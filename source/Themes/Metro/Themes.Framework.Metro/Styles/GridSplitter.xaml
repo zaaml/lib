@@ -1,0 +1,129 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <ResourceDictionary>
+
+      <!-- Visual States -->
+      <zm:VisualStateGroupCollection x:Key="VisualStates">
+        <!-- CommonStates States -->
+        <zm:VisualStateGroup Name="CommonStates">
+          <zm:VisualState Name="Normal" />
+          <zm:VisualState Name="ReadOnly" />
+          <zm:VisualState Name="MouseOver" />
+          <zm:VisualState Name="Pressed" />
+          <zm:VisualState Name="Disabled" />
+        </zm:VisualStateGroup>
+
+        <!-- FocusStates States -->
+        <zm:VisualStateGroup Name="FocusStates">
+          <zm:VisualState Name="Unfocused" />
+          <zm:VisualState Name="Focused" />
+        </zm:VisualStateGroup>
+      </zm:VisualStateGroupCollection>
+
+      <!-- Template -->
+      <ControlTemplate x:Key="GridSplitterTemplate" TargetType="{zm:KnownFrameworkType Type=GridSplitter}">
+        <zm:ControlTemplateRoot x:Name="TemplateRoot" 
+                                Background="Transparent" 
+                                IsHitTestVisible="{zm:TemplateBinding Path=IsEnabled}"
+                                VisualStateGroups="{StaticResource VisualStates}">
+
+          <zm:ControlTemplateRoot.Resources>
+            <Style x:Key="RectangleStyle" TargetType="Rectangle">
+              <Setter Property="Height" Value="2" />
+              <Setter Property="Width" Value="2" />
+              <Setter Property="RadiusX" Value="2" />
+              <Setter Property="RadiusY" Value="2" />
+            </Style>
+          </zm:ControlTemplateRoot.Resources>
+
+          <!-- Horizontal Template -->
+          <Grid x:Name="HorizontalTemplate" Visibility="Collapsed" Height="4">
+            <Grid Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{zm:TemplateBinding Path=Background}">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="2" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Rectangle Grid.Column="1" Style="{StaticResource RectangleStyle}" Fill="{zm:TemplateExpandoBinding Path=RectangleFill}" />
+              <Rectangle Grid.Column="3" Style="{StaticResource RectangleStyle}" Fill="{zm:TemplateExpandoBinding Path=RectangleFill}" />
+              <Rectangle Grid.Column="5" Style="{StaticResource RectangleStyle}" Fill="{zm:TemplateExpandoBinding Path=RectangleFill}" />
+              <Rectangle Grid.Column="7" Style="{StaticResource RectangleStyle}" Fill="{zm:TemplateExpandoBinding Path=RectangleFill}" />
+            </Grid>
+          </Grid>
+
+          <!-- Vertical Template -->
+          <Grid x:Name="VerticalTemplate" Width="4" Visibility="Collapsed">
+            <Grid Width="4" Background="{zm:TemplateBinding Path=Background}">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="2" />
+                <RowDefinition Height="2" />
+                <RowDefinition Height="2" />
+                <RowDefinition Height="2" />
+                <RowDefinition Height="2" />
+                <RowDefinition Height="2" />
+                <RowDefinition Height="2" />
+                <RowDefinition Height="*" />
+              </Grid.RowDefinitions>
+              <Rectangle Grid.Row="1" Style="{StaticResource RectangleStyle}" Fill="{zm:TemplateExpandoBinding Path=RectangleFill}" />
+              <Rectangle Grid.Row="3" Style="{StaticResource RectangleStyle}" Fill="{zm:TemplateExpandoBinding Path=RectangleFill}" />
+              <Rectangle Grid.Row="5" Style="{StaticResource RectangleStyle}" Fill="{zm:TemplateExpandoBinding Path=RectangleFill}" />
+              <Rectangle Grid.Row="7" Style="{StaticResource RectangleStyle}" Fill="{zm:TemplateExpandoBinding Path=RectangleFill}" />
+            </Grid>
+          </Grid>
+
+          <zm:Extension.Setters>
+            <zm:Setter Property="Opacity" VisualState="Disabled" Value="0.5" />
+          </zm:Extension.Setters>
+
+          <zm:Extension.Triggers>
+            <zm:VisualStateTrigger VisualState="MouseOver">
+              <zm:Setter ExpandoProperty="RectangleFill" Target="{zm:TemplateBinding}"
+                         Value="{zm:ThemeResource Key=Metro.StandardControls.GridSplitter.FillRectangle.MouseOver}" />
+            </zm:VisualStateTrigger>
+
+            <zm:DataTrigger Binding="{zm:TemplateBinding Path=VerticalAlignment}" Value="Stretch">
+              <zm:Setter Property="Visibility" TargetName="VerticalTemplate" Value="Visible" />
+            </zm:DataTrigger>
+
+            <zm:DataTrigger Binding="{zm:TemplateBinding Path=HorizontalAlignment}" Value="Stretch">
+              <zm:Setter Property="Visibility" TargetName="HorizontalTemplate" Value="Visible" />
+            </zm:DataTrigger>
+          </zm:Extension.Triggers>
+        </zm:ControlTemplateRoot>
+
+      </ControlTemplate>
+
+      <!-- Base Style -->
+      <zm:Style x:Key="GridSplitterStyle" TargetType="{zm:KnownFrameworkType Type=GridSplitter}">
+        <zm:Setter Property="IsTabStop" Value="true" />
+        <zm:Setter Property="HorizontalAlignment" Value="Right" />
+        <zm:Setter Property="Template" Value="{StaticResource GridSplitterTemplate}" />
+      </zm:Style>
+
+      <!-- Base Skinned Style -->
+      <zm:Style x:Key="GridSplitterSkinnedStyle" TargetType="{zm:KnownFrameworkType Type=GridSplitter}" BasedOn="{StaticResource GridSplitterStyle}">
+        <zm:SetterGroup ValuePathSource="ThemeResource">
+          <zm:Setter Property="Background" ValuePath="Metro.StandardControls.GridSplitter.Background.Normal" />
+          <zm:Setter ExpandoProperty="RectangleFill" ValuePath="Metro.StandardControls.GridSplitter.FillRectangle.Normal" />
+        </zm:SetterGroup>
+      </zm:Style>
+    </ResourceDictionary>
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!-- Theme Styles -->
+  <zm:ThemeStyle x:Key="GridSplitterBaseXm" TargetType="{zm:KnownFrameworkType Type=GridSplitter}" BasedOn="{StaticResource GridSplitterSkinnedStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

@@ -1,0 +1,10 @@
+﻿[*.cs]
+indent_style=tab
+indent_size=2
+tab_width=2
+
+[*]
+
+# ReSharper properties
+resharper_csharp_indent_size=2
+resharper_csharp_tab_width=2

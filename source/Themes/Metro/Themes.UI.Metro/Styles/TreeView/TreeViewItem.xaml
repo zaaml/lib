@@ -1,0 +1,94 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="TreeViewItemShared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  ToggleButton Template  -->
+  <ControlTemplate x:Key="ToggleButtonTemplate"
+                   TargetType="zm:ToggleButton">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource ToggleButtonVisualStates}">
+      <!--  Glyph  -->
+      <zm:PathIcon HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   zm:Extension.SettersSource="{StaticResource GlyphSetter}"
+                   Style="{zm:ThemeResource Key=Metro.StandardControls.TreeViewItem.Glyph.Style}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="TreeViewItemTemplate"
+                   TargetType="zm:TreeViewItem">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <zm:DockPanel Margin="{TemplateBinding ActualLevelPadding}">
+
+        <!--  Expander  -->
+        <Border Width="16"
+                zm:DockPanel.Dock="Left">
+          <zm:ToggleButton x:Name="ExpanderButton"
+                           IsChecked="{zm:TemplateBinding Path=IsExpanded,
+                                                          Mode=TwoWay}"
+                           IsTabStop="False"
+                           Focusable="False"
+                           Template="{StaticResource ToggleButtonTemplate}"
+                           Visibility="{zm:TemplateBinding Path=HasItems,
+                                                           Converter={zm:VisibilityConverter}}" />
+        </Border>
+
+        <!--  CommonStatesBorder  -->
+        <Border Padding="{TemplateBinding Padding}"
+                Background="{TemplateBinding Background}"
+                BorderThickness="0">
+
+          <!--  Content  -->
+          <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                   zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                   Content="{TemplateBinding Content}"
+                                   ContentTemplate="{TemplateBinding ContentTemplate}"
+                                   Icon="{TemplateBinding Icon}"
+                                   IconDistance="{TemplateBinding IconDistance}"
+                                   IconDock="{TemplateBinding IconDock}"
+                                   ShowContent="{TemplateBinding ShowContent}"
+                                   ShowIcon="{TemplateBinding ShowIcon}" />
+        </Border>
+      </zm:DockPanel>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="TreeViewItemBaseStyle" TargetType="zm:TreeViewItem">
+    <zm:Setter Property="Padding" Value="3,2" />
+    <zm:Setter Property="HorizontalAlignment" Value="Stretch" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Top" />
+    <zm:Setter Property="Template" Value="{StaticResource TreeViewItemTemplate}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="TreeViewItemStyle" BasedOn="{StaticResource TreeViewItemBaseStyle}" TargetType="zm:TreeViewItem" Skin="Metro.TreeViewItem">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!--  Foreground  -->
+      <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePath="Foreground" Property="Foreground" />
+
+      <!--  Background  -->
+      <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePath="Background" Property="Background" />
+
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="TreeViewItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TreeViewItemStyle}" TargetType="zm:TreeViewItem" />
+
+</zm:ThemeResourceDictionary>

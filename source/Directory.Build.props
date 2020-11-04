@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<PropertyGroup>
+		<LangVersion>latest</LangVersion>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\zaaml.snk</AssemblyOriginatorKeyFile>
+		<ErrorReport>prompt</ErrorReport>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<DefineConstants>$(DefineConstants);DEBUG;TRACE;INTERACTIVITY_DEBUG</DefineConstants>
+	</PropertyGroup>
+		
+	<PropertyGroup Condition="'$(Configuration)' == 'Test'">
+		<DefineConstants>$(DefineConstants);TEST;DEBUG;INTERACTIVITY_DEBUG</DefineConstants>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Configuration) == 'Release' AND $(Publish) == 'true'">
+		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
+		<TargetFrameworks>netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup> 
+		<Authors>zaaml</Authors>
+		<Company>zaaml</Company>
+		<Copyright>Copyright © zaaml 2020</Copyright>
+		<Description>zaaml library</Description>
+		<PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts</PackageOutputPath>
+	</PropertyGroup>
+	
+	<ItemGroup Condition="$(ExposeExternalInternals) == 'True' AND Exists('$(SolutionDir)\ExternalInternalsVisibleAttributes.cs')">
+		<Compile Include="$(SolutionDir)\ExternalInternalsVisibleAttributes.cs" />
+	</ItemGroup>
+	
+</Project>

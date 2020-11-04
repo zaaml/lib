@@ -1,0 +1,79 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <ControlTemplate x:Key="DottedVerticalDragHandleTemplate"
+                   TargetType="zm:Control">
+    <Grid x:Name="HandleGrid"
+          Width="5"
+          Margin="3,2"
+          Background="Transparent"
+          UseLayoutRounding="True">
+      <zm:Extension.Behaviors>
+        <zm:ActualSizeBehavior x:Name="HandleGridSizeTracker" />
+        <zm:ClipToBoundsBehavior />
+      </zm:Extension.Behaviors>
+      <Canvas>
+        <Line Canvas.Left="0.5"
+              Canvas.Top="0"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              Y1="0"
+              Y2="{Binding Path=ActualHeight, ElementName=HandleGridSizeTracker}" />
+        <Line Canvas.Left="2.5"
+              Canvas.Top="-2"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              Y1="0"
+              Y2="{Binding Path=ActualHeight, ElementName=HandleGridSizeTracker}" />
+        <Line Canvas.Left="4.5"
+              Canvas.Top="0"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              Y1="0"
+              Y2="{Binding Path=ActualHeight, ElementName=HandleGridSizeTracker}" />
+      </Canvas>
+    </Grid>
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="DottedHorizontalDragHandleTemplate"
+                   TargetType="zm:Control">
+    <Grid x:Name="HandleGrid"
+          Height="5"
+          Margin="2,3"
+          Background="Transparent"
+          UseLayoutRounding="True">
+      <zm:Extension.Behaviors>
+        <zm:ActualSizeBehavior x:Name="HandleGridSizeTracker" />
+        <zm:ClipToBoundsBehavior />
+      </zm:Extension.Behaviors>
+      <Canvas>
+        <Line Canvas.Left="0"
+              Canvas.Top="0.5"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              X1="0"
+              X2="{Binding Path=ActualWidth, ElementName=HandleGridSizeTracker}" />
+        <Line Canvas.Left="-2"
+              Canvas.Top="2.5"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              X1="0"
+              X2="{Binding Path=ActualWidth, ElementName=HandleGridSizeTracker}" />
+        <Line Canvas.Left="0"
+              Canvas.Top="4.5"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              X1="0"
+              X2="{Binding Path=ActualWidth, ElementName=HandleGridSizeTracker}" />
+      </Canvas>
+    </Grid>
+  </ControlTemplate>
+
+</ResourceDictionary>

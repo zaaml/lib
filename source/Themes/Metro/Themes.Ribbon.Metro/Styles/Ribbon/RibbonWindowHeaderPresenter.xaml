@@ -1,0 +1,63 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <zm:Style x:Key="RibbonWindowHeaderPresenterStyle" zmb:Deferred="True" Skin="Metro.RibbonWindow.Header" TargetType="zm:WindowHeaderPresenter">
+    <zm:Setter Property="Template">
+      <zm:Setter.Value>
+        <ControlTemplate TargetType="zm:WindowHeaderPresenter">
+
+          <zm:ControlTemplateRoot d:DataContext="{d:DesignInstance Type=zm:RibbonWindow}"
+                                  Background="{TemplateBinding Background}">
+
+            <zm:RibbonPresenter Ribbon="{Binding Path=Window.Ribbon, RelativeSource={RelativeSource TemplatedParent}}">
+
+              <zm:RibbonPresenter.Title>
+                <TextBlock Margin="8,0"
+                           VerticalAlignment="Center"
+                           Foreground="{TemplateBinding Foreground}"
+                           Text="{zm:TemplateBinding Path=Window.Title}"
+                           TextTrimming="WordEllipsis" />
+              </zm:RibbonPresenter.Title>
+
+              <zm:RibbonPresenter.Footer>
+
+                <!--  Window Buttons  -->
+                <zm:WindowButtonsPresenter Margin="{zm:TemplateSkinBinding SkinPath=Buttons.Margin}"
+                                           VerticalAlignment="Stretch"
+                                           VerticalContentAlignment="Stretch"
+                                           zm:DockPanel.Dock="Right"
+                                           ButtonStyle="{TemplateBinding ButtonStyle}"
+                                           ButtonsPresenterTemplate="{TemplateBinding ButtonsPresenterTemplate}">
+
+                  <!--  Minimize Button  -->
+                  <zm:WindowHeaderButton zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=Buttons.Minimize}"
+                                         Kind="Minimize" />
+
+                  <!--  Maximize Button  -->
+                  <zm:WindowHeaderButton zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=Buttons.Maximize}"
+                                         Kind="Maximize" />
+
+                  <!--  Restore Button  -->
+                  <zm:WindowHeaderButton zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=Buttons.Restore}"
+                                         Kind="Restore" />
+
+                  <!--  Close Button  -->
+                  <zm:WindowHeaderButton zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=Buttons.Close}"
+                                         Kind="Close" />
+
+                </zm:WindowButtonsPresenter>
+              </zm:RibbonPresenter.Footer>
+            </zm:RibbonPresenter>
+
+          </zm:ControlTemplateRoot>
+        </ControlTemplate>
+      </zm:Setter.Value>
+    </zm:Setter>
+  </zm:Style>
+
+</zm:ThemeResourceDictionary>

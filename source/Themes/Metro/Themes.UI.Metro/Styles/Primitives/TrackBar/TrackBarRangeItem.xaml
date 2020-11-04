@@ -1,0 +1,34 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="Template"
+                   TargetType="zm:TrackBarRangeItem">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
+      <ContentPresenter Content="{TemplateBinding Content}" />
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="TrackBarRangeItemStyle" TargetType="zm:TrackBarRangeItem">
+    <zm:Setter Property="Template" Value="{StaticResource Template}" />
+    <zm:Setter Property="CanDrag" Value="False" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="TrackBarRangeItemSkinnedStyle" BasedOn="{StaticResource TrackBarRangeItemStyle}" Skin="Metro.TrackBarRangeItem" TargetType="zm:TrackBarRangeItem">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="Stroke" Property="Background" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="TrackBarRangeItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TrackBarRangeItemSkinnedStyle}" TargetType="zm:TrackBarRangeItem" />
+
+</zm:ThemeResourceDictionary>

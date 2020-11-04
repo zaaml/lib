@@ -1,0 +1,44 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="CalendarItem.WPF.xaml"/>
+    <zm:ThemeResourceDictionary Source="CalendarDayButton.WPF.xaml"/>
+    <zm:ThemeResourceDictionary Source="CalendarButton.WPF.xaml"/>
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="CalendarTemplate" TargetType="Calendar">
+    <StackPanel x:Name="PART_Root" 
+                Background="{TemplateBinding Background}" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center">
+      <CalendarItem x:Name="PART_CalendarItem" />
+    </StackPanel>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="CalendarBaseStyle" TargetType="Calendar">
+    <zm:Setter Property="CalendarDayButtonStyle" Value="{StaticResource CalendarDayButtonStyle}" />
+    <zm:Setter Property="CalendarButtonStyle" Value="{StaticResource CalendarButtonStyle}" />
+    <zm:Setter Property="CalendarItemStyle" Value="{StaticResource CalendarItemStyle}" />
+    <zm:Setter Property="Template" Value="{StaticResource CalendarTemplate}" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="CalendarStyle" TargetType="Calendar" BasedOn="{StaticResource CalendarBaseStyle}" 
+            Skin="Metro.StandardControls.Calendar">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Background" ValuePath="Background" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="CalendarThemeStyle" TargetType="Calendar" BasedOn="{StaticResource CalendarStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

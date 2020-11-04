@@ -1,0 +1,1 @@
+dotnet build -c Release -v m -p:Publish=true

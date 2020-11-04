@@ -1,0 +1,41 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.UI.Metro;component/Styles/TreeView/TreeViewItemShared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <zm:SetterCollection x:Key="GlyphSetter">
+    <zm:SetterGroup ValuePathSource="TemplateSkin">
+
+      <!--  Brush  -->
+      <zm:SetterGroup ValuePath="Brush" Property="Brush">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter ValuePath="Pressed" VisualState="Pressed" />
+      </zm:SetterGroup>
+
+      <!--  Data  -->
+      <zm:SetterGroup ValuePath="Data" Property="Data">
+        <zm:Setter ValuePath="Expanded" VisualState="Checked" />
+        <zm:Setter ValuePath="Collapsed" VisualState="Unchecked" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+  </zm:SetterCollection>
+
+  <!--  ToggleButton Template  -->
+  <ControlTemplate x:Key="ToggleButtonTemplate"
+                   TargetType="zm:ToggleButton">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource ToggleButtonVisualStates}">
+      <!--  Glyph  -->
+      <zm:PathIcon HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   zm:Extension.SettersSource="{StaticResource GlyphSetter}"
+                   Style="{zm:ThemeResource Key=Metro.PropertyView.ToggleButton.Style}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+</zm:ThemeResourceDictionary>

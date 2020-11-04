@@ -1,0 +1,495 @@
+﻿<zm:ThemeResourceDictionary
+    xmlns:s="clr-namespace:System;assembly=mscorlib"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:zm="http://schemas.zaaml.com/xaml"
+    xmlns:zmb="http://schemas.zaaml.com/build"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="../Glyphs.Shared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!-- CheckBox -->
+  <zm:SkinDictionary x:Key="Metro.Shared.CheckBox">
+
+    <s:String x:Key="UncheckedGlyph">M 0,0 Z</s:String>
+    <s:String x:Key="CheckedGlyph">F1 M 0,120L 0,260L 140,400L 400,140L 400,0L 140,260L 0,120 Z</s:String>
+    <s:String x:Key="IndeterminateGlyph">F1 M 100,100L 300,100L 300,300L 100,300L 100,100 Z</s:String>
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+      <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Pressed" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Checked" Color="#BFFFFFFF" />
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF696969" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF696969" />
+      <SolidColorBrush x:Key="Checked" Color="#FF333333" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF515151" />
+      <SolidColorBrush x:Key="Checked" Color="#FF515151" />
+      <SolidColorBrush x:Key="Focused" Color="#FFF78A09" />
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- RadioButton -->
+  <zm:SkinDictionary x:Key="Metro.Shared.RadioButton">
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+      <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Pressed" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Checked" Color="#BFFFFFFF" />
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF696969" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF696969" />
+      <SolidColorBrush x:Key="Checked" Color="#FF333333" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF515151" />
+      <SolidColorBrush x:Key="Checked" Color="#FF515151" />
+      <SolidColorBrush x:Key="Focused" Color="#FFF78A09" />
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- Button -->
+  <zm:SkinDictionary x:Key="Metro.Shared.Button">
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+      <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Pressed" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Checked" Color="#BFFFFFFF" />
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF454545" />
+      <SolidColorBrush x:Key="Checked" Color="#FF515151" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF454545" />
+      <SolidColorBrush x:Key="Checked" Color="#FF515151" />
+      <SolidColorBrush x:Key="Focused" Color="#FFF78A09" />
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- DropDownGlyph -->
+  <zm:SkinDictionary x:Key="Metro.Shared.DropDownGlyph">
+
+    <!-- Style -->
+    <Style x:Key="Style" TargetType="zm:PathIcon">
+      <Setter Property="Stretch" Value="None"/>
+      <Setter Property="BrushMode" Value="Fill" />
+      <Setter Property="StrokeThickness" Value="0" />
+    </Style>
+
+    <!-- Data -->
+    <zm:ThemeResource x:Key="Data" Value="{StaticResource Metro.Glyphs.Arrows8Px.Down}" />
+
+  </zm:SkinDictionary>
+
+  <!-- DropDownButton -->
+  <zm:SkinDictionary x:Key="Metro.Shared.DropDownButton" BasedOn="Metro.Shared.Button">
+
+    <!-- Glyph -->
+    <zm:SkinDictionary x:Key="Glyph" BasedOn="Metro.Shared.DropDownGlyph" />
+
+  </zm:SkinDictionary>
+
+  <!-- SplitButton -->
+  <zm:SkinDictionary x:Key="Metro.Shared.SplitButton" BasedOn="Metro.Shared.Button">
+
+    <!-- Splitter -->
+    <zm:SkinDictionary x:Key="Splitter">
+      <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+      <SolidColorBrush x:Key="PopupOpened" Color="#FF515151" />
+    </zm:SkinDictionary>
+
+    <!-- DropDownButton -->
+    <zm:SkinDictionary x:Key="DropDownButton" BasedOn="Metro.Shared.Button">
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FFB9B9B9" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFB9B9B9" />
+      </zm:SkinDictionary>
+
+      <!-- Glyph -->
+      <zm:SkinDictionary x:Key="Glyph" BasedOn="Metro.Shared.DropDownGlyph" />
+
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- ToolBarButton -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ToolBarButton">
+
+    <zm:SkinDictionary x:Key="Input">
+      <Color x:Key="ForegroundBase">#BFFFFFFF</Color>
+      <Color x:Key="BackgroundBase">#00000000</Color>
+      <Color x:Key="BorderBrushBase">#00000000</Color>
+      <Color x:Key="AccentBase">#FFF78A09</Color>
+    </zm:SkinDictionary>
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+
+      <!-- BrushProcessor-->
+      <zm:SolidColorBrushProcessor x:Key="BrushProcessor"
+                                   ColorExpression="BaseColor" 
+                                   zm:Expression.Scope="BaseColor:$(~/Input.ForegroundBase)"/>
+
+      <SolidColorBrush x:Key="Normal" />
+      <SolidColorBrush x:Key="MouseOver" />
+      <SolidColorBrush x:Key="Pressed" />
+      <SolidColorBrush x:Key="Checked" />
+
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+
+      <!-- BrushProcessor-->
+      <zm:SolidColorBrushProcessor x:Key="BrushProcessor"
+                                   ColorExpression="Tint(BaseColor, Tint)" 
+                                   zm:Expression.Scope="BaseColor:$(~/Input.BackgroundBase)"/>
+
+      <SolidColorBrush x:Key="Normal" zm:Expression.Scope="Tint:0"/>
+      <SolidColorBrush x:Key="MouseOver" zm:Expression.Scope="Tint:0.2" />
+      <SolidColorBrush x:Key="Pressed" zm:Expression.Scope="Tint:0.1"/>
+      <SolidColorBrush x:Key="Checked" zm:Expression.Scope="Tint:0.15"/>
+
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+
+      <!-- BrushProcessor-->
+      <zm:SolidColorBrushProcessor x:Key="BrushProcessor"
+                                   ColorExpression="Tint(BaseColor, Tint)" 
+                                   zm:Expression.Scope="BaseColor:$(~/Input.BorderBrushBase)"/>
+
+      <SolidColorBrush x:Key="Normal" zm:Expression.Scope="Tint:0" />
+      <SolidColorBrush x:Key="MouseOver" zm:Expression.Scope="Tint:0.2" />
+      <SolidColorBrush x:Key="Pressed" zm:Expression.Scope="Tint:0.1"/>
+      <SolidColorBrush x:Key="Checked" zm:Expression.Scope="Tint:0.15"/>
+      <!--<zm:SolidColorBrushSkin x:Key="Focused" Color="{zm:SkinResource Key=~/Input/AccentBase}"/>-->
+
+    </zm:SkinDictionary>
+
+  </zm:SkinDictionary>
+
+  <!-- ToolBarSplitButton -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ToolBarSplitButton" BasedOn="Metro.Shared.ToolBarButton">
+
+    <!-- Splitter -->
+    <zm:SkinDictionary x:Key="Splitter">
+      <SolidColorBrush x:Key="Normal" Color="#FF7C7C7C" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="PopupOpened" Color="#FF7C7C7C" zmb:Skin="Office" />
+    </zm:SkinDictionary>
+
+    <!-- DropDownButton -->
+    <zm:SkinDictionary x:Key="DropDownButton" BasedOn="Metro.Shared.ToolBarDropDownButton">
+
+      <!-- Reference Input -->
+      <zm:SkinDictionary x:Key="Input" BasedOn="~/../Input" BasedOnFlags="Override" />
+
+    </zm:SkinDictionary>
+
+  </zm:SkinDictionary>
+
+  <!-- ToolBarDropDownButton -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ToolBarDropDownButton" BasedOn="Metro.Shared.ToolBarButton">
+
+    <!-- Glyph -->
+    <zm:SkinDictionary x:Key="Glyph" BasedOn="Metro.Shared.DropDownGlyph" />
+
+  </zm:SkinDictionary>
+
+  <!-- ToolBar -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ToolBar">
+    <SolidColorBrush x:Key="Background" Color="#FF333333" zmb:Skin="Office" />
+
+    <!-- MenuButton -->
+    <zm:SkinDictionary x:Key="MenuButton" BasedOn="Metro.Shared.ToolBarDropDownButton" />
+  </zm:SkinDictionary>
+
+  <!-- TabControl -->
+  <zm:SkinDictionary x:Key="Metro.Shared.TabControl">
+    <SolidColorBrush x:Key="Foreground" Color="#BFFFFFFF" />
+    <SolidColorBrush x:Key="Background" Color="#FF333333" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#FF515151" />
+    <SolidColorBrush x:Key="DisableVeilBrush" Color="#8C333333" />
+  </zm:SkinDictionary>
+
+  <!-- TabItem -->
+  <zm:SkinDictionary x:Key="Metro.Shared.TabItem">
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+      <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Selected" Color="#FFF78A09" />
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Selected" Color="#FF333333" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Selected" Color="#FF515151" />
+    </zm:SkinDictionary>
+
+    <!-- SelectionLine -->
+    <zm:SkinDictionary x:Key="SelectionLine">
+      <SolidColorBrush x:Key="Selected" Color="#FFF78A09" />
+      <SolidColorBrush x:Key="SelectedInactive" Color="#FFB9B9B9" />
+    </zm:SkinDictionary>
+
+    <SolidColorBrush x:Key="DisableVeilBrush" Color="#8C333333" />
+  </zm:SkinDictionary>
+
+  <!-- TextBox -->
+  <zm:SkinDictionary x:Key="Metro.Shared.TextBox">
+    <SolidColorBrush x:Key="CaretBrush" Color="#BFFFFFFF" />
+    <SolidColorBrush x:Key="Watermark.Foreground" Color="#FF515151" />
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+      <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="ReadOnly" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Disabled" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Focused" Color="#BFFFFFFF" />
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+      <SolidColorBrush x:Key="ReadOnly" Color="#FF333333" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF333333" />
+      <SolidColorBrush x:Key="Disabled" Color="#66696969" />
+      <SolidColorBrush x:Key="Focused" Color="#FF333333" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+      <SolidColorBrush x:Key="ReadOnly" Color="#FF515151" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Disabled" Color="#FF696969" />
+      <SolidColorBrush x:Key="Focused" Color="#FFF78A09" />
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- MenuItem -->
+  <zm:SkinDictionary x:Key="Metro.Shared.MenuItem">
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+      <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Highlighted" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Pressed" Color="#BFFFFFFF" />
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" />
+      <SolidColorBrush x:Key="Highlighted" Color="#FF666666" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF666666" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF515151" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" />
+      <SolidColorBrush x:Key="Highlighted" Color="#FF666666" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF666666" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF515151" />
+    </zm:SkinDictionary>
+
+    <SolidColorBrush x:Key="DisableVeilBrush" Color="#8C333333" />
+  </zm:SkinDictionary>
+
+  <!-- Glyph -->
+  <Style x:Key="Metro.SmallGlyphStyle" TargetType="Path">
+    <Setter Property="Width" Value="10" />
+    <Setter Property="Height" Value="10" />
+    <Setter Property="Fill" Value="#FF606060" />
+    <Setter Property="StrokeThickness" Value="0" />
+    <Setter Property="Stretch" Value="Fill" />
+  </Style>
+
+  <!-- ScrollViewer -->
+  <zm:SkinDictionary  x:Key="Metro.Shared.ScrollViewer">
+    <SolidColorBrush x:Key="Background" Color="#FF333333" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#FF515151" />
+  </zm:SkinDictionary>
+
+  <!-- ScrollBar -->
+  <zm:SkinDictionary  x:Key="Metro.Shared.ScrollBar">
+    <SolidColorBrush x:Key="Background" Color="#FF333333" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#FF515151" />
+  </zm:SkinDictionary>
+
+  <!-- ScrollBar RepeatButton -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ScrollBar.RepeatButton">
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+      <SolidColorBrush x:Key="Normal" Color="#FF666666" />
+      <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF666666" />
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#00FFFFFF" />
+      <SolidColorBrush x:Key="Pressed" Color="#00FFFFFF" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#00FFFFFF" />
+      <SolidColorBrush x:Key="Pressed" Color="#00FFFFFF" />
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- ScrollBar Thumb -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ScrollBar.Thumb">
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#FF666666" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FFCCCCCC" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF666666" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FF666666" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FFCCCCCC" />
+      <SolidColorBrush x:Key="Pressed" Color="#FF666666" />
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- ScrollBar Glyph -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ScrollBar.Glyph">
+
+    <!-- Style -->
+    <Style x:Key="Style" TargetType="Path">
+      <Setter Property="Stretch" Value="None"/>
+      <Setter Property="StrokeThickness" Value="0"/>
+      <Setter Property="Width" Value="8"/>
+      <Setter Property="Height" Value="8"/>
+    </Style>
+
+    <!-- Data -->
+    <zm:SkinDictionary x:Key="Data">
+      <zm:ThemeResource x:Key="Left" Value="{StaticResource Metro.Glyphs.Arrows8Px.Left}"/>
+      <zm:ThemeResource x:Key="Up" Value="{StaticResource Metro.Glyphs.Arrows8Px.Up}"/>
+      <zm:ThemeResource x:Key="Right" Value="{StaticResource Metro.Glyphs.Arrows8Px.Right}"/>
+      <zm:ThemeResource x:Key="Down" Value="{StaticResource Metro.Glyphs.Arrows8Px.Down}"/>
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- ListView -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ListView">
+    <SolidColorBrush x:Key="Foreground" Color="#BFFFFFFF" />
+    <SolidColorBrush x:Key="Background" Color="#FF333333" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#FF515151" />
+    <Thickness x:Key="ScrollViewerMargin">0</Thickness>
+    <Thickness x:Key="ScrollViewerPadding">1</Thickness>
+  </zm:SkinDictionary>
+
+  <!-- ListViewItem -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ListViewItem">
+
+    <!-- Foreground -->
+    <zm:SkinDictionary x:Key="Foreground">
+      <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Disabled" Color="#BFFFFFFF" />
+
+      <SolidColorBrush x:Key="Focused" Color="#FF333333" />
+      <SolidColorBrush x:Key="Unfocused" Color="#BFFFFFFF" />
+
+      <SolidColorBrush x:Key="Selected" Color="#FF333333" />
+      <SolidColorBrush x:Key="Unselected" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="SelectedUnfocused" Color="#BFFFFFFF" />
+    </zm:SkinDictionary>
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF666666" />
+      <SolidColorBrush x:Key="Disabled" Color="#00FFFFFF" />
+
+      <SolidColorBrush x:Key="Focused" Color="#FFF78A09" />
+      <SolidColorBrush x:Key="Unfocused" Color="#FF333333" />
+
+      <SolidColorBrush x:Key="Selected" Color="#FFF78A09" />
+      <SolidColorBrush x:Key="Unselected" Color="#FF333333" />
+      <SolidColorBrush x:Key="SelectedUnfocused" Color="#FF666666" />
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!-- DropDownItemsControl -->
+  <zm:SkinDictionary x:Key="Metro.Shared.DropDownItemsControl">
+
+    <!-- Background -->
+    <zm:SkinDictionary x:Key="Background">
+      <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+      <SolidColorBrush x:Key="ReadOnly" Color="#FF333333" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF333333" />
+      <SolidColorBrush x:Key="Disabled" Color="#66696969" />
+      <SolidColorBrush x:Key="Focused" Color="#FF333333" />
+    </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+      <SolidColorBrush x:Key="ReadOnly" Color="#FF515151" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Disabled" Color="#FF696969" />
+      <SolidColorBrush x:Key="Focused" Color="#FFF78A09" />
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+</zm:ThemeResourceDictionary>

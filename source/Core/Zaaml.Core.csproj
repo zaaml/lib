@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<ExposeExternalInternals>True</ExposeExternalInternals>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.3.7">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.Memory" Version="4.5.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="System\ListDictionary.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Range.Specialization.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Range.Specialization.cs</LastGenOutput>
+		</Content>
+		<Content Include="Text\Parser.tt">
+			<LastGenOutput>Parser.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Text\Parser.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Parser.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="Text\Parser.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Parser.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+</Project>

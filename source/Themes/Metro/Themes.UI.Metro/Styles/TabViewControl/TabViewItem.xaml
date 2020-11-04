@@ -1,0 +1,242 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.Metro;component/Styles/Button/Button.Shared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <zm:SwitchConverter x:Key="LayoutTransformConverter">
+    <zm:Case Key="Left" Value="{zm:Static Member=zm:Transforms.RotateCCW_90}" />
+    <zm:Case Key="Top" Value="{zm:Static Member=zm:Transforms.Identity}" />
+    <zm:Case Key="Right" Value="{zm:Static Member=zm:Transforms.RotateCW_90}" />
+    <zm:Case Key="Bottom" Value="{zm:Static Member=zm:Transforms.Rotate_180}" />
+  </zm:SwitchConverter>
+
+  <zm:SwitchConverter x:Key="RootTransformConverter">
+    <zm:Case Key="Left" Value="{zm:Static Member=zm:Transforms.Rotate_180}" />
+    <zm:Case Key="Bottom" Value="{zm:Static Member=zm:Transforms.Rotate_180}" />
+    <zm:Default Value="{zm:Static Member=zm:Transforms.Identity}" />
+  </zm:SwitchConverter>
+
+  <zm:SwitchConverter x:Key="UnselectedMarginConverter">
+    <zm:Case Key="Left" Value="2,0,0,0" />
+    <zm:Case Key="Top" Value="0,2,0,0" />
+    <zm:Case Key="Right" Value="0,0,2,0" />
+    <zm:Case Key="Bottom" Value="0,0,0,2" />
+    <zm:Default Value="0" />
+  </zm:SwitchConverter>
+
+  <!--  Button Style  -->
+  <zm:Style x:Key="ButtonStyle" Skin="Metro.TabViewItem.Button" TargetType="zm:ButtonBase">
+    <zm:Setter Property="Template">
+      <zm:Setter.Value>
+        <ControlTemplate TargetType="zm:ButtonBase">
+          <zm:ControlTemplateRoot Width="17"
+                                  Height="17"
+                                  Background="{TemplateBinding Background}"
+                                  VisualStateGroups="{StaticResource VisualStates}">
+            <ContentPresenter HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Content="{zm:TemplateBinding Path=Content}" />
+          </zm:ControlTemplateRoot>
+        </ControlTemplate>
+      </zm:Setter.Value>
+    </zm:Setter>
+
+    <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePathSource="Skin" />
+  </zm:Style>
+
+  <Style x:Key="NativeButtonStyle"
+         BasedOn="{zm:NativeStyle Style={StaticResource ButtonStyle}}"
+         TargetType="zm:ButtonBase" />
+
+  <!--  Close Button Visibility Converter  -->
+  <zm:SwitchConverter x:Key="CloseButtonVisibilityConverter">
+    <zm:Default Value="Collapsed" />
+  </zm:SwitchConverter>
+
+  <!--  TabViewItemTemplate  -->
+  <ControlTemplate x:Key="TabViewItemTemplate"
+                   TargetType="zm:TabViewItem">
+    <zm:ControlTemplateRoot Margin="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement, Converter={StaticResource UnselectedMarginConverter}}">
+      <zm:LayoutTransformer LayoutTransform="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement, Converter={StaticResource LayoutTransformConverter}}">
+        <Grid UseLayoutRounding="True">
+          <Border x:Name="border"
+                  Background="{zm:TemplateExpandoBinding Path=Background_Normal}"
+                  BorderBrush="{zm:TemplateExpandoBinding Path=BorderBrush_Normal}"
+                  BorderThickness="{Binding Path=ActualThickness, ElementName=borderThickness}">
+
+            <zm:Extension.Assets>
+              <zm:MaskThickness x:Name="borderThickness"
+                                EnabledThickness="{zm:TemplateBinding Path=BorderThickness}" />
+            </zm:Extension.Assets>
+
+            <Border x:Name="ContentBorder"
+                    zm:Interaction.Enabled="True"
+                    Background="Transparent"
+                    RenderTransform="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
+                                                         Converter={StaticResource RootTransformConverter}}"
+                    RenderTransformOrigin="0.5, 0.5">
+
+              <zm:DockPanel>
+
+                <!--  Header Content  -->
+                <zm:IconContentPresenter Margin="{zm:TemplateBinding Path=Padding}"
+                                         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                         VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                         zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                         Content="{TemplateBinding Header}"
+                                         ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                         ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                         Icon="{TemplateBinding Icon}"
+                                         IconDistance="{TemplateBinding IconDistance}"
+                                         IconDock="{TemplateBinding IconDock}"
+                                         ShowContent="{TemplateBinding ShowContent}"
+                                         ShowIcon="{TemplateBinding ShowIcon}" />
+
+                <zm:StackPanel Margin="-2,2,2,2"
+                               zm:DockPanel.Dock="Right"
+                               Orientation="Horizontal">
+
+                  <!--  PinButton  -->
+                  <zm:ToggleButton x:Name="PinButton"
+                                   Focusable="False"
+                                   IsChecked="{zm:TemplateBinding Path=IsPinned,
+                                                                  Mode=TwoWay}"
+                                   Style="{StaticResource NativeButtonStyle}"
+                                   Visibility="{TemplateBinding ActualPinButtonVisibility}">
+
+                    <zm:PathIcon Data="{zm:TemplateSkinBinding SkinPath=Button.Glyph.Pin}"
+                                 RenderTransform="{zm:TemplateBinding Path=IsPinned,
+                                                                      Converter={zm:TernaryConverter TrueValue={x:Null},
+                                                                                                     FalseValue={zm:RotateTransform Angle=90}}}"
+                                 RenderTransformOrigin="0.5 0.5"
+                                 Style="{zm:TemplateSkinBinding SkinPath=Button.Glyph.Style}" />
+
+                  </zm:ToggleButton>
+
+                  <!--  CloseButton  -->
+                  <zm:Button x:Name="CloseButton"
+                             Command="{zm:TemplateBinding Path=ActualCloseCommand}"
+                             CommandParameter="{zm:TemplateBinding Path=ActualCloseCommandParameter}"
+                             Focusable="False"
+                             Style="{StaticResource NativeButtonStyle}"
+                             Visibility="{TemplateBinding ActualCloseButtonVisibility}">
+
+                    <zm:PathIcon Data="{zm:TemplateSkinBinding SkinPath=Button.Glyph.Close}"
+                                 Style="{zm:TemplateSkinBinding SkinPath=Button.Glyph.Style}" />
+
+                  </zm:Button>
+                </zm:StackPanel>
+              </zm:DockPanel>
+            </Border>
+          </Border>
+
+
+          <!-- TabViewControl Border -->
+          <Border Background="Transparent"
+                  IsHitTestVisible="False"
+                  BorderBrush="{zm:TemplateBinding Path=TabViewControl.BorderBrush}"
+                  BorderThickness="{Binding Path=ActualThickness, ElementName=TabViewControlBorderThickness}">
+
+            <zm:Extension.Assets>
+              <zm:MaskThickness x:Name="TabViewControlBorderThickness"
+                                Flags="Bottom"
+                                EnabledThickness="{zm:TemplateBinding Path=BorderThickness}" />
+            </zm:Extension.Assets>
+
+          </Border>
+
+          <!--  SelectionLine  -->
+          <Border x:Name="SelectionLine"
+                  Height="2"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Top"
+                  Background="{zm:TemplateExpandoBinding Path=SelectionLine_Selected}"
+                  BorderThickness="0"
+                  Opacity="0" />
+
+        </Grid>
+      </zm:LayoutTransformer>
+
+
+      <!--  Control Triggers  -->
+      <zm:Extension.Triggers>
+        <zm:DataTrigger Binding="{zm:TemplateBinding Path=IsSelected}" Value="True">
+          <zm:Setter Property="Margin" Value="0" />
+        </zm:DataTrigger>
+
+        <zm:MultiTrigger>
+          <zm:MultiTrigger.Conditions>
+            <zm:DataCondition Binding="{zm:TemplateBinding Path=IsSelected}" Value="True" />
+            <zm:DataCondition Binding="{zm:TemplateBinding Path=TabViewControl.ActualIsBackContentVisible}" Value="False" />
+          </zm:MultiTrigger.Conditions>
+
+          <zm:Setter TargetName="border" Property="Background" Value="{zm:TemplateExpandoBinding Path=Background_Selected}" />
+          <zm:Setter TargetName="SelectionLine" Property="Opacity" Value="1" />
+          <zm:Setter TargetName="borderThickness" Property="Bottom" Value="False" />
+          <zm:Setter TargetName="TabViewControlBorderThickness" Property="Invert" Value="True" />
+        </zm:MultiTrigger>
+
+        <zm:MultiTrigger>
+          <zm:MultiTrigger.Conditions>
+            <zm:DataCondition Binding="{zm:Binding Path=(zm:Interaction.IsMouseOver), ElementName=ContentBorder}" Value="True" />
+            <zm:DataCondition Binding="{zm:TemplateBinding Path=IsSelected}" Value="False" />
+          </zm:MultiTrigger.Conditions>
+
+          <zm:Setter TargetName="border" Property="Background" Value="{zm:TemplateExpandoBinding Path=Background_MouseOver}" />
+
+        </zm:MultiTrigger>
+
+        <!--  Temp solution  -->
+        <zm:MultiTrigger>
+          <zm:MultiTrigger.Conditions>
+            <zm:DataCondition Binding="{zm:Binding Path=(zm:Interaction.IsMouseOver), ElementName=ContentBorder}" Value="True" />
+            <zm:DataCondition Binding="{zm:TemplateBinding Path=TabViewControl.ActualIsBackContentVisible}" Value="True" />
+          </zm:MultiTrigger.Conditions>
+
+          <zm:Setter TargetName="border" Property="Background" Value="{zm:TemplateExpandoBinding Path=Background_MouseOver}" />
+        </zm:MultiTrigger>
+
+      </zm:Extension.Triggers>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Styles  -->
+  <zm:Style x:Key="TabViewItemBaseStyle" TargetType="zm:TabViewItem">
+    <!--<zm:Setter Property="zm:OrderableBehavior.DragHeader" Value="{zm:SelfBinding}" />-->
+    <zm:Setter Property="Padding" Value="6,2,6,2" />
+    <zm:Setter Property="BorderThickness" Value="1,1,1,1" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="Canvas.ZIndex" Value="{zm:SelfBinding Path=IsSelected, Converter={zm:TernaryConverter TrueValue=65535, FalseValue=0}}" />
+    <zm:Setter Property="Template" Value="{StaticResource TabViewItemTemplate}" />
+    <zm:Setter Property="Foreground" Value="{zm:ThemeResource Key=Metro.TabViewItem.Foreground.Normal}" />
+    <zm:Setter Property="zm:DisableVeilControl.VeilBrush" Value="{zm:ThemeResource Key=Metro.TabViewItem.DisableVeilBrush}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!--  Base Skinned Styles  -->
+  <zm:Style x:Key="TabViewItemBaseSkinnedStyle" BasedOn="{StaticResource TabViewItemBaseStyle}" Skin="Metro.TabViewItem" TargetType="zm:TabViewItem">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ExpandoProperty="Foreground_Normal" ValuePath="Foreground.Normal" />
+      <zm:Setter ExpandoProperty="Foreground_Selected" ValuePath="Foreground.Selected" />
+      <zm:Setter ExpandoProperty="SelectionLine_Selected" ValuePath="SelectionLine.Selected" />
+      <zm:Setter ExpandoProperty="Background_Normal" ValuePath="Background.Normal" />
+      <zm:Setter ExpandoProperty="Background_MouseOver" ValuePath="Background.MouseOver" />
+      <zm:Setter ExpandoProperty="Background_Selected" ValuePath="Background.Selected" />
+      <zm:Setter ExpandoProperty="BorderBrush_Normal" ValuePath="BorderBrush.Normal" />
+      <zm:Setter ExpandoProperty="BorderBrush_MouseOver" ValuePath="BorderBrush.MouseOver" />
+      <zm:Setter ExpandoProperty="BorderBrush_Selected" ValuePath="BorderBrush.Selected" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="TabViewItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TabViewItemBaseSkinnedStyle}" TargetType="zm:TabViewItem" />
+
+</zm:ThemeResourceDictionary> 

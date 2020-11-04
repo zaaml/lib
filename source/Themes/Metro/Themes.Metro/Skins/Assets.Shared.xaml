@@ -1,0 +1,32 @@
+﻿<zm:ThemeResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:zm="http://schemas.zaaml.com/xaml"
+    xmlns:System="clr-namespace:System;assembly=mscorlib">
+
+  <!-- ThemeKeywords -->
+  <FontFamily x:Key="Metro.Shared.Application.FontFamily">Lucida Sans Unicode, Lucida Grande</FontFamily>
+  <System:Double x:Key="Metro.Shared.Application.FontSize">11</System:Double>
+  <FontWeight x:Key="Metro.Shared.Application.FontWeight">Normal</FontWeight>
+  <FontStretch x:Key="Metro.Shared.Application.FontStretch">Normal</FontStretch>
+  <FontStyle x:Key="Metro.Shared.Application.FontStyle">Normal</FontStyle>
+
+  <!-- ContentPresenter Text -->
+  <zm:SkinDictionary x:Key="Metro.Shared.ContentPresenter">
+    <zm:ThemeResource x:Key="FontFamily" Value="{StaticResource Metro.Shared.Application.FontFamily}" />
+    <zm:ThemeResource x:Key="FontSize" Value="{StaticResource Metro.Shared.Application.FontSize}"/>
+    <zm:ThemeResource x:Key="FontWeight" Value="{StaticResource Metro.Shared.Application.FontWeight}"/>
+    <zm:ThemeResource x:Key="FontStretch"  Value="{StaticResource Metro.Shared.Application.FontStretch}"/>
+    <zm:ThemeResource x:Key="FontStyle" Value="{StaticResource Metro.Shared.Application.FontStyle}"/>
+  </zm:SkinDictionary>
+
+  <!-- ThemeKeywords -->
+  <zm:ThemeKeywordGroup x:Key="FontThemeKeywords">
+    <zm:ThemeResource Keyword="ApplicationFontFamily" Value="{StaticResource Metro.Shared.Application.FontFamily}" />
+    <zm:ThemeResource Keyword="ApplicationFontSize" Value="{StaticResource Metro.Shared.Application.FontSize}" />
+    <zm:ThemeResource Keyword="ApplicationFontWeight" Value="{StaticResource Metro.Shared.Application.FontWeight}" />
+    <zm:ThemeResource Keyword="ApplicationFontStretch" Value="{StaticResource Metro.Shared.Application.FontStretch}" />
+    <zm:ThemeResource Keyword="ApplicationFontStyle" Value="{StaticResource Metro.Shared.Application.FontStyle}" />
+  </zm:ThemeKeywordGroup>
+
+</zm:ThemeResourceDictionary>

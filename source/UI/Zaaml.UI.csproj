@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<UseWPF>true</UseWPF>
+		<ExposeExternalInternals>True</ExposeExternalInternals>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
+		<ProjectReference Include="..\Platform\Zaaml.Platform.csproj" />
+		<ProjectReference Include="..\PresentationCore\Zaaml.PresentationCore.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.3.7">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Decorators\Trapezoid.cs" />
+		<Compile Remove="WindowEx.cs" />
+	</ItemGroup>
+
+	<Choose>
+		<When Condition="'$(RebuildWithDefaultTheme)'=='True'">
+			<ItemGroup>
+				<Resource Include="Themes\Default\*.zip" />
+			</ItemGroup>
+		</When>
+		<Otherwise>
+		</Otherwise>
+	</Choose>
+
+	<!-- Include Default Theme Resources -->
+	<Target Name="DefaultTheme">
+		<ItemGroup>
+			<TempResource Include="..\Themes.Metro\Styles\Controls\**\*.xaml" Exclude="..\Themes.Metro\Styles\Controls\**\*.SL.xaml" />
+
+			<Resource Include="@(TempResource)">
+				<Link>Themes\Default\Styles\Controls\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			</Resource>
+
+			<TempResource Remove="@(TempResource)" />
+			<TempResource Include="..\Themes.Metro\Skins\Office\**\*.xaml" Exclude="..\Themes.Metro\Skins\Office\**\*.SL.xaml" />
+
+			<Resource Include="@(TempResource)">
+				<Link>Themes\Default\Skins\Office\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			</Resource>
+
+			<TempResource Remove="@(TempResource)" />
+			<TempResource Include="..\Themes.Metro\Skins\*.Shared.xaml" />
+
+			<Resource Include="@(TempResource)">
+				<Link>Themes\Default\Skins\%(RecursiveDir)%(Filename)%(Extension)</Link>
+			</Resource>
+
+			<TempResource Remove="@(TempResource)" />
+		</ItemGroup>
+	</Target>
+
+	<PropertyGroup>
+		<PrepareForBuildDependsOn>
+			DefaultTheme;
+			$(PrepareForBuildDependsOn) 
+		</PrepareForBuildDependsOn>
+	</PropertyGroup>
+</Project>

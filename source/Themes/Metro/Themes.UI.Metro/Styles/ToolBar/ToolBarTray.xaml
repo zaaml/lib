@@ -1,0 +1,43 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Template -->
+  <ControlTemplate x:Key="ToolBarTrayTemplate" TargetType="zm:ToolBarTray">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
+      
+      <zm:ToolBarTrayPanel x:Name="ToolBarHost" 
+                           Margin="{TemplateBinding Padding}"
+                           HorizontalAlignment="Left" 
+                           VerticalAlignment="Stretch" />
+      
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="ToolBarTrayBaseStyle" TargetType="zm:ToolBarTray">
+    <zm:Setter Property="Template" Value="{StaticResource ToolBarTrayTemplate}" />
+    <zm:Setter Property="VerticalAlignment" Value="Stretch" />
+    <zm:Setter Property="HorizontalAlignment" Value="Stretch" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="ToolBarTrayStyle" TargetType="zm:ToolBarTray" BasedOn="{StaticResource ToolBarTrayBaseStyle}" 
+            Skin="Metro.ToolBarTray">
+    
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!-- Background -->
+      <zm:Setter Property="Background" ValuePath="Background" />
+
+    </zm:SetterGroup>
+    
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="ToolBarTrayThemeStyle" TargetType="zm:ToolBarTray" BasedOn="{StaticResource ToolBarTrayStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

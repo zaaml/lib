@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+   <PropertyGroup>
+    <DeferredResourceDictionariesDir>$(IntermediateOutputPath)\DeferredResourceDictionaries</DeferredResourceDictionariesDir>
+    <DeferredResourceDictionaries Condition="$(Configuration) == 'Release'">true</DeferredResourceDictionaries>
+    <DeferredResourceDictionaries>true</DeferredResourceDictionaries>
+  </PropertyGroup>
+
+	<!--<Target Name="CleanDeferredBefore" BeforeTargets="Clean;Build;Rebuild" Condition="$(DeferredResourceDictionaries) == 'true'">
+		<ItemGroup>
+			<CleanDeferredItems Include="$(DeferredResourceDictionariesDir)**\*zaaml.deferred.baml " />
+			<CleanDeferredItems Include="$(DeferredResourceDictionariesDir)**\*zaaml.deferred.xaml " />
+		</ItemGroup>
+
+		<Delete Files="@(CleanDeferredItems)" />
+	</Target>
+
+	<Target Name="CleanDeferredAfter" AfterTargets="Clean;Build;Rebuild" Condition="$(DeferredResourceDictionaries) == 'true'">
+		<ItemGroup>
+			<CleanDeferredItems Include="$(DeferredResourceDictionariesDir)**\*zaaml.deferred.baml " />
+			<CleanDeferredItems Include="$(DeferredResourceDictionariesDir)**\*zaaml.deferred.xaml " />
+		</ItemGroup>
+
+		<Delete Files="@(CleanDeferredItems)" />
+	</Target>
+
+	<Target Name="CreateDeferredResourceDictionaries" BeforeTargets="PrepareForBuild" Condition="$(DeferredResourceDictionaries) == 'true'">
+		<ItemGroup>
+			<DeferredDictionaries Include="@(Resource)" />
+		</ItemGroup>
+		
+		<CreateDeferredResourceDictionariesTask SourceFiles="@(DeferredDictionaries)" IntermediateDirectory="$(DeferredResourceDictionariesDir)">
+		  <Output ItemName="Resource" TaskParameter="DestinationFiles" />
+		  <Output ItemName="FileWrites" TaskParameter="DestinationFiles" />
+		</CreateDeferredResourceDictionariesTask>
+  </Target>-->
+  
+  	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.3.7">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>		
+	</ItemGroup>
+  
+	<PropertyGroup>
+		<BuildDependsOn>$(BuildDependsOn);PackThemeProject</BuildDependsOn>
+	</PropertyGroup>
+  
+  	<Target Name="PackThemeProject" Condition="$(ThemePart) == 'true'">
+		<PropertyGroup>
+			<ThemePartDir>$(ProjectDir)..\ThemeParts\$(TargetFramework)</ThemePartDir>
+		</PropertyGroup>
+		
+		<MakeDir Directories="$(ThemePartDir)"/>
+		<MakeDir Directories="$(IntermediateOutputPath)\$(ProjectName)"/>
+		
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(IntermediateOutputPath)\$(ProjectName)" />
+		
+		<ZipDirectory
+            SourceDirectory="$(IntermediateOutputPath)\$(ProjectName)"
+            DestinationFile="$(ThemePartDir)\$(ProjectName).themepart.zip"
+			Overwrite="True" />
+	
+		<RemoveDir Directories="$(IntermediateOutputPath)\$(ProjectName)" />
+		
+		<Copy SourceFiles="$(ProjectName).themepart.xml" DestinationFolder="$(ThemePartDir)" />
+	</Target>
+	
+	<!--<Target Name="CleanThemeParts" BeforeTargets="PrepareForBuild" Condition="$(ThemePartsDir) != ''">
+		<ItemGroup>
+			<ThemePartItem Include="$(ThemePartsDir)\$(ProjectName).themepart.zip"/>
+			<ThemePartItem Include="$(ThemePartsDir)\$(ProjectName).themepart.xml"/>
+		</ItemGroup>
+
+	  <Delete Files="@(ThemePartItem)" />
+	</Target>-->
+	
+ </Project>

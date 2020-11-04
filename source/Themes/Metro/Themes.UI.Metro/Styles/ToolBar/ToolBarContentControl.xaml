@@ -1,0 +1,34 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="ToolBarContentControlTemplate"
+                   TargetType="zm:ToolBarContentControl">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
+      <ContentPresenter Margin="{TemplateBinding Padding}"
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                        Content="{TemplateBinding Content}"
+                        ContentTemplate="{TemplateBinding ContentTemplate}" />
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ToolBarContentControlBaseStyle" TargetType="zm:ToolBarContentControl">
+    <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="Template" Value="{StaticResource ToolBarContentControlTemplate}" />
+    <zm:Setter Property="Focusable" Value="False"/>
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ToolBarContentControlStyle" BasedOn="{StaticResource ToolBarContentControlBaseStyle}" TargetType="zm:ToolBarContentControl" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ToolBarContentControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ToolBarContentControlStyle}" TargetType="zm:ToolBarContentControl" />
+
+</zm:ThemeResourceDictionary>

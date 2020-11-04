@@ -1,0 +1,240 @@
+﻿<zm:ThemeSkinResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                xmlns:s="clr-namespace:System;assembly=mscorlib"
+                                xmlns:zm="http://schemas.zaaml.com/xaml"
+                                xmlns:zmb="http://schemas.zaaml.com/build"
+                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                                mc:Ignorable="zmb"
+                                Name="Office">
+
+ <zm:SkinDictionary x:Key="Metro">
+
+    <!-- RibbonButton -->
+    <zm:SkinDictionary x:Key="RibbonButton" BasedOn="Metro.Shared.ToolBarButton" />
+
+    <!-- RibbonSplitButton -->
+    <zm:SkinDictionary x:Key="RibbonSplitButton" BasedOn="Metro.Shared.ToolBarSplitButton" />
+
+    <!-- RibbonDropDownButton -->
+    <zm:SkinDictionary x:Key="RibbonDropDownButton" BasedOn="Metro.Shared.ToolBarDropDownButton" />
+
+    <!-- RibbonSeparator -->
+    <zm:SkinDictionary x:Key="RibbonSeparator" />
+
+    <!-- RibbonToolBar -->
+    <zm:SkinDictionary x:Key="RibbonToolBar" BasedOn="Metro.Shared.ToolBar">
+
+      <SolidColorBrush x:Key="Background" Color="#FF2576C4" />
+
+      <!-- BaseColors -->
+      <zm:SkinDictionary x:Key="BaseColors">
+
+        <zm:SkinDictionary x:Key="Input">
+          <Color x:Key="ForegroundBase">#FFFFFFFF</Color>
+          <Color x:Key="BackgroundBase">#00FFFFFF</Color>
+          <Color x:Key="BorderBrushBase">#00FFFFFF</Color>
+          <Color x:Key="AccentBase">#FF0072C6</Color>
+        </zm:SkinDictionary>
+
+      </zm:SkinDictionary>
+
+      <!-- RibbonButton -->
+      <zm:SkinDictionary x:Key="RibbonButton" BasedOn="Metro.RibbonButton | Metro.RibbonToolBar.BaseColors" />
+
+      <!-- RibbonDropDownButton -->
+      <zm:SkinDictionary x:Key="RibbonDropDownButton" BasedOn="Metro.RibbonDropDownButton | Metro.RibbonToolBar.BaseColors" />
+
+      <!-- RibbonSplitButton -->
+      <zm:SkinDictionary x:Key="RibbonSplitButton" BasedOn="Metro.RibbonSplitButton | Metro.RibbonToolBar.BaseColors" />
+
+      <!-- RibbonSeparator -->
+      <zm:SkinDictionary x:Key="RibbonSeparator" BasedOn="Metro.RibbonSeparator" />
+
+    </zm:SkinDictionary>
+
+    <!-- RibbonWindow -->
+    <zm:SkinDictionary x:Key="RibbonWindow" BasedOn="Metro.AppWindow"/>
+
+    <!-- RibbonPage -->
+    <zm:SkinDictionary x:Key="RibbonPage">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FF2576C4" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFE6E6E6" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFE6E6E6" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+    </zm:SkinDictionary>
+
+    <!-- RibbonContextualPage -->
+    <zm:SkinDictionary x:Key="RibbonContextualPage" BasedOn="Metro.RibbonPage">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FF2576C4" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#30000000" zmb:Skin="Office" />
+
+        <!-- TODO Resources below not needed. Values are same as BasedOn Skin. Theme SkinResources Partial BasedOn issue (look SkinDictionary.Composition Freeze) -->
+        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFE6E6E6" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#30000000" zmb:Skin="Office" />
+
+        <!-- TODO Resources below not needed. Values are same as BasedOn Skin. Theme SkinResources Partial BasedOn issue (look SkinDictionary.Composition Freeze) -->
+        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFE6E6E6" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+    </zm:SkinDictionary>
+
+    <!-- RibbonPageCategory -->
+    <zm:SkinDictionary x:Key="RibbonPageCategory">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#30000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#30000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+    </zm:SkinDictionary>
+
+    <!-- RibbonGroup -->
+    <zm:SkinDictionary x:Key="RibbonGroup">
+      <SolidColorBrush x:Key="Foreground" Color="#FF848484" />
+      <SolidColorBrush x:Key="Background" Color="#FFE6E6E6" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#FFD4D4D4" />
+    </zm:SkinDictionary>
+
+    <!-- Ribbon -->
+    <zm:SkinDictionary x:Key="Ribbon">
+
+      <!-- RibbonControl -->
+      <zm:SkinDictionary x:Key="RibbonControl">
+
+        <SolidColorBrush x:Key="Background" Color="#FFE6E6E6" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#FFD4D4D4" />
+
+        <!-- AppButton-->
+        <zm:SkinDictionary x:Key="AppButton">
+
+          <!-- Foreground -->
+          <zm:SkinDictionary x:Key="Foreground">
+            <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Pressed" Color="#FFFFFFFF" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Checked" Color="#FFFFFFFF" zmb:Skin="Office" />
+          </zm:SkinDictionary>
+
+          <!-- Background -->
+          <zm:SkinDictionary x:Key="Background">
+            <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Pressed" Color="#40000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Checked" Color="#40000000" zmb:Skin="Office" />
+          </zm:SkinDictionary>
+
+          <!-- BorderBrush -->
+          <zm:SkinDictionary x:Key="BorderBrush">
+            <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Pressed" Color="#40000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Checked" Color="#40000000" zmb:Skin="Office" />
+          </zm:SkinDictionary>
+        </zm:SkinDictionary>
+      </zm:SkinDictionary>
+
+      <!-- QuickAccessToolBarControl -->
+      <zm:SkinDictionary x:Key="QuickAccessToolBarControl" BasedOn="Metro.RibbonToolBar" />
+    </zm:SkinDictionary>
+
+    <!-- BackstageViewContentPresenter -->
+    <zm:SkinDictionary x:Key="BackstageViewContentPresenter">
+
+      <SolidColorBrush x:Key="Foreground" Color="#E3000000" />
+      <SolidColorBrush x:Key="Background" Color="#FFFFFFFF" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#FFFFFFFF" />
+
+    </zm:SkinDictionary>
+
+    <!-- BackstageViewControl -->
+    <zm:SkinDictionary x:Key="BackstageViewControl">
+
+      <!-- BackButton -->
+      <zm:SkinDictionary x:Key="BackButton" BasedOn="Metro.Shared.Button">
+
+        <!-- Foreground -->
+        <zm:SkinDictionary x:Key="Foreground">
+          <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="MouseOver" Color="#FFE3E3E3" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Pressed" Color="#FFE3E3E3" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Checked" Color="#FFE3E3E3" zmb:Skin="Office" />
+        </zm:SkinDictionary>
+      </zm:SkinDictionary>
+
+      <SolidColorBrush x:Key="Foreground" Color="#FFFFFFFF" />
+      <SolidColorBrush x:Key="Background" Color="#FF2576C4" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#FF2576C4" />
+
+    </zm:SkinDictionary>
+
+    <!-- BackstageViewItem -->
+    <zm:SkinDictionary x:Key="BackstageViewItem">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FF2576C4" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFFFFFFF" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFFFFFFF" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+    </zm:SkinDictionary>
+
+    
+  </zm:SkinDictionary>
+</zm:ThemeSkinResourceDictionary>

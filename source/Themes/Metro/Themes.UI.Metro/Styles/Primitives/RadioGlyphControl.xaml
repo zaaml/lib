@@ -1,0 +1,54 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="ToggleGlyphControl.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="RadioGlyphControlTemplate" TargetType="zm:RadioGlyphControl">
+    <zm:ControlTemplateRoot Background="Transparent" 
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <Border CornerRadius="7"
+              Width="14" 
+              Height="14"
+              BorderThickness="1"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}">
+
+        <Ellipse Fill="{TemplateBinding Foreground}"
+                 Visibility="{zm:TemplateBinding Path=IsChecked, Converter={zm:VisibilityConverter}}"
+                 Margin="2" />
+      </Border>
+
+      <!-- ReadOnly Veil  -->
+      <Border Background="{zm:TemplateSkinBinding SkinPath=ReadOnlyVeilBackground}"
+              Visibility="{zm:TemplateBinding Path=IsReadOnly, Converter={zm:VisibilityConverter}}"/>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Style -->
+  <zm:Style x:Key="RadioGlyphControlBaseStyle" TargetType="zm:RadioGlyphControl">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Template" Value="{StaticResource RadioGlyphControlTemplate}" />
+  </zm:Style>
+
+  <!-- Skinned Style -->
+  <zm:Style x:Key="RadioGlyphControlStyle" TargetType="zm:RadioGlyphControl" BasedOn="{StaticResource RadioGlyphControlBaseStyle}" 
+            Skin="Metro.RadioGlyphControl">
+
+    <zm:SetterGroup ValuePathSource="Skin" SettersSource="{StaticResource SkinSetters}" />
+
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="RadioGlyphControlThemeStyle" TargetType="zm:RadioGlyphControl" BasedOn="{StaticResource RadioGlyphControlStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

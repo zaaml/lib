@@ -1,0 +1,36 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="MenuItemGroupTemplate"
+                   TargetType="zm:MenuItemGroup">
+    <zm:ControlTemplateRoot x:Name="ControlRoot"
+                            Background="{zm:ThemeResource Key=Metro.ContextMenu.Background}">
+
+      <!--  Items Presenter Host -->
+      <zm:MenuItemsPresenterHost x:Name="ItemsPresenterHost" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="MenuItemGroupBaseStyle" TargetType="zm:MenuItemGroup">
+    <zm:Setter Property="Padding" Value="0" />
+    <zm:Setter Property="Template" Value="{StaticResource MenuItemGroupTemplate}" />
+    <zm:Setter Property="zm:DisableVeilControl.VeilBrush" Value="{zm:ThemeResource Key=Metro.ContextMenu.VeilBrush}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="MenuItemGroupStyle" BasedOn="{StaticResource MenuItemGroupBaseStyle}" TargetType="zm:MenuItemGroup">
+    <zm:SetterGroup ValuePathSource="Skin" />
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="MenuItemGroupThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource MenuItemGroupStyle}" TargetType="zm:MenuItemGroup" />
+
+</zm:ThemeResourceDictionary>

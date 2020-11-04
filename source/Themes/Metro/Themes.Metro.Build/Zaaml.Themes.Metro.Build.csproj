@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<UseWPF>true</UseWPF>
+		<EnableDefaultItems>false</EnableDefaultItems>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Themes.Artboard.Metro\Zaaml.Themes.Artboard.Metro.csproj" />
+		<ProjectReference Include="..\Themes.PropertyView.Metro\Zaaml.Themes.PropertyView.Metro.csproj" />
+		<ProjectReference Include="..\Themes.UI.Metro\Zaaml.Themes.UI.Metro.csproj" />
+		<ProjectReference Include="..\Themes.Framework.Metro\Zaaml.Themes.Framework.Metro.csproj" />
+		<ProjectReference Include="..\Themes.Ribbon.Metro\Zaaml.Themes.Ribbon.Metro.csproj" />
+		<ProjectReference Include="..\Themes.Docking.Metro\Zaaml.Themes.Docking.Metro.csproj" />
+	</ItemGroup>
+
+	<Target Name="CombineBuild" AfterTargets="Build">
+		<Message Text="Combine" Importance="High" />
+		<MSBuild Projects="$(MSBuildThisFileDirectory)..\Themes.Metro\Zaaml.Themes.Metro.csproj" Properties="Configuration=$(Configuration);CombineTheme=True" />
+	</Target>
+
+</Project>

@@ -1,0 +1,37 @@
+<!--
+  <copyright file="SplitLayoutTemplate.xaml" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+    Copyright (c) zaaml. All rights reserved.
+  </copyright>-->
+
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="SplitLayoutViewTemplate"
+                   TargetType="zm:SplitLayoutView">
+
+    <zm:ControlTemplateRoot>
+
+      <!--  ItemsHost  -->
+      <Grid x:Name="ItemsHost"
+            UseLayoutRounding="True" />
+    </zm:ControlTemplateRoot>
+
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="SplitLayoutViewBaseStyle" TargetType="zm:SplitLayoutView">
+    <zm:Setter Property="Template" Value="{StaticResource SplitLayoutViewTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="SplitLayoutStyle" BasedOn="{StaticResource SplitLayoutViewBaseStyle}" TargetType="zm:SplitLayoutView" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="SplitLayoutViewThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource SplitLayoutStyle}" TargetType="zm:SplitLayoutView" />
+
+</zm:ThemeResourceDictionary>

@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<UseWPF>true</UseWPF>
+		<ThemePart>true</ThemePart>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
+		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
+		<ProjectReference Include="..\Themes.Metro\Zaaml.Themes.Metro.csproj" />
+		<ProjectReference Include="..\..\..\UI\Zaaml.UI.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.3.7">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Zaaml.Themes.Framework.Metro.ThemePart.xml" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Zaaml.Themes.Framework.Metro.ThemePart.xml">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+</Project>

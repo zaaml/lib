@@ -1,0 +1,101 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.Metro;component/Styles/Button/DropDownButton.Shared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  Fallback DropDownGlyph  -->
+  <zm:PathIcon x:Key="FallbackDropDownGlyph"
+               Margin="4,2"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               
+               Data="{zm:ThemeResource Key=Metro.RibbonDropDownButton.Glyph.Data}"
+               SharedResource="True"
+               Style="{zm:ThemeResource Key=Metro.RibbonDropDownButton.Glyph.Style}" />
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="RibbonDropDownButtonBaseTemplate"
+                   TargetType="zm:RibbonDropDownButtonBase">
+    <zm:RibbonItemTemplateRoot Background="Transparent"
+                               VisualStateGroups="{StaticResource VisualStates}">
+
+      <Border Padding="{TemplateBinding Padding}"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+
+        <zm:IconContentPresenter x:Name="Icon"
+                                 MinWidth="16"
+                                 MinHeight="16"
+                                 zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                 Icon="{zm:TemplateBinding Path=SmallIcon}"
+                                 IconDock="Left">
+
+          <zm:TwoLineTextBlockControl x:Name="TextBlock"
+                                      HorizontalAlignment="Center"
+                                      Foreground="{TemplateBinding Foreground}"
+                                      zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                      Glyph="{zm:TemplateBinding Path=DropDownGlyph,
+                                                                 TargetNullValue={StaticResource FallbackDropDownGlyph}}"
+                                      Mode="SingleLine"
+                                      Text="{zm:TemplateBinding Path=Text}" />
+        </zm:IconContentPresenter>
+      </Border>
+
+      <!--  PopupHost  -->
+      <zm:PopupControlHost x:Name="PopupHost" />
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl />
+
+      <!--  Control Triggers  -->
+      <zm:Extension.Triggers>
+        <zm:DataTrigger Binding="{zm:TemplateBinding Path=ActualItemStyle}" Value="Large">
+
+          <zm:SetterGroup TargetName="Icon">
+            <zm:Setter Property="Icon" Value="{zm:TemplateBinding Path=LargeIcon}" />
+            <zm:Setter Property="MinWidth" Value="32" />
+            <zm:Setter Property="MinHeight" Value="32" />
+            <zm:Setter Property="IconDock" Value="Top" />
+          </zm:SetterGroup>
+
+          <zm:SetterGroup TargetName="TextBlock">
+            <zm:Setter Property="Mode" Value="TwoLine" />
+          </zm:SetterGroup>
+
+        </zm:DataTrigger>
+
+        <zm:DataTrigger Binding="{zm:TemplateBinding Path=ActualItemStyle}" Value="Small">
+          <zm:Setter TargetName="TextBlock" Property="Visibility" Value="Collapsed" />
+        </zm:DataTrigger>
+      </zm:Extension.Triggers>
+
+    </zm:RibbonItemTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="RibbonDropDownButtonBaseStyle" TargetType="zm:RibbonDropDownButtonBase">
+    <zm:Setter Property="Padding" Value="3" />
+    <zm:Setter Property="HorizontalAlignment" Value="Left" />
+    <zm:Setter Property="Template" Value="{StaticResource RibbonDropDownButtonBaseTemplate}" />
+    <zm:Setter Property="ClickMode" Value="Press" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+
+    <zm:Setter Property="zm:Extension.Skin" Value="{zm:SelfBinding Path=ToolBar.(zm:Extension.ActualSkin), Converter={zm:Static Member=zm:SkinResourceConverter.Instance}, ConverterParameter=RibbonDropDownButton}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="RibbonDropDownButtonBaseSkinnedStyle" BasedOn="{StaticResource RibbonDropDownButtonBaseStyle}" Skin="Metro.RibbonDropDownButton" TargetType="zm:RibbonDropDownButtonBase">
+    <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePathSource="Skin" />
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="RibbonDropDownButtonThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource RibbonDropDownButtonBaseSkinnedStyle}" TargetType="zm:RibbonDropDownButton" />
+
+</zm:ThemeResourceDictionary>

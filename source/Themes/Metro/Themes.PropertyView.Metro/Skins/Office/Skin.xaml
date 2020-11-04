@@ -1,0 +1,153 @@
+﻿<zm:ThemeSkinResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                xmlns:s="clr-namespace:System;assembly=mscorlib"
+                                xmlns:zm="http://schemas.zaaml.com/xaml"
+                                xmlns:zmb="http://schemas.zaaml.com/build"
+                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                                mc:Ignorable="zmb"
+                                Name="Office">
+
+  <zm:ThemeSkinResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.Metro;component/Skins/Glyphs.Shared.xaml" />
+  </zm:ThemeSkinResourceDictionary.MergedDictionaries>
+
+ <zm:SkinDictionary x:Key="Metro">
+  
+   <zm:SkinDictionary x:Key="PropertyView">
+
+     <!-- ToggleButton -->
+     <zm:SkinDictionary x:Key="ToggleButton">
+
+       <!-- Style -->
+       <Style x:Key="Style" TargetType="zm:PathIcon">
+         <Setter Property="Width" Value="8" />
+         <Setter Property="Height" Value="8" />
+         <Setter Property="Stretch" Value="None" />
+         <Setter Property="BrushMode" Value="Fill" />
+         <Setter Property="StrokeThickness" Value="0" />
+       </Style>
+
+     </zm:SkinDictionary>
+
+      <zm:SkinDictionary x:Key="PropertyViewItemBase">
+
+       <SolidColorBrush x:Key="CategoryLine" Color="#FFCFCFCF" />
+
+       <!-- GlyphSelected -->
+       <zm:SkinDictionary x:Key="GlyphSelected">
+
+         <!-- Brush -->
+         <zm:SkinDictionary x:Key="Brush">
+           <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
+           <SolidColorBrush x:Key="MouseOver" Color="#AAFFFFFF" zmb:Skin="Office" />
+           <SolidColorBrush x:Key="Pressed" Color="#88FFFFFF" zmb:Skin="Office" />
+         </zm:SkinDictionary>
+
+         <!-- Data -->
+         <zm:SkinDictionary x:Key="Data">
+           <zm:ThemeResource x:Key="Collapsed" Value="{StaticResource Metro.Glyphs.Arrows8Px.Right}"/>
+           <zm:ThemeResource x:Key="Expanded" Value="{StaticResource Metro.Glyphs.Arrows8Px.BottomRight}"/>
+         </zm:SkinDictionary>
+       </zm:SkinDictionary>
+
+       <!-- GlyphNormal -->
+       <zm:SkinDictionary x:Key="GlyphNormal">
+
+         <!-- Brush -->
+         <zm:SkinDictionary x:Key="Brush">
+           <SolidColorBrush x:Key="Normal" Color="#FF787878" zmb:Skin="Office" />
+           <SolidColorBrush x:Key="MouseOver" Color="#FF454545" zmb:Skin="Office" />
+           <SolidColorBrush x:Key="Pressed" Color="#FF454545" zmb:Skin="Office" />
+         </zm:SkinDictionary>
+
+         <!-- Data -->
+         <zm:SkinDictionary x:Key="Data">
+           <zm:ThemeResource x:Key="Collapsed" Value="{StaticResource Metro.Glyphs.Arrows8Px.Right}"/>
+           <zm:ThemeResource x:Key="Expanded" Value="{StaticResource Metro.Glyphs.Arrows8Px.BottomRight}"/>
+         </zm:SkinDictionary>
+       </zm:SkinDictionary>
+
+       <!-- GlyphSkin -->
+       <zm:SkinDictionary x:Key="GlyphSkin">
+         <zm:ThemeResource x:Key="Normal" Value="Metro.PropertyView.PropertyViewItem.GlyphNormal" zmb:Skin="Office" />
+         <zm:ThemeResource x:Key="Selected" Value="Metro.PropertyView.PropertyViewItem.GlyphSelected" zmb:Skin="Office" />
+       </zm:SkinDictionary>
+
+       <!-- Foreground -->
+       <zm:SkinDictionary x:Key="Foreground">
+         <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Disabled" Color="#E3000000" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="Focused" Color="#E3000000" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Unfocused" Color="#E3000000" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="Selected" Color="#FFFFFFFF" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Unselected" Color="#E3000000" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="SelectedUnfocused" Color="#E3000000" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="InvalidFocused" Color="#FFFFFFFF" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="InvalidUnfocused" Color="#FFFFFFFF" zmb:Skin="Office" />
+       </zm:SkinDictionary>
+
+       <!-- Background -->
+       <zm:SkinDictionary x:Key="Background">
+         <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="MouseOver" Color="#FFCFCFCF" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Disabled" Color="#00FFFFFF" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="Focused" Color="#FF0072C6" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Unfocused" Color="#00FFFFFF" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="Selected" Color="#FF0072C6" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Unselected" Color="#00FFFFFF" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="SelectedUnfocused" Color="#FFD4D4D4" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="InvalidFocused" Color="#FFE0595A" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="InvalidUnfocused" Color="#FFE47C7C" zmb:Skin="Office" />
+
+       </zm:SkinDictionary>
+
+       <!-- BorderBrush -->
+       <zm:SkinDictionary x:Key="BorderBrush">
+         <SolidColorBrush x:Key="Normal" Color="#FFCFCFCF" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="MouseOver" Color="#FFCFCFCF" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Disabled" Color="#FFCFCFCF" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="Focused" Color="#FF0072C6" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Unfocused" Color="#FFCFCFCF" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="Selected" Color="#FF0072C6" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="Unselected" Color="#FFCFCFCF" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="SelectedUnfocused" Color="#FFD4D4D4" zmb:Skin="Office" />
+
+         <SolidColorBrush x:Key="InvalidFocused" Color="#FFE0595A" zmb:Skin="Office" />
+         <SolidColorBrush x:Key="InvalidUnfocused" Color="#FFE47C7C" zmb:Skin="Office" />
+
+       </zm:SkinDictionary>
+
+     </zm:SkinDictionary>
+
+     <!-- PropertyViewCategory -->
+     <zm:SkinDictionary x:Key="PropertyViewCategory" BasedOn="Metro.PropertyView.PropertyViewItemBase">
+
+       <!-- Background -->
+       <zm:SkinDictionary x:Key="Background">
+         <SolidColorBrush x:Key="Normal" Color="#FFCFCFCF" zmb:Skin="Office" />
+
+       </zm:SkinDictionary>
+
+       <!-- BorderBrush -->
+       <zm:SkinDictionary x:Key="BorderBrush">
+         <SolidColorBrush x:Key="Normal" Color="#FFCFCFCF" zmb:Skin="Office" />
+       </zm:SkinDictionary>
+
+     </zm:SkinDictionary>
+
+     <!-- PropertyViewItem -->
+     <zm:SkinDictionary x:Key="PropertyViewItem" BasedOn="Metro.PropertyView.PropertyViewItemBase" />
+
+   </zm:SkinDictionary>
+
+  </zm:SkinDictionary>
+</zm:ThemeSkinResourceDictionary>

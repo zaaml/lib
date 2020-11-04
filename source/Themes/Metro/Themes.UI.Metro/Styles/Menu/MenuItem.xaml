@@ -1,0 +1,285 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="MenuCommon.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  SubmenuHeaderPopup Template  -->
+  <ControlTemplate x:Key="SubmenuHeaderPopupTemplate"
+                   TargetType="zm:HeaderedMenuItem">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            UseLayoutRounding="True">
+
+      <!--  Header  -->
+      <zm:MenuItemHeaderPresenter x:Name="HeaderPresenter"
+                                  Header="{TemplateBinding Header}"
+                                  HeaderTemplate="{TemplateBinding HeaderTemplate}"
+                                  HeaderTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                  HeaderStringFormat="{TemplateBinding HeaderStringFormat}"
+                                  
+                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  zm:Extension.Skin="{zm:TemplateBinding Path=(zm:Extension.ActualSkin)}"
+                                  Visibility="{zm:TemplateBinding Path=ActualShowHeader,
+                                                                  Converter={zm:VisibilityConverter}}" />
+
+      <!--  SubMenu  -->
+      <zm:Popup x:Name="SubmenuPopup"
+                StaysOpen="False">
+
+        <zm:Popup.Placement>
+          <zm:SnapPlacement SnapSide="Right"
+                            Target="{zm:TemplateBinding}" />
+        </zm:Popup.Placement>
+
+        <zm:PopupContentPresenter AllowMotionAnimation="False"
+                                  AllowOpacityAnimation="False"
+                                  Background="{zm:ThemeResource Key=Metro.ContextMenu.Background}"
+                                  BorderBrush="{zm:ThemeResource Key=Metro.ContextMenu.BorderBrush}"
+                                  BorderStyle="Border"
+                                  BorderThickness="1"
+                                  DropShadow="True">
+
+          <zm:Panel x:Name="SubmenuHost"
+                    Margin="1" />
+
+        </zm:PopupContentPresenter>
+
+      </zm:Popup>
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl Background="{zm:TemplateSkinBinding SkinPath=DisableVeilBrush}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  SubmenuHeaderInline Template  -->
+  <ControlTemplate x:Key="SubmenuHeaderInlineTemplate"
+                   TargetType="zm:HeaderedMenuItem">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            UseLayoutRounding="True">
+
+      <zm:DockPanel>
+
+        <!--  Header  -->
+        <zm:MenuItemHeaderPresenter x:Name="HeaderPresenter"
+
+                                    Header="{TemplateBinding Header}"
+                                    HeaderTemplate="{TemplateBinding HeaderTemplate}"
+                                    HeaderTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                    HeaderStringFormat="{TemplateBinding HeaderStringFormat}"
+
+                                    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                    zm:DockPanel.Dock="Top"
+                                    zm:Extension.Skin="{zm:TemplateBinding Path=(zm:Extension.ActualSkin)}"
+                                    Visibility="{zm:TemplateBinding Path=ActualShowHeader,
+                                                                    Converter={zm:VisibilityConverter}}" />
+
+        <!--  Submenu  -->
+        <zm:Panel x:Name="SubmenuHost" />
+
+      </zm:DockPanel>
+
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl Background="{zm:TemplateSkinBinding SkinPath=DisableVeilBrush}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  SubmenuItem Template  -->
+  <ControlTemplate x:Key="SubmenuItemTemplate"
+                   TargetType="zm:HeaderedMenuItem">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            UseLayoutRounding="True">
+
+      <!--  Header  -->
+      <zm:MenuItemHeaderPresenter x:Name="HeaderPresenter"
+
+                                  Header="{TemplateBinding Header}"
+                                  HeaderTemplate="{TemplateBinding HeaderTemplate}"
+                                  HeaderTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                  HeaderStringFormat="{TemplateBinding HeaderStringFormat}"
+
+                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  zm:DockPanel.Dock="Top"
+                                  zm:Extension.Skin="{zm:TemplateBinding Path=(zm:Extension.ActualSkin)}"
+                                  Visibility="{zm:TemplateBinding Path=ActualShowHeader,
+                                                                  Converter={zm:VisibilityConverter}}" />
+
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl Background="{zm:TemplateSkinBinding SkinPath=DisableVeilBrush}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  TopLevelHeaderPopup Template  -->
+  <ControlTemplate x:Key="TopLevelHeaderPopupTemplate"
+                   TargetType="zm:HeaderedMenuItem">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            UseLayoutRounding="True">
+
+      <!--  Header  -->
+      <zm:MenuItemHeaderPresenter x:Name="HeaderPresenter"
+
+                                  Header="{TemplateBinding Header}"
+                                  HeaderTemplate="{TemplateBinding HeaderTemplate}"
+                                  HeaderTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                  HeaderStringFormat="{TemplateBinding HeaderStringFormat}"
+
+                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  zm:Extension.Skin="{zm:TemplateBinding Path=(zm:Extension.ActualSkin)}"
+                                  Visibility="{zm:TemplateBinding Path=ActualShowHeader,
+                                                                  Converter={zm:VisibilityConverter}}" />
+
+      <!--  SubMenu  -->
+      <zm:Popup x:Name="SubmenuPopup"
+                StaysOpen="False">
+
+        <zm:Popup.Placement>
+          <zm:SnapPlacement SnapSide="Bottom"
+                            Target="{zm:TemplateBinding}" />
+        </zm:Popup.Placement>
+
+        <zm:PopupContentPresenter AllowMotionAnimation="False"
+                                  AllowOpacityAnimation="False"
+                                  Background="{zm:ThemeResource Key=Metro.ContextMenu.Background}"
+                                  BorderBrush="{zm:ThemeResource Key=Metro.ContextMenu.BorderBrush}"
+                                  BorderStyle="Border"
+                                  BorderThickness="1"
+                                  DropShadow="True">
+
+          <zm:Panel x:Name="SubmenuHost"
+                    Margin="1" />
+
+        </zm:PopupContentPresenter>
+
+      </zm:Popup>
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl Background="{zm:TemplateSkinBinding SkinPath=DisableVeilBrush}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  TopLevelHeaderInline Template  -->
+  <ControlTemplate x:Key="TopLevelHeaderInlineTemplate"
+                   TargetType="zm:HeaderedMenuItem">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            UseLayoutRounding="True">
+
+      <zm:Panel x:Name="SubmenuHost" />
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl Background="{zm:TemplateSkinBinding SkinPath=DisableVeilBrush}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  TopLevelItem Template  -->
+  <ControlTemplate x:Key="TopLevelItemTemplate"
+                   TargetType="zm:HeaderedMenuItem">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            UseLayoutRounding="True">
+
+      <!--  Header  -->
+      <zm:MenuItemHeaderPresenter x:Name="HeaderPresenter"
+
+                                  Header="{TemplateBinding Header}"
+                                  HeaderTemplate="{TemplateBinding HeaderTemplate}"
+                                  HeaderTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                  HeaderStringFormat="{TemplateBinding HeaderStringFormat}"
+
+                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  zm:DockPanel.Dock="Top"
+                                  zm:Extension.Skin="{zm:TemplateBinding Path=(zm:Extension.ActualSkin)}"
+                                  Visibility="{zm:TemplateBinding Path=ActualShowHeader,
+                                                                  Converter={zm:VisibilityConverter}}" />
+
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl Background="{zm:TemplateSkinBinding SkinPath=DisableVeilBrush}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Template Converter  -->
+  <zm:SwitchConverter x:Key="TemplateConverter">
+    <zm:Case Key="TopLevelItem" Value="{StaticResource TopLevelItemTemplate}" />
+    <zm:Case Key="TopLevelHeaderPopup" Value="{StaticResource TopLevelHeaderPopupTemplate}" />
+    <zm:Case Key="TopLevelHeaderInline" Value="{StaticResource TopLevelHeaderInlineTemplate}" />
+
+    <zm:Case Key="SubmenuItem" Value="{StaticResource SubmenuItemTemplate}" />
+    <zm:Case Key="SubmenuHeaderPopup" Value="{StaticResource SubmenuHeaderPopupTemplate}" />
+    <zm:Case Key="SubmenuHeaderInline" Value="{StaticResource SubmenuHeaderInlineTemplate}" />
+  </zm:SwitchConverter>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="MenuItemBaseStyle" TargetType="zm:HeaderedMenuItem">
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualRole, Converter={StaticResource TemplateConverter}}" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Center" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!--  MenuItem  -->
+  <zm:Style x:Key="MenuItemStyle" BasedOn="{StaticResource MenuItemBaseStyle}" TargetType="zm:HeaderedMenuItem">
+    <zm:Setter ExpandoProperty="IconTemplate" Value="{StaticResource MenuItemIconTemplate}" />
+  </zm:Style>
+
+  <zm:Style x:Key="MenuItemSkinnedStyle" BasedOn="{StaticResource MenuItemStyle}" Skin="Metro.MenuItem" TargetType="zm:MenuItem" />
+
+  <!--  StripMenuItem  -->
+  <zm:Style x:Key="StripMenuItemStyle" BasedOn="{StaticResource MenuItemBaseStyle}" TargetType="zm:StripMenuItem">
+    <zm:Setter ExpandoProperty="IconTemplate" Value="{StaticResource MenuItemIconTemplate}" />
+  </zm:Style>
+
+  <zm:Style x:Key="StripMenuItemSkinnedStyle" BasedOn="{StaticResource StripMenuItemStyle}" Skin="Metro.MenuItem" TargetType="zm:StripMenuItem" />
+
+  <!--  BarMenuItem  -->
+  <zm:Style x:Key="BarMenuItemStyle" BasedOn="{StaticResource MenuItemBaseStyle}" TargetType="zm:BarMenuItem">
+    <zm:Setter ExpandoProperty="IconTemplate" Value="{StaticResource MenuItemIconTemplate}" />
+  </zm:Style>
+
+  <zm:Style x:Key="BarMenuItemSkinnedStyle" BasedOn="{StaticResource BarMenuItemStyle}" Skin="Metro.MenuItem" TargetType="zm:BarMenuItem" />
+
+  <!--  ToggleMenuItem  -->
+  <zm:Style x:Key="ToggleMenuItemStyle" BasedOn="{StaticResource MenuItemBaseStyle}" TargetType="zm:ToggleMenuItem">
+    <zm:Setter ExpandoProperty="IconTemplate" Value="{StaticResource ToggleMenuItemIconTemplate}" />
+  </zm:Style>
+
+  <zm:Style x:Key="ToggleMenuItemSkinnedStyle" BasedOn="{StaticResource ToggleMenuItemStyle}" Skin="Metro.ToggleMenuItem" TargetType="zm:ToggleMenuItem" />
+
+  <!--  CheckBoxMenuItem  -->
+  <zm:Style x:Key="CheckBoxMenuItemStyle" BasedOn="{StaticResource MenuItemBaseStyle}" TargetType="zm:CheckBoxMenuItem">
+    <zm:Setter ExpandoProperty="IconTemplate" Value="{StaticResource CheckBoxMenuItemIconTemplate}" />
+  </zm:Style>
+
+  <zm:Style x:Key="CheckBoxMenuItemSkinnedStyle" BasedOn="{StaticResource CheckBoxMenuItemStyle}" Skin="Metro.CheckBoxMenuItem" TargetType="zm:CheckBoxMenuItem" />
+
+  <!--  RadioMenuItem  -->
+  <zm:Style x:Key="RadioMenuItemStyle" BasedOn="{StaticResource MenuItemBaseStyle}" TargetType="zm:RadioMenuItem">
+    <zm:Setter ExpandoProperty="IconTemplate" Value="{StaticResource RadioMenuItemIconTemplate}" />
+  </zm:Style>
+
+  <zm:Style x:Key="RadioMenuItemSkinnedStyle" BasedOn="{StaticResource RadioMenuItemStyle}" Skin="Metro.RadioMenuItem" TargetType="zm:RadioMenuItem" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="MenuItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource MenuItemSkinnedStyle}" TargetType="zm:MenuItem" />
+  <zm:ThemeStyle x:Key="StripMenuItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource StripMenuItemSkinnedStyle}" TargetType="zm:StripMenuItem" />
+  <zm:ThemeStyle x:Key="BarMenuItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource BarMenuItemSkinnedStyle}" TargetType="zm:BarMenuItem" />
+  <zm:ThemeStyle x:Key="ToggleMenuItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ToggleMenuItemSkinnedStyle}" TargetType="zm:ToggleMenuItem" />
+  <zm:ThemeStyle x:Key="CheckBoxMenuItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource CheckBoxMenuItemSkinnedStyle}" TargetType="zm:CheckBoxMenuItem" />
+  <zm:ThemeStyle x:Key="RadioMenuItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource RadioMenuItemSkinnedStyle}" TargetType="zm:RadioMenuItem" />
+
+</zm:ThemeResourceDictionary>

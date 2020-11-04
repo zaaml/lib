@@ -1,0 +1,41 @@
+<!--
+  <copyright file="ResizeAdorner.xaml" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+    Copyright (c) zaaml. All rights reserved.
+  </copyright>-->
+
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <ControlTemplate x:Key="Template"
+                   TargetType="zm:ArtboardSelectionAdorner">
+    <zm:AdornerTemplateRoot Margin="-2">
+
+      <Border BorderBrush="Blue"
+              BorderThickness="2" />
+
+      <zm:ResizableBorderControl x:Name="ResizableBorderHandle"
+                                 Margin="-2"
+                                 BorderBrush="Transparent"
+                                 BorderThickness="6" />
+      <!--<Grid Margin="1">
+        <Rectangle x:Name="topThumb"  VerticalAlignment="Top" HorizontalAlignment="Center" zm:ResizableHandler.Handler="Top"/>
+        <Rectangle x:Name="topLeftThumb"  VerticalAlignment="Top" HorizontalAlignment="Left" zm:ResizableHandler.Handler="TopLeft"/>
+        <Rectangle x:Name="topRightThumb"  VerticalAlignment="Top" HorizontalAlignment="Right" zm:ResizableHandler.Handler="TopRight"/>
+        <Rectangle x:Name="leftThumb"  VerticalAlignment="Center" HorizontalAlignment="Left" zm:ResizableHandler.Handler="Left"/>
+        <Rectangle x:Name="rightThumb"  VerticalAlignment="Center" HorizontalAlignment="Right" zm:ResizableHandler.Handler="Right"/>
+        <Rectangle x:Name="bottomThumb"  VerticalAlignment="Bottom" HorizontalAlignment="Center" zm:ResizableHandler.Handler="Bottom"/>
+        <Rectangle x:Name="bottomLeftThumb"  VerticalAlignment="Bottom" HorizontalAlignment="Left" zm:ResizableHandler.Handler="BottomLeft"/>
+        <Rectangle x:Name="bottomRightThumb"  VerticalAlignment="Bottom" HorizontalAlignment="Right" zm:ResizableHandler.Handler="BottomRight"/>
+      </Grid>-->
+
+    </zm:AdornerTemplateRoot>
+  </ControlTemplate>
+
+  <zm:Style x:Key="ArtboardSelectionAdornerStyle" TargetType="zm:ArtboardSelectionAdorner">
+    <zm:Setter Property="Template" Value="{StaticResource Template}" />
+  </zm:Style>
+
+  <zm:ThemeStyle x:Key="ArtboardSelectionAdornerThemeStyle" BasedOn="{StaticResource ArtboardSelectionAdornerStyle}" TargetType="zm:ArtboardSelectionAdorner" />
+
+</ResourceDictionary>

@@ -1,0 +1,50 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="CalendarButton.xaml"/>
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+  
+  <!-- Template -->
+  <ControlTemplate x:Key="CalendarButtonTemplate" TargetType="CalendarButton">
+    <zm:ControlTemplateRoot Background="Transparent" 
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <Border BorderThickness="{TemplateBinding BorderThickness}" 
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}">
+        
+        <ContentControl x:Name="Content" 
+                        IsTabStop="False" 
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" 
+                        Foreground="{TemplateBinding Foreground}" 
+                        Content="{TemplateBinding Content}"
+                        ContentTemplate="{TemplateBinding ContentTemplate}" 
+                        FontSize="{TemplateBinding FontSize}"/>
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="CalendarButtonBaseStyle" TargetType="CalendarButton">
+    <zm:Setter Property="Template" Value="{StaticResource CalendarButtonTemplate}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="CalendarButtonStyle" TargetType="CalendarButton" BasedOn="{StaticResource CalendarButtonBaseStyle}" 
+            Skin="Metro.StandardControls.CalendarButton">
+
+    <zm:SetterGroup ValuePathSource="Skin" SettersSource="{StaticResource SkinSetter}"/>
+    
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="CalendarButtonThemeStyle" TargetType="CalendarButton" BasedOn="{StaticResource CalendarButtonStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

@@ -1,0 +1,107 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="ReadOnly" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!-- FocusStates States -->
+    <zm:VisualStateGroup Name="FocusStates">
+      <zm:VisualState Name="Unfocused" />
+      <zm:VisualState Name="Focused" />
+    </zm:VisualStateGroup>
+
+    <!-- SelectionStates States -->
+    <zm:VisualStateGroup Name="SelectionStates">
+      <zm:VisualState Name="Selected" />
+      <zm:VisualState Name="Unselected" />
+      <zm:VisualState Name="SelectedInactive" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="BackstageItemTemplate" TargetType="zm:BackstageViewItem">
+    <zm:ControlTemplateRoot x:Name="TemplateRoot"
+                                Background="Transparent"
+                                MinHeight="32"
+                                VisualStateGroups="{StaticResource VisualStates}">
+
+      <!-- Face -->
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+
+        <!--  Header Content  -->
+        <zm:IconContentPresenter Margin="{TemplateBinding Padding}"
+                                 HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                 VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                 zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                 Content="{TemplateBinding Header}"
+                                 ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                 Icon="{TemplateBinding Icon}"
+                                 IconDistance="{TemplateBinding IconDistance}"
+                                 IconDock="{TemplateBinding IconDock}"
+                                 ShowContent="{TemplateBinding ShowContent}"
+                                 ShowIcon="{TemplateBinding ShowIcon}" />
+      </Border>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Style -->
+  <zm:Style x:Key="BackstageViewItemBaseStyle" TargetType="zm:BackstageViewItem">
+    <zm:Setter Property="BorderThickness" Value="0"/>
+    <zm:Setter Property="Padding" Value="20,10"/>
+    <zm:Setter Property="Template" Value="{StaticResource BackstageItemTemplate}" />
+  </zm:Style>
+
+  <!-- Skinned Style -->
+  <zm:Style x:Key="BackstageViewItemStyle" TargetType="zm:BackstageViewItem" BasedOn="{StaticResource BackstageViewItemBaseStyle}" Skin="Metro.BackstageViewItem">
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!-- Foreground -->
+      <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1" />
+      </zm:SetterGroup>
+
+      <!-- Background -->
+      <zm:SetterGroup Property="Background" ValuePath="Background">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1" />
+      </zm:SetterGroup>
+
+      <!-- BorderBrush -->
+      <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1" />
+        <zm:Setter VisualState="Focused" ValuePath="Focused" Priority="2" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="BackstageViewItemThemeStyle" TargetType="zm:BackstageViewItem" BasedOn="{StaticResource BackstageViewItemStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

@@ -1,0 +1,11 @@
+﻿<zm:ThemeSkinResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                                xmlns:s="clr-namespace:System;assembly=mscorlib"
+                                xmlns:zm="http://schemas.zaaml.com/xaml"
+                                xmlns:zmb="http://schemas.zaaml.com/build"
+                                mc:Ignorable="zmb"
+                                Name="Light">
+
+
+</zm:ThemeSkinResourceDictionary>

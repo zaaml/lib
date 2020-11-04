@@ -1,0 +1,32 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!-- FocusStates States -->
+    <zm:VisualStateGroup Name="FocusStates">
+      <zm:VisualState Name="Focused" />
+      <zm:VisualState Name="Unfocused" />
+    </zm:VisualStateGroup>
+
+    <!-- SelectionStates States -->
+    <zm:VisualStateGroup Name="SelectionStates">
+      <zm:VisualState Name="Selected" />
+      <zm:VisualState Name="Unselected" />
+      <zm:VisualState Name="SelectedUnfocused" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+</zm:ThemeResourceDictionary>

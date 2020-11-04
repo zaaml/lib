@@ -1,0 +1,38 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Thickness Converter -->
+  <zm:SwitchConverter x:Key="ThicknessConverter">
+    <zm:Case Key="Vertical" Value="1,0,0,0" />
+    <zm:Default Value="0,1,0,0" />
+  </zm:SwitchConverter>
+  
+  <!-- Template -->
+  <ControlTemplate x:Key="Template" TargetType="zm:SeparatorControl">
+    <Border BorderBrush="{TemplateBinding Background}"
+            BorderThickness="{zm:TemplateBinding Path=Orientation, Converter={StaticResource ThicknessConverter}}"/>
+  </ControlTemplate>
+
+  <!-- Style -->
+  <zm:Style x:Key="SeparatorControlStyle" TargetType="zm:SeparatorControl">
+    <zm:Setter Property="Margin" Value="2" />
+    <zm:Setter Property="Template" Value="{StaticResource Template}" />
+  </zm:Style>
+
+  <!-- Skinned Style -->
+  <zm:Style x:Key="SeparatorControlSkinnedStyle" TargetType="zm:SeparatorControl" BasedOn="{StaticResource SeparatorControlStyle}" 
+            Skin="Metro.SeparatorControl">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Background" ValuePath="Stroke" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="SeparatorControlThemeStyle" TargetType="zm:SeparatorControl" BasedOn="{StaticResource SeparatorControlSkinnedStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

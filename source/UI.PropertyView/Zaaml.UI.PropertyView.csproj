@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+         Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<RootNamespace>Zaaml.UI.Controls.PropertyView</RootNamespace>
+		<UseWPF>true</UseWPF>
+		<ExposeExternalInternals>True</ExposeExternalInternals>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
+		<ProjectReference Include="..\PresentationCore\Zaaml.PresentationCore.csproj" />
+		<ProjectReference Include="..\UI\Zaaml.UI.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.3.7">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+</Project>

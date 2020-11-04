@@ -1,0 +1,133 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+														xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+														xmlns:zm="http://schemas.zaaml.com/xaml" 
+														xmlns:zmb="http://schemas.zaaml.com/build" 
+														xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+														mc:Ignorable="zmb">
+
+  <ControlTemplate x:Key="ScrollViewerTemplate" TargetType="ScrollViewer">
+    <ScrollContentPresenter x:Name="ScrollContentPresenter" 
+                            Cursor="{zm:TemplateBinding Path=Cursor}"
+                            Margin="{zm:TemplateBinding Path=Padding}"
+                            ContentTemplate="{zm:TemplateBinding Path=ContentTemplate}" />
+  </ControlTemplate>
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="ReadOnly" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!-- Button  Visual States -->
+  <zm:VisualStateGroupCollection x:Key="ButtonVisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!-- Button Template -->
+  <ControlTemplate x:Key="ButtonTemplate" TargetType="Button">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}" 
+                            Height="10" 
+                            VisualStateGroups="{StaticResource ButtonVisualStates}">
+      <Path Fill="{TemplateBinding Foreground}" 
+            HorizontalAlignment="Center" 
+            VerticalAlignment="Center" 
+            RenderTransform="{zm:Static Member=zm:Transforms.RotateCCW_90}" 
+            RenderTransformOrigin="0.5, 0.5"
+            Data="M 0 0 L 0 7 L 4 3.5 Z" />
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <zm:Style x:Key="ButtonStyle" TargetType="Button" Skin="Metro.MenuScrollViewer.Button">
+    <zm:Setter Property="Template" Value="{StaticResource ButtonTemplate}" />
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <!-- Background -->
+      <zm:SetterGroup Property="Background" ValuePath="Background">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
+      </zm:SetterGroup>
+
+      <!-- Foreground -->
+      <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+
+  </zm:Style>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="PopupMenuScrollViewerTemplate" TargetType="zm:MenuScrollViewer">
+    <zm:ControlTemplateRoot x:Name="TemplateRoot" 
+                            Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- LineUp -->
+        <Button Grid.Row="0" 
+                x:Name="PART_ScrollUpElement"
+                Margin="-1"
+                Padding="1"
+                Style="{zm:NativeStyle Style={StaticResource ButtonStyle}}"
+                Visibility="{zm:TemplateBinding Path=CanScrollUp, Converter={zm:VisibilityConverter}}" />
+
+        <!-- ScrollViewer -->
+        <ScrollViewer Grid.Row="1"
+                      x:Name="PART_ScrollViewer"
+                      Padding="{TemplateBinding Padding}" 
+                      VerticalScrollBarVisibility="Auto" 
+                      Template="{StaticResource ScrollViewerTemplate}">
+          <ContentPresenter />
+        </ScrollViewer>
+
+        <!-- LineDown -->
+        <Button Grid.Row="2"
+                x:Name="PART_ScrollDownElement"
+                Margin="-1"
+                Padding="1"
+                Style="{zm:NativeStyle Style={StaticResource ButtonStyle}}"
+                Visibility="{zm:TemplateBinding Converter={zm:VisibilityConverter}, Path=CanScrollDown}"
+                RenderTransformOrigin="0.5, 0.5">
+          <Button.RenderTransform>
+            <ScaleTransform ScaleY="-1" />
+          </Button.RenderTransform>
+        </Button>
+
+      </Grid>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Style -->
+  <zm:Style x:Key="PopupMenuScrollViewerStyle" TargetType="zm:MenuScrollViewer">
+    <zm:Setter Property="Padding" Value="1" />
+    <zm:Setter Property="Template" Value="{StaticResource PopupMenuScrollViewerTemplate}" />
+  </zm:Style>
+
+  <!-- Skinned Style -->
+  <zm:Style x:Key="PopupMenuScrollViewerSkinnedStyle" TargetType="zm:MenuScrollViewer" BasedOn="{StaticResource PopupMenuScrollViewerStyle}" />
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="PopupMenuScrollViewerThemeStyle" TargetType="zm:MenuScrollViewer" BasedOn="{StaticResource PopupMenuScrollViewerSkinnedStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

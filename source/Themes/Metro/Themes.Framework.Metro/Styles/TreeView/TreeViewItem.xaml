@@ -1,0 +1,107 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="ToggleButtonVisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!-- CheckStates States -->
+    <zm:VisualStateGroup Name="CheckStates">
+      <zm:VisualState Name="Checked" />
+      <zm:VisualState Name="Unchecked" />
+      <zm:VisualState Name="Indeterminate" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!-- Glyph Setter -->
+  <zm:SetterCollection x:Key="GlyphSetter">
+    <zm:SetterGroup ValuePathSource="ThemeResource" ValuePath="Metro.StandardControls.TreeViewItem.Glyph">
+
+      <!-- Brush -->
+      <zm:SetterGroup Property="Brush" ValuePath="Brush">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
+      </zm:SetterGroup>
+
+      <!-- Data -->
+      <zm:SetterGroup Property="Data" ValuePath="Data">
+        <zm:Setter VisualState="Checked" ValuePath="Expanded" />
+        <zm:Setter VisualState="Unchecked" ValuePath="Collapsed" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+  </zm:SetterCollection>
+
+  <!-- ToggleButton Template -->
+	<ControlTemplate x:Key="ToggleButtonTemplate" TargetType="ToggleButton">
+		<zm:ControlTemplateRoot Background="Transparent" 
+		                        VisualStateGroups="{StaticResource ToggleButtonVisualStates}">
+			<!-- Glyph -->
+      <zm:PathIcon Style="{zm:ThemeResource Key=Metro.StandardControls.TreeViewItem.Glyph.Style}"  
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   zm:Extension.SettersSource="{StaticResource GlyphSetter}" />
+
+		</zm:ControlTemplateRoot>
+	</ControlTemplate>
+
+  <!-- Header Template -->
+  <ControlTemplate x:Key="HeaderTemplate" TargetType="zm:ContentControl">
+    <Border Background="{TemplateBinding Background}">
+      <zm:ContentPresenter HorizontalAlignment="Stretch" 
+                           VerticalAlignment="Stretch"/>
+    </Border>
+  </ControlTemplate>
+
+  <!-- Header VisualState Converter -->
+  <zm:SwitchConverter x:Key="HeaderVisualStateConverter">
+    <zm:Case Key="True" Value="HeaderMouseOver" />
+    <zm:Default Value="HeaderNormal"/>
+  </zm:SwitchConverter>
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!-- Selection States -->
+    <zm:VisualStateGroup Name="SelectionStates">
+      <zm:VisualState Name="Selected" />
+      <zm:VisualState Name="Unselected" />
+      <zm:VisualState Name="SelectedInactive" />
+    </zm:VisualStateGroup>
+
+    <!-- Header States -->
+    <zm:VisualStateGroup Name="HeaderStates">
+      <zm:VisualState Name="HeaderNormal" />
+      <zm:VisualState Name="HeaderMouseOver" />
+    </zm:VisualStateGroup>
+
+    <!-- ExpansionStates States -->
+    <zm:VisualStateGroup Name="ExpansionStates">
+      <zm:VisualState Name="Expanded" />
+      <zm:VisualState Name="Collapsed" />
+    </zm:VisualStateGroup>
+    
+    <!-- HasItems States -->
+    <zm:VisualStateGroup Name="HasItemsStates">
+      <zm:VisualState Name="HasItems" />
+      <zm:VisualState Name="NoItems" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+</ResourceDictionary>

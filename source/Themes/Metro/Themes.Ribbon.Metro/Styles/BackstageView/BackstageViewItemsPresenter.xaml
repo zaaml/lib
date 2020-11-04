@@ -1,0 +1,58 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <!--  Control Template  -->
+  <ControlTemplate x:Key="BackstageViewItemsPresenterTemplate"
+                   TargetType="zm:BackstageViewItemsPresenter">
+    <zm:ControlTemplateRoot UseLayoutRounding="True">
+
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+
+        <zm:FlexPanel HorizontalAlignment="Stretch"
+                      Orientation="Vertical"
+                      Stretch="Fill">
+
+          <!--  Header  -->
+          <zm:FlexPanel.GenericDefinition>
+            <zm:FlexDefinition Length="Auto"
+                               StretchDirection="None" />
+          </zm:FlexPanel.GenericDefinition>
+
+          <ContentPresenter Content="{zm:TemplateBinding Path=Header}"
+                            ContentTemplate="{zm:TemplateBinding Path=HeaderTemplate}" />
+
+          <!--  Items Host  -->
+          <zm:BackstageViewItemsPanel x:Name="ItemsHost"
+                                      HorizontalAlignment="Stretch"
+                                      Background="Transparent" />
+
+          <!--  Footer  -->
+          <ContentPresenter zm:FlexDefinition.ShrinkPriority="1"
+                            zm:FlexDefinition.StretchDirection="Both"
+                            Content="{zm:TemplateBinding Path=Footer}"
+                            ContentTemplate="{zm:TemplateBinding Path=FooterTemplate}" />
+
+        </zm:FlexPanel>
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Styles  -->
+  <zm:Style x:Key="BackstageViewItemsPresenterBaseStyle" TargetType="zm:BackstageViewItemsPresenter">
+    <zm:Setter Property="Template" Value="{StaticResource BackstageViewItemsPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Styles  -->
+  <zm:Style x:Key="BackstageViewItemsPresenterStyle" BasedOn="{StaticResource BackstageViewItemsPresenterBaseStyle}" Skin="Metro.BackstageViewItemsPresenter" TargetType="zm:BackstageViewItemsPresenter" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="BackstageViewItemsPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource BackstageViewItemsPresenterStyle}" TargetType="zm:BackstageViewItemsPresenter" />
+
+</zm:ThemeResourceDictionary>

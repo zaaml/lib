@@ -1,0 +1,53 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="DockGridSplitterTemplate"
+                   TargetType="zm:DockGridSplitter">
+    <zm:ControlTemplateRoot MinWidth="3"
+                            MinHeight="3"
+                            Background="Transparent">
+
+      <!--  Horizontal Template  -->
+      <Grid x:Name="HorizontalTemplate"
+            Height="4"
+            Visibility="Collapsed" />
+
+      <!--  Vertical Template  -->
+      <Grid x:Name="VerticalTemplate"
+            Width="4"
+            Visibility="Collapsed" />
+
+      <zm:Extension.Triggers>
+        <zm:Trigger Source="{zm:TemplateBinding}" Property="VerticalAlignment" Value="Stretch">
+          <zm:Setter TargetName="VerticalTemplate" Property="Visibility" Value="Visible" />
+        </zm:Trigger>
+
+        <zm:Trigger Source="{zm:TemplateBinding}" Property="HorizontalAlignment" Value="Stretch">
+          <zm:Setter TargetName="HorizontalTemplate" Property="Visibility" Value="Visible" />
+        </zm:Trigger>
+      </zm:Extension.Triggers>
+    </zm:ControlTemplateRoot>
+
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="DockGridSplitterBaseStyle" TargetType="zm:DockGridSplitter">
+    <zm:Setter Property="ShowsPreview" Value="False" />
+    <zm:Setter Property="Template" Value="{StaticResource DockGridSplitterTemplate}" />
+    <zm:SetterGroup ValuePathSource="ThemeResource">
+      <zm:Setter ValuePath="Metro.Docking.GridSplitterBackground" Property="Background" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="DockGridSplitterStyle" BasedOn="{StaticResource DockGridSplitterBaseStyle}" TargetType="zm:DockGridSplitter" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="DockGridSplitterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource DockGridSplitterStyle}" TargetType="zm:DockGridSplitter" />
+
+</zm:ThemeResourceDictionary>

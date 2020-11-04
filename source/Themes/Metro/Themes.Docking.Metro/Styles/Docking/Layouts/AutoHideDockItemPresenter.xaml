@@ -1,0 +1,58 @@
+<!--
+  <copyright file="AutoHideLayoutTemplate.xaml" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+    Copyright (c) zaaml. All rights reserved.
+  </copyright>-->
+
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  DockItemHostTemplate  -->
+  <ControlTemplate x:Key="DockItemHostTemplate"
+                   TargetType="zm:ContentControl">
+
+    <zm:ControlTemplateRoot>
+
+      <!--  Shadow  -->
+      <zm:ShadowChrome Margin="-6"
+                       IsHitTestVisible="False" />
+
+      <zm:ContentPresenter Content="{TemplateBinding Content}" />
+    </zm:ControlTemplateRoot>
+
+  </ControlTemplate>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="AutoHideDockItemPresenterTemplate"
+                   TargetType="zm:AutoHideDockItemPresenter">
+    <zm:ControlTemplateRoot>
+
+      <!--  DockItemGrid  -->
+      <Grid x:Name="DockItemGrid">
+
+        <!--  DockItemHost  -->
+        <zm:ContentControl x:Name="DockItemHost"
+                           Template="{StaticResource DockItemHostTemplate}" />
+
+        <!--  GridSplitter  -->
+        <zm:DockGridSplitter x:Name="GridSplitter" />
+      </Grid>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="AutoHideDockItemPresenterBaseStyle" TargetType="zm:AutoHideDockItemPresenter">
+    <zm:Setter Property="Template" Value="{StaticResource AutoHideDockItemPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="AutoHideDockItemPresenterStyle" BasedOn="{StaticResource AutoHideDockItemPresenterBaseStyle}" TargetType="zm:AutoHideDockItemPresenter" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="AutoHideDockItemPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource AutoHideDockItemPresenterStyle}" TargetType="zm:AutoHideDockItemPresenter" />
+
+</zm:ThemeResourceDictionary>

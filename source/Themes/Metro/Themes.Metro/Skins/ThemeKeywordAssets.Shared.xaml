@@ -1,0 +1,21 @@
+<zm:ThemeResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:s="clr-namespace:System;assembly=mscorlib"
+    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <!-- Application font style -->
+  <FontFamily x:Key="Metro.Application.FontFamily">Lucida Sans Unicode, Lucida Grande</FontFamily>
+  <s:Double x:Key="Metro.Application.FontSize">11</s:Double>
+  <FontWeight x:Key="Metro.Application.FontWeight">Normal</FontWeight>
+  <FontStretch x:Key="Metro.Application.FontStretch">Normal</FontStretch>
+  <FontStyle x:Key="Metro.Application.FontStyle">Normal</FontStyle>
+
+  <!-- Control font style  -->
+  <FontFamily x:Key="Metro.Control.FontFamily">Lucida Sans Unicode, Lucida Grande</FontFamily>
+  <s:Double x:Key="Metro.Control.FontSize">11</s:Double>
+  <FontWeight x:Key="Metro.Control.FontWeight">Normal</FontWeight>
+  <FontStretch x:Key="Metro.Control.FontStretch">Normal</FontStretch>
+  <FontStyle x:Key="Metro.Control.FontStyle">Normal</FontStyle>
+
+</zm:ThemeResourceDictionary>

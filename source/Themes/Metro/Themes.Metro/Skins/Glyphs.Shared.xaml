@@ -1,0 +1,70 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <s:String x:Key="Metro.Glyphs.AutoHide">M 0,0L 256,0M 0,0L 0,256M 80,144L 96,144L 96,64L 128,64L 128,144L 160,144L 160,48L 80,48L 80,144 Z M 112,160L 48,160L 48,144L 192,144L 192,160L 128,160L 128,224L 112,224L 112,160 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Menu">M 64,96L 128,160L 192,96L 64,96 Z M 0,0L 256,0M 0,0L 0,256</s:String>
+  <s:String x:Key="Metro.Glyphs.MenuOverflowed">M 0,0L 256,0M 0,0L 0,256M 64,128L 128,192L 192,128L 64,128 Z M 192,96L 64,96L 64,64L 192,64L 192,96 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Close">M 0,0L 256,0M 0,0L 0,256M 187,204L 128,145L 69,204L 52,187L 111,128L 52,69L 69,52L 128,111L 187,52L 204,69L 145,128L 204,187L 187,204 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.ToolBar.DropDown">M 0,0L 256,0M 0,0L 0,256M 64,128L 128,192L 192,128L 64,128 Z M 192,96L 64,96L 64,64L 192,64L 192,96 Z</s:String>
+  <!-- TODO Need Refactoring -->
+  <s:String x:Key="Metro.Glyphs.SideBarButtonArrow.Left">M 114,100L 126,112L 122,112L 118,112L 102,96L 118,80L 122,80L 126,80L 114,92L 142,92L 142,100L 114,100 Z M 122,62C 141,62 156,77 156,96C 156,115 141,130 122,130C 103,130 88,115 88,96C 88,77 103,62 122,62 Z M 122,67C 138,67 151,80 151,96C 151,112 138,125 122,125C 106,125 93,112 93,96C 93,80 106,67 122,67 Z</s:String>
+
+
+  <!-- Window Header Glyphs -->
+  <s:String x:Key="Metro.Glyphs.LightDark.Window.Header.CloseButton">M 11.78,4L13.9,6.12 11.07,8.95 13.9,11.78 11.78,13.9 8.95,11.07 6.12,13.9 4,11.78 6.83,8.95 4,6.12 6.12,4 8.95,6.83 11.78,4z M 0,0 L 18,18 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.LightDark.Window.Header.MaximizeButton">M 4,4L14,4 14,14 4,14 4,4z M5,7L5,13 13,13 13,7 5,7z M 0,0 L 18,18 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.LightDark.Window.Header.RestoreButton">M 4,6L6,6 6,4 14,4 14,12 12,12 12,14 4,14 4,6z M13,5L7,5 7,6 12,6 12,11 13,11 13,5z M5,8L5,13 11,13 11,8 5,8z M 0,0 L 18,18 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.LightDark.Window.Header.MinimizeButton">M 4,11L14,11 14,13 4,13 4,11z M 0,0 L 18,18 Z</s:String>
+
+  <s:String x:Key="Metro.Glyphs.Office.Window.Header.CloseButton">M 17,6L19,6 19,7 20,7 20,8 21,8 21,7 22,7 22,6 24,6 24,8 23,8 23,9 22,9 22,10 23,10 23,11 24,11 24,13 22,13 22,12 21,12 21,11 20,11 20,12 19,12 19,13 17,13 17,11 18,11 18,10 19,10 19,9 18,9 18,8 17,8 17,6 Z M 0,0 L 41,18 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Office.Window.Header.MaximizeButton">M 7,6L17,6 17,14 7,14 7,6z M8,9L8,13 16,13 16,9 8,9z M 0,0 L 24,18 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Office.Window.Header.RestoreButton">M 10,6L17,6 17,12 14,12 14,15 7,15 7,9 10,9 10,6z M8,11L8,14 13,14 13,12 13,11 10,11 8,11z M11,8L11,9 14,9 14,11 16,11 16,8 11,8 Z M 0,0 L 24,18 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Office.Window.Header.MinimizeButton">M 7,12 H 16 V 14 H 7 V 12 Z M 0,0 L 24,18 Z</s:String>
+
+  <!-- AppWindow Header Glyphs -->
+  <s:String x:Key="Metro.Glyphs.AppWindow.Header.CloseButton">F1M17.23,6.29L18.29,5.23 22,8.94 25.71,5.23 26.77,6.29 23.06,10 26.77,13.71 25.71,14.77 22,11.06 18.29,14.77 17.23,13.71 20.94,10 17.23,6.29z M 0,0 Z M 44,20 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.AppWindow.Header.MaximizeButton">F1M27,5L17,5 17,15 27,15 27,5z M18,14L18,6 26,6 26,14 18,14z M 0,0 Z M 44,20 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.AppWindow.Header.RestoreButton">F1M17,7L19,7 19,5 27,5 27,13 25,13 25,15 17,15 17,7z M25,7L25,12 26,12 26,6 20,6 20,7 25,7z M18,8L18,14 24,14 24,8 18,8z M 0,0 Z M 44,20 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.AppWindow.Header.MinimizeButton">F1M17,10L27,10 27,11 17,11 17,10z M 0,0 Z M 44,20 Z</s:String>
+
+
+  <!-- Glyphs -->
+  <s:String x:Key="MenuGlyphGeometry">M 0 0 H 4 L 2 2 Z</s:String>
+  <s:String x:Key="OverflowGlyphGeometry">M 0 0 H 6 V 1 H 0 Z M 1 5 H 5 L 3 7 Z</s:String>
+  <s:String x:Key="PlusGlyphGeometry">M 0 4 H 8 Z M 4 0 V 8 Z</s:String>
+  <s:String x:Key="CloseGlyphGeometry">M 0 0 L 8 8 M 0 8 L 8 0</s:String>
+  <s:String x:Key="WindowCtxMenuGlyphGeometry">M 0 0 H 4 L 2 2 Z</s:String>
+  <s:String x:Key="AutoHideGlyph">M 192,320L 544,320L 544,352L 338.514,352L 192,352L 192,320 Z M 352,512L 384,512L 384,352L 352,352M 256,320L 288,320L 288,115.2L 288,92.4445L 256,92.4445L 256,320 Z M 480,96.0001L 480,64.0002L 256,64.0002L 256,96.0001L 383.833,96.0001L 480,96.0001 Z M 384,320L 480,320L 480,92.4444L 384,92.4444</s:String>
+
+  <s:String   x:Key="Metro.Glyphs.ButtonSpinner">F1 M 40,140L 200,300L 360,140</s:String>
+
+  <!-- Arrow Glyphs -->
+  <s:String x:Key="Metro.Glyphs.Arrows8Px.Left">F1 M 6,0L 2,4L 6,8L 6,0 Z M 0,0 Z M 8,8 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Arrows8Px.Up">F1 M 8,6L 4,2L 0,6L 8,6 Z M 0,0 Z M 8,8 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Arrows8Px.Right">F1 M 2,8L 6,4L 2,0L 2,8 Z M 0,0 Z M 8,8 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Arrows8Px.Down">F1 M 0,2L 4,6L 8,2L 0,2 Z M 0,0 Z M 8,8 Z</s:String>
+
+  <s:String x:Key="Metro.Glyphs.Arrows8Px.BottomRight">M1.2,6.8L6.8,1.2 6.8,6.8 1.2,6.8z M 0,0 Z M 8,8 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Arrows8Px.TopRight">M1.2,1.2L6.8,6.8 6.8,1.2 1.2,1.2z M 0,0 Z M 8,8 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Arrows8Px.BottomLeft">M6.8,6.8L1.2,1.2 1.2,6.8 6.8,6.8z M 0,0 Z M 8,8 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.Arrows8Px.TopLeft">M6.8,1.2L1.2,6.8 1.2,1.2 6.8,1.2z M 0,0 Z M 8,8 Z</s:String>
+
+  <!-- Angle Arrow Glyphs -->
+  <s:String x:Key="Metro.Glyphs.AngleArrows7Px.Left">F1 M 0.51,3.5L 4.16,0L 6.49,0L 2.84,3.5L 6.49,7L 4.16,7L 0.51,3.5 Z M 0,0 Z M 7,7 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.AngleArrows7Px.Up">F1 M 3.5,0.51L 7,4.16L 7,6.49L 3.5,2.84L 0,6.49L 0,4.16L 3.5,0.51 Z M 0,0 Z M 7,7 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.AngleArrows7Px.Right">F1 M 6.49,3.5L 2.84,7L 0.51,7L 4.16,3.5L 0.51,0L 2.84,0L 6.49,3.5 Z M 0,0 Z M 7,7 Z</s:String>
+  <s:String x:Key="Metro.Glyphs.AngleArrows7Px.Down">F1 M 3.5,6.49L 0,2.84L 0,0.51L 3.5,4.16L 7,0.51L 7,2.84L 3.5,6.49 Z M 0,0 Z M 7,7 Z</s:String>
+
+  <!-- Circle Arrow Glyphs-->
+  <s:String x:Key="Metro.Glyphs.Stroke.CircleArrows13Px.Left">M1.76,1.76C-0.59,4.1 -0.59,7.9 1.76,10.24 4.1,12.59 7.9,12.59 10.24,10.24 12.59,7.9 12.59,4.1 10.24,1.76 7.9,-0.59 4.1,-0.59 1.76,1.76z M6.35,2.82L3.17,6 6.35,9.18 M9.63,6L3.16,6</s:String>
+  <s:String x:Key="Metro.Glyphs.Stroke.CircleArrows13Px.Up">M1.76,1.76C4.1,-0.59 7.9,-0.59 10.24,1.76 12.59,4.1 12.59,7.9 10.24,10.24 7.9,12.59 4.1,12.59 1.76,10.24 -0.59,7.9 -0.59,4.1 1.76,1.76z M2.82,6.35L6,3.17 9.18,6.35 M6,9.63L6,3.16</s:String>
+  <s:String x:Key="Metro.Glyphs.Stroke.CircleArrows13Px.Right">M10.24,1.76C12.59,4.1 12.59,7.9 10.24,10.24 7.9,12.59 4.1,12.59 1.76,10.24 -0.59,7.9 -0.59,4.1 1.76,1.76 4.1,-0.59 7.9,-0.59 10.24,1.76z M5.65,2.82L8.83,6 5.65,9.18 M2.37,6L8.84,6</s:String>
+  <s:String x:Key="Metro.Glyphs.Stroke.CircleArrows13Px.Down">M1.76,10.24C4.1,12.59 7.9,12.59 10.24,10.24 12.59,7.9 12.59,4.1 10.24,1.76 7.9,-0.59 4.1,-0.59 1.76,1.76 -0.59,4.1 -0.59,7.9 1.76,10.24z M2.82,5.65L6,8.83 9.18,5.65 M6,2.37L6,8.84</s:String>
+  <s:String x:Key="Metro.Glyphs.Stroke.CircleArrows13Px.BottomRight">M12,6C12,9.31 9.31,12 6,12 2.69,12 0,9.31 0,6 0,2.69 2.69,0 6,0 9.31,0 12,2.69 12,6z M8,3.5L8,8 3.5,8 M3.43,3.43L8.01,8.01</s:String>
+  <s:String x:Key="Metro.Glyphs.Stroke.CircleArrows13Px.TopRight">M12,6C12,2.69 9.31,0 6,0 2.69,0 0,2.69 0,6 0,9.31 2.69,12 6,12 9.31,12 12,9.31 12,6z M8,8.5L8,4 3.5,4 M3.43,8.57L8.01,3.99</s:String>
+  <s:String x:Key="Metro.Glyphs.Stroke.CircleArrows13Px.BottomLeft">M0,6C0,9.31 2.69,12 6,12 9.31,12 12,9.31 12,6 12,2.69 9.31,0 6,0 2.69,0 0,2.69 0,6z M4,3.5L4,8 8.5,8 M8.57,3.43L3.99,8.01</s:String>
+  <s:String x:Key="Metro.Glyphs.Stroke.CircleArrows13Px.TopLeft">M0,6C0,2.69 2.69,0 6,0 9.31,0 12,2.69 12,6 12,9.31 9.31,12 6,12 2.69,12 0,9.31 0,6z M4,8.5L4,4 8.5,4 M8.57,8.57L3.99,3.99</s:String>
+
+</zm:ThemeResourceDictionary>

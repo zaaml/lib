@@ -1,0 +1,68 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb d">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="ItemCommon.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!-- Template triggers -->
+  <zm:TriggerCollection x:Key="TriggerCollection">
+    <zm:DataTrigger Binding="{zm:TemplateBinding Path=ActualLayoutKind, Converter={StaticResource IsRawContentConverter}}" Value="False">
+      <zm:Setter TargetName="Border" Property="Visibility" Value="Visible" />
+      <zm:Setter TargetName="Border" Property="BorderThickness" Value="{zm:TemplateBinding Path=BorderThickness}" />
+      <zm:Setter TargetName="HeaderPresenter" Property="Visibility" Value="Visible" />
+    </zm:DataTrigger>
+  </zm:TriggerCollection>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="DockItemTemplate"
+                   TargetType="zm:DockItem">
+    <zm:ControlTemplateRoot x:Name="TemplateRoot"
+                            zm:Extension.TriggersSource="{StaticResource TriggerCollection}"
+                            Background="{TemplateBinding Background}"
+                            VisualStateGroups="{StaticResource DockItemVisualStates}">
+
+      <!--  Frame  -->
+      <Border x:Name="Border"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              Visibility="Collapsed" />
+
+      <zm:DockPanel Margin="{Binding ElementName=Border, Path=BorderThickness}">
+
+        <!--  HeaderPresenter  -->
+        <zm:DockItemHeaderPresenter x:Name="HeaderPresenter"
+                                    zm:DockPanel.Dock="Top"
+                                    Visibility="Collapsed" />
+
+        <!--  Content  -->
+        <zm:DockItemContentPresenter x:Name="ContentPresenter"
+                                     Content="{zm:TemplateBinding Path=Content}" />
+      </zm:DockPanel>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base style  -->
+  <zm:Style x:Key="DockItemBaseStyle" Skin="Metro.Docking.DockItem" TargetType="zm:DockItem">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Template" Value="{StaticResource DockItemTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="DockItemStyle" BasedOn="{StaticResource DockItemBaseStyle}" TargetType="zm:DockItem">
+    <zm:SetterGroup SettersSource="{StaticResource DockItemSkinSetters}" ValuePathSource="Skin" />
+  </zm:Style>
+
+  <zm:Style x:Key="DocumentDockItemStyle" BasedOn="{StaticResource DockItemBaseStyle}" TargetType="zm:DocumentDockItem">
+    <zm:SetterGroup SettersSource="{StaticResource DockItemSkinSetters}" ValuePathSource="Skin" />
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="DockItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource DockItemStyle}" TargetType="zm:DockItem" />
+  <zm:ThemeStyle x:Key="DocumentDockItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource DocumentDockItemStyle}" TargetType="zm:DocumentDockItem" />
+
+</zm:ThemeResourceDictionary>

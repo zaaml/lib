@@ -1,0 +1,40 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="DockItemPreviewElementTemplate"
+                   TargetType="zm:DockItemPreviewElement">
+
+    <zm:ControlTemplateRoot Opacity="0.2">
+
+      <Path Data="{TemplateBinding Geometry}"
+            Fill="{TemplateBinding Background}"
+            Stroke="{TemplateBinding BorderBrush}" />
+
+    </zm:ControlTemplateRoot>
+
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="DockItemPreviewElementBaseStyle" TargetType="zm:DockItemPreviewElement">
+    <zm:Setter Property="Template" Value="{StaticResource DockItemPreviewElementTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="DockItemPreviewElementStyle" BasedOn="{StaticResource DockItemPreviewElementBaseStyle}" Skin="Metro.Docking.DockItemPreviewElement" TargetType="zm:DockItemPreviewElement">
+
+    <!--  Skin Setters  -->
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="Background" Property="Background" />
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="DockItemPreviewElementThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource DockItemPreviewElementStyle}" TargetType="zm:DockItemPreviewElement" />
+
+</zm:ThemeResourceDictionary>

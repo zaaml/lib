@@ -1,0 +1,136 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="Slider.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  Horizontal Template  -->
+  <ControlTemplate x:Key="HorizontalSliderTemplate"
+                   TargetType="Slider">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <Grid x:Name="HorizontalTemplate">
+
+        <Border Height="6"
+                Margin="0,6"
+                Background="{zm:TemplateSkinBinding SkinPath=Background}"
+                BorderThickness="1" />
+
+        <Track x:Name="PART_Track"
+               IsDirectionReversed="False"
+               Orientation="Horizontal">
+
+          <Track.DecreaseRepeatButton>
+            <RepeatButton x:Name="HorizontalTrackLargeChangeDecreaseRepeatButton"
+                          Height="18"
+                          IsTabStop="False"
+                          Template="{StaticResource RepeatButtonTemplate}">
+              <Border Height="6"
+                      Margin="0,6"
+                      Background="{zm:TemplateSkinBinding SkinPath=BackgroundValue}"
+                      BorderThickness="1" />
+            </RepeatButton>
+          </Track.DecreaseRepeatButton>
+
+          <Track.Thumb>
+            <Thumb x:Name="HorizontalThumb"
+                   Width="6"
+                   Height="14"
+                   IsTabStop="True"
+                   Style="{zm:NativeStyle Style={StaticResource ThumbStyle}}"
+                   zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=Thumb}"
+                   Template="{StaticResource ThumbTemplateHorizontal}" />
+          </Track.Thumb>
+
+          <Track.IncreaseRepeatButton>
+            <RepeatButton x:Name="HorizontalTrackLargeChangeIncreaseRepeatButton"
+                          Height="18"
+                          IsTabStop="False"
+                          Template="{StaticResource RepeatButtonTemplate}" />
+          </Track.IncreaseRepeatButton>
+        </Track>
+
+      </Grid>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Vertical Template  -->
+  <ControlTemplate x:Key="VerticalSliderTemplate"
+                   TargetType="Slider">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <Grid x:Name="VerticalTemplate">
+
+        <Border Width="6"
+                Margin="6,0"
+                Background="{zm:TemplateSkinBinding SkinPath=Background}"
+                BorderThickness="1" />
+
+        <Track x:Name="PART_Track"
+                  IsDirectionReversed="False"
+                  Orientation="Vertical">
+
+          <Track.DecreaseRepeatButton>
+            <RepeatButton x:Name="VerticalTrackLargeChangeDecreaseRepeatButton"
+                          Width="18"
+                          IsTabStop="False"
+                          Template="{StaticResource RepeatButtonTemplate}">
+              <Border Width="6"
+                      Margin="6,0"
+                      Background="{zm:TemplateSkinBinding SkinPath=BackgroundValue}"
+                      BorderThickness="1" />
+            </RepeatButton>
+          </Track.DecreaseRepeatButton>
+
+          <Track.Thumb>
+            <Thumb x:Name="VerticalThumb"
+                   Width="14"
+                   Height="6"
+                   IsTabStop="True"
+                   Style="{zm:NativeStyle Style={StaticResource ThumbStyle}}"
+                   zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=Thumb}"
+                   Template="{StaticResource ThumbTemplateVertical}" />
+          </Track.Thumb>
+
+          <Track.IncreaseRepeatButton>
+            <RepeatButton x:Name="VerticalTrackLargeChangeIncreaseRepeatButton"
+                          Width="18"
+                          IsTabStop="False"
+                          Template="{StaticResource RepeatButtonTemplate}" />
+          </Track.IncreaseRepeatButton>
+        </Track>
+
+      </Grid>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Template Converter  -->
+  <zm:SwitchConverter x:Key="TemplateConverter">
+    <zm:Case Key="Horizontal" Value="{StaticResource HorizontalSliderTemplate}" />
+    <zm:Case Key="Vertical" Value="{StaticResource VerticalSliderTemplate}" />
+  </zm:SwitchConverter>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="SliderBaseStyle" TargetType="Slider">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Maximum" Value="10" />
+    <zm:Setter Property="Minimum" Value="0" />
+    <zm:Setter Property="Value" Value="0" />
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=Orientation, Converter={StaticResource TemplateConverter}}" />
+  </zm:Style>
+
+  <!--  Base Skinned Style  -->
+  <zm:Style x:Key="SliderStyle" BasedOn="{StaticResource SliderBaseStyle}" TargetType="Slider" Skin="Metro.StandardControls.Slider" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="SliderThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource SliderStyle}" TargetType="Slider" />
+
+</zm:ThemeResourceDictionary>

@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<ExposeExternalInternals>True</ExposeExternalInternals>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.3.7">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.Memory" Version="4.5.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Automata\Automata.Process.ExecutionPathQueueCollectionBuilder.Dfa.dev.cs" />
+		<Compile Remove="System\ListDictionary.cs" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Automata\Automata.Builder.Quantifier.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Automata.Builder.Quantifier.cs</LastGenOutput>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Automata\Automata.Builder.Quantifier.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Automata.Builder.Quantifier.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Grammar\Grammar.ParserRule.BindFactory.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Grammar.ParserRule.BindFactory.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Grammar\GrammarBuilders.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>GrammarBuilders.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="Grammar\Grammar.ParserRule.BindFactory.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Grammar.ParserRule.BindFactory.cs</LastGenOutput>
+		</None>
+		<None Update="Grammar\GrammarBuilders.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>GrammarBuilders.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Grammar\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="Automata\Automata.Process.ExecutionPathQueueCollectionBuilder.Dfa.dev.cs" />
+	</ItemGroup>
+
+</Project>

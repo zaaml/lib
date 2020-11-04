@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<ExposeExternalInternals>True</ExposeExternalInternals>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.3.7">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
+		<ProjectReference Include="..\Text\Zaaml.Text.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="ExpressionEngine.Register.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ExpressionEngine.Register.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Grammar\Grammar.ParserRule.BindFactory.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Grammar.ParserRule.BindFactory.cs</LastGenOutput>
+		</None>
+		<None Update="ExpressionEngine.Register.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>ExpressionEngine.Register.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+</Project>

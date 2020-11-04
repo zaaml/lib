@@ -1,0 +1,82 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            mc:Ignorable="zmb">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStateGroups">
+    <zm:VisualStateGroup Name="CurrentStates">
+      <zm:VisualState Name="Regular" />
+      <zm:VisualState Name="Current" />
+    </zm:VisualStateGroup>
+
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+    </zm:VisualStateGroup>
+
+    <zm:VisualStateGroup Name="FocusStates">
+      <zm:VisualState Name="Unfocused" />
+      <zm:VisualState Name="Focused" />
+    </zm:VisualStateGroup>
+
+    <zm:VisualStateGroup Name="InteractionStates">
+      <zm:VisualState Name="Display" />
+      <zm:VisualState Name="Editing" />
+    </zm:VisualStateGroup>
+
+    <zm:VisualStateGroup Name="SelectionStates">
+      <zm:VisualState Name="Selected" />
+      <zm:VisualState Name="Unselected" />
+    </zm:VisualStateGroup>
+
+    <zm:VisualStateGroup Name="ValidationStates">
+      <zm:VisualState Name="Valid" />
+      <zm:VisualState Name="Invalid" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="DataGridCellTemplate" TargetType="DataGridCell">
+    <zm:NativeDataGridCellRoot Background="{TemplateBinding Background}" 
+                               SnapsToDevicePixels="True" 
+                               VisualStateGroups="{StaticResource VisualStateGroups}">
+      <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+    </zm:NativeDataGridCellRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="DataGridCellBaseStyle" TargetType="DataGridCell">
+    <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="Template" Value="{StaticResource DataGridCellTemplate}" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="DataGridCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellBaseStyle}" 
+            Skin="Metro.StandardControls.DataGridCell">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      
+      <!-- Foreground -->
+      <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="Editing"  ValuePath="NormalEditing" />
+      </zm:SetterGroup>
+
+      <!-- Background -->
+      <zm:SetterGroup Property="Background" ValuePath="Background">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="Current" ValuePath="Current" Priority="2" />
+        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1"/>
+
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Styles -->
+  <zm:ThemeStyle x:Key="DataGridCellThemeStyle" TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

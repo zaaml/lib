@@ -1,0 +1,85 @@
+﻿<zm:ThemeResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <!-- Application Assets -->
+  <Color x:Key="Metro.Application.ForegroundColor">#BFFFFFFF</Color>
+  <Color x:Key="Metro.Application.BackgroundColor">#FF333333</Color>
+  <Color x:Key="Metro.Application.BorderColor">#FF515151</Color>
+
+  <SolidColorBrush x:Key="Metro.Application.ForegroundBrush" Color="{StaticResource Metro.Application.ForegroundColor}" />
+  <SolidColorBrush x:Key="Metro.Application.BackgroundBrush" Color="{StaticResource Metro.Application.BackgroundColor}" />
+  <SolidColorBrush x:Key="Metro.Application.BorderBrush" Color="{StaticResource Metro.Application.BorderColor}" />
+
+  <!-- Control Assets -->
+  <Color x:Key="Metro.Control.ForegroundColor">#BFFFFFFF</Color>
+  <Color x:Key="Metro.Control.BackgroundColor">#FF333333</Color>
+  <Color x:Key="Metro.Control.BorderColor">#FF515151</Color>
+
+  <SolidColorBrush x:Key="Metro.Control.ForegroundBrush" Color="{StaticResource Metro.Control.ForegroundColor}" />
+  <SolidColorBrush x:Key="Metro.Control.BackgroundBrush" Color="{StaticResource Metro.Control.BackgroundColor}" />
+  <SolidColorBrush x:Key="Metro.Control.BorderBrush" Color="{StaticResource Metro.Control.BorderColor}" />
+
+  <!-- Selection Assets -->
+  <Color x:Key="Metro.Selection.BackgroundColor">#FFF78A09</Color>
+  <Color x:Key="Metro.Selection.ForegroundColor">#FFFFFFFF</Color>
+  <Color x:Key="Metro.Selection.BorderColor">#FFF78A09</Color>
+
+  <Color x:Key="Metro.InactiveSelection.BackgroundColor">#FFB9B9B9</Color>
+  <Color x:Key="Metro.InactiveSelection.ForegroundColor">#FF000000</Color>
+  <Color x:Key="Metro.InactiveSelection.BorderColor">#FFB9B9B9</Color>
+
+  <SolidColorBrush x:Key="Metro.Selection.BackgroundBrush" Color="{StaticResource Metro.Selection.BackgroundColor}" />
+  <SolidColorBrush x:Key="Metro.Selection.ForegroundBrush" Color="{StaticResource Metro.Selection.ForegroundColor}" />
+  <SolidColorBrush x:Key="Metro.Selection.BorderBrush" Color="{StaticResource Metro.Selection.BorderColor}" />
+
+  <SolidColorBrush x:Key="Metro.InactiveSelection.BackgroundBrush" Color="{StaticResource Metro.InactiveSelection.BackgroundColor}" />
+  <SolidColorBrush x:Key="Metro.InactiveSelection.ForegroundBrush" Color="{StaticResource Metro.InactiveSelection.ForegroundColor}" />
+  <SolidColorBrush x:Key="Metro.InactiveSelection.BorderBrush" Color="{StaticResource Metro.InactiveSelection.BorderColor}" />
+
+
+  <!-- Bar Assets -->
+  <!--
+		BarBackgroundColor,
+		BarBackgroundBrush,
+		BarForegroundColor,
+		BarForegroundBrush,
+		BarBorderBrush,
+		BarBorderColor,
+	-->
+
+
+  <!-- BarItem Assets -->
+  <!--
+    BarItemBackgroundColor,
+    BarItemBackgroundBrush,
+    BarItemForegroundColor,
+    BarItemForegroundBrush,
+    BarItemBorderBrush,
+    BarItemBorderColor,
+	-->
+
+
+  <!-- Menu Assets -->
+  <!--
+    MenuBackgroundColor,
+    MenuBackgroundBrush,
+    MenuForegroundColor,
+    MenuForegroundBrush,
+    MenuBorderBrush,
+    MenuBorderColor,
+	-->
+
+
+  <!-- MenuItem Assets -->
+  <!--
+    MenuItemBackgroundColor,
+    MenuItemBackgroundBrush,
+    MenuItemForegroundColor,
+    MenuItemForegroundBrush,
+    MenuItemBorderBrush,
+    MenuItemBorderColor,
+	-->
+
+</zm:ThemeResourceDictionary>

@@ -1,0 +1,142 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="TabViewContentPresenter.xaml" />
+    <zm:ThemeResourceDictionary Source="TabViewItemsPresenter.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  Native TabViewItemsPresenter Style  -->
+  <Style x:Key="TabViewItemsPresenterNativeStyle"
+         BasedOn="{zm:NativeStyle Style={StaticResource TabViewItemsPresenterStyle}}"
+         TargetType="zm:TabViewItemsPresenter" />
+
+  <!--  Native TabViewControlContentPresenter Style  -->
+  <Style x:Key="TabViewControlContentPresenterNativeStyle"
+         BasedOn="{zm:NativeStyle Style={StaticResource TabViewContentPresenterStyle}}"
+         TargetType="zm:TabViewContentPresenter" />
+
+  <!--  ItemsPresenter Left  -->
+  <zm:SetterCollection x:Key="ItemsPresenterLeft">
+    <zm:Setter Property="Grid.Row" Value="1" />
+    <zm:Setter Property="Grid.Column" Value="0" />
+    <zm:Setter Property="Margin" Value="0,0,-1,0" />
+  </zm:SetterCollection>
+
+  <!--  ItemsPresenter Top  -->
+  <zm:SetterCollection x:Key="ItemsPresenterTop">
+    <zm:Setter Property="Grid.Row" Value="0" />
+    <zm:Setter Property="Grid.Column" Value="1" />
+    <zm:Setter Property="Margin" Value="0,0,0,-1" />
+  </zm:SetterCollection>
+
+  <!--  ItemsPresenter Right  -->
+  <zm:SetterCollection x:Key="ItemsPresenterRight">
+    <zm:Setter Property="Grid.Row" Value="1" />
+    <zm:Setter Property="Grid.Column" Value="2" />
+    <zm:Setter Property="Margin" Value="-1,0,0,0" />
+  </zm:SetterCollection>
+
+  <!--  ItemsPresenter Bottom  -->
+  <zm:SetterCollection x:Key="ItemsPresenterBottom">
+    <zm:Setter Property="Grid.Row" Value="2" />
+    <zm:Setter Property="Grid.Column" Value="1" />
+    <zm:Setter Property="Margin" Value="0,-1,0,0" />
+  </zm:SetterCollection>
+
+  <!--  Control Template  -->
+  <ControlTemplate x:Key="TabViewControlTemplate"
+                   TargetType="zm:TabViewControl">
+    <zm:ControlTemplateRoot>
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  ContentPresenter  -->
+        <zm:TabViewContentPresenter x:Name="ContentPresenter"
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    Padding="{TemplateBinding Padding}"
+                                    BackContent="{TemplateBinding BackContent}"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Style="{zm:TemplateBinding Path=ContentPresenterStyle,
+                                                               TargetNullValue={StaticResource TabViewControlContentPresenterNativeStyle}}" />
+
+
+        <!--  ItemsPresenter  -->
+        <!-- ReSharper disable once Xaml.MissingGridIndex -->
+        <zm:TabViewItemsPresenter x:Name="ItemsPresenter"
+                                  Footer="{TemplateBinding ItemsPresenterFooter}"
+                                  FooterTemplate="{TemplateBinding ItemsPresenterFooterTemplate}"
+                                  Header="{TemplateBinding ItemsPresenterHeader}"
+                                  HeaderTemplate="{TemplateBinding ItemsPresenterHeaderTemplate}"
+                                  Style="{zm:TemplateBinding Path=ItemsPresenterStyle,
+                                                             TargetNullValue={StaticResource TabViewItemsPresenterNativeStyle}}"
+                                  Visibility="{zm:TemplateBinding Path=ActualItemsPresenterVisibility}">
+          <zm:Extension.Triggers>
+            <zm:SwitchDataTrigger Binding="{zm:TemplateBinding Path=TabStripPlacement}">
+              <zm:CaseTrigger Value="Left">
+                <zm:SetterGroup SettersSource="{StaticResource ItemsPresenterLeft}" />
+              </zm:CaseTrigger>
+
+              <zm:CaseTrigger Value="Top">
+                <zm:SetterGroup SettersSource="{StaticResource ItemsPresenterTop}" />
+              </zm:CaseTrigger>
+
+              <zm:CaseTrigger Value="Right">
+                <zm:SetterGroup SettersSource="{StaticResource ItemsPresenterRight}" />
+              </zm:CaseTrigger>
+
+              <zm:CaseTrigger Value="Bottom">
+                <zm:SetterGroup SettersSource="{StaticResource ItemsPresenterBottom}" />
+              </zm:CaseTrigger>
+            </zm:SwitchDataTrigger>
+          </zm:Extension.Triggers>
+        </zm:TabViewItemsPresenter>
+      </Grid>
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Styles  -->
+  <zm:Style x:Key="TabViewControlBaseStyle" TargetType="zm:TabViewControl">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Padding" Value="5" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="zm:DisableVeilControl.VeilBrush" Value="{zm:ThemeResource Key=Metro.TabViewControl.DisableVeilBrush}" />
+    <zm:Setter Property="Template" Value="{StaticResource TabViewControlTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="TabViewControlStyle" BasedOn="{StaticResource TabViewControlBaseStyle}" Skin="Metro.TabViewControl" TargetType="zm:TabViewControl">
+
+    <!--  Skin Setters  -->
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="Foreground" Property="Foreground" />
+      <zm:Setter ValuePath="Background" Property="Background" />
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="TabViewControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TabViewControlStyle}" TargetType="zm:TabViewControl" />
+
+</zm:ThemeResourceDictionary>

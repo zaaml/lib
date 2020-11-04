@@ -1,0 +1,52 @@
+namespace Zaaml.Expressions
+{
+  @internal
+  @syntaxTree(NodeBase : ExpressionNode, NodeSuffix : Node, Visitor : true)
+  grammar Expression
+  {
+    lexer
+    {
+      @fragment 
+      Int			      :   [0-9]+
+                    ;
+
+      Double        :   Int "." Int
+                    |   Int
+                    ;
+
+
+      Identifier    :   [a-zA-Z]+
+                    ;
+
+
+      @skip 
+      Whitespace    :   [ \r\t]+
+                    ;
+    }
+
+    parser
+    {
+      Expr          :   Term '+' Expr                         <ExprPlus>
+                    |   Term '-' Expr                         <ExprMinus>
+                    |   Term                                  <ExprTerm>
+                    ;
+
+
+      Term          :   Factor '*' Term                       <TermMul>
+                    |   Factor '/' Term                       <TermDiv>
+                    |   Factor                                <TermFactor>
+                    ;
+
+
+      Factor        :   Identifier '(' Expr (','Expr)* ')'    <FactorCallArgs>
+                    |   Identifier '(' ')'                    <FactorCallEmpty>
+                    |   Identifier                            <FactorParameter>
+                    |   '(' Expr ')'                          <FactorExpr>
+                    |   Number                                <FactorNumber>
+                    ;
+
+      Number        :   Double                                <NumberDouble>
+                    ;
+    }
+  }
+}
