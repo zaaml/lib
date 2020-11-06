@@ -18,7 +18,8 @@
 
 	<Target Name="CombineBuild" AfterTargets="Build">
 		<Message Text="Combine" Importance="High" />
-		<MSBuild Projects="$(MSBuildThisFileDirectory)..\Themes.Metro\Zaaml.Themes.Metro.csproj" Properties="Configuration=$(Configuration);CombineTheme=True" />
+		<Exec Command="dotnet restore $(MSBuildThisFileDirectory)..\Themes.Metro\Zaaml.Themes.Metro.Combine.csproj -p:Publish=true"/>
+		<MSBuild Projects="$(MSBuildThisFileDirectory)..\Themes.Metro\Zaaml.Themes.Metro.Combine.csproj" Properties="Configuration=$(Configuration)" />
 	</Target>
 
 </Project>

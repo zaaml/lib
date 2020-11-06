@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    runs-on: [windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          fetch-depth: 0      
+
+    #- name: Fetch
+    #  run: git fetch --prune --unshallow --tags
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.301
+    
+    - name: Build
+      run: dotnet build -c Release -p:Publish=true -p:Version=${{ github.event.release.tag_name }} -p:DisableGitVersionTask=true
+
+    - name: Upload workflow artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: packages
+        path: artifacts/
+
+    - name: Zip nuget packages
+      run: powershell Compress-Archive -Path ./artifacts/*.nupkg -DestinationPath ./artifacts/packages.zip -Force
+                  
+    - name: Upload release artifact
+      uses: actions/upload-release-asset@v1.0.2
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: artifacts/packages.zip
+        asset_name: packages.zip
+        asset_content_type: application/zip

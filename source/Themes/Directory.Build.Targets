@@ -37,7 +37,7 @@
   </Target>-->
   
   	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.3.7">
+		<PackageReference Include="GitVersionTask" Version="5.5.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>		

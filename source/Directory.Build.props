@@ -7,6 +7,7 @@
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\zaaml.snk</AssemblyOriginatorKeyFile>
 		<ErrorReport>prompt</ErrorReport>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<GitVersion_NoFetchEnabled>true</GitVersion_NoFetchEnabled>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -21,7 +22,7 @@
 		<TargetFramework>netcoreapp3.1</TargetFramework>
 	</PropertyGroup>
 	
-	<PropertyGroup Condition="$(Configuration) == 'Release' AND $(Publish) == 'true'">
+	<PropertyGroup Condition="$(Publish) == 'true'">
 		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
 		<TargetFrameworks>netcoreapp3.1;net48</TargetFrameworks>
 		<TargetFramework></TargetFramework>

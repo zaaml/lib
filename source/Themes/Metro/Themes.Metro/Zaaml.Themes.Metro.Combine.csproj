@@ -8,9 +8,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
-		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
-		<ProjectReference Include="..\..\..\UI\Zaaml.UI.csproj" />
+		<Reference Include="..\..\..\Core\bin\$(Configuration)\$(TargetFramework)\Zaaml.Core.dll" />
+		<Reference Include="..\..\..\PresentationCore\bin\$(Configuration)\$(TargetFramework)\Zaaml.PresentationCore.dll" />
+		<Reference Include="..\..\..\UI\bin\$(Configuration)\$(TargetFramework)\Zaaml.UI.dll" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -20,4 +20,8 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+		<Resource Include="..\ThemeParts\$(TargetFramework)\*.themepart.zip" />
+		<Resource Include="..\ThemeParts\$(TargetFramework)\*.themepart.xml" />
+	</ItemGroup>
 </Project>
