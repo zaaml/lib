@@ -45,4 +45,4 @@ jobs:
         asset_content_type: application/zip
 
     - name: Push packages to nuget.org
-      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_ZAAML }} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push $GITHUB_WORKSPACE/artifacts/*.nupkg --api-key ${{ secrets.NUGET_ZAAML }} --source https://api.nuget.org/v3/index.json
