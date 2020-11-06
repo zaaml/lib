@@ -31,10 +31,17 @@
 		<Authors>zaaml</Authors>
 		<Company>zaaml</Company>
 		<Copyright>Copyright © zaaml 2020</Copyright>
-		<Description>zaaml library</Description>
+		<Description>zaaml component library</Description>
+		<RepositoryUrl>https://github.com/zaaml/lib</RepositoryUrl>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts</PackageOutputPath>
 	</PropertyGroup>
 	
+	<ItemGroup>
+		<None Include="$(MSBuildThisFileDirectory)PackageLicense.txt" Pack="true" PackagePath="$(PackageLicenseFile)"/>
+	</ItemGroup>	
+		
 	<ItemGroup Condition="$(ExposeExternalInternals) == 'True' AND Exists('$(SolutionDir)\ExternalInternalsVisibleAttributes.cs')">
 		<Compile Include="$(SolutionDir)\ExternalInternalsVisibleAttributes.cs" />
 	</ItemGroup>

@@ -1,0 +1,12 @@
+This package, the Zaaml library, is dual-licensed under
+the GNU General Public License v3.0 and the Zaaml Proprietary License Agreement.
+
+For the GNU GPL, please see the file LICENSE (https://github.com/zaaml/lib).
+
+For the Zaaml Proprietary License Agreement, please refer to https://zaaml.com
+
+For attribution of copyright and other details of provenance, please
+refer to the source code.
+
+If you have any questions regarding licensing, please contact us at 
+support@zaaml.com.
