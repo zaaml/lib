@@ -1,8 +1,8 @@
 # Zaaml UI components library
 
-Zaaml library is a set of flexible and high performance WPF UI components for building rich desktop applications, designed with passion and love for delivering the most exciting development experience.
+Zaaml library is a set of flexible and high performance WPF UI components for building rich desktop applications.
 
-Being at the beginning of its journey Zaaml provides the following list of controls and components:
+Zaaml provides the following list of controls and components:
 * AccordionView
 * Artboard
 * BackstageView
