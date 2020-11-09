@@ -28,7 +28,6 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private readonly WeakLinkedList<UIElement> _canvasElements = new WeakLinkedList<UIElement>();
 		private readonly Func<UIElement, bool> _childCleanupPredicate;
-		private ArtboardControl _artboard;
 
 		public ArtboardCanvas()
 		{
@@ -36,26 +35,6 @@ namespace Zaaml.UI.Controls.Artboard
 
 			DraggableBehavior.SetAdvisor(this, new ArtboardCanvasDraggableAdvisor(this));
 			ResizableBehavior.SetAdvisor(this, new ArtboardCanvasResizableAdvisor(this));
-		}
-
-		internal ArtboardControl Artboard
-		{
-			get => _artboard;
-			set
-			{
-				if (ReferenceEquals(_artboard, value))
-					return;
-
-				if (_artboard != null)
-					foreach (var element in Elements)
-						DetachFactoryAdorners(element);
-
-				_artboard = value;
-
-				if (_artboard != null)
-					foreach (var element in Elements)
-						AttachFactoryAdorners(element);
-			}
 		}
 
 		private IEnumerable<UIElement> Elements => Children.OfType<UIElement>();
@@ -78,6 +57,14 @@ namespace Zaaml.UI.Controls.Artboard
 				ArrangeChild(child);
 
 			return finalSize;
+		}
+
+		private protected override void AttachArtboard(ArtboardControl artboard)
+		{
+			base.AttachArtboard(artboard);
+
+			foreach (var element in Elements)
+				AttachFactoryAdorners(element);
 		}
 
 		private void AttachElement(UIElement element)
@@ -112,6 +99,14 @@ namespace Zaaml.UI.Controls.Artboard
 				SetCanvas(element, null);
 
 			return true;
+		}
+
+		private protected override void DetachArtboard(ArtboardControl artboard)
+		{
+			foreach (var element in Elements)
+				DetachFactoryAdorners(element);
+
+			base.DetachArtboard(artboard);
 		}
 
 		private void DetachElement(UIElement element)

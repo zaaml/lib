@@ -4,37 +4,7 @@
 
 namespace Zaaml.UI.Controls.Artboard
 {
-	public sealed class ArtboardPresenter : ArtboardControlBase<ArtboardPresenterPanel>
+	public sealed class ArtboardPresenter : ArtboardComponentControlBase<ArtboardPresenterPanel>
 	{
-		private ArtboardControl _artboard;
-
-		internal ArtboardControl Artboard
-		{
-			get => _artboard;
-			set
-			{
-				if (ReferenceEquals(_artboard, value))
-					return;
-
-				_artboard = value;
-
-				if (TemplateRoot != null)
-					TemplateRoot.Artboard = value;
-			}
-		}
-
-		protected override void ApplyTemplateOverride()
-		{
-			base.ApplyTemplateOverride();
-
-			TemplateRoot.Artboard = Artboard;
-		}
-
-		protected override void UndoTemplateOverride()
-		{
-			TemplateRoot.Artboard = null;
-
-			base.UndoTemplateOverride();
-		}
 	}
 }

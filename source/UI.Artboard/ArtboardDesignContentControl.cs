@@ -11,7 +11,7 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.Artboard
 {
 	[ContentProperty(nameof(Child))]
-	public sealed class ArtboardDesignContentControl : ArtboardControlBase<ArtboardDesignContentPanel>, IFixedTemplateContentControl<ArtboardDesignContentPanel>
+	public sealed class ArtboardDesignContentControl : ArtboardComponentControlBase<ArtboardDesignContentPanel>, IFixedTemplateContentControl<ArtboardDesignContentPanel>
 	{
 		public static readonly DependencyProperty ChildProperty = DPM.Register<UIElement, ArtboardDesignContentControl>
 			("Child", default, d => d.OnChildPropertyChangedPrivate);

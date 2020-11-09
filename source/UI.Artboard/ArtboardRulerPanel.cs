@@ -29,6 +29,8 @@ namespace Zaaml.UI.Controls.Artboard
 					OffsetTransform
 				}
 			};
+
+			Background = Brushes.Transparent;
 		}
 
 		internal ArtboardRuler ArtboardRuler

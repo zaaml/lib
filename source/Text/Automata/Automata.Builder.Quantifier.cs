@@ -1,5 +1,4 @@
-﻿
-// <copyright file="Automata.Builder.Quantifier.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="Automata.Builder.Quantifier.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -16,59 +15,11 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		protected QuantifierEntry ZeroOrOne(PrimitiveMatchEntry match)
-		{
-			return new QuantifierEntry(match, QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry ZeroOrMore(PrimitiveMatchEntry match)
-		{
-			return new QuantifierEntry(match, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry OneOrMore(PrimitiveMatchEntry match)
-		{
-			return new QuantifierEntry(match, QuantifierKind.OneOrMore, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry Exact(int count, PrimitiveMatchEntry match)
-		{
-			return new QuantifierEntry(match, QuantifierHelper.Exact(count), QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry Between(int from, int to, PrimitiveMatchEntry match)
-		{
-			return new QuantifierEntry(match, QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
-		}
+		#region Methods
 
 		protected QuantifierEntry AtLeast(int count, PrimitiveMatchEntry match)
 		{
 			return new QuantifierEntry(match, QuantifierHelper.AtLeast(count), QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry ZeroOrOne(TOperand operand)
-		{
-			return new QuantifierEntry(operand, QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry ZeroOrMore(TOperand operand)
-		{
-			return new QuantifierEntry(operand, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry OneOrMore(TOperand operand)
-		{
-			return new QuantifierEntry(operand, QuantifierKind.OneOrMore, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry Exact(int count, TOperand operand)
-		{
-			return new QuantifierEntry(operand, QuantifierHelper.Exact(count), QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry Between(int from, int to, TOperand operand)
-		{
-			return new QuantifierEntry(operand, QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
 		}
 
 		protected QuantifierEntry AtLeast(int count, TOperand operand)
@@ -76,59 +27,9 @@ namespace Zaaml.Text
 			return new QuantifierEntry(operand, QuantifierHelper.AtLeast(count), QuantifierMode.Greedy);
 		}
 
-		protected QuantifierEntry ZeroOrOne(FiniteState state)
-		{
-			return new QuantifierEntry(state, QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry ZeroOrMore(FiniteState state)
-		{
-			return new QuantifierEntry(state, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry OneOrMore(FiniteState state)
-		{
-			return new QuantifierEntry(state, QuantifierKind.OneOrMore, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry Exact(int count, FiniteState state)
-		{
-			return new QuantifierEntry(state, QuantifierHelper.Exact(count), QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry Between(int from, int to, FiniteState state)
-		{
-			return new QuantifierEntry(state, QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
-		}
-
 		protected QuantifierEntry AtLeast(int count, FiniteState state)
 		{
 			return new QuantifierEntry(state, QuantifierHelper.AtLeast(count), QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry ZeroOrOne(params Entry[] entries)
-		{
-			return new QuantifierEntry(Inline(entries), QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry ZeroOrMore(params Entry[] entries)
-		{
-			return new QuantifierEntry(Inline(entries), QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry OneOrMore(params Entry[] entries)
-		{
-			return new QuantifierEntry(Inline(entries), QuantifierKind.OneOrMore, QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry Exact(int count, params Entry[] entries)
-		{
-			return new QuantifierEntry(Inline(entries), QuantifierHelper.Exact(count), QuantifierMode.Greedy);
-		}
-
-		protected QuantifierEntry Between(int from, int to, params Entry[] entries)
-		{
-			return new QuantifierEntry(Inline(entries), QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
 		}
 
 		protected QuantifierEntry AtLeast(int count, params Entry[] entries)
@@ -136,5 +37,106 @@ namespace Zaaml.Text
 			return new QuantifierEntry(Inline(entries), QuantifierHelper.AtLeast(count), QuantifierMode.Greedy);
 		}
 
+		protected QuantifierEntry Between(int from, int to, PrimitiveMatchEntry match)
+		{
+			return new QuantifierEntry(match, QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry Between(int from, int to, TOperand operand)
+		{
+			return new QuantifierEntry(operand, QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry Between(int from, int to, FiniteState state)
+		{
+			return new QuantifierEntry(state, QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry Between(int from, int to, params Entry[] entries)
+		{
+			return new QuantifierEntry(Inline(entries), QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry Exact(int count, PrimitiveMatchEntry match)
+		{
+			return new QuantifierEntry(match, QuantifierHelper.Exact(count), QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry Exact(int count, TOperand operand)
+		{
+			return new QuantifierEntry(operand, QuantifierHelper.Exact(count), QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry Exact(int count, FiniteState state)
+		{
+			return new QuantifierEntry(state, QuantifierHelper.Exact(count), QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry Exact(int count, params Entry[] entries)
+		{
+			return new QuantifierEntry(Inline(entries), QuantifierHelper.Exact(count), QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry OneOrMore(PrimitiveMatchEntry match)
+		{
+			return new QuantifierEntry(match, QuantifierKind.OneOrMore, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry OneOrMore(TOperand operand)
+		{
+			return new QuantifierEntry(operand, QuantifierKind.OneOrMore, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry OneOrMore(FiniteState state)
+		{
+			return new QuantifierEntry(state, QuantifierKind.OneOrMore, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry OneOrMore(params Entry[] entries)
+		{
+			return new QuantifierEntry(Inline(entries), QuantifierKind.OneOrMore, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry ZeroOrMore(PrimitiveMatchEntry match)
+		{
+			return new QuantifierEntry(match, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry ZeroOrMore(TOperand operand)
+		{
+			return new QuantifierEntry(operand, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry ZeroOrMore(FiniteState state)
+		{
+			return new QuantifierEntry(state, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry ZeroOrMore(params Entry[] entries)
+		{
+			return new QuantifierEntry(Inline(entries), QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry ZeroOrOne(PrimitiveMatchEntry match)
+		{
+			return new QuantifierEntry(match, QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry ZeroOrOne(TOperand operand)
+		{
+			return new QuantifierEntry(operand, QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry ZeroOrOne(FiniteState state)
+		{
+			return new QuantifierEntry(state, QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
+		}
+
+		protected QuantifierEntry ZeroOrOne(params Entry[] entries)
+		{
+			return new QuantifierEntry(Inline(entries), QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
+		}
+
+		#endregion
 	}
 }

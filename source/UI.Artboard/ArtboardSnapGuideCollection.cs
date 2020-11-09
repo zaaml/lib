@@ -1,4 +1,4 @@
-﻿// <copyright file="ArtboardSnapGuideItemCollection.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="ArtboardSnapGuideCollection.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -14,5 +14,19 @@ namespace Zaaml.UI.Controls.Artboard
 		}
 
 		public ArtboardControl Artboard { get; }
+
+		protected override void OnItemAdded(ArtboardSnapGuide snapGuide)
+		{
+			base.OnItemAdded(snapGuide);
+
+			Artboard.OnSnapGuideAdded(snapGuide);
+		}
+
+		protected override void OnItemRemoved(ArtboardSnapGuide snapGuide)
+		{
+			base.OnItemRemoved(snapGuide);
+
+			Artboard.OnSnapGuideRemoved(snapGuide);
+		}
 	}
 }

@@ -9,45 +9,49 @@
   <zm:VisualStateGroupCollection x:Key="VisualStates">
     <zm:VisualStateGroup Name="CommonStates">
       <zm:VisualState Name="Normal" />
-      <zm:VisualState Name="ReadOnly" />
-      <zm:VisualState Name="MouseOver" />
-      <zm:VisualState Name="Pressed" />
-      <zm:VisualState Name="Disabled" />
     </zm:VisualStateGroup>
   </zm:VisualStateGroupCollection>
 
+  <!-- Thickness Converter -->
+  <zm:SwitchConverter x:Key="ThicknessConverter">
+    <zm:Case Key="Vertical" Value="1,0,0,0" />
+    <zm:Default Value="0,1,0,0" />
+  </zm:SwitchConverter>
+
   <!--  Template  -->
-  <ControlTemplate x:Key="RulerTemplate"
-                   TargetType="zm:ArtboardRuler">
+  <ControlTemplate x:Key="ArtboardSnapGuideTemplate"
+                   TargetType="zm:ArtboardSnapGuide">
 
     <zm:ControlTemplateRoot x:Name="TemplateRoot"
                             Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
-      
-      <zm:TickBar x:Name="TickBar"
-                  Orientation="{TemplateBinding Orientation}" />
+
+      <Border BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{zm:TemplateBinding Path=Orientation, Converter={StaticResource ThicknessConverter}}" />
+
+      <Border Background="Transparent" Margin="-2" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
   <!--  Style  -->
-  <zm:Style x:Key="RulerStyle" TargetType="zm:ArtboardRuler">
-    <zm:Setter Property="Template" Value="{StaticResource RulerTemplate}" />
+  <zm:Style x:Key="ArtboardSnapGuideStyleBase" TargetType="zm:ArtboardSnapGuide">
+    <zm:Setter Property="Template" Value="{StaticResource ArtboardSnapGuideTemplate}" />
   </zm:Style>
 
   <!--  Skinned Style  -->
-  <zm:Style x:Key="RulerSkinnedStyle" BasedOn="{StaticResource RulerStyle}" TargetType="zm:ArtboardRuler" Skin="Metro.ArtboardRuler">
-    
+  <zm:Style x:Key="ArtboardSnapGuideStyle" BasedOn="{StaticResource ArtboardSnapGuideStyleBase}"
+            TargetType="zm:ArtboardSnapGuide" Skin="Metro.ArtboardSnapGuide">
+
     <zm:SetterGroup ValuePathSource="Skin">
 
-      <zm:Setter ValuePath="Background" Property="Background" />
-      <zm:Setter ValuePath="Foreground" Property="Foreground" />
       <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
 
     </zm:SetterGroup>
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="RulerThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource RulerSkinnedStyle}" TargetType="zm:ArtboardRuler" />
+  <zm:ThemeStyle x:Key="ArtboardSnapGuideThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource ArtboardSnapGuideStyle}" TargetType="zm:ArtboardSnapGuide" />
 
 </zm:ThemeResourceDictionary>

@@ -11,7 +11,7 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.Artboard
 {
 	[ContentProperty("Model")]
-	public sealed class ArtboardGridLineControl : FixedTemplateControl<ArtboardGridLineRendererPanel>
+	public sealed class ArtboardGridLineControl : FixedTemplateControl<ArtboardGridLineRendererPanel>, IArtboardComponentControl
 	{
 		public static readonly DependencyProperty OffsetXProperty = DPM.Register<double, ArtboardGridLineControl>
 			("OffsetX", 0.0, g => g.OnOffsetXChanged);
@@ -43,6 +43,8 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			this.OverrideStyleKey<ArtboardGridLineControl>();
 		}
+
+		private ArtboardControl Artboard { get; set; }
 
 		public ArtboardGridLineModel Model
 		{
@@ -160,6 +162,42 @@ namespace Zaaml.UI.Controls.Artboard
 			TemplateRoot.Model = null;
 
 			base.UndoTemplateOverride();
+		}
+
+		double IArtboardComponentControl.DesignHeight
+		{
+			get => 0.0;
+			set { }
+		}
+
+		double IArtboardComponentControl.DesignWidth
+		{
+			get => 0.0;
+			set { }
+		}
+
+		double IArtboardComponentControl.Zoom
+		{
+			get => Zoom;
+			set => Zoom = value;
+		}
+
+		double IArtboardComponentControl.OffsetX
+		{
+			get => OffsetX;
+			set => OffsetX = value;
+		}
+
+		double IArtboardComponentControl.OffsetY
+		{
+			get => OffsetY;
+			set => OffsetY = value;
+		}
+
+		ArtboardControl IArtboardComponentControl.Artboard
+		{
+			get => Artboard;
+			set => Artboard = value;
 		}
 	}
 

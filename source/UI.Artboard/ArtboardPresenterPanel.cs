@@ -9,38 +9,17 @@ namespace Zaaml.UI.Controls.Artboard
 {
 	public sealed class ArtboardPresenterPanel : ArtboardPanel
 	{
-		private ArtboardControl _artboard;
-
-		internal ArtboardControl Artboard
+		private protected override void AttachArtboard(ArtboardControl artboard)
 		{
-			get => _artboard;
-			set
-			{
-				if (ReferenceEquals(_artboard, value))
-					return;
+			base.AttachArtboard(artboard);
 
-				if (_artboard != null)
-				{
-					_artboard.CanvasCollection.CanvasAdded -= OnCanvasAdded;
-					_artboard.CanvasCollection.CanvasRemoved -= OnCanvasRemoved;
+			artboard.CanvasCollection.CanvasAdded += OnCanvasAdded;
+			artboard.CanvasCollection.CanvasRemoved += OnCanvasRemoved;
 
-					foreach (var canvas in _artboard.CanvasCollection)
-						DetachCanvas(canvas);
-				}
+			foreach (var canvas in artboard.CanvasCollection)
+				AttachCanvas(canvas);
 
-				_artboard = value;
-
-				if (_artboard != null)
-				{
-					_artboard.CanvasCollection.CanvasAdded += OnCanvasAdded;
-					_artboard.CanvasCollection.CanvasRemoved += OnCanvasRemoved;
-
-					foreach (var canvas in _artboard.CanvasCollection)
-						AttachCanvas(canvas);
-				}
-
-				InvalidateMeasure();
-			}
+			InvalidateMeasure();
 		}
 
 		private void AttachCanvas(ArtboardCanvas canvas)
@@ -52,6 +31,19 @@ namespace Zaaml.UI.Controls.Artboard
 			canvas.Zoom = Zoom;
 
 			Children.Add(canvas);
+		}
+
+		private protected override void DetachArtboard(ArtboardControl artboard)
+		{
+			artboard.CanvasCollection.CanvasAdded -= OnCanvasAdded;
+			artboard.CanvasCollection.CanvasRemoved -= OnCanvasRemoved;
+
+			foreach (var canvas in artboard.CanvasCollection)
+				DetachCanvas(canvas);
+
+			InvalidateMeasure();
+
+			base.DetachArtboard(artboard);
 		}
 
 		private void DetachCanvas(ArtboardCanvas canvas)
@@ -94,10 +86,10 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			base.OnDesignHeightChanged();
 
-			if (_artboard == null)
+			if (Artboard == null)
 				return;
 
-			foreach (var canvas in _artboard.CanvasCollection)
+			foreach (var canvas in Artboard.CanvasCollection)
 				canvas.DesignHeight = DesignHeight;
 		}
 
@@ -105,10 +97,10 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			base.OnDesignWidthChanged();
 
-			if (_artboard == null)
+			if (Artboard == null)
 				return;
 
-			foreach (var canvas in _artboard.CanvasCollection)
+			foreach (var canvas in Artboard.CanvasCollection)
 				canvas.DesignWidth = DesignWidth;
 		}
 
@@ -116,10 +108,10 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			base.OnOffsetXChanged();
 
-			if (_artboard == null)
+			if (Artboard == null)
 				return;
 
-			foreach (var canvas in _artboard.CanvasCollection)
+			foreach (var canvas in Artboard.CanvasCollection)
 				canvas.OffsetX = OffsetX;
 		}
 
@@ -127,10 +119,10 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			base.OnOffsetYChanged();
 
-			if (_artboard == null)
+			if (Artboard == null)
 				return;
 
-			foreach (var canvas in _artboard.CanvasCollection)
+			foreach (var canvas in Artboard.CanvasCollection)
 				canvas.OffsetY = OffsetY;
 		}
 
@@ -138,10 +130,10 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			base.OnZoomChanged();
 
-			if (_artboard == null)
+			if (Artboard == null)
 				return;
 
-			foreach (var canvas in _artboard.CanvasCollection)
+			foreach (var canvas in Artboard.CanvasCollection)
 				canvas.Zoom = Zoom;
 		}
 	}

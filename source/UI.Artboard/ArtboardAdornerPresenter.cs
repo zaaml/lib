@@ -4,7 +4,7 @@
 
 namespace Zaaml.UI.Controls.Artboard
 {
-	public sealed class ArtboardAdornerPresenter : ArtboardControlBase<ArtboardAdornerPanel>
+	public sealed class ArtboardAdornerPresenter : ArtboardComponentControlBase<ArtboardAdornerPanel>
 	{
 		internal ArtboardAdornerPanel AdornerPanel => TemplateRoot;
 

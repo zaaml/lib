@@ -12,7 +12,7 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.Artboard
 {
 	[ContentProperty("Model")]
-	public class ArtboardRuler : FixedTemplateControl<ArtboardRulerPanel>
+	public class ArtboardRuler : FixedTemplateControl<ArtboardRulerPanel>, IArtboardComponentControl
 	{
 		public static readonly DependencyProperty OffsetProperty = DPM.Register<double, ArtboardRuler>
 			("Offset", r => r.OnOffsetChanged);
@@ -38,6 +38,8 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			this.OverrideStyleKey<ArtboardRuler>();
 		}
+
+		private ArtboardControl Artboard { get; set; }
 
 		public ArtboardRulerModel Model
 		{
@@ -146,6 +148,50 @@ namespace Zaaml.UI.Controls.Artboard
 			TemplateRoot.VerticalLines = orientation == Orientation.Horizontal;
 			TemplateRoot.HorizontalLines = orientation == Orientation.Vertical;
 			TemplateRoot.OnOrientationChanged();
+		}
+
+		double IArtboardComponentControl.DesignHeight
+		{
+			get => 0.0;
+			set { }
+		}
+
+		double IArtboardComponentControl.DesignWidth
+		{
+			get => 0.0;
+			set { }
+		}
+
+		double IArtboardComponentControl.Zoom
+		{
+			get => Zoom;
+			set => Zoom = value;
+		}
+
+		double IArtboardComponentControl.OffsetX
+		{
+			get => Orientation == Orientation.Horizontal ? Offset : 0.0;
+			set
+			{
+				if (Orientation == Orientation.Horizontal)
+					Offset = value;
+			}
+		}
+
+		double IArtboardComponentControl.OffsetY
+		{
+			get => Orientation == Orientation.Vertical ? Offset : 0.0;
+			set
+			{
+				if (Orientation == Orientation.Vertical)
+					Offset = value;
+			}
+		}
+
+		ArtboardControl IArtboardComponentControl.Artboard
+		{
+			get => Artboard;
+			set => Artboard = value;
 		}
 	}
 }

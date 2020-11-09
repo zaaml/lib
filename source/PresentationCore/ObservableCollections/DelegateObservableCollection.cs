@@ -31,12 +31,14 @@ namespace Zaaml.PresentationCore.ObservableCollections
     protected override void OnItemAdded(T obj)
     {
       base.OnItemAdded(obj);
+
       _onItemAdded(obj);
     }
 
     protected override void OnItemRemoved(T item)
     {
       base.OnItemRemoved(item);
+
       _onItemRemoved(item);
     }
 

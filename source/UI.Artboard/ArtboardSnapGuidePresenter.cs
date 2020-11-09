@@ -2,25 +2,41 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Windows;
-using System.Windows.Controls;
-using Zaaml.PresentationCore.PropertyCore;
-
 namespace Zaaml.UI.Controls.Artboard
 {
-	public class ArtboardSnapGuidePresenter : ArtboardControlBase<ArtboardSnapGuidePanel>
+	public class ArtboardSnapGuidePresenter : ArtboardComponentControlBase<ArtboardSnapGuidePanel>
 	{
-		public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, ArtboardSnapGuidePresenter>
-			("Orientation", default, d => d.OnOrientationPropertyChangedPrivate);
-
-		public Orientation Orientation
+		public ArtboardSnapGuidePresenter()
 		{
-			get => (Orientation) GetValue(OrientationProperty);
-			set => SetValue(OrientationProperty, value);
+			SnapGuides = new ArtboardSnapGuideCollectionInternal(this);
 		}
 
-		private void OnOrientationPropertyChangedPrivate(Orientation oldValue, Orientation newValue)
+		internal ArtboardSnapGuideCollectionInternal SnapGuides { get; }
+
+		protected override void ApplyTemplateOverride()
 		{
+			base.ApplyTemplateOverride();
+
+			foreach (var snapGuide in SnapGuides)
+				TemplateRoot.Children.Add(snapGuide);
+		}
+
+		internal void OnSnapGuideAdded(ArtboardSnapGuide snapGuide)
+		{
+			TemplateRoot?.Children.Add(snapGuide);
+		}
+
+		internal void OnSnapGuideRemoved(ArtboardSnapGuide snapGuide)
+		{
+			TemplateRoot?.Children.Remove(snapGuide);
+		}
+
+		protected override void UndoTemplateOverride()
+		{
+			foreach (var snapGuide in SnapGuides)
+				TemplateRoot.Children.Remove(snapGuide);
+
+			base.UndoTemplateOverride();
 		}
 	}
 }

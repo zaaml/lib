@@ -39,7 +39,7 @@ namespace Zaaml.PresentationCore.ObservableCollections
 
     #region  Methods
 
-    protected virtual void OnItemAdded(T obj)
+    protected virtual void OnItemAdded(T item)
     {
     }
 

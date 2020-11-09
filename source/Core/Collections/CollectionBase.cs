@@ -56,21 +56,19 @@ namespace Zaaml.Core.Collections
       get
       {
         var listItems = _items as List<T>;
+
         return listItems?.Capacity ?? Count;
       }
       set
       {
-        var listItems = _items as List<T>;
-
-        if (listItems != null)
+	      if (_items is List<T> listItems)
           listItems.Capacity = value;
       }
     }
 
     public void RemoveRange(int index, int count)
     {
-      var list = _items as List<T>;
-      if (list != null)
+	    if (_items is List<T> list)
         list.RemoveRange(index, count);
       else
       {
@@ -114,8 +112,10 @@ namespace Zaaml.Core.Collections
     {
       if (value is T)
         return true;
+
       if (value == null)
         return default(T) == null;
+
       return false;
     }
 
@@ -144,9 +144,7 @@ namespace Zaaml.Core.Collections
         if (_syncRoot != null)
           return _syncRoot;
 
-        var items = _items as ICollection;
-
-        if (items != null)
+        if (_items is ICollection items)
           _syncRoot = items.SyncRoot;
         else
           Interlocked.CompareExchange<object>(ref _syncRoot, new object(), null);
@@ -173,8 +171,7 @@ namespace Zaaml.Core.Collections
       if (array.Length - index < Count)
         Error.ThrowArgumentException(ExceptionResource.Arg_ArrayPlusOffTooSmall);
 
-      var array1 = array as T[];
-      if (array1 != null)
+      if (array is T[] array1)
       {
         _items.CopyTo(array1, index);
       }
@@ -304,6 +301,7 @@ namespace Zaaml.Core.Collections
       get
       {
         var items = _items as IList;
+
         return items?.IsFixedSize ?? _items.IsReadOnly;
       }
     }
@@ -327,20 +325,17 @@ namespace Zaaml.Core.Collections
 
       return Count - 1;
     }
-
-
+		
     bool IList.Contains(object value)
     {
       return IsCompatibleObject(value) && Contains((T) value);
     }
-
-
+		
     int IList.IndexOf(object value)
     {
       return IsCompatibleObject(value) ? IndexOf((T) value) : -1;
     }
-
-
+		
     void IList.Insert(int index, object value)
     {
       if (_items.IsReadOnly)
@@ -357,8 +352,7 @@ namespace Zaaml.Core.Collections
         Error.ThrowWrongValueTypeArgumentException(value, typeof(T));
       }
     }
-
-
+		
     void IList.Remove(object value)
     {
       if (_items.IsReadOnly)

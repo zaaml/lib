@@ -3,9 +3,13 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -74,6 +78,19 @@ namespace Zaaml.UI.Controls.Artboard
 
 		public static readonly DependencyProperty CanvasCollectionProperty = CanvasCollectionPropertyKey.DependencyProperty;
 
+		private protected readonly CompositeTransform ScrollViewTransform = new CompositeTransform
+		{
+			ScaleX = 1.0,
+			ScaleY = 1.0
+		};
+
+		private bool _isRulerMouseOver;
+		private bool _isSnapGuideMouseOver;
+		private ArtboardSnapGuide _mouseSnapGuide;
+		private double _mouseSnapGuideOriginLocation;
+		private bool _movingSnapGuide;
+		private Point _rulerOriginLocation;
+
 		static ArtboardControl()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<ArtboardControl>();
@@ -82,6 +99,8 @@ namespace Zaaml.UI.Controls.Artboard
 		public ArtboardControl()
 		{
 			this.OverrideStyleKey<ArtboardControl>();
+
+			MouseSnapGuide = PreviewSnapGuide;
 		}
 
 		public ArtboardAdornerFactoryCollection AdornerFactories => this.GetValueOrCreate(AdornerFactoriesPropertyKey, CreateArtboardAdornerFactoryCollection);
@@ -91,6 +110,22 @@ namespace Zaaml.UI.Controls.Artboard
 		internal ArtboardAdornerPresenter AdornerPresenterInternal => AdornerPresenter;
 
 		public ArtboardCanvasCollection CanvasCollection => this.GetValueOrCreate(CanvasCollectionPropertyKey, () => new ArtboardCanvasCollection(this));
+
+		private IEnumerable<IArtboardComponentControl> Components
+		{
+			get
+			{
+				yield return Presenter;
+				yield return GridLineControl;
+				yield return VerticalRuler;
+				yield return HorizontalRuler;
+				yield return AdornerPresenter;
+				yield return DesignTopContentControl;
+				yield return DesignBottomContentControl;
+				yield return VerticalSnapGuidePresenter;
+				yield return HorizontalSnapGuidePresenter;
+			}
+		}
 
 		public Brush DesignBackground
 		{
@@ -150,13 +185,61 @@ namespace Zaaml.UI.Controls.Artboard
 			set => SetValue(DesignWidthProperty, value);
 		}
 
+		protected Matrix FromDesignMatrix => ScrollViewTransform.Transform.Value;
+
 		private ArtboardGridLineControl GridLineControl => TemplateContract.GridLineControl;
 
 		internal ArtboardGridLineControl GridLineControlInternal => GridLineControl;
 
 		private ArtboardRuler HorizontalRuler => TemplateContract.HorizontalRuler;
 
+		private ArtboardSnapGuidePresenter HorizontalSnapGuidePresenter => TemplateContract.HorizontalSnapGuidePresenter;
+
+		private bool IsRulerMouseOver
+		{
+			get => _isRulerMouseOver;
+			set
+			{
+				if (_isRulerMouseOver == value)
+					return;
+
+				_isRulerMouseOver = value;
+
+				UpdateSnapGuidePresenterHitTestVisibility();
+			}
+		}
+
+		private bool IsSnapGuideMouseOver
+		{
+			get => _isSnapGuideMouseOver;
+			set
+			{
+				if (_isSnapGuideMouseOver == value)
+					return;
+
+				_isSnapGuideMouseOver = value;
+
+				UpdateSnapGuidePresenterHitTestVisibility();
+			}
+		}
+
+		private ArtboardSnapGuide MouseSnapGuide
+		{
+			get => _mouseSnapGuide;
+			set
+			{
+				if (ReferenceEquals(_mouseSnapGuide, value))
+					return;
+
+				_mouseSnapGuide = value;
+
+				PreviewSnapGuide.Visibility = ReferenceEquals(_mouseSnapGuide, PreviewSnapGuide) == false ? Visibility.Collapsed : Visibility.Visible;
+			}
+		}
+
 		private ArtboardPresenter Presenter => TemplateContract.Presenter;
+
+		private ArtboardSnapGuide PreviewSnapGuide { get; } = new ArtboardSnapGuide {IsHitTestVisible = false};
 
 		internal double ScrollPanelOffsetX { get; set; }
 
@@ -182,7 +265,21 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private ArtboardControlTemplateContract TemplateContract => (ArtboardControlTemplateContract) TemplateContractInternal;
 
+		protected Matrix ToDesignMatrix
+		{
+			get
+			{
+				var matrix = ScrollViewTransform.Transform.Value;
+
+				matrix.Invert();
+
+				return matrix;
+			}
+		}
+
 		private ArtboardRuler VerticalRuler => TemplateContract.VerticalRuler;
+
+		private ArtboardSnapGuidePresenter VerticalSnapGuidePresenter => TemplateContract.VerticalSnapGuidePresenter;
 
 		public double Zoom
 		{
@@ -237,6 +334,33 @@ namespace Zaaml.UI.Controls.Artboard
 			return (ArtboardAdornerCollection) element.GetValue(AdornersProperty);
 		}
 
+		private ArtboardSnapGuidePresenter GetTargetSnapGuidePresenter(ArtboardSnapGuide snapGuide)
+		{
+			return snapGuide.Orientation switch
+			{
+				Orientation.Horizontal => HorizontalSnapGuidePresenter,
+				Orientation.Vertical => VerticalSnapGuidePresenter,
+				_ => throw new InvalidOperationException()
+			};
+		}
+
+		private void MoveSnapGuide(ArtboardSnapGuide snapGuide, MouseEventArgs e)
+		{
+			MouseSnapGuide = snapGuide;
+
+			var ruler = MouseSnapGuide.Orientation == Orientation.Horizontal ? VerticalRuler : HorizontalRuler;
+
+			_mouseSnapGuideOriginLocation = MouseSnapGuide.Location;
+			_rulerOriginLocation = e.GetPosition(ruler);
+
+			var captured = ruler.CaptureMouse();
+
+			if (captured == false)
+				return;
+
+			_movingSnapGuide = true;
+		}
+
 		internal void OnAdornerFactoryAdded(ArtboardAdornerFactory adornerFactory)
 		{
 			foreach (var canvas in CanvasCollection)
@@ -264,6 +388,90 @@ namespace Zaaml.UI.Controls.Artboard
 			OnDesignSizeChanged();
 		}
 
+		private void OnRulerGotMouseCapture(object sender, MouseEventArgs e)
+		{
+			var ruler = (ArtboardRuler) sender;
+
+			ruler.Cursor = MouseSnapGuide.Cursor;
+		}
+
+		private void OnRulerLostMouseCapture(object sender, MouseEventArgs e)
+		{
+			var ruler = (ArtboardRuler) sender;
+
+			ruler.Cursor = Cursors.Arrow;
+
+			_movingSnapGuide = false;
+		}
+
+		private void OnRulerMouseDown(object sender, MouseButtonEventArgs e)
+		{
+			if (e.ClickCount == 1)
+				MoveSnapGuide(PreviewSnapGuide, e);
+		}
+
+		private void OnRulerMouseEnter(object sender, MouseEventArgs e)
+		{
+			var ruler = (ArtboardRuler) sender;
+
+			PreviewSnapGuide.Orientation = ruler.Orientation.Rotate();
+			GetTargetSnapGuidePresenter(PreviewSnapGuide).SnapGuides.Add(PreviewSnapGuide);
+
+			IsRulerMouseOver = true;
+		}
+
+		private void OnRulerMouseLeave(object sender, MouseEventArgs e)
+		{
+			GetTargetSnapGuidePresenter(PreviewSnapGuide).SnapGuides.Remove(PreviewSnapGuide);
+
+			IsRulerMouseOver = false;
+		}
+
+		private void OnRulerMouseMove(object sender, MouseEventArgs e)
+		{
+			var ruler = (ArtboardRuler) sender;
+			var designMatrix = ToDesignMatrix;
+			var rulerPosition = e.GetPosition(ruler);
+			var designPosition = designMatrix.Transform(rulerPosition);
+
+			if (ReferenceEquals(MouseSnapGuide, PreviewSnapGuide))
+				MouseSnapGuide.Location = ruler.Orientation == Orientation.Horizontal ? designPosition.X : designPosition.Y;
+			else
+			{
+				var designOriginPosition = designMatrix.Transform(_rulerOriginLocation);
+
+				if (ruler.Orientation == Orientation.Horizontal)
+					MouseSnapGuide.Location = _mouseSnapGuideOriginLocation + designPosition.X - designOriginPosition.X;
+				else
+					MouseSnapGuide.Location = _mouseSnapGuideOriginLocation + designPosition.Y - designOriginPosition.Y;
+			}
+		}
+
+		private void OnRulerMouseUp(object sender, MouseButtonEventArgs e)
+		{
+			var ruler = (ArtboardRuler) sender;
+
+			if (_movingSnapGuide == false)
+				return;
+
+			_movingSnapGuide = false;
+
+			if (ReferenceEquals(MouseSnapGuide, PreviewSnapGuide))
+			{
+				var snapGuide = new ArtboardSnapGuide
+				{
+					Orientation = PreviewSnapGuide.Orientation,
+					Location = PreviewSnapGuide.Location
+				};
+
+				SnapGuides.Add(snapGuide);
+			}
+
+			MouseSnapGuide = PreviewSnapGuide;
+
+			ruler.ReleaseMouseCapture();
+		}
+
 		private void OnSnapEnginePropertyChangedPrivate(ArtboardSnapEngine oldValue, ArtboardSnapEngine newValue)
 		{
 			if (oldValue != null)
@@ -273,22 +481,141 @@ namespace Zaaml.UI.Controls.Artboard
 				AttachSnapEngine(newValue);
 		}
 
+		internal void OnSnapGuideAdded(ArtboardSnapGuide snapGuide)
+		{
+			snapGuide.Artboard = this;
+
+			if (IsTemplateAttached == false)
+				return;
+
+			GetTargetSnapGuidePresenter(snapGuide).SnapGuides.Add(snapGuide);
+		}
+
+		internal void OnSnapGuideMouseDown(ArtboardSnapGuide artboardSnapGuide, MouseButtonEventArgs e)
+		{
+			if (e.Handled)
+				return;
+
+			if (e.ChangedButton != MouseButton.Left)
+				return;
+
+			MoveSnapGuide(artboardSnapGuide, e);
+
+			e.Handled = true;
+		}
+
+		internal void OnSnapGuideMouseEnter(ArtboardSnapGuide artboardSnapGuide, MouseEventArgs e)
+		{
+			IsSnapGuideMouseOver = true;
+		}
+
+		internal void OnSnapGuideMouseLeave(ArtboardSnapGuide artboardSnapGuide, MouseEventArgs e)
+		{
+			IsSnapGuideMouseOver = false;
+		}
+
+		internal void OnSnapGuideMouseUp(ArtboardSnapGuide artboardSnapGuide, MouseButtonEventArgs e)
+		{
+			if (e.Handled)
+				return;
+
+			if (e.ChangedButton != MouseButton.Left)
+				return;
+
+			e.Handled = true;
+		}
+
+		internal void OnSnapGuideOrientationChanged(ArtboardSnapGuide snapGuide)
+		{
+			if (IsTemplateAttached == false)
+				return;
+
+			if (snapGuide.Orientation == Orientation.Horizontal)
+			{
+				VerticalSnapGuidePresenter.SnapGuides.Remove(snapGuide);
+				HorizontalSnapGuidePresenter.SnapGuides.Add(snapGuide);
+			}
+			else
+			{
+				HorizontalSnapGuidePresenter.SnapGuides.Remove(snapGuide);
+				VerticalSnapGuidePresenter.SnapGuides.Add(snapGuide);
+			}
+		}
+
+		internal void OnSnapGuideRemoved(ArtboardSnapGuide snapGuide)
+		{
+			if (IsTemplateAttached == false)
+				return;
+
+			GetTargetSnapGuidePresenter(snapGuide).SnapGuides.Remove(snapGuide);
+
+			snapGuide.Artboard = null;
+		}
+
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
 
 			ScrollView.Artboard = this;
-			Presenter.Artboard = this;
+
+			foreach (var component in Components)
+				component.Artboard = this;
+
+			foreach (var snapGuide in SnapGuides)
+			{
+				if (snapGuide.Orientation == Orientation.Horizontal)
+					HorizontalSnapGuidePresenter.SnapGuides.Add(snapGuide);
+				else
+					VerticalSnapGuidePresenter.SnapGuides.Add(snapGuide);
+			}
+
+			VerticalRuler.MouseEnter += OnRulerMouseEnter;
+			VerticalRuler.MouseLeave += OnRulerMouseLeave;
+			VerticalRuler.MouseMove += OnRulerMouseMove;
+			VerticalRuler.MouseLeftButtonDown += OnRulerMouseDown;
+			VerticalRuler.MouseLeftButtonUp += OnRulerMouseUp;
+			VerticalRuler.GotMouseCapture += OnRulerGotMouseCapture;
+			VerticalRuler.LostMouseCapture += OnRulerLostMouseCapture;
+
+			HorizontalRuler.MouseEnter += OnRulerMouseEnter;
+			HorizontalRuler.MouseLeave += OnRulerMouseLeave;
+			HorizontalRuler.MouseMove += OnRulerMouseMove;
+			HorizontalRuler.MouseLeftButtonDown += OnRulerMouseDown;
+			HorizontalRuler.MouseLeftButtonUp += OnRulerMouseUp;
+			HorizontalRuler.GotMouseCapture += OnRulerGotMouseCapture;
+			HorizontalRuler.LostMouseCapture += OnRulerLostMouseCapture;
 
 			UpdateZoom();
 			UpdateOffset();
 			UpdateDesignSize();
+			UpdateSnapGuidePresenterHitTestVisibility();
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
+			VerticalRuler.MouseEnter -= OnRulerMouseEnter;
+			VerticalRuler.MouseLeave -= OnRulerMouseLeave;
+			VerticalRuler.MouseMove -= OnRulerMouseMove;
+			VerticalRuler.MouseLeftButtonDown -= OnRulerMouseDown;
+			VerticalRuler.MouseLeftButtonUp -= OnRulerMouseUp;
+			VerticalRuler.GotMouseCapture -= OnRulerGotMouseCapture;
+			VerticalRuler.LostMouseCapture -= OnRulerLostMouseCapture;
+
+			HorizontalRuler.MouseEnter -= OnRulerMouseEnter;
+			HorizontalRuler.MouseLeave -= OnRulerMouseLeave;
+			HorizontalRuler.MouseMove -= OnRulerMouseMove;
+			HorizontalRuler.MouseLeftButtonDown -= OnRulerMouseDown;
+			HorizontalRuler.MouseLeftButtonUp -= OnRulerMouseUp;
+			HorizontalRuler.GotMouseCapture -= OnRulerGotMouseCapture;
+			HorizontalRuler.LostMouseCapture -= OnRulerLostMouseCapture;
+
+			HorizontalSnapGuidePresenter.SnapGuides.Clear();
+			VerticalSnapGuidePresenter.SnapGuides.Clear();
+
 			ScrollView.Artboard = null;
-			Presenter.Artboard = null;
+
+			foreach (var component in Components)
+				component.Artboard = this;
 
 			base.OnTemplateContractDetaching();
 		}
@@ -306,43 +633,31 @@ namespace Zaaml.UI.Controls.Artboard
 			var designWidth = DesignWidth;
 			var designHeight = DesignHeight;
 
-			Presenter.DesignWidth = designWidth;
-			Presenter.DesignHeight = designHeight;
-
-			AdornerPresenter.DesignWidth = designWidth;
-			AdornerPresenter.DesignHeight = designHeight;
-
-			DesignTopContentControl.DesignWidth = designWidth;
-			DesignTopContentControl.DesignHeight = designHeight;
-
-			DesignBottomContentControl.DesignWidth = designWidth;
-			DesignBottomContentControl.DesignHeight = designHeight;
+			foreach (var component in Components)
+			{
+				component.DesignWidth = designWidth;
+				component.DesignHeight = designHeight;
+			}
 
 			ScrollView.OnDesignSizeChangedInternal();
 		}
 
 		private void UpdateOffset()
 		{
-			if (IsTemplateAttached == false)
-				return;
-
 			var offsetX = ScrollPanelOffsetX;
 			var offsetY = ScrollPanelOffsetY;
 
-			HorizontalRuler.Offset = offsetX;
-			VerticalRuler.Offset = offsetY;
+			ScrollViewTransform.TranslateX = -offsetX;
+			ScrollViewTransform.TranslateY = -offsetY;
 
-			GridLineControl.OffsetX = offsetX;
-			GridLineControl.OffsetY = offsetY;
+			if (IsTemplateAttached == false)
+				return;
 
-			AdornerPresenter.OffsetX = offsetX;
-			AdornerPresenter.OffsetY = offsetY;
-
-			DesignTopContentControl.OffsetX = offsetX;
-			DesignTopContentControl.OffsetY = offsetY;
-
-			DesignBottomContentControl.OffsetX = offsetX;
-			DesignBottomContentControl.OffsetY = offsetY;
+			foreach (var component in Components)
+			{
+				component.OffsetX = offsetX;
+				component.OffsetY = offsetY;
+			}
 		}
 
 		internal void UpdateScrollPanelOffset(double offsetX, double offsetY)
@@ -353,20 +668,22 @@ namespace Zaaml.UI.Controls.Artboard
 			UpdateOffset();
 		}
 
+		private void UpdateSnapGuidePresenterHitTestVisibility()
+		{
+			HorizontalSnapGuidePresenter.IsHitTestVisible = VerticalSnapGuidePresenter.IsHitTestVisible = IsRulerMouseOver || IsSnapGuideMouseOver;
+		}
+
 		private void UpdateZoom()
 		{
+			var zoom = Zoom;
+
+			ScrollViewTransform.ScaleX = ScrollViewTransform.ScaleY = zoom;
+
 			if (IsTemplateAttached == false)
 				return;
 
-			var zoom = Zoom;
-
-			Presenter.Zoom = zoom;
-			GridLineControl.Zoom = zoom;
-			VerticalRuler.Zoom = zoom;
-			HorizontalRuler.Zoom = zoom;
-			AdornerPresenter.Zoom = zoom;
-			DesignTopContentControl.Zoom = zoom;
-			DesignBottomContentControl.Zoom = zoom;
+			foreach (var component in Components)
+				component.Zoom = zoom;
 		}
 	}
 }

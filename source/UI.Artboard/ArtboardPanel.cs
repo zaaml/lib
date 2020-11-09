@@ -13,11 +13,35 @@ namespace Zaaml.UI.Controls.Artboard
 {
 	public abstract class ArtboardPanel : Panel
 	{
-		private protected readonly CompositeTransform ScrollViewTransform = new CompositeTransform();
+		private protected readonly CompositeTransform ScrollViewTransform = new CompositeTransform
+		{
+			ScaleX = 1.0,
+			ScaleY = 1.0
+		};
+
+		private ArtboardControl _artboard;
 		private double _designHeight;
 		private double _designWidth;
 
 		internal event EventHandler DesignMatrixChanged;
+
+		public ArtboardControl Artboard
+		{
+			get => _artboard;
+			internal set
+			{
+				if (ReferenceEquals(_artboard, value))
+					return;
+
+				if (_artboard != null)
+					DetachArtboard(_artboard);
+
+				_artboard = value;
+
+				if (_artboard != null)
+					AttachArtboard(_artboard);
+			}
+		}
 
 		internal double DesignHeight
 		{
@@ -47,7 +71,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		private Matrix FromDesignMatrix => ScrollViewTransform.Transform.Value;
+		protected Matrix FromDesignMatrix => ScrollViewTransform.Transform.Value;
 
 		internal double OffsetX
 		{
@@ -79,7 +103,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		private Matrix ToDesignMatrix
+		protected Matrix ToDesignMatrix
 		{
 			get
 			{
@@ -104,6 +128,14 @@ namespace Zaaml.UI.Controls.Artboard
 				OnZoomChanged();
 				OnDesignMatrixChanged();
 			}
+		}
+
+		private protected virtual void AttachArtboard(ArtboardControl artboard)
+		{
+		}
+
+		private protected virtual void DetachArtboard(ArtboardControl artboard)
+		{
 		}
 
 		protected virtual void OnDesignHeightChanged()
