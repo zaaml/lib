@@ -7,5 +7,207 @@
                                 mc:Ignorable="zmb"
                                 Name="Light">
 
+  <zm:SkinDictionary x:Key="Metro">
+
+    <!-- Docking -->
+    <zm:SkinDictionary x:Key="Docking">
+
+      <!-- DockControl -->
+      <zm:SkinDictionary x:Key="DockControl">
+        <SolidColorBrush x:Key="Background" Color="#FFE6E6E6" />
+      </zm:SkinDictionary>
+
+      <!-- FloatingDockWindow -->
+      <zm:SkinDictionary x:Key="FloatingDockWindow" BasedOn="Metro.Window">
+
+        <!-- WindowPresenter -->
+        <zm:SkinDictionary x:Key="WindowPresenter">
+
+          <!-- WindowFramePresenter -->
+          <zm:SkinDictionary x:Key="WindowFramePresenter">
+
+            <!-- Background -->
+            <zm:SkinDictionary x:Key="Background">
+              <SolidColorBrush x:Key="Normal" Color="#FFE6E6E6" zmb:Skin="Office" />
+              <SolidColorBrush x:Key="Active" Color="#FFE6E6E6" zmb:Skin="Office" />
+            </zm:SkinDictionary>
+
+            <!-- BorderBrush -->
+            <zm:SkinDictionary x:Key="BorderBrush">
+              <SolidColorBrush x:Key="Normal" Color="#FFB9B9B9" zmb:Skin="Office" />
+              <SolidColorBrush x:Key="Active" Color="#FF0173C7" zmb:Skin="Office" />
+            </zm:SkinDictionary>
+
+            <Color x:Key="Shadow">#FF000000</Color>
+          </zm:SkinDictionary>
+
+        </zm:SkinDictionary>
+
+      </zm:SkinDictionary>
+
+      <!-- DockItemHeaderPresenter-->
+      <zm:SkinDictionary x:Key="DockItemHeaderPresenter">
+
+        <!-- Foreground -->
+        <zm:SkinDictionary x:Key="Foreground">
+          <SolidColorBrush x:Key="Normal" Color="#E3000000" />
+          <SolidColorBrush x:Key="Selected" Color="#FFFFFFFF" />
+          <SolidColorBrush x:Key="SelectedInactive" Color="#E3000000" />
+        </zm:SkinDictionary>
+
+        <!-- Background -->
+        <zm:SkinDictionary x:Key="Background">
+          <SolidColorBrush x:Key="Normal" Color="#FFF0F0F0" />
+          <SolidColorBrush x:Key="Selected" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="SelectedInactive" Color="#FFF0F0F0" />
+        </zm:SkinDictionary>
+
+        <!-- BorderBrush -->
+        <zm:SkinDictionary x:Key="BorderBrush">
+          <SolidColorBrush x:Key="Normal" Color="#FFF0F0F0" />
+          <SolidColorBrush x:Key="Selected" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="SelectedInactive" Color="#FFF0F0F0" />
+        </zm:SkinDictionary>
+
+        <!-- Button -->
+        <zm:SkinDictionary x:Key="Button">
+
+          <!-- Background -->
+          <zm:SkinDictionary x:Key="Background">
+            <SolidColorBrush x:Key="Normal" Color="#00000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="MouseOver" Color="#40000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Pressed" Color="#50000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Checked" Color="#00000000" zmb:Skin="Office" />
+          </zm:SkinDictionary>
+
+          <!-- Glyph -->
+          <zm:SkinDictionary x:Key="Glyph">
+
+            <!-- IconStyle -->
+            <Style x:Key="Style" TargetType="zm:PathIcon">
+              <Setter Property="Width" Value="11" />
+              <Setter Property="Height" Value="11" />
+              <Setter Property="Stretch" Value="None" />
+              <Setter Property="BrushMode" Value="Fill" />
+              <Setter Property="StrokeThickness" Value="0" />
+            </Style>
+
+            <s:String x:Key="Menu">M1,3L10,3 5.5,8 1,3z M 0,0 Z M 11,11 Z</s:String>
+            <s:String x:Key="Pin">M3,1L8,1 8,6 9,6 9,7 6,7 6,10 5,10 5,7 2,7 2,6 3,6 3,1z M4,2L4,6 6,6 6,2 4,2z M 0,0 Z M 11,11 Z</s:String>
+            <s:String x:Key="Close">M1.46,2.47L2.47,1.46 5.5,4.49 8.53,1.46 9.54,2.47 6.51,5.5 9.54,8.53 8.53,9.54 5.5,6.51 2.47,9.54 1.46,8.53 4.49,5.5 1.46,2.47z M 0,0 Z M 11,11 Z</s:String>
+
+          </zm:SkinDictionary>
+        </zm:SkinDictionary>
+      </zm:SkinDictionary>
+
+      <!-- DockItem -->
+      <zm:SkinDictionary x:Key="DockItem">
+
+        <!-- Foreground -->
+        <zm:SkinDictionary x:Key="Foreground">
+          <SolidColorBrush x:Key="Normal" Color="#E3000000" />
+          <SolidColorBrush x:Key="Selected" Color="#E3000000" />
+          <SolidColorBrush x:Key="SelectedInactive" Color="#E3000000" />
+        </zm:SkinDictionary>
+
+        <!-- Background -->
+        <zm:SkinDictionary x:Key="Background">
+          <SolidColorBrush x:Key="Normal" Color="#FFF0F0F0" />
+          <SolidColorBrush x:Key="Selected" Color="#FFF0F0F0" />
+          <SolidColorBrush x:Key="SelectedInactive" Color="#FFF0F0F0" />
+        </zm:SkinDictionary>
+
+        <!-- BorderBrush -->
+        <zm:SkinDictionary x:Key="BorderBrush">
+          <SolidColorBrush x:Key="Normal" Color="#FFB9B9B9" />
+          <SolidColorBrush x:Key="Selected" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="SelectedInactive" Color="#FFB9B9B9" />
+        </zm:SkinDictionary>
+      </zm:SkinDictionary>
+
+      <!-- TabTabDockItemGroup -->
+      <zm:SkinDictionary x:Key="TabDockItemGroup">
+
+        <!-- BorderBrush -->
+        <zm:SkinDictionary x:Key="BorderBrush">
+          <SolidColorBrush x:Key="Normal" Color="#FFB9B9B9" />
+          <SolidColorBrush x:Key="Selected" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="SelectedInactive" Color="#FFB9B9B9" />
+        </zm:SkinDictionary>
+      </zm:SkinDictionary>
+
+      <!-- DocumentDockItemGroup -->
+      <zm:SkinDictionary x:Key="DocumentDockItemGroup">
+
+        <!-- BorderBrush -->
+        <zm:SkinDictionary x:Key="BorderBrush">
+          <SolidColorBrush x:Key="Normal" Color="#FFB9B9B9" />
+          <SolidColorBrush x:Key="Selected" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="SelectedInactive" Color="#FFB9B9B9" />
+        </zm:SkinDictionary>
+      </zm:SkinDictionary>
+
+      <!-- DockItemPreviewElement -->
+      <zm:SkinDictionary x:Key="DockItemPreviewElement">
+        <SolidColorBrush x:Key="Background" Color="#FF2576C4" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#FF2576C4" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- AutoHideTabViewItem -->
+      <zm:SkinDictionary x:Key="AutoHideTabViewItem">
+
+        <!-- Foreground -->
+        <zm:SkinDictionary x:Key="Foreground">
+          <SolidColorBrush x:Key="Normal" Color="#E3000000" />
+          <SolidColorBrush x:Key="MouseOver" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="Pressed" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="Selected" Color="#FF2576C4" />
+        </zm:SkinDictionary>
+
+        <!-- Background -->
+        <zm:SkinDictionary x:Key="Background">
+          <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" />
+          <SolidColorBrush x:Key="MouseOver" Color="#00FFFFFF" />
+          <SolidColorBrush x:Key="Pressed" Color="#00FFFFFF" />
+          <SolidColorBrush x:Key="Selected" Color="#00FFFFFF" />
+        </zm:SkinDictionary>
+
+        <!-- BorderBrush -->
+        <zm:SkinDictionary x:Key="BorderBrush">
+          <SolidColorBrush x:Key="Normal" Color="#FFADADAD" />
+          <SolidColorBrush x:Key="MouseOver" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="Pressed" Color="#FF2576C4" />
+          <SolidColorBrush x:Key="Selected" Color="#FF2576C4" />
+        </zm:SkinDictionary>
+      </zm:SkinDictionary>
+
+      <SolidColorBrush x:Key="GridSplitterBackground" Color="#FFEEEEEE" />
+
+      <!-- DropCompass -->
+      <zm:SkinDictionary x:Key="DropCompass">
+        <SolidColorBrush x:Key="Background" Color="#88C6C6C6" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#FFB9B9B9" />
+      </zm:SkinDictionary>
+
+      <!-- DropGuide -->
+      <zm:SkinDictionary x:Key="DropGuide">
+        <SolidColorBrush x:Key="IconStroke" Color="#FF0072C6" />
+        <SolidColorBrush x:Key="IconFill" Color="#FFC6C6C6" />
+        <SolidColorBrush x:Key="Background" Color="#FFC6C6C6" />
+      </zm:SkinDictionary>
+
+      <!-- TabLayout -->
+      <zm:SkinDictionary x:Key="TabLayout">
+        <SolidColorBrush x:Key="Background" Color="#FFEEEEEE" />
+        <SolidColorBrush x:Key="TabItemContainer.Background" Color="#FFEEEEEE" />
+        <SolidColorBrush x:Key="TabItem.NormalBrush" Color="Transparent" />
+      </zm:SkinDictionary>
+
+      <!-- PreviewPath -->
+      <zm:SkinDictionary x:Key="PreviewPath">
+        <SolidColorBrush x:Key="Fill" Color="#FF2576C4" />
+      </zm:SkinDictionary>
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
 
 </zm:ThemeSkinResourceDictionary>
