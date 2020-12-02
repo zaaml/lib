@@ -23,8 +23,9 @@ Zaaml provides the following list of controls and components:
 * Xaml Interactivity
 
 ## Supported frameworks:
-* .NetFramework 4.8
+* .Net 5.0
 * .NetCore 3.1
+* .NetFramework 4.8
 
 ## License
 
