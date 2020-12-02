@@ -1,3 +1,5 @@
+![logo](./zaaml_logo.svg)
+
 # Zaaml UI components library
 
 Zaaml library is a set of flexible and high performance WPF UI components for building rich desktop applications.
