@@ -104,11 +104,6 @@ namespace Zaaml.UI.Controls.Core
 
 	public abstract class ItemTextFilter<TItem> : ItemTextFilter, IItemFilter
 	{
-		protected ItemTextFilter()
-		{
-			FilterText = "filter";
-		}
-
 		protected abstract bool Pass(TItem item);
 
 		bool IItemFilter.Pass(object item)

@@ -1011,7 +1011,9 @@ namespace Zaaml.UI.Windows
     }
 
     [SecuritySafeCritical]
+#if !NET5_0
     [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
+#endif
     private void WindowSourceInitialized(object sender, EventArgs e)
     {
       InitializeStep2(new WindowInteropHelper(Target));

@@ -35,6 +35,7 @@ namespace Zaaml.PresentationCore.Theming
       return typeof(Control).IsAssignableFrom(type) ? (DefaultStyleKeyProperty?.GetMetadata(type)?.DefaultValue as Type ?? typeof(FrameworkElement)) : typeof(FrameworkElement);
 #else
       var fce = typeof(FrameworkContentElement).IsAssignableFrom(type) ? (DefaultStyleKeyProperty?.GetMetadata(type)?.DefaultValue as Type ?? typeof(FrameworkContentElement)) : null;
+
       if (fce != null)
         return fce;
 
@@ -53,6 +54,7 @@ namespace Zaaml.PresentationCore.Theming
       EnsureThemeManager();
 
       var type = typeof(T);
+
       OverridenTypes.Add(type);
 
 #if SILVERLIGHT

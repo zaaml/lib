@@ -234,8 +234,9 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private void MeasureChild(UIElement child, Size size, bool force)
 		{
-			if (child.IsMeasureValid && force == false && (size.Equals(XamlConstants.InfiniteSize) || size.Equals(_lastMeasureSize)))
-				return;
+			// TODO Review measure size cache (Docking compass measured incorrectly after window maximization)
+			//if (child.IsMeasureValid && force == false && (size.Equals(XamlConstants.InfiniteSize) || size.Equals(_lastMeasureSize)))
+			//	return;
 
 			_lastMeasureSize = size;
 

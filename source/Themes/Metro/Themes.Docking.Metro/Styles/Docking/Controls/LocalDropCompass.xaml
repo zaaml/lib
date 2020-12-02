@@ -365,7 +365,7 @@
 
       <zm:Extension.Triggers>
 
-        <!--  Reduce compas size removing mid guides  -->
+        <!--  Reduce compass size removing mid guides  -->
         <zm:MultiTrigger>
           <zm:MultiTrigger.Conditions>
             <zm:DataCondition Binding="{Binding Path=IsAllowed, ElementName=SplitDocumentLeftGuide}" Value="False" />
@@ -382,7 +382,7 @@
 
         </zm:MultiTrigger>
 
-        <!--  Reduce compas size removing edge guides  -->
+        <!--  Reduce compass size removing edge guides  -->
         <zm:MultiTrigger>
           <zm:MultiTrigger.Conditions>
             <zm:DataCondition Binding="{Binding Path=IsAllowed, ElementName=SplitLeftGuide}" Value="False" />

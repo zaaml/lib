@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Windows;
 using Zaaml.Core.Utils;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Core
@@ -23,10 +24,14 @@ namespace Zaaml.UI.Controls.Core
 			if (GetMentor(logicalChild) != null)
 				return;
 
+			var dependencyObject = logicalChild as DependencyObject;
+
+			if (dependencyObject?.GetLogicalParent() != null)
+				return;
+
 			AddLogicalChildCore(logicalChild);
 
-			if (logicalChild is DependencyObject dependencyObject)
-				dependencyObject.SetValue(MentorProperty, this);
+			dependencyObject?.SetValue(MentorProperty, this);
 		}
 
 		protected abstract void AddLogicalChildCore(object logicalChild);

@@ -122,7 +122,9 @@ namespace Zaaml.Platform
     private SafeHBITMAP() : base(true) { }
 
     [SecurityCritical]
+#if !NET5_0
     [ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
+#endif
     protected override bool ReleaseHandle()
     {
       return NativeMethods.DeleteObject(handle);

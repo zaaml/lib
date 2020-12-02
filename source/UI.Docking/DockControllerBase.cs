@@ -134,6 +134,9 @@ namespace Zaaml.UI.Controls.Docking
 				// Create groups
 				foreach (var groupLayout in layouts.OfType<DockItemGroupLayout>())
 				{
+					if (string.IsNullOrEmpty(groupLayout.ItemName))
+						groupLayout.ItemName = GenerateItemName();
+
 					var group = MountItemGroup(groupLayout.GroupKind);
 
 					group.Name = groupLayout.ItemName;
@@ -236,6 +239,14 @@ namespace Zaaml.UI.Controls.Docking
 				IsItemLayoutValid = true;
 				IsInArrangeItems = false;
 			}
+		}
+
+		private void AttachItem(DockItem dockItem)
+		{
+			dockItem.Controller = this;
+
+			if (dockItem.IsSelected)
+				SelectionScope.SelectedItem = dockItem;
 		}
 
 		public void BeforeMeasure()
@@ -487,6 +498,16 @@ namespace Zaaml.UI.Controls.Docking
 					foreach (var childDockItem in DestroyGroupRecursive(dockItem))
 						yield return childDockItem;
 			}
+		}
+
+		private void DetachItem(DockItem dockItem)
+		{
+			if (dockItem.IsSelected)
+				SelectionScope.SelectedItem = null;
+
+			dockItem.RemoveFromLayout();
+
+			dockItem.Controller = null;
 		}
 
 		internal void DropItem(DockItem source, DockItem target, DropGuideAction dropGuideAction)
@@ -924,14 +945,6 @@ namespace Zaaml.UI.Controls.Docking
 			InvalidateItemArrange();
 		}
 
-		private void AttachItem(DockItem dockItem)
-		{
-			dockItem.Controller = this;
-
-			if (dockItem.IsSelected)
-				SelectionScope.SelectedItem = dockItem;
-		}
-
 		internal virtual void OnItemArranged(DockItem dockItem)
 		{
 		}
@@ -945,16 +958,6 @@ namespace Zaaml.UI.Controls.Docking
 			InternalItems.Remove(dockItem);
 
 			InvalidateItemArrange();
-		}
-
-		private void DetachItem(DockItem dockItem)
-		{
-			if (dockItem.IsSelected)
-				SelectionScope.SelectedItem = null;
-
-			dockItem.RemoveFromLayout();
-
-			dockItem.Controller = null;
 		}
 
 		private void OnLayoutResumed()

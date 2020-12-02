@@ -119,6 +119,8 @@ namespace Zaaml.UI.Controls.Docking
 			set => SetValue(LayoutProperty, value);
 		}
 
+		private bool LayoutDirty { get; set; }
+
 		private LocalDropCompass LocalDropCompass => TemplateContract.LocalCompass;
 
 		internal PreviewDockController PreviewController
@@ -212,6 +214,13 @@ namespace Zaaml.UI.Controls.Docking
 			return true;
 		}
 
+		private void InvalidateLayoutState()
+		{
+			LayoutDirty = true;
+
+			InvalidateMeasure();
+		}
+
 		protected override Size MeasureOverride(Size availableSize)
 		{
 			UpdateDockLayout();
@@ -282,6 +291,13 @@ namespace Zaaml.UI.Controls.Docking
 			item.DockControl = null;
 		}
 
+		private void OnLayoutChanged(object sender, EventArgs e)
+		{
+			LayoutDirty = true;
+
+			InvalidateLayoutState();
+		}
+
 		private void OnLayoutPropertyChangedPrivate(DockControlLayout oldValue, DockControlLayout newValue)
 		{
 			if (ReferenceEquals(oldValue, newValue))
@@ -289,20 +305,11 @@ namespace Zaaml.UI.Controls.Docking
 
 			if (oldValue != null)
 				oldValue.LayoutChanged -= OnLayoutChanged;
-			
+
 			if (newValue != null)
 				newValue.LayoutChanged += OnLayoutChanged;
 
-			LayoutDirty = true;
-		}
-
-		private bool LayoutDirty { get; set; }
-
-		private void OnLayoutChanged(object sender, EventArgs e)
-		{
-			LayoutDirty = true;
-			
-			InvalidateMeasure();
+			InvalidateLayoutState();
 		}
 
 		protected virtual void OnSelectedItemChanged(DockItem oldItem, DockItem newItem)
@@ -328,29 +335,6 @@ namespace Zaaml.UI.Controls.Docking
 			PreviewControlView.IsHitTestVisible = false;
 
 			UpdateDockLayout();
-		}
-
-		private void UpdateDockLayout()
-		{
-			if (IsTemplateAttached == false || LayoutDirty == false)
-				return;
-
-			try
-			{
-				var layout = Layout;
-
-				if (layout == null)
-					return;
-
-				Controller.ApplyLayout(layout, false);
-
-				if (PreviewController.IsEnabled)
-					PreviewController.ApplyLayout(layout, false);
-			}
-			finally
-			{
-				LayoutDirty = false;
-			}
 		}
 
 		protected override void OnTemplateContractDetaching()
@@ -423,6 +407,29 @@ namespace Zaaml.UI.Controls.Docking
 		internal void SyncPreviewLayout()
 		{
 			PreviewController.ApplyLayout(Controller.GetActualLayout(), true);
+		}
+
+		private void UpdateDockLayout()
+		{
+			if (IsTemplateAttached == false || LayoutDirty == false)
+				return;
+
+			try
+			{
+				var layout = Layout;
+
+				if (layout == null)
+					return;
+
+				Controller.ApplyLayout(layout, false);
+
+				if (PreviewController.IsEnabled)
+					PreviewController.ApplyLayout(layout, false);
+			}
+			finally
+			{
+				LayoutDirty = false;
+			}
 		}
 	}
 }

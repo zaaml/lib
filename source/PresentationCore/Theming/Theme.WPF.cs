@@ -9,36 +9,28 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public partial class Theme
-  {
-    #region Fields
+	public partial class Theme
+	{
+		private readonly Dictionary<Type, ThemeKey> _themeKeys = new Dictionary<Type, ThemeKey>();
 
-    private readonly Dictionary<Type, ThemeKey> _themeKeys = new Dictionary<Type, ThemeKey>();
+		private ThemeKey CreateThemeKey(Type elementType)
+		{
+			var masterTheme = MasterTheme;
 
-    #endregion
+			if (ReferenceEquals(this, masterTheme) == false)
+				return masterTheme.CreateThemeKey(elementType);
 
-    #region  Methods
+			var themeStyle = _themeStyles.GetValueOrDefault(elementType);
 
-    private ThemeKey CreateThemeKey(Type elementType)
-    {
-      var masterTheme = MasterTheme;
+			if (themeStyle == null)
+			{
+				ThemeResourceDictionaryLoader.Instance.EnsureThemePartLoaded(elementType.Assembly);
 
-      if (ReferenceEquals(this, masterTheme) == false)
-        return masterTheme.CreateThemeKey(elementType);
+				themeStyle = _themeStyles.GetValueOrDefault(elementType);
+			}
 
-      var themeStyle = _themeStyles.GetValueOrDefault(elementType);
-
-      if (themeStyle == null)
-      {
-	      ThemeResourceDictionaryLoader.Instance.EnsureThemePartLoaded(elementType.Assembly);
-
-	      themeStyle = _themeStyles.GetValueOrDefault(elementType);
-
-	      if (themeStyle == null)
-		      return null;
-
-	      return null;
-      }
+			if (themeStyle == null)
+				return null;
 
 			if (themeStyle.IsDeferred)
 			{
@@ -50,45 +42,42 @@ namespace Zaaml.PresentationCore.Theming
 					return null;
 			}
 
-      if (ThemeManager.EnableThemeStyle(elementType, themeStyle.TargetType) == false)
-        return null;
+			if (ThemeManager.EnableThemeStyle(elementType, themeStyle.TargetType) == false)
+				return null;
 
-      var themeKey = new ThemeKey(elementType, this, themeStyle);
+			var themeKey = new ThemeKey(elementType, this, themeStyle);
 
-      foreach (var genericDictionary in _genericDictionaries)
-        RegisterGenericThemeKey(genericDictionary, themeKey);
+			foreach (var genericDictionary in _genericDictionaries)
+				RegisterGenericThemeKey(genericDictionary, themeKey);
 
-      return themeKey;
-    }
+			return themeKey;
+		}
 
-    public ThemeKey GetThemeKey(Type elementType)
-    {
-      var masterTheme = MasterTheme;
+		public ThemeKey GetThemeKey(Type elementType)
+		{
+			var masterTheme = MasterTheme;
 
-      if (ReferenceEquals(this, masterTheme) == false)
-        return masterTheme.GetThemeKey(elementType);
+			if (ReferenceEquals(this, masterTheme) == false)
+				return masterTheme.GetThemeKey(elementType);
 
-      return _themeKeys.GetValueOrCreate(elementType, CreateThemeKey);
-    }
+			return _themeKeys.GetValueOrCreate(elementType, CreateThemeKey);
+		}
 
-    internal virtual Assembly GetThemeKeyAssembly(ThemeKey themeKey)
-    {
-      //return themeKey.ThemeStyle.Assembly ?? GetType().Assembly;
-      return themeKey.Theme.GetType().Assembly;
-    }
+		internal virtual Assembly GetThemeKeyAssembly(ThemeKey themeKey)
+		{
+			return themeKey.Theme.GetType().Assembly;
+		}
 
-    partial void PlatformOnGenericDictionaryRegistered(GenericResourceDictionary genericDictionary)
-    {
-      foreach (var themeKey in _themeKeys.Values.SkipNull())
-        RegisterGenericThemeKey(genericDictionary, themeKey);
-    }
+		partial void PlatformOnGenericDictionaryRegistered(GenericResourceDictionary genericDictionary)
+		{
+			foreach (var themeKey in _themeKeys.Values.SkipNull())
+				RegisterGenericThemeKey(genericDictionary, themeKey);
+		}
 
-    private static void RegisterGenericThemeKey(GenericResourceDictionary genericDictionary, ThemeKey themeKey)
-    {
-      if (themeKey.ThemeStyle != null)
-        genericDictionary[themeKey] = themeKey.ThemeStyle.NativeStyle;
-    }
-
-    #endregion
-  }
+		private static void RegisterGenericThemeKey(GenericResourceDictionary genericDictionary, ThemeKey themeKey)
+		{
+			if (themeKey.ThemeStyle != null)
+				genericDictionary[themeKey] = themeKey.ThemeStyle.NativeStyle;
+		}
+	}
 }

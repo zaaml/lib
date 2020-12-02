@@ -14,198 +14,174 @@ using ContentControl = Zaaml.UI.Controls.Core.ContentControl;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  [TemplateContractType(typeof(AutoHideDockItemPresenterTemplateContract))]
-  public sealed class AutoHideDockItemPresenter : TemplateContractControl
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(AutoHideDockItemPresenterTemplateContract))]
+	public sealed class AutoHideDockItemPresenter : TemplateContractControl
+	{
+		private static readonly PropertyPath AutoHideWidthPropertyPath = new PropertyPath(AutoHideLayout.AutoHideWidthProperty);
+		private static readonly PropertyPath AutoHideHeightPropertyPath = new PropertyPath(AutoHideLayout.AutoHideHeightProperty);
 
-    private static readonly PropertyPath AutoHideWidthPropertyPath = new PropertyPath(AutoHideLayout.AutoHideWidthProperty);
-    private static readonly PropertyPath AutoHideHeightPropertyPath = new PropertyPath(AutoHideLayout.AutoHideHeightProperty);
+		private bool _isAttached;
 
-    #endregion
+		public AutoHideDockItemPresenter(AutoHideTabViewItem autoHideTabViewItem)
+		{
+			AutoHideTabViewItem = autoHideTabViewItem;
 
-    #region Fields
+			ArrangeContentPresenter();
+		}
 
-    private bool _isAttached;
+		public AutoHideTabViewItem AutoHideTabViewItem { get; }
 
-    #endregion
+		public DockItem DockItem => AutoHideTabViewItem.DockItem;
 
-    #region Ctors
+		private Grid DockItemGrid => TemplateContract.DockItemGrid;
 
-    public AutoHideDockItemPresenter(AutoHideTabViewItem autoHideTabViewItem)
-    {
-      AutoHideTabViewItem = autoHideTabViewItem;
+		private ContentControl DockItemHost => TemplateContract.DockItemHost;
 
-      ArrangeContentPresenter();
-    }
+		private DockGridSplitter GridSplitter => TemplateContract.GridSplitter;
 
-    #endregion
+		public bool IsAttached
+		{
+			get => _isAttached;
+			set
+			{
+				if (_isAttached == value)
+					return;
 
-    #region Properties
+				_isAttached = value;
 
-    public AutoHideTabViewItem AutoHideTabViewItem { get; }
+				UpdateDockItemHost();
+			}
+		}
 
-    public DockItem DockItem => AutoHideTabViewItem.DockItem;
+		private AutoHideDockItemPresenterTemplateContract TemplateContract => (AutoHideDockItemPresenterTemplateContract) TemplateContractInternal;
 
-    private Grid DockItemGrid => TemplateContract.DockItemGrid;
+		private void ArrangeContentPresenter()
+		{
+			if (DockItemGrid == null)
+				return;
 
-    private ContentControl DockItemHost => TemplateContract.DockItemHost;
+			DockItemGrid.ColumnDefinitions.Clear();
+			DockItemGrid.RowDefinitions.Clear();
 
-    private DockGridSplitter GridSplitter => TemplateContract.GridSplitter;
+			var dockSide = AutoHideLayout.GetDockSide(DockItem);
 
-    public bool IsAttached
-    {
-      get => _isAttached;
-      set
-      {
-        if (_isAttached == value)
-          return;
+			if (dockSide == Dock.Left || dockSide == Dock.Right)
+			{
+				var itemColumn = new ColumnDefinition
+				{
+					Width = new GridLength(AutoHideLayout.GetAutoHideWidth(DockItem))
+				};
 
-        _isAttached = value;
+				itemColumn.SetBinding(ColumnDefinition.WidthProperty, new Binding {Path = AutoHideWidthPropertyPath, Source = DockItem, Mode = BindingMode.TwoWay, Converter = XamlConverter.Instance});
 
-        UpdateDockItemHost();
-      }
-    }
+				GridSplitter.VerticalAlignment = VerticalAlignment.Stretch;
 
-    private AutoHideDockItemPresenterTemplateContract TemplateContract => (AutoHideDockItemPresenterTemplateContract) TemplateContractInternal;
+				DockItemGrid.ColumnDefinitions.Add(new ColumnDefinition());
 
-    #endregion
+				var index = dockSide == Dock.Left ? 0 : 1;
 
-    #region  Methods
+				DockItemGrid.ColumnDefinitions.Insert(index, itemColumn);
 
-    private void ArrangeContentPresenter()
-    {
-      if (DockItemGrid == null)
-        return;
+				Grid.SetColumn(DockItemHost, index);
+				Grid.SetColumn(GridSplitter, index);
 
-      DockItemGrid.ColumnDefinitions.Clear();
-      DockItemGrid.RowDefinitions.Clear();
+				GridSplitter.HorizontalAlignment = dockSide == Dock.Left ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+			}
+			else
+			{
+				var itemRow = new RowDefinition
+				{
+					Height = new GridLength(AutoHideLayout.GetAutoHideHeight(DockItem))
+				};
 
-      var dockSide = AutoHideLayout.GetDockSide(DockItem);
+				itemRow.SetBinding(RowDefinition.HeightProperty, new Binding {Path = AutoHideHeightPropertyPath, Source = DockItem, Mode = BindingMode.TwoWay, Converter = XamlConverter.Instance});
 
-      if (dockSide == Dock.Left || dockSide == Dock.Right)
-      {
-        var itemColumn = new ColumnDefinition
-        {
-          Width = new GridLength(AutoHideLayout.GetAutoHideWidth(DockItem))
-        };
+				GridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
 
-        itemColumn.SetBinding(ColumnDefinition.WidthProperty, new Binding {Path = AutoHideWidthPropertyPath, Source = DockItem, Mode = BindingMode.TwoWay, Converter = XamlConverter.Instance});
+				DockItemGrid.RowDefinitions.Add(new RowDefinition());
 
-        GridSplitter.VerticalAlignment = VerticalAlignment.Stretch;
+				var index = dockSide == Dock.Top ? 0 : 1;
 
-        DockItemGrid.ColumnDefinitions.Add(new ColumnDefinition());
+				DockItemGrid.RowDefinitions.Insert(index, itemRow);
 
-        var index = dockSide == Dock.Left ? 0 : 1;
+				Grid.SetRow(DockItemHost, index);
+				Grid.SetRow(GridSplitter, index);
 
-        DockItemGrid.ColumnDefinitions.Insert(0, itemColumn);
+				GridSplitter.VerticalAlignment = dockSide == Dock.Top ? VerticalAlignment.Bottom : VerticalAlignment.Top;
+			}
+		}
 
-        Grid.SetColumn(DockItemHost, index);
-        Grid.SetColumn(GridSplitter, index);
+		public void AttachItem()
+		{
+			IsAttached = true;
+		}
 
-        GridSplitter.HorizontalAlignment = dockSide == Dock.Left ? HorizontalAlignment.Right : HorizontalAlignment.Left;
-      }
-      else
-      {
-        var itemRow = new RowDefinition
-        {
-          Height = new GridLength(AutoHideLayout.GetAutoHideHeight(DockItem))
-        };
+		public void DetachItem()
+		{
+			IsAttached = false;
+		}
 
-        itemRow.SetBinding(RowDefinition.HeightProperty, new Binding {Path = AutoHideHeightPropertyPath, Source = DockItem, Mode = BindingMode.TwoWay, Converter = XamlConverter.Instance});
+		public void OnItemDockSideChanged(Dock oldDockSide, Dock newDockSide)
+		{
+			ArrangeContentPresenter();
+		}
 
-        GridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
+		protected override void OnMouseEnter(MouseEventArgs e)
+		{
+			base.OnMouseEnter(e);
 
-        DockItemGrid.RowDefinitions.Add(new RowDefinition());
+			AutoHideTabViewItem.OnPresenterMouseEnter(this);
+		}
 
-        var index = dockSide == Dock.Top ? 0 : 1;
+		protected override void OnMouseLeave(MouseEventArgs e)
+		{
+			base.OnMouseLeave(e);
 
-        DockItemGrid.RowDefinitions.Insert(0, itemRow);
+			AutoHideTabViewItem.OnPresenterMouseLeave(this);
+		}
 
-        Grid.SetRow(DockItemHost, index);
-        Grid.SetRow(GridSplitter, index);
-
-        GridSplitter.VerticalAlignment = dockSide == Dock.Top ? VerticalAlignment.Bottom : VerticalAlignment.Top;
-      }
-    }
-
-    public void AttachItem()
-    {
-      IsAttached = true;
-    }
-
-    public void DetachItem()
-    {
-      IsAttached = false;
-    }
-
-    public void OnItemDockSideChanged(Dock oldDockSide, Dock newDockSide)
-    {
-      ArrangeContentPresenter();
-    }
-
-    protected override void OnMouseEnter(MouseEventArgs e)
-    {
-      base.OnMouseEnter(e);
-
-      AutoHideTabViewItem.OnPresenterMouseEnter(this);
-    }
-
-    protected override void OnMouseLeave(MouseEventArgs e)
-    {
-      base.OnMouseLeave(e);
-
-      AutoHideTabViewItem.OnPresenterMouseLeave(this);
-    }
-
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
 #if !SILVERLIGHT
-      GridSplitter.Focusable = false;
+			GridSplitter.Focusable = false;
 #endif
 
-      GridSplitter.IsTabStop = false;
+			GridSplitter.IsTabStop = false;
 
-      Panel.SetZIndex(GridSplitter, 1);
+			Panel.SetZIndex(GridSplitter, 1);
 
-      UpdateDockItemHost();
-      ArrangeContentPresenter();
-    }
+			UpdateDockItemHost();
+			ArrangeContentPresenter();
+		}
 
-    protected override void OnTemplateContractDetaching()
-    {
-      DockItemHost.Content = null;
-      DockItemGrid.Children.Clear();
+		protected override void OnTemplateContractDetaching()
+		{
+			DockItemHost.Content = null;
+			DockItemGrid.Children.Clear();
 
-      base.OnTemplateContractDetaching();
-    }
+			base.OnTemplateContractDetaching();
+		}
 
-    private void UpdateDockItemHost()
-    {
-      if (DockItemHost == null)
-        return;
+		private void UpdateDockItemHost()
+		{
+			if (DockItemHost == null)
+				return;
 
-      DockItemHost.Content = IsAttached ? DockItem : null;
-    }
+			DockItemHost.Content = IsAttached ? DockItem : null;
+		}
+	}
 
-    #endregion
-  }
+	public sealed class AutoHideDockItemPresenterTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = true)]
+		public Grid DockItemGrid { get; [UsedImplicitly] private set; }
 
-  public sealed class AutoHideDockItemPresenterTemplateContract : TemplateContract
-  {
-    #region Properties
+		[TemplateContractPart(Required = true)]
+		public ContentControl DockItemHost { get; [UsedImplicitly] private set; }
 
-    [TemplateContractPart(Required = true)]
-    public Grid DockItemGrid { get; [UsedImplicitly] private set; }
-
-    [TemplateContractPart(Required = true)]
-    public ContentControl DockItemHost { get; [UsedImplicitly] private set; }
-
-    [TemplateContractPart(Required = true)]
-    public DockGridSplitter GridSplitter { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
+		[TemplateContractPart(Required = true)]
+		public DockGridSplitter GridSplitter { get; [UsedImplicitly] private set; }
+	}
 }

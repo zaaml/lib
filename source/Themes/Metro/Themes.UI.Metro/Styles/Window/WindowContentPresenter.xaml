@@ -11,8 +11,8 @@
                    TargetType="zm:WindowContentPresenter">
     <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
 
-      <ContentPresenter Content="{zm:TemplateBinding Path=Content}"
-                        ContentTemplate="{zm:TemplateBinding Path=ContentTemplate}" />
+      <zm:ContentPresenter Content="{zm:TemplateBinding Path=Content}"
+                           ContentTemplate="{zm:TemplateBinding Path=ContentTemplate}" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

@@ -14,17 +14,11 @@ namespace Zaaml.UI.Windows
 	[ContentProperty(nameof(Content))]
 	public sealed class WindowContentPresenter : Control, IWindowElement
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty ContentProperty = DPM.Register<object, WindowContentPresenter>
 			("Content");
 
 		public static readonly DependencyProperty ContentTemplateProperty = DPM.Register<DataTemplate, WindowContentPresenter>
 			("ContentTemplate");
-
-		#endregion
-
-		#region Ctors
 
 		static WindowContentPresenter()
 		{
@@ -37,16 +31,11 @@ namespace Zaaml.UI.Windows
 			this.OverrideStyleKey<WindowContentPresenter>();
 		}
 
-		#endregion
-
-		#region Properties
-
 		public object Content
 		{
 			get => GetValue(ContentProperty);
 			set => SetValue(ContentProperty, value);
 		}
-
 
 		public DataTemplate ContentTemplate
 		{
@@ -54,21 +43,11 @@ namespace Zaaml.UI.Windows
 			set => SetValue(ContentTemplateProperty, value);
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IWindowElement
-
 		IEnumerable<IWindowElement> IWindowElement.EnumerateWindowElements()
 		{
 			yield break;
 		}
 
 		IWindow IWindowElement.Window { get; set; }
-
-		#endregion
-
-		#endregion
 	}
 }

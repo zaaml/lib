@@ -2,9 +2,13 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Xml.Linq;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Docking
@@ -27,9 +31,16 @@ namespace Zaaml.UI.Controls.Docking
 			AutoHideWidthProperty
 		};
 
+		private static readonly List<DependencyProperty> AutoHideLayoutSizeProperties = new List<DependencyProperty>
+		{
+			AutoHideHeightProperty,
+			AutoHideWidthProperty
+		};
+
 		static AutoHideLayout()
 		{
 			RegisterLayoutProperties<AutoHideLayout>(AutoHideLayoutProperties);
+			RegisterLayoutSerializer<AutoHideLayout>(new AutoHideLayoutSerializer());
 		}
 
 		public override LayoutKind LayoutKind => LayoutKind.AutoHide;
@@ -37,6 +48,11 @@ namespace Zaaml.UI.Controls.Docking
 		public static double GetAutoHideHeight(DependencyObject dependencyObject)
 		{
 			return (double) dependencyObject.GetValue(AutoHideHeightProperty);
+		}
+
+		public static Size GetAutoHideSize(DependencyObject depObj)
+		{
+			return new Size(GetAutoHideWidth(depObj), GetAutoHideHeight(depObj));
 		}
 
 		public static double GetAutoHideWidth(DependencyObject dependencyObject)
@@ -69,6 +85,12 @@ namespace Zaaml.UI.Controls.Docking
 			dependencyObject.SetValue(AutoHideHeightProperty, height);
 		}
 
+		public static void SetAutoHideSize(DependencyObject depObj, Size size)
+		{
+			SetAutoHideWidth(depObj, size.Width);
+			SetAutoHideHeight(depObj, size.Height);
+		}
+
 		public static void SetAutoHideWidth(DependencyObject dependencyObject, double width)
 		{
 			dependencyObject.SetValue(AutoHideWidthProperty, width);
@@ -77,6 +99,28 @@ namespace Zaaml.UI.Controls.Docking
 		public static void SetDockSide(DependencyObject depObj, Dock value)
 		{
 			depObj.SetValue(DockSideProperty, value);
+		}
+
+		private sealed class AutoHideLayoutSerializer : LayoutSerializer
+		{
+			private static readonly Type LayoutType = typeof(AutoHideLayout);
+
+			public override void WriteProperties(DependencyObject dependencyObject, XElement element)
+			{
+				if (AutoHideLayoutSizeProperties.Any(l => ShouldSerializeProperty(LayoutType, dependencyObject, l)))
+				{
+					var propertyName = FormatProperty(typeof(DockLayout), "AutoHideSize");
+
+					element.Add(new XAttribute(propertyName, GetAutoHideSize(dependencyObject).ToString(CultureInfo.InvariantCulture)));
+				}
+
+				if (ShouldSerializeProperty(LayoutType, dependencyObject, DockSideProperty))
+				{
+					var propertyName = FormatProperty(LayoutType, "DockSide");
+
+					element.Add(new XAttribute(propertyName, GetDockSide(dependencyObject).ToString()));
+				}
+			}
 		}
 	}
 }
