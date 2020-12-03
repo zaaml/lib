@@ -228,6 +228,11 @@ namespace Zaaml.UI.Controls.ListView
 		{
 		}
 
+		private void OnGeneratorChanged(object sender, EventArgs e)
+		{
+			UpdateData();
+		}
+
 		internal override void OnItemAttachedInternal(ListViewItem item)
 		{
 			item.ListView = this;
@@ -245,6 +250,14 @@ namespace Zaaml.UI.Controls.ListView
 		internal virtual void OnItemGeneratorChanged(ListViewItemGeneratorBase oldGenerator, ListViewItemGeneratorBase newGenerator)
 		{
 			Items.Generator = ActualGenerator;
+
+			if (oldGenerator != null)
+				oldGenerator.GeneratorChangedCore -= OnGeneratorChanged;
+
+			if (newGenerator != null)
+				newGenerator.GeneratorChangedCore += OnGeneratorChanged;
+
+			UpdateData();
 		}
 
 		internal void OnItemMouseButton(ListViewItem listViewItem, MouseButtonEventArgs e)
@@ -287,6 +300,8 @@ namespace Zaaml.UI.Controls.ListView
 		private void OnItemsSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
 			ItemsSourceCore = newSource;
+
+			UpdateData();
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)
@@ -341,6 +356,15 @@ namespace Zaaml.UI.Controls.ListView
 		private protected override void SetIsSelectedInternal(ListViewItem item, bool value)
 		{
 			item.SetIsSelectedInternal(value);
+		}
+
+		private void UpdateData()
+		{
+			ListViewData = null;
+
+			ItemsPresenter?.ItemsHostInternal?.InvalidateMeasure();
+
+			InvalidateMeasure();
 		}
 
 		public string ItemContentStringFormat

@@ -303,7 +303,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private void OnGeneratorChanged(object sender, EventArgs e)
 		{
-			UpdateTree();
+			UpdateData();
 		}
 
 		internal override void OnItemAttachedInternal(TreeViewItem item)
@@ -330,7 +330,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (newGenerator != null)
 				newGenerator.GeneratorChangedCore += OnGeneratorChanged;
 
-			UpdateTree();
+			UpdateData();
 		}
 
 		internal void OnItemIsExpandedChangedInternal(TreeViewItem treeViewItem)
@@ -381,7 +381,7 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			ItemsSourceCore = newSource;
 
-			UpdateTree();
+			UpdateData();
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)
@@ -486,7 +486,7 @@ namespace Zaaml.UI.Controls.TreeView
 			item.SetIsSelectedInternal(value);
 		}
 
-		private void UpdateTree()
+		private void UpdateData()
 		{
 			TreeViewData = null;
 
