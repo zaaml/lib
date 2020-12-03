@@ -7,19 +7,21 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Zaaml.Core.Extensions;
-using Zaaml.PresentationCore.MarkupExtensions;
 using Zaaml.PresentationCore.PropertyCore;
 #if !SILVERLIGHT
 using System.Windows.Markup;
 using System.Windows.Navigation;
 #endif
 
+#if !NETCOREAPP
+using Zaaml.Core.Extensions;
+#endif
+
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
   public sealed partial class BitmapIcon : IconBase
   {
-    #region Static Fields and Constants
+		#region Static Fields and Constants
 
     public static readonly DependencyProperty SourceProperty = DPM.RegisterAttached<ImageSource, BitmapIcon>
       ("Source", OnIconPropertyChanged);
@@ -46,24 +48,24 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 #endif
     };
 
-    #endregion
+#endregion
 
-    #region Fields
+#region Fields
 
     private Image _image;
 
-    #endregion
+#endregion
 
-    #region Ctors
+#region Ctors
 
     static BitmapIcon()
     {
       Factories[SourceProperty] = () => new BitmapIcon();
     }
 
-    #endregion
+#endregion
 
-    #region Properties
+#region Properties
 
     private ImageSource ActualSource => GetActualValue<ImageSource>(SourceProperty);
 
@@ -101,9 +103,9 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
       set => SetValue(StretchDirectionProperty, value);
     }
 
-    #endregion
+#endregion
 
-    #region  Methods
+#region  Methods
 
     private Image CreateImage()
     {
@@ -162,29 +164,6 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
     }
 #endif
 
-    #endregion
-  }
-
-  public sealed class BitmapIconExtension : MarkupExtensionBase
-  {
-    #region Properties
-
-    public ImageSource Source { get; set; }
-
-    public Stretch Stretch { get; set; }
-
-    public StretchDirection StretchDirection { get; set; }
-
-    public override object ProvideValue(IServiceProvider serviceProvider)
-    {
-      return new BitmapIcon
-      {
-        Source = Source,
-        Stretch = Stretch,
-        StretchDirection = StretchDirection
-      };
-    }
-
-    #endregion
+#endregion
   }
 }

@@ -1,0 +1,35 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="IconContentControlTemplate"
+                   TargetType="zm:IconContentControl">
+    <zm:IconContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                             VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                             Content="{TemplateBinding Content}"
+                             ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                             ContentTemplate="{TemplateBinding ContentTemplate}"
+                             ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                             Icon="{TemplateBinding Icon}"
+                             IconDistance="{TemplateBinding IconDistance}"
+                             IconDock="{TemplateBinding IconDock}"
+                             ShowIcon="{TemplateBinding ShowIcon}" />
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="IconContentControlBase" TargetType="zm:IconContentControl">
+    <zm:Setter Property="Foreground" Value="{zm:ThemeResource Keyword=ControlForegroundBrush}" />
+    <zm:Setter Property="Template" Value="{StaticResource IconContentControlTemplate}" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="IsTabStop" Value="False" />
+  </zm:Style>
+
+  <!--  ThemeStyle  -->
+  <zm:ThemeStyle x:Key="IconContentControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource IconContentControlBase}" TargetType="zm:IconContentControl" />
+
+</zm:ThemeResourceDictionary>

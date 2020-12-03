@@ -9,8 +9,6 @@ namespace Zaaml.UI.Controls.Primitives
 {
 	internal interface IButtonController : ICommandController
 	{
-		#region  Methods
-
 		void OnKeyDown(KeyEventArgs e);
 
 		void OnKeyUp(KeyEventArgs e);
@@ -31,6 +29,6 @@ namespace Zaaml.UI.Controls.Primitives
 
 		void RaiseOnClick();
 
-		#endregion
+		void UpdateCanExecute();
 	}
 }
