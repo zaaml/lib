@@ -23,7 +23,7 @@ Zaaml provides the following list of controls and components:
 * Xaml Interactivity
 
 ### How to:
-For quick start refer to [Getting Started Tutorial](https://github.com/zaaml/lib/wiki/Getting-started)
+For a quick start, refer to the [Getting Started Tutorial](https://github.com/zaaml/lib/wiki/Getting-started)
 
 ### Examples:
 [Zaaml Examples](https://github.com/zaaml/examples) repository contains Zaaml UI components usage examples.
