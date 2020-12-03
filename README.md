@@ -22,11 +22,11 @@ Zaaml provides the following list of controls and components:
 * Theming
 * Xaml Interactivity
 
-## Supported frameworks:
+### Supported frameworks:
 * .Net 5.0
 * .NetCore 3.1
 * .NetFramework 4.8
 
-## License
+### License:
 
 Please check the [LICENSE](LICENSE) file.
