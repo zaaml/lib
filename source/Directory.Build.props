@@ -17,15 +17,9 @@
 	<PropertyGroup Condition="'$(Configuration)' == 'Test'">
 		<DefineConstants>$(DefineConstants);TEST;DEBUG;INTERACTIVITY_DEBUG</DefineConstants>
 	</PropertyGroup>
-	
-	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
-	</PropertyGroup>
-	
+
 	<PropertyGroup Condition="$(Publish) == 'true'">
 		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
-		<TargetFramework></TargetFramework>
 	</PropertyGroup>
 	
 	<PropertyGroup> 
