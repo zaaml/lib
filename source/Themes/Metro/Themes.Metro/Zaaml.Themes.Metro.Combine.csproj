@@ -7,8 +7,22 @@
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<TargetFramework>net5.0-windows</TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
+		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<TargetFrameworkDir>$(TargetFramework)</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net5.0-windows'">net5.0</TargetFrameworkDir>
+	</PropertyGroup>
+	
 	<ItemGroup>
-		<Reference Include="..\..\..\Core\bin\$(Configuration)\$(TargetFramework)\Zaaml.Core.dll" />
+		<Reference Include="..\..\..\Core\bin\$(Configuration)\$(TargetFrameworkDir)\Zaaml.Core.dll" />
 		<Reference Include="..\..\..\PresentationCore\bin\$(Configuration)\$(TargetFramework)\Zaaml.PresentationCore.dll" />
 		<Reference Include="..\..\..\UI\bin\$(Configuration)\$(TargetFramework)\Zaaml.UI.dll" />
 	</ItemGroup>

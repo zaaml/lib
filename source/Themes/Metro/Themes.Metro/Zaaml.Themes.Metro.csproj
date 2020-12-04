@@ -7,6 +7,16 @@
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<TargetFramework>net5.0-windows</TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
+		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
 		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
