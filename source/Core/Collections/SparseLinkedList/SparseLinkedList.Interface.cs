@@ -8,10 +8,8 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedList<T>
 	{
-		#region Ctors
-
 		[PublicAPI]
-		public SparseLinkedList(IEnumerable<T> collection) : this(0, DefaultCapacity)
+		public SparseLinkedList(IEnumerable<T> collection)
 		{
 			InsertRange(0, collection);
 
@@ -19,14 +17,10 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public SparseLinkedList(int count) : this(count, DefaultCapacity)
+		public SparseLinkedList(int count) : base(count)
 		{
 			VerifyStructure();
 		}
-
-		#endregion
-
-		#region  Methods
 
 		[PublicAPI]
 		public void AddCleanRange(int count)
@@ -193,11 +187,17 @@ namespace Zaaml.Core.Collections
 			Unlock();
 		}
 
-		#endregion
+		[PublicAPI]
+		public void Clear()
+		{
+			Lock();
 
-		#region Interface Implementations
+			ClearImpl();
 
-		#region ICollection<T>
+			VerifyStructure();
+
+			Unlock();
+		}
 
 		[PublicAPI]
 		public void Add(T item)
@@ -213,26 +213,6 @@ namespace Zaaml.Core.Collections
 			Unlock();
 		}
 
-		#endregion
-
-		#region IList
-
-		[PublicAPI]
-		public void Clear()
-		{
-			Lock();
-
-			ClearImpl();
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		#endregion
-
-		#region IList<T>
-
 		[PublicAPI]
 		public T this[int index]
 		{
@@ -242,7 +222,7 @@ namespace Zaaml.Core.Collections
 
 				VerifyIndex(index);
 
-				var item = GetItem(index);
+				var item = GetItemImpl(index);
 
 				Unlock();
 
@@ -256,7 +236,7 @@ namespace Zaaml.Core.Collections
 
 				Version++;
 
-				SetItem(index, value);
+				SetItemImpl(index, value);
 
 				VerifyStructure();
 
@@ -295,9 +275,5 @@ namespace Zaaml.Core.Collections
 
 			Unlock();
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

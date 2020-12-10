@@ -102,12 +102,12 @@ namespace Zaaml.Text
 				return fastLookup;
 			}
 
-			private static Range<int> CreateRange(TOperand minimum, TOperand maximum)
+			private static Interval<int> CreateRange(TOperand minimum, TOperand maximum)
 			{
-				return new Range<int>(ConvertOperand(minimum), ConvertOperand(maximum));
+				return new Interval<int>(ConvertOperand(minimum), ConvertOperand(maximum));
 			}
 
-			private static Range<int> CreateRange(PrimitiveMatchEntry operandMatch)
+			private static Interval<int> CreateRange(PrimitiveMatchEntry operandMatch)
 			{
 				return operandMatch switch
 				{
@@ -193,28 +193,28 @@ namespace Zaaml.Text
 
 			private static IEnumerable<ExecutionPathGroup> GroupWithRanges(IEnumerable<GroupExecutionPathData> matchPaths, List<ExecutionPath> predicatePaths)
 			{
-				var rangeItems = new List<RangeItem<ExecutionPath, int>>();
+				var rangeItems = new List<IntervalItem<ExecutionPath, int>>();
 
 				foreach (var executionPath in matchPaths)
 				{
 					switch (executionPath.Match)
 					{
 						case SingleMatchEntry singleMatch:
-							rangeItems.Add(new RangeItem<ExecutionPath, int>(executionPath.Path, CreateRange(singleMatch.Operand, singleMatch.Operand)));
+							rangeItems.Add(new IntervalItem<ExecutionPath, int>(executionPath.Path, CreateRange(singleMatch.Operand, singleMatch.Operand)));
 
 							break;
 						case RangeMatchEntry rangeMatch:
-							rangeItems.Add(new RangeItem<ExecutionPath, int>(executionPath.Path, rangeMatch.IntRange));
+							rangeItems.Add(new IntervalItem<ExecutionPath, int>(executionPath.Path, rangeMatch.IntRange));
 
 							break;
 					}
 				}
 
-				var split = Core.Range.Split(rangeItems.Distinct());
-				var dictionary = new Dictionary<Range<int>, List<ExecutionPath>>();
+				var split = Core.Interval.Split(rangeItems.Distinct());
+				var dictionary = new Dictionary<Interval<int>, List<ExecutionPath>>();
 
 				foreach (var rangeItem in split)
-					dictionary.GetValueOrCreate(rangeItem.Range, () => new List<ExecutionPath>()).Add(rangeItem.Item);
+					dictionary.GetValueOrCreate(rangeItem.Interval, () => new List<ExecutionPath>()).Add(rangeItem.Item);
 
 				return dictionary.Select(kv => new ExecutionPathGroup(new RangeMatchEntry(kv.Key), kv.Value.Concat(predicatePaths)));
 			}
@@ -341,7 +341,7 @@ namespace Zaaml.Text
 				private readonly ExecutionPathGroup _emptyGroup;
 				private readonly int _maxValue;
 				private readonly int _minValue;
-				private readonly RangeTree<ExecutionPathGroup, int> _rangeTree;
+				private readonly IntervalTree<ExecutionPathGroup, int> _intervalTree;
 
 				#endregion
 
@@ -359,7 +359,7 @@ namespace Zaaml.Text
 						_maxValue = Math.Max(_maxValue, range.Maximum);
 					}
 
-					_rangeTree = RangeTree.Build(executionPathGroups, e => CreateRange(e.Match));
+					_intervalTree = IntervalTree.Build(executionPathGroups, e => CreateRange(e.Match));
 				}
 
 				#endregion
@@ -381,7 +381,7 @@ namespace Zaaml.Text
 						if (_dictionary.TryGetValue(operand, out executionPathGroup))
 							return executionPathGroup;
 
-						executionPathGroup = _rangeTree.QueryFirstOrDefault(operand) ?? _emptyGroup;
+						executionPathGroup = _intervalTree.SearchFirstOrDefault(operand) ?? _emptyGroup;
 
 						_dictionary.SetValue(operand, executionPathGroup);
 					}

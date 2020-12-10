@@ -10,22 +10,17 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedList<T> : ICollection
 	{
-		#region Interface Implementations
-
-		#region ICollection
-
 		void ICollection.CopyTo(Array array, int index)
 		{
-			CopyToImpl(array, index);
+			if (array is T[] typeArray)
+				CopyToImpl(typeArray, index);
+			else
+				throw new InvalidOperationException();
 		}
 
 		object ICollection.SyncRoot { get; } = new object();
 
 		bool ICollection.IsSynchronized => false;
-
-		#endregion
-
-		#region ICollection<T>
 
 		void ICollection<T>.Clear()
 		{
@@ -48,9 +43,5 @@ namespace Zaaml.Core.Collections
 		}
 
 		public bool IsReadOnly => false;
-
-		#endregion
-
-		#endregion
 	}
 }

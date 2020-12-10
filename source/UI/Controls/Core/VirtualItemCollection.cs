@@ -27,9 +27,10 @@ namespace Zaaml.UI.Controls.Core
 
 		protected VirtualItemCollection()
 		{
-			TempGeneratedItems = new GeneratedItemList(this);
-			NextGeneratedItems = new GeneratedItemList(this);
-			PrevGeneratedItems = new GeneratedItemList(this);
+			LinkedListManager = new SparseLinkedListManager(this);
+			TempGeneratedItems = new GeneratedItemList(LinkedListManager);
+			NextGeneratedItems = new GeneratedItemList(LinkedListManager);
+			PrevGeneratedItems = new GeneratedItemList(LinkedListManager);
 		}
 
 		public IEnumerable<T> ActualItems => GeneratedItems;
@@ -37,10 +38,6 @@ namespace Zaaml.UI.Controls.Core
 		private Stack<GeneratedItem> GeneratedItemPool { get; } = new Stack<GeneratedItem>();
 
 		private IEnumerable<T> GeneratedItems => PrevGeneratedItems.Where(g => g != null).Select(g => g.Item).Where(i => i != null);
-
-		protected IndexedEnumerable IndexedSource { get; set; } = IndexedEnumerable.Empty;
-
-		internal IndexedEnumerable IndexedSourceInternal => IndexedSource;
 
 		public ItemGenerator<T> Generator
 		{
@@ -68,6 +65,10 @@ namespace Zaaml.UI.Controls.Core
 
 		private int GeneratorVersion { get; set; }
 
+		protected IndexedEnumerable IndexedSource { get; set; } = IndexedEnumerable.Empty;
+
+		internal IndexedEnumerable IndexedSourceInternal => IndexedSource;
+
 		private bool IsGenerating
 		{
 			get => PackedDefinition.IsGenerating.GetValue(_packedValue);
@@ -93,6 +94,8 @@ namespace Zaaml.UI.Controls.Core
 
 		private IVirtualItemsHost ItemHost { get; set; }
 
+		private SparseLinkedListManager<GeneratedItem> LinkedListManager { get; }
+
 		private Dictionary<T, GeneratedItem> LockedItemDictionary { get; } = new Dictionary<T, GeneratedItem>();
 
 		private Dictionary<object, GeneratedItem> LockedItemSourceDictionary { get; } = new Dictionary<object, GeneratedItem>();
@@ -101,7 +104,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private GeneratedItemList PrevGeneratedItems { get; set; }
 
-		private SparseLinkedList<GeneratedItem>.RealizedNode RealizedNodePool { get; set; }
+		private SparseLinkedListBase<GeneratedItem>.RealizedNode RealizedNodePool { get; set; }
 
 		private Stack<GeneratedItem> RecyclePool { get; } = new Stack<GeneratedItem>();
 
@@ -184,21 +187,6 @@ namespace Zaaml.UI.Controls.Core
 		private GeneratedItem CreateGeneratedItem()
 		{
 			return GeneratedItemPool.Count > 0 ? GeneratedItemPool.Pop() : new GeneratedItem(this);
-		}
-
-		private SparseLinkedList<GeneratedItem>.RealizedNode CreateRealizedNode(int nodeCapacity)
-		{
-			if (RealizedNodePool == null)
-				return new SparseLinkedList<GeneratedItem>.RealizedNode(new GeneratedItem[nodeCapacity]);
-
-			var node = RealizedNodePool;
-
-			RealizedNodePool = (SparseLinkedList<GeneratedItem>.RealizedNode) RealizedNodePool.Next;
-
-			node.Next = null;
-			node.Prev = null;
-
-			return node;
 		}
 
 		private void DetachGenerator()
@@ -340,7 +328,7 @@ namespace Zaaml.UI.Controls.Core
 				var generate = CreateGeneratedItem().Mount(item, itemSource, generator, NonGeneratedVersion, Version);
 
 				attach = true;
-				
+
 				return generate;
 			}
 
@@ -550,7 +538,7 @@ namespace Zaaml.UI.Controls.Core
 			Debug.Assert(item.IsInTemp == false);
 
 			item.IsInTemp = true;
-			
+
 			TempGeneratedItems.Add(item);
 		}
 
@@ -564,7 +552,7 @@ namespace Zaaml.UI.Controls.Core
 			var isGenerating = IsGenerating;
 			var nextItems = isGenerating ? NextGeneratedItems : PrevGeneratedItems;
 			var prevItems = isGenerating ? PrevGeneratedItems : NextGeneratedItems;
-			
+
 			var generatedItem = nextItems[index];
 
 			if (generatedItem?.Item != null)
@@ -620,19 +608,6 @@ namespace Zaaml.UI.Controls.Core
 			return generatedItem.Item;
 		}
 
-		private void RemoveFromTemp(GeneratedItem generatedItem)
-		{
-			if (generatedItem.IsInTemp == false)
-				return;
-
-			var tempGeneratedItemPair = FindGeneratedItem(generatedItem.Item, TempGeneratedItems);
-
-			Debug.Assert(tempGeneratedItemPair.IsEmpty == false);
-
-			TempGeneratedItems[tempGeneratedItemPair.Index] = null;
-			generatedItem.IsInTemp = false;
-		}
-
 		private void ReleaseItem(GeneratedItem generatedItem, bool pushIntoPool)
 		{
 			DetachItem(-1, generatedItem);
@@ -648,28 +623,35 @@ namespace Zaaml.UI.Controls.Core
 				generatedItem.Release();
 			}
 		}
-		
-		private void ReleaseRealizedNode(SparseLinkedList<GeneratedItem>.RealizedNode realizedNode)
+
+		private void ReleaseRealizedNode(SparseLinkedListBase<GeneratedItem>.RealizedNode realizedNode)
 		{
-			if (SuspendReleaseGeneratedItems == false)
+			if (SuspendReleaseGeneratedItems)
+				return;
+
+			var items = realizedNode.Span;
+			var itemsLength = items.Length;
+
+			for (var index = 0; index < itemsLength; index++)
 			{
-				var items = realizedNode.Items;
-				var itemsLength = items.Length;
+				var generatedItem = items[index];
 
-				for (var index = 0; index < itemsLength; index++)
-				{
-					var generatedItem = items[index];
-
-					if (generatedItem != null)
-						PushIntoTempItems(generatedItem);
-				}
+				if (generatedItem != null)
+					PushIntoTempItems(generatedItem);
 			}
+		}
 
-			Array.Clear(realizedNode.Items, 0, realizedNode.Items.Length);
+		private void RemoveFromTemp(GeneratedItem generatedItem)
+		{
+			if (generatedItem.IsInTemp == false)
+				return;
 
-			realizedNode.Next = RealizedNodePool;
+			var tempGeneratedItemPair = FindGeneratedItem(generatedItem.Item, TempGeneratedItems);
 
-			RealizedNodePool = realizedNode;
+			Debug.Assert(tempGeneratedItemPair.IsEmpty == false);
+
+			TempGeneratedItems[tempGeneratedItemPair.Index] = null;
+			generatedItem.IsInTemp = false;
 		}
 
 		private void RemoveLockedSource(GeneratedItem generatedItem)
@@ -753,7 +735,7 @@ namespace Zaaml.UI.Controls.Core
 
 				tempGeneratedItem.IsInTemp = false;
 
-				if (IsLocked(tempGeneratedItem) == false) 
+				if (IsLocked(tempGeneratedItem) == false)
 					ReleaseItem(tempGeneratedItem, true);
 			}
 
@@ -814,6 +796,8 @@ namespace Zaaml.UI.Controls.Core
 
 			public int GeneratorVersion;
 
+			public bool IsInTemp;
+
 			public T Item;
 
 			private int LockCount;
@@ -828,8 +812,6 @@ namespace Zaaml.UI.Controls.Core
 			public bool IsAttached { get; private set; }
 
 			public bool IsLocked => LockCount > 0;
-
-			public bool IsInTemp;
 
 			private VirtualItemCollection<T> ItemCollection { get; }
 
@@ -931,9 +913,8 @@ namespace Zaaml.UI.Controls.Core
 
 		private sealed class GeneratedItemList : SparseLinkedList<GeneratedItem>
 		{
-			public GeneratedItemList(VirtualItemCollection<T> virtualSource)
+			public GeneratedItemList(SparseLinkedListManager<GeneratedItem> linkedListManager) : base(0, linkedListManager)
 			{
-				VirtualSource = virtualSource;
 			}
 
 			public new GeneratedItem this[int index]
@@ -947,28 +928,33 @@ namespace Zaaml.UI.Controls.Core
 				}
 			}
 
-			private VirtualItemCollection<T> VirtualSource { get; }
-
-			internal override RealizedNode CreateRealizedNodeCore()
-			{
-				return VirtualSource.CreateRealizedNode(NodeCapacity);
-			}
-
 			public void EnsureCount(int count)
 			{
 				if (count > Count)
 					AddCleanRange(count - Count);
 			}
+		}
 
-			internal override void ReleaseNodeCore(Node node)
+		private sealed class SparseLinkedListManager : SparseLinkedListManager<GeneratedItem>
+		{
+			public SparseLinkedListManager(VirtualItemCollection<T> virtualSource) : base(new SparseMemoryManager<GeneratedItem>(16))
 			{
-				if (node is RealizedNode realizedNode)
+				VirtualSource = virtualSource;
+			}
+
+			private VirtualItemCollection<T> VirtualSource { get; }
+
+			protected override void OnNodeReleasing(SparseLinkedListBase<GeneratedItem>.Node node)
+			{
+				if (node is SparseLinkedListBase<GeneratedItem>.RealizedNode realizedNode)
 					VirtualSource.ReleaseRealizedNode(realizedNode);
+
+				base.OnNodeReleasing(node);
 			}
 		}
 	}
 
-	internal class VirtualItemCollection<TControl, T> :  VirtualItemCollection<T> where T : FrameworkElement
+	internal class VirtualItemCollection<TControl, T> : VirtualItemCollection<T> where T : FrameworkElement
 	{
 	}
 }

@@ -1,16 +1,13 @@
-﻿// <copyright file="SparseLinkedList.Insert.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SparseLinkedListBase.Insert.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections.Generic;
 
 namespace Zaaml.Core.Collections
 {
-	internal partial class SparseLinkedList<T>
+	internal partial class SparseLinkedListBase<T>
 	{
-		#region  Methods
-
 		private Node FindInsertNodeImpl(int index)
 		{
 			if (Count == 0)
@@ -51,7 +48,7 @@ namespace Zaaml.Core.Collections
 			return node;
 		}
 
-		private void InsertCleanRangeImpl(int index, int count)
+		private protected void InsertCleanRangeImpl(int index, int count)
 		{
 			if (index >= TailNode.Index)
 			{
@@ -108,9 +105,17 @@ namespace Zaaml.Core.Collections
 
 			if (count <= NodeCapacity - realizedNode.Count)
 			{
-				Array.Copy(realizedNode.Items, splitIndex, realizedNode.Items, splitIndex + count, splitCount);
-				Array.Clear(realizedNode.Items, splitIndex, count);
+				//Array.Copy(realizedNode.Items, splitIndex, realizedNode.Items, splitIndex + count, splitCount);
 
+				var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
+				var destinationSpan = realizedNode.Span.Slice(splitIndex + count, splitCount);
+
+				sourceSpan.CopyTo(destinationSpan);
+			
+				//Array.Clear(realizedNode.Items, splitIndex, count);
+				
+				realizedNode.Span.Slice(splitIndex, count).Clear();
+				
 				realizedNode.Count += count;
 
 				AdvanceIndices(realizedNode);
@@ -151,8 +156,14 @@ namespace Zaaml.Core.Collections
 
 				realizedNode.Count = splitIndex;
 
-				Array.Copy(realizedNode.Items, splitIndex, nextRealizedNode.Items, 0, splitCount);
-				Array.Clear(realizedNode.Items, splitIndex, splitCount);
+				//Array.Copy(realizedNode.ItemsPrivate, splitIndex, nextRealizedNode.ItemsPrivate, 0, splitCount);
+				var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
+				var destinationSpan = nextRealizedNode.Span.Slice(0, splitCount);
+
+				sourceSpan.CopyTo(destinationSpan);
+
+				//Array.Clear(realizedNode.ItemsPrivate, splitIndex, splitCount);
+				sourceSpan.Clear();
 			}
 
 			AdvanceIndices(gapNode);
@@ -161,12 +172,12 @@ namespace Zaaml.Core.Collections
 			Current = gapNode;
 		}
 
-		private void InsertImpl(int index, T item)
+		private protected void InsertImpl(int index, T item)
 		{
 			InsertRangeImpl(index, new InsertEnumerator(item, this));
 		}
 
-		private void InsertRangeImpl(int index, InsertEnumerator enumerator)
+		private protected void InsertRangeImpl(int index, InsertEnumerator enumerator)
 		{
 			if (enumerator.HasAny == false)
 				return;
@@ -184,11 +195,18 @@ namespace Zaaml.Core.Collections
 				{
 					var splitItems = AllocateItems();
 
-					Array.Copy(realizedNode.Items, splitIndex, splitItems, 0, splitCount);
-					Array.Clear(realizedNode.Items, splitIndex, splitCount);
+					//Array.Copy(realizedNode.ItemsPrivate, splitIndex, splitItems, 0, splitCount);
+
+					var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
+					var destinationSpan = splitItems.Span.Slice(0, splitCount);
+					
+					sourceSpan.CopyTo(destinationSpan);
+
+					//Array.Clear(realizedNode.ItemsPrivate, splitIndex, splitCount);
+					realizedNode.Span.Slice(splitIndex, splitCount).Clear();
 
 					realizedNode.Count = splitIndex + 1;
-					realizedNode.Items[splitIndex] = enumerator.Current;
+					realizedNode.Span[splitIndex] = enumerator.Current;
 
 					enumerator = enumerator.WithItems(splitItems, splitCount);
 					count -= splitCount;
@@ -206,7 +224,7 @@ namespace Zaaml.Core.Collections
 			{
 				while (realizedNode.Count < NodeCapacity && enumerator.MoveNext())
 				{
-					realizedNode.Items[realizedNode.Count++] = enumerator.Current;
+					realizedNode.Span[realizedNode.Count++] = enumerator.Current;
 					count++;
 				}
 
@@ -224,7 +242,7 @@ namespace Zaaml.Core.Collections
 				next.Count = 1;
 				next.Prev = realizedNode;
 
-				next.Items[0] = enumerator.Current;
+				next.Span[0] = enumerator.Current;
 
 				realizedNode.Next = next;
 				realizedNode = next;
@@ -241,24 +259,20 @@ namespace Zaaml.Core.Collections
 			Current = realizedNode;
 		}
 
-		private void InsertRangeImpl(int index, IEnumerable<T> collection)
+		private protected void InsertRangeImpl(int index, IEnumerable<T> collection)
 		{
 			var enumerator = new InsertEnumerator(collection.GetEnumerator(), this);
 
 			InsertRangeImpl(index, enumerator);
 		}
 
-		#endregion
-
-		#region  Nested Types
-
-		private struct InsertEnumerator
+		private protected struct InsertEnumerator
 		{
-			public InsertEnumerator(T singleItem, SparseLinkedList<T> list)
+			public InsertEnumerator(T singleItem, SparseLinkedListBase<T> list)
 			{
 				BaseEnumerator = null;
 				List = list;
-				Items = null;
+				SparseMemorySpan = SparseMemorySpan<T>.Empty;
 				ItemsCount = 0;
 				Current = singleItem;
 				CurrentItemIndex = -1;
@@ -266,11 +280,11 @@ namespace Zaaml.Core.Collections
 				HasAny = true;
 			}
 
-			public InsertEnumerator(IEnumerator<T> baseEnumerator, SparseLinkedList<T> list)
+			public InsertEnumerator(IEnumerator<T> baseEnumerator, SparseLinkedListBase<T> list)
 			{
 				BaseEnumerator = baseEnumerator;
 				List = list;
-				Items = null;
+				SparseMemorySpan = SparseMemorySpan<T>.Empty;
 				ItemsCount = 0;
 
 				CurrentItemIndex = 0;
@@ -279,10 +293,10 @@ namespace Zaaml.Core.Collections
 				Current = baseEnumerator.Current;
 			}
 
-			private InsertEnumerator(InsertEnumerator enumerator, T[] items, int count)
+			private InsertEnumerator(InsertEnumerator enumerator, SparseMemorySpan<T> sparseMemorySpan, int count)
 			{
 				BaseEnumerator = enumerator.BaseEnumerator;
-				Items = items;
+				SparseMemorySpan = sparseMemorySpan;
 				ItemsCount = count;
 				List = enumerator.List;
 				Current = enumerator.Current;
@@ -290,7 +304,7 @@ namespace Zaaml.Core.Collections
 				HasAny = enumerator.HasAny;
 			}
 
-			public InsertEnumerator WithItems(T[] items, int count)
+			public InsertEnumerator WithItems(SparseMemorySpan<T> items, int count)
 			{
 				return new InsertEnumerator(this, items, count);
 			}
@@ -313,10 +327,10 @@ namespace Zaaml.Core.Collections
 					BaseEnumerator.Dispose();
 					BaseEnumerator = null;
 
-					if (Items == null)
+					if (SparseMemorySpan.IsEmpty)
 						return false;
 
-					Current = Items[0];
+					Current = SparseMemorySpan.Span[0];
 
 					return true;
 				}
@@ -325,7 +339,7 @@ namespace Zaaml.Core.Collections
 				{
 					CurrentItemIndex++;
 
-					Current = Items[CurrentItemIndex];
+					Current = SparseMemorySpan.Span[CurrentItemIndex];
 
 					return true;
 				}
@@ -343,10 +357,10 @@ namespace Zaaml.Core.Collections
 					BaseEnumerator = null;
 				}
 
-				if (Items != null)
+				if (SparseMemorySpan.IsEmpty == false)
 				{
-					List.DeallocateItems(Items);
-					Items = null;
+					List.DeallocateItems(SparseMemorySpan);
+					SparseMemorySpan = SparseMemorySpan<T>.Empty;
 				}
 
 				List = null;
@@ -356,15 +370,13 @@ namespace Zaaml.Core.Collections
 
 			private IEnumerator<T> BaseEnumerator { get; set; }
 
-			private SparseLinkedList<T> List { get; set; }
+			private SparseLinkedListBase<T> List { get; set; }
 
-			private T[] Items { get; set; }
+			private SparseMemorySpan<T> SparseMemorySpan { get; set; }
 
 			private int ItemsCount { get; }
 
 			public bool HasAny { get; }
 		}
-
-		#endregion
 	}
 }

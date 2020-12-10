@@ -21,7 +21,7 @@ namespace Zaaml.UI.Panels
 
     public static OrientedSize ArrangeStackLine(this Panel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
     {
-      return ArrangeStackLine(panel.Children.Cast<UIElement>().Skip(line.Minimum).Take(line.Length()), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
+      return ArrangeStackLine(panel.Children.Cast<UIElement>().Skip(line.Minimum).Take(line.Maximum - line.Minimum), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
     }
 
     public static OrientedSize ArrangeStackLine(IEnumerable<UIElement> elements, Orientation orientation, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)

@@ -1,4 +1,4 @@
-﻿// <copyright file="SparseLinkedList.Clean.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SparseLinkedListBase.Clean.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -7,11 +7,9 @@ using System.Diagnostics;
 
 namespace Zaaml.Core.Collections
 {
-	internal partial class SparseLinkedList<T>
+	internal partial class SparseLinkedListBase<T>
 	{
-		#region  Methods
-
-		private void CleanAtImpl(int index)
+		private protected void CleanAtImpl(int index)
 		{
 			CleanRangeImpl(index, 1);
 		}
@@ -126,12 +124,13 @@ namespace Zaaml.Core.Collections
 			}
 
 			// Clean part of Node
-			var items = realizedNode.Items;
+			var items = realizedNode.Span;
 			var itemsStart = index - realizedNode.Index;
 			var itemsEnd = itemsStart + count;
 			var loopEnd = Math.Min(itemsEnd, realizedNode.Count);
 
-			Array.Clear(items, itemsStart, loopEnd - itemsStart);
+			//Array.Clear(items, itemsStart, loopEnd - itemsStart);
+			items.Slice(itemsStart, loopEnd - itemsStart).Clear();
 
 			if (itemsEnd < realizedNode.Count)
 				return;
@@ -153,7 +152,7 @@ namespace Zaaml.Core.Collections
 			realizedNode.Count = itemsStart;
 		}
 
-		private void CleanRangeImpl(int index, int count)
+		private protected void CleanRangeImpl(int index, int count)
 		{
 			if (count == 0)
 				return;
@@ -283,7 +282,5 @@ namespace Zaaml.Core.Collections
 				CleanNodeRange(lastNode, lastNode.Index, count - (lastNode.Index - index));
 			}
 		}
-
-		#endregion
 	}
 }

@@ -1,4 +1,4 @@
-﻿// <copyright file="SparseLinkedList.Remove.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SparseLinkedListBase.Remove.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -7,11 +7,9 @@ using System.Diagnostics;
 
 namespace Zaaml.Core.Collections
 {
-	internal partial class SparseLinkedList<T>
+	internal partial class SparseLinkedListBase<T>
 	{
-		#region  Methods
-
-		private void RemoveAtImpl(int index)
+		private protected void RemoveAtImpl(int index)
 		{
 			RemoveRangeAtImpl(index, 1);
 		}
@@ -63,15 +61,27 @@ namespace Zaaml.Core.Collections
 				var removeStartIndex = index - realizedNode.Index;
 
 				if (removeStartIndex + count == realizedNode.Count)
-					Array.Clear(realizedNode.Items, removeStartIndex, count);
+				{
+					//Array.Clear(realizedNode.ItemsPrivate, removeStartIndex, count);
+
+					realizedNode.Span.Slice(removeStartIndex, count).Clear();
+				}
 				else
 				{
 					var moveIndex = removeStartIndex + count;
 					var moveCount = realizedNode.Count - moveIndex;
 					var clearIndex = removeStartIndex + moveCount;
 
-					Array.Copy(realizedNode.Items, moveIndex, realizedNode.Items, removeStartIndex, moveCount);
-					Array.Clear(realizedNode.Items, clearIndex, realizedNode.Count - clearIndex);
+					//Array.Copy(realizedNode.ItemsPrivate, moveIndex, realizedNode.ItemsPrivate, removeStartIndex, moveCount);
+
+					var sourceSpan = realizedNode.Span.Slice(moveIndex, moveCount);
+					var destinationSpan = realizedNode.Span.Slice(removeStartIndex, moveCount);
+
+					sourceSpan.CopyTo(destinationSpan);
+
+					//Array.Clear(realizedNode.ItemsPrivate, clearIndex, realizedNode.Count - clearIndex);
+
+					realizedNode.Span.Slice(clearIndex, realizedNode.Count - clearIndex).Clear();
 				}
 
 				realizedNode.Count -= count;
@@ -84,7 +94,7 @@ namespace Zaaml.Core.Collections
 			}
 		}
 
-		private void RemoveRangeAtImpl(int index, int count)
+		private protected void RemoveRangeAtImpl(int index, int count)
 		{
 			if (count == 0)
 				return;
@@ -187,7 +197,5 @@ namespace Zaaml.Core.Collections
 				Count -= count - firstCount - lastCount;
 			}
 		}
-
-		#endregion
 	}
 }

@@ -18,7 +18,7 @@ namespace Zaaml.Text
 			{
 				#region Ctors
 
-				public ParserQuantifierEntry(Grammar<TToken>.ParserQuantifierEntry grammarEntry, PrimitiveEntry primitiveEntry, Range<int> range, QuantifierMode mode) : base(primitiveEntry, range, mode)
+				public ParserQuantifierEntry(Grammar<TToken>.ParserQuantifierEntry grammarEntry, PrimitiveEntry primitiveEntry, Interval<int> range, QuantifierMode mode) : base(primitiveEntry, range, mode)
 				{
 					var name = EnsureName(grammarEntry);
 

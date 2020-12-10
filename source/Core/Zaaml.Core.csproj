@@ -28,8 +28,12 @@
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="Range.Specialization.tt">
-		  <Generator>TextTemplatingFileGenerator</Generator>
 		  <LastGenOutput>Range.Specialization.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Interval.Specialization.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>Interval.Specialization.cs</LastGenOutput>
 		</None>
 		<None Update="Text\Parser.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -40,6 +44,16 @@
 	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Compile Update="Interval - Copy.Specialization.cs">
+	    <DependentUpon>Interval.Specialization.tt</DependentUpon>
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	  </Compile>
+	  <Compile Update="Interval.Specialization.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Interval.Specialization.tt</DependentUpon>
+	  </Compile>
 	  <Compile Update="Range.Specialization.cs">
 	    <DesignTime>True</DesignTime>
 	    <AutoGen>True</AutoGen>

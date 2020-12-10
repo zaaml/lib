@@ -11,687 +11,219 @@
 
 // ReSharper disable All
 
-using System;
-using System.Collections.Generic;
-using Zaaml.Core.Extensions;
-
 
 namespace Zaaml.Core
 {
-	internal struct RangeMinMax<T>
-	{
-		public RangeMinMax(T minimum, T maximum)
-		{
-			Minimum = minimum;
-			Maximum = maximum;
-		}
-
-		public readonly T Minimum;
-		public readonly T Maximum;
-	}
-
-	internal static class RangeMinMax
-	{
-		private static readonly Dictionary<Type, object> Dictionary = new Dictionary<Type, object> 
-		{
-			{ typeof(byte), new RangeMinMax<byte>(byte.MinValue, byte.MaxValue) },
-			{ typeof(sbyte), new RangeMinMax<sbyte>(sbyte.MinValue, sbyte.MaxValue) },
-			{ typeof(char), new RangeMinMax<char>(char.MinValue, char.MaxValue) },
-			{ typeof(short), new RangeMinMax<short>(short.MinValue, short.MaxValue) },
-			{ typeof(ushort), new RangeMinMax<ushort>(ushort.MinValue, ushort.MaxValue) },
-			{ typeof(int), new RangeMinMax<int>(int.MinValue, int.MaxValue) },
-			{ typeof(uint), new RangeMinMax<uint>(uint.MinValue, uint.MaxValue) },
-			{ typeof(long), new RangeMinMax<long>(long.MinValue, long.MaxValue) },
-			{ typeof(ulong), new RangeMinMax<ulong>(ulong.MinValue, ulong.MaxValue) },
-			{ typeof(float), new RangeMinMax<float>(float.MinValue, float.MaxValue) },
-			{ typeof(double), new RangeMinMax<double>(double.MinValue, double.MaxValue) },
-		};
-
-		public static RangeMinMax<T> Get<T>()
-		{
-			return (RangeMinMax<T>)IDictionaryExtensions.GetValueOrDefault(Dictionary, typeof(T), new RangeMinMax<T>(default(T), default(T)) as object);
-		}
-	}
-
 	public static partial class Range
 	{
-		public static Range<byte> Union(Range<byte> first, Range<byte> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<byte> Intersect(Range<byte> first, Range<byte> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<byte> Complement(Range<byte> first, Range<byte> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static byte Length(this Range<byte> range)
-		{
-			return range.IsEmpty ? default(byte) : (byte)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<byte> WithOffset(this Range<byte> range, byte offset)
-		{
-			return range.IsEmpty ? range : new Range<byte>((byte) (range.Minimum + offset), (byte) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<byte> WithShrink(this Range<byte> range, byte value)
-		{
-			return range.IsEmpty ? range : new Range<byte>((byte) (range.Minimum + value), (byte) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<byte> WithExpand(this Range<byte> range, byte value)
-		{
-			return range.IsEmpty ? range : new Range<byte>((byte) (range.Minimum - value), (byte) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<byte> Create(byte minimum, byte maximum)
 		{
 			return new Range<byte>(minimum, maximum);
 		}
 
-		internal static Range<byte> CreateMaximumUnbounded(byte minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<byte> WithOffset(this Range<byte> range, byte offset)
 		{
-			return new Range<byte>(minimum, minimumPoint, byte.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<byte>((byte) (range.Minimum + offset), (byte) (range.Maximum + offset));
 		}
 
-		internal static Range<byte> CreateMinimumUnbounded(byte maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<byte> WithShrink(this Range<byte> range, byte value)
 		{
-			return new Range<byte>(byte.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<byte>((byte) (range.Minimum + value), (byte) (range.Maximum - value));
 		}
 
-		private static Range<byte> Coerce(this Range<byte> range)
+		public static Range<byte> WithExpand(this Range<byte> range, byte value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? byte.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? byte.MaxValue : range.Maximum;
-
-			return new Range<byte>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<byte>((byte) (range.Minimum - value), (byte) (range.Maximum + value));
 		}
-
-		public static Range<sbyte> Union(Range<sbyte> first, Range<sbyte> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<sbyte> Intersect(Range<sbyte> first, Range<sbyte> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<sbyte> Complement(Range<sbyte> first, Range<sbyte> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static sbyte Length(this Range<sbyte> range)
-		{
-			return range.IsEmpty ? default(sbyte) : (sbyte)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<sbyte> WithOffset(this Range<sbyte> range, sbyte offset)
-		{
-			return range.IsEmpty ? range : new Range<sbyte>((sbyte) (range.Minimum + offset), (sbyte) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<sbyte> WithShrink(this Range<sbyte> range, sbyte value)
-		{
-			return range.IsEmpty ? range : new Range<sbyte>((sbyte) (range.Minimum + value), (sbyte) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<sbyte> WithExpand(this Range<sbyte> range, sbyte value)
-		{
-			return range.IsEmpty ? range : new Range<sbyte>((sbyte) (range.Minimum - value), (sbyte) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<sbyte> Create(sbyte minimum, sbyte maximum)
 		{
 			return new Range<sbyte>(minimum, maximum);
 		}
 
-		internal static Range<sbyte> CreateMaximumUnbounded(sbyte minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<sbyte> WithOffset(this Range<sbyte> range, sbyte offset)
 		{
-			return new Range<sbyte>(minimum, minimumPoint, sbyte.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<sbyte>((sbyte) (range.Minimum + offset), (sbyte) (range.Maximum + offset));
 		}
 
-		internal static Range<sbyte> CreateMinimumUnbounded(sbyte maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<sbyte> WithShrink(this Range<sbyte> range, sbyte value)
 		{
-			return new Range<sbyte>(sbyte.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<sbyte>((sbyte) (range.Minimum + value), (sbyte) (range.Maximum - value));
 		}
 
-		private static Range<sbyte> Coerce(this Range<sbyte> range)
+		public static Range<sbyte> WithExpand(this Range<sbyte> range, sbyte value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? sbyte.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? sbyte.MaxValue : range.Maximum;
-
-			return new Range<sbyte>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<sbyte>((sbyte) (range.Minimum - value), (sbyte) (range.Maximum + value));
 		}
-
-		public static Range<char> Union(Range<char> first, Range<char> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<char> Intersect(Range<char> first, Range<char> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<char> Complement(Range<char> first, Range<char> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static char Length(this Range<char> range)
-		{
-			return range.IsEmpty ? default(char) : (char)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<char> WithOffset(this Range<char> range, char offset)
-		{
-			return range.IsEmpty ? range : new Range<char>((char) (range.Minimum + offset), (char) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<char> WithShrink(this Range<char> range, char value)
-		{
-			return range.IsEmpty ? range : new Range<char>((char) (range.Minimum + value), (char) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<char> WithExpand(this Range<char> range, char value)
-		{
-			return range.IsEmpty ? range : new Range<char>((char) (range.Minimum - value), (char) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<char> Create(char minimum, char maximum)
 		{
 			return new Range<char>(minimum, maximum);
 		}
 
-		internal static Range<char> CreateMaximumUnbounded(char minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<char> WithOffset(this Range<char> range, char offset)
 		{
-			return new Range<char>(minimum, minimumPoint, char.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<char>((char) (range.Minimum + offset), (char) (range.Maximum + offset));
 		}
 
-		internal static Range<char> CreateMinimumUnbounded(char maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<char> WithShrink(this Range<char> range, char value)
 		{
-			return new Range<char>(char.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<char>((char) (range.Minimum + value), (char) (range.Maximum - value));
 		}
 
-		private static Range<char> Coerce(this Range<char> range)
+		public static Range<char> WithExpand(this Range<char> range, char value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? char.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? char.MaxValue : range.Maximum;
-
-			return new Range<char>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<char>((char) (range.Minimum - value), (char) (range.Maximum + value));
 		}
-
-		public static Range<short> Union(Range<short> first, Range<short> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<short> Intersect(Range<short> first, Range<short> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<short> Complement(Range<short> first, Range<short> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static short Length(this Range<short> range)
-		{
-			return range.IsEmpty ? default(short) : (short)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<short> WithOffset(this Range<short> range, short offset)
-		{
-			return range.IsEmpty ? range : new Range<short>((short) (range.Minimum + offset), (short) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<short> WithShrink(this Range<short> range, short value)
-		{
-			return range.IsEmpty ? range : new Range<short>((short) (range.Minimum + value), (short) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<short> WithExpand(this Range<short> range, short value)
-		{
-			return range.IsEmpty ? range : new Range<short>((short) (range.Minimum - value), (short) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<short> Create(short minimum, short maximum)
 		{
 			return new Range<short>(minimum, maximum);
 		}
 
-		internal static Range<short> CreateMaximumUnbounded(short minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<short> WithOffset(this Range<short> range, short offset)
 		{
-			return new Range<short>(minimum, minimumPoint, short.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<short>((short) (range.Minimum + offset), (short) (range.Maximum + offset));
 		}
 
-		internal static Range<short> CreateMinimumUnbounded(short maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<short> WithShrink(this Range<short> range, short value)
 		{
-			return new Range<short>(short.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<short>((short) (range.Minimum + value), (short) (range.Maximum - value));
 		}
 
-		private static Range<short> Coerce(this Range<short> range)
+		public static Range<short> WithExpand(this Range<short> range, short value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? short.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? short.MaxValue : range.Maximum;
-
-			return new Range<short>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<short>((short) (range.Minimum - value), (short) (range.Maximum + value));
 		}
-
-		public static Range<ushort> Union(Range<ushort> first, Range<ushort> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<ushort> Intersect(Range<ushort> first, Range<ushort> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<ushort> Complement(Range<ushort> first, Range<ushort> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static ushort Length(this Range<ushort> range)
-		{
-			return range.IsEmpty ? default(ushort) : (ushort)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<ushort> WithOffset(this Range<ushort> range, ushort offset)
-		{
-			return range.IsEmpty ? range : new Range<ushort>((ushort) (range.Minimum + offset), (ushort) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<ushort> WithShrink(this Range<ushort> range, ushort value)
-		{
-			return range.IsEmpty ? range : new Range<ushort>((ushort) (range.Minimum + value), (ushort) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<ushort> WithExpand(this Range<ushort> range, ushort value)
-		{
-			return range.IsEmpty ? range : new Range<ushort>((ushort) (range.Minimum - value), (ushort) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<ushort> Create(ushort minimum, ushort maximum)
 		{
 			return new Range<ushort>(minimum, maximum);
 		}
 
-		internal static Range<ushort> CreateMaximumUnbounded(ushort minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<ushort> WithOffset(this Range<ushort> range, ushort offset)
 		{
-			return new Range<ushort>(minimum, minimumPoint, ushort.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<ushort>((ushort) (range.Minimum + offset), (ushort) (range.Maximum + offset));
 		}
 
-		internal static Range<ushort> CreateMinimumUnbounded(ushort maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<ushort> WithShrink(this Range<ushort> range, ushort value)
 		{
-			return new Range<ushort>(ushort.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<ushort>((ushort) (range.Minimum + value), (ushort) (range.Maximum - value));
 		}
 
-		private static Range<ushort> Coerce(this Range<ushort> range)
+		public static Range<ushort> WithExpand(this Range<ushort> range, ushort value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? ushort.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? ushort.MaxValue : range.Maximum;
-
-			return new Range<ushort>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<ushort>((ushort) (range.Minimum - value), (ushort) (range.Maximum + value));
 		}
-
-		public static Range<int> Union(Range<int> first, Range<int> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<int> Intersect(Range<int> first, Range<int> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<int> Complement(Range<int> first, Range<int> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static int Length(this Range<int> range)
-		{
-			return range.IsEmpty ? default(int) : (int)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<int> WithOffset(this Range<int> range, int offset)
-		{
-			return range.IsEmpty ? range : new Range<int>((int) (range.Minimum + offset), (int) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<int> WithShrink(this Range<int> range, int value)
-		{
-			return range.IsEmpty ? range : new Range<int>((int) (range.Minimum + value), (int) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<int> WithExpand(this Range<int> range, int value)
-		{
-			return range.IsEmpty ? range : new Range<int>((int) (range.Minimum - value), (int) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<int> Create(int minimum, int maximum)
 		{
 			return new Range<int>(minimum, maximum);
 		}
 
-		internal static Range<int> CreateMaximumUnbounded(int minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<int> WithOffset(this Range<int> range, int offset)
 		{
-			return new Range<int>(minimum, minimumPoint, int.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<int>((int) (range.Minimum + offset), (int) (range.Maximum + offset));
 		}
 
-		internal static Range<int> CreateMinimumUnbounded(int maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<int> WithShrink(this Range<int> range, int value)
 		{
-			return new Range<int>(int.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<int>((int) (range.Minimum + value), (int) (range.Maximum - value));
 		}
 
-		private static Range<int> Coerce(this Range<int> range)
+		public static Range<int> WithExpand(this Range<int> range, int value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? int.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? int.MaxValue : range.Maximum;
-
-			return new Range<int>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<int>((int) (range.Minimum - value), (int) (range.Maximum + value));
 		}
-
-		public static Range<uint> Union(Range<uint> first, Range<uint> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<uint> Intersect(Range<uint> first, Range<uint> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<uint> Complement(Range<uint> first, Range<uint> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static uint Length(this Range<uint> range)
-		{
-			return range.IsEmpty ? default(uint) : (uint)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<uint> WithOffset(this Range<uint> range, uint offset)
-		{
-			return range.IsEmpty ? range : new Range<uint>((uint) (range.Minimum + offset), (uint) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<uint> WithShrink(this Range<uint> range, uint value)
-		{
-			return range.IsEmpty ? range : new Range<uint>((uint) (range.Minimum + value), (uint) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<uint> WithExpand(this Range<uint> range, uint value)
-		{
-			return range.IsEmpty ? range : new Range<uint>((uint) (range.Minimum - value), (uint) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<uint> Create(uint minimum, uint maximum)
 		{
 			return new Range<uint>(minimum, maximum);
 		}
 
-		internal static Range<uint> CreateMaximumUnbounded(uint minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<uint> WithOffset(this Range<uint> range, uint offset)
 		{
-			return new Range<uint>(minimum, minimumPoint, uint.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<uint>((uint) (range.Minimum + offset), (uint) (range.Maximum + offset));
 		}
 
-		internal static Range<uint> CreateMinimumUnbounded(uint maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<uint> WithShrink(this Range<uint> range, uint value)
 		{
-			return new Range<uint>(uint.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<uint>((uint) (range.Minimum + value), (uint) (range.Maximum - value));
 		}
 
-		private static Range<uint> Coerce(this Range<uint> range)
+		public static Range<uint> WithExpand(this Range<uint> range, uint value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? uint.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? uint.MaxValue : range.Maximum;
-
-			return new Range<uint>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<uint>((uint) (range.Minimum - value), (uint) (range.Maximum + value));
 		}
-
-		public static Range<long> Union(Range<long> first, Range<long> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<long> Intersect(Range<long> first, Range<long> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<long> Complement(Range<long> first, Range<long> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static long Length(this Range<long> range)
-		{
-			return range.IsEmpty ? default(long) : (long)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<long> WithOffset(this Range<long> range, long offset)
-		{
-			return range.IsEmpty ? range : new Range<long>((long) (range.Minimum + offset), (long) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<long> WithShrink(this Range<long> range, long value)
-		{
-			return range.IsEmpty ? range : new Range<long>((long) (range.Minimum + value), (long) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<long> WithExpand(this Range<long> range, long value)
-		{
-			return range.IsEmpty ? range : new Range<long>((long) (range.Minimum - value), (long) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<long> Create(long minimum, long maximum)
 		{
 			return new Range<long>(minimum, maximum);
 		}
 
-		internal static Range<long> CreateMaximumUnbounded(long minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<long> WithOffset(this Range<long> range, long offset)
 		{
-			return new Range<long>(minimum, minimumPoint, long.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<long>((long) (range.Minimum + offset), (long) (range.Maximum + offset));
 		}
 
-		internal static Range<long> CreateMinimumUnbounded(long maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<long> WithShrink(this Range<long> range, long value)
 		{
-			return new Range<long>(long.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<long>((long) (range.Minimum + value), (long) (range.Maximum - value));
 		}
 
-		private static Range<long> Coerce(this Range<long> range)
+		public static Range<long> WithExpand(this Range<long> range, long value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? long.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? long.MaxValue : range.Maximum;
-
-			return new Range<long>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<long>((long) (range.Minimum - value), (long) (range.Maximum + value));
 		}
-
-		public static Range<ulong> Union(Range<ulong> first, Range<ulong> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<ulong> Intersect(Range<ulong> first, Range<ulong> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<ulong> Complement(Range<ulong> first, Range<ulong> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static ulong Length(this Range<ulong> range)
-		{
-			return range.IsEmpty ? default(ulong) : (ulong)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<ulong> WithOffset(this Range<ulong> range, ulong offset)
-		{
-			return range.IsEmpty ? range : new Range<ulong>((ulong) (range.Minimum + offset), (ulong) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<ulong> WithShrink(this Range<ulong> range, ulong value)
-		{
-			return range.IsEmpty ? range : new Range<ulong>((ulong) (range.Minimum + value), (ulong) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<ulong> WithExpand(this Range<ulong> range, ulong value)
-		{
-			return range.IsEmpty ? range : new Range<ulong>((ulong) (range.Minimum - value), (ulong) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<ulong> Create(ulong minimum, ulong maximum)
 		{
 			return new Range<ulong>(minimum, maximum);
 		}
 
-		internal static Range<ulong> CreateMaximumUnbounded(ulong minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<ulong> WithOffset(this Range<ulong> range, ulong offset)
 		{
-			return new Range<ulong>(minimum, minimumPoint, ulong.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<ulong>((ulong) (range.Minimum + offset), (ulong) (range.Maximum + offset));
 		}
 
-		internal static Range<ulong> CreateMinimumUnbounded(ulong maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<ulong> WithShrink(this Range<ulong> range, ulong value)
 		{
-			return new Range<ulong>(ulong.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<ulong>((ulong) (range.Minimum + value), (ulong) (range.Maximum - value));
 		}
 
-		private static Range<ulong> Coerce(this Range<ulong> range)
+		public static Range<ulong> WithExpand(this Range<ulong> range, ulong value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? ulong.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? ulong.MaxValue : range.Maximum;
-
-			return new Range<ulong>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<ulong>((ulong) (range.Minimum - value), (ulong) (range.Maximum + value));
 		}
-
-		public static Range<float> Union(Range<float> first, Range<float> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<float> Intersect(Range<float> first, Range<float> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<float> Complement(Range<float> first, Range<float> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static float Length(this Range<float> range)
-		{
-			return range.IsEmpty ? default(float) : (float)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<float> WithOffset(this Range<float> range, float offset)
-		{
-			return range.IsEmpty ? range : new Range<float>((float) (range.Minimum + offset), (float) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<float> WithShrink(this Range<float> range, float value)
-		{
-			return range.IsEmpty ? range : new Range<float>((float) (range.Minimum + value), (float) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<float> WithExpand(this Range<float> range, float value)
-		{
-			return range.IsEmpty ? range : new Range<float>((float) (range.Minimum - value), (float) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<float> Create(float minimum, float maximum)
 		{
 			return new Range<float>(minimum, maximum);
 		}
 
-		internal static Range<float> CreateMaximumUnbounded(float minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<float> WithOffset(this Range<float> range, float offset)
 		{
-			return new Range<float>(minimum, minimumPoint, float.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<float>((float) (range.Minimum + offset), (float) (range.Maximum + offset));
 		}
 
-		internal static Range<float> CreateMinimumUnbounded(float maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<float> WithShrink(this Range<float> range, float value)
 		{
-			return new Range<float>(float.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<float>((float) (range.Minimum + value), (float) (range.Maximum - value));
 		}
 
-		private static Range<float> Coerce(this Range<float> range)
+		public static Range<float> WithExpand(this Range<float> range, float value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? float.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? float.MaxValue : range.Maximum;
-
-			return new Range<float>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<float>((float) (range.Minimum - value), (float) (range.Maximum + value));
 		}
-
-		public static Range<double> Union(Range<double> first, Range<double> second)
-		{
-			return UnionImpl(first, second).Coerce();
-		}
-
-		public static Range<double> Intersect(Range<double> first, Range<double> second)
-		{
-			return IntersectImpl(first, second).Coerce();
-		}
-
-		public static Range<double> Complement(Range<double> first, Range<double> second)
-		{
-			return ComplementImpl(first, second).Coerce();
-		}
-
-		public static double Length(this Range<double> range)
-		{
-			return range.IsEmpty ? default(double) : (double)(range.Maximum - range.Minimum);
-		}
-
-		public static Range<double> WithOffset(this Range<double> range, double offset)
-		{
-			return range.IsEmpty ? range : new Range<double>((double) (range.Minimum + offset), (double) (range.Maximum + offset)).Coerce();
-		}
-
-		public static Range<double> WithShrink(this Range<double> range, double value)
-		{
-			return range.IsEmpty ? range : new Range<double>((double) (range.Minimum + value), (double) (range.Maximum - value)).Coerce();
-		}
-
-		public static Range<double> WithExpand(this Range<double> range, double value)
-		{
-			return range.IsEmpty ? range : new Range<double>((double) (range.Minimum - value), (double) (range.Maximum + value)).Coerce();
-		}
-
 		public static Range<double> Create(double minimum, double maximum)
 		{
 			return new Range<double>(minimum, maximum);
 		}
 
-		internal static Range<double> CreateMaximumUnbounded(double minimum, RangeEndPoint minimumPoint = RangeEndPoint.Closed)
+		public static Range<double> WithOffset(this Range<double> range, double offset)
 		{
-			return new Range<double>(minimum, minimumPoint, double.MaxValue, RangeEndPoint.Unbounded);
+			return new Range<double>((double) (range.Minimum + offset), (double) (range.Maximum + offset));
 		}
 
-		internal static Range<double> CreateMinimumUnbounded(double maximum, RangeEndPoint maximumPoint = RangeEndPoint.Closed)
+		public static Range<double> WithShrink(this Range<double> range, double value)
 		{
-			return new Range<double>(double.MinValue, RangeEndPoint.Unbounded, maximum, maximumPoint);
+			return new Range<double>((double) (range.Minimum + value), (double) (range.Maximum - value));
 		}
 
-		private static Range<double> Coerce(this Range<double> range)
+		public static Range<double> WithExpand(this Range<double> range, double value)
 		{
-			var minimum = range.MinimumPoint == RangeEndPoint.Unbounded ? double.MinValue : range.Minimum;
-			var maximum = range.MaximumPoint == RangeEndPoint.Unbounded ? double.MaxValue : range.Maximum;
-
-			return new Range<double>(minimum, range.MinimumPoint, maximum, range.MaximumPoint);
+			return new Range<double>((double) (range.Minimum - value), (double) (range.Maximum + value));
 		}
-
 	}
 }
