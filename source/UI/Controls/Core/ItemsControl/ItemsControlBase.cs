@@ -7,12 +7,10 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
-using Zaaml.Core;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
-using Zaaml.UI.Controls.ScrollView;
 using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Controls.Core
@@ -44,8 +42,6 @@ namespace Zaaml.UI.Controls.Core
 		protected virtual Orientation LogicalOrientation => ItemsHost?.LogicalOrientationInt ?? Orientation.Vertical;
 
 		internal bool PreserveMinSize { get; set; }
-
-		protected ScrollViewControl ScrollView => TemplateContract.ScrollView;
 
 		private ItemsControlBaseTemplateContract TemplateContract => (ItemsControlBaseTemplateContract) TemplateContractInternal;
 
@@ -92,24 +88,6 @@ namespace Zaaml.UI.Controls.Core
 		{
 		}
 
-		protected override void OnTemplateContractAttached()
-		{
-			base.OnTemplateContractAttached();
-
-			if (ScrollView != null)
-			{
-				ScrollView.IsTabStop = false;
-				ItemsPresenter.ScrollView = ScrollView;
-			}
-		}
-
-		protected override void OnTemplateContractDetaching()
-		{
-			ItemsPresenter.ScrollView = null;
-
-			base.OnTemplateContractDetaching();
-		}
-
 		protected override void OnUnloaded()
 		{
 			_minDesiredSize = new Size();
@@ -147,8 +125,5 @@ namespace Zaaml.UI.Controls.Core
 		protected abstract ItemsPresenterBase ItemsPresenterBase { get; }
 
 		internal ItemsPresenterBase ItemsPresenterInternal => ItemsPresenterBase;
-
-		[TemplateContractPart(Required = false)]
-		public ScrollViewControl ScrollView { get; [UsedImplicitly] private set; }
 	}
 }

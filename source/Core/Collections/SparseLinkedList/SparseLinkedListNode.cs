@@ -9,11 +9,11 @@ namespace Zaaml.Core.Collections
 	[PublicAPI]
 	internal readonly struct SparseLinkedListNode<T>
 	{
-		public SparseLinkedListNode(SparseLinkedListBase<T>.Node node, SparseLinkedListBase<T> list)
+		public SparseLinkedListNode(SparseLinkedListBase<T>.NodeBase node, SparseLinkedListBase<T> list)
 		{
 			_node = node;
 			_list = list;
-			_version = list.Version;
+			_version = list.StructureVersion;
 		}
 
 		private SparseLinkedListNode(int version)
@@ -25,14 +25,14 @@ namespace Zaaml.Core.Collections
 
 		private readonly SparseLinkedListBase<T> _list;
 		private readonly int _version;
-		private readonly SparseLinkedListBase<T>.Node _node;
+		private readonly SparseLinkedListBase<T>.NodeBase _node;
 
 		private void Verify()
 		{
 			if (IsEmpty)
 				throw new InvalidOperationException("Node is Empty.");
 
-			if (_version != _list.Version)
+			if (_version != _list.StructureVersion)
 				throw new InvalidOperationException("List has changed.");
 		}
 
@@ -85,24 +85,13 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public int Index
+		public long Count
 		{
 			get
 			{
 				Verify();
 
-				return _node.Index;
-			}
-		}
-
-		[PublicAPI]
-		public int Count
-		{
-			get
-			{
-				Verify();
-
-				return _node.Count;
+				return _node.Size;
 			}
 		}
 

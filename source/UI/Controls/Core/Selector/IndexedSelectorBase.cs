@@ -12,7 +12,7 @@ namespace Zaaml.UI.Controls.Core
 	public abstract class IndexedSelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> : SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>, ISelector<TItem>
 		where TItem : NativeControl, ISelectable
 		where TCollection : ItemCollectionBase<TControl, TItem>
-		where TPresenter : ItemsPresenterBase<TControl, TItem, TCollection, TPanel>
+		where TPresenter : ScrollableItemsPresenterBase<TControl, TItem, TCollection, TPanel>
 		where TPanel : ItemsPanel<TItem>
 		where TControl : SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>
 	{
@@ -28,5 +28,11 @@ namespace Zaaml.UI.Controls.Core
 		internal override int SelectedIndexInternal => SelectedIndex;
 
 		DependencyProperty ISelector<TItem>.SelectedIndexProperty => SelectedIndexProperty;
+	}
+
+
+	public abstract class IndexedSelectorBaseTemplateContract<TPresenter> : SelectorBaseTemplateContract<TPresenter>
+		where TPresenter : ItemsPresenterBase
+	{
 	}
 }

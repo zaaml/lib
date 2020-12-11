@@ -150,7 +150,9 @@ namespace Zaaml.UI.Controls.Core
 
 		protected Orientation LogicalOrientation => Control.LogicalOrientation;
 
-		protected ScrollViewControl ScrollView => Control.ScrollView;
+		private IScrollableFocusNavigatorAdvisor<TItem> ScrollableControl => Control as IScrollableFocusNavigatorAdvisor<TItem>;
+
+		protected ScrollViewControl ScrollView => ScrollableControl?.ScrollView;
 
 		protected void FocusItem(TItem item)
 		{
@@ -169,10 +171,12 @@ namespace Zaaml.UI.Controls.Core
 						return;
 				}
 
-				if (reenter || Control.IsVirtualizing == false || Control.ScrollView == null)
+				var scrollView = ScrollView;
+
+				if (reenter || Control.IsVirtualizing == false || scrollView == null)
 					return;
 
-				Control.ScrollView.UpdateLayout();
+				scrollView.UpdateLayout();
 
 				reenter = true;
 			}

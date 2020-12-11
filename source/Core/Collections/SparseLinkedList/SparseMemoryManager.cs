@@ -8,8 +8,6 @@ namespace Zaaml.Core.Collections
 {
 	internal sealed class SparseMemoryManager<T>
 	{
-		public int NodeCapacity { get; }
-
 		private readonly Stack<SparseMemoryPage<T>> _pagesPool = new Stack<SparseMemoryPage<T>>();
 
 		private SparseMemoryPage<T> _currentPage;
@@ -19,6 +17,8 @@ namespace Zaaml.Core.Collections
 			NodeCapacity = nodeCapacity;
 			PageSize = nodeCapacity * nodeCount;
 		}
+
+		public int NodeCapacity { get; }
 
 		public int PageSize { get; }
 

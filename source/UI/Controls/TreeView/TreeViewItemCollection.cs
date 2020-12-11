@@ -68,7 +68,7 @@ namespace Zaaml.UI.Controls.TreeView
 			}
 		}
 
-		private TreeViewControl TreeViewControl => TreeViewItem.TreeView;
+		private TreeViewControl TreeViewControl => TreeViewItem.TreeViewControl;
 
 		private TreeViewItem TreeViewItem => Control;
 

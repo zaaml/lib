@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Diagnostics;
 
 namespace Zaaml.Core.Collections
@@ -14,83 +13,77 @@ namespace Zaaml.Core.Collections
 			RemoveRangeAtImpl(index, 1);
 		}
 
-		private void RemoveNodeRange(Node node, int index, int count, bool advanceIndices)
+		private void RemoveNodeRange(ref NodeCursor cursor, long index, long count)
 		{
-			// Remove whole node
-			if (index == node.Index && count == node.Count)
+			try
 			{
-				if (ReferenceEquals(node, HeadNode) || ReferenceEquals(node, TailNode))
+				EnterStructureChange();
+
+				// Remove whole node
+				if (index == cursor.NodeOffset && count == cursor.Node.Size)
 				{
-					node.Count -= count;
+					if (ReferenceEquals(cursor.Node, HeadNode) || ReferenceEquals(cursor.Node, TailNode))
+					{
+						cursor.Node.Size -= count;
 
-					AdvanceIndices(node);
+						LongCount -= count;
+					}
+					else
+					{
+						RemoveNode(cursor.Node);
 
-					Count -= count;
-					Current = node;
+						LongCount -= count;
+					}
+
+					return;
+				}
+
+				var realizedNode = cursor.Node as RealizedNode;
+
+				if (realizedNode == null)
+				{
+					cursor.Node.Size -= count;
+
+					LongCount -= count;
 				}
 				else
 				{
-					var prevNode = node.Prev;
+					var removeStartIndex = (int)(index - cursor.NodeOffset);
 
-					RemoveNode(node);
+					if (removeStartIndex + count == realizedNode.Size)
+					{
+						//Array.Clear(realizedNode.ItemsPrivate, removeStartIndex, count);
 
-					if (advanceIndices)
-						AdvanceIndices(prevNode);
+						realizedNode.Span.Slice(removeStartIndex, (int)count).Clear();
+					}
+					else
+					{
+						var moveIndex = (int)(removeStartIndex + count);
+						var moveCount = (int)(realizedNode.Size - moveIndex);
+						var clearIndex = (int)(removeStartIndex + moveCount);
 
-					Count -= count;
-					Current = prevNode;
+						//Array.Copy(realizedNode.ItemsPrivate, moveIndex, realizedNode.ItemsPrivate, removeStartIndex, moveCount);
+
+						var sourceSpan = realizedNode.Span.Slice(moveIndex, moveCount);
+						var targetSpan = realizedNode.Span.Slice(removeStartIndex, moveCount);
+
+						sourceSpan.CopyTo(targetSpan);
+
+						//Array.Clear(realizedNode.ItemsPrivate, clearIndex, realizedNode.Count - clearIndex);
+
+						var clearSpan = realizedNode.Span.Slice(clearIndex, (int)(realizedNode.Size - clearIndex));
+
+						clearSpan.Clear();
+					}
+
+					realizedNode.Size -= count;
+
+					LongCount -= count;
 				}
-
-				return;
 			}
-
-			var realizedNode = node as RealizedNode;
-
-			if (realizedNode == null)
+			finally
 			{
-				node.Count -= count;
-
-				if (advanceIndices)
-					AdvanceIndices(node);
-
-				Count -= count;
-				Current = node;
-			}
-			else
-			{
-				var removeStartIndex = index - realizedNode.Index;
-
-				if (removeStartIndex + count == realizedNode.Count)
-				{
-					//Array.Clear(realizedNode.ItemsPrivate, removeStartIndex, count);
-
-					realizedNode.Span.Slice(removeStartIndex, count).Clear();
-				}
-				else
-				{
-					var moveIndex = removeStartIndex + count;
-					var moveCount = realizedNode.Count - moveIndex;
-					var clearIndex = removeStartIndex + moveCount;
-
-					//Array.Copy(realizedNode.ItemsPrivate, moveIndex, realizedNode.ItemsPrivate, removeStartIndex, moveCount);
-
-					var sourceSpan = realizedNode.Span.Slice(moveIndex, moveCount);
-					var destinationSpan = realizedNode.Span.Slice(removeStartIndex, moveCount);
-
-					sourceSpan.CopyTo(destinationSpan);
-
-					//Array.Clear(realizedNode.ItemsPrivate, clearIndex, realizedNode.Count - clearIndex);
-
-					realizedNode.Span.Slice(clearIndex, realizedNode.Count - clearIndex).Clear();
-				}
-
-				realizedNode.Count -= count;
-
-				if (advanceIndices)
-					AdvanceIndices(realizedNode);
-
-				Count -= count;
-				Current = realizedNode;
+				LeaveStructureChange();
 			}
 		}
 
@@ -99,102 +92,105 @@ namespace Zaaml.Core.Collections
 			if (count == 0)
 				return;
 
-			var endIndex = index + count - 1;
-			var firstNode = FindNodeImpl(index);
-
-			// Single Node
-			if (firstNode.Contains(endIndex))
+			try
 			{
-				RemoveNodeRange(firstNode, index, count, true);
+				EnterStructureChange();
 
-				return;
-			}
+				var endIndex = index + count - 1;
+				var firstNode = FindNodeImpl(index);
+				var firstNodeCursor = Cursor.NavigateTo(index);
 
-			var lastNode = firstNode.Next;
-
-			// Contiguous nodes
-			if (lastNode != null && lastNode.Contains(endIndex))
-			{
-				var firstCount = firstNode.Count - (index - firstNode.Index);
-				var lastCount = count - (lastNode.Index - index);
-
-				RemoveNodeRange(lastNode, lastNode.Index, lastCount, false);
-				RemoveNodeRange(firstNode, index, firstCount, true);
-
-				return;
-			}
-
-			while (lastNode != null && lastNode.Contains(endIndex) == false)
-			{
-				var next = lastNode.Next;
-
-				ReleaseNode(lastNode);
-
-				lastNode = next;
-			}
-
-			Debug.Assert(lastNode != null);
-
-			var gapSize = lastNode.Index - firstNode.Index - firstNode.Count;
-			var firstGap = firstNode is GapNode;
-			var lastGap = lastNode is GapNode;
-
-			if (firstGap && lastGap)
-			{
-				if (ReferenceEquals(firstNode, HeadNode))
+				// Single Node
+				if (firstNodeCursor.Contains(endIndex))
 				{
-					if (ReferenceEquals(lastNode, TailNode))
+					RemoveNodeRange(ref firstNodeCursor, index, count);
+
+					return;
+				}
+
+				var lastNodeCursor = firstNodeCursor.GetNext();
+				var lastNode = lastNodeCursor.Node;
+
+				// Contiguous nodes
+				if (lastNodeCursor.IsValid && lastNodeCursor.Contains(endIndex))
+				{
+					var firstCount = firstNode.Size - (index - firstNodeCursor.NodeOffset);
+					var lastCount = count - (lastNodeCursor.NodeOffset - index);
+
+					RemoveNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, lastCount);
+					RemoveNodeRange(ref firstNodeCursor, index, firstCount);
+
+					return;
+				}
+
+				while (lastNodeCursor.IsValid && lastNodeCursor.Contains(endIndex) == false)
+				{
+					var next = lastNodeCursor.GetNext();
+
+					ReleaseNode(lastNodeCursor.Node);
+
+					lastNodeCursor = next;
+					lastNode = lastNodeCursor.Node;
+				}
+
+				Debug.Assert(lastNode != null);
+
+				var gapSize = lastNodeCursor.NodeOffset - firstNodeCursor.NodeOffset - firstNode.Size;
+				var firstGap = firstNode is GapNode;
+				var lastGap = lastNode is GapNode;
+
+				if (firstGap && lastGap)
+				{
+					if (ReferenceEquals(firstNode, HeadNode))
 					{
-						Count -= count;
+						if (ReferenceEquals(lastNode, TailNode))
+						{
+							LongCount -= count;
 
-						InitHeadTail();
+							InitHeadTail();
 
-						return;
+							return;
+						}
+
+						HeadNode.Next = lastNode.Next;
+						lastNode.Next.Prev = HeadNode;
+						HeadNode.Size += gapSize + lastNode.Size - count;
+
+						ReleaseNode(lastNode);
+
+						LongCount -= count;
+					}
+					else
+					{
+						lastNode.Size += gapSize + firstNode.Size - count;
+
+						lastNode.Prev = firstNode.Prev;
+						firstNode.Prev.Next = lastNode;
+
+						ReleaseNode(firstNode);
+
+						LongCount -= count;
 					}
 
-					HeadNode.Next = lastNode.Next;
-					lastNode.Next.Prev = HeadNode;
-					HeadNode.Count += gapSize + lastNode.Count - count;
-
-					ReleaseNode(lastNode);
-
-					AdvanceIndices(HeadNode);
-
-					Count -= count;
-
-					Current = HeadNode;
+					return;
 				}
-				else
+
+				firstNode.Next = lastNode;
+				lastNode.Prev = firstNode;
+
 				{
-					lastNode.Index = firstNode.Index;
-					lastNode.Count += gapSize + firstNode.Count - count;
+					var firstCount = firstNode.Size - (index - firstNodeCursor.NodeOffset);
+					var lastCount = count - (lastNodeCursor.NodeOffset - index);
 
-					lastNode.Prev = firstNode.Prev;
-					firstNode.Prev.Next = lastNode;
+					RemoveNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, lastCount);
+					RemoveNodeRange(ref firstNodeCursor, index, firstCount);
 
-					ReleaseNode(firstNode);
-
-					AdvanceIndices(lastNode);
-
-					Count -= count;
-
-					Current = lastNode;
+					LongCount -= count - firstCount - lastCount;
 				}
-
-				return;
 			}
-
-			firstNode.Next = lastNode;
-			lastNode.Prev = firstNode;
-
+			finally
 			{
-				var firstCount = firstNode.Count - (index - firstNode.Index);
-				var lastCount = count - (lastNode.Index - index);
-
-				RemoveNodeRange(lastNode, lastNode.Index, lastCount, false);
-				RemoveNodeRange(firstNode, index, firstCount, true);
-
-				Count -= count - firstCount - lastCount;
+				LeaveStructureChange();
 			}
 		}
 	}

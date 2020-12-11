@@ -12,6 +12,7 @@ using System.Windows.Media;
 using Zaaml.Core.Packed;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Weak.Collections;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.PropertyCore.Extensions;

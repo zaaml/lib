@@ -12,23 +12,21 @@ namespace Zaaml.Core.Collections
 		public SparseLinkedList()
 		{
 		}
-		
-		protected SparseLinkedList(int count, SparseLinkedListManager<T> manager) : base(count,  manager)
+
+		internal SparseLinkedList(SparseLinkedListManager<T> manager) : base(0, manager)
 		{
 		}
 
-		public SparseLinkedListNode<T> Head => new SparseLinkedListNode<T>(HeadNode, this);
-
 		private bool Locked { get; set; }
 
-		public SparseLinkedListNode<T> Tail => new SparseLinkedListNode<T>(TailNode, this);
+		internal int Version { get; private set; }
 
 		private void CopyToImpl(T[] array, int arrayIndex)
 		{
 			if (array.Length - arrayIndex < Count)
 				throw new InvalidOperationException("Insufficient array length");
 
-			var index = arrayIndex;
+			long index = arrayIndex;
 			var current = HeadNode;
 
 			while (current != null)
@@ -37,12 +35,13 @@ namespace Zaaml.Core.Collections
 				{
 					//Array.Copy(realizedNode.ItemsPrivate, 0, array, index, realizedNode.Count);
 
-					var destinationSpan = new Span<T>(array, index, realizedNode.Count);
-					
-					realizedNode.Span.CopyTo(destinationSpan);
+					var sourceSpan = realizedNode.Span.Slice(0, (int) realizedNode.Size);
+					var targetSpan = new Span<T>(array, (int) index, (int) realizedNode.Size);
+
+					sourceSpan.CopyTo(targetSpan);
 				}
 
-				index += current.Count;
+				index += current.Size;
 
 				current = current.Next;
 			}

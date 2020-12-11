@@ -14,20 +14,18 @@ namespace Zaaml.Core.Collections
 			CleanRangeImpl(index, 1);
 		}
 
-		private void CleanNodeRange(Node node, int index, int count)
+		private void CleanNodeRange(ref NodeCursor cursor, long index, long count)
 		{
-			if (!(node is RealizedNode realizedNode))
+			if (!(cursor.Node is RealizedNode realizedNode))
 				return;
 
 			var prevNode = realizedNode.Prev;
 			var nextNode = realizedNode.Next;
 
-			Current = nextNode;
-
 			GapNode gapNode;
 
 			// Remove whole node
-			if (realizedNode.Index == index && count >= realizedNode.Count)
+			if (cursor.NodeOffset == index && count >= realizedNode.Size)
 			{
 				// Between Head and Tail
 				var isPrevHead = ReferenceEquals(prevNode, HeadNode);
@@ -49,35 +47,28 @@ namespace Zaaml.Core.Collections
 				{
 					if (isPrevHead)
 					{
-						HeadNode.Count += realizedNode.Count + nextNode.Count;
+						HeadNode.Size += realizedNode.Size + nextNode.Size;
 
 						RemoveNode(nextNode);
 						RemoveNode(realizedNode);
-
-						Current = HeadNode;
 
 						return;
 					}
 
 					if (isNextTail)
 					{
-						TailNode.Count += realizedNode.Count + prevNode.Count;
-						TailNode.Index -= realizedNode.Count + prevNode.Count;
+						TailNode.Size += realizedNode.Size + prevNode.Size;
 
 						RemoveNode(prevNode);
 						RemoveNode(realizedNode);
 
-						Current = TailNode;
-
 						return;
 					}
 
-					prevNode.Count += realizedNode.Count + nextNode.Count;
+					prevNode.Size += realizedNode.Size + nextNode.Size;
 
 					RemoveNode(nextNode);
 					RemoveNode(realizedNode);
-
-					Current = prevNode;
 
 					return;
 				}
@@ -85,7 +76,7 @@ namespace Zaaml.Core.Collections
 				// Prev Node Gap. Expand
 				if (isPrevGap)
 				{
-					prevNode.Count += realizedNode.Count;
+					prevNode.Size += realizedNode.Size;
 					prevNode.Next = nextNode;
 					nextNode.Prev = prevNode;
 
@@ -97,8 +88,7 @@ namespace Zaaml.Core.Collections
 				// Next Node Gap. Expand
 				if (isNextGap)
 				{
-					nextNode.Count += realizedNode.Count;
-					nextNode.Index -= realizedNode.Count;
+					nextNode.Size += realizedNode.Size;
 					prevNode.Next = nextNode;
 					nextNode.Prev = prevNode;
 
@@ -112,8 +102,7 @@ namespace Zaaml.Core.Collections
 
 				gapNode.Prev = prevNode;
 				gapNode.Next = nextNode;
-				gapNode.Count = realizedNode.Count;
-				gapNode.Index = realizedNode.Index;
+				gapNode.Size = realizedNode.Size;
 
 				prevNode.Next = gapNode;
 				nextNode.Prev = gapNode;
@@ -125,14 +114,14 @@ namespace Zaaml.Core.Collections
 
 			// Clean part of Node
 			var items = realizedNode.Span;
-			var itemsStart = index - realizedNode.Index;
+			var itemsStart = (int)(index - cursor.NodeOffset);
 			var itemsEnd = itemsStart + count;
-			var loopEnd = Math.Min(itemsEnd, realizedNode.Count);
+			var loopEnd = Math.Min(itemsEnd, realizedNode.Size);
 
 			//Array.Clear(items, itemsStart, loopEnd - itemsStart);
-			items.Slice(itemsStart, loopEnd - itemsStart).Clear();
+			items.Slice(itemsStart, (int)(loopEnd - itemsStart)).Clear();
 
-			if (itemsEnd < realizedNode.Count)
+			if (itemsEnd < realizedNode.Size)
 				return;
 
 			gapNode = nextNode as GapNode;
@@ -147,139 +136,143 @@ namespace Zaaml.Core.Collections
 				realizedNode.Next = gapNode;
 			}
 
-			gapNode.Index = index;
-			gapNode.Count += realizedNode.Count - itemsStart;
-			realizedNode.Count = itemsStart;
+			gapNode.Size += realizedNode.Size - itemsStart;
+			realizedNode.Size = itemsStart;
 		}
 
 		private protected void CleanRangeImpl(int index, int count)
 		{
 			if (count == 0)
 				return;
-
-			var endIndex = index + count - 1;
-			var firstNode = FindNodeImpl(index);
-
-			// Single Node
-			if (firstNode.Contains(endIndex))
+			
+			try
 			{
-				CleanNodeRange(firstNode, index, count);
+				EnterStructureChange();
 
-				return;
-			}
+				var endIndex = index + count - 1;
+				var firstNodeCursor = Cursor.NavigateTo(index);
+				var firstNode = firstNodeCursor.Node;
 
-			var lastNode = firstNode.Next;
-
-			// Contiguous nodes
-			if (lastNode != null && lastNode.Contains(endIndex))
-			{
-				// First is Gap. Expand to next
-				if (firstNode is GapNode)
+				// Single Node
+				if (firstNodeCursor.Contains(endIndex))
 				{
-					CleanNodeRange(lastNode, lastNode.Index, count - (lastNode.Index - index));
-				}
-				// Last is Gap. Expand to prev
-				else if (lastNode is GapNode)
-				{
-					CleanNodeRange(firstNode, index, firstNode.Count - (index - firstNode.Index));
-				}
-				// Contiguous realized nodes. Make gap between
-				else
-				{
-					var firstCount = firstNode.Count - (index - firstNode.Index);
-					var lastCount = count - (lastNode.Index - index);
+					CleanNodeRange(ref firstNodeCursor, index, count);
 
-					CleanNodeRange(lastNode, lastNode.Index, lastCount);
-					CleanNodeRange(firstNode, index, firstCount);
+					return;
 				}
 
-				return;
-			}
+				var lastNodeCursor = firstNodeCursor.GetNext();
+				var lastNode = lastNodeCursor.Node;
 
-			GapNode gapNode = null;
-
-			while (lastNode != null && lastNode.Contains(endIndex) == false)
-			{
-				var next = lastNode.Next;
-
-				ReleaseNode(lastNode);
-
-				gapNode ??= lastNode as GapNode;
-
-				lastNode = next;
-			}
-
-			Debug.Assert(lastNode != null);
-
-			var gapSize = lastNode.Index - firstNode.Index - firstNode.Count;
-			var firstGap = firstNode is GapNode;
-			var lastGap = lastNode is GapNode;
-
-			if (firstGap && lastGap)
-			{
-				if (ReferenceEquals(firstNode, HeadNode))
+				// Contiguous nodes
+				if (lastNodeCursor.IsValid && lastNodeCursor.Contains(endIndex))
 				{
-					if (ReferenceEquals(lastNode, TailNode))
+					// First is Gap. Expand to next
+					if (firstNode is GapNode)
 					{
-						InitHeadTail();
+						CleanNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, count - (lastNodeCursor.NodeOffset - index));
+					}
+					// Last is Gap. Expand to prev
+					else if (lastNode is GapNode)
+					{
+						CleanNodeRange(ref firstNodeCursor, index, firstNode.Size - (index - firstNodeCursor.NodeOffset));
+					}
+					// Contiguous realized nodes. Make gap between
+					else
+					{
+						var firstCount = firstNode.Size - (index - firstNodeCursor.NodeOffset);
+						var lastCount = count - (lastNodeCursor.NodeOffset - index);
 
-						return;
+						CleanNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, lastCount);
+						CleanNodeRange(ref firstNodeCursor, index, firstCount);
 					}
 
-					HeadNode.Next = lastNode.Next;
-					lastNode.Next.Prev = HeadNode;
-					HeadNode.Count += gapSize + lastNode.Count;
+					return;
+				}
 
-					ReleaseNode(lastNode);
+				GapNode gapNode = null;
 
-					Current = HeadNode;
+				while (lastNodeCursor.IsValid && lastNodeCursor.Contains(endIndex) == false)
+				{
+					var nextCursor = lastNodeCursor.GetNext();
+
+					ReleaseNode(lastNodeCursor.Node);
+
+					gapNode ??= lastNodeCursor.Node as GapNode;
+
+					lastNodeCursor = nextCursor;
+					lastNode = lastNodeCursor.Node;
+				}
+
+				Debug.Assert(lastNode != null);
+
+				var gapSize = lastNodeCursor.NodeOffset - firstNodeCursor.NodeOffset - firstNode.Size;
+				var firstGap = firstNode is GapNode;
+				var lastGap = lastNode is GapNode;
+
+				if (firstGap && lastGap)
+				{
+					if (ReferenceEquals(firstNode, HeadNode))
+					{
+						if (ReferenceEquals(lastNode, TailNode))
+						{
+							InitHeadTail();
+
+							return;
+						}
+
+						HeadNode.Next = lastNode.Next;
+						lastNode.Next.Prev = HeadNode;
+						HeadNode.Size += gapSize + lastNode.Size;
+
+						ReleaseNode(lastNode);
+					}
+					else
+					{
+						lastNode.Size += gapSize + firstNode.Size;
+
+						lastNode.Prev = firstNode.Prev;
+						firstNode.Prev.Next = lastNode;
+
+						ReleaseNode(firstNode);
+					}
+				}
+				else if (firstGap)
+				{
+					firstNode.Next = lastNode;
+					lastNode.Prev = firstNode;
+
+					firstNode.Size += gapSize;
+
+					CleanNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, count - (lastNodeCursor.NodeOffset - index));
+				}
+				else if (lastGap)
+				{
+					firstNode.Next = lastNode;
+					lastNode.Prev = firstNode;
+
+					lastNode.Size += gapSize;
+
+					CleanNodeRange(ref firstNodeCursor, index, firstNode.Size - (index - firstNodeCursor.NodeOffset));
 				}
 				else
 				{
-					lastNode.Index -= gapSize + firstNode.Count;
-					lastNode.Count += gapSize + firstNode.Count;
+					gapNode ??= CreateGapNode();
 
-					lastNode.Prev = firstNode.Prev;
-					firstNode.Prev.Next = lastNode;
+					gapNode.Size = gapSize;
 
-					ReleaseNode(firstNode);
+					firstNode.Next = gapNode;
+					lastNode.Prev = gapNode;
+					gapNode.Prev = firstNode;
+					gapNode.Next = lastNode;
 
-					Current = lastNode;
+					CleanNodeRange(ref firstNodeCursor, index, firstNode.Size - (index - firstNodeCursor.NodeOffset));
+					CleanNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, count - (lastNodeCursor.NodeOffset - index));
 				}
 			}
-			else if (firstGap)
+			finally
 			{
-				firstNode.Next = lastNode;
-				lastNode.Prev = firstNode;
-
-				firstNode.Count += gapSize;
-
-				CleanNodeRange(lastNode, lastNode.Index, count - (lastNode.Index - index));
-			}
-			else if (lastGap)
-			{
-				firstNode.Next = lastNode;
-				lastNode.Prev = firstNode;
-
-				lastNode.Index -= gapSize;
-				lastNode.Count += gapSize;
-
-				CleanNodeRange(firstNode, index, firstNode.Count - (index - firstNode.Index));
-			}
-			else
-			{
-				gapNode ??= CreateGapNode();
-
-				gapNode.Index = firstNode.Index + firstNode.Count;
-				gapNode.Count = gapSize;
-
-				firstNode.Next = gapNode;
-				lastNode.Prev = gapNode;
-				gapNode.Prev = firstNode;
-				gapNode.Next = lastNode;
-
-				CleanNodeRange(firstNode, index, firstNode.Count - (index - firstNode.Index));
-				CleanNodeRange(lastNode, lastNode.Index, count - (lastNode.Index - index));
+				LeaveStructureChange();
 			}
 		}
 	}

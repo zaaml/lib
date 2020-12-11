@@ -9,7 +9,7 @@ using Zaaml.Core.Utils;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
-namespace Zaaml.UI.Controls.Core
+namespace Zaaml.PresentationCore
 {
 	internal abstract class LogicalChildMentor
 	{

@@ -14,10 +14,10 @@ using NativeControl = System.Windows.Controls.Control;
 
 namespace Zaaml.UI.Controls.Core
 {
-	public abstract class SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> : ItemsControlBase<TControl, TItem, TCollection, TPresenter, TPanel>, ISelector<TItem>
+	public abstract class SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> : ScrollableItemsControlBase<TControl, TItem, TCollection, TPresenter, TPanel>, ISelector<TItem>
 		where TItem : NativeControl, ISelectable
 		where TCollection : ItemCollectionBase<TControl, TItem>
-		where TPresenter : ItemsPresenterBase<TControl, TItem, TCollection, TPanel>
+		where TPresenter : ScrollableItemsPresenterBase<TControl, TItem, TCollection, TPanel>
 		where TPanel : ItemsPanel<TItem>
 		where TControl : SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>
 	{
@@ -336,5 +336,10 @@ namespace Zaaml.UI.Controls.Core
 				IsInitializing = allocator.AllocateBoolItem();
 			}
 		}
+	}
+
+	public abstract class SelectorBaseTemplateContract<TPresenter> : ScrollableItemsControlBaseTemplateContract<TPresenter>
+		where TPresenter : ItemsPresenterBase
+	{
 	}
 }

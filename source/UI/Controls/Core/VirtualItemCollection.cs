@@ -224,6 +224,7 @@ namespace Zaaml.UI.Controls.Core
 		private static IEnumerable<GeneratedItemIndexPair> EnumerateRealizedItems(GeneratedItemList generatedItems)
 		{
 			var currentNode = generatedItems.Head;
+			var currentNodeOffset = 0L;
 
 			if (currentNode.IsEmpty)
 				yield break;
@@ -237,41 +238,43 @@ namespace Zaaml.UI.Controls.Core
 						var generatedItem = currentNode[i];
 
 						if (generatedItem != null)
-							yield return new GeneratedItemIndexPair(generatedItem, currentNode.Index + i);
+							yield return new GeneratedItemIndexPair(generatedItem, (int)(currentNodeOffset + i));
 					}
 				}
 
+				currentNodeOffset += currentNode.Count;
 				currentNode = currentNode.Next;
 			}
 		}
 
 		private IEnumerable<GeneratedItemIndexPair> EnumerateRealizedItems(GeneratedItemList generatedItems, int index, int count)
 		{
-			var currentNode = generatedItems.FindNode(index);
+			var currentNode = generatedItems.FindNode(index, out var currentNodeOffset);
 
 			if (currentNode.IsEmpty)
 				yield break;
 
-			var firstIndex = index - currentNode.Index;
-			var currentIndex = 0;
+			var firstIndex = index - currentNodeOffset;
+			var currentIndex = 0L;
 
 			while (currentNode.IsEmpty == false && currentIndex < count)
 			{
 				if (currentNode.IsRealized)
 				{
-					for (var i = firstIndex; i < currentNode.Count && currentIndex < count; i++, currentIndex++)
+					for (var i = (int)firstIndex; i < currentNode.Count && currentIndex < count; i++, currentIndex++)
 					{
 						var generatedItem = currentNode[i];
 
 						if (generatedItem != null)
-							yield return new GeneratedItemIndexPair(generatedItem, currentNode.Index + i);
+							yield return new GeneratedItemIndexPair(generatedItem, (int)(currentNodeOffset + i));
 					}
 				}
 				else
-					currentIndex += currentNode.Count - firstIndex;
+					currentIndex += currentNodeOffset - firstIndex;
 
 				firstIndex = 0;
 
+				currentNodeOffset += currentNode.Count;
 				currentNode = currentNode.Next;
 			}
 		}
@@ -279,6 +282,7 @@ namespace Zaaml.UI.Controls.Core
 		private static GeneratedItemIndexPair FindGeneratedItem(T item, GeneratedItemList generatedItems)
 		{
 			var currentNode = generatedItems.Head;
+			var currentNodeOffset = 0L;
 
 			while (currentNode.IsEmpty == false)
 			{
@@ -289,10 +293,11 @@ namespace Zaaml.UI.Controls.Core
 						var generatedItem = currentNode[i];
 
 						if (generatedItem != null && ReferenceEquals(generatedItem.Item, item))
-							return new GeneratedItemIndexPair(generatedItem, currentNode.Index + i);
+							return new GeneratedItemIndexPair(generatedItem, (int)(currentNodeOffset + i));
 					}
 				}
 
+				currentNodeOffset += currentNode.Count;
 				currentNode = currentNode.Next;
 			}
 
@@ -944,7 +949,7 @@ namespace Zaaml.UI.Controls.Core
 
 			private VirtualItemCollection<T> VirtualSource { get; }
 
-			protected override void OnNodeReleasing(SparseLinkedListBase<GeneratedItem>.Node node)
+			protected override void OnNodeReleasing(SparseLinkedListBase<GeneratedItem>.NodeBase node)
 			{
 				if (node is SparseLinkedListBase<GeneratedItem>.RealizedNode realizedNode)
 					VirtualSource.ReleaseRealizedNode(realizedNode);

@@ -9,7 +9,7 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.ListView
 {
   [TemplateContractType(typeof(ListViewItemsPresenterTemplateContract))]
-  public class ListViewItemsPresenter : ItemsPresenterBase<ListViewControl, ListViewItem, ListViewItemCollection, ListViewPanel>
+  public class ListViewItemsPresenter : ScrollableItemsPresenterBase<ListViewControl, ListViewItem, ListViewItemCollection, ListViewPanel>
   {
 	  #region Ctors
 

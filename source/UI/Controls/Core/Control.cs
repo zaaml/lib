@@ -4,6 +4,7 @@
 
 using System.Collections;
 using System.Windows;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.Interfaces;

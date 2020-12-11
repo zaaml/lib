@@ -13,24 +13,24 @@ namespace Zaaml.Core.Collections
 		public struct Enumerator : IEnumerator<T>
 		{
 			private SparseLinkedListBase<T> _list;
-			private int _version;
-			private Node _currentNode;
+			private int _structureVersion;
+			private NodeBase _currentNode;
 			private int _currentNodeIndex;
 			private T _current;
 
 			public Enumerator(SparseLinkedListBase<T> list)
 			{
 				_list = list;
-				_version = _list.Version;
+				_current = default;
 				_currentNode = _list.HeadNode;
 				_currentNodeIndex = -1;
-				_current = default;
+				_structureVersion = _list.StructureVersion;
 			}
 
 			public void Dispose()
 			{
 				_list = null;
-				_version = -1;
+				_structureVersion = -1;
 			}
 
 			private void Verify()
@@ -38,7 +38,7 @@ namespace Zaaml.Core.Collections
 				if (_list == null)
 					throw new InvalidOperationException("Enumerator has been disposed.");
 
-				if (_version != _list.Version)
+				if (_structureVersion != _list.StructureVersion)
 					throw new InvalidOperationException("List has changed.");
 			}
 
@@ -48,13 +48,13 @@ namespace Zaaml.Core.Collections
 
 				_currentNodeIndex++;
 
-				if (_currentNodeIndex >= _currentNode.Count)
+				if (_currentNodeIndex >= _currentNode.Size)
 				{
 					_currentNode = _currentNode.Next;
 					_currentNodeIndex = 0;
 				}
 
-				var moveNext = _currentNode != null && _currentNodeIndex < _currentNode.Count;
+				var moveNext = _currentNode != null && _currentNodeIndex < _currentNode.Size;
 
 				if (moveNext)
 					_current = _currentNode.GetLocalItem(_currentNodeIndex);

@@ -8,255 +8,277 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		private Node FindInsertNodeImpl(int index)
+		private NodeCursor FindInsertNodeCursorImpl(long index)
 		{
-			if (Count == 0)
-				return HeadNode;
+			if (Count == 0 || ReferenceEquals(HeadNode.Next, TailNode))
+				return HeadCursor;
 
-			var node = Current;
+			if (TailCursor.Contains(index))
+				return TailCursor;
 
-			if (ReferenceEquals(HeadNode.Next, TailNode))
+			var cursor = Cursor;
+
+			if (cursor.Contains(index))
+				return cursor;
+
+			if (index >= cursor.Index)
 			{
-				node = HeadNode;
-			}
-			else if (node.Contains(index) || node.Count == 0 && node.Index == index)
-			{
-			}
-			else if (index >= node.Index)
-			{
-				while (node != null)
+				while (cursor.Node != null)
 				{
-					if (node.Contains(index) || node.Count == 0 && node.Index == index)
-						break;
+					var next = cursor.GetNext();
 
-					node = node.Next;
+					if (cursor.Contains(index, true))
+						return (next.Contains(index) ? next : cursor).WithIndex(index);
+
+					cursor = next;
 				}
 			}
 			else
 			{
-				while (node != null)
+				while (cursor.Node != null)
 				{
-					if (node.Contains(index) || node.Count == 0 && node.Index == index)
-						break;
+					var prev = cursor.GetPrev();
 
-					node = node.Prev;
+					if (cursor.Contains(index, true))
+						return (prev.Contains(index) ? prev : cursor).WithIndex(index);
+
+					cursor = prev;
 				}
 			}
 
-			Current = node;
-
-			return node;
+			return NodeCursor.Empty;
 		}
 
-		private protected void InsertCleanRangeImpl(int index, int count)
+		private protected void InsertCleanRangeImpl(long index, long count)
 		{
-			if (index >= TailNode.Index)
+			try
 			{
-				if (ReferenceEquals(HeadNode.Next, TailNode))
-				{
-					HeadNode.Count += count;
-					TailNode.Index += count;
+				EnterStructureChange();
 
-					Current = HeadNode;
+				if (index == 0 || HeadCursor.Contains(index))
+				{
+					HeadNode.Size += count;
+					LongCount += count;
+
+					return;
+				}
+
+				if (index == LongCount || TailCursor.Contains(index))
+				{
+					TailNode.Size += count;
+					LongCount += count;
+
+					return;
+				}
+
+				var cursor = FindInsertNodeCursorImpl(index);
+				var node = cursor.Node;
+				var realizedNode = node as RealizedNode;
+				var prevNode = node.Prev;
+				var nextNode = node.Next;
+
+				if (prevNode is GapNode prevGapNode && cursor.GetPrev().NodeOffset == index)
+				{
+					prevGapNode.Size += count;
+					LongCount += count;
+
+					return;
+				}
+
+				if (realizedNode == null)
+				{
+					node.Size += count;
+					LongCount += count;
+
+					return;
+				}
+
+				var splitIndex = (int) (index - cursor.NodeOffset);
+				var splitCount = (int) (realizedNode.Size - splitIndex);
+
+				if (count <= NodeCapacity - realizedNode.Size)
+				{
+					//Array.Copy(realizedNode.Items, splitIndex, realizedNode.Items, splitIndex + count, splitCount);
+
+					var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
+					var targetSpan = realizedNode.Span.Slice((int) (splitIndex + count), splitCount);
+
+					sourceSpan.CopyTo(targetSpan);
+
+					//Array.Clear(realizedNode.Items, splitIndex, count);
+
+					var clearSpan = realizedNode.Span.Slice(splitIndex, (int) count);
+
+					clearSpan.Clear();
+
+					realizedNode.Size += count;
+
+					LongCount += count;
+
+					return;
+				}
+
+				var gapNode = CreateGapNode();
+
+				gapNode.Size = count;
+
+				if (index == cursor.NodeOffset)
+				{
+					gapNode.Prev = prevNode;
+					gapNode.Next = realizedNode;
+
+					prevNode.Next = gapNode;
+					realizedNode.Prev = gapNode;
 				}
 				else
 				{
-					TailNode.Count += count;
+					var nextRealizedNode = CreateRealizedNode();
 
-					Current = TailNode;
+					node.Next = gapNode;
+
+					gapNode.Prev = node;
+					gapNode.Next = nextRealizedNode;
+
+					nextRealizedNode.Size = splitCount;
+					nextRealizedNode.Prev = gapNode;
+					nextRealizedNode.Next = nextNode;
+					nextNode.Prev = nextRealizedNode;
+
+					realizedNode.Size = splitIndex;
+
+					//Array.Copy(realizedNode.ItemsPrivate, splitIndex, nextRealizedNode.ItemsPrivate, 0, splitCount);
+					var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
+					var targetSpan = nextRealizedNode.Span.Slice(0, splitCount);
+
+					sourceSpan.CopyTo(targetSpan);
+
+					//Array.Clear(realizedNode.ItemsPrivate, splitIndex, splitCount);
+					sourceSpan.Clear();
 				}
 
-				Count += count;
-
-				return;
+				LongCount += count;
 			}
-
-			var node = FindInsertNodeImpl(index);
-			var realizedNode = node as RealizedNode;
-			var prevNode = node.Prev;
-			var nextNode = node.Next;
-
-			if (prevNode is GapNode prevGapNode && prevGapNode.Index == index)
+			finally
 			{
-				prevGapNode.Count += count;
-
-				AdvanceIndices(prevGapNode);
-
-				Count += count;
-				Current = node;
-
-				return;
+				LeaveStructureChange();
 			}
-
-			if (realizedNode == null)
-			{
-				node.Count += count;
-
-				AdvanceIndices(node);
-
-				Count += count;
-				Current = node;
-
-				return;
-			}
-
-			var splitIndex = index - realizedNode.Index;
-			var splitCount = realizedNode.Count - splitIndex;
-
-			if (count <= NodeCapacity - realizedNode.Count)
-			{
-				//Array.Copy(realizedNode.Items, splitIndex, realizedNode.Items, splitIndex + count, splitCount);
-
-				var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
-				var destinationSpan = realizedNode.Span.Slice(splitIndex + count, splitCount);
-
-				sourceSpan.CopyTo(destinationSpan);
-			
-				//Array.Clear(realizedNode.Items, splitIndex, count);
-				
-				realizedNode.Span.Slice(splitIndex, count).Clear();
-				
-				realizedNode.Count += count;
-
-				AdvanceIndices(realizedNode);
-
-				Count += count;
-				Current = node;
-
-				return;
-			}
-
-			var gapNode = CreateGapNode();
-
-			gapNode.Index = index;
-			gapNode.Count = count;
-
-			if (index == realizedNode.Index)
-			{
-				gapNode.Prev = prevNode;
-				gapNode.Next = realizedNode;
-
-				prevNode.Next = gapNode;
-				realizedNode.Prev = gapNode;
-			}
-			else
-			{
-				var nextRealizedNode = CreateRealizedNode();
-
-				node.Next = gapNode;
-
-				gapNode.Prev = node;
-				gapNode.Next = nextRealizedNode;
-
-				nextRealizedNode.Index = gapNode.Index + gapNode.Count;
-				nextRealizedNode.Count = splitCount;
-				nextRealizedNode.Prev = gapNode;
-				nextRealizedNode.Next = nextNode;
-				nextNode.Prev = nextRealizedNode;
-
-				realizedNode.Count = splitIndex;
-
-				//Array.Copy(realizedNode.ItemsPrivate, splitIndex, nextRealizedNode.ItemsPrivate, 0, splitCount);
-				var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
-				var destinationSpan = nextRealizedNode.Span.Slice(0, splitCount);
-
-				sourceSpan.CopyTo(destinationSpan);
-
-				//Array.Clear(realizedNode.ItemsPrivate, splitIndex, splitCount);
-				sourceSpan.Clear();
-			}
-
-			AdvanceIndices(gapNode);
-
-			Count += count;
-			Current = gapNode;
 		}
 
-		private protected void InsertImpl(int index, T item)
+		private int StructureChangeCount { get; set; }
+
+		private void EnterStructureChange()
+		{
+			StructureChangeCount++;
+		}
+
+		private void LeaveStructureChange()
+		{
+			StructureChangeCount--;
+
+			if(StructureChangeCount == 0)
+				IncrementStructureVersion();
+		}
+
+		private void IncrementStructureVersion()
+		{
+			StructureVersion++;
+		}
+
+		private protected void InsertImpl(long index, T item)
 		{
 			InsertRangeImpl(index, new InsertEnumerator(item, this));
 		}
 
-		private protected void InsertRangeImpl(int index, InsertEnumerator enumerator)
+		private protected void InsertRangeImpl(long index, InsertEnumerator enumerator)
 		{
 			if (enumerator.HasAny == false)
 				return;
 
-			var count = 1;
-			var node = FindInsertNodeImpl(index);
-			var nextNode = node.Next;
-
-			if (node is RealizedNode realizedNode)
+			try
 			{
-				var splitIndex = index - realizedNode.Index;
-				var splitCount = realizedNode.Count - splitIndex;
+				EnterStructureChange();
 
-				if (splitCount > 0)
+				var count = 1;
+				var cursor = FindInsertNodeCursorImpl(index);
+
+				if (cursor.Node is RealizedNode && cursor.NodeSize == NodeCapacity && index == cursor.NodeOffset + cursor.NodeSize)
+					cursor = cursor.GetNext();
+
+				var nextNode = cursor.Node.Next;
+
+				if (cursor.Node is RealizedNode realizedNode)
 				{
-					var splitItems = AllocateItems();
+					var splitIndex = (int) (index - cursor.NodeOffset);
+					var splitCount = (int) (realizedNode.Size - splitIndex);
 
-					//Array.Copy(realizedNode.ItemsPrivate, splitIndex, splitItems, 0, splitCount);
+					if (splitCount == 0)
+					{
+						realizedNode.Span[(int) realizedNode.Size++] = enumerator.Current;
+					}
+					else
+					{
+						var splitItems = AllocateItems();
+						var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
+						var targetSpan = splitItems.Span.Slice(0, splitCount);
 
-					var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
-					var destinationSpan = splitItems.Span.Slice(0, splitCount);
-					
-					sourceSpan.CopyTo(destinationSpan);
+						sourceSpan.CopyTo(targetSpan);
+						sourceSpan.Clear();
 
-					//Array.Clear(realizedNode.ItemsPrivate, splitIndex, splitCount);
-					realizedNode.Span.Slice(splitIndex, splitCount).Clear();
+						realizedNode.Size = splitIndex + 1;
+						realizedNode.Span[splitIndex] = enumerator.Current;
 
-					realizedNode.Count = splitIndex + 1;
-					realizedNode.Span[splitIndex] = enumerator.Current;
-
-					enumerator = enumerator.WithItems(splitItems, splitCount);
-					count -= splitCount;
+						enumerator = enumerator.WithItems(splitItems, splitCount);
+						count -= splitCount;
+					}
 				}
-			}
-			else
-			{
-				realizedNode = EnsureRealizedNode(node, index, true);
-				nextNode = realizedNode.Next;
-
-				realizedNode[index] = enumerator.Current;
-			}
-
-			while (true)
-			{
-				while (realizedNode.Count < NodeCapacity && enumerator.MoveNext())
+				else
 				{
-					realizedNode.Span[realizedNode.Count++] = enumerator.Current;
+					realizedNode = EnsureRealizedNode(ref cursor, index, true);
+					nextNode = realizedNode.Next;
+
+					cursor = NavigateTo(index);
+
+					cursor.Node.SetItem(ref cursor, enumerator.Current);
+				}
+
+				while (true)
+				{
+					while (realizedNode.Size < NodeCapacity && enumerator.MoveNext())
+					{
+						realizedNode.Span[(int) realizedNode.Size++] = enumerator.Current;
+						count++;
+					}
+
+					if (realizedNode.Size < NodeCapacity)
+						break;
+
+					if (enumerator.MoveNext() == false)
+						break;
+
 					count++;
+
+					var next = CreateRealizedNode();
+
+					next.Size = 1;
+					next.Prev = realizedNode;
+
+					next.Span[0] = enumerator.Current;
+
+					realizedNode.Next = next;
+					realizedNode = next;
 				}
 
-				if (realizedNode.Count < NodeCapacity)
-					break;
+				enumerator.Dispose();
 
-				if (enumerator.MoveNext() == false)
-					break;
+				realizedNode.Next = nextNode;
+				nextNode.Prev = realizedNode;
 
-				count++;
-
-				var next = CreateRealizedNode();
-
-				next.Index = realizedNode.Index + NodeCapacity;
-				next.Count = 1;
-				next.Prev = realizedNode;
-
-				next.Span[0] = enumerator.Current;
-
-				realizedNode.Next = next;
-				realizedNode = next;
+				LongCount += count;
 			}
-
-			enumerator.Dispose();
-
-			realizedNode.Next = nextNode;
-			nextNode.Prev = realizedNode;
-
-			AdvanceIndices(realizedNode);
-
-			Count += count;
-			Current = realizedNode;
+			finally
+			{
+				LeaveStructureChange();
+			}
 		}
 
 		private protected void InsertRangeImpl(int index, IEnumerable<T> collection)

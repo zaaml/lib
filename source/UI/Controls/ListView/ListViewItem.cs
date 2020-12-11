@@ -23,10 +23,10 @@ namespace Zaaml.UI.Controls.ListView
 		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, ListViewItem>
 			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
 
-		private static readonly DependencyPropertyKey ListViewPropertyKey = DPM.RegisterReadOnly<ListViewControl, ListViewItem>
-			("ListView", default, d => d.OnListViewPropertyChangedPrivate);
+		private static readonly DependencyPropertyKey ListViewControlPropertyKey = DPM.RegisterReadOnly<ListViewControl, ListViewItem>
+			("ListViewControl", default, d => d.OnListViewControlPropertyChangedPrivate);
 
-		public static readonly DependencyProperty ListViewProperty = ListViewPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
 
 		private ListViewItemData _listViewItemData;
 
@@ -40,13 +40,13 @@ namespace Zaaml.UI.Controls.ListView
 			this.OverrideStyleKey<ListViewItem>();
 		}
 
-		internal bool ActualCanSelect => CanSelect && ListView?.CanSelectItemInternal(this) != false;
+		internal bool ActualCanSelect => CanSelect && ListViewControl?.CanSelectItemInternal(this) != false;
 
 		internal Rect ArrangeRect { get; private set; }
 
 		protected virtual bool CanSelect => true;
 
-		private bool FocusOnMouseHover => ListView?.FocusItemOnMouseHover ?? false;
+		private bool FocusOnMouseHover => ListViewControl?.FocusItemOnMouseHover ?? false;
 
 		private bool IsActuallyFocused => IsFocused;
 
@@ -62,10 +62,10 @@ namespace Zaaml.UI.Controls.ListView
 
 		protected virtual bool IsValid => this.HasValidationError() == false;
 
-		public ListViewControl ListView
+		public ListViewControl ListViewControl
 		{
-			get => (ListViewControl) GetValue(ListViewProperty);
-			internal set => this.SetReadOnlyValue(ListViewPropertyKey, value);
+			get => (ListViewControl) GetValue(ListViewControlProperty);
+			internal set => this.SetReadOnlyValue(ListViewControlPropertyKey, value);
 		}
 
 		internal ListViewItemData ListViewItemData
@@ -107,7 +107,7 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			base.OnGotFocus(e);
 
-			ListView?.OnItemGotFocusInternal(this);
+			ListViewControl?.OnItemGotFocusInternal(this);
 		}
 
 		protected virtual void OnIsSelectedChanged()
@@ -128,44 +128,44 @@ namespace Zaaml.UI.Controls.ListView
 			var selected = IsSelected;
 
 			if (selected)
-				ListView?.Select(this);
+				ListViewControl?.Select(this);
 
 			OnIsSelectedChanged();
 
 			UpdateVisualState(true);
 		}
 
-		protected virtual void OnListViewChanged(ListViewControl oldListView, ListViewControl newListView)
+		protected virtual void OnListViewControlChanged(ListViewControl oldListView, ListViewControl newListView)
 		{
 		}
 
-		internal virtual void OnListViewChangedInternal(ListViewControl oldListView, ListViewControl newListView)
+		internal virtual void OnListViewControlChangedInternal(ListViewControl oldListView, ListViewControl newListView)
 		{
-			OnListViewChanged(oldListView, newListView);
+			OnListViewControlChanged(oldListView, newListView);
 		}
 
-		private void OnListViewPropertyChangedPrivate(ListViewControl oldListView, ListViewControl newListView)
+		private void OnListViewControlPropertyChangedPrivate(ListViewControl oldListView, ListViewControl newListView)
 		{
-			OnListViewChangedInternal(oldListView, newListView);
+			OnListViewControlChangedInternal(oldListView, newListView);
 		}
 
 		protected override void OnLostFocus(RoutedEventArgs e)
 		{
 			base.OnLostFocus(e);
 
-			ListView?.OnItemLostFocusInternal(this);
+			ListViewControl?.OnItemLostFocusInternal(this);
 		}
 
 		protected override void OnMouseEnter(MouseEventArgs e)
 		{
 			base.OnMouseEnter(e);
 
-			ListView?.OnItemMouseEnter(this, e);
+			ListViewControl?.OnItemMouseEnter(this, e);
 		}
 
 		protected override void OnMouseLeave(MouseEventArgs e)
 		{
-			ListView?.OnItemMouseLeave(this, e);
+			ListViewControl?.OnItemMouseLeave(this, e);
 
 			base.OnMouseLeave(e);
 		}
@@ -175,7 +175,7 @@ namespace Zaaml.UI.Controls.ListView
 			if (e.Handled)
 				return;
 
-			ListView?.OnItemMouseButton(this, e);
+			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
@@ -183,14 +183,14 @@ namespace Zaaml.UI.Controls.ListView
 			if (e.Handled)
 				return;
 
-			ListView?.OnItemMouseButton(this, e);
+			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
 
-			ListView?.OnItemMouseMove(this, e);
+			ListViewControl?.OnItemMouseMove(this, e);
 		}
 
 		protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
@@ -198,7 +198,7 @@ namespace Zaaml.UI.Controls.ListView
 			if (e.Handled)
 				return;
 
-			ListView?.OnItemMouseButton(this, e);
+			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
@@ -206,7 +206,7 @@ namespace Zaaml.UI.Controls.ListView
 			if (e.Handled)
 				return;
 
-			ListView?.OnItemMouseButton(this, e);
+			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
 		internal void SelectInternal()
