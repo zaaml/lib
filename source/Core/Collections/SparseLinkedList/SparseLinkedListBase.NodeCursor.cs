@@ -26,9 +26,6 @@ namespace Zaaml.Core.Collections
 			{
 				get
 				{
-					if (IsEmpty)
-						return null;
-
 					VerifyValid();
 
 					return NodePrivate;
@@ -39,9 +36,6 @@ namespace Zaaml.Core.Collections
 			{
 				get
 				{
-					if (IsEmpty)
-						return 0;
-
 					VerifyValid();
 
 					return NodeOffsetPrivate;
@@ -52,9 +46,6 @@ namespace Zaaml.Core.Collections
 			{
 				get
 				{
-					if (IsEmpty)
-						return -1;
-
 					VerifyValid();
 
 					return IndexPrivate;
@@ -65,9 +56,6 @@ namespace Zaaml.Core.Collections
 			{
 				get
 				{
-					if (IsEmpty)
-						return -1;
-
 					VerifyValid();
 
 					return (int) (IndexPrivate - NodeOffsetPrivate);
@@ -76,9 +64,6 @@ namespace Zaaml.Core.Collections
 
 			public NodeCursor GetNext()
 			{
-				if (IsEmpty)
-					return Empty;
-
 				VerifyValid();
 
 				if (NodePrivate.Next == null)
@@ -92,9 +77,6 @@ namespace Zaaml.Core.Collections
 			{
 				get
 				{
-					if (IsEmpty)
-						return 0;
-
 					VerifyValid();
 
 					return NodePrivate.Size;
@@ -103,9 +85,6 @@ namespace Zaaml.Core.Collections
 
 			public NodeCursor WithIndex(long index)
 			{
-				if (IsEmpty)
-					return Empty;
-
 				if (Contains(index, true) == false)
 				{
 					if (index < NodeOffsetPrivate)
@@ -130,9 +109,6 @@ namespace Zaaml.Core.Collections
 
 			public NodeCursor GetPrev()
 			{
-				if (IsEmpty)
-					return Empty;
-
 				VerifyValid();
 
 				if (NodePrivate.Prev == null)
@@ -231,16 +207,6 @@ namespace Zaaml.Core.Collections
 				return Equals(NodePrivate, other.NodePrivate) && NodeOffsetPrivate == other.NodeOffsetPrivate &&
 				       IndexPrivate == other.IndexPrivate &&
 				       Equals(List, other.List) && StructureVersion == other.StructureVersion;
-			}
-
-			public override bool Equals(object obj)
-			{
-				return obj is NodeCursor other && Equals(other);
-			}
-
-			public override int GetHashCode()
-			{
-				return HashCode.Combine(NodePrivate, NodeOffsetPrivate, IndexPrivate, List, StructureVersion);
 			}
 
 			public override string ToString()

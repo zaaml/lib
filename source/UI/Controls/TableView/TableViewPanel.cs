@@ -8,6 +8,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.PresentationCore;
+using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Panels;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Panels.Interfaces;
@@ -16,17 +17,98 @@ namespace Zaaml.UI.Controls.TableView
 {
 	public class TableViewPanel : ItemsPanel<TableViewItem>, IStackPanelAdvanced
 	{
+		private TableViewItem _footerItem;
+		private TableViewItem _headerItem;
 		internal MeasurePass CurrentMeasurePass { get; set; }
 
 		private List<TableViewDefinition> Definitions { get; } = new List<TableViewDefinition>();
 
 		private Stack<TableViewDefinition> DefinitionsPool { get; } = new Stack<TableViewDefinition>();
 
+		internal TableViewItem FooterItem
+		{
+			get => _footerItem;
+			set
+			{
+				if (ReferenceEquals(_footerItem, value))
+					return;
+
+				if (_footerItem != null && value != null)
+				{
+					LogicalChildMentor.DetachLogical(_footerItem);
+
+					Children[Children.Count - 1] = value;
+
+					LogicalChildMentor.AttachLogical(_footerItem);
+
+					_footerItem = value;
+				}
+				else
+				{
+					if (_footerItem != null)
+					{
+						Children.RemoveAt(Children.Count - 1);
+
+						LogicalChildMentor.AttachLogical(_footerItem);
+					}
+
+					_footerItem = value;
+
+					LogicalChildMentor.DetachLogical(_footerItem);
+
+					if (_footerItem != null)
+						Children.Add(_footerItem);
+				}
+			}
+		}
+
+		internal TableViewItem HeaderItem
+		{
+			get => _headerItem;
+			set
+			{
+				if (ReferenceEquals(_headerItem, value))
+					return;
+
+				if (_headerItem != null && value != null)
+				{
+					LogicalChildMentor.DetachLogical(_headerItem);
+
+					Children[0] = value;
+
+					LogicalChildMentor.AttachLogical(_headerItem);
+
+					_headerItem = value;
+				}
+				else
+				{
+					if (_headerItem != null)
+					{
+						Children.RemoveAt(0);
+
+						LogicalChildMentor.AttachLogical(_headerItem);
+					}
+
+					_headerItem = value;
+
+					LogicalChildMentor.DetachLogical(_headerItem);
+
+					if (_headerItem != null)
+						Children.Insert(0, _headerItem);
+				}
+			}
+		}
+
 		internal TableViewItemsPresenter ItemsPresenter { get; set; }
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
 			return StackPanelLayout.Arrange(this, finalSize);
+		}
+
+		internal override ItemHostCollection<TableViewItem> CreateHostCollectionInternal()
+		{
+			return new TableViewPanelHostCollection(this);
 		}
 
 		internal TableViewDefinition GetDefinition(int index)
@@ -47,13 +129,8 @@ namespace Zaaml.UI.Controls.TableView
 				};
 		}
 
-		protected override Size MeasureOverrideCore(Size availableSize)
+		private void InitDefinitions(TableViewControl tableViewControl)
 		{
-			var tableViewControl = ItemsPresenter?.TableViewControl;
-
-			if (tableViewControl == null)
-				return StackPanelLayout.Measure(this, availableSize);
-
 			foreach (var definition in Definitions)
 			{
 				if (definition.IsImplicit)
@@ -67,17 +144,6 @@ namespace Zaaml.UI.Controls.TableView
 				while (Definitions.Count < tableViewItem.Elements.Count)
 					Definitions.Add(GetDefinition());
 
-			CurrentMeasurePass = MeasurePass.Fixed;
-
-			var orientation = tableViewControl.Orientation;
-			var orientedResult = new OrientedSize(orientation);
-			var elementSpacing = tableViewControl.ElementSpacing;
-			var definitionsSpacing = elementSpacing * (Definitions.Count - 1);
-			var orientedAvailable = new OrientedSize(orientation, availableSize);
-
-			orientedAvailable.Indirect -= definitionsSpacing;
-
-			var constraint = orientedAvailable.ChangeDirect(double.PositiveInfinity).Size;
 			var defaultDefinitionLength = tableViewControl.DefinitionLength;
 
 			for (var index = 0; index < Definitions.Count; index++)
@@ -89,6 +155,29 @@ namespace Zaaml.UI.Controls.TableView
 
 				definition.DesiredSize = definition.Length.IsAbsolute ? definition.Length.Value : 0;
 			}
+		}
+
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			var tableViewControl = ItemsPresenter?.TableViewControl;
+
+			if (tableViewControl == null)
+				return StackPanelLayout.Measure(this, availableSize);
+
+			InitDefinitions(tableViewControl);
+
+			var orientation = tableViewControl.Orientation;
+			var orientedResult = new OrientedSize(orientation);
+			var elementSpacing = tableViewControl.ElementSpacing;
+			var definitionsSpacing = elementSpacing * (Definitions.Count - 1);
+			var orientedAvailable = new OrientedSize(orientation, availableSize);
+
+			orientedAvailable.Indirect -= definitionsSpacing;
+
+			var constraint = orientedAvailable.ChangeDirect(double.PositiveInfinity).Size;
+
+			// Fixed measure pass
+			CurrentMeasurePass = MeasurePass.Fixed;
 
 			for (var index = 0; index < Children.Count; index++)
 			{
@@ -120,6 +209,7 @@ namespace Zaaml.UI.Controls.TableView
 			var starAvailable = Math.Max(0, orientedAvailable.Indirect - fixedIndirect);
 			var starLength = starAvailable / starLengthValue;
 
+			// Star measure pass
 			CurrentMeasurePass = MeasurePass.Star;
 
 			for (var index = 0; index < Definitions.Count; index++)
@@ -160,6 +250,24 @@ namespace Zaaml.UI.Controls.TableView
 			Undefined,
 			Fixed,
 			Star
+		}
+
+		private sealed class TableViewPanelHostCollection : PanelHostCollectionBase<TableViewItem, TableViewPanel>
+		{
+			public TableViewPanelHostCollection(TableViewPanel panel) : base(panel)
+			{
+			}
+
+			protected override UIElementCollectionSpan Children
+			{
+				get
+				{
+					var start = Panel.HeaderItem == null ? 0 : 1;
+					var length = (Panel.FooterItem == null ? Panel.Children.Count : Panel.Children.Count - 1) - start;
+
+					return new UIElementCollectionSpan(Panel.Children, start, length);
+				}
+			}
 		}
 	}
 }

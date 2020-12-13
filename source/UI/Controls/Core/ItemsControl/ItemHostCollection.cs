@@ -10,73 +10,86 @@ namespace Zaaml.UI.Controls.Core
 	internal abstract class ItemHostCollection<TItem> : IEnumerable<TItem>
 		where TItem : System.Windows.Controls.Control
 	{
-		#region Properties
-
 		protected List<TItem> Items { get; } = new List<TItem>();
-
-		#endregion
-
-		#region  Methods
-
-		protected abstract void ClearCore();
 
 		internal void ClearInternal()
 		{
+			SyncCore(SyncAction.PreClear, SyncActionData.Empty);
+
 			Items.Clear();
 
-			ClearCore();
+			SyncCore(SyncAction.PostClear, SyncActionData.Empty);
 		}
-
-		protected abstract void InitCore(ICollection<TItem> items);
 
 		internal void InitInternal(ICollection<TItem> items)
 		{
+			SyncCore(SyncAction.PreInit, SyncActionData.Empty);
+
 			Items.Clear();
 			Items.AddRange(items);
 
-			InitCore(items);
+			SyncCore(SyncAction.PostInit, SyncActionData.Empty);
 		}
-
-		protected abstract void InsertCore(int index, TItem item);
 
 		internal void InsertInternal(int index, TItem item)
 		{
+			var syncActionData = new SyncActionData(index, item);
+
+			SyncCore(SyncAction.PreInsert, syncActionData);
+
 			Items.Insert(index, item);
 
-			InsertCore(index, item);
+			SyncCore(SyncAction.PostInsert, syncActionData);
 		}
-
-		protected abstract void RemoveAtCore(int index);
 
 		internal void RemoveAtInternal(int index)
 		{
+			var syncActionData = new SyncActionData(index, Items[index]);
+
+			SyncCore(SyncAction.PreRemove, syncActionData);
+
 			Items.RemoveAt(index);
 
-			RemoveAtCore(index);
+			SyncCore(SyncAction.PostRemove, syncActionData);
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IEnumerable
+		protected abstract void SyncCore(SyncAction syncAction, SyncActionData syncActionData);
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
 		}
 
-		#endregion
-
-		#region IEnumerable<TItem>
-
 		public IEnumerator<TItem> GetEnumerator()
 		{
 			return Items.GetEnumerator();
 		}
 
-		#endregion
+		protected enum SyncAction
+		{
+			PreClear,
+			PreInit,
+			PreInsert,
+			PreRemove,
+			PostClear,
+			PostInit,
+			PostInsert,
+			PostRemove
+		}
 
-		#endregion
+		protected readonly struct SyncActionData
+		{
+			public SyncActionData(int index, TItem item)
+			{
+				Index = index;
+				Item = item;
+			}
+
+			public static SyncActionData Empty => new SyncActionData(-1, null);
+
+			public int Index { get; }
+
+			public TItem Item { get; }
+		}
 	}
 }

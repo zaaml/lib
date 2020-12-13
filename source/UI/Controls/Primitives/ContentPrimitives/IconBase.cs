@@ -10,13 +10,17 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using Zaaml.Core.Packed;
-using Zaaml.Core.Extensions;
 using Zaaml.Core.Weak.Collections;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.PropertyCore.Extensions;
+
+#if NETCOREAPP
+#else
+using Zaaml.Core.Extensions;
 using Zaaml.UI.Controls.Core;
+#endif
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {

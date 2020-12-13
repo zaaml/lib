@@ -16,7 +16,7 @@ using Panel = Zaaml.UI.Panels.Core.Panel;
 namespace Zaaml.UI.Controls.Core
 {
 	[TemplateContractType(typeof(ItemsControlBaseTemplateContract))]
-	public abstract class ItemsControlBase : TemplateContractControl, IItemsControl, ILogicalOwner
+	public abstract class ItemsControlBase : TemplateContractControl, IItemsControl
 	{
 		private static readonly DependencyPropertyKey HasItemsPropertyKey = DPM.RegisterReadOnly<bool, ItemsControlBase>
 			("HasItems", i => i.OnHasItemsChangedPrivate);
@@ -107,16 +107,6 @@ namespace Zaaml.UI.Controls.Core
 		void IItemsControl.OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
 		{
 			OnCollectionChangedInternal(sender, args);
-		}
-
-		void ILogicalOwner.AddLogicalChild(object child)
-		{
-			AddLogicalChild(child);
-		}
-
-		void ILogicalOwner.RemoveLogicalChild(object child)
-		{
-			RemoveLogicalChild(child);
 		}
 	}
 

@@ -22,8 +22,54 @@ namespace Zaaml.Core.Collections
 		{
 			var prevCursor = cursor.GetPrev();
 			var gapNode = (GapNode)cursor.Node;
+			var prevNode = gapNode.Prev;
+			var nextNode = gapNode.Next;
+			var realizedNode = CreateRealizedNode();
 
-			if (prevCursor.Node is RealizedNode prevRealizedNode && index < prevCursor.NodeOffset + NodeCapacity)
+			if (index == LongCount && insert)
+			{
+				EnterStructureChange();
+
+				if (ReferenceEquals(TailNode, gapNode))
+				{
+					if (TailNode.Size > 0)
+					{
+						TailNode.Next = realizedNode;
+						realizedNode.Prev = TailNode;
+
+						TailNode = CreateGapNode();
+
+						TailNode.Prev = realizedNode;
+						realizedNode.Next = TailNode;
+					}
+					else
+					{
+						prevNode.Next = realizedNode;
+						realizedNode.Prev = prevNode;
+						realizedNode.Next = TailNode;
+						TailNode.Prev = realizedNode;
+					}
+				}
+				else if (ReferenceEquals(HeadNode, gapNode))
+				{
+					HeadNode.Next = realizedNode;
+					realizedNode.Prev = HeadNode;
+					realizedNode.Next = TailNode;
+					TailNode.Prev = realizedNode;
+				}
+
+				realizedNode.Size = 1;
+
+				LeaveStructureChange();
+
+				cursor = new NodeCursor(index, this, realizedNode, index);
+
+				return realizedNode;
+			}
+
+			Debug.Assert(index < LongCount);
+
+			if (prevCursor.IsEmpty == false && prevCursor.Node is RealizedNode prevRealizedNode && index < prevCursor.NodeOffset + NodeCapacity)
 			{
 				var extraSize = index - (prevCursor.NodeOffset + prevRealizedNode.Size) + 1;
 
@@ -44,9 +90,6 @@ namespace Zaaml.Core.Collections
 				EnterStructureChange();
 
 				var alignedIndex = index / NodeCapacity * NodeCapacity;
-				var prevNode = gapNode.Prev;
-				var nextNode = gapNode.Next;
-				var realizedNode = CreateRealizedNode();
 
 				if (ReferenceEquals(HeadNode.Next, TailNode) == false && cursor.Contains(alignedIndex) == false)
 				{

@@ -14,5 +14,23 @@ namespace Zaaml.UI.Controls.TableView
 		}
 
 		public TableViewControl TableViewControl { get; }
+
+		protected override void OnItemAdded(TableViewDefinition tableViewDefinition)
+		{
+			tableViewDefinition.TableViewControl = TableViewControl;
+
+			base.OnItemAdded(tableViewDefinition);
+
+			TableViewControl.OnDefinitionsChanged();
+		}
+
+		protected override void OnItemRemoved(TableViewDefinition tableViewDefinition)
+		{
+			tableViewDefinition.TableViewControl = null;
+
+			base.OnItemRemoved(tableViewDefinition);
+
+			TableViewControl.OnDefinitionsChanged();
+		}
 	}
 }

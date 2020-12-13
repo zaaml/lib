@@ -26,8 +26,11 @@ namespace Zaaml.UI.Controls.TableView
 			set => SetValue(LengthProperty, value);
 		}
 
+		internal TableViewControl TableViewControl { get; set; }
+
 		private void OnLengthPropertyChangedPrivate(FlexLength oldValue, FlexLength newValue)
 		{
+			TableViewControl?.OnDefinitionsChanged();
 		}
 	}
 }

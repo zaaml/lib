@@ -296,7 +296,7 @@ namespace Zaaml.Core.Collections
 			Lock();
 			targetList.Lock();
 
-			VerifyIndex(index);
+			VerifyIndex(index, true);
 
 			Version++;
 			targetList.Version++;
@@ -311,23 +311,41 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		internal void Swap(int index, SparseLinkedList<T> targetList)
+		internal void Swap(int index, SparseLinkedList<T> list)
 		{
 			Lock();
-			targetList.Lock();
+			list.Lock();
 
 			VerifyIndex(index);
 
 			Version++;
-			targetList.Version++;
+			list.Version++;
 
-			SwapImpl(targetList);
+			SwapImpl(list);
 
 			VerifyStructure();
-			targetList.VerifyStructure();
+			list.VerifyStructure();
 
 			Unlock();
-			targetList.Unlock();
+			list.Unlock();
+		}
+
+		[PublicAPI]
+		internal void Merge(SparseLinkedList<T> list)
+		{
+			Lock();
+			list.Lock();
+
+			Version++;
+			list.Version++;
+
+			MergeImpl(list);
+
+			VerifyStructure();
+			list.VerifyStructure();
+
+			Unlock();
+			list.Unlock();
 		}
 	}
 }

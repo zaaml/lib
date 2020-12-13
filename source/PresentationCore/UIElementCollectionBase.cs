@@ -22,14 +22,30 @@ namespace Zaaml.PresentationCore
 				if (ReferenceEquals(_elementsHost, value))
 					return;
 
-				if (_elementsHost != null)
+				if (_elementsHost != null && value != null)
+				{
 					VisualDetachElements();
 
-				_elementsHost = value;
+					_elementsHost = value;
 
-
-				if (_elementsHost != null)
 					VisualAttachElements();
+				}
+				else
+				{
+					if (_elementsHost != null)
+					{
+						VisualDetachElements();
+						LogicalAttachElements();
+					}
+
+					_elementsHost = value;
+
+					if (_elementsHost != null)
+					{
+						LogicalDetachElements();
+						VisualAttachElements();
+					}
+				}
 			}
 		}
 
@@ -54,12 +70,12 @@ namespace Zaaml.PresentationCore
 				if (ReferenceEquals(_logicalHost, value))
 					return;
 
-				if (_logicalHost != null)
+				if (_logicalHost != null && ElementsHost == null)
 					LogicalDetachElements();
 
 				_logicalHost = value;
 
-				if (_logicalHost != null)
+				if (_logicalHost != null && ElementsHost == null)
 					LogicalAttachElements();
 			}
 		}
@@ -71,9 +87,6 @@ namespace Zaaml.PresentationCore
 
 		private void LogicalAttachElements()
 		{
-			if (ElementsHost != null)
-				return;
-
 			foreach (var element in this)
 				LogicalAttachElement(element);
 		}
@@ -85,9 +98,6 @@ namespace Zaaml.PresentationCore
 
 		private void LogicalDetachElements()
 		{
-			if (ElementsHost != null)
-				return;
-
 			foreach (var element in this)
 				LogicalDetachElement(element);
 		}
@@ -114,9 +124,6 @@ namespace Zaaml.PresentationCore
 
 		private void VisualAttachElement(T element)
 		{
-			if (LogicalHost != null)
-				LogicalDetachElement(element);
-
 			ElementsHost.Children.Add(element);
 		}
 
@@ -129,19 +136,12 @@ namespace Zaaml.PresentationCore
 		private void VisualDetachElement(T element)
 		{
 			ElementsHost.Children.Remove(element);
-
-			LogicalAttachElement(element);
 		}
 
 		private void VisualDetachElements()
 		{
 			foreach (var element in this)
-			{
 				VisualDetachElement(element);
-
-				if (LogicalHost != null)
-					LogicalAttachElement(element);
-			}
 		}
 	}
 }

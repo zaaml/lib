@@ -288,7 +288,7 @@ namespace Zaaml.UI.Controls.BackstageView
 		#endregion
 	}
 
-	public class BackstageViewControlTemplateContract : ItemsControlBaseTemplateContract<BackstageViewItemsPresenter>
+	public class BackstageViewControlTemplateContract : IndexedSelectorBaseTemplateContract<BackstageViewItemsPresenter>
 	{
 		#region Properties
 

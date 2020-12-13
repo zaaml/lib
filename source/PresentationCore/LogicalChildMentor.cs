@@ -11,6 +11,15 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore
 {
+	internal interface ILogicalMentorOwner
+	{
+		void AddLogicalChild(object child);
+
+		void RemoveLogicalChild(object child);
+
+		IEnumerator BaseLogicalChildren { get; }
+	}
+
 	internal abstract class LogicalChildMentor
 	{
 		private static readonly DependencyProperty MentorProperty = DPM.RegisterAttached<LogicalChildMentor, LogicalChildMentor>
@@ -41,7 +50,7 @@ namespace Zaaml.PresentationCore
 			GetMentor(logicalChild)?.AddLogicalChildCore(logicalChild);
 		}
 
-		public static LogicalChildMentor<TControl> Create<TControl>(TControl control) where TControl : System.Windows.Controls.Control, ILogicalOwner
+		public static LogicalChildMentor<TControl> Create<TControl>(TControl control) where TControl : System.Windows.Controls.Control, ILogicalMentorOwner
 		{
 			return new LogicalChildMentor<TControl>(control);
 		}
@@ -82,7 +91,7 @@ namespace Zaaml.PresentationCore
 		protected abstract void RemoveLogicalChildCore(object logicalChild);
 	}
 
-	internal sealed class LogicalChildMentor<TControl> : LogicalChildMentor where TControl : System.Windows.Controls.Control, ILogicalOwner
+	internal sealed class LogicalChildMentor<TControl> : LogicalChildMentor where TControl : System.Windows.Controls.Control, ILogicalMentorOwner
 	{
 		private readonly List<object> _logicalChildren = new List<object>();
 
@@ -100,9 +109,9 @@ namespace Zaaml.PresentationCore
 			Control.AddLogicalChild(logicalChild);
 		}
 
-		public IEnumerator GetLogicalChildren(IEnumerator logicalChildren)
+		public IEnumerator GetLogicalChildren()
 		{
-			return _logicalChildren.Count == 0 ? logicalChildren : EnumeratorUtils.Concat(logicalChildren, (IEnumerator) _logicalChildren.GetEnumerator());
+			return _logicalChildren.Count == 0 ? Control.BaseLogicalChildren : EnumeratorUtils.Concat(Control.BaseLogicalChildren, (IEnumerator) _logicalChildren.GetEnumerator());
 		}
 
 		protected override void RemoveLogicalChildCore(object logicalChild)

@@ -58,12 +58,12 @@ namespace Zaaml.UI.Controls.TreeView
 				if (value)
 				{
 					foreach (var treeViewItem in ActualItemsInternal)
-						DetachLogical(treeViewItem);
+						DetachLogicalCore(treeViewItem);
 				}
 				else
 				{
 					foreach (var treeViewItem in ActualItemsInternal)
-						AttachLogical(treeViewItem);
+						AttachLogicalCore(treeViewItem);
 				}
 			}
 		}

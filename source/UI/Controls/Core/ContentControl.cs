@@ -20,7 +20,7 @@ using TriggerCollection = Zaaml.PresentationCore.Interactivity.TriggerCollection
 
 namespace Zaaml.UI.Controls.Core
 {
-	public partial class ContentControl : NativeContentControl, IContentControl, ILogicalOwner
+	public partial class ContentControl : NativeContentControl, IContentControl, ILogicalOwner, ILogicalMentorOwner
 	{
 		private static readonly DependencyPropertyKey ActualHasContentPropertyKey = DPM.RegisterReadOnly<bool, ContentControl>
 			("ActualHasContent", false);
@@ -112,7 +112,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private protected LogicalChildMentor LogicalChildMentor => _logicalChildMentor ??= LogicalChildMentor.Create(this);
 
-		protected override IEnumerator LogicalChildren => _logicalChildMentor?.GetLogicalChildren(base.LogicalChildren) ?? base.LogicalChildren;
+		protected override IEnumerator LogicalChildren => _logicalChildMentor == null ? base.LogicalChildren : _logicalChildMentor.GetLogicalChildren();
 
 		private BehaviorCollection CreateBehaviorCollection()
 		{
@@ -249,14 +249,26 @@ namespace Zaaml.UI.Controls.Core
 
 		void ILogicalOwner.AddLogicalChild(object child)
 		{
-			AddLogicalChild(child);
+			LogicalChildMentor.AddLogicalChild(child);
 		}
 
 		void ILogicalOwner.RemoveLogicalChild(object child)
 		{
-			RemoveLogicalChild(child);
+			LogicalChildMentor.RemoveLogicalChild(child);
 		}
 
 		IEnumerator ILogicalOwner.BaseLogicalChildren => base.LogicalChildren;
+
+		void ILogicalMentorOwner.RemoveLogicalChild(object child)
+		{
+			RemoveLogicalChild(child);
+		}
+
+		IEnumerator ILogicalMentorOwner.BaseLogicalChildren => base.LogicalChildren;
+
+		void ILogicalMentorOwner.AddLogicalChild(object child)
+		{
+			AddLogicalChild(child);
+		}
 	}
 }

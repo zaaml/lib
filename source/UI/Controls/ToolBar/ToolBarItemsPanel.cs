@@ -17,22 +17,12 @@ namespace Zaaml.UI.Controls.ToolBar
 {
 	public class ToolBarItemsPanel : ItemsPanel<ToolBarItem>, IFlexPanel
 	{
-		#region Fields
-
 		private ToolBarItemsPresenter _itemsPresenter;
-
-		#endregion
-
-		#region Ctors
 
 		public ToolBarItemsPanel()
 		{
 			Layout = new FlexPanelLayout(this);
 		}
-
-		#endregion
-
-		#region Properties
 
 		private Orientation ActualOrientation => ToolBar?.ActualOrientation ?? Orientation.Horizontal;
 
@@ -55,10 +45,6 @@ namespace Zaaml.UI.Controls.ToolBar
 		private FlexPanelLayout Layout { get; }
 
 		private ToolBarControl ToolBar => ItemsPresenter?.ToolBar;
-
-		#endregion
-
-		#region  Methods
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
@@ -107,12 +93,6 @@ namespace Zaaml.UI.Controls.ToolBar
 				toolBarItem.OverflowController.Suspend();
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IFlexPanel
-
 		IFlexDistributor IFlexPanel.Distributor => FlexDistributor.LastToFirst;
 
 		bool IFlexPanel.HasHiddenChildren
@@ -136,78 +116,29 @@ namespace Zaaml.UI.Controls.ToolBar
 
 		void IFlexPanel.SetIsHidden(UIElement child, bool value) => SetIsOverflow(child, value);
 
-		#endregion
-
-		#region IOrientedPanel
-
 		Orientation IOrientedPanel.Orientation => ActualOrientation;
-
-		#endregion
-
-		#region IPanel
 
 		IReadOnlyList<UIElement> IPanel.Elements
 		{
 			get
 			{
 				if (Children.Count > 1 && ToolBar?.IsMeasureToMinLength == true)
-					return new ReadOnlyListWrapper<UIElement>(new List<UIElement> { Children[0] });
+					return new ReadOnlyListWrapper<UIElement>(new List<UIElement> {Children[0]});
 
 				return ReadOnlyChildren;
 			}
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
-		private sealed class ToolBarItemHostCollection : ItemHostCollection<ToolBarItem>
+		private sealed class ToolBarItemHostCollection : PanelHostCollectionBase<ToolBarItem, ToolBarItemsPanel>
 		{
-			#region Ctors
-
-			public ToolBarItemHostCollection(ToolBarItemsPanel panel)
+			public ToolBarItemHostCollection(ToolBarItemsPanel panel) : base(panel)
 			{
-				Panel = panel;
 			}
 
-			#endregion
-
-			#region Properties
-
-			private ToolBarItemsPanel Panel { get; }
-
-			#endregion
-
-			#region  Methods
-
-			protected override void ClearCore()
+			protected override UIElement GetActualElement(ToolBarItem item)
 			{
-				Panel.Children.Clear();
+				return item.OverflowController.VisibleHost;
 			}
-
-			protected override void InitCore(ICollection<ToolBarItem> items)
-			{
-				Panel.Children.Clear();
-
-				foreach (var toolBarItem in items)
-					Panel.Children.Add(toolBarItem.OverflowController.VisibleHost);
-			}
-
-			protected override void InsertCore(int index, ToolBarItem item)
-			{
-				Panel.Children.Insert(index, item.OverflowController.VisibleHost);
-			}
-
-			protected override void RemoveAtCore(int index)
-			{
-				Panel.Children.RemoveAt(index);
-			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }
