@@ -57,10 +57,10 @@ namespace Zaaml.UI.Controls.TreeView
 		// ReSharper disable once StaticMemberInGenericType
 		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
 
-		private static readonly DependencyPropertyKey TreeViewPropertyKey = DPM.RegisterReadOnly<TreeViewControl, TreeViewItem>
-			("TreeView", default, d => d.OnTreeViewPropertyChangedPrivate);
+		private static readonly DependencyPropertyKey TreeViewControlPropertyKey = DPM.RegisterReadOnly<TreeViewControl, TreeViewItem>
+			("TreeViewControl", default, d => d.OnTreeViewControlPropertyChangedPrivate);
 
-		public static readonly DependencyProperty TreeViewProperty = TreeViewPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty TreeViewControlProperty = TreeViewControlPropertyKey.DependencyProperty;
 
 		private uint _packedValue;
 
@@ -80,7 +80,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal bool ActualCanExpand => HasItems && CanExpand;
 
-		internal bool ActualCanSelect => CanSelect && TreeView?.CanSelectItemInternal(this) != false;
+		internal bool ActualCanSelect => CanSelect && TreeViewControl?.CanSelectItemInternal(this) != false;
 
 		public int ActualLevel
 		{
@@ -108,7 +108,7 @@ namespace Zaaml.UI.Controls.TreeView
 			set => PackedDefinition.CoerceIsExpanded.SetValue(ref _packedValue, value);
 		}
 
-		private bool FocusOnMouseHover => TreeView?.FocusItemOnMouseHover ?? false;
+		private bool FocusOnMouseHover => TreeViewControl?.FocusItemOnMouseHover ?? false;
 
 		public bool HasItems
 		{
@@ -166,10 +166,10 @@ namespace Zaaml.UI.Controls.TreeView
 			set => PackedDefinition.SuspendPushIsExpanded.SetValue(ref _packedValue, value);
 		}
 
-		public TreeViewControl TreeView
+		public TreeViewControl TreeViewControl
 		{
-			get => (TreeViewControl) GetValue(TreeViewProperty);
-			internal set => this.SetReadOnlyValue(TreeViewPropertyKey, value);
+			get => (TreeViewControl) GetValue(TreeViewControlProperty);
+			internal set => this.SetReadOnlyValue(TreeViewControlPropertyKey, value);
 		}
 
 		internal TreeViewItemData TreeViewItemData
@@ -248,7 +248,7 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			base.OnGotFocus(e);
 
-			TreeView?.OnItemGotFocusInternal(this);
+			TreeViewControl?.OnItemGotFocusInternal(this);
 		}
 
 		protected virtual void OnHasItemsChanged()
@@ -267,7 +267,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private void OnIsExpandedPropertyChangedPrivate(bool oldIsExpanded, bool newIsExpanded)
 		{
-			TreeView?.OnItemIsExpandedChangedInternal(this);
+			TreeViewControl?.OnItemIsExpandedChangedInternal(this);
 
 			PushIsExpanded(newIsExpanded);
 
@@ -297,7 +297,7 @@ namespace Zaaml.UI.Controls.TreeView
 			var selected = IsSelected;
 
 			if (selected)
-				TreeView?.Select(this);
+				TreeViewControl?.Select(this);
 
 			OnIsSelectedChanged();
 
@@ -318,19 +318,19 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			base.OnLostFocus(e);
 
-			TreeView?.OnItemLostFocusInternal(this);
+			TreeViewControl?.OnItemLostFocusInternal(this);
 		}
 
 		protected override void OnMouseEnter(MouseEventArgs e)
 		{
 			base.OnMouseEnter(e);
 
-			TreeView?.OnItemMouseEnter(this, e);
+			TreeViewControl?.OnItemMouseEnter(this, e);
 		}
 
 		protected override void OnMouseLeave(MouseEventArgs e)
 		{
-			TreeView?.OnItemMouseLeave(this, e);
+			TreeViewControl?.OnItemMouseLeave(this, e);
 
 			base.OnMouseLeave(e);
 		}
@@ -340,7 +340,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (e.Handled)
 				return;
 
-			TreeView?.OnItemMouseButton(this, e);
+			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
@@ -348,14 +348,14 @@ namespace Zaaml.UI.Controls.TreeView
 			if (e.Handled)
 				return;
 
-			TreeView?.OnItemMouseButton(this, e);
+			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
 
-			TreeView?.OnItemMouseMove(this, e);
+			TreeViewControl?.OnItemMouseMove(this, e);
 		}
 
 		protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
@@ -363,7 +363,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (e.Handled)
 				return;
 
-			TreeView?.OnItemMouseButton(this, e);
+			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseRightButtonUp(MouseButtonEventArgs e)
@@ -371,21 +371,21 @@ namespace Zaaml.UI.Controls.TreeView
 			if (e.Handled)
 				return;
 
-			TreeView?.OnItemMouseButton(this, e);
+			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
-		protected virtual void OnTreeViewChanged(TreeViewControl oldTreeView, TreeViewControl newTreeView)
+		protected virtual void OnTreeViewControlChanged(TreeViewControl oldTreeView, TreeViewControl newTreeView)
 		{
 		}
 
-		internal virtual void OnTreeViewChangedInternal(TreeViewControl oldTreeView, TreeViewControl newTreeView)
+		internal virtual void OnTreeViewControlChangedInternal(TreeViewControl oldTreeView, TreeViewControl newTreeView)
 		{
-			OnTreeViewChanged(oldTreeView, newTreeView);
+			OnTreeViewControlChanged(oldTreeView, newTreeView);
 		}
 
-		private void OnTreeViewPropertyChangedPrivate(TreeViewControl oldTreeView, TreeViewControl newTreeView)
+		private void OnTreeViewControlPropertyChangedPrivate(TreeViewControl oldTreeView, TreeViewControl newTreeView)
 		{
-			OnTreeViewChangedInternal(oldTreeView, newTreeView);
+			OnTreeViewControlChangedInternal(oldTreeView, newTreeView);
 		}
 
 		private void PushIsExpanded(bool value)

@@ -21,7 +21,7 @@ using Zaaml.UI.Controls.ScrollView;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	[TemplateContractType(typeof(ListViewTemplateContract))]
+	[TemplateContractType(typeof(ListViewControlTemplateContract))]
 	public class ListViewControl : IndexedSelectorBase<ListViewControl, ListViewItem, ListViewItemCollection, ListViewItemsPresenter, ListViewPanel>, IContentItemsControl, IIndexedFocusNavigatorAdvisor<ListViewItem>
 	{
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<ListViewItemGeneratorBase, ListViewControl>
@@ -235,7 +235,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal override void OnItemAttachedInternal(ListViewItem item)
 		{
-			item.ListView = this;
+			item.ListViewControl = this;
 
 			base.OnItemAttachedInternal(item);
 		}
@@ -244,7 +244,7 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			base.OnItemDetachedInternal(item);
 
-			item.ListView = null;
+			item.ListViewControl = null;
 		}
 
 		internal virtual void OnItemGeneratorChanged(ListViewItemGeneratorBase oldGenerator, ListViewItemGeneratorBase newGenerator)
@@ -396,7 +396,7 @@ namespace Zaaml.UI.Controls.ListView
 		}
 	}
 
-	public class ListViewTemplateContract : ItemsControlBaseTemplateContract<ListViewItemsPresenter>
+	public class ListViewControlTemplateContract : IndexedSelectorBaseTemplateContract<ListViewItemsPresenter>
 	{
 	}
 }

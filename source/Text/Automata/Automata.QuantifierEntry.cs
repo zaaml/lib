@@ -36,7 +36,7 @@ namespace Zaaml.Text
 				Maximum = range.Maximum;
 			}
 
-			public QuantifierEntry(PrimitiveEntry primitiveEntry, Range<int> range, QuantifierMode mode)
+			public QuantifierEntry(PrimitiveEntry primitiveEntry, Interval<int> range, QuantifierMode mode)
 			{
 				PrimitiveEntry = primitiveEntry;
 				Kind = QuantifierHelper.GetKind(range);

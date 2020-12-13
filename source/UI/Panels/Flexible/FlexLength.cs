@@ -53,22 +53,19 @@ namespace Zaaml.UI.Panels.Flexible
       UnitType = type;
     }
 
-
     public static bool operator ==(FlexLength flexLength1, FlexLength flexLength2)
     {
       return flexLength1.UnitType == flexLength2.UnitType && Equals(flexLength1.Value, flexLength2.Value);
     }
-
 
     public static bool operator !=(FlexLength flexLength1, FlexLength flexLength2)
     {
       return flexLength1.UnitType != flexLength2.UnitType || !Equals(flexLength1.Value, flexLength2.Value);
     }
 
-
-    public override bool Equals(object oCompare)
+    public override bool Equals(object other)
     {
-      return oCompare is FlexLength && this == (FlexLength) oCompare;
+      return other is FlexLength length && this == length;
     }
 
     public bool Equals(FlexLength flexLength)
@@ -139,8 +136,7 @@ namespace Zaaml.UI.Panels.Flexible
       if (source == null)
         throw GetConvertFromExceptionInt(null);
 
-      var stringValue = source as string;
-      if (stringValue != null)
+      if (source is string stringValue)
         return FromString(stringValue, cultureInfo);
 
       var num = Convert.ToDouble(source, cultureInfo);
@@ -158,7 +154,6 @@ namespace Zaaml.UI.Panels.Flexible
       return new FlexLength(num, type);
     }
 
-
     public override object ConvertTo(ITypeDescriptorContext typeDescriptorContext, CultureInfo cultureInfo, object value, Type destinationType)
     {
       if (destinationType == null)
@@ -168,6 +163,7 @@ namespace Zaaml.UI.Panels.Flexible
         throw GetConvertToExceptionInt(value, destinationType);
 
       var flexLength = (FlexLength) value;
+
       if (destinationType == typeof(string))
         return ToString(flexLength, cultureInfo);
 
@@ -181,9 +177,8 @@ namespace Zaaml.UI.Panels.Flexible
 
     internal static FlexLength FromString(string s, CultureInfo cultureInfo)
     {
-      double num;
-      FlexLengthUnitType unit;
-      FromString(s, cultureInfo, out num, out unit);
+	    FromString(s, cultureInfo, out var num, out var unit);
+
       return new FlexLength(num, unit);
     }
 
@@ -211,8 +206,10 @@ namespace Zaaml.UI.Panels.Flexible
         {
           if (normalized.EndsWith(UnitStrings[i], StringComparison.Ordinal) == false)
             continue;
+
           strLenUnit = UnitStrings[i].Length;
           unit = (FlexLengthUnitType) i;
+
           break;
         }
       }
@@ -226,6 +223,7 @@ namespace Zaaml.UI.Panels.Flexible
 
           strLenUnit = PixelUnitStrings[i].Length;
           unitFactor = PixelUnitFactors[i];
+
           break;
         }
       }
@@ -237,6 +235,7 @@ namespace Zaaml.UI.Panels.Flexible
         Debug.Assert(unit == FlexLengthUnitType.Pixel || DoubleUtils.AreClose(unitFactor, 1.0));
 
         var valueString = normalized.Substring(0, strLen - strLenUnit);
+
         value = Convert.ToDouble(valueString, cultureInfo) * unitFactor;
       }
     }
@@ -250,7 +249,6 @@ namespace Zaaml.UI.Panels.Flexible
     {
       throw new NotSupportedException($"Can not convert to {destinationType.FullName}");
     }
-
 
     internal static string ToString(FlexLength gl, CultureInfo cultureInfo)
     {

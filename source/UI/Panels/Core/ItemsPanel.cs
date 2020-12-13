@@ -23,7 +23,7 @@ namespace Zaaml.UI.Panels.Core
 
 		internal virtual ItemHostCollection<TItem> CreateHostCollectionInternal()
 		{
-			return new ItemsPanelHostCollection<TItem>(this);
+			return new PanelHostCollection<TItem>(this);
 		}
 
 		private protected virtual void EnqueueBringIntoView(BringIntoViewRequest<TItem> request)

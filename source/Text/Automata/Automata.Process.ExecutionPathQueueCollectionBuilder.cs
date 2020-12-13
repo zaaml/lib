@@ -39,7 +39,7 @@ namespace Zaaml.Text
 				public ArrayPageSegment<int> Serialize(ArrayPageManager<int> arrayPageManager)
 				{
 					var serializeLength = SerializeLength;
-					var plane = arrayPageManager.GetPlane(serializeLength);
+					var plane = arrayPageManager.GetPage(serializeLength);
 					var span = plane.Allocate(serializeLength, out var offset);
 
 					Serialize(span);

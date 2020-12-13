@@ -11,22 +11,22 @@ namespace Zaaml.Text
 	{
 		#region Static Fields and Constants
 
-		private static readonly Range<int> OneOrMoreRange = new Range<int>(1, RangeEndPoint.Closed, int.MaxValue, RangeEndPoint.Unbounded);
-		private static readonly Range<int> ZeroOrMoreRange = new Range<int>(0, RangeEndPoint.Closed, int.MaxValue, RangeEndPoint.Unbounded);
-		private static readonly Range<int> ZeroOrOneRange = new Range<int>(0, 1);
+		private static readonly Interval<int> OneOrMoreRange = new Interval<int>(1, IntervalEndPoint.Closed, int.MaxValue, IntervalEndPoint.Unbounded);
+		private static readonly Interval<int> ZeroOrMoreRange = new Interval<int>(0, IntervalEndPoint.Closed, int.MaxValue, IntervalEndPoint.Unbounded);
+		private static readonly Interval<int> ZeroOrOneRange = new Interval<int>(0, 1);
 
 		#endregion
 
 		#region Methods
 
-		public static Range<int> AtLeast(int count)
+		public static Interval<int> AtLeast(int count)
 		{
-			return new Range<int>(count, RangeEndPoint.Closed, int.MaxValue, RangeEndPoint.Unbounded);
+			return new Interval<int>(count, IntervalEndPoint.Closed, int.MaxValue, IntervalEndPoint.Unbounded);
 		}
 
-		public static Range<int> Between(int from, int to)
+		public static Interval<int> Between(int from, int to)
 		{
-			return new Range<int>(from, to);
+			return new Interval<int>(from, to);
 		}
 
 		public static bool CanCollapse(QuantifierKind inner, QuantifierKind outer)
@@ -54,12 +54,12 @@ namespace Zaaml.Text
 			};
 		}
 
-		public static Range<int> Exact(int count)
+		public static Interval<int> Exact(int count)
 		{
-			return new Range<int>(count, count);
+			return new Interval<int>(count, count);
 		}
 
-		public static QuantifierKind GetKind(Range<int> range)
+		public static QuantifierKind GetKind(Interval<int> range)
 		{
 			if (range.Equals(OneOrMoreRange))
 				return QuantifierKind.OneOrMore;
@@ -73,7 +73,7 @@ namespace Zaaml.Text
 			return QuantifierKind.Generic;
 		}
 
-		public static Range<int> GetRange(QuantifierKind kind)
+		public static Interval<int> GetRange(QuantifierKind kind)
 		{
 			switch (kind)
 			{

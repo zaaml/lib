@@ -106,7 +106,7 @@ namespace Zaaml.UI.Controls.PropertyView
 			if (ValidationErrorControl == null || ValidationErrorControl.ActualShowValidationError == false)
 				return arrangeOverride;
 
-			if (TreeView?.ItemsPresenterInternal?.ItemsHostBaseInternal is IItemsHost<TreeViewItem> host)
+			if (TreeViewControl?.ItemsPresenterInternal?.ItemsHostBaseInternal is IItemsHost<TreeViewItem> host)
 				ValidationErrorControl.ForceHideToolTip = host.GetLayoutInformation(this).Visibility != ItemLayoutInformationVisibility.Visible;
 			else
 				ValidationErrorControl.ForceHideToolTip = false;

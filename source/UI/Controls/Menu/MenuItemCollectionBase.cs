@@ -32,12 +32,12 @@ namespace Zaaml.UI.Controls.Menu
 
 		#region  Methods
 
-		protected override void AttachLogical(TMenuItem menuItem)
+		protected override void AttachLogicalCore(TMenuItem menuItem)
 		{
 			MenuItemOwner.AddLogicalChild(menuItem);
 		}
 
-		protected override void DetachLogical(TMenuItem menuItem)
+		protected override void DetachLogicalCore(TMenuItem menuItem)
 		{
 			MenuItemOwner.RemoveLogicalChild(menuItem);
 		}

@@ -21,10 +21,10 @@ namespace Zaaml.Text
 				MinOperand = minOperand;
 				MaxOperand = maxOperand;
 
-				IntRange = new Range<int>(ConvertOperand(minOperand), ConvertOperand(maxOperand));
+				IntRange = new Interval<int>(ConvertOperand(minOperand), ConvertOperand(maxOperand));
 			}
 
-			internal RangeMatchEntry(Range<int> range)
+			internal RangeMatchEntry(Interval<int> range)
 			{
 				IntRange = range;
 
@@ -38,7 +38,7 @@ namespace Zaaml.Text
 
 			protected override string DebuggerDisplay => $"[{MinOperand};{MaxOperand}]";
 
-			internal Range<int> IntRange { get; }
+			internal Interval<int> IntRange { get; }
 
 			public TOperand MaxOperand { get; }
 

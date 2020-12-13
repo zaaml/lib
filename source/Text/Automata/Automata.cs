@@ -32,7 +32,7 @@ namespace Zaaml.Text
 		protected static Func<TOperand, int> Converter;
 
 		// ReSharper disable once StaticMemberInGenericType
-		protected static readonly Range<int> InstructionsRange;
+		protected static readonly Interval<int> InstructionsRange;
 
 		#endregion
 
@@ -52,9 +52,9 @@ namespace Zaaml.Text
 			var operandType = typeof(TOperand);
 
 			if (operandType.IsEnum && Enum.GetUnderlyingType(operandType) == typeof(int))
-				InstructionsRange = new Range<int>(0, Enum.GetValues(operandType).Cast<int>().Max());
+				InstructionsRange = new Interval<int>(0, Enum.GetValues(operandType).Cast<int>().Max());
 			else
-				InstructionsRange = new Range<int>(0, int.MaxValue);
+				InstructionsRange = new Interval<int>(0, int.MaxValue);
 		}
 
 		protected Automata(AutomataManager manager) : base(manager)

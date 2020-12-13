@@ -4,22 +4,14 @@
 
 using System.Collections;
 using Zaaml.PresentationCore.TemplateCore;
-using Zaaml.UI.Controls.ScrollView;
 using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Core
 {
 	[TemplateContractType(typeof(ItemsPresenterBaseTemplateContract))]
-	public abstract class ItemsPresenterBase : TemplateContractControl, IDelegateScrollViewPanel
+	public abstract class ItemsPresenterBase : TemplateContractControl
 	{
-		#region Fields
-
 		private Panel _itemsHost;
-		private ScrollViewControl _scrollView;
-
-		#endregion
-
-		#region Ctors
 
 		internal ItemsPresenterBase()
 		{
@@ -29,10 +21,6 @@ namespace Zaaml.UI.Controls.Core
 			Focusable = false;
 #endif
 		}
-
-		#endregion
-
-		#region Properties
 
 		internal bool IsVirtualizing => (ItemsHostPrivate as IVirtualItemsHost)?.IsVirtualizing ?? false;
 
@@ -58,29 +46,7 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		internal ScrollViewControl ScrollView
-		{
-			get => _scrollView;
-			set
-			{
-				if (ReferenceEquals(_scrollView, value))
-					return;
-
-				var oldScrollView = _scrollView;
-
-				_scrollView = value;
-
-				OnScrollViewChanged(oldScrollView, value);
-			}
-		}
-
-		private protected abstract void OnScrollViewChanged(ScrollViewControl oldScrollView, ScrollViewControl newScrollView);
-
 		private ItemsPresenterBaseTemplateContract TemplateContract => (ItemsPresenterBaseTemplateContract) TemplateContractInternal;
-
-		#endregion
-
-		#region  Methods
 
 		protected virtual void OnItemsHostAttached()
 		{
@@ -103,17 +69,5 @@ namespace Zaaml.UI.Controls.Core
 
 			base.OnTemplateContractDetaching();
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IDelegateScrollViewPanel
-
-		IScrollViewPanel IDelegateScrollViewPanel.ScrollViewPanel => ItemsHostPrivate as IScrollViewPanel;
-
-		#endregion
-
-		#endregion
 	}
 }

@@ -13,7 +13,7 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.TabView
 {
 	[TemplateContractType(typeof(TabViewItemsPresenterTemplateContract))]
-	public class TabViewItemsPresenter : ItemsPresenterBase<TabViewControl, TabViewItem, TabViewItemCollection, TabViewItemsPanel>
+	public class TabViewItemsPresenter : ScrollableItemsPresenterBase<TabViewControl, TabViewItem, TabViewItemCollection, TabViewItemsPanel>
 	{
 		#region Static Fields and Constants
 

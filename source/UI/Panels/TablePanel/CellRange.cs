@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Zaaml.Core;
-using Range = Zaaml.Core.Range;
 
 namespace Zaaml.UI.Panels.TablePanel
 {
@@ -82,39 +81,39 @@ namespace Zaaml.UI.Panels.TablePanel
 	{
 		public static ICellRange Intersect(ICellRange cellRange1, ICellRange cellRange2)
 		{
-			var columnRange1 = new Range<int>(cellRange1.Column, cellRange1.Column + cellRange1.ColumnSpan - 1);
-			var columnRange2 = new Range<int>(cellRange2.Column, cellRange2.Column + cellRange2.ColumnSpan - 1);
+			var columnRange1 = new Interval<int>(cellRange1.Column, cellRange1.Column + cellRange1.ColumnSpan - 1);
+			var columnRange2 = new Interval<int>(cellRange2.Column, cellRange2.Column + cellRange2.ColumnSpan - 1);
 
-			var columnIntersection = Range.Intersect(columnRange1, columnRange2);
+			var columnIntersection = Interval.Intersect(columnRange1, columnRange2);
 
 			if (columnIntersection.IsEmpty)
 				return null;
 
-			var rowRange1 = new Range<int>(cellRange1.Row, cellRange1.Row + cellRange1.RowSpan - 1);
-			var rowRange2 = new Range<int>(cellRange2.Row, cellRange2.Row + cellRange2.RowSpan - 1);
+			var rowRange1 = new Interval<int>(cellRange1.Row, cellRange1.Row + cellRange1.RowSpan - 1);
+			var rowRange2 = new Interval<int>(cellRange2.Row, cellRange2.Row + cellRange2.RowSpan - 1);
 
-			var rowIntersection = Range.Intersect(rowRange1, rowRange2);
+			var rowIntersection = Interval.Intersect(rowRange1, rowRange2);
 
 			if (rowIntersection.IsEmpty)
 				return null;
 
-			return CellRange.CreateCellRange(columnIntersection, rowIntersection);
+			return CellRange.CreateCellRange(columnIntersection.AsRange(), rowIntersection.AsRange());
 		}
 
 		internal static bool IntersectsWith(ICellRange cellRange1, ICellRange cellRange2)
 		{
-			var columnRange1 = new Range<int>(cellRange1.Column, cellRange1.Column + cellRange1.ColumnSpan - 1);
-			var columnRange2 = new Range<int>(cellRange2.Column, cellRange2.Column + cellRange2.ColumnSpan - 1);
+			var columnRange1 = new Interval<int>(cellRange1.Column, cellRange1.Column + cellRange1.ColumnSpan - 1);
+			var columnRange2 = new Interval<int>(cellRange2.Column, cellRange2.Column + cellRange2.ColumnSpan - 1);
 
-			var columnIntersection = Range.Intersect(columnRange1, columnRange2);
+			var columnIntersection = Interval.Intersect(columnRange1, columnRange2);
 
 			if (columnIntersection.IsEmpty)
 				return false;
 
-			var rowRange1 = new Range<int>(cellRange1.Row, cellRange1.Row + cellRange1.RowSpan - 1);
-			var rowRange2 = new Range<int>(cellRange2.Row, cellRange2.Row + cellRange2.RowSpan - 1);
+			var rowRange1 = new Interval<int>(cellRange1.Row, cellRange1.Row + cellRange1.RowSpan - 1);
+			var rowRange2 = new Interval<int>(cellRange2.Row, cellRange2.Row + cellRange2.RowSpan - 1);
 
-			var rowIntersection = Range.Intersect(rowRange1, rowRange2);
+			var rowIntersection = Interval.Intersect(rowRange1, rowRange2);
 
 			if (rowIntersection.IsEmpty)
 				return false;
@@ -141,11 +140,11 @@ namespace Zaaml.UI.Panels.TablePanel
 
 		internal static bool Contains(ICellRange self, ICellRange cellRange)
 		{
-			var selfColumnRange = Range.Create(self.Column, self.Column + self.ColumnSpan - 1);
-			var columnRange = Range.Create(cellRange.Column, cellRange.Column + cellRange.ColumnSpan - 1);
+			var selfColumnRange = Interval.Create(self.Column, self.Column + self.ColumnSpan - 1);
+			var columnRange = Interval.Create(cellRange.Column, cellRange.Column + cellRange.ColumnSpan - 1);
 
-			var selfRowRange = Range.Create(self.Row, self.Row + self.RowSpan - 1);
-			var rowRange = Range.Create(cellRange.Row, cellRange.Row + cellRange.RowSpan - 1);
+			var selfRowRange = Interval.Create(self.Row, self.Row + self.RowSpan - 1);
+			var rowRange = Interval.Create(cellRange.Row, cellRange.Row + cellRange.RowSpan - 1);
 
 			return selfColumnRange.Contains(columnRange) && selfRowRange.Contains(rowRange);
 		}

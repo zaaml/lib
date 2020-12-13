@@ -35,5 +35,6 @@ using System.Windows.Markup;
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.ToolBar")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.ValidationSummary")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.ListView")]
+[assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.TableView")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.TreeView")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.DropDown")]

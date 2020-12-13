@@ -4,7 +4,7 @@
 
 using System.Collections;
 
-namespace Zaaml.UI.Controls.Core
+namespace Zaaml.PresentationCore
 {
 	internal interface ILogicalOwner
 	{

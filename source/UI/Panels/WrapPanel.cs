@@ -11,7 +11,6 @@ using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Panel = Zaaml.UI.Panels.Core.Panel;
-using Range = Zaaml.Core.Range;
 
 namespace Zaaml.UI.Panels
 {
@@ -80,14 +79,14 @@ namespace Zaaml.UI.Panels
 
         if (maximumSize.Direct.IsLessThan(lineSize.Direct + elementSize.Direct, XamlConstants.LayoutComparisonPrecision))
         {
-          this.ArrangeStackLine(orientation, Range.Create(lineStart, lineEnd), lineOffset, 0, lineSize.Indirect, fixedItemSize);
+          this.ArrangeStackLine(orientation, Zaaml.Core.Range.Create(lineStart, lineEnd), lineOffset, 0, lineSize.Indirect, fixedItemSize);
 
           lineOffset += lineSize.Indirect;
           lineSize = elementSize;
 
           if (maximumSize.Direct.IsLessThan(elementSize.Direct, XamlConstants.LayoutComparisonPrecision))
           {
-            this.ArrangeStackLine(orientation, Range.Create(lineStart, ++lineEnd), lineOffset, 0, lineSize.Indirect, fixedItemSize);
+            this.ArrangeStackLine(orientation, Zaaml.Core.Range.Create(lineStart, ++lineEnd), lineOffset, 0, lineSize.Indirect, fixedItemSize);
 
             lineOffset += lineSize.Indirect;
             lineSize = new OrientedSize(orientation);
@@ -103,7 +102,7 @@ namespace Zaaml.UI.Panels
       }
 
       if (lineStart < count)
-        this.ArrangeStackLine(orientation, Range.Create(lineStart, count), lineOffset, 0, lineSize.Indirect, fixedItemSize);
+        this.ArrangeStackLine(orientation, Zaaml.Core.Range.Create(lineStart, count), lineOffset, 0, lineSize.Indirect, fixedItemSize);
 
       return finalSize;
     }

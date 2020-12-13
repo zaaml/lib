@@ -9,7 +9,7 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.TreeView
 {
 	[TemplateContractType(typeof(TreeViewItemsPresenterTemplateContract))]
-	public class TreeViewItemsPresenter : ItemsPresenterBase<TreeViewControl, TreeViewItem, TreeViewItemRootCollection, TreeViewPanel>
+	public class TreeViewItemsPresenter : ScrollableItemsPresenterBase<TreeViewControl, TreeViewItem, TreeViewItemRootCollection, TreeViewPanel>
 	{
 		static TreeViewItemsPresenter()
 		{

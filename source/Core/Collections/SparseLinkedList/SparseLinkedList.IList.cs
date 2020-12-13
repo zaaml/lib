@@ -9,10 +9,6 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedList<T> : IList<T>, IList
 	{
-		#region Interface Implementations
-
-		#region IList
-
 		int IList.Add(object value)
 		{
 			Add((T) value);
@@ -48,17 +44,9 @@ namespace Zaaml.Core.Collections
 
 		bool IList.IsFixedSize => false;
 
-		#endregion
-
-		#region IList<T>
-
 		int IList<T>.IndexOf(T item)
 		{
 			return IndexOf(item);
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

@@ -252,19 +252,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private class RibbonPagesItemCollection : ItemHostCollection<RibbonPage>
 		{
-			protected override void ClearCore()
-			{
-			}
-
-			protected override void InitCore(ICollection<RibbonPage> items)
-			{
-			}
-
-			protected override void InsertCore(int index, RibbonPage item)
-			{
-			}
-
-			protected override void RemoveAtCore(int index)
+			protected override void SyncCore(SyncAction syncAction, SyncActionData syncActionData)
 			{
 			}
 		}

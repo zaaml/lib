@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core;
@@ -14,183 +13,117 @@ using Zaaml.UI.Panels.Interfaces;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  public class RibbonToolBarItemsPanel : ItemsPanel<RibbonItem>, IFlexPanel
-  {
-    #region Fields
+	public class RibbonToolBarItemsPanel : ItemsPanel<RibbonItem>, IFlexPanel
+	{
+		private RibbonToolBarItemsPresenter _itemsPresenter;
 
-    private RibbonToolBarItemsPresenter _itemsPresenter;
+		public RibbonToolBarItemsPanel()
+		{
+			Layout = new FlexPanelLayout(this);
+		}
 
-    #endregion
+		internal bool HasOverflowChildren { get; private set; }
 
-    #region Ctors
+		internal RibbonToolBarItemsPresenter ItemsPresenter
+		{
+			get => _itemsPresenter;
+			set
+			{
+				if (ReferenceEquals(_itemsPresenter, value))
+					return;
 
-    public RibbonToolBarItemsPanel()
-    {
-      Layout = new FlexPanelLayout(this);
-    }
+				_itemsPresenter = value;
 
-    #endregion
+				InvalidateMeasure();
+			}
+		}
 
-    #region Properties
+		private FlexPanelLayout Layout { get; }
 
-    internal bool HasOverflowChildren { get; private set; }
+		[UsedImplicitly] private RibbonToolBar ToolBar => ItemsPresenter?.ToolBar;
 
-    internal RibbonToolBarItemsPresenter ItemsPresenter
-    {
-      get => _itemsPresenter;
-      set
-      {
-        if (ReferenceEquals(_itemsPresenter, value))
-          return;
+		protected override Size ArrangeOverrideCore(Size finalSize)
+		{
+			return Layout.Arrange(finalSize);
+		}
 
-        _itemsPresenter = value;
+		internal override ItemHostCollection<RibbonItem> CreateHostCollectionInternal()
+		{
+			return new RibbonToolBarItemHostCollection(this);
+		}
 
-        InvalidateMeasure();
-      }
-    }
+		private static bool GetIsOverflow(UIElement child)
+		{
+			var overflowItem = (OverflowItem<RibbonItem>) child;
+			var ribbonItem = overflowItem.Item;
 
-    private FlexPanelLayout Layout { get; }
+			return ribbonItem.IsOverflow;
+		}
 
-    [UsedImplicitly]
-    private RibbonToolBar ToolBar => ItemsPresenter?.ToolBar;
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			return Layout.Measure(availableSize);
+		}
 
-    #endregion
+		internal bool ResumeOverflow()
+		{
+			var remeasure = false;
 
-    #region  Methods
+			foreach (var ribbonItem in ItemsInternal)
+				remeasure |= ribbonItem.OverflowController.Resume();
 
-    protected override Size ArrangeOverrideCore(Size finalSize)
-    {
-      return Layout.Arrange(finalSize);
-    }
+			return remeasure;
+		}
 
-    internal override ItemHostCollection<RibbonItem> CreateHostCollectionInternal()
-    {
-      return new RibbonToolBarItemHostCollection(this);
-    }
+		private static void SetIsOverflow(UIElement child, bool value)
+		{
+			var overflowItem = (OverflowItem<RibbonItem>) child;
+			var ribbonItem = overflowItem.Item;
 
-    private static bool GetIsOverflow(UIElement child)
-    {
-      var overflowItem = (OverflowItem<RibbonItem>) child;
-      var ribbonItem = overflowItem.Item;
+			ribbonItem.IsOverflow = value;
+		}
 
-      return ribbonItem.IsOverflow;
-    }
+		internal void SuspendOverflow()
+		{
+			foreach (var ribbonItem in ItemsInternal)
+				ribbonItem.OverflowController.Suspend();
+		}
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      return Layout.Measure(availableSize);
-    }
+		IFlexDistributor IFlexPanel.Distributor => FlexDistributor.LastToFirst;
 
-    internal bool ResumeOverflow()
-    {
-      var remeasure = false;
+		bool IFlexPanel.HasHiddenChildren
+		{
+			get => HasOverflowChildren;
+			set => HasOverflowChildren = value;
+		}
 
-      foreach (var ribbonItem in ItemsInternal)
-        remeasure |= ribbonItem.OverflowController.Resume();
+		double IFlexPanel.Spacing => 0;
 
-      return remeasure;
-    }
+		FlexStretch IFlexPanel.Stretch => FlexStretch.Fill;
 
-    private static void SetIsOverflow(UIElement child, bool value)
-    {
-      var overflowItem = (OverflowItem<RibbonItem>) child;
-      var ribbonItem = overflowItem.Item;
+		FlexElement IFlexPanel.GetFlexElement(UIElement child)
+		{
+			var overflowBehavior = Children.Count > 0 && ReferenceEquals(child, Children[0]) ? FlexOverflowBehavior.Pin : FlexOverflowBehavior.Hide;
 
-      ribbonItem.IsOverflow = value;
-    }
+			return child.GetFlexElement(this).WithStretchDirection(FlexStretchDirection.None).WithOverflowBehavior(overflowBehavior);
+		}
 
-    internal void SuspendOverflow()
-    {
-      foreach (var ribbonItem in ItemsInternal)
-        ribbonItem.OverflowController.Suspend();
-    }
+		bool IFlexPanel.GetIsHidden(UIElement child) => GetIsOverflow(child);
 
-    #endregion
+		void IFlexPanel.SetIsHidden(UIElement child, bool value) => SetIsOverflow(child, value);
 
-    #region Interface Implementations
+		Orientation IOrientedPanel.Orientation => Orientation.Horizontal;
 
-    #region IFlexPanel
+		private sealed class RibbonToolBarItemHostCollection : PanelHostCollectionBase<RibbonItem, RibbonToolBarItemsPanel>
+		{
+			public RibbonToolBarItemHostCollection(RibbonToolBarItemsPanel panel) : base(panel)
+			{
+			}
 
-    IFlexDistributor IFlexPanel.Distributor => FlexDistributor.LastToFirst;
-
-    bool IFlexPanel.HasHiddenChildren
-    {
-      get => HasOverflowChildren;
-      set => HasOverflowChildren = value;
-    }
-
-    double IFlexPanel.Spacing => 0;
-
-    FlexStretch IFlexPanel.Stretch => FlexStretch.Fill;
-
-    FlexElement IFlexPanel.GetFlexElement(UIElement child)
-    {
-      var overflowBehavior = Children.Count > 0 && ReferenceEquals(child, Children[0]) ? FlexOverflowBehavior.Pin : FlexOverflowBehavior.Hide;
-
-      return child.GetFlexElement(this).WithStretchDirection(FlexStretchDirection.None).WithOverflowBehavior(overflowBehavior);
-    }
-
-    bool IFlexPanel.GetIsHidden(UIElement child) => GetIsOverflow(child);
-
-    void IFlexPanel.SetIsHidden(UIElement child, bool value) => SetIsOverflow(child, value);
-
-    #endregion
-
-    #region IOrientedPanel
-
-    Orientation IOrientedPanel.Orientation => Orientation.Horizontal;
-
-    #endregion
-
-    #endregion
-
-    #region  Nested Types
-
-    private sealed class RibbonToolBarItemHostCollection : ItemHostCollection<RibbonItem>
-    {
-      #region Ctors
-
-      public RibbonToolBarItemHostCollection(RibbonToolBarItemsPanel panel)
-      {
-        Panel = panel;
-      }
-
-      #endregion
-
-      #region Properties
-
-      private RibbonToolBarItemsPanel Panel { get; }
-
-      #endregion
-
-      #region  Methods
-
-      protected override void ClearCore()
-      {
-        Panel.Children.Clear();
-      }
-
-      protected override void InitCore(ICollection<RibbonItem> items)
-      {
-        Panel.Children.Clear();
-
-        foreach (var toolBarItem in items)
-          Panel.Children.Add(toolBarItem.OverflowController.VisibleHost);
-      }
-
-      protected override void InsertCore(int index, RibbonItem item)
-      {
-        Panel.Children.Insert(index, item.OverflowController.VisibleHost);
-      }
-
-      protected override void RemoveAtCore(int index)
-      {
-        Panel.Children.RemoveAt(index);
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+			protected override UIElement GetActualElement(RibbonItem item)
+			{
+				return item.OverflowController.VisibleHost;
+			}
+		}
+	}
 }

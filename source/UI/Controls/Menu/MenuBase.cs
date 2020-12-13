@@ -66,12 +66,12 @@ namespace Zaaml.UI.Controls.Menu
 
 		void IMenuItemOwner.AddLogicalChild(object menuItem)
 		{
-			AddLogicalChild(menuItem);
+			LogicalChildMentor.AddLogicalChild(menuItem);
 		}
 
 		void IMenuItemOwner.RemoveLogicalChild(object menuItem)
 		{
-			RemoveLogicalChild(menuItem);
+			LogicalChildMentor.RemoveLogicalChild(menuItem);
 		}
 
 		IMenuItemCollection IMenuItemOwner.Items => Items;

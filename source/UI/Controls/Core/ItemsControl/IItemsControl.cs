@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Windows;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Interfaces;
 
 namespace Zaaml.UI.Controls.Core

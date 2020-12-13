@@ -12,7 +12,7 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.BackstageView
 {
 	[TemplateContractType(typeof(BackstageViewItemsPresenterTemplateContract))]
-	public class BackstageViewItemsPresenter : ItemsPresenterBase<BackstageViewControl, BackstageViewItem, BackstageViewItemCollection, BackstageViewItemsPanel>
+	public class BackstageViewItemsPresenter : ScrollableItemsPresenterBase<BackstageViewControl, BackstageViewItem, BackstageViewItemCollection, BackstageViewItemsPanel>
 	{
 		#region Static Fields and Constants
 

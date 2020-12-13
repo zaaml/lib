@@ -59,12 +59,6 @@ namespace Zaaml.UI.Controls.Core
       }
     }
 
-    private protected override void OnScrollViewChanged(ScrollViewControl oldScrollView, ScrollViewControl newScrollView)
-    {
-	    if (ItemsHost != null)
-		    ItemsHost.ScrollView = newScrollView;
-    }
-
     protected TPanel ItemsHost => TemplateContract.ItemsHost;
 
     internal TPanel ItemsHostInternal => ItemsHost;
@@ -90,15 +84,11 @@ namespace Zaaml.UI.Controls.Core
       if (Items != null)
         Items.ItemsHost = ItemsHost;
 
-      ItemsHost.ScrollView = ScrollView;
-
       base.OnItemsHostAttached();
     }
 
     protected override void OnItemsHostDetaching()
     {
-	    ItemsHost.ScrollView = null;
-
       if (Items != null)
         Items.ItemsHost = null;
 

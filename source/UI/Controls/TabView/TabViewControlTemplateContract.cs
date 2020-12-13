@@ -8,7 +8,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.TabView
 {
-  public class TabViewControlTemplateContract : ItemsControlBaseTemplateContract<TabViewItemsPresenter>
+  public class TabViewControlTemplateContract : IndexedSelectorBaseTemplateContract<TabViewItemsPresenter>
   {
     #region Properties
 

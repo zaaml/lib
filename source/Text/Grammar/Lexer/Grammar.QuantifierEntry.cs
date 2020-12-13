@@ -22,7 +22,7 @@ namespace Zaaml.Text
 				Range = QuantifierHelper.GetRange(kind);
 			}
 
-			public QuantifierEntry(TokenPrimitiveEntry primitiveEntry, Range<int> range, QuantifierMode mode)
+			public QuantifierEntry(TokenPrimitiveEntry primitiveEntry, Interval<int> range, QuantifierMode mode)
 			{
 				PrimitiveEntry = primitiveEntry;
 				Kind = QuantifierHelper.GetKind(range);
@@ -40,7 +40,7 @@ namespace Zaaml.Text
 
 			public TokenPrimitiveEntry PrimitiveEntry { get; }
 
-			public Range<int> Range { get; }
+			public Interval<int> Range { get; }
 
 			#endregion
 		}

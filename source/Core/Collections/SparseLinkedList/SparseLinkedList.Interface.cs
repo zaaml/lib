@@ -8,10 +8,8 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedList<T>
 	{
-		#region Ctors
-
 		[PublicAPI]
-		public SparseLinkedList(IEnumerable<T> collection) : this(0, DefaultCapacity)
+		public SparseLinkedList(IEnumerable<T> collection)
 		{
 			InsertRange(0, collection);
 
@@ -19,14 +17,113 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public SparseLinkedList(int count) : this(count, DefaultCapacity)
+		internal SparseLinkedList(IEnumerable<T> collection, SparseLinkedListManager<T> listManager) : base(0, listManager)
+		{
+			InsertRange(0, collection);
+
+			VerifyStructure();
+		}
+
+		[PublicAPI]
+		internal SparseLinkedList(int count, SparseLinkedListManager<T> listManager) : base(count, listManager)
 		{
 			VerifyStructure();
 		}
 
-		#endregion
+		[PublicAPI]
+		public SparseLinkedList(int count) : base(count)
+		{
+			VerifyStructure();
+		}
 
-		#region  Methods
+		[PublicAPI]
+		public void Clear()
+		{
+			Lock();
+
+			ClearImpl();
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void Add(T item)
+		{
+			Lock();
+
+			Version++;
+
+			AddImpl(item);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public T this[int index]
+		{
+			get
+			{
+				Lock();
+
+				VerifyIndex(index);
+
+				var item = GetItemImpl(index);
+
+				Unlock();
+
+				return item;
+			}
+			set
+			{
+				Lock();
+
+				VerifyIndex(index);
+
+				Version++;
+
+				SetItemImpl(index, value);
+
+				VerifyStructure();
+
+				Unlock();
+			}
+		}
+
+		[PublicAPI]
+		public void Insert(int index, T item)
+		{
+			Lock();
+
+			VerifyIndex(index, true);
+
+			Version++;
+
+			InsertImpl(index, item);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void RemoveAt(int index)
+		{
+			Lock();
+
+			VerifyIndex(index);
+
+			Version++;
+
+			RemoveAtImpl(index);
+
+			VerifyStructure();
+
+			Unlock();
+		}
 
 		[PublicAPI]
 		public void AddCleanRange(int count)
@@ -193,111 +290,62 @@ namespace Zaaml.Core.Collections
 			Unlock();
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region ICollection<T>
-
 		[PublicAPI]
-		public void Add(T item)
+		internal void SplitAt(int index, SparseLinkedList<T> targetList)
 		{
 			Lock();
-
-			Version++;
-
-			AddImpl(item);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		#endregion
-
-		#region IList
-
-		[PublicAPI]
-		public void Clear()
-		{
-			Lock();
-
-			ClearImpl();
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		#endregion
-
-		#region IList<T>
-
-		[PublicAPI]
-		public T this[int index]
-		{
-			get
-			{
-				Lock();
-
-				VerifyIndex(index);
-
-				var item = GetItem(index);
-
-				Unlock();
-
-				return item;
-			}
-			set
-			{
-				Lock();
-
-				VerifyIndex(index);
-
-				Version++;
-
-				SetItem(index, value);
-
-				VerifyStructure();
-
-				Unlock();
-			}
-		}
-
-		[PublicAPI]
-		public void Insert(int index, T item)
-		{
-			Lock();
+			targetList.Lock();
 
 			VerifyIndex(index, true);
 
 			Version++;
+			targetList.Version++;
 
-			InsertImpl(index, item);
+			SplitAtImpl(index, targetList);
 
 			VerifyStructure();
+			targetList.VerifyStructure();
 
 			Unlock();
+			targetList.Unlock();
 		}
 
 		[PublicAPI]
-		public void RemoveAt(int index)
+		internal void Swap(int index, SparseLinkedList<T> list)
 		{
 			Lock();
+			list.Lock();
 
 			VerifyIndex(index);
 
 			Version++;
+			list.Version++;
 
-			RemoveAtImpl(index);
+			SwapImpl(list);
 
 			VerifyStructure();
+			list.VerifyStructure();
 
 			Unlock();
+			list.Unlock();
 		}
 
-		#endregion
+		[PublicAPI]
+		internal void Merge(SparseLinkedList<T> list)
+		{
+			Lock();
+			list.Lock();
 
-		#endregion
+			Version++;
+			list.Version++;
+
+			MergeImpl(list);
+
+			VerifyStructure();
+			list.VerifyStructure();
+
+			Unlock();
+			list.Unlock();
+		}
 	}
 }
