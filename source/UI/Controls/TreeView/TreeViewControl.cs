@@ -22,7 +22,7 @@ using Zaaml.UI.Data.Hierarchy;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	[TemplateContractType(typeof(TreeViewTemplateContract))]
+	[TemplateContractType(typeof(TreeViewControlTemplateContract))]
 	public class TreeViewControl : SelectorBase<TreeViewControl, TreeViewItem, TreeViewItemRootCollection, TreeViewItemsPresenter, TreeViewPanel>, IContentItemsControl, IIndexedFocusNavigatorAdvisor<TreeViewItem>
 	{
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<TreeViewItemGeneratorBase, TreeViewControl>
@@ -303,12 +303,12 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private void OnGeneratorChanged(object sender, EventArgs e)
 		{
-			UpdateTree();
+			UpdateData();
 		}
 
 		internal override void OnItemAttachedInternal(TreeViewItem item)
 		{
-			item.TreeView = this;
+			item.TreeViewControl = this;
 
 			base.OnItemAttachedInternal(item);
 		}
@@ -317,7 +317,7 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			base.OnItemDetachedInternal(item);
 
-			item.TreeView = null;
+			item.TreeViewControl = null;
 		}
 
 		internal virtual void OnItemGeneratorChanged(TreeViewItemGeneratorBase oldGenerator, TreeViewItemGeneratorBase newGenerator)
@@ -330,7 +330,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (newGenerator != null)
 				newGenerator.GeneratorChangedCore += OnGeneratorChanged;
 
-			UpdateTree();
+			UpdateData();
 		}
 
 		internal void OnItemIsExpandedChangedInternal(TreeViewItem treeViewItem)
@@ -381,7 +381,7 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			ItemsSourceCore = newSource;
 
-			UpdateTree();
+			UpdateData();
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)
@@ -486,7 +486,7 @@ namespace Zaaml.UI.Controls.TreeView
 			item.SetIsSelectedInternal(value);
 		}
 
-		private void UpdateTree()
+		private void UpdateData()
 		{
 			TreeViewData = null;
 
@@ -526,7 +526,7 @@ namespace Zaaml.UI.Controls.TreeView
 		}
 	}
 
-	public class TreeViewTemplateContract : ItemsControlBaseTemplateContract<TreeViewItemsPresenter>
+	public class TreeViewControlTemplateContract : SelectorBaseTemplateContract<TreeViewItemsPresenter>
 	{
 	}
 }

@@ -61,7 +61,7 @@ namespace Zaaml.Text
 			{
 			}
 
-			public ArrayPage<T> GetPlane(int capacity)
+			public ArrayPage<T> GetPage(int capacity)
 			{
 				if (_currentPage == null)
 					return _currentPage = Get().AddReference();

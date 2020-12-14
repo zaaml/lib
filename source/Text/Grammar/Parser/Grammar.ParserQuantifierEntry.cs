@@ -22,7 +22,7 @@ namespace Zaaml.Text
 				Mode = mode;
 			}
 
-			public ParserQuantifierEntry(ParserPrimitiveEntry primitiveEntry, Range<int> range, QuantifierMode mode)
+			public ParserQuantifierEntry(ParserPrimitiveEntry primitiveEntry, Interval<int> range, QuantifierMode mode)
 			{
 				PrimitiveEntry = primitiveEntry;
 				Kind = QuantifierHelper.GetKind(range);
@@ -40,7 +40,7 @@ namespace Zaaml.Text
 
 			public ParserPrimitiveEntry PrimitiveEntry { get; }
 
-			public Range<int> Range { get; }
+			public Interval<int> Range { get; }
 
 			#endregion
 

@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
+using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.Core
@@ -27,6 +28,16 @@ namespace Zaaml.UI.Controls.Core
 
 		public static readonly DependencyProperty ShowIconProperty = DPM.Register<bool, IconContentControl>
 			("ShowIcon", true);
+
+		static IconContentControl()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<IconContentControl>();
+		}
+
+		public IconContentControl()
+		{
+			this.OverrideStyleKey<IconContentControl>();
+		}
 
 		public double IconDistance
 		{

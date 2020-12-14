@@ -85,7 +85,7 @@ namespace Zaaml.UI.Controls.Core
 
 		#region  Methods
 
-		protected virtual void AttachLogical(TItem item)
+		protected virtual void AttachLogicalCore(TItem item)
 		{
 			var itemsControl = ItemsControl;
 
@@ -99,10 +99,10 @@ namespace Zaaml.UI.Controls.Core
 		private void AttachLogicalPrivate(TItem item)
 		{
 			if (IsLogicalParent)
-				AttachLogical(item);
+				AttachLogicalCore(item);
 		}
 
-		protected virtual void DetachLogical(TItem item)
+		protected virtual void DetachLogicalCore(TItem item)
 		{
 			var itemsControl = ItemsControl;
 
@@ -116,7 +116,7 @@ namespace Zaaml.UI.Controls.Core
 		private void DetachLogicalPrivate(TItem item)
 		{
 			if (IsLogicalParent)
-				DetachLogical(item);
+				DetachLogicalCore(item);
 		}
 
 		private void HostClear()

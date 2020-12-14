@@ -5,7 +5,17 @@
 		<OutputType>Library</OutputType>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
 	</PropertyGroup>
-
+	
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
 	</ItemGroup>
@@ -56,9 +66,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Grammar\" />
-	</ItemGroup>
-	<ItemGroup>
-	  <None Include="Automata\Automata.Process.ExecutionPathQueueCollectionBuilder.Dfa.dev.cs" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />

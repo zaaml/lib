@@ -7,6 +7,16 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<TargetFramework>net5.0-windows</TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
+		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<ProjectReference Include="..\Themes.Artboard.Metro\Zaaml.Themes.Artboard.Metro.csproj" />
 		<ProjectReference Include="..\Themes.PropertyView.Metro\Zaaml.Themes.PropertyView.Metro.csproj" />

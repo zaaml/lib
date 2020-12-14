@@ -9,77 +9,62 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Windows
 {
-  public sealed class FloatingDialogButton : WindowButton
-  {
-    #region Static Fields and Constants
+	public sealed class FloatingDialogButton : WindowButton
+	{
+		public static readonly DependencyProperty DialogResultProperty = DPM.Register<FloatingDialogResult, FloatingDialogButton>
+			("DialogResult", FloatingDialogResult.None, b => b.OnDialogResultChanged);
 
-    public static readonly DependencyProperty DialogResultProperty = DPM.Register<FloatingDialogResult, FloatingDialogButton>
-      ("DialogResult", FloatingDialogResult.None, b => b.OnDialogResultChanged);
+		static FloatingDialogButton()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<FloatingDialogButton>();
+		}
 
-    #endregion
+		public FloatingDialogButton()
+		{
+			this.OverrideStyleKey<FloatingDialogButton>();
 
-    #region Ctors
+			Command = FloatingDialog.CloseDialogCommand;
+			CommandParameter = DialogResult;
+		}
 
-    static FloatingDialogButton()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<FloatingDialogButton>();
-    }
+		public FloatingDialogResult DialogResult
+		{
+			get => (FloatingDialogResult) GetValue(DialogResultProperty);
+			set => SetValue(DialogResultProperty, value);
+		}
 
-    public FloatingDialogButton()
-    {
-      this.OverrideStyleKey<FloatingDialogButton>();
-      Command = FloatingDialog.CloseDialogCommand;
-      CommandParameter = DialogResult;
-    }
+		private void OnDialogResultChanged()
+		{
+			CommandParameter = DialogResult;
 
-    #endregion
-
-    #region Properties
-
-    public FloatingDialogResult DialogResult
-    {
-      get => (FloatingDialogResult) GetValue(DialogResultProperty);
-      set => SetValue(DialogResultProperty, value);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private void OnDialogResultChanged()
-    {
-      CommandParameter = DialogResult;
-
-      switch (DialogResult)
-      {
-        case FloatingDialogResult.None:
-          break;
-        case FloatingDialogResult.OK:
-          Content = Localization.DialogButton_OK;
-          break;
-        case FloatingDialogResult.Cancel:
-          Content = Localization.DialogButton_Cancel;
-          break;
-        case FloatingDialogResult.Abort:
-          break;
-        case FloatingDialogResult.Retry:
-          break;
-        case FloatingDialogResult.Ignore:
-          break;
-        case FloatingDialogResult.Yes:
-          Content = Localization.DialogButton_Yes;
-          break;
-        case FloatingDialogResult.No:
-          Content = Localization.DialogButton_No;
-          break;
-        case FloatingDialogResult.Apply:
-          Content = Localization.DialogButton_Apply;
-          break;
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
-
-    #endregion
-  }
+			switch (DialogResult)
+			{
+				case FloatingDialogResult.None:
+					break;
+				case FloatingDialogResult.OK:
+					Content = Localization.DialogButton_OK;
+					break;
+				case FloatingDialogResult.Cancel:
+					Content = Localization.DialogButton_Cancel;
+					break;
+				case FloatingDialogResult.Abort:
+					break;
+				case FloatingDialogResult.Retry:
+					break;
+				case FloatingDialogResult.Ignore:
+					break;
+				case FloatingDialogResult.Yes:
+					Content = Localization.DialogButton_Yes;
+					break;
+				case FloatingDialogResult.No:
+					Content = Localization.DialogButton_No;
+					break;
+				case FloatingDialogResult.Apply:
+					Content = Localization.DialogButton_Apply;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+	}
 }

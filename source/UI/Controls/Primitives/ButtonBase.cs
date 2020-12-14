@@ -21,8 +21,6 @@ namespace Zaaml.UI.Controls.Primitives
 {
 	public abstract partial class ButtonBase : TemplateContractContentControl, IButton, IManagedButton, IIconOwner
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty CanClickProperty = DPM.Register<bool, ButtonBase>
 			("CanClick", true);
 
@@ -58,15 +56,7 @@ namespace Zaaml.UI.Controls.Primitives
 		public static readonly DependencyProperty ShowIconProperty = DPM.Register<bool, ButtonBase>
 			("ShowIcon", true);
 
-		#endregion
-
-		#region Fields
-
 		[UsedImplicitly] private readonly IButtonController _buttonController;
-
-		#endregion
-
-		#region Ctors
 
 		static ButtonBase()
 		{
@@ -79,10 +69,6 @@ namespace Zaaml.UI.Controls.Primitives
 		{
 			_buttonController = new ButtonController<ButtonBase>(this);
 		}
-
-		#endregion
-
-		#region Properties
 
 		public bool CanClick
 		{
@@ -119,10 +105,6 @@ namespace Zaaml.UI.Controls.Primitives
 			get => (bool) GetValue(ShowIconProperty);
 			set => SetValue(ShowIconProperty, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		protected override TemplateContract CreateTemplateContract()
 		{
@@ -242,21 +224,16 @@ namespace Zaaml.UI.Controls.Primitives
 			_buttonController.RaiseOnClick();
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IButton
+		public void UpdateCanExecute()
+		{
+			_buttonController.UpdateCanExecute();
+		}
 
 		public bool IsPressed
 		{
 			get => (bool) GetValue(IsPressedProperty);
 			internal set => this.SetReadOnlyValue(IsPressedPropertyKey, value);
 		}
-
-		#endregion
-
-		#region ICommandControl
 
 		public event EventHandler CommandChanged;
 		public event EventHandler CommandParameterChanged;
@@ -280,19 +257,11 @@ namespace Zaaml.UI.Controls.Primitives
 			set => SetValue(CommandParameterProperty, value);
 		}
 
-		#endregion
-
-		#region IIconOwner
-
 		public IconBase Icon
 		{
 			get => (IconBase) GetValue(IconProperty);
 			set => SetValue(IconProperty, value);
 		}
-
-		#endregion
-
-		#region IManagedButton
 
 		bool IManagedButton.ShouldFocusOnClick => Focusable;
 
@@ -320,10 +289,6 @@ namespace Zaaml.UI.Controls.Primitives
 		{
 			OnClick();
 		}
-
-		#endregion
-
-		#endregion
 	}
 
 	public class ButtonBaseTemplateContract : TemplateContract

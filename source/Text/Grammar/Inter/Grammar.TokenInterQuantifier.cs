@@ -14,7 +14,7 @@ namespace Zaaml.Text
 		{
 			#region Ctors
 
-			public TokenInterQuantifier(TokenInterPrimitiveEntry primitiveEntry, Range<int> range, QuantifierMode mode)
+			public TokenInterQuantifier(TokenInterPrimitiveEntry primitiveEntry, Interval<int> range, QuantifierMode mode)
 			{
 				PrimitiveEntry = primitiveEntry;
 				Kind = QuantifierHelper.GetKind(range);
@@ -40,7 +40,7 @@ namespace Zaaml.Text
 
 			public TokenInterPrimitiveEntry PrimitiveEntry { get; }
 
-			public Range<int> Range { get; }
+			public Interval<int> Range { get; }
 
 			#endregion
 

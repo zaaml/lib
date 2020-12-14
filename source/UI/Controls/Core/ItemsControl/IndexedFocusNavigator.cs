@@ -26,7 +26,10 @@ namespace Zaaml.UI.Controls.Core
 		int ItemsCount { get; }
 
 		Orientation LogicalOrientation { get; }
+	}
 
+	internal interface IScrollableFocusNavigatorAdvisor<TItem> : IFocusNavigatorAdvisor<TItem> where TItem : NativeControl
+	{
 		ScrollViewControl ScrollView { get; }
 	}
 
@@ -38,13 +41,16 @@ namespace Zaaml.UI.Controls.Core
 
 		TItem GetItemFromIndex(int index);
 
-		bool IsOnCurrentPage(int index);
-
 		void LockItem(TItem item);
 
-		void ScrollIntoView(int index);
-
 		void UnlockItem(TItem item);
+	}
+
+	internal interface IIndexedScrollableFocusNavigatorAdvisor<TItem> : IFocusNavigatorAdvisor<TItem> where TItem : NativeControl
+	{
+		bool IsOnCurrentPage(int index);
+
+		void ScrollIntoView(int index);
 	}
 
 	internal class IndexedFocusNavigator<TControl, TItem> : FocusNavigator<TControl, TItem>
@@ -95,7 +101,7 @@ namespace Zaaml.UI.Controls.Core
 					else
 					{
 						if (newFocusedItem.IsMouseOver == false)
-							Control.ScrollIntoView(FocusedIndex);
+							ScrollIntoView(FocusedIndex);
 
 						if (_suspendFocus == false)
 							FocusItem(newFocusedItem);
@@ -137,6 +143,8 @@ namespace Zaaml.UI.Controls.Core
 					Control.LockItem(_lockedItem);
 			}
 		}
+
+		private IIndexedScrollableFocusNavigatorAdvisor<TItem> ScrollableControl => Control as IIndexedScrollableFocusNavigatorAdvisor<TItem>;
 
 		public override void ClearFocus()
 		{
@@ -270,7 +278,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool IsOnCurrentPage(int index)
 		{
-			return Control.IsOnCurrentPage(index);
+			return ScrollableControl?.IsOnCurrentPage(index) ?? true;
 		}
 
 		private bool IsValidIndex(int index)
@@ -307,7 +315,7 @@ namespace Zaaml.UI.Controls.Core
 			var focusedItem = FocusedItem;
 
 			if (focusedItem != null && IsOnCurrentPage(FocusedIndex) == false)
-				Control.ScrollIntoView(FocusedIndex);
+				ScrollIntoView(FocusedIndex);
 
 			if (focusedItem == null)
 			{
@@ -369,6 +377,11 @@ namespace Zaaml.UI.Controls.Core
 			{
 				_suspendFocus = false;
 			}
+		}
+
+		private void ScrollIntoView(int index)
+		{
+			ScrollableControl?.ScrollIntoView(index);
 		}
 
 		protected void SyncFocusIndex(int focusIndex)

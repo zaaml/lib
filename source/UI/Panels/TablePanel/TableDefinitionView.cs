@@ -308,10 +308,12 @@ namespace Zaaml.UI.Panels.TablePanel
 			public Range<int> GetDefinitionRange(float offset, float size)
 			{
 				var first = Array.BinarySearch(_offsetArray, offset);
+
 				if (first < 0)
 					first = ~first - 1;
 
 				var last = float.IsPositiveInfinity(size) ? Count - 1 : Array.BinarySearch(_offsetArray, offset + size);
+
 				if (last < 0)
 					last = ~last - 1;
 

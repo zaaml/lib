@@ -4,6 +4,7 @@
 
 using System.Collections;
 using System.Windows;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.Interfaces;
@@ -13,7 +14,7 @@ using NativeVisualStateManager = System.Windows.VisualStateManager;
 
 namespace Zaaml.UI.Controls.Core
 {
-  public partial class Control : NativeControl, IControl, ILogicalOwner
+  public partial class Control : NativeControl, IControl, ILogicalOwner, ILogicalMentorOwner
 	{
 		private LogicalChildMentor<Control> _logicalChildMentor;
 
@@ -72,7 +73,7 @@ namespace Zaaml.UI.Controls.Core
       return GetTemplateChild(name);
     }
 
-		protected override IEnumerator LogicalChildren => _logicalChildMentor?.GetLogicalChildren(base.LogicalChildren);
+		protected override IEnumerator LogicalChildren => _logicalChildMentor == null ? base.LogicalChildren : _logicalChildMentor.GetLogicalChildren();
 
 		private protected LogicalChildMentor LogicalChildMentor => _logicalChildMentor ??= LogicalChildMentor.Create(this);
 
@@ -80,13 +81,25 @@ namespace Zaaml.UI.Controls.Core
 
     void ILogicalOwner.AddLogicalChild(object child)
     {
+			LogicalChildMentor.AddLogicalChild(child);
+		}
+
+    void ILogicalMentorOwner.RemoveLogicalChild(object child)
+    {
+	    RemoveLogicalChild(child);
+    }
+
+    IEnumerator ILogicalMentorOwner.BaseLogicalChildren => base.LogicalChildren;
+
+		void ILogicalMentorOwner.AddLogicalChild(object child)
+    {
 	    AddLogicalChild(child);
     }
 
     void ILogicalOwner.RemoveLogicalChild(object child)
     {
-	    RemoveLogicalChild(child);
-    }
+			LogicalChildMentor.RemoveLogicalChild(child);
+		}
 
     IEnumerator ILogicalOwner.BaseLogicalChildren => base.LogicalChildren;
 	}

@@ -22,10 +22,10 @@ namespace Zaaml.PresentationCore.CommandCore
 
 		public static void Execute(ICommand command, object commandParameter, DependencyObject commandTarget)
 		{
-			if (command == null) return;
+			if (command == null) 
+				return;
 
-			var targetCommand = command as RoutedCommand;
-			if (targetCommand != null)
+			if (command is RoutedCommand targetCommand)
 			{
 #if SILVERLIGHT
 				targetCommand.Execute(commandParameter, commandTarget);

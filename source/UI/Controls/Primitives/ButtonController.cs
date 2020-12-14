@@ -14,21 +14,11 @@ namespace Zaaml.UI.Controls.Primitives
 {
 	internal class ButtonController<T> : CommandController<T>, IButtonController where T : Control, IManagedButton
 	{
-		#region Fields
-
 		private byte _packedValue;
-
-		#endregion
-
-		#region Ctors
 
 		public ButtonController(T control) : base(control)
 		{
 		}
-
-		#endregion
-
-		#region Properties
 
 		// ReSharper disable once MemberCanBeMadeStatic.Local
 		private bool AllowEnter
@@ -91,10 +81,6 @@ namespace Zaaml.UI.Controls.Primitives
 			get => PackedValue.DownEventCanClick.GetValue(_packedValue);
 			set => PackedValue.DownEventCanClick.SetValue(ref _packedValue, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		private void CaptureMouse()
 		{
@@ -284,8 +270,8 @@ namespace Zaaml.UI.Controls.Primitives
 
 			e.Handled = true;
 
-      if (Control.ShouldFocusOnClick)
-			  FocusHelper.SetKeyboardFocusedElement(Control);
+			if (Control.ShouldFocusOnClick)
+				FocusHelper.SetKeyboardFocusedElement(Control);
 
 			// MouseButton could be released during method calls. Check here and after to ensure it is still pressed.
 			if (IsLeftButtonPressed)
@@ -408,11 +394,10 @@ namespace Zaaml.UI.Controls.Primitives
 				IsPressed = false;
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IButtonController
+		void IButtonController.UpdateCanExecute()
+		{
+			UpdateCanExecuteInternal();
+		}
 
 		void IButtonController.OnMouseMove(MouseEventArgs mouseEventArgs)
 		{
@@ -464,16 +449,8 @@ namespace Zaaml.UI.Controls.Primitives
 			OnKeyDown(keyEventArgs);
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedValue
 		{
-			#region Ctors
-
 			static PackedValue()
 			{
 				var allocator = new PackedValueAllocator();
@@ -483,8 +460,6 @@ namespace Zaaml.UI.Controls.Primitives
 				IsLeftButtonPressed = allocator.AllocateBoolItem();
 				DownEventCanClick = allocator.AllocateBoolItem();
 			}
-
-			#endregion
 
 			// ReSharper disable StaticMemberInGenericType
 			public static readonly PackedBoolItemDefinition IsMouseCaptured;
@@ -497,7 +472,5 @@ namespace Zaaml.UI.Controls.Primitives
 			public static readonly PackedBoolItemDefinition DownEventCanClick;
 			// ReSharper restore StaticMemberInGenericType
 		}
-
-		#endregion
 	}
 }

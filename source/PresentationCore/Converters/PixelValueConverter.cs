@@ -25,8 +25,8 @@ namespace Zaaml.PresentationCore.Converters
       _pixelRange = pixelRange;
       _valueRange = valueRange;
 
-      var pixelDistance = _pixelRange.Length();
-      var valueDistance = _valueRange.Length();
+      var pixelDistance = _pixelRange.Maximum - _pixelRange.Minimum;
+      var valueDistance = _valueRange.Maximum - _valueRange.Minimum;
 
       _pixel2ValueRatio = valueDistance / pixelDistance;
       _value2PixelRatio = pixelDistance / valueDistance;

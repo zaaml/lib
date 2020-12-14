@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using Zaaml.Core.Utils;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Core

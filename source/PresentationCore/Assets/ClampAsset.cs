@@ -21,10 +21,10 @@ namespace Zaaml.PresentationCore.Assets
 			("Value", default, d => d.OnValuePropertyChangedPrivate);
 
 		public static readonly DependencyProperty MinimumProperty = DPM.Register<TValue, ClampAsset<TValue>>
-			("Minimum", RangeMinMax.Get<TValue>().Minimum, d => d.OnMinimumPropertyChangedPrivate);
+			("Minimum", IntervalMinMax.Get<TValue>().Minimum, d => d.OnMinimumPropertyChangedPrivate);
 
 		public static readonly DependencyProperty MaximumProperty = DPM.Register<TValue, ClampAsset<TValue>>
-			("Maximum", RangeMinMax.Get<TValue>().Maximum, d => d.OnMaximumPropertyChangedPrivate);
+			("Maximum", IntervalMinMax.Get<TValue>().Maximum, d => d.OnMaximumPropertyChangedPrivate);
 
 		public TValue ActualValue
 		{

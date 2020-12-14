@@ -21,7 +21,7 @@ using Zaaml.UI.Controls.ScrollView;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	[TemplateContractType(typeof(ListViewTemplateContract))]
+	[TemplateContractType(typeof(ListViewControlTemplateContract))]
 	public class ListViewControl : IndexedSelectorBase<ListViewControl, ListViewItem, ListViewItemCollection, ListViewItemsPresenter, ListViewPanel>, IContentItemsControl, IIndexedFocusNavigatorAdvisor<ListViewItem>
 	{
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<ListViewItemGeneratorBase, ListViewControl>
@@ -228,9 +228,14 @@ namespace Zaaml.UI.Controls.ListView
 		{
 		}
 
+		private void OnGeneratorChanged(object sender, EventArgs e)
+		{
+			UpdateData();
+		}
+
 		internal override void OnItemAttachedInternal(ListViewItem item)
 		{
-			item.ListView = this;
+			item.ListViewControl = this;
 
 			base.OnItemAttachedInternal(item);
 		}
@@ -239,12 +244,20 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			base.OnItemDetachedInternal(item);
 
-			item.ListView = null;
+			item.ListViewControl = null;
 		}
 
 		internal virtual void OnItemGeneratorChanged(ListViewItemGeneratorBase oldGenerator, ListViewItemGeneratorBase newGenerator)
 		{
 			Items.Generator = ActualGenerator;
+
+			if (oldGenerator != null)
+				oldGenerator.GeneratorChangedCore -= OnGeneratorChanged;
+
+			if (newGenerator != null)
+				newGenerator.GeneratorChangedCore += OnGeneratorChanged;
+
+			UpdateData();
 		}
 
 		internal void OnItemMouseButton(ListViewItem listViewItem, MouseButtonEventArgs e)
@@ -287,6 +300,8 @@ namespace Zaaml.UI.Controls.ListView
 		private void OnItemsSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
 			ItemsSourceCore = newSource;
+
+			UpdateData();
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)
@@ -343,6 +358,15 @@ namespace Zaaml.UI.Controls.ListView
 			item.SetIsSelectedInternal(value);
 		}
 
+		private void UpdateData()
+		{
+			ListViewData = null;
+
+			ItemsPresenter?.ItemsHostInternal?.InvalidateMeasure();
+
+			InvalidateMeasure();
+		}
+
 		public string ItemContentStringFormat
 		{
 			get => (string) GetValue(ItemContentStringFormatProperty);
@@ -372,7 +396,7 @@ namespace Zaaml.UI.Controls.ListView
 		}
 	}
 
-	public class ListViewTemplateContract : ItemsControlBaseTemplateContract<ListViewItemsPresenter>
+	public class ListViewControlTemplateContract : IndexedSelectorBaseTemplateContract<ListViewItemsPresenter>
 	{
 	}
 }
