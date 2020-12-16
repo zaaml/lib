@@ -98,7 +98,7 @@ namespace Zaaml.Core.Collections
 				}
 
 				// Create Gap Node.
-				gapNode = CreateGapNode();
+				gapNode = Manager.GetGapNode();
 
 				gapNode.Prev = prevNode;
 				gapNode.Next = nextNode;
@@ -128,7 +128,7 @@ namespace Zaaml.Core.Collections
 
 			if (gapNode == null)
 			{
-				gapNode = CreateGapNode();
+				gapNode = Manager.GetGapNode();
 				gapNode.Prev = realizedNode;
 				gapNode.Next = nextNode;
 
@@ -257,7 +257,7 @@ namespace Zaaml.Core.Collections
 				}
 				else
 				{
-					gapNode ??= CreateGapNode();
+					gapNode ??= Manager.GetGapNode();
 
 					gapNode.Size = gapSize;
 

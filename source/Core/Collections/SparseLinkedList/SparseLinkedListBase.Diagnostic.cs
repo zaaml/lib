@@ -9,25 +9,22 @@ namespace Zaaml.Core.Collections
 	internal partial class SparseLinkedListBase<T>
 	{
 		[UsedImplicitly]
-		internal string Dump
+		internal string Dump()
 		{
-			get
+			var sb = new StringBuilder();
+			NodeBase node = HeadNode;
+
+			while (node != null)
 			{
-				var sb = new StringBuilder();
-				var node = HeadNode;
+				if (ReferenceEquals(node, HeadNode) == false)
+					sb.Append("  ");
 
-				while (node != null)
-				{
-					if (ReferenceEquals(node, HeadNode) == false)
-						sb.Append("  ");
+				sb.Append(node);
 
-					sb.Append(node);
-
-					node = node.Next;
-				}
-
-				return sb.ToString();
+				node = node.Next;
 			}
+
+			return sb.ToString();
 		}
 	}
 }

@@ -8,7 +8,7 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		private protected void AddCleanRangeImpl(int count)
+		private protected void AddCleanRangeImpl(long count)
 		{
 			InsertCleanRangeImpl(Count, count);
 		}

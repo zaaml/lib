@@ -27,7 +27,7 @@ namespace Zaaml.Core.Collections
 				throw new InvalidOperationException("Insufficient array length");
 
 			long index = arrayIndex;
-			var current = HeadNode;
+			NodeBase current = HeadNode;
 
 			while (current != null)
 			{

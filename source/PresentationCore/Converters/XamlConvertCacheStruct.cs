@@ -56,4 +56,54 @@ namespace Zaaml.PresentationCore.Converters
 
     #endregion
   }
+
+  internal struct XamlConvertCacheStruct<TValue>
+  {
+	  #region Fields
+
+	  private Type _cacheType;
+	  private TValue _convertedValueCache;
+	  private TValue _value;
+
+	  #endregion
+
+	  #region Ctors
+
+	  #endregion
+
+	  #region Properties
+
+	  public TValue Value
+	  {
+		  get => _value;
+		  set
+		  {
+			  if (ReferenceEquals(_value, value))
+				  return;
+
+			  _value = value;
+			  _cacheType = null;
+		  }
+	  }
+
+	  #endregion
+
+	  #region  Methods
+
+	  public TValue XamlConvert(Type targetType)
+	  {
+		  if (targetType == null)
+			  throw new ArgumentNullException(nameof(targetType));
+
+		  if (_cacheType == targetType)
+			  return _convertedValueCache;
+
+		  _convertedValueCache = (TValue)_value.XamlConvert(targetType);
+		  _cacheType = targetType;
+
+		  return _convertedValueCache;
+	  }
+
+	  #endregion
+  }
 }

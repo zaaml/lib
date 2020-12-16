@@ -15,6 +15,7 @@
 
   <!--  Base Style  -->
   <zm:Style x:Key="TableViewControlBaseStyle" TargetType="zm:TableViewControl">
+    <zm:Setter Property="Background" Value="#00FFFFFF" />
     <zm:Setter Property="Template" Value="{StaticResource TableViewControlTemplate}" />
   </zm:Style>
 

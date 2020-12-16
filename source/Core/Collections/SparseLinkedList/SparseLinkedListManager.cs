@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Zaaml.Core.Collections
 {
@@ -15,8 +16,7 @@ namespace Zaaml.Core.Collections
 
 		private Stack<SparseLinkedListBase<T>.GapNode> GapNodePool { get; } = new Stack<SparseLinkedListBase<T>.GapNode>();
 
-		private Stack<SparseLinkedListBase<T>.RealizedNode> RealizedNodePool { get; } =
-			new Stack<SparseLinkedListBase<T>.RealizedNode>();
+		private Stack<SparseLinkedListBase<T>.RealizedNode> RealizedNodePool { get; } = new Stack<SparseLinkedListBase<T>.RealizedNode>();
 
 		public SparseMemoryManager<T> SparseMemoryManager { get; }
 
@@ -27,7 +27,20 @@ namespace Zaaml.Core.Collections
 
 		public SparseLinkedListBase<T>.GapNode GetGapNode()
 		{
-			return GapNodePool.Count > 0 ? GapNodePool.Pop() : new SparseLinkedListBase<T>.GapNode();
+			var gapNode = GapNodePool.Count > 0 ? GapNodePool.Pop() : new SparseLinkedListBase<T>.GapNode();
+
+			MountNode(gapNode);
+
+			return gapNode;
+		}
+
+		private static void MountNode(SparseLinkedListBase<T>.NodeBase node)
+		{
+			Debug.Assert(node.Size == -1);
+
+			node.Next = null;
+			node.Prev = null;
+			node.Size = 0;
 		}
 
 		public SparseLinkedListBase<T>.RealizedNode GetRealizedNode()
@@ -36,6 +49,7 @@ namespace Zaaml.Core.Collections
 				? RealizedNodePool.Pop()
 				: new SparseLinkedListBase<T>.RealizedNode();
 
+			MountNode(realizedNode);
 			realizedNode.Mount(SparseMemoryManager.Allocate());
 
 			return realizedNode;

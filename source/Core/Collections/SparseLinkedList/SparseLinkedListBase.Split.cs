@@ -3,7 +3,6 @@
 // </copyright>
 
 using System;
-using System.Diagnostics;
 
 namespace Zaaml.Core.Collections
 {
@@ -11,7 +10,8 @@ namespace Zaaml.Core.Collections
 	{
 		private protected void SplitAtImpl(long index, SparseLinkedListBase<T> targetList)
 		{
-			Debug.Assert(targetList.Count == 0);
+			if (ReferenceEquals(this, targetList))
+				throw new InvalidOperationException("Cannot split into self");
 
 			if (ReferenceEquals(Manager, targetList.Manager) == false)
 				throw new InvalidOperationException("Manager of source list and target list must be the same");
@@ -26,99 +26,48 @@ namespace Zaaml.Core.Collections
 
 				if (index == 0)
 				{
-					SwapImpl(targetList);
+					if (targetList.LongCount == 0)
+						SwapImpl(targetList);
+					else
+					{
+						var left = new LinkedListStruct(this);
+						var right = new LinkedListStruct(targetList);
+
+						left.Merge(ref right);
+
+						left.Store(targetList);
+						right.Store(this);
+					}
 
 					return;
 				}
 
-				var cursor = Cursor.NavigateTo(index);
-				var nodeSplitIndex = (int) (index - cursor.NodeOffset);
-				var nodeSplitCount = (int) (cursor.Node.Size - nodeSplitIndex);
-				var targetListTail = targetList.TailNode;
+				var cursor = NavigateTo(index);
 
-				if (cursor.Node is GapNode gapNode)
+				if (targetList.Count == 0)
 				{
-					if (ReferenceEquals(HeadNode, gapNode))
-					{
-						// Target
-						targetList.HeadNode.Size = nodeSplitCount;
-						targetList.HeadNode.Next = gapNode.Next;
-						gapNode.Next.Prev = targetList.HeadNode;
-						targetList.TailNode = TailNode;
+					var left = new LinkedListStruct(this);
+					var right = new LinkedListStruct(targetList);
 
-						// Source
-						TailNode = targetListTail;
-						TailNode.Prev = HeadNode;
-						HeadNode.Next = TailNode;
+					left.Split(ref cursor, ref right);
 
-						HeadNode.Size = index;
-						TailNode.Size = 0;
-					}
-					else if (ReferenceEquals(TailNode, gapNode))
-					{
-						TailNode.Size -= nodeSplitCount;
-						targetList.HeadNode.Size += nodeSplitCount;
-					}
-					else
-					{
-						var prevNode = gapNode.Prev;
-
-						// Target
-						targetList.HeadNode.Size = nodeSplitCount;
-						targetList.HeadNode.Next = gapNode.Next;
-						gapNode.Next.Prev = targetList.HeadNode;
-						targetList.TailNode = TailNode;
-
-						// Source
-						TailNode = targetListTail;
-						TailNode.Prev = prevNode;
-
-						prevNode.Next = TailNode;
-						TailNode.Size = nodeSplitIndex;
-
-						ReleaseNode(gapNode);
-					}
-				}
-				else if (nodeSplitIndex == 0)
-				{
-					var node = cursor.Node;
-					var prev = node.Prev;
-
-					// Target
-					targetList.HeadNode.Next = node;
-					node.Prev = targetList.HeadNode;
-					targetList.TailNode = TailNode;
-
-					TailNode = targetListTail;
-					prev.Next = targetListTail;
-					targetListTail.Prev = prev;
+					left.Store(this);
+					right.Store(targetList);
 				}
 				else
 				{
-					var sourceRealizedNode = (RealizedNode) cursor.Node;
-					var targetRealizedNode = CreateRealizedNode();
+					var left = new LinkedListStruct(this);
+					var mid = new LinkedListStruct(Manager);
+					var right = new LinkedListStruct(targetList);
 
-					var sourceSpan = sourceRealizedNode.Span.Slice(nodeSplitIndex, nodeSplitCount);
-					var targetSpan = targetRealizedNode.Span.Slice(0, nodeSplitCount);
+					left.Split(ref cursor, ref mid);
+					mid.Merge(ref right);
 
-					sourceSpan.CopyTo(targetSpan);
+					left.Store(this);
+					mid.Store(targetList);
 
-					// Target
-					targetRealizedNode.Size = nodeSplitCount;
-					targetList.HeadNode.Next = targetRealizedNode;
-					targetRealizedNode.Prev = targetList.HeadNode;
-					targetList.TailNode = TailNode;
-
-					// Source
-					sourceRealizedNode.Size = nodeSplitIndex;
-					TailNode = targetListTail;
-					TailNode.Prev = sourceRealizedNode;
-					sourceRealizedNode.Next = TailNode;
+					right.Release();
 				}
-
-				targetList.LongCount = LongCount - index;
-
-				LongCount = index;
 			}
 			finally
 			{
@@ -134,17 +83,11 @@ namespace Zaaml.Core.Collections
 				EnterStructureChange();
 				targetList.EnterStructureChange();
 
-				var head = HeadNode;
-				var tail = TailNode;
-				var count = Count;
+				var left = new LinkedListStruct(this);
+				var right = new LinkedListStruct(targetList);
 
-				HeadNode = targetList.HeadNode;
-				TailNode = targetList.TailNode;
-				LongCount = targetList.Count;
-
-				targetList.HeadNode = head;
-				targetList.TailNode = tail;
-				targetList.LongCount = count;
+				left.Store(targetList);
+				right.Store(this);
 			}
 			finally
 			{

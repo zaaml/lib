@@ -55,6 +55,14 @@ namespace Zaaml.Core.Collections
 			{
 				EnterStructureChange();
 
+				if (ReferenceEquals(HeadNode.Next, TailNode))
+				{
+					HeadNode.Size += count;
+					LongCount += count;
+
+					return;
+				}
+
 				if (index == 0 || HeadCursor.Contains(index))
 				{
 					HeadNode.Size += count;
@@ -118,7 +126,7 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				var gapNode = CreateGapNode();
+				var gapNode = Manager.GetGapNode();
 
 				gapNode.Size = count;
 
@@ -132,7 +140,7 @@ namespace Zaaml.Core.Collections
 				}
 				else
 				{
-					var nextRealizedNode = CreateRealizedNode();
+					var nextRealizedNode = Manager.GetRealizedNode();
 
 					node.Next = gapNode;
 
@@ -257,7 +265,7 @@ namespace Zaaml.Core.Collections
 
 					count++;
 
-					var next = CreateRealizedNode();
+					var next = Manager.GetRealizedNode();
 
 					next.Size = 1;
 					next.Prev = realizedNode;

@@ -11,40 +11,32 @@ using System.Threading;
 namespace Zaaml.Core.Collections
 {
   [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
-#if !SILVERLIGHT
-  [Serializable]
-#endif
-  public class CollectionBase<T> : IList<T>, IList, IReadOnlyList<T>
+	public abstract class CollectionBase<T> : IList<T>, IList, IReadOnlyList<T>
   {
     #region Fields
 
-    private readonly IList<T> _items;
-
-#if !SILVERLIGHT
-    [NonSerialized]
-#endif
     private object _syncRoot;
 
     #endregion
 
     #region Ctors
 
-    public CollectionBase()
+    protected CollectionBase()
     {
-      _items = new List<T>();
+      Items = new List<T>();
     }
 
     internal CollectionBase(int capacity)
     {
-      _items = new List<T>(capacity);
+      Items = new List<T>(capacity);
     }
 
-    public CollectionBase(IList<T> list)
+    protected CollectionBase(IList<T> list)
     {
       if (list == null)
         Error.ThrowArgumentNullException(ExceptionArgument.list);
 
-      _items = list;
+      Items = list;
     }
 
     #endregion
@@ -55,20 +47,20 @@ namespace Zaaml.Core.Collections
     {
       get
       {
-        var listItems = _items as List<T>;
+        var listItems = Items as List<T>;
 
         return listItems?.Capacity ?? Count;
       }
       set
       {
-	      if (_items is List<T> listItems)
+	      if (Items is List<T> listItems)
           listItems.Capacity = value;
       }
     }
 
     public void RemoveRange(int index, int count)
     {
-	    if (_items is List<T> list)
+	    if (Items is List<T> list)
         list.RemoveRange(index, count);
       else
       {
@@ -92,7 +84,7 @@ namespace Zaaml.Core.Collections
       }
     }
 
-    protected IList<T> Items => _items;
+    protected IList<T> Items { get; }
 
     #endregion
 
@@ -100,12 +92,12 @@ namespace Zaaml.Core.Collections
 
     protected virtual void ClearItems()
     {
-      _items.Clear();
+      Items.Clear();
     }
 
     protected virtual void InsertItem(int index, T item)
     {
-      _items.Insert(index, item);
+      Items.Insert(index, item);
     }
 
     private static bool IsCompatibleObject(object value)
@@ -121,12 +113,12 @@ namespace Zaaml.Core.Collections
 
     protected virtual void RemoveItem(int index)
     {
-      _items.RemoveAt(index);
+      Items.RemoveAt(index);
     }
 
     protected virtual void SetItem(int index, T item)
     {
-      _items[index] = item;
+      Items[index] = item;
     }
 
     #endregion
@@ -144,7 +136,7 @@ namespace Zaaml.Core.Collections
         if (_syncRoot != null)
           return _syncRoot;
 
-        if (_items is ICollection items)
+        if (Items is ICollection items)
           _syncRoot = items.SyncRoot;
         else
           Interlocked.CompareExchange<object>(ref _syncRoot, new object(), null);
@@ -152,8 +144,7 @@ namespace Zaaml.Core.Collections
         return _syncRoot;
       }
     }
-
-
+		
     void ICollection.CopyTo(Array array, int index)
     {
       if (array == null)
@@ -173,7 +164,7 @@ namespace Zaaml.Core.Collections
 
       if (array is T[] array1)
       {
-        _items.CopyTo(array1, index);
+        Items.CopyTo(array1, index);
       }
       else
       {
@@ -188,12 +179,12 @@ namespace Zaaml.Core.Collections
         if (objArray == null)
           Error.ThrowArgumentException(ExceptionResource.Argument_InvalidArrayType);
 
-        var count = _items.Count;
+        var count = Items.Count;
 
         try
         {
           for (var index1 = 0; index1 < count; ++index1)
-            objArray[index++] = _items[index1];
+            objArray[index++] = Items[index1];
         }
         catch (ArrayTypeMismatchException)
         {
@@ -206,19 +197,19 @@ namespace Zaaml.Core.Collections
 
     #region ICollection<T>
 
-    public int Count => _items.Count;
+    public int Count => Items.Count;
 
     public void Add(T item)
     {
-      if (_items.IsReadOnly)
+      if (Items.IsReadOnly)
         Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
-      InsertItem(_items.Count, item);
+      InsertItem(Items.Count, item);
     }
 
     public void Clear()
     {
-      if (_items.IsReadOnly)
+      if (Items.IsReadOnly)
         Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
       ClearItems();
@@ -226,20 +217,20 @@ namespace Zaaml.Core.Collections
 
     public void CopyTo(T[] array, int index)
     {
-      _items.CopyTo(array, index);
+      Items.CopyTo(array, index);
     }
 
     public bool Contains(T item)
     {
-      return _items.Contains(item);
+      return Items.Contains(item);
     }
 
     public bool Remove(T item)
     {
-      if (_items.IsReadOnly)
+      if (Items.IsReadOnly)
         Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
-      var index = _items.IndexOf(item);
+      var index = Items.IndexOf(item);
 
       if (index < 0)
         return false;
@@ -250,7 +241,7 @@ namespace Zaaml.Core.Collections
     }
 
 
-    bool ICollection<T>.IsReadOnly => _items.IsReadOnly;
+    bool ICollection<T>.IsReadOnly => Items.IsReadOnly;
 
     #endregion
 
@@ -258,7 +249,7 @@ namespace Zaaml.Core.Collections
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-      return _items.GetEnumerator();
+      return Items.GetEnumerator();
     }
 
     #endregion
@@ -267,7 +258,7 @@ namespace Zaaml.Core.Collections
 
     public IEnumerator<T> GetEnumerator()
     {
-      return _items.GetEnumerator();
+      return Items.GetEnumerator();
     }
 
     #endregion
@@ -276,7 +267,7 @@ namespace Zaaml.Core.Collections
 
     object IList.this[int index]
     {
-      get => _items[index];
+      get => Items[index];
 
       set
       {
@@ -291,25 +282,22 @@ namespace Zaaml.Core.Collections
         }
       }
     }
-
-
-    bool IList.IsReadOnly => _items.IsReadOnly;
-
-
+		
+    bool IList.IsReadOnly => Items.IsReadOnly;
+		
     bool IList.IsFixedSize
     {
       get
       {
-        var items = _items as IList;
+        var items = Items as IList;
 
-        return items?.IsFixedSize ?? _items.IsReadOnly;
+        return items?.IsFixedSize ?? Items.IsReadOnly;
       }
     }
-
-
+		
     int IList.Add(object value)
     {
-      if (_items.IsReadOnly)
+      if (Items.IsReadOnly)
         Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
       Error.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
@@ -338,7 +326,7 @@ namespace Zaaml.Core.Collections
 		
     void IList.Insert(int index, object value)
     {
-      if (_items.IsReadOnly)
+      if (Items.IsReadOnly)
         Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
       Error.IfNullAndNullsAreIllegalThenThrow<T>(value, ExceptionArgument.value);
@@ -355,7 +343,7 @@ namespace Zaaml.Core.Collections
 		
     void IList.Remove(object value)
     {
-      if (_items.IsReadOnly)
+      if (Items.IsReadOnly)
         Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
       if (!IsCompatibleObject(value))
@@ -370,14 +358,14 @@ namespace Zaaml.Core.Collections
 
     public T this[int index]
     {
-      get => _items[index];
+      get => Items[index];
 
       set
       {
-        if (_items.IsReadOnly)
+        if (Items.IsReadOnly)
           Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
-        if (index < 0 || index >= _items.Count)
+        if (index < 0 || index >= Items.Count)
           Error.ThrowArgumentOutOfRangeException();
 
         SetItem(index, value);
@@ -386,15 +374,15 @@ namespace Zaaml.Core.Collections
 
     public int IndexOf(T item)
     {
-      return _items.IndexOf(item);
+      return Items.IndexOf(item);
     }
 
     public void Insert(int index, T item)
     {
-      if (_items.IsReadOnly)
+      if (Items.IsReadOnly)
         Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
-      if (index < 0 || index > _items.Count)
+      if (index < 0 || index > Items.Count)
         Error.ThrowArgumentOutOfRangeException(ExceptionArgument.index, ExceptionResource.ArgumentOutOfRange_ListInsert);
 
       InsertItem(index, item);
@@ -402,10 +390,10 @@ namespace Zaaml.Core.Collections
 
     public void RemoveAt(int index)
     {
-      if (_items.IsReadOnly)
+      if (Items.IsReadOnly)
         Error.ThrowNotSupportedException(ExceptionResource.NotSupported_ReadOnlyCollection);
 
-      if (index < 0 || index >= _items.Count)
+      if (index < 0 || index >= Items.Count)
         Error.ThrowArgumentOutOfRangeException();
 
       RemoveItem(index);

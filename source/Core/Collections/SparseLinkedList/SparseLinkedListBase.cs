@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Zaaml.Core.Collections
 {
@@ -30,8 +31,8 @@ namespace Zaaml.Core.Collections
 		{
 			Manager = manager;
 
-			HeadNode = CreateGapNode();
-			TailNode = CreateGapNode();
+			HeadNode = Manager.GetGapNode();
+			TailNode = Manager.GetGapNode();
 
 			LongCount = count;
 
@@ -44,13 +45,13 @@ namespace Zaaml.Core.Collections
 
 		internal int StructureVersion { get; private set; }
 
-		protected NodeBase HeadNode { get; private set; }
+		protected GapNode HeadNode { get; private set; }
 
 		protected int NodeCapacity => Manager.SparseMemoryManager.NodeCapacity;
 
 		private SparseLinkedListManager<T> Manager { get; }
 
-		protected NodeBase TailNode { get; private set; }
+		protected GapNode TailNode { get; private set; }
 
 		private NodeCursor Cursor
 		{
@@ -86,19 +87,32 @@ namespace Zaaml.Core.Collections
 			LeaveStructureChange();
 		}
 
-		private RealizedNode CreateRealizedNode()
+		private protected void VerifyStructureImpl()
 		{
-			var node = Manager.GetRealizedNode();
+			if (HeadNode == null || TailNode == null)
+				throw new InvalidOperationException();
 
-			MountNode(node);
+			if (ReferenceEquals(HeadNode, TailNode))
+				throw new InvalidOperationException();
 
-			return node;
-		}
+			if (HeadNode.Prev != null || TailNode.Next != null)
+				throw new InvalidOperationException();
 
-		[Conditional("TEST")]
-		private protected void VerifyStructure()
-		{
-			var current = HeadNode;
+			if (ReferenceEquals(HeadNode.Next, TailNode))
+			{
+				if (TailNode.Size > 0)
+					throw new InvalidOperationException();
+
+				if (ReferenceEquals(TailNode.Prev, HeadNode) == false)
+					throw new InvalidOperationException();
+
+				if (HeadNode.Size != LongCount)
+					throw new InvalidOperationException();
+
+				return;
+			}
+
+			NodeBase current = HeadNode;
 
 			while (current != null)
 			{
@@ -109,15 +123,20 @@ namespace Zaaml.Core.Collections
 					if (ReferenceEquals(next.Prev, current) == false)
 						throw new InvalidOperationException();
 
-					if (current is GapNode && current.Prev is GapNode)
+					if (next is GapNode && current is GapNode)
 					{
-						if (ReferenceEquals(current, TailNode) == false)
-							throw new InvalidOperationException();
+						throw new InvalidOperationException();
 					}
 				}
 
 				current = next;
 			}
+		}
+
+		[Conditional("TEST")]
+		private protected void VerifyStructure()
+		{
+			VerifyStructureImpl();
 		}
 
 		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
@@ -228,6 +247,8 @@ namespace Zaaml.Core.Collections
 
 		private protected void ClearImpl()
 		{
+			EnterStructureChange();
+
 			var current = HeadNode.Next;
 
 			while (current != null && ReferenceEquals(current, TailNode) == false)
@@ -242,21 +263,8 @@ namespace Zaaml.Core.Collections
 			LongCount = 0;
 
 			InitHeadTail();
-		}
 
-		private GapNode CreateGapNode()
-		{
-			var node = Manager.GetGapNode();
-
-			MountNode(node);
-
-			return node;
-		}
-
-		private void MountNode(NodeBase node)
-		{
-			node.Next = null;
-			node.Prev = null;
+			LeaveStructureChange();
 		}
 
 		private void RemoveEmptyGapNode(GapNode gapNode)

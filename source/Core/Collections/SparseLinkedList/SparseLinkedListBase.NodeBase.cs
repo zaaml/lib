@@ -8,10 +8,18 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		[DebuggerDisplay(("{" + nameof(Dump) + "}"))]
+		[DebuggerDisplay(("{Dump()}"))]
 		internal abstract class NodeBase
 		{
-			public long Size { get; set; }
+//#if TEST
+//			~NodeBase()
+//			{
+//				if (Size != -1)
+//					throw new InvalidOperationException();
+//			}
+//#endif
+
+			public long Size { get; set; } = -1;
 
 			public NodeBase Next { get; set; }
 
@@ -46,23 +54,20 @@ namespace Zaaml.Core.Collections
 			{
 				Next = null;
 				Prev = null;
-				Size = 0;
+				Size = -1;
 			}
 
-			public string Dump
+			public string Dump()
 			{
-				get
-				{
-					var index = GetGlobalIndex();
-					var range = Size == 0 ? $"[{index}]" : $"[{index}..{index + Size - 1}]";
+				var index = GetGlobalIndex();
+				var range = Size == 0 ? $"[{index}]" : $"[{index}..{index + Size - 1}]";
 
-					return this is GapNode ? $"gap{range}" : $"real{range}";
-				}
+				return this is GapNode ? $"gap{range}" : $"real{range}";
 			}
 
 			public override string ToString()
 			{
-				return Dump;
+				return Dump();
 			}
 		}
 	}

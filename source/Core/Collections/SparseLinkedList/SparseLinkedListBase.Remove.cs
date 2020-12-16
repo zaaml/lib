@@ -92,6 +92,13 @@ namespace Zaaml.Core.Collections
 			if (count == 0)
 				return;
 
+			if (index == 0 && count == LongCount)
+			{
+				ClearImpl();
+
+				return;
+			}
+
 			try
 			{
 				EnterStructureChange();
@@ -190,6 +197,12 @@ namespace Zaaml.Core.Collections
 			}
 			finally
 			{
+				if (ReferenceEquals(HeadNode.Next, TailNode) && TailNode.Size > 0)
+				{
+					HeadNode.Size += TailNode.Size;
+					TailNode.Size = 0;
+				}
+
 				LeaveStructureChange();
 			}
 		}

@@ -10,144 +10,227 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore.Converters
 {
-  [ContentProperty("Value")]
-  public abstract class SwitchOption
-  {
-    #region Fields
+	[ContentProperty("Value")]
+	public abstract class SwitchOption<TKey, TValue>
+	{
+		private XamlConvertCacheStruct<TValue> _valueCache;
 
-    private XamlConvertCacheStruct _keyCache;
-    private XamlConvertCacheStruct _valueCache;
+		public TValue Value
+		{
+			get => _valueCache.Value;
+			set => _valueCache.Value = value;
+		}
 
-    #endregion
+		internal abstract TKey XamlConvertKey(Type targetType);
 
-    #region Properties
+		internal TValue XamlConvertValue(Type targetType)
+		{
+			return _valueCache.XamlConvert(targetType);
+		}
+	}
 
-    public object Key
-    {
-      get => _keyCache.Value;
-      set => _keyCache.Value = value;
-    }
+	public class Case<TKey, TValue> : SwitchOption<TKey, TValue>
+	{
+		private XamlConvertCacheStruct<TKey> _keyCache;
 
-    public object Value
-    {
-      get => _valueCache.Value;
-      set => _valueCache.Value = value;
-    }
+		public TKey Key
+		{
+			get => _keyCache.Value;
+			set => _keyCache.Value = value;
+		}
 
-    #endregion
+		internal override TKey XamlConvertKey(Type targetType)
+		{
+			return _keyCache.XamlConvert(targetType);
+		}
+	}
 
-    #region  Methods
+	public class Default<TKey, TValue> : SwitchOption<TKey, TValue>
+	{
+		private XamlConvertCacheStruct<TKey> _keyCache = new XamlConvertCacheStruct<TKey> {Value = default};
 
-    internal object XamlConvertKey(Type targetType)
-    {
-      return _keyCache.XamlConvert(targetType);
-    }
+		internal override TKey XamlConvertKey(Type targetType)
+		{
+			return _keyCache.XamlConvert(targetType);
+		}
+	}
 
-    internal object XamlConvertValue(Type targetType)
-    {
-      return _valueCache.XamlConvert(targetType);
-    }
+	public sealed class OptionCollection<TKey, TValue> : CollectionBase<SwitchOption<TKey, TValue>>
+	{
+	}
 
-    #endregion
-  }
+	[ContentProperty("Options")]
+	public class SwitchConverter<TKey, TValue> : BaseValueConverter
+	{
+		private static readonly SwitchOption<TKey, TValue> FallBackCase = new Case<TKey, TValue>();
 
-  public class Case : SwitchOption
-  {
-  }
+		public OptionCollection<TKey, TValue> Options { get; } = new OptionCollection<TKey, TValue>();
 
-  public class Default : SwitchOption
-  {
-  }
+		protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return ConvertImpl(value, targetType, SwitchConvertDirection.Reverse);
+		}
 
-  public class OptionCollection : CollectionBase<SwitchOption>
-  {
-  }
+		protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return ConvertImpl(value, targetType, SwitchConvertDirection.Direct);
+		}
 
-  [ContentProperty("Options")]
-  public sealed class SwitchConverter : BaseValueConverter
-  {
-    #region Static Fields and Constants
+		private object ConvertImpl(object value, Type targetType, SwitchConvertDirection direction)
+		{
+			var valueType = value?.GetType() ?? typeof(object);
 
-    private static readonly SwitchOption FallBackCase = new Case();
+			Default<TKey, TValue> defaultCase = null;
 
-    #endregion
+			foreach (var option in Options)
+			{
+				if (option is Case<TKey, TValue> caseOption)
+				{
+					var caseKey = GetKey(caseOption, direction, valueType);
 
-    #region Ctors
+					if (Equals(value, caseKey))
+						return GetValue(caseOption, direction, targetType);
 
-    public SwitchConverter()
-    {
-      Options = new OptionCollection();
-    }
+					continue;
+				}
 
-    #endregion
+				var defaultOption = option as Default<TKey, TValue>;
 
-    #region Properties
+				if (defaultOption != null && defaultCase != null)
+					throw new Exception("SwitchConverter can have only 1 default case");
 
-    public OptionCollection Options { get; }
+				defaultCase = defaultOption;
+			}
 
-    #endregion
+			return defaultCase != null ? GetValue(defaultCase, direction, targetType) : FallBackCase.Value.XamlConvert(targetType);
+		}
 
-    #region  Methods
+		private static object GetKey(SwitchOption<TKey, TValue> switchOption, SwitchConvertDirection direction, Type targetType)
+		{
+			return direction == SwitchConvertDirection.Direct ? (object) switchOption.XamlConvertKey(targetType) : switchOption.XamlConvertValue(targetType);
+		}
 
-    protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      return ConvertImpl(value, targetType, SwitchConvertDirection.Reverse);
-    }
+		private static object GetValue(SwitchOption<TKey, TValue> switchOption, SwitchConvertDirection direction, Type targetType)
+		{
+			return direction == SwitchConvertDirection.Direct ? (object) switchOption.XamlConvertValue(targetType) : switchOption.XamlConvertKey(targetType);
+		}
 
+		private enum SwitchConvertDirection
+		{
+			Direct,
+			Reverse
+		}
+	}
 
-    protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      return ConvertImpl(value, targetType, SwitchConvertDirection.Direct);
-    }
+	[ContentProperty("Value")]
+	public abstract class SwitchOption
+	{
+		private XamlConvertCacheStruct _valueCache;
 
-    private object ConvertImpl(object value, Type targetType, SwitchConvertDirection direction)
-    {
-      var valueType = value?.GetType() ?? typeof(object);
+		public object Value
+		{
+			get => _valueCache.Value;
+			set => _valueCache.Value = value;
+		}
 
-      Default defaultCase = null;
+		internal abstract object XamlConvertKey(Type targetType);
 
-      foreach (var option in Options)
-      {
-        var caseOption = option as Case;
-        if (caseOption != null)
-        {
-          var caseKey = GetKey(caseOption, direction, valueType);
-          if (Equals(value, caseKey))
-            return GetValue(caseOption, direction, targetType);
+		internal object XamlConvertValue(Type targetType)
+		{
+			return _valueCache.XamlConvert(targetType);
+		}
+	}
 
-          continue;
-        }
+	public class Case : SwitchOption
+	{
+		private XamlConvertCacheStruct _keyCache;
 
-        var defaultOption = option as Default;
-        if (defaultOption != null && defaultCase != null)
-          throw new Exception("SwitchConverter can have only 1 default case");
+		public object Key
+		{
+			get => _keyCache.Value;
+			set => _keyCache.Value = value;
+		}
 
-        defaultCase = defaultOption;
-      }
+		internal override object XamlConvertKey(Type targetType)
+		{
+			return _keyCache.XamlConvert(targetType);
+		}
+	}
 
-      return defaultCase != null ? GetValue(defaultCase, direction, targetType) : FallBackCase.Value.XamlConvert(targetType);
-    }
+	public class Default : SwitchOption
+	{
+		private XamlConvertCacheStruct _keyCache = new XamlConvertCacheStruct {Value = default};
 
-    private static object GetKey(SwitchOption switchOption, SwitchConvertDirection direction, Type targetType)
-    {
-      return direction == SwitchConvertDirection.Direct ? switchOption.XamlConvertKey(targetType) : switchOption.XamlConvertValue(targetType);
-    }
+		internal override object XamlConvertKey(Type targetType)
+		{
+			return _keyCache.XamlConvert(targetType);
+		}
+	}
 
-    private static object GetValue(SwitchOption switchOption, SwitchConvertDirection direction, Type targetType)
-    {
-      return direction == SwitchConvertDirection.Direct ? switchOption.XamlConvertValue(targetType) : switchOption.XamlConvertKey(targetType);
-    }
+	public sealed class OptionCollection : CollectionBase<SwitchOption>
+	{
+	}
 
-    #endregion
+	[ContentProperty("Options")]
+	public class SwitchConverter : BaseValueConverter
+	{
+		private static readonly SwitchOption FallBackCase = new Case();
 
-    #region  Nested Types
+		public OptionCollection Options { get; } = new OptionCollection();
 
-    private enum SwitchConvertDirection
-    {
-      Direct,
-      Reverse
-    }
+		protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return ConvertImpl(value, targetType, SwitchConvertDirection.Reverse);
+		}
 
-    #endregion
-  }
+		protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return ConvertImpl(value, targetType, SwitchConvertDirection.Direct);
+		}
+
+		private object ConvertImpl(object value, Type targetType, SwitchConvertDirection direction)
+		{
+			var valueType = value?.GetType() ?? typeof(object);
+
+			Default defaultCase = null;
+
+			foreach (var option in Options)
+			{
+				if (option is Case caseOption)
+				{
+					var caseKey = GetKey(caseOption, direction, valueType);
+
+					if (Equals(value, caseKey))
+						return GetValue(caseOption, direction, targetType);
+
+					continue;
+				}
+
+				var defaultOption = option as Default;
+
+				if (defaultOption != null && defaultCase != null)
+					throw new Exception("SwitchConverter can have only 1 default case");
+
+				defaultCase = defaultOption;
+			}
+
+			return defaultCase != null ? GetValue(defaultCase, direction, targetType) : FallBackCase.Value.XamlConvert(targetType);
+		}
+
+		private static object GetKey(SwitchOption switchOption, SwitchConvertDirection direction, Type targetType)
+		{
+			return direction == SwitchConvertDirection.Direct ? switchOption.XamlConvertKey(targetType) : switchOption.XamlConvertValue(targetType);
+		}
+
+		private static object GetValue(SwitchOption switchOption, SwitchConvertDirection direction, Type targetType)
+		{
+			return direction == SwitchConvertDirection.Direct ? switchOption.XamlConvertValue(targetType) : switchOption.XamlConvertKey(targetType);
+		}
+
+		private enum SwitchConvertDirection
+		{
+			Direct,
+			Reverse
+		}
+	}
 }

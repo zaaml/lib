@@ -24,7 +24,7 @@ namespace Zaaml.Core.Collections
 			var gapNode = (GapNode)cursor.Node;
 			var prevNode = gapNode.Prev;
 			var nextNode = gapNode.Next;
-			var realizedNode = CreateRealizedNode();
+			var realizedNode = Manager.GetRealizedNode();
 
 			if (index == LongCount && insert)
 			{
@@ -37,7 +37,7 @@ namespace Zaaml.Core.Collections
 						TailNode.Next = realizedNode;
 						realizedNode.Prev = TailNode;
 
-						TailNode = CreateGapNode();
+						TailNode = Manager.GetGapNode();
 
 						TailNode.Prev = realizedNode;
 						realizedNode.Next = TailNode;
@@ -165,7 +165,7 @@ namespace Zaaml.Core.Collections
 					}
 					else
 					{
-						var nextGapNode = CreateGapNode();
+						var nextGapNode = Manager.GetGapNode();
 
 						nextGapNode.Size = nextGapCount;
 
@@ -187,7 +187,7 @@ namespace Zaaml.Core.Collections
 				{
 					// ReSharper disable once PossibleNullReferenceException
 					var prevGapCount = alignedIndex - cursor.NodeOffset;
-					var prevGapNode = CreateGapNode();
+					var prevGapNode = Manager.GetGapNode();
 
 					prevGapNode.Size = prevGapCount;
 					prevGapNode.Prev = prevNode;

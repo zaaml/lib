@@ -8,58 +8,34 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		private protected void MergeImpl(SparseLinkedListBase<T> list)
+		private protected void MergeImpl(SparseLinkedListBase<T> sourceList)
 		{
-			if (ReferenceEquals(Manager, list.Manager) == false)
+			if (ReferenceEquals(this, sourceList))
+				throw new InvalidOperationException("Cannot split into self");
+
+			if (ReferenceEquals(Manager, sourceList.Manager) == false)
 				throw new InvalidOperationException("Manager of source list and target list must be the same");
 
-			if (list.LongCount == 0)
+			if (sourceList.LongCount == 0)
 				return;
 
 			try
 			{
-				if (ReferenceEquals(list.HeadNode, list.TailNode))
-				{
-					if (ReferenceEquals(HeadNode, TailNode))
-						HeadNode.Size += list.HeadNode.Size;
-					else
-						TailNode.Size += list.HeadNode.Size;
+				EnterStructureChange();
+				sourceList.EnterStructureChange();
 
-					list.HeadNode.Size = 0;
-				}
-				else
-				{
-					if (TailNode.Size > 0)
-					{
-						if (list.HeadNode.Size > 0)
-						{
-							throw new NotImplementedException();
-						}
-						else
-						{
-							throw new NotImplementedException();
-						}
-					}
-					else
-					{
-						if (list.HeadNode.Size > 0)
-						{
-							throw new NotImplementedException();
-						}
-						else
-						{
-							throw new NotImplementedException();
-						}
-					}
-				}
+				var first = new LinkedListStruct(this);
+				var second = new LinkedListStruct(sourceList);
 
-				LongCount += list.LongCount;
-				list.LongCount = 0;
+				first.Merge(ref second);
+
+				first.Store(this);
+				second.Store(sourceList);
 			}
 			finally
 			{
 				LeaveStructureChange();
-				list.LeaveStructureChange();
+				sourceList.LeaveStructureChange();
 			}
 		}
 	}
