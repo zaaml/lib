@@ -14,7 +14,6 @@ namespace Zaaml.UI.Controls.TableView
 
 		protected override ItemGenerator<TableViewItem> DefaultGenerator { get; } = new TableViewItemGenerator();
 
-
 		internal TableViewItemGenerator Generator
 		{
 			get => (TableViewItemGenerator)GeneratorCore;

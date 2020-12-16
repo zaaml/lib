@@ -25,6 +25,7 @@ namespace Zaaml.UI.Controls.Core
 		}
 
 		#endregion
+	
 	}
 
 	public sealed class ItemsPresenterTemplateContract : ItemsPresenterBaseTemplateContract<ItemsPanel<NativeControl>, NativeControl>

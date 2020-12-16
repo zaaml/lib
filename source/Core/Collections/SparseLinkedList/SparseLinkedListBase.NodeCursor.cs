@@ -3,11 +3,13 @@
 // </copyright>
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
+		[SuppressMessage("ReSharper", "InconsistentNaming")]
 		internal readonly struct NodeCursor
 		{
 			private readonly NodeBase NodePrivate;

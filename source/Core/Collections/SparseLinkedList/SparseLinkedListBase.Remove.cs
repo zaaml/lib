@@ -8,7 +8,7 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		private protected void RemoveAtImpl(int index)
+		private protected void RemoveAtImpl(long index)
 		{
 			RemoveRangeAtImpl(index, 1);
 		}
@@ -87,7 +87,7 @@ namespace Zaaml.Core.Collections
 			}
 		}
 
-		private protected void RemoveRangeAtImpl(int index, int count)
+		private protected void RemoveRangeAtImpl(long index, long count)
 		{
 			if (count == 0)
 				return;

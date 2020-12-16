@@ -289,7 +289,7 @@ namespace Zaaml.Core.Collections
 			}
 		}
 
-		private protected void InsertRangeImpl(int index, IEnumerable<T> collection)
+		private protected void InsertRangeImpl(long index, IEnumerable<T> collection)
 		{
 			var enumerator = new InsertEnumerator(collection.GetEnumerator(), this);
 

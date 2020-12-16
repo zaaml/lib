@@ -17,8 +17,6 @@ using Zaaml.Theming;
 // Metro UI Theme
 [assembly: ThemeAssembly(typeof(MetroTheme), "")]
 
-
-
 [assembly: InternalsVisibleTo("Zaaml.Themes.Docking.Metro,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 

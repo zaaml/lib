@@ -15,6 +15,9 @@ using DefaultMasterTheme = Zaaml.PresentationCore.Theming.DefaultMasterTheme;
 [assembly: ThemeAssembly(typeof(DefaultMasterTheme), "Themes/Default")]
 
 
+[assembly: InternalsVisibleTo("Zaaml.UI.Dev,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
 [assembly: InternalsVisibleTo("Zaaml.UI.Artboard,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 

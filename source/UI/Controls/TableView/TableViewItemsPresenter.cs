@@ -86,8 +86,4 @@ namespace Zaaml.UI.Controls.TableView
 			base.OnItemsHostDetaching();
 		}
 	}
-
-	public class TableViewItemsPresenterTemplateContract : ItemsPresenterBaseTemplateContract<TableViewPanel, TableViewItem>
-	{
-	}
 }
