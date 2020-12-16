@@ -21,7 +21,9 @@
 		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
 		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
 		<ProjectReference Include="..\Themes.Metro\Zaaml.Themes.Metro.csproj" />
+		<ProjectReference Include="..\..\..\UI.PropertyView\Zaaml.UI.PropertyView.csproj" />
 		<ProjectReference Include="..\..\..\UI\Zaaml.UI.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI\Zaaml.Themes.Metro.UI.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -32,12 +34,26 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="Zaaml.Themes.Framework.Metro.ThemePart.xml" />
+		<None Remove="Zaaml.Themes.Metro.UI.PropertyView.ThemePart.xml" />
 	</ItemGroup>
 	<ItemGroup>
-		<Content Include="Zaaml.Themes.Framework.Metro.ThemePart.xml">
+		<Content Include="Zaaml.Themes.Metro.UI.PropertyView.ThemePart.xml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Styles\PropertyDropDownListViewEditor.xaml">
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="Styles\PropertyViewItemShared.xaml">
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="Styles\PropertyViewCategory.xaml">
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="Styles\PropertyDisplayOnlyEditor.xaml">
+			<SubType>Designer</SubType>
+		</Page>
 	</ItemGroup>
 
 </Project>

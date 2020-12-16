@@ -21,9 +21,7 @@
 		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
 		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
 		<ProjectReference Include="..\Themes.Metro\Zaaml.Themes.Metro.csproj" />
-		<ProjectReference Include="..\..\..\UI.Docking\Zaaml.UI.Docking.csproj" />
 		<ProjectReference Include="..\..\..\UI\Zaaml.UI.csproj" />
-		<ProjectReference Include="..\Themes.UI.Metro\Zaaml.Themes.UI.Metro.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,11 +32,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="Zaaml.Themes.Docking.Metro.ThemePart.xml" />
+		<None Remove="Zaaml.Themes.Metro.Framework.ThemePart.xml" />
 	</ItemGroup>
-
 	<ItemGroup>
-		<Content Include="Zaaml.Themes.Docking.Metro.ThemePart.xml">
+		<Content Include="Zaaml.Themes.Metro.Framework.ThemePart.xml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>

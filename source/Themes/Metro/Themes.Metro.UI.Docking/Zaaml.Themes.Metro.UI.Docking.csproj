@@ -21,7 +21,9 @@
 		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
 		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
 		<ProjectReference Include="..\Themes.Metro\Zaaml.Themes.Metro.csproj" />
+		<ProjectReference Include="..\..\..\UI.Docking\Zaaml.UI.Docking.csproj" />
 		<ProjectReference Include="..\..\..\UI\Zaaml.UI.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI\Zaaml.Themes.Metro.UI.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -29,34 +31,6 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Remove="Zaaml.Themes.UI.Metro.ThemePart.xml" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Include="Zaaml.Themes.UI.Metro.ThemePart.xml">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Page Update="Styles\Editors\TextEditor.xaml">
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="Styles\Editors\DropDownTreeViewEditor.xaml">
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="Styles\Editors\DropDownListViewEditor.xaml">
-			<SubType>Designer</SubType>
-		</Page>
-		<Page Update="Styles\TableView\TableViewControl.xaml">
-		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-		</Page>
-		<Page Update="Styles\TableView\TableViewItemsPresenter.xaml">
-		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-		</Page>
 	</ItemGroup>
 
 </Project>

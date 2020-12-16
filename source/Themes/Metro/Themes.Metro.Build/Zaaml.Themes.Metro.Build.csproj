@@ -18,12 +18,12 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<ProjectReference Include="..\Themes.Artboard.Metro\Zaaml.Themes.Artboard.Metro.csproj" />
-		<ProjectReference Include="..\Themes.PropertyView.Metro\Zaaml.Themes.PropertyView.Metro.csproj" />
-		<ProjectReference Include="..\Themes.UI.Metro\Zaaml.Themes.UI.Metro.csproj" />
-		<ProjectReference Include="..\Themes.Framework.Metro\Zaaml.Themes.Framework.Metro.csproj" />
-		<ProjectReference Include="..\Themes.Ribbon.Metro\Zaaml.Themes.Ribbon.Metro.csproj" />
-		<ProjectReference Include="..\Themes.Docking.Metro\Zaaml.Themes.Docking.Metro.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI.Artboard\Zaaml.Themes.Metro.UI.Artboard.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI.PropertyView\Zaaml.Themes.Metro.UI.PropertyView.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI\Zaaml.Themes.Metro.UI.csproj" />
+		<ProjectReference Include="..\Themes.Metro.Framework\Zaaml.Themes.Metro.Framework.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI.Ribbon\Zaaml.Themes.Metro.UI.Ribbon.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI.Docking\Zaaml.Themes.Metro.UI.Docking.csproj" />
 	</ItemGroup>
 
 	<Target Name="CombineBuild" AfterTargets="Build">

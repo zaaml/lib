@@ -17,27 +17,27 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Expressions", "Source
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Themes", "Themes", "{F282F30F-E2EF-43FC-870E-AF5FB86C4E4D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Docking.Metro", "Source\Themes\Metro\Themes.Docking.Metro\Zaaml.Themes.Docking.Metro.csproj", "{6A7CCC34-E270-46D0-A9AF-EF5B73801E6D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Metro.UI.Docking", "Source\Themes\Metro\Themes.Metro.UI.Docking\Zaaml.Themes.Metro.UI.Docking.csproj", "{6A7CCC34-E270-46D0-A9AF-EF5B73801E6D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Framework.Metro", "Source\Themes\Metro\Themes.Framework.Metro\Zaaml.Themes.Framework.Metro.csproj", "{0092ECFF-D803-419F-B917-41674C5AC965}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Metro.Framework", "Source\Themes\Metro\Themes.Metro.Framework\Zaaml.Themes.Metro.Framework.csproj", "{0092ECFF-D803-419F-B917-41674C5AC965}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Metro", "Source\Themes\Metro\Themes.Metro\Zaaml.Themes.Metro.csproj", "{52F8E82F-3B2C-46F4-906D-A6C6CAB7A0D4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Metro.Build", "Source\Themes\Metro\Themes.Metro.Build\Zaaml.Themes.Metro.Build.csproj", "{3FBAC1C0-C77F-4D52-8CDA-5249AF89C561}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Ribbon.Metro", "Source\Themes\Metro\Themes.Ribbon.Metro\Zaaml.Themes.Ribbon.Metro.csproj", "{546A6664-4F53-413E-9466-69D766C05CAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Metro.UI.Ribbon", "Source\Themes\Metro\Themes.Metro.UI.Ribbon\Zaaml.Themes.Metro.UI.Ribbon.csproj", "{546A6664-4F53-413E-9466-69D766C05CAB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.UI.Metro", "Source\Themes\Metro\Themes.UI.Metro\Zaaml.Themes.UI.Metro.csproj", "{70A0312B-FB3B-41C1-980A-7115469E4FF0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Metro.UI", "Source\Themes\Metro\Themes.Metro.UI\Zaaml.Themes.Metro.UI.csproj", "{70A0312B-FB3B-41C1-980A-7115469E4FF0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.UI.Docking", "Source\UI.Docking\Zaaml.UI.Docking.csproj", "{E43AF50F-EB90-4AA6-A5BB-C6687203E69D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.UI.Ribbon", "Source\UI.Ribbon\Zaaml.UI.Ribbon.csproj", "{2D4BE3CA-8F6A-4994-84B2-AD2FEEFC09C3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Artboard.Metro", "Source\Themes\Metro\Themes.Artboard.Metro\Zaaml.Themes.Artboard.Metro.csproj", "{11F6E724-F5D2-4EBC-828C-E3A2A63640D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Metro.UI.Artboard", "Source\Themes\Metro\Themes.Metro.UI.Artboard\Zaaml.Themes.Metro.UI.Artboard.csproj", "{11F6E724-F5D2-4EBC-828C-E3A2A63640D0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.UI.Artboard", "Source\UI.Artboard\Zaaml.UI.Artboard.csproj", "{141C4429-5AF4-4616-857E-8D21C41909CB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.PropertyView.Metro", "Source\Themes\Metro\Themes.PropertyView.Metro\Zaaml.Themes.PropertyView.Metro.csproj", "{54802B8D-2F0A-4A29-BA3B-F693DC890F04}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.Themes.Metro.UI.PropertyView", "Source\Themes\Metro\Themes.Metro.UI.PropertyView\Zaaml.Themes.Metro.UI.PropertyView.csproj", "{54802B8D-2F0A-4A29-BA3B-F693DC890F04}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zaaml.UI.PropertyView", "Source\UI.PropertyView\Zaaml.UI.PropertyView.csproj", "{56449971-4A31-43E5-BCFF-9EC03A044941}"
 EndProject
