@@ -3,7 +3,7 @@
                             xmlns:zm="http://schemas.zaaml.com/xaml">
 
   <zm:ThemeResourceDictionary.MergedDictionaries>
-    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.UI.Metro;component/Styles/TreeView/TreeViewItemShared.xaml" />
+    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.Metro.UI;component/Styles/TreeView/TreeViewItemShared.xaml" />
   </zm:ThemeResourceDictionary.MergedDictionaries>
 
   <zm:SetterCollection x:Key="GlyphSetter">

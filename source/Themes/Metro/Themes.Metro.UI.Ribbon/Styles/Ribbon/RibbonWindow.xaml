@@ -7,7 +7,7 @@
                             mc:Ignorable="d zmb">
 
   <zm:ThemeResourceDictionary.MergedDictionaries>
-    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.UI.Metro;component/Styles/Window/WindowBase.xaml" />
+    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.Metro.UI;component/Styles/Window/WindowBase.xaml" />
     <zm:ThemeResourceDictionary Source="RibbonWindowHeaderPresenter.xaml" />
   </zm:ThemeResourceDictionary.MergedDictionaries>
 
