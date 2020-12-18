@@ -22,7 +22,6 @@ namespace Zaaml.PresentationCore.Converters
       throw new NotSupportedException();
     }
 
-
     protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
     {
       return value?.GetType();

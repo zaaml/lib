@@ -1,8 +1,8 @@
-<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
                             xmlns:zmb="http://schemas.zaaml.com/build"
-                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
                             mc:Ignorable="zmb">
 
 
@@ -10,44 +10,47 @@
     <zm:ThemeResourceDictionary Source="ToggleGlyphControl.xaml" />
   </zm:ThemeResourceDictionary.MergedDictionaries>
 
-  <!-- Template -->
-  <ControlTemplate x:Key="CheckBoxGlyphControlTemplate" TargetType="zm:CheckBoxGlyphControl">
-    <zm:ControlTemplateRoot Background="Transparent" 
+  <!--  Template  -->
+  <ControlTemplate x:Key="CheckBoxGlyphControlTemplate"
+                   TargetType="zm:CheckBoxGlyphControl">
+    <zm:ControlTemplateRoot Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
-      <!-- Face -->
-      <Border BorderThickness="{TemplateBinding BorderThickness}"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}" />
+      <!--  Face  -->
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}" />
 
-      <!-- Glyph -->
+      <!--  Glyph  -->
       <Path x:Name="Glyph"
+            Margin="1"
             Data="{zm:TemplateExpandoBinding Path=Glyph}"
-            Margin="1" 
-            Style="{zm:ThemeResource Key=Metro.SmallGlyphStyle}" 
-            Fill="{TemplateBinding Foreground}" />
+            Fill="{TemplateBinding Foreground}"
+            Style="{zm:ThemeResource Key=Metro.SmallGlyphStyle}" />
 
-      <!-- ReadOnly Veil  -->
+      <!--  ReadOnly Veil  -->
       <Border Background="{zm:TemplateSkinBinding SkinPath=ReadOnlyVeilBackground}"
-              Visibility="{zm:TemplateBinding Path=IsReadOnly, Converter={zm:VisibilityConverter}}"/>
+              Visibility="{zm:TemplateBinding Path=IsReadOnly,
+                                              Converter={zm:VisibilityConverter}}" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
-  <!-- Style -->
+  <!--  Style  -->
   <zm:Style x:Key="CheckBoxGlyphControlBaseStyle" TargetType="zm:CheckBoxGlyphControl">
     <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Width" Value="14" />
+    <zm:Setter Property="Height" Value="14" />
     <zm:Setter Property="Template" Value="{StaticResource CheckBoxGlyphControlTemplate}" />
   </zm:Style>
 
-  <!-- Skinned Style -->
-  <zm:Style x:Key="CheckBoxGlyphControlStyle" TargetType="zm:CheckBoxGlyphControl" BasedOn="{StaticResource CheckBoxGlyphControlBaseStyle}" 
-            Skin="Metro.CheckBoxGlyphControl">
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="CheckBoxGlyphControlStyle" BasedOn="{StaticResource CheckBoxGlyphControlBaseStyle}" Skin="Metro.CheckBoxGlyphControl" TargetType="zm:CheckBoxGlyphControl">
 
-    <zm:SetterGroup ValuePathSource="Skin" SettersSource="{StaticResource SkinSetters}" />
+    <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePathSource="Skin" />
 
   </zm:Style>
 
-  <!-- Theme Style -->
-  <zm:ThemeStyle x:Key="CheckBoxGlyphControlThemeStyle" TargetType="zm:CheckBoxGlyphControl" BasedOn="{StaticResource CheckBoxGlyphControlStyle}" zmb:Deferred="True" />
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="CheckBoxGlyphControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource CheckBoxGlyphControlStyle}" TargetType="zm:CheckBoxGlyphControl" />
 
 </zm:ThemeResourceDictionary>

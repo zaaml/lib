@@ -73,12 +73,12 @@ namespace Zaaml.PresentationCore.Interactivity
 
     protected override bool ApplyCore()
     {
-//#if INTERACTIVITY_DEBUG
-//	    if (Debug)
-//	    {
-//	    }
-//#endif
-	    using var context = Context.Get(this);
+#if INTERACTIVITY_DEBUG
+			if (Debug)
+			{
+			}
+#endif
+			using var context = Context.Get(this);
 
 	    var actualTarget = context.Target;
 

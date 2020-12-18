@@ -7,22 +7,15 @@ using Zaaml.PresentationCore.Converters;
 
 namespace Zaaml.PresentationCore.MarkupExtensions
 {
-  public class IsSubclassOfConverterExtension : MarkupExtensionBase
-  {
-    #region Properties
+	public class IsSubclassOfConverterExtension : MarkupExtensionBase
+	{
+		public bool Self { get; set; } = true;
 
-    public bool Self { get; set; }
-    public Type Type { get; set; }
+		public Type Type { get; set; }
 
-    #endregion
-
-    #region  Methods
-
-    public override object ProvideValue(IServiceProvider serviceProvider)
-    {
-      return new IsSubclassOfConverter {Type = Type, Self = Self};
-    }
-
-    #endregion
-  }
+		public override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			return new IsSubclassOfConverter { Type = Type, Self = Self };
+		}
+	}
 }

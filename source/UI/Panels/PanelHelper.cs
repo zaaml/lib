@@ -19,10 +19,10 @@ namespace Zaaml.UI.Panels
   {
     #region  Methods
 
-    public static OrientedSize ArrangeStackLine(this Panel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
-    {
-      return ArrangeStackLine(panel.Children.Cast<UIElement>().Skip(line.Minimum).Take(line.Maximum - line.Minimum), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
-    }
+    //public static OrientedSize ArrangeStackLine(this Panel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
+    //{
+    //  return ArrangeStackLine(panel.Children.Cast<UIElement>().Skip(line.Minimum).Take(line.Maximum - line.Minimum), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
+    //}
 
     public static OrientedSize ArrangeStackLine(IEnumerable<UIElement> elements, Orientation orientation, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
     {
@@ -52,6 +52,12 @@ namespace Zaaml.UI.Panels
 
       return orientedSize;
     }
+
+    public static OrientedSize ArrangeStackLine(this IPanel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
+    {
+      return ArrangeStackLine(panel.Elements.Skip(line.Minimum).Take(line.Maximum - line.Minimum), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
+    }
+
 
     internal static Size ConstraintSize(this Size desiredSize, Size availableSize)
     {

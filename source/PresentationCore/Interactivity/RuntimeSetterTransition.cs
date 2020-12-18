@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media.Animation;
-using Zaaml.Core.Extensions;
 using Zaaml.Core.Pools;
 using Zaaml.PresentationCore.Animation;
 using Zaaml.PresentationCore.Animation.Animators;
@@ -14,7 +13,10 @@ using Zaaml.PresentationCore.PropertyCore;
 using DoubleAnimation = System.Windows.Media.Animation.DoubleAnimation;
 
 #if SILVERLIGHT
+#elif NETCOREAPP
+using System.Windows.Threading;
 #else
+using Zaaml.Core.Extensions;
 using System.Windows.Threading;
 #endif
 
@@ -27,8 +29,7 @@ namespace Zaaml.PresentationCore.Interactivity
     public static readonly DependencyProperty ProgressProperty = DPM.Register<double, RuntimeSetterTransition>
       ("Progress", e => e.OnProgressChanged);
 
-
-    private static readonly Dictionary<Type, RuntimeTransitionPool> TransionPools = new Dictionary<Type, RuntimeTransitionPool>();
+    private static readonly Dictionary<Type, RuntimeTransitionPool> TransitionPools = new Dictionary<Type, RuntimeTransitionPool>();
 
     #endregion
 
@@ -127,15 +128,16 @@ namespace Zaaml.PresentationCore.Interactivity
       if (type == null)
         return null;
 
-      var pool = TransionPools.GetValueOrDefault(type);
+      var pool = TransitionPools.GetValueOrDefault(type);
 
       if (pool == null)
       {
         var animatorFactory = AnimatorFactoryProvider.GetAnimatorFactory(type);
+
         if (animatorFactory == null)
           return null;
 
-        TransionPools[type] = pool = new RuntimeTransitionPool(animatorFactory);
+        TransitionPools[type] = pool = new RuntimeTransitionPool(animatorFactory);
       }
 
       var runtimeTransition = pool.GeTransition();
@@ -156,6 +158,7 @@ namespace Zaaml.PresentationCore.Interactivity
       _animator.Time = 0;
 
       var doubleAnimation = (DoubleAnimation) _storyboard.Children[0];
+
       doubleAnimation.BeginTime = transition.BeginTime;
       doubleAnimation.Duration = transition.Duration;
 

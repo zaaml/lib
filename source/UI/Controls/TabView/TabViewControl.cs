@@ -491,6 +491,7 @@ namespace Zaaml.UI.Controls.TabView
 		internal override void OnItemAttachedInternal(TabViewItem item)
 		{
 			item.TabViewControl = this;
+
 			DraggableBehavior.AddDragMoveHandler(item, OnDragMove);
 
 			base.OnItemAttachedInternal(item);
@@ -501,6 +502,7 @@ namespace Zaaml.UI.Controls.TabView
 			base.OnItemDetachedInternal(tabViewItem);
 
 			DraggableBehavior.RemoveDragMoveHandler(tabViewItem, OnDragMove);
+
 			tabViewItem.TabViewControl = null;
 
 			EnsureSelection();
@@ -677,6 +679,7 @@ namespace Zaaml.UI.Controls.TabView
 		private void UpdateMenuButtonVisibility()
 		{
 			var autoVisibility = HasItems == false ? Visibility.Collapsed : (ItemsPresenter?.HasHiddenChildren == true ? Visibility.Visible : Visibility.Collapsed);
+
 			ActualItemsMenuButtonVisibility = VisibilityUtils.EvaluateElementVisibility(ItemsMenuButtonVisibility, autoVisibility);
 		}
 

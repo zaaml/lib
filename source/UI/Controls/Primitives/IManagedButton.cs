@@ -15,7 +15,7 @@ namespace Zaaml.UI.Controls.Primitives
 
 		ClickMode ClickMode { get; }
 
-		bool IsMouseOver { get; set; }
+		bool IsMouseOver { get; }
 
 		bool IsPressed { get; set; }
 

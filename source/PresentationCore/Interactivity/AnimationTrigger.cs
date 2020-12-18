@@ -25,7 +25,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
     internal override IEnumerable<InteractivityObject> Children => base.Children.Concat(ActualKeyTriggers);
 
-    public AnimationKeyTriggerCollection KeyTriggers => _keyTriggers ?? (_keyTriggers = new AnimationKeyTriggerCollection(this));
+    public AnimationKeyTriggerCollection KeyTriggers => _keyTriggers ??= new AnimationKeyTriggerCollection(this);
 
     #endregion
 

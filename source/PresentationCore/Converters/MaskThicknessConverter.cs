@@ -9,110 +9,116 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Converters
 {
-  public sealed class MaskThicknessConverter : BaseValueConverter
-  {
-    #region Fields
+	public sealed class MaskThicknessConverter : BaseValueConverter
+	{
+		#region Fields
 
-    private byte _packedValue;
+		private byte _packedValue;
 
-    #endregion
+		#endregion
 
-    #region Ctors
+		#region Ctors
 
-    public MaskThicknessConverter()
-    {
-      _packedValue = 0xFF;
-    }
+		public MaskThicknessConverter()
+		{
+			_packedValue = 0x0;
+		}
 
-    #endregion
+		#endregion
 
-    #region Properties
+		#region Properties
 
-    public bool Bottom
-    {
-      get => PackedDefinition.Bottom.GetValue(_packedValue);
-      set => PackedDefinition.Bottom.SetValue(ref _packedValue, value);
-    }
+		public bool Bottom
+		{
+			get => PackedDefinition.Bottom.GetValue(_packedValue);
+			set => PackedDefinition.Bottom.SetValue(ref _packedValue, value);
+		}
 
-    public bool Left
-    {
-      get => PackedDefinition.Left.GetValue(_packedValue);
-      set => PackedDefinition.Left.SetValue(ref _packedValue, value);
-    }
+		public bool Left
+		{
+			get => PackedDefinition.Left.GetValue(_packedValue);
+			set => PackedDefinition.Left.SetValue(ref _packedValue, value);
+		}
 
-    public bool Right
-    {
-      get => PackedDefinition.Right.GetValue(_packedValue);
-      set => PackedDefinition.Right.SetValue(ref _packedValue, value);
-    }
+		public bool Right
+		{
+			get => PackedDefinition.Right.GetValue(_packedValue);
+			set => PackedDefinition.Right.SetValue(ref _packedValue, value);
+		}
 
-    public bool Top
-    {
-      get => PackedDefinition.Top.GetValue(_packedValue);
-      set => PackedDefinition.Top.SetValue(ref _packedValue, value);
-    }
+		public bool Top
+		{
+			get => PackedDefinition.Top.GetValue(_packedValue);
+			set => PackedDefinition.Top.SetValue(ref _packedValue, value);
+		}
 
-    #endregion
+		#endregion
 
-    #region  Methods
+		#region  Methods
 
-    protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      throw new NotSupportedException();
-    }
+		protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotSupportedException();
+		}
 
-    protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      if (value is Thickness == false)
-        return value;
+		protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			Thickness thickness;
 
-      var thickness = (Thickness) value;
+			if (value is double doubleValue)
+				thickness = new Thickness(doubleValue);
+			else if (value is int intValue)
+				thickness = new Thickness(intValue);
+			else if (value is Thickness thicknessValue)
+				thickness = thicknessValue;
+			else
+				return value;
 
-      if (Left == false)
-        thickness.Left = 0;
+			if (Left == false)
+				thickness.Left = 0;
 
-      if (Top == false)
-        thickness.Top = 0;
+			if (Top == false)
+				thickness.Top = 0;
 
-      if (Right == false)
-        thickness.Right = 0;
+			if (Right == false)
+				thickness.Right = 0;
 
-      if (Bottom == false)
-        thickness.Bottom = 0;
+			if (Bottom == false)
+				thickness.Bottom = 0;
 
-      return thickness;
-    }
+			return thickness;
+		}
 
-    #endregion
+		#endregion
 
-    #region  Nested Types
+		#region  Nested Types
 
-    private static class PackedDefinition
-    {
-      #region Static Fields and Constants
+		private static class PackedDefinition
+		{
+			#region Static Fields and Constants
 
-      public static readonly PackedBoolItemDefinition Left;
-      public static readonly PackedBoolItemDefinition Top;
-      public static readonly PackedBoolItemDefinition Right;
-      public static readonly PackedBoolItemDefinition Bottom;
+			public static readonly PackedBoolItemDefinition Left;
+			public static readonly PackedBoolItemDefinition Top;
+			public static readonly PackedBoolItemDefinition Right;
+			public static readonly PackedBoolItemDefinition Bottom;
 
-      #endregion
+			#endregion
 
-      #region Ctors
+			#region Ctors
 
-      static PackedDefinition()
-      {
-        var allocator = new PackedValueAllocator();
+			static PackedDefinition()
+			{
+				var allocator = new PackedValueAllocator();
 
-        Left = allocator.AllocateBoolItem();
-        Top = allocator.AllocateBoolItem();
-        Right = allocator.AllocateBoolItem();
-        Bottom = allocator.AllocateBoolItem();
-      }
+				Left = allocator.AllocateBoolItem();
+				Top = allocator.AllocateBoolItem();
+				Right = allocator.AllocateBoolItem();
+				Bottom = allocator.AllocateBoolItem();
+			}
 
-      #endregion
-    }
+			#endregion
+		}
 
-    #endregion
-  }
+		#endregion
+	}
 }

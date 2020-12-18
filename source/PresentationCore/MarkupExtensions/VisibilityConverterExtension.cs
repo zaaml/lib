@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Windows;
 using Zaaml.PresentationCore.Converters;
 
 namespace Zaaml.PresentationCore.MarkupExtensions
@@ -17,5 +18,31 @@ namespace Zaaml.PresentationCore.MarkupExtensions
     }
 
     #endregion
+  }
+
+  public sealed class IsSubclassOfVisibilityConverterExtension : MarkupExtensionBase
+  {
+	  public bool Self { get; set; } = true;
+
+	  public Type Type { get; set; }
+
+	  public Visibility TrueVisibility { get; set; } = Visibility.Visible;
+
+	  public Visibility FalseVisibility { get; set; } = Visibility.Collapsed;
+
+		#region  Methods
+
+		public override object ProvideValue(IServiceProvider serviceProvider)
+	  {
+		  return new IsSubclassOfVisibilityConverter
+		  {
+				Self = Self,
+				Type = Type,
+				TrueVisibility = TrueVisibility,
+				FalseVisibility = FalseVisibility
+		  };
+	  }
+
+	  #endregion
   }
 }

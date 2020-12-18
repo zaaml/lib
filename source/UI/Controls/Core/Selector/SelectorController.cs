@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Collections.Specialized;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
@@ -322,8 +323,27 @@ namespace Zaaml.UI.Controls.Core
 			if (AllowNullSelection && PreferSelection == false)
 				return;
 
-			if (SelectedIndex == -1)
-				SelectIndexCore(ActualPreferredIndex, true);
+			if (SupportsIndex)
+			{
+				if (SelectedIndex == -1)
+					SelectIndexCore(ActualPreferredIndex, true);
+			}
+			else if (SupportsItem)
+			{
+				if (SelectedItem != null) 
+					return;
+
+				for (var i = 0; i < Advisor.Count; i++)
+				{
+					if (Advisor.TryGetItem(i, out var item) == false || CanSelect(item) == false)
+						continue;
+
+					SelectItemCore(item, true);
+
+					if (ReferenceEquals(SelectedItem, item))
+						break;
+				}
+			}
 		}
 
 		private int GetIndexOfItem(TItem item)
@@ -363,23 +383,35 @@ namespace Zaaml.UI.Controls.Core
 
 		private void OnItemAttached(int index, TItem item)
 		{
-			var selectedIndex = IsSelectionChangeSuspended ? SelectionResume.Index : SelectedIndex;
-
-			if (selectedIndex == -1)
-				return;
-
-			var itemIndex = index;
-
-			if (itemIndex == -1)
-				itemIndex = GetIndexOfItem(item);
-
-			if (IsSelectionChangeSuspended)
+			if (SupportsIndex)
 			{
-				if (SelectionResume.Index == itemIndex)
-					SelectionResume = new Selection<TItem>(SelectionResume.Index, item, SelectionResume.ItemSource, SelectionResume.Value);
+				var selectedIndex = IsSelectionChangeSuspended ? SelectionResume.Index : SelectedIndex;
+
+				if (selectedIndex == -1)
+					return;
+
+				var itemIndex = index;
+
+				if (itemIndex == -1)
+					itemIndex = GetIndexOfItem(item);
+
+				if (IsSelectionChangeSuspended)
+				{
+					if (SelectionResume.Index == itemIndex)
+						SelectionResume = new Selection<TItem>(SelectionResume.Index, item, SelectionResume.ItemSource, SelectionResume.Value);
+				}
+				else if (SelectedIndex == itemIndex)
+					Select(new Selection<TItem>(SelectedIndex, item, SelectedItemSource, SelectedValue));
 			}
-			else if (SelectedIndex == itemIndex)
-				Select(new Selection<TItem>(SelectedIndex, item, SelectedItemSource, SelectedValue));
+			else if (SupportsItem)
+			{
+				var selectedItem = IsSelectionChangeSuspended ? SelectionResume.Item : Selection.Item;
+
+				if (item != null && item.IsSelected && ReferenceEquals(item, selectedItem) == false)
+					SelectItem(item);
+			}
+
+
 		}
 
 		private void OnItemCollectionChanged(NotifyCollectionChangedEventArgs e)
@@ -743,6 +775,7 @@ namespace Zaaml.UI.Controls.Core
 			}
 
 			Select(SelectionResume);
+			EnsureSelection();
 		}
 
 		private void Select(Selection<TItem> newSelection)

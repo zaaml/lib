@@ -57,12 +57,7 @@ namespace Zaaml.UI.Controls.Primitives
 			set => PackedValue.IsMouseCaptured.SetValue(ref _packedValue, value);
 		}
 
-		private bool IsMouseOver
-		{
-			get => Control.IsMouseOver;
-			// ReSharper disable once RedundantCast
-			set => ((IManagedButton) Control).IsMouseOver = value;
-		}
+		private bool IsMouseOver => Control.IsMouseOver;
 
 		private bool IsPressed
 		{
@@ -116,7 +111,6 @@ namespace Zaaml.UI.Controls.Primitives
 			if (Control.IsInPopupTree() == false)
 				return;
 
-			IsMouseOver = false;
 			IsPressed = false;
 
 			Control.ClosePopupTree();
@@ -344,7 +338,8 @@ namespace Zaaml.UI.Controls.Primitives
 			finally
 			{
 				if (e.IsWithin(Control) == false)
-					IsMouseOver = false;
+				{
+				}
 
 				if (IsSpaceOrEnterKeyDown == false)
 				{

@@ -15,9 +15,9 @@ namespace Zaaml.UI.Controls.Primitives
 {
   public class ExpandControl : ZaamlContentControl
   {
-    #region Static Fields and Constants
+		#region Static Fields and Constants
 
-    public static readonly DependencyProperty IsExpandedProperty = DPM.Register<bool, ExpandControl>
+		public static readonly DependencyProperty IsExpandedProperty = DPM.Register<bool, ExpandControl>
       ("IsExpanded", e => e.UpdatePanel(true));
 
     public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, ExpandControl>
@@ -116,7 +116,8 @@ namespace Zaaml.UI.Controls.Primitives
 
     private void StopAnimation()
     {
-      if (_currentStoryboard == null) return;
+      if (_currentStoryboard == null) 
+	      return;
 
       _currentStoryboard.Completed -= OnAnimationClockCompleted;
       _currentStoryboard.Stop();
@@ -130,9 +131,10 @@ namespace Zaaml.UI.Controls.Primitives
       if (_expandPanel == null)
         return;
 
-      if (useAnimation == false)
+      if (useAnimation == false || Transition == null)
       {
         _expandPanel.ExpandRatio = IsExpanded ? 1.0 : 0.0;
+
         return;
       }
 

@@ -5,12 +5,6 @@
 using System.Windows;
 using Zaaml.PresentationCore.Extensions;
 
-#if SILVERLIGHT
-using RoutedEventArgs = System.Windows.RoutedEventArgsSL;
-using RoutedEventHandler = System.Windows.RoutedEventHandlerSL;
-using RoutedEvent = System.Windows.RoutedEventSL;
-#endif
-
 namespace Zaaml.UI.Controls.ListView
 {
   public partial class ListViewItem

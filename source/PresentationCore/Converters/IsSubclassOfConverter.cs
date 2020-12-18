@@ -4,6 +4,7 @@
 
 using System;
 using System.Globalization;
+using System.Windows;
 
 namespace Zaaml.PresentationCore.Converters
 {
@@ -11,9 +12,9 @@ namespace Zaaml.PresentationCore.Converters
   {
     #region Properties
 
-    public bool Self { get; set; }
+    public bool Self { get; set; } = true;
 
-    public Type Type { get; set; }
+		public Type Type { get; set; }
 
     #endregion
 
@@ -35,5 +36,39 @@ namespace Zaaml.PresentationCore.Converters
     }
 
     #endregion
+  }
+
+  public sealed class IsSubclassOfVisibilityConverter : BaseValueConverter
+  {
+	  #region Properties
+
+	  public bool Self { get; set; } = true;
+
+		public Type Type { get; set; }
+
+	  public Visibility TrueVisibility { get; set; } = Visibility.Visible;
+
+	  public Visibility FalseVisibility { get; set; } = Visibility.Collapsed;
+
+	  #endregion
+
+	  #region  Methods
+
+	  protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
+	  {
+		  throw new NotSupportedException();
+	  }
+
+	  protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
+	  {
+		  if (value == null)
+			  return false;
+
+		  var type = value.GetType();
+
+		  return type.IsSubclassOf(Type) || (Self && Type == type) ? TrueVisibility : FalseVisibility;
+	  }
+
+	  #endregion
   }
 }

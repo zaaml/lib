@@ -15,7 +15,7 @@ namespace Zaaml.PresentationCore.Interactivity
 	{
 		#region Properties
 
-		private PulseStateTrigger ActualTrigger => Trigger ?? (Trigger = new PulseStateTrigger(this));
+		private PulseStateTrigger ActualTrigger => Trigger ??= new PulseStateTrigger(this);
 
 		public TriggerActionCollection EnterActions => ActualTrigger.EnterActions;
 
@@ -80,12 +80,14 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void LoadCore(IInteractivityRoot root)
 		{
 			base.LoadCore(root);
+
 			Trigger?.Load(root);
 		}
 
 		internal override void UnloadCore(IInteractivityRoot root)
 		{
 			Trigger?.Unload(root);
+
 			base.UnloadCore(root);
 		}
 

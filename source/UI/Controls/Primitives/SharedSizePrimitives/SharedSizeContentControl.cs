@@ -46,7 +46,6 @@ namespace Zaaml.UI.Controls.Primitives.SharedSizePrimitives
       set => SetValue(SharedSizeKeyProperty, value);
     }
 
-
     public bool ShareHeight
     {
       get => (bool) GetValue(ShareHeightProperty);

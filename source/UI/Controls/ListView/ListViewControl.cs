@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -41,6 +42,9 @@ namespace Zaaml.UI.Controls.ListView
 
 		public static readonly DependencyProperty ItemsFilterProperty = DPM.Register<IListViewItemFilter, ListViewControl>
 			("ItemsFilter", default, d => d.OnItemsFilterPropertyChangedPrivate);
+
+		//public static readonly DependencyProperty ItemsCheckBoxVisibilityProperty = DPM.Register<ElementVisibility, ListViewControl>
+		//	("ItemsCheckBoxVisibility", ElementVisibility.Auto, d => d.OnItemsCheckBoxVisibilityPropertyChangedPrivate);
 
 		private DelegateContentItemGeneratorImpl<ListViewItem, DefaultListViewItemGenerator> _defaultGeneratorImpl;
 		private ListViewData _listViewData;
@@ -92,6 +96,12 @@ namespace Zaaml.UI.Controls.ListView
 			get => (ListViewItemGeneratorBase) GetValue(ItemGeneratorProperty);
 			set => SetValue(ItemGeneratorProperty, value);
 		}
+
+		//public ElementVisibility ItemsCheckBoxVisibility
+		//{
+		//	get => (ElementVisibility) GetValue(ItemsCheckBoxVisibilityProperty);
+		//	set => SetValue(ItemsCheckBoxVisibilityProperty, value);
+		//}
 
 		public IListViewItemFilter ItemsFilter
 		{
@@ -196,11 +206,11 @@ namespace Zaaml.UI.Controls.ListView
 			return base.MeasureOverride(availableSize);
 		}
 
-		private bool MouseSelect(ListViewItem listViewItem, MouseButtonKind mouseButtonKind, MouseButtonEventKind eventKind)
+		private bool MouseSelect(ListViewItem navigationViewItem, MouseButtonKind mouseButtonKind, MouseButtonEventKind eventKind)
 		{
-			if (MouseButtonSelectionHelper.ShouldSelect(mouseButtonKind, eventKind, MouseButtonSelectionOptions) && listViewItem.ActualCanSelect)
+			if (MouseButtonSelectionHelper.ShouldSelect(mouseButtonKind, eventKind, MouseButtonSelectionOptions.LeftButtonDown) && navigationViewItem.ActualCanSelect)
 			{
-				listViewItem.SelectInternal();
+				navigationViewItem.SelectInternal();
 
 				return true;
 			}
@@ -231,6 +241,10 @@ namespace Zaaml.UI.Controls.ListView
 		private void OnGeneratorChanged(object sender, EventArgs e)
 		{
 			UpdateData();
+		}
+
+		private void OnIsCheckedPropertyChangedPrivate(bool? oldValue, bool? newValue)
+		{
 		}
 
 		internal override void OnItemAttachedInternal(ListViewItem item)
@@ -281,6 +295,10 @@ namespace Zaaml.UI.Controls.ListView
 		}
 
 		internal void OnItemMouseMove(ListViewItem listViewItem, MouseEventArgs mouseEventArgs)
+		{
+		}
+
+		private void OnItemsCheckBoxVisibilityPropertyChangedPrivate(ElementVisibility oldValue, ElementVisibility newValue)
 		{
 		}
 

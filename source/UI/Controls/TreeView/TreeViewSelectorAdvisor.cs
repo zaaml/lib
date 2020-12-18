@@ -10,10 +10,10 @@ namespace Zaaml.UI.Controls.TreeView
 	{
 		public TreeViewSelectorAdvisor(TreeViewControl treeViewControl) : base(treeViewControl, treeViewControl.Items)
 		{
-			TreeView = treeViewControl;
+			TreeViewControl = treeViewControl;
 		}
 
-		public TreeViewControl TreeView { get; }
+		public TreeViewControl TreeViewControl { get; }
 
 		public override object GetItemSource(TreeViewItem item)
 		{
@@ -22,9 +22,9 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public override bool TryGetItemBySource(object itemSource, out TreeViewItem item)
 		{
-			TreeView.EnsureVirtualItemCollection();
+			TreeViewControl.EnsureVirtualItemCollection();
 
-			var treeViewData = TreeView.EnsureTreeViewData();
+			var treeViewData = TreeViewControl.EnsureTreeViewData();
 			var treeViewItemData = treeViewData.FindNode(itemSource);
 
 			if (treeViewItemData == null)
@@ -46,7 +46,7 @@ namespace Zaaml.UI.Controls.TreeView
 				{
 					var index = treeViewData.FindIndex(current);
 
-					TreeView.VirtualItemCollection.EnsureItem(index);
+					TreeViewControl.VirtualItemCollection.EnsureItem(index);
 
 					current = current.Parent;
 				}

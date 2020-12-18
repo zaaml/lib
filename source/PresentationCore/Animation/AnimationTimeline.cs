@@ -7,12 +7,13 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Zaaml.PresentationCore.CommandCore;
+using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Animation
 {
-	public abstract class AnimationTimeline : InheritanceContextObject
+	public abstract class AnimationTimeline : AssetBase
 	{
 		public static readonly DependencyProperty BeginTimeProperty = DPM.Register<TimeSpan?, AnimationTimeline>
 			("BeginTime", null, mt => mt.OnBeginTimePropertyChangedPrivate);

@@ -52,23 +52,32 @@
     <zm:ControlTemplateRoot Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
 
-      <!--  CommonStatesBorder  -->
-      <Border Padding="{TemplateBinding Padding}"
-              Background="{TemplateBinding Background}"
-              BorderThickness="0">
+      <!--<zm:DockPanel>
 
-        <!--  Content  -->
-        <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                 VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                 zm:PathIcon.Brush="{TemplateBinding Foreground}"
-                                 Content="{TemplateBinding Content}"
-                                 ContentTemplate="{TemplateBinding ContentTemplate}"
-                                 Icon="{TemplateBinding Icon}"
-                                 IconDistance="{TemplateBinding IconDistance}"
-                                 IconDock="{TemplateBinding IconDock}"
-                                 ShowContent="{TemplateBinding ShowContent}"
-                                 ShowIcon="{TemplateBinding ShowIcon}" />
-      </Border>
+        <zm:CheckBoxGlyphControl zm:DockPanel.Dock="Left" 
+                                 Margin="2,0"
+                                 Visibility="{TemplateBinding ActualCheckBoxVisibility}" 
+                                 IsChecked="{zm:TemplateBinding Path=IsChecked, Mode=TwoWay}" />-->
+
+        <!--  CommonStatesBorder  -->
+        <Border Padding="{TemplateBinding Padding}"
+                Background="{TemplateBinding Background}"
+                BorderThickness="0">
+
+          <!--  Content  -->
+          <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                   zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                   Content="{TemplateBinding Content}"
+                                   ContentTemplate="{TemplateBinding ContentTemplate}"
+                                   Icon="{TemplateBinding Icon}"
+                                   IconDistance="{TemplateBinding IconDistance}"
+                                   IconDock="{TemplateBinding IconDock}"
+                                   ShowContent="{TemplateBinding ShowContent}"
+                                   ShowIcon="{TemplateBinding ShowIcon}" />
+        </Border>
+
+      <!--</zm:DockPanel>-->
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

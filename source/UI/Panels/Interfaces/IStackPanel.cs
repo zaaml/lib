@@ -39,4 +39,11 @@ namespace Zaaml.UI.Panels.Interfaces
 
     #endregion
   }
+
+  internal interface IWrapPanel : IOrientedPanel
+  {
+		double ItemWidth { get; }
+
+		double ItemHeight { get; }
+  }
 }

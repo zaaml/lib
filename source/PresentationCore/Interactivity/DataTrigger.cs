@@ -40,6 +40,7 @@ namespace Zaaml.PresentationCore.Interactivity
 					return;
 
 				_comparer = value;
+
 				UpdateTriggerState();
 			}
 		}

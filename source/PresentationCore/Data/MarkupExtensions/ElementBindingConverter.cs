@@ -38,8 +38,7 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
     protected override object ConvertOverride(object value, Type targetType, object parameter, CultureInfo culture)
     {
-      var fre = value as FrameworkElement;
-      if (fre != null)
+	    if (value is FrameworkElement fre)
         NameScopeUtils.FindName(fre, _elementName);
 
       return value;

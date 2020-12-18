@@ -42,11 +42,8 @@
                   <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <zm:CheckBoxGlyphControl BorderThickness="1"
-                                         IsChecked="{zm:TemplateBinding Path=IsChecked}"
+                <zm:CheckBoxGlyphControl IsChecked="{zm:TemplateBinding Path=IsChecked}"
                                          IsReadOnly="{zm:TemplateBinding Path=IsReadOnly}"
-                                         Width="14" 
-                                         Height="14"
                                          Foreground="{zm:ThemeResource Key=Metro.StandardControls.CheckBox.Foreground.Normal}"
                                          Background="{zm:ThemeResource Key=Metro.StandardControls.CheckBox.Background.Normal}"
                                          BorderBrush="{zm:ThemeResource Key=Metro.StandardControls.CheckBox.BorderBrush.Normal}" />
@@ -143,7 +140,6 @@
 
     </ResourceDictionary>
   </zm:ThemeResourceDictionary.MergedDictionaries>
-
 
   <!-- Theme Styles -->
   <zm:ThemeStyle x:Key="CheckedPopupBarItemThemeStyle" TargetType="zm:CheckedPopupBarItem" BasedOn="{StaticResource CheckedPopupBarItemBaseSkinnedStyle}" zmb:Deferred="True" />

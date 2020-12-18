@@ -10,25 +10,25 @@ namespace Zaaml.UI.Controls.ListView
 	{
 		public ListViewSelectorAdvisor(ListViewControl listViewControl) : base(listViewControl, listViewControl.Items)
 		{
-			ListView = listViewControl;
+			ListViewControl = listViewControl;
 		}
 
-		public ListViewControl ListView { get; }
+		public ListViewControl ListViewControl { get; }
 
 		public override bool TryGetItem(int index, out ListViewItem item)
 		{
-			ListView.EnsureVirtualItemCollection();
+			ListViewControl.EnsureVirtualItemCollection();
 
-			item = ListView.VirtualItemCollection.EnsureItem(index);
+			item = ListViewControl.VirtualItemCollection.EnsureItem(index);
 
 			return item != null;
 		}
 
 		public override bool TryGetItemBySource(object itemSource, out ListViewItem item)
 		{
-			ListView.EnsureVirtualItemCollection();
+			ListViewControl.EnsureVirtualItemCollection();
 
-			var listViewData = ListView.EnsureListViewData();
+			var listViewData = ListViewControl.EnsureListViewData();
 			var listViewItemData = listViewData.FindNode(itemSource);
 
 			if (listViewItemData == null)
@@ -44,7 +44,7 @@ namespace Zaaml.UI.Controls.ListView
 			{
 				var index = listViewData.FindIndex(listViewItemData);
 
-				item = ListView.VirtualItemCollection.EnsureItem(index);
+				item = ListViewControl.VirtualItemCollection.EnsureItem(index);
 			}
 
 			return item != null;

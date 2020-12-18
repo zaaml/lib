@@ -27,6 +27,26 @@ namespace Zaaml.PresentationCore.Utils
       return visibility == ElementVisibility.Visible ? Visibility.Visible : autoVisibility;
     }
 
-    #endregion
-  }
+    public static Visibility EvaluateElementVisibility(ElementVisibility visibility, Visibility autoVisibility, Visibility? inheritVisibility)
+    {
+	    if (visibility == ElementVisibility.Inherit && inheritVisibility.HasValue)
+		    return inheritVisibility.Value;
+
+	    if (visibility == ElementVisibility.Collapsed)
+		    return Visibility.Collapsed;
+
+	    if (visibility == ElementVisibility.Hidden)
+	    {
+#if SILVERLIGHT
+        return Visibility.Collapsed;
+#else
+		    return Visibility.Hidden;
+#endif
+	    }
+
+	    return visibility == ElementVisibility.Visible ? Visibility.Visible : autoVisibility;
+    }
+
+		#endregion
+	}
 }

@@ -32,9 +32,7 @@
                    SharedResource="True">
     <zm:TemplateIcon.Template>
       <DataTemplate>
-        <zm:CheckBoxGlyphControl Width="14"
-                                 Height="14"
-                                 IsChecked="{zm:ExpandoBinding Path=IsChecked,
+        <zm:CheckBoxGlyphControl IsChecked="{zm:ExpandoBinding Path=IsChecked,
                                                                RelativeSource={RelativeSource Mode=FindAncestor,
                                                                                               AncestorType=zm:IconPresenter},
                                                                FallbackValue={zm:False}}" />

@@ -283,15 +283,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
     #region IManagedButton
 
-    bool IManagedButton.IsMouseOver
-    {
-      get { return IsMouseOver; }
-#if SILVERLIGHT
-      set { IsMouseOver = value; }
-#else
-      set { }
-#endif
-    }
+    bool IManagedButton.IsMouseOver => IsMouseOver;
 
     bool IManagedButton.ShouldFocusOnClick => Focusable;
 

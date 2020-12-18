@@ -137,13 +137,6 @@ namespace Zaaml.UI.Controls.Primitives
 			CommandTargetChanged?.Invoke(this, EventArgs.Empty);
 		}
 
-		protected override void OnGotFocus(RoutedEventArgs e)
-		{
-			base.OnGotFocus(e);
-
-			UpdateVisualState(true);
-		}
-
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
 			base.OnKeyDown(e);
@@ -158,24 +151,12 @@ namespace Zaaml.UI.Controls.Primitives
 			_buttonController.OnKeyUp(e);
 		}
 
-		protected override void OnLostFocus(RoutedEventArgs e)
-		{
-			base.OnLostFocus(e);
-
-#if SILVERLIGHT
-      _buttonController.OnLostKeyboardFocus(e);
-#endif
-			UpdateVisualState(true);
-		}
-
-#if !SILVERLIGHT
 		protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
 		{
 			base.OnLostKeyboardFocus(e);
 
 			_buttonController.OnLostKeyboardFocus(e);
 		}
-#endif
 
 		protected override void OnLostMouseCapture(MouseEventArgs e)
 		{
@@ -265,15 +246,7 @@ namespace Zaaml.UI.Controls.Primitives
 
 		bool IManagedButton.ShouldFocusOnClick => Focusable;
 
-		bool IManagedButton.IsMouseOver
-		{
-			get { return IsMouseOver; }
-#if SILVERLIGHT
-      set { IsMouseOver = value; }
-#else
-			set { }
-#endif
-		}
+		bool IManagedButton.IsMouseOver => IsMouseOver;
 
 		ClickMode IManagedButton.ClickMode => ClickMode;
 

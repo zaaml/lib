@@ -28,7 +28,7 @@ namespace Zaaml.UI.Controls.TreeView
 			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
 
 		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<TreeViewItemCollection, TreeViewItem>
-			("ItemsInt");
+			("ItemsPrivate");
 
 		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, TreeViewItem>
 			("ItemsSource", i => i.OnItemsSourceChangedPrivate);

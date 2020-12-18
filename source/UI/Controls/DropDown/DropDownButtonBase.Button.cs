@@ -227,15 +227,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		bool IManagedButton.CanClick => CanClick;
 
-		bool IManagedButton.IsMouseOver
-		{
-			get { return IsMouseOver; }
-#if SILVERLIGHT
-      set { IsMouseOver = value; }
-#else
-			set { }
-#endif
-		}
+		bool IManagedButton.IsMouseOver => IsMouseOver;
 
 		bool IManagedButton.ShouldFocusOnClick => Focusable;
 
