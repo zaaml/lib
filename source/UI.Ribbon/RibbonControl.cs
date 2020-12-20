@@ -189,7 +189,7 @@ namespace Zaaml.UI.Controls.Ribbon
     internal void Activate(RibbonPage ribbonPage)
     {
       if (ReferenceEquals(SelectedPage, ribbonPage) == false)
-        SelectorController.SelectedItem = ribbonPage;
+        SelectorController.SelectItem(ribbonPage);
 
       HideBackContent();
     }
