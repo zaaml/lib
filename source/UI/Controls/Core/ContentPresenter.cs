@@ -3,8 +3,12 @@
 // </copyright>
 
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.PresentationCore.Behaviors;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
+using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.PropertyCore.Extensions;
 using TriggerCollection = Zaaml.PresentationCore.Interactivity.TriggerCollection;
 
 namespace Zaaml.UI.Controls.Core
@@ -15,6 +19,14 @@ namespace Zaaml.UI.Controls.Core
 	public class ContentPresenter : System.Windows.Controls.ContentPresenter
 #endif
 	{
+		private static readonly DependencyPropertyKey ActualHasContentPropertyKey = DPM.RegisterReadOnly<bool, ContentPresenter>
+			("ActualHasContent", false, c => c.OnActualHasContentPropertyChanged);
+
+		public static readonly DependencyProperty EmptyVisibilityProperty = DPM.Register<Visibility, ContentPresenter>
+			("EmptyVisibility", Visibility.Visible, c => c.OnEmptyVisibilityChanged);
+
+		public static readonly DependencyProperty ActualHasContentProperty = ActualHasContentPropertyKey.DependencyProperty;
+
 		private SetterCollection _actualSetters;
 
 		private TriggerCollection _actualTriggers;
@@ -22,6 +34,18 @@ namespace Zaaml.UI.Controls.Core
 		private BehaviorCollection _contentBehaviorCollection;
 		private SetterCollection _contentSetterCollection;
 		private TriggerCollection _contentTriggerCollection;
+
+		public ContentPresenter()
+		{
+			UpdateActualHasContent();
+			UpdateVisibility();
+		}
+
+		public bool ActualHasContent
+		{
+			get => (bool) GetValue(ActualHasContentProperty);
+			private set => this.SetReadOnlyValue(ActualHasContentPropertyKey, value);
+		}
 
 		internal BehaviorCollection ContentBehaviorCollection
 		{
@@ -69,6 +93,12 @@ namespace Zaaml.UI.Controls.Core
 
 				AttachTriggers(VisualChild, _contentTriggerCollection);
 			}
+		}
+
+		public Visibility EmptyVisibility
+		{
+			get => (Visibility) GetValue(EmptyVisibilityProperty);
+			set => SetValue(EmptyVisibilityProperty, value);
 		}
 
 		private FrameworkElement VisualChild
@@ -146,6 +176,37 @@ namespace Zaaml.UI.Controls.Core
 			_actualTriggers = null;
 		}
 
+		private void OnActualHasContentPropertyChanged()
+		{
+			UpdateVisibility();
+		}
+
+		protected override void OnContentStringFormatChanged(string oldContentStringFormat, string newContentStringFormat)
+		{
+			base.OnContentStringFormatChanged(oldContentStringFormat, newContentStringFormat);
+
+			UpdateActualHasContent();
+		}
+
+		protected override void OnContentTemplateChanged(DataTemplate oldContentTemplate, DataTemplate newContentTemplate)
+		{
+			base.OnContentTemplateChanged(oldContentTemplate, newContentTemplate);
+
+			UpdateActualHasContent();
+		}
+
+		protected override void OnContentTemplateSelectorChanged(DataTemplateSelector oldContentTemplateSelector, DataTemplateSelector newContentTemplateSelector)
+		{
+			base.OnContentTemplateSelectorChanged(oldContentTemplateSelector, newContentTemplateSelector);
+
+			UpdateActualHasContent();
+		}
+
+		private void OnEmptyVisibilityChanged()
+		{
+			UpdateVisibility();
+		}
+
 		protected override void OnVisualChildrenChanged(DependencyObject visualAdded, DependencyObject visualRemoved)
 		{
 			base.OnVisualChildrenChanged(visualAdded, visualRemoved);
@@ -155,6 +216,27 @@ namespace Zaaml.UI.Controls.Core
 
 			if (visualAdded != null)
 				VisualChild = visualAdded as FrameworkElement;
+
+			UpdateActualHasContent();
+		}
+
+		private void UpdateActualHasContent()
+		{
+			var actualHasContent = Content != null || ContentTemplate != null || ContentTemplateSelector != null || ContentStringFormat != null || VisualChild != null;
+
+			if (ActualHasContent != actualHasContent)
+				ActualHasContent = actualHasContent;
+		}
+
+		private void UpdateVisibility()
+		{
+			if (this.GetValueSource(VisibilityProperty) != PropertyValueSource.Default)
+				return;
+
+			var visibility = ActualHasContent ? Visibility.Visible : EmptyVisibility;
+
+			if (Visibility != visibility)
+				this.SetCurrentValueInternal(VisibilityProperty, visibility);
 		}
 	}
 }

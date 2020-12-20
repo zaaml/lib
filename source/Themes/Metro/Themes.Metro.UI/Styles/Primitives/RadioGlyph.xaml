@@ -11,7 +11,7 @@
   </zm:ThemeResourceDictionary.MergedDictionaries>
 
   <!-- Template -->
-  <ControlTemplate x:Key="RadioGlyphControlTemplate" TargetType="zm:RadioGlyphControl">
+  <ControlTemplate x:Key="RadioGlyphTemplate" TargetType="zm:RadioGlyph">
     <zm:ControlTemplateRoot Background="Transparent" 
                             VisualStateGroups="{StaticResource VisualStates}">
 
@@ -35,20 +35,20 @@
   </ControlTemplate>
 
   <!-- Style -->
-  <zm:Style x:Key="RadioGlyphControlBaseStyle" TargetType="zm:RadioGlyphControl">
+  <zm:Style x:Key="RadioGlyphBaseStyle" TargetType="zm:RadioGlyph">
     <zm:Setter Property="BorderThickness" Value="1" />
-    <zm:Setter Property="Template" Value="{StaticResource RadioGlyphControlTemplate}" />
+    <zm:Setter Property="Template" Value="{StaticResource RadioGlyphTemplate}" />
   </zm:Style>
 
   <!-- Skinned Style -->
-  <zm:Style x:Key="RadioGlyphControlStyle" TargetType="zm:RadioGlyphControl" BasedOn="{StaticResource RadioGlyphControlBaseStyle}" 
-            Skin="Metro.RadioGlyphControl">
+  <zm:Style x:Key="RadioGlyphStyle" TargetType="zm:RadioGlyph" BasedOn="{StaticResource RadioGlyphBaseStyle}" 
+            Skin="Metro.RadioGlyph">
 
     <zm:SetterGroup ValuePathSource="Skin" SettersSource="{StaticResource SkinSetters}" />
 
   </zm:Style>
 
   <!-- Theme Style -->
-  <zm:ThemeStyle x:Key="RadioGlyphControlThemeStyle" TargetType="zm:RadioGlyphControl" BasedOn="{StaticResource RadioGlyphControlStyle}" zmb:Deferred="True" />
+  <zm:ThemeStyle x:Key="RadioGlyphThemeStyle" TargetType="zm:RadioGlyph" BasedOn="{StaticResource RadioGlyphStyle}" zmb:Deferred="True" />
 
 </zm:ThemeResourceDictionary>

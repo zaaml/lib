@@ -62,8 +62,10 @@ namespace Zaaml.PresentationCore.Input
     protected override void OnAttach()
     {
       base.OnAttach();
+      
       MouseInternal.MouseMove += OnGlobalMouseMove;
       Target.LayoutUpdated += TargetOnLayoutUpdated;
+      
       ProcessMouseEventSource();
     }
 
@@ -71,6 +73,7 @@ namespace Zaaml.PresentationCore.Input
     {
       Target.LayoutUpdated -= TargetOnLayoutUpdated;
       MouseInternal.MouseMove -= OnGlobalMouseMove;
+      
       base.OnDetach();
     }
 
@@ -97,6 +100,7 @@ namespace Zaaml.PresentationCore.Input
     private void ProcessMouseEventSource()
     {
       var fre = MouseInternal.DirectlyOver as FrameworkElement;
+      
       if (fre == null)
         return;
 

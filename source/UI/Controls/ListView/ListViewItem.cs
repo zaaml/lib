@@ -10,9 +10,9 @@ using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
-using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.ListView.Data;
+using Zaaml.UI.Controls.Primitives;
 using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Utils;
@@ -24,16 +24,11 @@ namespace Zaaml.UI.Controls.ListView
 		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, ListViewItem>
 			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
 
+		public static readonly DependencyProperty GlyphProperty = DPM.Register<GlyphBase, ListViewItem>
+			("Glyph", i => i.OnGlyphPropertyChangedPrivate);
+
 		private static readonly DependencyPropertyKey ListViewControlPropertyKey = DPM.RegisterReadOnly<ListViewControl, ListViewItem>
 			("ListViewControl", default, d => d.OnListViewControlPropertyChangedPrivate);
-
-		//private static readonly DependencyPropertyKey ActualCheckBoxVisibilityPropertyKey = DPM.RegisterReadOnly<Visibility, ListViewItem>
-		//	("ActualCheckBoxVisibility", Visibility.Collapsed);
-
-		//public static readonly DependencyProperty ActualCheckBoxVisibilityProperty = ActualCheckBoxVisibilityPropertyKey.DependencyProperty;
-
-		//public static readonly DependencyProperty CheckBoxVisibilityProperty = DPM.Register<ElementVisibility, ListViewItem>
-		//	("CheckBoxVisibility", ElementVisibility.Inherit, d => d.OnCheckBoxVisibilityPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
 
@@ -51,23 +46,17 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal bool ActualCanSelect => CanSelect && ListViewControl?.CanSelectItemInternal(this) != false;
 
-		//public Visibility ActualCheckBoxVisibility
-		//{
-		//	get => (Visibility) GetValue(ActualCheckBoxVisibilityProperty);
-		//	private set => this.SetReadOnlyValue(ActualCheckBoxVisibilityPropertyKey, value);
-		//}
-
 		internal Rect ArrangeRect { get; private set; }
 
 		protected virtual bool CanSelect => true;
 
-		//public ElementVisibility CheckBoxVisibility
-		//{
-		//	get => (ElementVisibility) GetValue(CheckBoxVisibilityProperty);
-		//	set => SetValue(CheckBoxVisibilityProperty, value);
-		//}
-
 		private bool FocusOnMouseHover => ListViewControl?.FocusItemOnMouseHover ?? false;
+
+		public GlyphBase Glyph
+		{
+			get => (GlyphBase) GetValue(GlyphProperty);
+			set => SetValue(GlyphProperty, value);
+		}
 
 		private bool IsActuallyFocused => IsFocused;
 
@@ -114,11 +103,6 @@ namespace Zaaml.UI.Controls.ListView
 			}
 		}
 
-		//private void OnCheckBoxVisibilityPropertyChangedPrivate(ElementVisibility oldValue, ElementVisibility newValue)
-		//{
-		//	UpdateCheckBoxVisibility();
-		//}
-
 		private object OnCoerceSelection(object arg)
 		{
 			var isSelected = (bool) arg;
@@ -127,6 +111,10 @@ namespace Zaaml.UI.Controls.ListView
 				return KnownBoxes.BoolFalse;
 
 			return arg;
+		}
+
+		private void OnGlyphPropertyChangedPrivate(GlyphBase oldGlyph, GlyphBase newGlyph)
+		{
 		}
 
 		protected override void OnGotFocus(RoutedEventArgs e)
@@ -155,6 +143,8 @@ namespace Zaaml.UI.Controls.ListView
 
 			if (selected)
 				ListViewControl?.Select(this);
+			else
+				ListViewControl?.Unselect(this);
 
 			OnIsSelectedChanged();
 
@@ -172,8 +162,6 @@ namespace Zaaml.UI.Controls.ListView
 
 		private void OnListViewControlPropertyChangedPrivate(ListViewControl oldListView, ListViewControl newListView)
 		{
-			//UpdateCheckBoxVisibility();
-
 			OnListViewControlChangedInternal(oldListView, newListView);
 		}
 
@@ -242,6 +230,11 @@ namespace Zaaml.UI.Controls.ListView
 			SetIsSelectedInternal(true);
 		}
 
+		internal void UnselectInternal()
+		{
+			SetIsSelectedInternal(false);
+		}
+
 		internal void SetIsSelectedInternal(bool value)
 		{
 			this.SetCurrentValueInternal(IsSelectedProperty, value ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
@@ -250,13 +243,6 @@ namespace Zaaml.UI.Controls.ListView
 		private protected virtual void SyncListNodeState()
 		{
 		}
-
-		//private void UpdateCheckBoxVisibility()
-		//{
-		//	var inheritVisibility = ListViewControl != null ? (Visibility?) VisibilityUtils.EvaluateElementVisibility(ListViewControl.ItemsCheckBoxVisibility, Visibility.Collapsed) : null;
-
-		//	ActualCheckBoxVisibility = VisibilityUtils.EvaluateElementVisibility(CheckBoxVisibility, Visibility.Collapsed, inheritVisibility);
-		//}
 
 		protected override void UpdateVisualState(bool useTransitions)
 		{

@@ -74,12 +74,12 @@
 
   <!-- CheckBoxMenuItem Glyph -->
   <DataTemplate x:Key="CheckBoxMenuItemIconTemplate">
-    <zm:CheckBoxGlyphControl IsChecked="{zm:TemplateExpandoBinding Path=IsChecked}" />
+    <zm:CheckGlyph IsChecked="{zm:TemplateExpandoBinding Path=IsChecked}" />
   </DataTemplate>
 
   <!-- RadioMenuItem Glyph -->
   <DataTemplate x:Key="RadioMenuItemIconTemplate">
-    <zm:RadioGlyphControl BorderThickness="1"
+    <zm:RadioGlyph BorderThickness="1"
                           IsChecked="{zm:TemplateExpandoBinding Path=IsChecked}"
                           Width="14" 
                           Height="14" />

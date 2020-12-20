@@ -11,8 +11,8 @@
   </zm:ThemeResourceDictionary.MergedDictionaries>
 
   <!--  Template  -->
-  <ControlTemplate x:Key="CheckBoxGlyphControlTemplate"
-                   TargetType="zm:CheckBoxGlyphControl">
+  <ControlTemplate x:Key="CheckGlyphTemplate"
+                   TargetType="zm:CheckGlyph">
     <zm:ControlTemplateRoot Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
       <!--  Face  -->
@@ -36,21 +36,21 @@
   </ControlTemplate>
 
   <!--  Style  -->
-  <zm:Style x:Key="CheckBoxGlyphControlBaseStyle" TargetType="zm:CheckBoxGlyphControl">
+  <zm:Style x:Key="CheckGlyphBaseStyle" TargetType="zm:CheckGlyph">
     <zm:Setter Property="BorderThickness" Value="1" />
     <zm:Setter Property="Width" Value="14" />
     <zm:Setter Property="Height" Value="14" />
-    <zm:Setter Property="Template" Value="{StaticResource CheckBoxGlyphControlTemplate}" />
+    <zm:Setter Property="Template" Value="{StaticResource CheckGlyphTemplate}" />
   </zm:Style>
 
   <!--  Skinned Style  -->
-  <zm:Style x:Key="CheckBoxGlyphControlStyle" BasedOn="{StaticResource CheckBoxGlyphControlBaseStyle}" Skin="Metro.CheckBoxGlyphControl" TargetType="zm:CheckBoxGlyphControl">
+  <zm:Style x:Key="CheckGlyphStyle" BasedOn="{StaticResource CheckGlyphBaseStyle}" Skin="Metro.CheckGlyph" TargetType="zm:CheckGlyph">
 
     <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePathSource="Skin" />
 
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="CheckBoxGlyphControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource CheckBoxGlyphControlStyle}" TargetType="zm:CheckBoxGlyphControl" />
+  <zm:ThemeStyle x:Key="CheckGlyphThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource CheckGlyphStyle}" TargetType="zm:CheckGlyph" />
 
 </zm:ThemeResourceDictionary>

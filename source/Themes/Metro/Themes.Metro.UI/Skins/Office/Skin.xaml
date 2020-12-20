@@ -20,12 +20,12 @@
     </zm:SkinDictionary>
 
     <!-- CheckBoxGlyphControl -->
-    <zm:SkinDictionary x:Key="CheckBoxGlyphControl" BasedOn="Metro.Shared.CheckBox">
+    <zm:SkinDictionary x:Key="CheckGlyph" BasedOn="Metro.Shared.CheckBox">
       <SolidColorBrush x:Key="ReadOnlyVeilBackground" Color="#77FFFFFF" zmb:Skin="Light" />
     </zm:SkinDictionary>
 
     <!-- RadioGlyphControl -->
-    <zm:SkinDictionary x:Key="RadioGlyphControl"  BasedOn="Metro.Shared.RadioButton">
+    <zm:SkinDictionary x:Key="RadioGlyph"  BasedOn="Metro.Shared.RadioButton">
       <SolidColorBrush x:Key="ReadOnlyVeilBackground" Color="#77FFFFFF" zmb:Skin="Light" />
     </zm:SkinDictionary>
 

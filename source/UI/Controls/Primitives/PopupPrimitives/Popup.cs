@@ -350,13 +350,18 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 #else
 	internal sealed class PopupWndSource : Window
 	{
-		public static readonly DependencyProperty IsOpenProperty = DPM.Register<bool, PopupWindow>
+		public static readonly DependencyProperty IsOpenProperty = DPM.Register<bool, PopupWndSource>
 			("IsOpen", t => t.OnIsOpenChanged);
 
-		public PopupWindow()
+		public PopupWndSource(Popup popup)
 		{
 			WindowStyle = WindowStyle.None;
 			SizeToContent = SizeToContent.WidthAndHeight;
+			AllowsTransparency = true;
+			Background = Brushes.Transparent;
+			Topmost = true;
+			ShowActivated = true;
+			ShowInTaskbar = false;
 		}
 
 		private void OnIsOpenChanged()
@@ -398,7 +403,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		public void Open()
 		{
 			Show();
-
+			
 			Opened?.Invoke(this, EventArgs.Empty);
 		}
 	}

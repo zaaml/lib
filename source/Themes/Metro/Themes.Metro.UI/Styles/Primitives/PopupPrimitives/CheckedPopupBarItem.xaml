@@ -42,7 +42,7 @@
                   <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <zm:CheckBoxGlyphControl IsChecked="{zm:TemplateBinding Path=IsChecked}"
+                <zm:CheckGlyph IsChecked="{zm:TemplateBinding Path=IsChecked}"
                                          IsReadOnly="{zm:TemplateBinding Path=IsReadOnly}"
                                          Foreground="{zm:ThemeResource Key=Metro.StandardControls.CheckBox.Foreground.Normal}"
                                          Background="{zm:ThemeResource Key=Metro.StandardControls.CheckBox.Background.Normal}"

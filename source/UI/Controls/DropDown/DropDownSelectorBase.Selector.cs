@@ -66,15 +66,10 @@ namespace Zaaml.UI.Controls.DropDown
 			{
 				var selectedItem = FocusNavigator.FocusedItem;
 
-				if (selectedItem != null)
-				{
-					selectorController.SelectedItem = selectedItem;
+				if (selectedItem != null && selectorController.SelectItem(selectedItem) == false)
+					return false;
 
-					if (ReferenceEquals(selectorController.CurrentSelectedItem, selectedItem) == false)
-						return false;
-				}
-
-				selectorController.ResumeSelectionChange(true);
+				selectorController.ResumeSelectionChange();
 			}
 
 			CloseDropDown();

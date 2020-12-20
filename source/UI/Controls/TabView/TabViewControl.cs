@@ -383,7 +383,7 @@ namespace Zaaml.UI.Controls.TabView
 		internal void Activate(TabViewItem tabViewItem)
 		{
 			if (ReferenceEquals(SelectedItem, tabViewItem) == false)
-				SelectorController.SelectedItem = tabViewItem;
+				SelectorController.SelectItem(tabViewItem);
 
 			HideBackContent();
 		}
@@ -652,7 +652,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		internal void SelectItemInternal(TabViewItem tabViewItem)
 		{
-			SelectorController.SelectedItem = tabViewItem;
+			SelectorController.SelectItem(tabViewItem);
 		}
 
 		private void UpdateActualIsBackContentVisible()

@@ -116,6 +116,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private static void OnControllerSelectorPropertyChanged(DependencyObject dependencyObject, IPopupControllerSelector oldSelector, IPopupControllerSelector newSelector)
 		{
+			EnsureInstance();
 		}
 
 		public static void OnPopupControllerSelectorChanged(FrameworkElement frameworkElement, IPopupControllerSelector oldSelector, IPopupControllerSelector newSelector)

@@ -11,6 +11,7 @@ using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -43,8 +44,14 @@ namespace Zaaml.UI.Controls.ListView
 		public static readonly DependencyProperty ItemsFilterProperty = DPM.Register<IListViewItemFilter, ListViewControl>
 			("ItemsFilter", default, d => d.OnItemsFilterPropertyChangedPrivate);
 
-		//public static readonly DependencyProperty ItemsCheckBoxVisibilityProperty = DPM.Register<ElementVisibility, ListViewControl>
-		//	("ItemsCheckBoxVisibility", ElementVisibility.Auto, d => d.OnItemsCheckBoxVisibilityPropertyChangedPrivate);
+		public static readonly DependencyProperty SelectionModeProperty = DPM.Register<ListViewSelectionMode, ListViewControl>
+			("SelectionMode", ListViewSelectionMode.Single, l => l.OnSelectionModePropertyChangedPrivate);
+
+		private static readonly DependencyPropertyKey SelectionCollectionPropertyKey = DPM.RegisterReadOnly<ListViewSelectionCollection, ListViewControl>
+			("SelectionCollectionPrivate");
+
+		public static readonly DependencyProperty ItemGlyphTemplateProperty = DPM.Register<DataTemplate, ListViewControl>
+			("ItemGlyphTemplate");
 
 		private DelegateContentItemGeneratorImpl<ListViewItem, DefaultListViewItemGenerator> _defaultGeneratorImpl;
 		private ListViewData _listViewData;
@@ -73,6 +80,8 @@ namespace Zaaml.UI.Controls.ListView
 			VirtualItemCollection = new VirtualListViewItemCollection(this);
 		}
 
+		private protected override bool ActualSelectItemOnFocus => SelectionMode != ListViewSelectionMode.Multiple && base.ActualSelectItemOnFocus;
+
 		protected virtual bool ActualFocusItemOnMouseHover => FocusItemOnMouseHover;
 
 		protected virtual bool ActualFocusItemOnSelect => FocusItemOnSelect;
@@ -97,11 +106,11 @@ namespace Zaaml.UI.Controls.ListView
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
-		//public ElementVisibility ItemsCheckBoxVisibility
-		//{
-		//	get => (ElementVisibility) GetValue(ItemsCheckBoxVisibilityProperty);
-		//	set => SetValue(ItemsCheckBoxVisibilityProperty, value);
-		//}
+		public DataTemplate ItemGlyphTemplate
+		{
+			get => (DataTemplate) GetValue(ItemGlyphTemplateProperty);
+			set => SetValue(ItemGlyphTemplateProperty, value);
+		}
 
 		public IListViewItemFilter ItemsFilter
 		{
@@ -140,6 +149,16 @@ namespace Zaaml.UI.Controls.ListView
 		internal MouseButtonSelectionOptions MouseButtonSelectionOptions { get; set; } = MouseButtonSelectionOptions.LeftButtonDown;
 
 		internal ScrollViewControl ScrollViewInternal => ScrollView;
+
+		public ListViewSelectionCollection SelectionCollection => this.GetValueOrCreate(SelectionCollectionPropertyKey, () => new ListViewSelectionCollection((ListViewSelectorController) SelectorController));
+
+		public static DependencyProperty SelectionCollectionProperty => SelectionCollectionPropertyKey.DependencyProperty;
+
+		public ListViewSelectionMode SelectionMode
+		{
+			get => (ListViewSelectionMode) GetValue(SelectionModeProperty);
+			set => SetValue(SelectionModeProperty, value);
+		}
 
 		internal VirtualListViewItemCollection VirtualItemCollection { get; }
 
@@ -206,11 +225,20 @@ namespace Zaaml.UI.Controls.ListView
 			return base.MeasureOverride(availableSize);
 		}
 
-		private bool MouseSelect(ListViewItem navigationViewItem, MouseButtonKind mouseButtonKind, MouseButtonEventKind eventKind)
+		private void ToggleItemSelection(ListViewItem listViewItem)
 		{
-			if (MouseButtonSelectionHelper.ShouldSelect(mouseButtonKind, eventKind, MouseButtonSelectionOptions.LeftButtonDown) && navigationViewItem.ActualCanSelect)
+			if (listViewItem.IsSelected == false)
+				listViewItem.SelectInternal();
+			else if (SelectionMode == ListViewSelectionMode.Multiple) 
+				listViewItem.UnselectInternal();
+		}
+
+		private bool MouseSelect(ListViewItem listViewItem, MouseButtonKind mouseButtonKind, MouseButtonEventKind eventKind)
+		{
+			if (MouseButtonSelectionHelper.ShouldSelect(mouseButtonKind, eventKind, MouseButtonSelectionOptions.LeftButtonDown) && listViewItem.ActualCanSelect)
 			{
-				navigationViewItem.SelectInternal();
+				FocusItem(listViewItem);
+				ToggleItemSelection(listViewItem);
 
 				return true;
 			}
@@ -344,6 +372,11 @@ namespace Zaaml.UI.Controls.ListView
 			base.OnPreviewMouseMove(e);
 		}
 
+		private void OnSelectionModePropertyChangedPrivate()
+		{
+			SelectorController.MultipleSelection = SelectionMode == ListViewSelectionMode.Multiple;
+		}
+
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
@@ -363,14 +396,14 @@ namespace Zaaml.UI.Controls.ListView
 			if (ActualFocusItemOnSelect)
 				FocusItem(listViewItem);
 
-			var currentSelectedItem = SelectorController.CurrentSelectedItem;
-
-			if (ReferenceEquals(currentSelectedItem, listViewItem) == false)
-				currentSelectedItem?.SetIsSelectedInternal(false);
-
-			SelectorController.SelectedItem = listViewItem;
+			SelectorController.SelectItem(listViewItem, SelectionMode == ListViewSelectionMode.Multiple);
 		}
 
+		internal void Unselect(ListViewItem listViewItem)
+		{
+			SelectorController.UnselectItem(listViewItem);
+		}
+		
 		private protected override void SetIsSelectedInternal(ListViewItem item, bool value)
 		{
 			item.SetIsSelectedInternal(value);

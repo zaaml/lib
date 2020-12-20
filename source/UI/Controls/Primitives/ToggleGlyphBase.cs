@@ -1,22 +1,21 @@
-﻿// <copyright file="ToggleGlyphControl.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="ToggleGlyphBase.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System.Windows;
 using Zaaml.PresentationCore.PropertyCore;
-using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Primitives
 {
-  public class ToggleGlyphControl : Control, IReadOnlyControl
+	public abstract class ToggleGlyphBase : GlyphBase, IReadOnlyControl
   {
     #region Static Fields and Constants
 
-    public static readonly DependencyProperty IsCheckedProperty = DPM.Register<bool?, ToggleGlyphControl>
+    public static readonly DependencyProperty IsCheckedProperty = DPM.Register<bool?, ToggleGlyphBase>
       ("IsChecked", c => c.OnIsCheckedChanged);
 
-    public static readonly DependencyProperty IsReadOnlyProperty = DPM.Register<bool, ToggleGlyphControl>
+    public static readonly DependencyProperty IsReadOnlyProperty = DPM.Register<bool, ToggleGlyphBase>
       ("IsReadOnly");
 
     #endregion

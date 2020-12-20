@@ -206,11 +206,13 @@ namespace Zaaml.UI.Controls.Core
 				item.IsSelected = false;
 		}
 
+		private protected virtual bool ActualSelectItemOnFocus => SelectItemOnFocus;
+		
 		private protected override void OnItemGotFocus(TItem item)
 		{
 			base.OnItemGotFocus(item);
 			
-			if (SelectItemOnFocus)
+			if (ActualSelectItemOnFocus)
 				SetIsSelectedInternal(item, true);
 		}
 

@@ -68,6 +68,12 @@
   <ControlTemplate x:Key="PopupPresenterBorderTemplate" TargetType="zm:PopupContentPresenter">
     <zm:ControlTemplateRoot>
 
+      <!--<Border Margin="24" Background="White" BorderThickness="1">
+        <Border.Effect>
+          <DropShadowEffect BlurRadius="24" Opacity="0.3" Direction="0" ShadowDepth="0"/>
+        </Border.Effect>
+      </Border>-->
+
       <!-- Shadow -->
       <zm:ShadowChrome IsHitTestVisible="False"
                        Margin="6"

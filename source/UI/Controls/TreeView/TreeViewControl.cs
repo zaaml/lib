@@ -446,11 +446,6 @@ namespace Zaaml.UI.Controls.TreeView
 			if (ActualFocusItemOnSelect)
 				FocusItem(treeViewItem);
 
-			var currentSelectedItem = SelectorController.CurrentSelectedItem;
-
-			if (ReferenceEquals(currentSelectedItem, treeViewItem) == false)
-				currentSelectedItem?.SetIsSelectedInternal(false);
-
 			SelectorController.SelectItem(treeViewItem);
 		}
 

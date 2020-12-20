@@ -92,6 +92,7 @@ namespace Zaaml.PresentationCore
 				if (wParam.ToInt32() == 0)
 				{
 					_onLeave();
+					
 					Dispose();
 				}
 			}

@@ -134,7 +134,7 @@ namespace Zaaml.UI.Controls.BackstageView
 		public void Activate(BackstageViewItem backstageViewItem)
 		{
 			if (ReferenceEquals(SelectedItem, backstageViewItem) == false)
-				SelectorController.SelectedItem = backstageViewItem;
+				SelectorController.SelectItem(backstageViewItem);
 		}
 
 		private void ClosePopupHost()
@@ -226,7 +226,7 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		internal void SelectItemInternal(BackstageViewItem backstageViewItem)
 		{
-			SelectorController.SelectedItem = backstageViewItem;
+			SelectorController.SelectItem(backstageViewItem);
 		}
 
 		protected virtual void UpdateSelectedContent()
