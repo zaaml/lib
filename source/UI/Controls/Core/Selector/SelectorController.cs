@@ -2,24 +2,27 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows;
-using System.Windows.Data;
-using System.Windows.Threading;
-using Zaaml.Core;
 using Zaaml.Core.Extensions;
-using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal abstract partial class SelectorController<TItem> where TItem : FrameworkElement, ISelectable
+	internal abstract partial class SelectorController<TItem> where TItem : FrameworkElement
 	{
 		private bool _allowNullSelection;
+		private TItem _lockedItem;
 		private bool _multipleSelection;
 		private bool _preferSelection;
 		private Selection<TItem> _selection = Selection<TItem>.Empty;
 		private bool _selectionHandling;
 		private Selection<TItem> _selectionResume = Selection<TItem>.Empty;
+
+		public event EventHandler<NotifyCollectionChangedEventArgs> SelectionCollectionChanged;
+		public event PropertyChangedEventHandler SelectionCollectionPropertyChanged;
 
 		protected SelectorController(ISelector<TItem> selector, ISelectorAdvisor<TItem> advisor)
 		{
@@ -50,15 +53,13 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private Selection<TItem> CoerceSelection { get; set; }
-
 		internal int Count => Advisor.Count;
 
 		public int CurrentSelectedIndex => CurrentSelection.Index;
 
 		public TItem CurrentSelectedItem => CurrentSelection.Item;
 
-		public object CurrentSelectedItemSource => CurrentSelection.ItemSource;
+		public object CurrentSelectedSource => CurrentSelection.Source;
 
 		public object CurrentSelectedValue => CurrentSelection.Value;
 
@@ -66,7 +67,33 @@ namespace Zaaml.UI.Controls.Core
 
 		private SelectionCollectionImpl CurrentSelectionCollection => IsSelectionChangeSuspended ? SelectionCollectionResume : SelectionCollection;
 
+		private bool HasSource => Advisor.HasSource;
+
+		private bool IsInitializing { get; set; }
+
+		private bool IsInverted { get; set; }
+
 		public bool IsSelectionChangeSuspended => SuspendSelectionChangeCount > 0;
+
+		private bool IsVirtualizing => Advisor.IsVirtualizing;
+
+		private TItem LockedItem
+		{
+			get => _lockedItem;
+			set
+			{
+				if (ReferenceEquals(_lockedItem, value))
+					return;
+
+				if (_lockedItem != null)
+					Advisor.Unlock(_lockedItem);
+
+				_lockedItem = value;
+
+				if (_lockedItem != null)
+					Advisor.Lock(_lockedItem);
+			}
+		}
 
 		public bool MultipleSelection
 		{
@@ -78,8 +105,7 @@ namespace Zaaml.UI.Controls.Core
 
 				_multipleSelection = value;
 
-				if (_multipleSelection == false)
-					ResetMultipleSelection();
+				ResetMultipleSelection();
 			}
 		}
 
@@ -109,7 +135,7 @@ namespace Zaaml.UI.Controls.Core
 
 		public TItem SelectedItem => Selection.Item;
 
-		public object SelectedItemSource => Selection.ItemSource;
+		public object SelectedSource => Selection.Source;
 
 		public object SelectedValue => Selection.Value;
 
@@ -128,9 +154,9 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private SelectionCollectionImpl SelectionCollection { get; }
+		private SelectionCollectionImpl SelectionCollection { get; set; }
 
-		private SelectionCollectionImpl SelectionCollectionResume { get; }
+		private SelectionCollectionImpl SelectionCollectionResume { get; set; }
 
 		private Selection<TItem> SelectionResume
 		{
@@ -147,277 +173,63 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		public SelectNextMode SelectNextMode { get; set; }
-
 		public ISelector<TItem> Selector { get; }
 
 		protected abstract bool SupportsIndex { get; }
 
 		protected abstract bool SupportsItem { get; }
 
-		protected abstract bool SupportsItemSource { get; }
+		protected abstract bool SupportsSource { get; }
 
 		protected abstract bool SupportsValue { get; }
 
 		public int SuspendSelectionChangeCount { get; private set; }
 
-		internal void AdvisorOnItemAttached(int index, TItem item)
-		{
-			OnItemAttached(index, item);
-		}
-
-		internal void AdvisorOnItemCollectionChanged(NotifyCollectionChangedEventArgs e)
-		{
-			OnItemCollectionChanged(e);
-		}
-
-		internal void AdvisorOnItemCollectionSourceChanged(NotifyCollectionChangedEventArgs e)
-		{
-			OnItemCollectionSourceChanged(e);
-		}
-
-		internal void AdvisorOnItemDetached(int index, TItem item)
-		{
-			OnItemDetached(index, item);
-		}
+		private int Version { get; set; }
 
 		private bool AreSelectionEquals(Selection<TItem> first, Selection<TItem> second)
 		{
 			return first.Index == second.Index &&
 			       ReferenceEquals(first.Item, second.Item) &&
-			       ReferenceEquals(first.ItemSource, second.ItemSource) &&
+			       ReferenceEquals(first.Source, second.Source) &&
 			       CompareValues(first.Value, second.Value);
 		}
 
-		private static bool CanSelect(TItem item)
+		public void BeginInit()
 		{
-			return !(item is ISelectableEx selectableEx) || selectableEx.CanSelect;
+			IsInitializing = true;
+
+			SuspendSelectionChange();
 		}
 
-		public int CoerceSelectedIndex(int selectedIndex)
+		private bool CanSelect(TItem item)
 		{
-			if (_selectionHandling)
-				return CoerceSelection.Index;
-
-			var preselectIndex = PreselectIndex(selectedIndex, true, SelectionResume, out var preSelection);
-
-			if (IsSelectionChangeSuspended)
-			{
-				if (preselectIndex)
-					SelectionResume = preSelection;
-
-				CoerceSelection = Selection;
-				PushSelectedIndexBoundValue(Selection.Index);
-
-				return Selection.Index;
-			}
-
-			var coerceSelectedIndex = _selectionHandling || preselectIndex == false ? SelectedIndex : preSelection.Index;
-
-			if (Equals(coerceSelectedIndex, selectedIndex))
-				return coerceSelectedIndex;
-
-			PushSelectedIndexBoundValue(coerceSelectedIndex);
-
-			return coerceSelectedIndex;
-		}
-
-		public TItem CoerceSelectedItem(TItem selectedItem)
-		{
-			if (_selectionHandling)
-				return CoerceSelection.Item;
-
-			var preselectItem = PreselectItem(selectedItem, true, SelectionResume, out var preSelection);
-
-			if (IsSelectionChangeSuspended)
-			{
-				if (preselectItem)
-					SelectionResume = preSelection;
-
-				CoerceSelection = Selection;
-				PushSelectedItemBoundValue(Selection.Item);
-
-				return Selection.Item;
-			}
-
-			var coerceSelectedItem = preselectItem == false ? SelectedItem : preSelection.Item;
-
-			if (Equals(coerceSelectedItem, selectedItem))
-				return coerceSelectedItem;
-
-			PushSelectedItemBoundValue(coerceSelectedItem);
-
-			return coerceSelectedItem;
-		}
-
-		public object CoerceSelectedItemSource(object selectedItemSource)
-		{
-			if (_selectionHandling)
-				return CoerceSelection.ItemSource;
-
-			var preselectItemSource = PreselectItemSource(selectedItemSource, true, SelectionResume, out var preSelection);
-
-			if (IsSelectionChangeSuspended)
-			{
-				if (preselectItemSource)
-					SelectionResume = preSelection;
-
-				CoerceSelection = Selection;
-				PushSelectedItemSourceBoundValue(Selection.ItemSource);
-
-				return Selection.ItemSource;
-			}
-
-			var coerceSelectedItemSource = preselectItemSource == false ? SelectedItemSource : preSelection.ItemSource;
-
-			if (Equals(coerceSelectedItemSource, selectedItemSource))
-				return coerceSelectedItemSource;
-
-			PushSelectedItemSourceBoundValue(coerceSelectedItemSource);
-
-			return coerceSelectedItemSource;
-		}
-
-		public object CoerceSelectedValue(object selectedValue)
-		{
-			if (_selectionHandling)
-				return CoerceSelection.Value;
-
-			var preselectValue = PreselectValue(selectedValue, true, SelectionResume, out var preSelection);
-
-			if (IsSelectionChangeSuspended)
-			{
-				if (preselectValue)
-					SelectionResume = preSelection;
-
-				CoerceSelection = Selection;
-				PushSelectedValueBoundValue(Selection.Value);
-
-				return Selection.Value;
-			}
-
-			var coerceSelectedValue = _selectionHandling || preselectValue == false ? SelectedValue : preSelection.Value;
-
-			if (Equals(coerceSelectedValue, selectedValue))
-				return coerceSelectedValue;
-
-			PushSelectedValueBoundValue(coerceSelectedValue);
-
-			return coerceSelectedValue;
-		}
-
-		private void CommitSelection(Selection<TItem> selection, bool applySelection, bool addToSelection)
-		{
-			try
-			{
-				_selectionHandling = true;
-
-				var selectedItemChanged = false;
-				var selectedIndexChanged = false;
-				var selectedValueChanged = false;
-				var selectedItemSourceChanged = false;
-
-				var oldSelectedItem = SupportsItem ? ReadSelectedItem() : default;
-				var oldSelectedIndex = SupportsIndex ? ReadSelectedIndex() : default;
-				var oldSelectedValue = SupportsValue ? ReadSelectedValue() : default;
-				var oldSelectedItemSource = SupportsItemSource ? ReadSelectedItemSource() : default;
-
-				TItem newSelectedItem = default;
-				int newSelectedIndex = default;
-				object newSelectedValue = default;
-				object newSelectedItemSource = default;
-
-				CoerceSelection = selection;
-
-				if (SupportsItem)
-				{
-					if (ReferenceEquals(oldSelectedItem, selection.Item) == false)
-						WriteSelectedItem(selection.Item);
-
-					newSelectedItem = ReadSelectedItem();
-					selectedItemChanged = ReferenceEquals(oldSelectedItem, newSelectedItem) == false;
-				}
-
-				if (SupportsItemSource)
-				{
-					if (ReferenceEquals(oldSelectedItemSource, selection.ItemSource) == false)
-						WriteSelectedItemSource(selection.ItemSource);
-
-					newSelectedItemSource = ReadSelectedItemSource();
-					selectedItemSourceChanged = ReferenceEquals(oldSelectedItemSource, newSelectedItemSource) == false;
-				}
-
-				if (SupportsIndex)
-				{
-					if (oldSelectedIndex != selection.Index)
-						WriteSelectedIndex(selection.Index);
-
-					newSelectedIndex = ReadSelectedIndex();
-					selectedIndexChanged = oldSelectedIndex != newSelectedIndex;
-				}
-
-				if (SupportsValue)
-				{
-					if (CompareValues(oldSelectedValue, selection.Value) == false)
-						WriteSelectedValue(selection.Value);
-
-					newSelectedValue = ReadSelectedValue();
-					selectedValueChanged = CompareValues(oldSelectedValue, newSelectedValue) == false;
-				}
-
-				var oldSelection = new Selection<TItem>(oldSelectedIndex, oldSelectedItem, oldSelectedItemSource, oldSelectedValue);
-				var newSelection = new Selection<TItem>(newSelectedIndex, newSelectedItem, newSelectedItemSource, newSelectedValue);
-
-				Selection = newSelection;
-
-				if (selectedItemChanged)
-				{
-					if (oldSelectedItem != null)
-					{
-						Advisor.Unlock(oldSelectedItem);
-
-						if (applySelection && addToSelection == false)
-							SetItemSelection(oldSelectedItem, false);
-					}
-
-					if (newSelectedItem != null)
-					{
-						Advisor.Lock(newSelectedItem);
-
-						if (applySelection)
-							SetItemSelection(newSelectedItem, true);
-					}
-				}
-
-				if (selectedItemChanged)
-					RaiseOnSelectedItemChanged(oldSelectedItem, newSelectedItem);
-
-				if (selectedItemSourceChanged)
-					RaiseOnSelectedItemSourceChanged(oldSelectedItemSource, newSelectedItemSource);
-
-				if (selectedIndexChanged)
-					RaiseOnSelectedIndexChanged(oldSelectedIndex, newSelectedIndex);
-
-				if (selectedValueChanged)
-					RaiseOnSelectedValueChanged(oldSelectedValue, newSelectedValue);
-
-				var raiseSelectionChanged = selectedItemChanged |
-				                            selectedIndexChanged |
-				                            selectedValueChanged |
-				                            selectedItemSourceChanged;
-
-				if (raiseSelectionChanged)
-					RaiseOnSelectionChanged(oldSelection, newSelection);
-			}
-			finally
-			{
-				_selectionHandling = false;
-			}
+			return Advisor.CanSelect(item);
 		}
 
 		private bool CompareValues(object itemValue, object value)
 		{
 			return Advisor.CompareValues(itemValue, value);
+		}
+
+		public void EndInit()
+		{
+			ResumeSelectionChange();
+
+			IsInitializing = false;
+		}
+
+		private bool EnsureInvertedSelection(bool selectionResult)
+		{
+			if (_selectionHandling)
+				return false;
+			
+			if (selectionResult == false)
+				return false;
+
+			SelectFirst();
+
+			return true;
 		}
 
 		internal void EnsureSelection()
@@ -431,23 +243,19 @@ namespace Zaaml.UI.Controls.Core
 			if (SupportsIndex)
 			{
 				if (SelectedIndex == -1)
-					SelectIndexCore(ActualPreferredIndex, true, false);
+				{
+					if (SelectIndexCore(ActualPreferredIndex, true))
+						return;
+
+					SelectFirstPossible();
+				}
 			}
 			else if (SupportsItem)
 			{
 				if (SelectedItem != null)
 					return;
 
-				for (var i = 0; i < Advisor.Count; i++)
-				{
-					if (Advisor.TryGetItem(i, out var item) == false || CanSelect(item) == false)
-						continue;
-
-					SelectItemCore(item, true, false);
-
-					if (ReferenceEquals(SelectedItem, item))
-						break;
-				}
+				SelectFirstPossible();
 			}
 		}
 
@@ -456,9 +264,9 @@ namespace Zaaml.UI.Controls.Core
 			return SupportsItem && item != null && Count > 0 ? Advisor.GetIndexOfItem(item) : -1;
 		}
 
-		private int GetIndexOfItemSource(object itemSource)
+		private int GetIndexOfSource(object source)
 		{
-			return SupportsItemSource && itemSource != null && Count > 0 ? Advisor.GetIndexOfItemSource(itemSource) : -1;
+			return SupportsSource && source != null && Count > 0 ? Advisor.GetIndexOfSource(source) : -1;
 		}
 
 		private int GetIndexOfValue(object value)
@@ -466,14 +274,19 @@ namespace Zaaml.UI.Controls.Core
 			return SupportsValue && Count > 0 ? Advisor.GetIndexOfValue(value) : -1;
 		}
 
-		private object GetItemSource(int index)
+		private bool GetIsItemSelected(TItem item)
 		{
-			return SupportsItemSource && IsWithinRange(index) ? Advisor.GetItemSource(index) : null;
+			return item != null && Advisor.GetItemSelected(item);
 		}
 
-		private object GetItemSource(TItem item)
+		private object GetSource(int index)
 		{
-			return SupportsItemSource && item != null ? Advisor.GetItemSource(item) : null;
+			return SupportsSource && IsWithinRange(index) ? Advisor.GetSource(index) : null;
+		}
+
+		private object GetSource(TItem item)
+		{
+			return SupportsSource && item != null ? Advisor.GetSource(item) : null;
 		}
 
 		internal SelectionCollectionImpl.SelectionCollectionEnumerator GetSelectionCollectionEnumerator()
@@ -481,73 +294,49 @@ namespace Zaaml.UI.Controls.Core
 			return CurrentSelectionCollection.GetEnumerator();
 		}
 
-		private object GetValue(TItem item, object itemSource)
+		private object GetValue(TItem item, object source)
 		{
-			return SupportsValue ? Selector.GetValue(item, itemSource) : null;
+			return SupportsValue ? Selector.GetValue(item, source) : null;
 		}
 
-		private bool IsIndexInSelection(int index)
+		public void InvertSelection()
 		{
-			if (index == -1)
-				return false;
+			if (MultipleSelection == false)
+				return;
 
-			if (index == CurrentSelectedIndex)
-				return true;
+			try
+			{
+				_selectionHandling = true;
 
-			return MultipleSelection && CurrentSelectionCollection.ContainsIndex(index);
+				InvertSelectionSafe();
+			}
+			finally
+			{
+				_selectionHandling = false;
+			}
+			
+			EnsureSelection();
 		}
 
-		private bool IsIndexSelected(int index)
+		private void InvertSelectionSafe()
 		{
-			return false;
+			foreach (var selection in CurrentSelectionCollection)
+				SetItemSelected(selection.Item, false);
+
+			IsInverted = !IsInverted;
+
+			var currentSelection = CurrentSelectionCollection.Count > 0 ? CurrentSelectionCollection.First() : Selection<TItem>.Empty;
+
+			foreach (var selection in CurrentSelectionCollection)
+				SetItemSelected(selection.Item, true);
+
+			RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
+			CommitSelectionSafe(currentSelection);
 		}
 
-		private bool IsItemInSelection(TItem item)
+		private bool IsLocked(TItem item)
 		{
-			if (item == null)
-				return false;
-
-			if (ReferenceEquals(item, CurrentSelectedItem))
-				return true;
-
-			return MultipleSelection && CurrentSelectionCollection.ContainsItem(item);
-		}
-
-		private bool IsItemSelected(TItem item)
-		{
-			return item != null && item.IsSelected;
-		}
-
-		private bool IsItemSourceInSelection(object itemSource)
-		{
-			if (itemSource == null)
-				return false;
-
-			if (ReferenceEquals(itemSource, CurrentSelectedItemSource))
-				return true;
-
-			return MultipleSelection && CurrentSelectionCollection.ContainsItemSource(itemSource);
-		}
-
-		private bool IsItemSourceSelected(object itemSource)
-		{
-			return false;
-		}
-
-		private bool IsValueInSelection(object value)
-		{
-			if (value == null)
-				return false;
-
-			if (CompareValues(value, CurrentSelectedValue))
-				return true;
-
-			return MultipleSelection && CurrentSelectionCollection.ContainsValue(value);
-		}
-
-		private bool IsValueSelected(object value)
-		{
-			return false;
+			return ReferenceEquals(LockedItem, item);
 		}
 
 		private bool IsWithinRange(int index)
@@ -555,124 +344,21 @@ namespace Zaaml.UI.Controls.Core
 			return index >= 0 && Count != 0 && index < Count;
 		}
 
-		private void OnItemAttached(int index, TItem item)
+		private void ModifySelectionCollection(Selection<TItem> selection, bool raiseEvent = true)
 		{
-			if (SupportsIndex)
+			if (MultipleSelection == false)
 			{
-				var selectedIndex = IsSelectionChangeSuspended ? SelectionResume.Index : SelectedIndex;
-
-				if (selectedIndex == -1)
-					return;
-
-				var itemIndex = index;
-
-				if (itemIndex == -1)
-					itemIndex = GetIndexOfItem(item);
-
-				if (IsSelectionChangeSuspended)
+				if (IsSelectionChangeSuspended == false)
 				{
-					if (SelectionResume.Index == itemIndex)
-						SelectionResume = new Selection<TItem>(SelectionResume.Index, item, SelectionResume.ItemSource, SelectionResume.Value);
-				}
-				else if (SelectedIndex == itemIndex)
-					UpdateSelectedItem(new Selection<TItem>(SelectedIndex, item, SelectedItemSource, SelectedValue));
-			}
-			else if (SupportsItem)
-			{
-				if (IsItemSelected(item) && IsItemInSelection(item) == false)
-					SelectItem(item, true);
-			}
-		}
-
-		private void OnItemCollectionChanged(NotifyCollectionChangedEventArgs e)
-		{
-			if (e.Action == NotifyCollectionChangedAction.Reset)
-			{
-			}
-			else if (e.Action == NotifyCollectionChangedAction.Move)
-			{
-			}
-			else
-			{
-				if (e.NewItems != null)
-				{
-					foreach (TItem item in e.NewItems)
-					{
-						if (IsItemSelected(item))
-							SelectItem(item);
-					}
+					if (raiseEvent)
+						RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
 				}
 
-				if (e.OldItems != null)
-				{
-					foreach (TItem item in e.OldItems)
-					{
-						if (IsItemInSelection(item))
-							UnselectItem(item);
-					}
-				}
-			}
-
-			UpdateSelectedIndex(true);
-			EnsureSelection();
-		}
-
-		private void OnItemCollectionSourceChanged(NotifyCollectionChangedEventArgs e)
-		{
-			if (e.Action == NotifyCollectionChangedAction.Move)
-			{
-			}
-			else if (e.Action == NotifyCollectionChangedAction.Reset)
-			{
-			}
-			else
-			{
-				if (e.NewItems != null)
-				{
-					foreach (var itemSource in e.NewItems)
-					{
-						if (IsItemSourceSelected(itemSource))
-							SelectItemSource(itemSource);
-					}
-				}
-
-				if (e.OldItems != null)
-				{
-					foreach (var itemSource in e.OldItems)
-					{
-						if (IsItemSourceInSelection(itemSource))
-							UnselectItemSource(itemSource);
-					}
-				}
-			}
-
-			UpdateSelectedIndex(false);
-			EnsureSelection();
-		}
-
-		private void OnItemDetached([UsedImplicitly] int index, TItem item)
-		{
-			if (ReferenceEquals(SelectedItem, item))
-				SelectIndexCore(ActualPreferredIndex, true, false);
-		}
-
-		public void OnItemSelectionChanged(TItem item)
-		{
-			if (_selectionHandling)
 				return;
+			}
 
-			var isCurrent = IsItemInSelection(item);
-			var isSelected = IsItemSelected(item);
-
-			SuspendSelectionChange();
-
-			if (isSelected == false && isCurrent)
-				UnselectItem(item);
-
-			if (isSelected && isCurrent == false)
-				SelectItem(item);
-
-			ResumeSelectionChange();
+			if (selection.IsEmpty == false)
+				CurrentSelectionCollection.Add(selection);
 		}
 
 		public void OnSelectedIndexPropertyChanged(int oldIndex, int newIndex)
@@ -701,15 +387,15 @@ namespace Zaaml.UI.Controls.Core
 			ResumeSelectionChange();
 		}
 
-		public void OnSelectedItemSourcePropertyChanged(object oldItemSource, object newItemSource)
+		public void OnSelectedSourcePropertyChanged(object oldSource, object newSource)
 		{
 			if (_selectionHandling)
 				return;
 
 			SuspendSelectionChange();
 
-			UnselectItemSource(oldItemSource);
-			SelectItemSource(newItemSource);
+			UnselectSource(oldSource);
+			SelectSource(newSource);
 
 			ResumeSelectionChange();
 		}
@@ -730,285 +416,48 @@ namespace Zaaml.UI.Controls.Core
 		private void OnSelectionChangeSuspended()
 		{
 			SelectionResume = Selection;
+			SelectionCollectionResume.CopyFrom(SelectionCollection);
 		}
 
-		private bool PreselectIndex(int value, bool force, Selection<TItem> selection, out Selection<TItem> preSelection)
+		private void RaiseSelectionCollectionChanged(NotifyCollectionChangedEventArgs args)
 		{
-			preSelection = selection;
+			if (IsSelectionChangeSuspended)
+				return;
 
-			if (SupportsIndex == false)
-				return false;
-
-			if (force == false && selection.Index == value)
-				return false;
-
-			var index = value;
-
-			if (index == -1)
-				return PreselectNull(selection, out preSelection);
-
-			if (TryGetItem(index, out var item))
-			{
-				if (CanSelect(item) == false)
-					return false;
-			}
-
-			var itemSource = GetItemSource(index);
-			var itemValue = GetValue(item, itemSource);
-
-			preSelection = new Selection<TItem>(index, item, itemSource, itemValue);
-
-			return true;
+			SelectionCollectionChanged?.Invoke(this, args);
 		}
 
-		private bool PreselectItem(TItem value, bool force, Selection<TItem> selection, out Selection<TItem> preSelection)
+		private void RaiseSelectionCollectionPropertyChanged(PropertyChangedEventArgs args)
 		{
-			preSelection = selection;
+			if (IsSelectionChangeSuspended)
+				return;
 
-			if (SupportsItem == false)
-				return false;
-
-			if (force == false && ReferenceEquals(selection.Item, value))
-				return false;
-
-			if (value == null)
-				return PreselectNull(selection, out preSelection);
-
-			var item = value;
-
-			if (CanSelect(item) == false)
-				return false;
-
-			var index = GetIndexOfItem(item);
-			var itemSource = GetItemSource(item);
-			var itemValue = GetValue(item, itemSource);
-
-			preSelection = new Selection<TItem>(index, item, itemSource, itemValue);
-
-			return true;
+			SelectionCollectionPropertyChanged?.Invoke(this, args);
 		}
-
-		private bool PreselectItemSource(object value, bool force, Selection<TItem> selection, out Selection<TItem> preSelection)
-		{
-			preSelection = selection;
-
-			if (SupportsItemSource == false)
-				return false;
-
-			if (force == false && ReferenceEquals(selection.ItemSource, value))
-				return false;
-
-			var itemSource = value;
-
-			if (itemSource == null)
-				return PreselectNull(selection, out preSelection);
-
-			if (SupportsIndex)
-			{
-				var index = GetIndexOfItemSource(itemSource);
-
-				if (index == -1)
-					return PreselectNull(selection, out preSelection);
-
-				if (TryGetItem(index, out var item))
-				{
-					if (CanSelect(item) == false)
-						return false;
-				}
-
-				var itemValue = GetValue(item, itemSource);
-
-				preSelection = new Selection<TItem>(index, item, itemSource, itemValue);
-
-				return true;
-			}
-			else
-			{
-				if (TryGetItemBySource(itemSource, out var item))
-				{
-					if (CanSelect(item) == false)
-						return false;
-				}
-
-				var itemValue = GetValue(item, itemSource);
-
-				preSelection = new Selection<TItem>(-1, item, itemSource, itemValue);
-
-				return true;
-			}
-		}
-
-		private bool PreselectNull(Selection<TItem> selection, out Selection<TItem> preSelection)
-		{
-			preSelection = selection;
-
-			var count = Advisor.Count;
-
-			if (AllowNullSelection || count <= 0)
-				return false;
-
-			for (var i = 0; i < count; i++)
-			{
-				if (TryGetItem(i, out var item))
-				{
-					if (CanSelect(item) == false)
-						continue;
-				}
-
-				var itemSource = GetItemSource(item);
-				var value = GetValue(item, itemSource);
-
-				preSelection = new Selection<TItem>(0, item, itemSource, value);
-
-				return true;
-			}
-
-			return false;
-		}
-
-		private bool PreselectValue(object value, bool force, Selection<TItem> selection, out Selection<TItem> preSelection)
-		{
-			preSelection = selection;
-
-			if (SupportsValue == false)
-				return false;
-
-			if (force == false && CompareValues(selection.Value, value))
-				return false;
-
-			var itemValue = value;
-
-			if (itemValue == null)
-				return PreselectNull(selection, out preSelection);
-
-			var index = GetIndexOfValue(itemValue);
-
-			if (TryGetItem(index, out var item))
-			{
-				if (CanSelect(item) == false)
-					return false;
-			}
-
-			var itemSource = GetItemSource(index);
-
-			preSelection = new Selection<TItem>(index, item, itemSource, itemValue);
-
-			return true;
-		}
-
-		private void PushSelectedIndexBoundValue(int index)
-		{
-			try
-			{
-				_selectionHandling = true;
-
-				PushSelectedIndexBoundValueCore(index);
-			}
-			finally
-			{
-				_selectionHandling = false;
-			}
-		}
-
-		protected abstract void PushSelectedIndexBoundValueCore(object coerceSelectedIndex);
-
-		private void PushSelectedItemBoundValue(TItem coerceSelectedItem)
-		{
-			try
-			{
-				_selectionHandling = true;
-
-				PushSelectedItemBoundValueCore(coerceSelectedItem);
-			}
-			finally
-			{
-				_selectionHandling = false;
-			}
-		}
-
-		protected abstract void PushSelectedItemBoundValueCore(TItem coerceSelectedItem);
-
-		private void PushSelectedItemSourceBoundValue(object coerceSelectedItemSource)
-		{
-			try
-			{
-				_selectionHandling = true;
-
-				PushSelectedItemSourceBoundValueCore(coerceSelectedItemSource);
-			}
-			finally
-			{
-				_selectionHandling = false;
-			}
-		}
-
-		protected abstract void PushSelectedItemSourceBoundValueCore(object coerceSelectedItemSource);
-
-		private void PushSelectedValueBoundValue(object coerceSelectedValue)
-		{
-			try
-			{
-				_selectionHandling = true;
-
-				PushSelectedValueBoundValueCore(coerceSelectedValue);
-			}
-			finally
-			{
-				_selectionHandling = false;
-			}
-		}
-
-		protected abstract void PushSelectedValueBoundValueCore(object coerceSelectedValue);
-
-		private void RaiseOnSelectedIndexChanged(int oldIndex, int newIndex)
-		{
-			Selector.OnSelectedIndexChanged(oldIndex, newIndex);
-		}
-
-		private void RaiseOnSelectedItemChanged(TItem oldItem, TItem newItem)
-		{
-			Selector.OnSelectedItemChanged(oldItem, newItem);
-		}
-
-		private void RaiseOnSelectedItemSourceChanged(object oldItemSource, object newItemSource)
-		{
-			Selector.OnSelectedItemSourceChanged(oldItemSource, newItemSource);
-		}
-
-		private void RaiseOnSelectedValueChanged(object oldValue, object newValue)
-		{
-			Selector.OnSelectedValueChanged(oldValue, newValue);
-		}
-
-		private void RaiseOnSelectionChanged(Selection<TItem> oldSelection, Selection<TItem> newSelection)
-		{
-			Selector.OnSelectionChanged(oldSelection, newSelection);
-		}
-
-		protected abstract int ReadSelectedIndex();
-
-		protected abstract TItem ReadSelectedItem();
-
-		protected abstract object ReadSelectedItemSource();
-
-		protected abstract object ReadSelectedValue();
 
 		private void ResetMultipleSelection()
 		{
+			CurrentSelectionCollection.Clear(false);
+
+			if (MultipleSelection)
+			{
+				if (CurrentSelection.IsEmpty == false) 
+					CurrentSelectionCollection.Add(CurrentSelection);
+			}
+			else
+				IsInverted = false;
 		}
 
 		public void RestoreSelection()
 		{
 			if (IsSelectionChangeSuspended)
+			{
 				SelectionResume = Selection;
+				SelectionCollectionResume.CopyFrom(SelectionCollection);
+			}
 		}
 
 		public void ResumeSelectionChange()
-		{
-			ResumeSelectionChange(true);
-		}
-
-		public void ResumeSelectionChange(bool applySelection)
 		{
 			if (_selectionHandling)
 				return;
@@ -1021,202 +470,19 @@ namespace Zaaml.UI.Controls.Core
 			if (SuspendSelectionChangeCount > 0)
 				return;
 
-			CommitSelection(SelectionResume, applySelection, SelectionCollectionResume.ContainsSelection(SelectionResume));
+			SelectionCollection.CopyFrom(SelectionCollectionResume);
+			RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
+
+			CommitSelection(SelectionResume);
 			EnsureSelection();
 		}
 
-		private int Version { get; set; }
-		
-		private void SelectCore(Selection<TItem> selection, bool addToSelection)
+		private void SetItemSelected(TItem item, bool selection)
 		{
-			if (IsSelectionChangeSuspended)
-				SelectionResume = selection;
-			else
-				CommitSelection(selection, true, addToSelection);
-
-			if (addToSelection)
-				CurrentSelectionCollection.Add(selection);
-			else
-				CurrentSelectionCollection.Clear();
-
-			Version++;
-		}
-
-		private void RaiseSelectionCollectionChanged()
-		{
-			if (IsSelectionChangeSuspended)
+			if (item == null)
 				return;
-			
-			
-		}
 
-		private void UpdateSelectedItem(Selection<TItem> selection)
-		{
-			if (ReferenceEquals(CurrentSelectedItemSource, selection.ItemSource)) 
-				CommitSelection(selection, true, true);
-
-			CurrentSelectionCollection.UpdateSelectedItem(selection);
-		}
-
-		public bool SelectIndex(int index)
-		{
-			return SelectIndexCore(index, false, false);
-		}
-
-		public bool SelectIndex(int index, bool addToSelection)
-		{
-			return SelectIndexCore(index, false, addToSelection);
-		}
-
-		private bool SelectIndexCore(int index, bool force, bool addToSelection)
-		{
-			if (_selectionHandling)
-				return false;
-
-			if (PreselectIndex(index, force, CurrentSelection, out var preSelection))
-			{
-				SelectCore(preSelection, addToSelection);
-
-				return true;
-			}
-
-			return false;
-		}
-
-		public bool SelectItem(TItem item)
-		{
-			return SelectItemCore(item, false, false);
-		}
-
-		public bool SelectItem(TItem item, bool addToSelection)
-		{
-			return SelectItemCore(item, false, addToSelection);
-		}
-
-		private bool SelectItemCore(TItem item, bool force, bool addToSelection)
-		{
-			if (_selectionHandling)
-				return false;
-
-			if (PreselectItem(item, force, CurrentSelection, out var preSelection))
-			{
-				SelectCore(preSelection, addToSelection);
-
-				return true;
-			}
-
-			return false;
-		}
-
-		public bool SelectItemSource(object itemSource)
-		{
-			return SelectItemSourceCore(itemSource, false, false);
-		}
-
-		public bool SelectItemSource(object itemSource, bool addToSelection)
-		{
-			return SelectItemSourceCore(itemSource, false, addToSelection);
-		}
-
-		private bool SelectItemSourceCore(object itemSource, bool force, bool addToSelection)
-		{
-			if (_selectionHandling)
-				return false;
-
-			if (PreselectItemSource(itemSource, force, CurrentSelection, out var preSelection))
-			{
-				SelectCore(preSelection, addToSelection);
-
-				return true;
-			}
-
-			return false;
-		}
-
-		public int SelectNext(int index, SelectNextMode mode)
-		{
-			if (Count == 0)
-				index = -1;
-			else if (Count == 1)
-				index = 0;
-			else
-			{
-				switch (mode)
-				{
-					case SelectNextMode.First:
-
-						index = 0;
-
-						break;
-
-					case SelectNextMode.PrevOrNearest:
-
-						index = index > 0 ? index - 1 : index + 1;
-
-						break;
-
-					case SelectNextMode.Prev:
-
-						index = index == 0 ? Count - 1 : index - 1;
-
-						break;
-
-					case SelectNextMode.Next:
-
-						index = index == Count - 1 ? 0 : index + 1;
-
-						break;
-
-					case SelectNextMode.NextOrNearest:
-
-						index = index < Count - 1 ? index + 1 : index - 1;
-
-						break;
-
-					case SelectNextMode.Last:
-
-						index = Count - 1;
-
-						break;
-				}
-			}
-
-			return index;
-		}
-
-		public void SelectNext(bool force = false)
-		{
-			SelectIndexCore(SelectNext(SelectedIndex, SelectNextMode), force, false);
-		}
-
-		public bool SelectValue(object value)
-		{
-			return SelectValueCore(value, false, false);
-		}
-
-		public bool SelectValue(object value, bool addToSelection)
-		{
-			return SelectValueCore(value, false, addToSelection);
-		}
-
-		private bool SelectValueCore(object value, bool force, bool addToSelection)
-		{
-			if (_selectionHandling)
-				return false;
-
-			if (PreselectValue(value, force, CurrentSelection, out var preSelection))
-			{
-				SelectCore(preSelection, addToSelection);
-
-				return true;
-			}
-
-			return false;
-		}
-
-		private void SetItemSelection(TItem item, bool selection)
-		{
-			item.IsSelected = selection;
+			Advisor.SetItemSelected(item, selection);
 		}
 
 		public void SuspendSelectionChange()
@@ -1230,7 +496,7 @@ namespace Zaaml.UI.Controls.Core
 				OnSelectionChangeSuspended();
 		}
 
-		private bool TryGetItem(int index, out TItem item)
+		private bool TryGetItem(int index, bool ensure, out TItem item)
 		{
 			if (SupportsItem == false || IsWithinRange(index) == false)
 			{
@@ -1239,206 +505,19 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-			return Advisor.TryGetItem(index, out item);
+			return Advisor.TryGetItem(index, ensure, out item);
 		}
 
-		private bool TryGetItemBySource(object itemSource, out TItem item)
+		private bool TryGetItemBySource(object source, bool ensure, out TItem item)
 		{
-			if (SupportsItemSource == false || itemSource == null)
+			if (SupportsSource == false || source == null)
 			{
 				item = default;
 
 				return false;
 			}
 
-			return Advisor.TryGetItemBySource(itemSource, out item);
-		}
-
-		public void UnselectIndex(int index)
-		{
-			if (_selectionHandling)
-				return;
-
-			if (SelectedIndex == index)
-				SelectIndex(-1);
-
-			EnsureSelection();
-		}
-
-		public void UnselectItem(TItem item)
-		{
-			if (_selectionHandling)
-				return;
-
-			if (ReferenceEquals(SelectedItem, item))
-				SelectItem(null);
-
-			EnsureSelection();
-		}
-
-		public void UnselectItemSource(object itemSource)
-		{
-			if (_selectionHandling)
-				return;
-
-			if (ReferenceEquals(SelectedItemSource, itemSource))
-				SelectItemSource(null);
-
-			EnsureSelection();
-		}
-
-		public void UnselectValue(object value)
-		{
-			if (_selectionHandling)
-				return;
-
-			if (ReferenceEquals(SelectedValue, value))
-				SelectValue(null);
-
-			EnsureSelection();
-		}
-
-		private void UpdateSelectedIndex(bool forItem)
-		{
-			if (SupportsIndex == false)
-				return;
-
-			if (forItem)
-			{
-				var itemIndex = SelectedItem != null ? GetIndexOfItem(SelectedItem) : -1;
-
-				UpdateSelectedIndex(itemIndex);
-			}
-			else
-			{
-				var itemSourceIndex = SelectedItemSource != null ? GetIndexOfItemSource(SelectedItemSource) : -1;
-
-				UpdateSelectedIndex(itemSourceIndex);
-			}
-		}
-
-		private void UpdateSelectedIndex(int itemIndex)
-		{
-			if (itemIndex == SelectedIndex)
-				return;
-
-			SuspendSelectionChange();
-
-			if (SelectedIndex != -1)
-				UnselectIndex(SelectedIndex);
-
-			if (itemIndex != -1)
-				SelectIndex(itemIndex);
-
-			ResumeSelectionChange();
-		}
-
-		public void UpdateSelectedValue()
-		{
-			if (SupportsIndex && SelectedIndex == -1)
-				return;
-
-			SelectValue(GetValue(SelectedItem, SelectedItemSource));
-		}
-
-		protected abstract void WriteSelectedIndex(int index);
-
-		protected abstract void WriteSelectedItem(TItem item);
-
-		protected abstract void WriteSelectedItemSource(object itemSource);
-
-		protected abstract void WriteSelectedValue(object value);
-	}
-
-	internal class SelectorController<TSelector, TItem> : SelectorController<TItem>
-		where TSelector : FrameworkElement, ISelector<TItem>
-		where TItem : FrameworkElement, ISelectable
-	{
-		public SelectorController(TSelector selector, ISelectorAdvisor<TItem> advisor) : base(selector, advisor)
-		{
-		}
-
-		private TSelector SelectorInt => (TSelector) Selector;
-
-		protected override bool SupportsIndex => SelectorInt.SelectedIndexProperty != null;
-
-		protected override bool SupportsItem => SelectorInt.SelectedItemProperty != null;
-
-		protected override bool SupportsItemSource => SelectorInt.SelectedItemSourceProperty != null;
-
-		protected override bool SupportsValue => SelectorInt.SelectedValueProperty != null;
-
-		private void PushBoundValue(DependencyProperty property, [UsedImplicitly] object coercedValue)
-		{
-			if (!(SelectorInt.ReadLocalValue(property) is BindingExpression localBindingExpression))
-				return;
-
-			SelectorInt.Dispatcher.BeginInvoke(DispatcherPriority.DataBind, () => localBindingExpression.UpdateSource());
-		}
-
-		protected override void PushSelectedIndexBoundValueCore(object coerceSelectedIndex)
-		{
-			PushBoundValue(SelectorInt.SelectedIndexProperty, coerceSelectedIndex);
-		}
-
-		protected override void PushSelectedItemBoundValueCore(TItem coerceSelectedItem)
-		{
-			PushBoundValue(SelectorInt.SelectedItemProperty, coerceSelectedItem);
-		}
-
-		protected override void PushSelectedItemSourceBoundValueCore(object coerceSelectedItemSource)
-		{
-			PushBoundValue(SelectorInt.SelectedItemSourceProperty, coerceSelectedItemSource);
-		}
-
-		protected override void PushSelectedValueBoundValueCore(object coerceSelectedValue)
-		{
-			PushBoundValue(SelectorInt.SelectedValueProperty, coerceSelectedValue);
-		}
-
-		private void PushValue(DependencyProperty property, object value)
-		{
-			SelectorInt.SetCurrentValueInternal(property, value);
-		}
-
-		protected override int ReadSelectedIndex()
-		{
-			return (int) SelectorInt.GetValue(SelectorInt.SelectedIndexProperty);
-		}
-
-		protected override TItem ReadSelectedItem()
-		{
-			return (TItem) SelectorInt.GetValue(SelectorInt.SelectedItemProperty);
-		}
-
-		protected override object ReadSelectedItemSource()
-		{
-			return SelectorInt.GetValue(SelectorInt.SelectedItemSourceProperty);
-		}
-
-		protected override object ReadSelectedValue()
-		{
-			return SelectorInt.GetValue(SelectorInt.SelectedValueProperty);
-		}
-
-		protected override void WriteSelectedIndex(int index)
-		{
-			PushValue(SelectorInt.SelectedIndexProperty, index);
-		}
-
-		protected override void WriteSelectedItem(TItem item)
-		{
-			PushValue(SelectorInt.SelectedItemProperty, item);
-		}
-
-		protected override void WriteSelectedItemSource(object itemSource)
-		{
-			PushValue(SelectorInt.SelectedItemSourceProperty, itemSource);
-		}
-
-		protected override void WriteSelectedValue(object value)
-		{
-			PushValue(SelectorInt.SelectedValueProperty, value);
+			return Advisor.TryGetItemBySource(source, ensure, out item);
 		}
 	}
 }

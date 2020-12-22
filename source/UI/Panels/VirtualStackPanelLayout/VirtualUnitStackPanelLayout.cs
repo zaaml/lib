@@ -17,7 +17,6 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 {
 	internal partial class VirtualUnitStackPanelLayout : VirtualPanelLayoutBase<IVirtualStackPanel>
 	{
-		private const int CacheLength = 2;
 		private BringIntoViewRequest _enqueueBringIntoViewRequest;
 		private Size _pixelViewport;
 		private double _preCacheDelta;

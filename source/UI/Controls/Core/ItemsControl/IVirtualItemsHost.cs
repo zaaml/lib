@@ -26,7 +26,7 @@ namespace Zaaml.UI.Controls.Core
 	}
 
 	internal interface IVirtualItemsHost<TItem> : IItemsHost<TItem>, IVirtualItemsHost
-		where TItem : System.Windows.Controls.Control
+		where TItem : FrameworkElement
 	{
 	}
 }

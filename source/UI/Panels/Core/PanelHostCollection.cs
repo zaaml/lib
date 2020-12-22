@@ -2,12 +2,12 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using Control = System.Windows.Controls.Control;
+using System.Windows;
 
 namespace Zaaml.UI.Panels.Core
 {
 	internal sealed class PanelHostCollection<TItem> : PanelHostCollectionBase<TItem, ItemsPanel<TItem>>
-		where TItem : Control
+		where TItem : FrameworkElement
 	{
 		public PanelHostCollection(ItemsPanel<TItem> panel) : base(panel)
 		{

@@ -92,7 +92,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			}
 		}
 
-		private PopupWndSource PopupSource => Popup?.PopupSource;
+		private PopupSource PopupSource => Popup?.PopupSource;
 
 		private void ApplyOffset()
 		{
@@ -108,6 +108,12 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				PopupSource.VerticalOffset = calculatedOffset.Y;
 		}
 
+		internal event EventHandler ArrangedInternal;
+
+		internal Point ActualOffset => _calculatedOffset.Offset(Offset);
+		
+		internal Size ActualSize { get; private set; }
+		
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
 			if (Popup?.IsOpen != true)
@@ -127,7 +133,11 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				desiredSize = child.DesiredSize;
 			}
 
+			ActualSize = finalSize;
+				
 			ApplyOffset();
+
+			ArrangedInternal?.Invoke(this, EventArgs.Empty);
 
 			return finalSize.Clamp(new Size(), desiredSize);
 		}
@@ -443,7 +453,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			protected override Rect ArrangeOverride(Size desiredSize)
 			{
-				return RectUtils.CalcAlignBox(ScreenBoundsCore, desiredSize.Rect(), Popup.HorizontalAlignment, Popup.VerticalAlignment);
+				return RectUtils.CalcAlignBox(ScreenBoundsCore, desiredSize.Rect(), HorizontalAlignment.Left, VerticalAlignment.Top);
 			}
 
 			public static PopupPlacement GetDefault(Popup popup)

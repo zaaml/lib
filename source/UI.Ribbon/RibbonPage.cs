@@ -24,252 +24,210 @@ using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  [TemplateContractType(typeof(RibbonPageTemplateContract))]
-  public partial class RibbonPage : ItemsControlBase<RibbonPage, RibbonGroup, RibbonGroupCollection, RibbonGroupsPresenter, RibbonGroupsPanel>, ISelectionStateControl, ISelectable, IIconOwner
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(RibbonPageTemplateContract))]
+	public partial class RibbonPage : ItemsControlBase<RibbonPage, RibbonGroup, RibbonGroupCollection, RibbonGroupsPresenter, RibbonGroupsPanel>, ISelectionStateControl, IIconOwner
+	{
+		public static readonly DependencyProperty HeaderProperty = DPM.Register<string, RibbonPage>
+			("Header");
 
-    public static readonly DependencyProperty HeaderProperty = DPM.Register<string, RibbonPage>
-      ("Header");
+		public static readonly DependencyProperty IconProperty = DPM.Register<IconBase, RibbonPage>
+			("Icon", i => i.LogicalChildMentor.OnLogicalChildPropertyChanged);
 
-    public static readonly DependencyProperty IconProperty = DPM.Register<IconBase, RibbonPage>
-      ("Icon", i => i.LogicalChildMentor.OnLogicalChildPropertyChanged);
+		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, RibbonPage>
+			("IsSelected", false, p => p.OnIsSelectedChanged);
 
-    public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, RibbonPage>
-      ("IsSelected", false, p => p.OnIsSelectedChanged);
+		private static readonly DependencyPropertyKey RibbonPropertyKey = DPM.RegisterReadOnly<RibbonControl, RibbonPage>
+			("Ribbon", p => p.OnRibbonControlChanged);
 
-    private static readonly DependencyPropertyKey RibbonPropertyKey = DPM.RegisterReadOnly<RibbonControl, RibbonPage>
-      ("Ribbon", p => p.OnRibbonControlChanged);
+		private static readonly DependencyPropertyKey PageCategoryPropertyKey = DPM.RegisterReadOnly<RibbonPageCategory, RibbonPage>
+			("PageCategory");
 
-    private static readonly DependencyPropertyKey PageCategoryPropertyKey = DPM.RegisterReadOnly<RibbonPageCategory, RibbonPage>
-      ("PageCategory");
+		public static readonly DependencyProperty PageCategoryProperty = PageCategoryPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty PageCategoryProperty = PageCategoryPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty GroupSizeReductionOrderProperty = DPM.Register<StringCollection, RibbonPage>
+			("GroupSizeReductionOrder");
 
-    public static readonly DependencyProperty GroupSizeReductionOrderProperty = DPM.Register<StringCollection, RibbonPage>
-      ("GroupSizeReductionOrder");
+		public static readonly DependencyProperty RibbonProperty = RibbonPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty RibbonProperty = RibbonPropertyKey.DependencyProperty;
+		private static readonly DependencyPropertyKey ActualGroupsPresenterPropertyKey = DPM.RegisterReadOnly<RibbonGroupsPresenter, RibbonPage>
+			("ActualGroupsPresenter");
 
-    private static readonly DependencyPropertyKey ActualGroupsPresenterPropertyKey = DPM.RegisterReadOnly<RibbonGroupsPresenter, RibbonPage>
-      ("ActualGroupsPresenter");
+		internal static readonly DependencyProperty ActualGroupsPresenterProperty = ActualGroupsPresenterPropertyKey.DependencyProperty;
 
-    internal static readonly DependencyProperty ActualGroupsPresenterProperty = ActualGroupsPresenterPropertyKey.DependencyProperty;
+		public event EventHandler IsSelectedChanged;
 
-    #endregion
+		static RibbonPage()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<RibbonPage>();
+		}
 
-    #region Ctors
+		public RibbonPage()
+		{
+			this.OverrideStyleKey<RibbonPage>();
+			SelectCommand = new RelayCommand(OnSelectCommandExecute, () => true);
+		}
 
-    static RibbonPage()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<RibbonPage>();
-    }
+		internal IEnumerable<RibbonGroup> ActualGroupSizeReductionOrder => GroupSizeReductionOrder == null ? Items.Reverse() : GroupSizeReductionOrder.Cast<string>().Select(GetRibbonGroup).SkipNull();
 
-    public RibbonPage()
-    {
-      this.OverrideStyleKey<RibbonPage>();
-      SelectCommand = new RelayCommand(OnSelectCommandExecute, () => true);
-    }
+		public RibbonGroupsPresenter ActualGroupsPresenter
+		{
+			get => (RibbonGroupsPresenter) GetValue(ActualGroupsPresenterProperty);
+			private set => this.SetReadOnlyValue(ActualGroupsPresenterPropertyKey, value);
+		}
 
-    #endregion
+		[TypeConverter(typeof(StringCollectionTypeConverter))]
+		public StringCollection GroupSizeReductionOrder
+		{
+			get => (StringCollection) GetValue(GroupSizeReductionOrderProperty);
+			set => SetValue(GroupSizeReductionOrderProperty, value);
+		}
 
-    #region Properties
+		internal RibbonGroupsPresenterHost GroupsPresenterHost => TemplateContract.GroupsPresenterHost;
 
-    internal IEnumerable<RibbonGroup> ActualGroupSizeReductionOrder => GroupSizeReductionOrder == null ? Items.Reverse() : GroupSizeReductionOrder.Cast<string>().Select(GetRibbonGroup).SkipNull();
+		public string Header
+		{
+			get => (string) GetValue(HeaderProperty);
+			set => SetValue(HeaderProperty, value);
+		}
 
-    public RibbonGroupsPresenter ActualGroupsPresenter
-    {
-      get => (RibbonGroupsPresenter) GetValue(ActualGroupsPresenterProperty);
-      private set => this.SetReadOnlyValue(ActualGroupsPresenterPropertyKey, value);
-    }
+		public RibbonPageCategory PageCategory
+		{
+			get => (RibbonPageCategory) GetValue(PageCategoryProperty);
+			internal set => this.SetReadOnlyValue(PageCategoryPropertyKey, value);
+		}
 
-    [TypeConverter(typeof(StringCollectionTypeConverter))]
-    public StringCollection GroupSizeReductionOrder
-    {
-      get => (StringCollection) GetValue(GroupSizeReductionOrderProperty);
-      set => SetValue(GroupSizeReductionOrderProperty, value);
-    }
+		public RibbonControl Ribbon
+		{
+			get => (RibbonControl) GetValue(RibbonProperty);
+			internal set => this.SetReadOnlyValue(RibbonPropertyKey, value);
+		}
 
-    internal RibbonGroupsPresenterHost GroupsPresenterHost => TemplateContract.GroupsPresenterHost;
+		public RelayCommand SelectCommand { get; }
 
-    public string Header
-    {
-      get => (string) GetValue(HeaderProperty);
-      set => SetValue(HeaderProperty, value);
-    }
+		private RibbonPageTemplateContract TemplateContract => (RibbonPageTemplateContract) TemplateContractInternal;
 
-    public RibbonPageCategory PageCategory
-    {
-      get => (RibbonPageCategory) GetValue(PageCategoryProperty);
-      internal set => this.SetReadOnlyValue(PageCategoryPropertyKey, value);
-    }
+		private void Activate()
+		{
+			SetIsSelectedInt(true);
+			Ribbon?.Activate(this);
+		}
 
-    public RibbonControl Ribbon
-    {
-      get => (RibbonControl) GetValue(RibbonProperty);
-      internal set => this.SetReadOnlyValue(RibbonPropertyKey, value);
-    }
+		protected override RibbonGroupCollection CreateItemCollection()
+		{
+			return new RibbonGroupCollection(this);
+		}
 
-    public RelayCommand SelectCommand { get; }
+		private RibbonGroup GetRibbonGroup(string name)
+		{
+			var ribbonGroup = FindName(name) as RibbonGroup ?? this.GetTemplateElement(name) as RibbonGroup;
+			return ribbonGroup;
+		}
 
-    private RibbonPageTemplateContract TemplateContract => (RibbonPageTemplateContract) TemplateContractInternal;
-
-    #endregion
-
-    #region  Methods
-
-    private void Activate()
-    {
-      SetIsSelectedInt(true);
-      Ribbon?.Activate(this);
-    }
-
-    protected override RibbonGroupCollection CreateItemCollection()
-    {
-      return new RibbonGroupCollection(this);
-    }
-
-    private RibbonGroup GetRibbonGroup(string name)
-    {
-      var ribbonGroup = FindName(name) as RibbonGroup ?? this.GetTemplateElement(name) as RibbonGroup;
-      return ribbonGroup;
-    }
-
-    protected override void OnGotFocus(RoutedEventArgs e)
-    {
-      base.OnGotFocus(e);
+		protected override void OnGotFocus(RoutedEventArgs e)
+		{
+			base.OnGotFocus(e);
 
 #if !SILVERLIGHT
-      if (e.Handled)
-        return;
+			if (e.Handled)
+				return;
 
-      e.Handled = true;
+			e.Handled = true;
 #endif
 
-      if (Ribbon?.IsInitializing == false)
-        Activate();
-    }
+			if (Ribbon?.IsInitializing == false)
+				Activate();
+		}
 
-    protected virtual void OnIsSelectedChanged()
-    {
-      UpdateVisualState(true);
-      var selected = IsSelected;
+		protected virtual void OnIsSelectedChanged()
+		{
+			UpdateVisualState(true);
+			var selected = IsSelected;
 
-      if (selected)
-        Ribbon?.Select(this);
+			if (selected)
+				Ribbon?.Select(this);
 
-      UpdateVisualState(true);
+			UpdateVisualState(true);
 
-      if (selected)
-        RaiseSelectedEvent();
-      else
-        RaiseUnselectedEvent();
+			if (selected)
+				RaiseSelectedEvent();
+			else
+				RaiseUnselectedEvent();
 
-      if (selected == IsSelected)
-        IsSelectedChanged?.Invoke(this, EventArgs.Empty);
-    }
+			if (selected == IsSelected)
+				IsSelectedChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    internal override void OnItemAttachedInternal(RibbonGroup item)
-    {
-      item.Page = this;
+		internal override void OnItemAttachedInternal(RibbonGroup item)
+		{
+			item.Page = this;
 
-      base.OnItemAttachedInternal(item);
-    }
+			base.OnItemAttachedInternal(item);
+		}
 
-    internal override void OnItemDetachedInternal(RibbonGroup item)
-    {
-      base.OnItemDetachedInternal(item);
+		internal override void OnItemDetachedInternal(RibbonGroup item)
+		{
+			base.OnItemDetachedInternal(item);
 
-      item.Page = null;
-    }
+			item.Page = null;
+		}
 
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-      if (e.Handled)
-        return;
+		protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			if (e.Handled)
+				return;
 
-      e.Handled = true;
-      Activate();
-    }
+			e.Handled = true;
+			Activate();
+		}
 
-    protected virtual void OnRibbonControlChanged()
-    {
-    }
+		protected virtual void OnRibbonControlChanged()
+		{
+		}
 
-    private void OnSelectCommandExecute()
-    {
-      Activate();
-    }
+		private void OnSelectCommandExecute()
+		{
+			Activate();
+		}
 
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-      ItemsPresenter.Page = this;
-      GroupsPresenterHost.Page = this;
-      ActualGroupsPresenter = ItemsPresenter;
-    }
+			ItemsPresenter.Page = this;
+			GroupsPresenterHost.Page = this;
+			ActualGroupsPresenter = ItemsPresenter;
+		}
 
-    protected override void OnTemplateContractDetaching()
-    {
-      ItemsPresenter.Page = null;
-      ActualGroupsPresenter = null;
-      GroupsPresenterHost.Page = null;
+		protected override void OnTemplateContractDetaching()
+		{
+			ItemsPresenter.Page = null;
+			ActualGroupsPresenter = null;
+			GroupsPresenterHost.Page = null;
 
-      base.OnTemplateContractDetaching();
-    }
+			base.OnTemplateContractDetaching();
+		}
 
-    private void SetIsSelectedInt(bool isSelected)
-    {
-      this.SetCurrentValueInternal(IsSelectedProperty, isSelected ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
-    }
+		private void SetIsSelectedInt(bool isSelected)
+		{
+			this.SetCurrentValueInternal(IsSelectedProperty, isSelected ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+		}
 
-    #endregion
+		public IconBase Icon
+		{
+			get => (IconBase) GetValue(IconProperty);
+			set => SetValue(IconProperty, value);
+		}
 
-    #region Interface Implementations
+		public bool IsSelected
+		{
+			get => (bool) GetValue(IsSelectedProperty);
+			set => SetValue(IsSelectedProperty, value);
+		}
+	}
 
-    #region IIconOwner
-
-    public IconBase Icon
-    {
-      get => (IconBase) GetValue(IconProperty);
-      set => SetValue(IconProperty, value);
-    }
-
-    #endregion
-
-    #region ISelectable
-
-    public event EventHandler IsSelectedChanged;
-
-    bool ISelectable.IsSelected
-    {
-      get => IsSelected;
-      set => SetIsSelectedInt(value);
-    }
-
-    #endregion
-
-    #region ISelectionStateControl
-
-    public bool IsSelected
-    {
-      get => (bool) GetValue(IsSelectedProperty);
-      set => SetValue(IsSelectedProperty, value);
-    }
-
-    #endregion
-
-    #endregion
-  }
-
-  public sealed class RibbonPageTemplateContract : ItemsControlBaseTemplateContract<RibbonGroupsPresenter>
-  {
-    #region Properties
-
-    [TemplateContractPart(Required = true)]
-    public RibbonGroupsPresenterHost GroupsPresenterHost { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
+	public sealed class RibbonPageTemplateContract : ItemsControlBaseTemplateContract<RibbonGroupsPresenter>
+	{
+		[TemplateContractPart(Required = true)]
+		public RibbonGroupsPresenterHost GroupsPresenterHost { get; [UsedImplicitly] private set; }
+	}
 }

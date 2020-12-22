@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core;
 using Zaaml.Core.Utils;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -99,6 +100,36 @@ namespace Zaaml.UI.Controls.DropDown
 		protected virtual void OnClosed()
 		{
 			DropDownClosed?.Invoke(this, EventArgs.Empty);
+		}
+
+		public void OpenDropDown()
+		{
+			if (IsDropDownOpen)
+				return;
+			
+			this.SetCurrentValueInternal(IsDropDownOpenProperty, true);
+
+			CoerceIsDropDownOpen();
+		}
+
+		private void CoerceIsDropDownOpen()
+		{
+			var popupIsOpen = PopupControl?.PopupController?.Popup?.IsOpen;
+			
+			if (popupIsOpen == false)
+				this.SetCurrentValueInternal(IsDropDownOpenProperty, false);
+			else if (popupIsOpen == true)
+				this.SetCurrentValueInternal(IsDropDownOpenProperty, true);
+		}
+
+		public void CloseDropDown()
+		{
+			if (IsDropDownOpen == false)
+				return;
+
+			this.SetCurrentValueInternal(IsDropDownOpenProperty, false);
+
+			CoerceIsDropDownOpen();
 		}
 
 		private void OnClosedCore()

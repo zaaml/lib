@@ -103,12 +103,12 @@ namespace Zaaml.UI.Controls.PropertyView
 			base.OnTemplateContractAttached();
 
 			TreeView.ItemGenerator = _generator;
-			TreeView.ItemsSource = Controller.PropertyCategories;
+			TreeView.SourceCollection = Controller.PropertyCategories;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
-			TreeView.ItemsSource = null;
+			TreeView.SourceCollection = null;
 			TreeView.ItemGenerator = null;
 
 			base.OnTemplateContractDetaching();
@@ -117,7 +117,7 @@ namespace Zaaml.UI.Controls.PropertyView
 		internal void UpdateProperties()
 		{
 			if (TreeView != null)
-				TreeView.ItemsSource = Controller.PropertyCategories;
+				TreeView.SourceCollection = Controller.PropertyCategories;
 		}
 	}
 

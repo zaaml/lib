@@ -52,8 +52,13 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			base.OnClick();
 
-			if (PopupControl != null)
-				IsDropDownOpen = !IsDropDownOpen;
+			if (PopupControl == null) 
+				return;
+			
+			if (IsDropDownOpen)
+				CloseDropDown();
+			else
+				OpenDropDown();
 		}
 
 		private void OnPlacementTargetChanged()

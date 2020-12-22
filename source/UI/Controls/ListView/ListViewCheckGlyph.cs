@@ -34,8 +34,8 @@ namespace Zaaml.UI.Controls.ListView
 			if (oldListViewItem != null)
 				ClearValue(IsCheckedProperty);
 
-			if (newListViewItem != null)
-				SetBinding(IsCheckedProperty, new Binding { Path = ListViewItemIsSelectedPropertyPath, Source = newListViewItem, Mode = BindingMode.TwoWay });
+			if (newListViewItem != null) 
+				SetBinding(IsCheckedProperty, new Binding {Path = ListViewItemIsSelectedPropertyPath, Source = newListViewItem, Mode = BindingMode.TwoWay});
 		}
 
 		protected override void OnLoaded()

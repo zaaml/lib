@@ -43,8 +43,8 @@ namespace Zaaml.UI.Controls.TableView
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<TableViewItemGenerator, TableViewControl>
 			("ItemGenerator", default, d => d.OnItemGeneratorPropertyChangedPrivate);
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, TableViewControl>
-			("ItemsSource", default, d => d.OnItemsSourcePropertyChangedPrivate);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, TableViewControl>
+			("SourceCollection", d => d.OnSourceCollectionPropertyChangedPrivate);
 
 		public static readonly DependencyProperty DefinitionsProperty = DefinitionPropertyKey.DependencyProperty;
 
@@ -58,7 +58,7 @@ namespace Zaaml.UI.Controls.TableView
 			this.OverrideStyleKey<TableViewControl>();
 		}
 
-		[TypeConverter(typeof(FlexLengthConverter))]
+		[TypeConverter(typeof(FlexLengthTypeConverter))]
 		public FlexLength DefinitionLength
 		{
 			get => (FlexLength) GetValue(DefinitionLengthProperty);
@@ -97,10 +97,10 @@ namespace Zaaml.UI.Controls.TableView
 			set => SetValue(ItemSpacingProperty, value);
 		}
 
-		public IEnumerable ItemsSource
+		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
+			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public Orientation Orientation
@@ -218,9 +218,9 @@ namespace Zaaml.UI.Controls.TableView
 			InvalidatePanel();
 		}
 
-		private void OnItemsSourcePropertyChangedPrivate(IEnumerable oldValue, IEnumerable newValue)
+		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldValue, IEnumerable newValue)
 		{
-			ItemsSourceCore = newValue;
+			SourceCore = newValue;
 		}
 
 		private void OnOrientationPropertyChangedPrivate(Orientation oldValue, Orientation newValue)

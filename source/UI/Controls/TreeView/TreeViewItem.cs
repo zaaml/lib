@@ -14,6 +14,8 @@ using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.Interfaces;
+using Zaaml.UI.Controls.Primitives;
 using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 using Zaaml.UI.Controls.TreeView.Data;
 using Zaaml.UI.Panels.Core;
@@ -22,7 +24,7 @@ using Zaaml.UI.Utils;
 namespace Zaaml.UI.Controls.TreeView
 {
 	[ContentProperty(nameof(Items))]
-	public partial class TreeViewItem : IconContentControl, ISelectable, ISelectableEx, IContextPopupTarget, MouseHoverVisualStateFlickeringReducer<TreeViewItem>.IClient
+	public partial class TreeViewItem : IconContentControl, IContextPopupTarget, MouseHoverVisualStateFlickeringReducer<TreeViewItem>.IClient, ISelectableIconContentItem
 	{
 		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, TreeViewItem>
 			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
@@ -30,8 +32,8 @@ namespace Zaaml.UI.Controls.TreeView
 		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<TreeViewItemCollection, TreeViewItem>
 			("ItemsPrivate");
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, TreeViewItem>
-			("ItemsSource", i => i.OnItemsSourceChangedPrivate);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, TreeViewItem>
+			("SourceCollection", i => i.OnSourceChangedPrivate);
 
 		private static readonly DependencyPropertyKey HasItemsPropertyKey = DPM.RegisterReadOnly<bool, TreeViewItem>
 			("HasItems", i => i.OnHasItemsChangedPrivate);
@@ -60,11 +62,19 @@ namespace Zaaml.UI.Controls.TreeView
 		private static readonly DependencyPropertyKey TreeViewControlPropertyKey = DPM.RegisterReadOnly<TreeViewControl, TreeViewItem>
 			("TreeViewControl", default, d => d.OnTreeViewControlPropertyChangedPrivate);
 
+		public static readonly DependencyProperty GlyphProperty = DPM.Register<GlyphBase, TreeViewItem>
+			("Glyph", i => i.OnGlyphPropertyChangedPrivate);
+
+		public static readonly DependencyProperty ValueProperty = DPM.Register<object, TreeViewItem>
+			("Value", d => d.OnValuePropertyChangedPrivate);
+
 		public static readonly DependencyProperty TreeViewControlProperty = TreeViewControlPropertyKey.DependencyProperty;
 
 		private uint _packedValue;
 
 		private TreeViewItemData _treeViewItemData;
+
+		public event EventHandler IsSelectedChanged;
 
 		static TreeViewItem()
 		{
@@ -102,6 +112,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		protected virtual bool CanSelect => true;
 
+		internal bool CanSelectInternal => CanSelect;
+
 		private bool CoerceIsExpanded
 		{
 			get => PackedDefinition.CoerceIsExpanded.GetValue(_packedValue);
@@ -138,18 +150,6 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public TreeViewItemCollection Items => this.GetValueOrCreate(ItemsPropertyKey, CreateItemCollectionPrivate);
 
-		public IEnumerable ItemsSource
-		{
-			get => (IEnumerable) GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
-		}
-
-		protected IEnumerable ItemsSourceCore
-		{
-			get => Items.SourceInternal;
-			set => Items.SourceInternal = value;
-		}
-
 		private int Level => TreeViewItemData?.ActualLevel ?? 0;
 
 		public double LevelDistance
@@ -159,6 +159,18 @@ namespace Zaaml.UI.Controls.TreeView
 		}
 
 		public TreeViewItem ParentItem => TreeViewItemData?.ActualParent?.TreeViewItem;
+
+		public IEnumerable SourceCollection
+		{
+			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
+		}
+
+		protected IEnumerable SourceCore
+		{
+			get => Items.SourceInternal;
+			set => Items.SourceInternal = value;
+		}
 
 		private bool SuspendPushIsExpanded
 		{
@@ -195,6 +207,12 @@ namespace Zaaml.UI.Controls.TreeView
 					SyncTreeNodeState();
 				}
 			}
+		}
+
+		public object Value
+		{
+			get => GetValue(ValueProperty);
+			set => SetValue(ValueProperty, value);
 		}
 
 		private bool CoerceIsExpandedProperty(bool value)
@@ -242,6 +260,10 @@ namespace Zaaml.UI.Controls.TreeView
 				return KnownBoxes.BoolFalse;
 
 			return arg;
+		}
+
+		private void OnGlyphPropertyChangedPrivate(GlyphBase oldGlyph, GlyphBase newGlyph)
+		{
 		}
 
 		protected override void OnGotFocus(RoutedEventArgs e)
@@ -298,15 +320,12 @@ namespace Zaaml.UI.Controls.TreeView
 
 			if (selected)
 				TreeViewControl?.Select(this);
+			else
+				TreeViewControl?.Unselect(this);
 
 			OnIsSelectedChanged();
 
 			UpdateVisualState(true);
-		}
-
-		private void OnItemsSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
-		{
-			ItemsSourceCore = newSource;
 		}
 
 		private void OnLevelDistanceChanged()
@@ -374,6 +393,11 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
+		private void OnSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
+		{
+			SourceCore = newSource;
+		}
+
 		protected virtual void OnTreeViewControlChanged(TreeViewControl oldTreeView, TreeViewControl newTreeView)
 		{
 		}
@@ -386,6 +410,10 @@ namespace Zaaml.UI.Controls.TreeView
 		private void OnTreeViewControlPropertyChangedPrivate(TreeViewControl oldTreeView, TreeViewControl newTreeView)
 		{
 			OnTreeViewControlChangedInternal(oldTreeView, newTreeView);
+		}
+
+		private void OnValuePropertyChangedPrivate(object oldValue, object newValue)
+		{
 		}
 
 		private void PushIsExpanded(bool value)
@@ -426,6 +454,11 @@ namespace Zaaml.UI.Controls.TreeView
 #else
 			return base.ToString();
 #endif
+		}
+
+		internal void UnselectInternal()
+		{
+			SetIsSelectedInternal(false);
 		}
 
 		private void UpdateActualLevelPadding()
@@ -540,15 +573,9 @@ namespace Zaaml.UI.Controls.TreeView
 			SelectInternal();
 		}
 
-		public event EventHandler IsSelectedChanged;
+		DependencyProperty ISelectableItem.ValueProperty => ValueProperty;
 
-		bool ISelectable.IsSelected
-		{
-			get => IsSelected;
-			set => SetIsSelectedInternal(value);
-		}
-
-		bool ISelectableEx.CanSelect => CanSelect;
+		DependencyProperty ISelectableItem.SelectionProperty => IsSelectedProperty;
 
 		Rect ILayoutInformation.ArrangeRect
 		{

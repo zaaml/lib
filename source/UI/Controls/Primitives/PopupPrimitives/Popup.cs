@@ -8,8 +8,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
+using System.Windows.Threading;
 using Zaaml.Core.Utils;
-using Zaaml.Platform;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -28,7 +28,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			("StaysOpen", true);
 
 		public static readonly DependencyProperty IsOpenProperty = DPM.Register<bool, Popup>
-			("IsOpen", t => t.OnIsOpenChanged, p => CoerceIsOpen);
+			("IsOpen", false, t => t.OnIsOpenChanged, p => p.CoerceIsOpen);
 
 		public static readonly DependencyProperty PlacementProperty = DPM.Register<PopupPlacement, Popup>
 			("Placement", t => t.OnPlacementChanged);
@@ -53,9 +53,12 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public Popup()
 		{
-			PopupSource = new PopupWndSource(this);
+			PopupSource = new PopupSource(this);
 
-			Panel = new PopupPanel(this);
+			Panel = new PopupPanel(this)
+			{
+				Visibility = Visibility.Collapsed
+			};
 
 			PopupCloseController = new PopupCloseController(this);
 
@@ -70,13 +73,15 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			set => SetValue(ChildProperty, value);
 		}
 
+		private bool DispatcherClosing { get; set; }
+
 		public bool IsHidden
 		{
 			get => (bool) GetValue(IsHiddenProperty);
 			set => SetValue(IsHiddenProperty, value);
 		}
 
-		private bool IsOpenAttached => ReferenceEquals(PopupSource.ReadLocalBinding(PopupWndSource.IsOpenProperty)?.Source, this);
+		private bool IsOpenAttached => ReferenceEquals(PopupSource.ReadLocalBinding(PopupSource.IsOpenProperty)?.Source, this);
 
 		internal DependencyObject LogicalChild
 		{
@@ -98,6 +103,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		protected override IEnumerator LogicalChildren => _logicalChild != null ? EnumeratorUtils.Concat(_logicalChild, base.LogicalChildren) : base.LogicalChildren;
 
+		private bool OpeningLocked { get; set; }
+
 		internal IPopupOwner Owner { get; set; }
 
 		internal PopupPanel Panel { get; }
@@ -110,7 +117,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		internal PopupCloseController PopupCloseController { get; }
 
-		internal PopupWndSource PopupSource { get; }
+		internal PopupSource PopupSource { get; }
 
 		public bool StaysOpen
 		{
@@ -161,13 +168,54 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			if (PresentationCoreUtils.IsInDesignMode)
 				return;
 
-			PopupSource.ClearValue(PopupWndSource.IsOpenProperty);
-			PopupSource.SetBinding(PopupWndSource.IsOpenProperty, new Binding {Path = new PropertyPath(IsOpenProperty), Source = this, Mode = BindingMode.TwoWay});
+			PopupSource.ClearValue(PopupSource.IsOpenProperty);
+			PopupSource.SetBinding(PopupSource.IsOpenProperty, new Binding {Path = new PropertyPath(IsOpenProperty), Source = this, Mode = BindingMode.TwoWay});
 		}
 
-		private static bool CoerceIsOpen(bool value)
+		public void Close()
 		{
+			if (DispatcherClosing)
+				return;
+
+			IsOpen = false;
+		}
+
+		internal void CloseDispatcher()
+		{
+			if (DispatcherClosing)
+				return;
+
+			try
+			{
+				DispatcherClosing = false;
+
+				PreIsOpenChange(false);
+				Dispatcher.Invoke(Close, DispatcherPriority.Input);
+			}
+			finally
+			{
+				DispatcherClosing = false;
+			}
+		}
+
+		private bool CoerceIsOpen(bool value)
+		{
+			if (OpeningLocked)
+				return false;
+
+			if (value && DispatcherClosing)
+				return false;
+
+			PreIsOpenChange(value);
+
 			return value;
+		}
+
+		internal void DisableOpenUntilNextLayoutUpdate()
+		{
+			OpeningLocked = true;
+
+			this.InvokeOnLayoutUpdate(() => OpeningLocked = false);
 		}
 
 		public static Popup FromElement(DependencyObject dependencyObject)
@@ -188,6 +236,11 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		internal void InvalidatePlacement()
 		{
 			Panel?.InvalidatePlacement();
+		}
+
+		internal static bool IsMouseEventSourceHitTestVisible(DependencyObject mouseEventSource)
+		{
+			return mouseEventSource.GetAncestorsAndSelf(VisualTreeEnumerationStrategy.Instance).OfType<FrameworkElement>().Any(f => GetHitTestVisible(f) == false) == false;
 		}
 
 		private void OnChildChanged(UIElement oldChild, UIElement newChild)
@@ -263,11 +316,24 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			PlacementChanged?.Invoke(this, EventArgs.Empty);
 		}
 
+		public void Open()
+		{
+			if (DispatcherClosing)
+				return;
+
+			IsOpen = true;
+		}
+
 		partial void PlatformCtor();
 
 		partial void PlatformOnChildChanged(UIElement oldChild, UIElement newChild);
 
 		partial void PlatformOnOpened();
+
+		private void PreIsOpenChange(bool value)
+		{
+			Panel.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+		}
 
 		public static void SetHitTestVisible(DependencyObject element, bool value)
 		{
@@ -316,96 +382,36 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		FrameworkElement FocusScopeElement { get; }
 	}
 
-#if true
-	internal sealed class PopupWndSource : System.Windows.Controls.Primitives.Popup
+	internal sealed class PopupSource : System.Windows.Controls.Primitives.Popup
 	{
-		public PopupWndSource(Popup popup)
+		public PopupSource(Popup popup)
 		{
 			Popup = popup;
 		}
-		
+
 		public Popup Popup { get; }
-
-		internal void SetEventTransparent(bool value)
-		{
-			var hwndSource = PresentationTreeUtils.GetPopupHwndSource(this);
-
-			if (hwndSource == null)
-				return;
-
-			var exStyle = (WS_EX) NativeMethods.GetWindowLongPtr(hwndSource.Handle, GWL.EXSTYLE);
-			var originalExStyle = exStyle;
-
-			if (value)
-				exStyle |= WS_EX.TRANSPARENT;
-			else
-				exStyle &= ~WS_EX.TRANSPARENT;
-
-			if (exStyle != originalExStyle)
-			{
-				NativeMethods.SetWindowLongPtr(hwndSource.Handle, GWL.EXSTYLE, (IntPtr) exStyle);
-			}
-		}
 	}
-#else
-	internal sealed class PopupWndSource : Window
+
+	public readonly struct PopupLength
 	{
-		public static readonly DependencyProperty IsOpenProperty = DPM.Register<bool, PopupWndSource>
-			("IsOpen", t => t.OnIsOpenChanged);
-
-		public PopupWndSource(Popup popup)
+		public PopupLength(double unitValue, PopupLengthUnitType unitType)
 		{
-			WindowStyle = WindowStyle.None;
-			SizeToContent = SizeToContent.WidthAndHeight;
-			AllowsTransparency = true;
-			Background = Brushes.Transparent;
-			Topmost = true;
-			ShowActivated = true;
-			ShowInTaskbar = false;
+			_unitValue = unitValue;
+			UnitType = unitType;
 		}
 
-		private void OnIsOpenChanged()
-		{
-			if (IsOpen)
-				Open();
-			else
-				Hide();
-		}
+		private readonly double _unitValue;
 
-		public bool IsOpen
-		{
-			get => (bool) GetValue(IsOpenProperty);
-			set => SetValue(IsOpenProperty, value);
-		}
+		public PopupLengthUnitType UnitType { get; }
 
-		public FrameworkElement Child
-		{
-			get => (FrameworkElement) Content;
-			set => Content = value;
-		}
-
-		public PlacementMode Placement { get; set; }
-		
-		public event EventHandler Opened;
-
-		public double HorizontalOffset
-		{
-			get => Left;
-			set => Left = value;
-		}
-
-		public double VerticalOffset
-		{
-			get => Top;
-			set => Top = value;
-		}
-
-		public void Open()
-		{
-			Show();
-			
-			Opened?.Invoke(this, EventArgs.Empty);
-		}
+		public double Value => UnitType != PopupLengthUnitType.Auto ? _unitValue : 1.0;
 	}
-#endif
+
+	public enum PopupLengthUnitType
+	{
+		Auto,
+		Fixed,
+		ScreenRatio,
+		TargetRatio
+	}
 }

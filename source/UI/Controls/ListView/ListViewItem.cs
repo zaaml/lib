@@ -11,6 +11,7 @@ using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.ListView.Data;
 using Zaaml.UI.Controls.Primitives;
 using Zaaml.UI.Controls.Primitives.PopupPrimitives;
@@ -19,7 +20,7 @@ using Zaaml.UI.Utils;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	public partial class ListViewItem : IconContentControl, ISelectable, ISelectableEx, MouseHoverVisualStateFlickeringReducer<ListViewItem>.IClient, IContextPopupTarget
+	public partial class ListViewItem : IconContentControl, MouseHoverVisualStateFlickeringReducer<ListViewItem>.IClient, ISelectableIconContentItem, IContextPopupTarget
 	{
 		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, ListViewItem>
 			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
@@ -30,9 +31,14 @@ namespace Zaaml.UI.Controls.ListView
 		private static readonly DependencyPropertyKey ListViewControlPropertyKey = DPM.RegisterReadOnly<ListViewControl, ListViewItem>
 			("ListViewControl", default, d => d.OnListViewControlPropertyChangedPrivate);
 
+		public static readonly DependencyProperty ValueProperty = DPM.Register<object, ListViewItem>
+			("Value", default, d => d.OnValuePropertyChangedPrivate);
+
 		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
 
 		private ListViewItemData _listViewItemData;
+
+		public event EventHandler IsSelectedChanged;
 
 		static ListViewItem()
 		{
@@ -49,6 +55,8 @@ namespace Zaaml.UI.Controls.ListView
 		internal Rect ArrangeRect { get; private set; }
 
 		protected virtual bool CanSelect => true;
+
+		internal bool CanSelectInternal => CanSelect;
 
 		private bool FocusOnMouseHover => ListViewControl?.FocusItemOnMouseHover ?? false;
 
@@ -101,6 +109,12 @@ namespace Zaaml.UI.Controls.ListView
 					SyncListNodeState();
 				}
 			}
+		}
+
+		public object Value
+		{
+			get => GetValue(ValueProperty);
+			set => SetValue(ValueProperty, value);
 		}
 
 		private object OnCoerceSelection(object arg)
@@ -225,14 +239,14 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
+		private void OnValuePropertyChangedPrivate(object oldValue, object newValue)
+		{
+			ListViewControl?.OnItemValueChanged(this);
+		}
+
 		internal void SelectInternal()
 		{
 			SetIsSelectedInternal(true);
-		}
-
-		internal void UnselectInternal()
-		{
-			SetIsSelectedInternal(false);
 		}
 
 		internal void SetIsSelectedInternal(bool value)
@@ -242,6 +256,11 @@ namespace Zaaml.UI.Controls.ListView
 
 		private protected virtual void SyncListNodeState()
 		{
+		}
+
+		internal void UnselectInternal()
+		{
+			SetIsSelectedInternal(false);
 		}
 
 		protected override void UpdateVisualState(bool useTransitions)
@@ -302,15 +321,9 @@ namespace Zaaml.UI.Controls.ListView
 			SelectInternal();
 		}
 
-		public event EventHandler IsSelectedChanged;
+		DependencyProperty ISelectableItem.ValueProperty => ValueProperty;
 
-		bool ISelectable.IsSelected
-		{
-			get => IsSelected;
-			set => SetIsSelectedInternal(value);
-		}
-
-		bool ISelectableEx.CanSelect => CanSelect;
+		DependencyProperty ISelectableItem.SelectionProperty => IsSelectedProperty;
 
 		Rect ILayoutInformation.ArrangeRect
 		{

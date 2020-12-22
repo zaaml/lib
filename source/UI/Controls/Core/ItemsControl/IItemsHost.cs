@@ -8,7 +8,7 @@ using Zaaml.UI.Panels;
 namespace Zaaml.UI.Controls.Core
 {
 	internal interface IItemsHost<TItem>
-		where TItem : System.Windows.Controls.Control
+		where TItem : FrameworkElement
 	{
 		ItemHostCollection<TItem> Items { get; }
 
@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.Core
 	}
 
 	internal class BringIntoViewRequest<TItem> : BringIntoViewRequest
-		where TItem : System.Windows.Controls.Control
+		where TItem : FrameworkElement
 	{
 		public BringIntoViewRequest(TItem item, BringIntoViewMode mode = BringIntoViewMode.Default, int fallbackIndex = -1) : base(-1, mode, fallbackIndex)
 		{

@@ -30,24 +30,24 @@ namespace Zaaml.UI.Controls.ListView
 
 		protected override bool SupportsRecycling => true;
 
-		protected override void AttachItem(ListViewItem item, object itemSource)
+		protected override void AttachItem(ListViewItem item, object source)
 		{
-			Implementation.AttachItem(item, itemSource);
+			Implementation.AttachItem(item, source);
 		}
 
-		protected override ListViewItem CreateItem(object itemSource)
+		protected override ListViewItem CreateItem(object source)
 		{
-			return Implementation.CreateItem(itemSource);
+			return Implementation.CreateItem(source);
 		}
 
-		protected override void DetachItem(ListViewItem item, object itemSource)
+		protected override void DetachItem(ListViewItem item, object source)
 		{
-			Implementation.DetachItem(item, itemSource);
+			Implementation.DetachItem(item, source);
 		}
 
-		protected override void DisposeItem(ListViewItem item, object itemSource)
+		protected override void DisposeItem(ListViewItem item, object source)
 		{
-			Implementation.DisposeItem(item, itemSource);
+			Implementation.DisposeItem(item, source);
 		}
 
 		private void OnItemTemplateChanged()

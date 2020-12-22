@@ -125,7 +125,7 @@
 
             <zm:DropDownButton.PopupControl>
               <zm:PopupMenu ItemGenerator="{zm:TemplateBinding Path=TabViewControl.ActualMenuItemGenerator}"
-                            ItemsSource="{zm:TemplateBinding Path=TabViewControl.ActualMenuItemsSource}" />
+                            SourceCollection="{zm:TemplateBinding Path=TabViewControl.ActualMenuSourceCollection}" />
             </zm:DropDownButton.PopupControl>
           </zm:DropDownButton>
         </zm:FlexPanel>

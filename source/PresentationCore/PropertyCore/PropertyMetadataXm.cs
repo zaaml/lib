@@ -88,7 +88,7 @@ namespace Zaaml.PresentationCore.PropertyCore
         try
         {
           var coercedValue = args.NewValue;
-
+					
           coercedValue = coerceValueCallback(o, coercedValue);
 
           if (Equals(args.NewValue, coercedValue) == false)
@@ -100,6 +100,7 @@ namespace Zaaml.PresentationCore.PropertyCore
         catch (Exception ex)
         {
           o.SetValue(args.Property, args.OldValue);
+          
           exception = true;
 
           throw new InvalidOperationException("An error occurred while handling property change. See the inner exception for details", ex);
@@ -109,7 +110,10 @@ namespace Zaaml.PresentationCore.PropertyCore
           var coerceState = CoercionService.LeaveCoercion(o, args);
 
           if (exception == false)
-            propertyChangedCallback?.Invoke(o, coerceState.CoercedValueEventArgs);
+          {
+	          if (Equals(args.OldValue, coerceState.CoercedValueEventArgs.NewValue) == false)
+							propertyChangedCallback?.Invoke(o, coerceState.CoercedValueEventArgs);
+          }
         }
       };
     }
@@ -144,7 +148,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     #region  Nested Types
 
-    private struct CoercionState
+    private readonly struct CoercionState
     {
       public CoercionState(DependencyPropertyChangedEventArgs coercedValueEventArgs)
       {

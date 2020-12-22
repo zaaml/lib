@@ -6,26 +6,40 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	internal sealed class TreeViewSelectorAdvisor : ItemCollectionSelectorAdvisor<TreeViewControl, TreeViewItem>
+	internal sealed class TreeViewSelectorAdvisor : SelectorBaseControllerAdvisor<TreeViewControl, TreeViewItem, TreeViewItemRootCollection, TreeViewItemsPresenter, TreeViewItemsPanel>
 	{
-		public TreeViewSelectorAdvisor(TreeViewControl treeViewControl) : base(treeViewControl, treeViewControl.Items)
+		public TreeViewSelectorAdvisor(TreeViewControl treeViewControl) : base(treeViewControl)
 		{
 			TreeViewControl = treeViewControl;
+			TreeViewControl.VirtualItemCollection.AttachObserver(this);
 		}
 
 		public TreeViewControl TreeViewControl { get; }
 
-		public override object GetItemSource(TreeViewItem item)
+		public override object GetSource(TreeViewItem item)
 		{
-			return item?.TreeViewItemData?.Data;
+			if (item == null)
+				return null;
+
+			if (item.TreeViewItemData != null)
+				return item.TreeViewItemData.Data;
+			
+			return base.GetSource(item);
 		}
 
-		public override bool TryGetItemBySource(object itemSource, out TreeViewItem item)
+		public override bool CanSelect(TreeViewItem item)
+		{
+			return item.CanSelectInternal;
+		}
+
+		public override bool HasSource => TreeViewControl.SourceCollection != null;
+		
+		public override bool TryGetItemBySource(object source, bool ensure, out TreeViewItem item)
 		{
 			TreeViewControl.EnsureVirtualItemCollection();
 
 			var treeViewData = TreeViewControl.EnsureTreeViewData();
-			var treeViewItemData = treeViewData.FindNode(itemSource);
+			var treeViewItemData = treeViewData.FindNode(source);
 
 			if (treeViewItemData == null)
 			{
@@ -36,7 +50,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 			item = treeViewItemData.TreeViewItem;
 
-			if (item == null)
+			if (item == null && ensure)
 			{
 				treeViewData.ExpandRoot(treeViewItemData);
 

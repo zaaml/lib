@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections;
+using System.Windows;
 using Zaaml.Core;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Panels.Core;
@@ -11,8 +12,8 @@ using Zaaml.UI.Panels.Core;
 namespace Zaaml.UI.Controls.Core
 {
   public abstract class ItemsPresenterBase<TControl, TItem, TCollection, TPanel> : ItemsPresenterBase
-    where TItem : System.Windows.Controls.Control
-    where TCollection : ItemCollectionBase<TControl, TItem>
+    where TItem : FrameworkElement
+		where TCollection : ItemCollectionBase<TControl, TItem>
     where TPanel : ItemsPanel<TItem>
     where TControl : System.Windows.Controls.Control
   {
@@ -68,7 +69,7 @@ namespace Zaaml.UI.Controls.Core
 
     #region  Methods
 
-    protected sealed override TemplateContract CreateTemplateContract()
+    protected override TemplateContract CreateTemplateContract()
     {
       var templateContract = base.CreateTemplateContract();
 
@@ -98,8 +99,8 @@ namespace Zaaml.UI.Controls.Core
   }
 
   public class ItemsPresenterBaseTemplateContract<TPanel, TItem> : ItemsPresenterBaseTemplateContract where TPanel : ItemsPanel<TItem>
-    where TItem : System.Windows.Controls.Control
-  {
+    where TItem : FrameworkElement
+	{
     #region Properties
 
     [TemplateContractPart(Required = true)]

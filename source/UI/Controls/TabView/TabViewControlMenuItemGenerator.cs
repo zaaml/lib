@@ -31,35 +31,35 @@ namespace Zaaml.UI.Controls.TabView
 
     #region  Methods
 
-    protected override void AttachItem(MenuItemBase item, object itemSource)
+    protected override void AttachItem(MenuItemBase item, object source)
     {
       var menuItem = (MenuItem) item;
-      var tabViewItem = itemSource as TabViewItem;
+      var tabViewItem = source as TabViewItem;
 
       if (tabViewItem == null)
       {
-        menuItem.Header = itemSource;
+        menuItem.Header = source;
         menuItem.HeaderTemplate = TabViewControl.ItemHeaderTemplate;
         menuItem.HeaderTemplateSelector = TabViewControl.ItemHeaderTemplateSelector;
-        menuItem.DataContext = itemSource;
+        menuItem.DataContext = source;
       }
       else
         tabViewItem.AttachMenuItem(menuItem);
 
 
       menuItem.Command = SelectCommand;
-      menuItem.CommandParameter = itemSource;
+      menuItem.CommandParameter = source;
     }
 
-    protected override MenuItemBase CreateItem(object itemSource)
+    protected override MenuItemBase CreateItem(object source)
     {
       return new MenuItem { HorizontalContentAlignment = HorizontalAlignment.Left };
     }
 
-    protected override void DetachItem(MenuItemBase item, object itemSource)
+    protected override void DetachItem(MenuItemBase item, object source)
     {
       var menuItem = (MenuItem) item;
-      var tabViewItem = itemSource as TabViewItem;
+      var tabViewItem = source as TabViewItem;
 
       if (tabViewItem == null)
       {
@@ -75,7 +75,7 @@ namespace Zaaml.UI.Controls.TabView
       menuItem.CommandParameter = null;
     }
 
-    protected override void DisposeItem(MenuItemBase item, object itemSource)
+    protected override void DisposeItem(MenuItemBase item, object source)
     {
     }
 

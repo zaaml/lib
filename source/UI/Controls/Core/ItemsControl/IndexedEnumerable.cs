@@ -242,6 +242,15 @@ namespace Zaaml.UI.Controls.Core
 			{
 				UseNewEnumerator();
 			}
+			else if (_enumerator is IIndexedEnumerableAdvisor advisor)
+			{
+				if (advisor.IsEnumeratorValid)
+					return _enumeratorVersion;
+				
+				UseNewEnumerator();
+
+				return _enumeratorVersion;
+			}
 			else
 			{
 				try
@@ -402,9 +411,7 @@ namespace Zaaml.UI.Controls.Core
 
 		internal int IndexOf(object item)
 		{
-			int index;
-
-			if (GetNativeIndexOf(item, out index))
+			if (GetNativeIndexOf(item, out var index))
 				return index;
 
 			if (EnsureCacheCurrent())
@@ -425,6 +432,7 @@ namespace Zaaml.UI.Controls.Core
 				if (Equals(_enumerator.Current, item))
 				{
 					index = i;
+					
 					break;
 				}
 
@@ -449,9 +457,7 @@ namespace Zaaml.UI.Controls.Core
 
 			if (List == null)
 			{
-				var icc = Enumerable as INotifyCollectionChanged;
-
-				if (icc != null)
+				if (Enumerable is INotifyCollectionChanged icc)
 				{
 #if SILVERLIGHT
 		      // TODO: Implement weak event pattern
@@ -578,7 +584,7 @@ namespace Zaaml.UI.Controls.Core
 
 		#region  Nested Types
 
-		private class FilteredEnumerator : IEnumerator, IDisposable
+		private class FilteredEnumerator : IEnumerator, IDisposable, IIndexedEnumerableAdvisor
 		{
 			#region Fields
 
@@ -660,8 +666,15 @@ namespace Zaaml.UI.Controls.Core
 			#endregion
 
 			#endregion
+
+			public bool IsEnumeratorValid => _enumerator is IIndexedEnumerableAdvisor advisor && advisor.IsEnumeratorValid;
 		}
 
 		#endregion
+	}
+	
+	internal interface IIndexedEnumerableAdvisor
+	{
+		bool IsEnumeratorValid { get; }
 	}
 }

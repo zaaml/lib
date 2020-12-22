@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using Zaaml.Core;
 using Zaaml.PresentationCore;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
@@ -19,10 +20,8 @@ namespace Zaaml.UI.Controls.BackstageView
 {
 	[ContentProperty(nameof(Items))]
 	[TemplateContractType(typeof(BackstageViewControlTemplateContract))]
-	public class BackstageViewControl : IndexedSelectorBase<BackstageViewControl, BackstageViewItem, BackstageViewItemCollection, BackstageViewItemsPresenter, BackstageViewItemsPanel>, IHeaderedContentItemsControl
+	public class BackstageViewControl : IndexedSelectorBase<BackstageViewControl, BackstageViewItem, BackstageViewItemCollection, BackstageViewItemsPresenter, BackstageViewItemsPanel>, IHeaderedIconContentSelectorControl
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty IsOpenProperty = DPM.Register<bool, BackstageViewControl>
 			("IsOpen", b => b.OnIsOpenChanged);
 
@@ -53,21 +52,28 @@ namespace Zaaml.UI.Controls.BackstageView
 		public static readonly DependencyProperty ItemHeaderStringFormatProperty = DPM.Register<string, BackstageViewControl>
 			("ItemHeaderStringFormat", a => a.DefaultGeneratorImpl.OnItemHeaderStringFormatChanged);
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, BackstageViewControl>
-			("ItemsSource", i => i.OnItemsSourceChangedPrivate);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, BackstageViewControl>
+			("SourceCollection", i => i.OnSourceCollectionPropertyChangedPrivate);
 
-		#endregion
+		public static readonly DependencyProperty ItemContentMemberProperty = DPM.Register<string, BackstageViewControl>
+			("ItemContentMember", d => d.DefaultGeneratorImpl.OnItemContentMemberChanged);
 
-		#region Type: Fields
+		public static readonly DependencyProperty ItemHeaderMemberProperty = DPM.Register<string, BackstageViewControl>
+			("ItemHeaderMember", d => d.DefaultGeneratorImpl.OnItemHeaderMemberChanged);
 
+		public static readonly DependencyProperty ItemIconMemberProperty = DPM.Register<string, BackstageViewControl>
+			("ItemIconMember", d => d.DefaultGeneratorImpl.OnItemIconMemberChanged);
+
+		public static readonly DependencyProperty ItemValueMemberProperty = DPM.Register<string, BackstageViewControl>
+			("ItemValueMember", d => d.DefaultGeneratorImpl.SelectableGeneratorImplementation.OnItemValueMemberChanged);
+
+		public static readonly DependencyProperty ItemSelectionMemberProperty = DPM.Register<string, BackstageViewControl>
+			("ItemSelectionMember", d => d.DefaultGeneratorImpl.SelectableGeneratorImplementation.OnItemSelectionMemberChanged);
+		
 		private readonly DelayStateTrigger _delayTrigger;
 		private readonly BackstageViewHost _host;
-		private DelegateHeaderedContentItemGeneratorImpl<BackstageViewItem, DefaultBackstageViewItemGenerator> _defaultGeneratorImpl;
+		private DefaultItemTemplateBackstageViewItemGenerator _defaultGeneratorImpl;
 		public event EventHandler IsOpenChanged;
-
-		#endregion
-
-		#region Ctors
 
 		static BackstageViewControl()
 		{
@@ -83,10 +89,6 @@ namespace Zaaml.UI.Controls.BackstageView
 			_delayTrigger = new DelayStateTrigger(OpenPopupHost, TimeSpan.Zero, ClosePopupHost, TimeSpan.Zero);
 		}
 
-		#endregion
-
-		#region Properties
-
 		private BackstageViewItemGeneratorBase ActualGenerator => ItemGenerator ?? DefaultGenerator;
 
 		public Duration CloseDelay
@@ -99,7 +101,8 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		private BackstageViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImpl.Generator;
 
-		private DelegateHeaderedContentItemGeneratorImpl<BackstageViewItem, DefaultBackstageViewItemGenerator> DefaultGeneratorImpl => _defaultGeneratorImpl ??= new DelegateHeaderedContentItemGeneratorImpl<BackstageViewItem, DefaultBackstageViewItemGenerator>(this);
+		private DefaultItemTemplateBackstageViewItemGenerator DefaultGeneratorImpl =>
+			_defaultGeneratorImpl ??= new DefaultItemTemplateBackstageViewItemGenerator(this);
 
 		public bool IsOpen
 		{
@@ -113,23 +116,19 @@ namespace Zaaml.UI.Controls.BackstageView
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
-		public IEnumerable ItemsSource
-		{
-			get => (IEnumerable) GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
-		}
-
 		public Duration OpenDelay
 		{
 			get => (Duration) GetValue(OpenDelayProperty);
 			set => SetValue(OpenDelayProperty, value);
 		}
 
+		public IEnumerable SourceCollection
+		{
+			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
+		}
+
 		private BackstageViewControlTemplateContract TemplateContract => (BackstageViewControlTemplateContract) TemplateContractInternal;
-
-		#endregion
-
-		#region  Methods
 
 		public void Activate(BackstageViewItem backstageViewItem)
 		{
@@ -148,6 +147,11 @@ namespace Zaaml.UI.Controls.BackstageView
 			{
 				Generator = ActualGenerator
 			};
+		}
+
+		protected override bool GetIsSelected(BackstageViewItem item)
+		{
+			return item.IsSelected;
 		}
 
 		private void OnCloseDelayChanged()
@@ -184,11 +188,6 @@ namespace Zaaml.UI.Controls.BackstageView
 			Items.Generator = ActualGenerator;
 		}
 
-		private void OnItemsSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
-		{
-			ItemsSourceCore = newSource;
-		}
-
 		private void OnOpenDelayChanged()
 		{
 			_delayTrigger.OpenDelay = OpenDelay.HasTimeSpan ? OpenDelay.TimeSpan : TimeSpan.Zero;
@@ -199,6 +198,11 @@ namespace Zaaml.UI.Controls.BackstageView
 			base.OnSelectionChanged(oldSelection, newSelection);
 
 			UpdateSelectedContent();
+		}
+
+		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
+		{
+			SourceCore = newSource;
 		}
 
 		protected override void OnTemplateContractAttached()
@@ -229,6 +233,11 @@ namespace Zaaml.UI.Controls.BackstageView
 			SelectorController.SelectItem(backstageViewItem);
 		}
 
+		protected override void SetIsSelected(BackstageViewItem item, bool value)
+		{
+			item.SetCurrentValueInternal(BackstageViewItem.IsSelectedProperty, value);
+		}
+
 		protected virtual void UpdateSelectedContent()
 		{
 			if (ContentPresenter == null)
@@ -237,11 +246,35 @@ namespace Zaaml.UI.Controls.BackstageView
 			ContentPresenter.Content = SelectedItem?.ContentHost;
 		}
 
-		#endregion
+		public string ItemSelectionMember
+		{
+			get => (string) GetValue(ItemSelectionMemberProperty);
+			set => SetValue(ItemSelectionMemberProperty, value);
+		}
 
-		#region Interface Implementations
+		public string ItemValueMember
+		{
+			get => (string) GetValue(ItemValueMemberProperty);
+			set => SetValue(ItemValueMemberProperty, value);
+		}
 
-		#region IContentItemsControl
+		public string ItemIconMember
+		{
+			get => (string) GetValue(ItemIconMemberProperty);
+			set => SetValue(ItemIconMemberProperty, value);
+		}
+
+		public string ItemHeaderMember
+		{
+			get => (string) GetValue(ItemHeaderMemberProperty);
+			set => SetValue(ItemHeaderMemberProperty, value);
+		}
+
+		public string ItemContentMember
+		{
+			get => (string) GetValue(ItemContentMemberProperty);
+			set => SetValue(ItemContentMemberProperty, value);
+		}
 
 		public string ItemContentStringFormat
 		{
@@ -261,10 +294,6 @@ namespace Zaaml.UI.Controls.BackstageView
 			set => SetValue(ItemContentTemplateSelectorProperty, value);
 		}
 
-		#endregion
-
-		#region IHeaderedContentItemsControl
-
 		public string ItemHeaderStringFormat
 		{
 			get => (string) GetValue(ItemHeaderStringFormatProperty);
@@ -282,19 +311,11 @@ namespace Zaaml.UI.Controls.BackstageView
 			get => (DataTemplate) GetValue(ItemHeaderTemplateProperty);
 			set => SetValue(ItemHeaderTemplateProperty, value);
 		}
-
-		#endregion
-
-		#endregion
 	}
 
 	public class BackstageViewControlTemplateContract : IndexedSelectorBaseTemplateContract<BackstageViewItemsPresenter>
 	{
-		#region Properties
-
 		[TemplateContractPart(Required = true)]
 		public BackstageViewContentPresenter ContentPresenter { get; [UsedImplicitly] private set; }
-
-		#endregion
 	}
 }

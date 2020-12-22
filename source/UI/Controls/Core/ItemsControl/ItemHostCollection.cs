@@ -4,11 +4,12 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
 	internal abstract class ItemHostCollection<TItem> : IEnumerable<TItem>
-		where TItem : System.Windows.Controls.Control
+		where TItem : FrameworkElement
 	{
 		protected List<TItem> Items { get; } = new List<TItem>();
 

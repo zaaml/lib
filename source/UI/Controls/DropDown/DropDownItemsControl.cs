@@ -10,7 +10,6 @@ using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.Core;
-using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 using Zaaml.UI.Controls.ScrollView;
 using NativeControl = System.Windows.Controls.Control;
@@ -20,16 +19,6 @@ namespace Zaaml.UI.Controls.DropDown
 	[TemplateContractType(typeof(DropDownItemsControlTemplateContract))]
 	public abstract class DropDownItemsControl : DropDownControlBase
 	{
-		private static readonly DependencyPropertyKey ActualIconPropertyKey = DPM.RegisterAttachedReadOnly<IconBase, DropDownItemsControl>
-			("ActualIcon");
-
-		public static readonly DependencyProperty ActualIconProperty = ActualIconPropertyKey.DependencyProperty;
-
-		private static readonly DependencyPropertyKey ActualContentPropertyKey = DPM.RegisterAttachedReadOnly<object, DropDownItemsControl>
-			("ActualContent");
-
-		public static readonly DependencyProperty ActualContentProperty = ActualIconPropertyKey.DependencyProperty;
-
 		public static readonly DependencyProperty IsDropDownOpenProperty = DPM.Register<bool, DropDownItemsControl>
 			("IsDropDownOpen", d => d.OnIsDropDownOpenChangedPrivate);
 
@@ -53,18 +42,6 @@ namespace Zaaml.UI.Controls.DropDown
 
 		public static readonly DependencyProperty ShowDropDownButtonProperty = DPM.Register<bool, DropDownItemsControl>
 			("ShowDropDownButton", true);
-
-		public object ActualContent
-		{
-			get => GetValue(ActualContentProperty);
-			protected set => SetValue(ActualContentPropertyKey, value);
-		}
-
-		public IconBase ActualIcon
-		{
-			get => (IconBase) GetValue(ActualIconProperty);
-			protected set => SetValue(ActualIconPropertyKey, value);
-		}
 
 		public object DropDownFooter
 		{

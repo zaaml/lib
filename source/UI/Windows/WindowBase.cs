@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
-using System.Windows.Documents;
 using System.Windows.Input;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
@@ -257,8 +256,7 @@ namespace Zaaml.UI.Windows
       get => (bool) GetValue(ShowCloseButtonProperty);
       set => SetValue(ShowCloseButtonProperty, value);
     }
-
-
+		
     public bool ShowMaximizeButton
     {
       get => (bool) GetValue(ShowMaximizeButtonProperty);

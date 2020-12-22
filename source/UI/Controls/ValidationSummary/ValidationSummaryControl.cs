@@ -11,20 +11,23 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
+using Control = Zaaml.UI.Controls.Core.Control;
 using Style = System.Windows.Style;
 using ZaamlLocalization = Zaaml.UI.Localization;
 
+#if NETCOREAPP
+#else
+using Zaaml.Core.Extensions;
+#endif
+
 namespace Zaaml.UI.Controls.ValidationSummary
 {
-	public class ValidationSummaryControl : Core.Control
+	public class ValidationSummaryControl : Control
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty ShowErrorsInSummaryProperty = DPM.RegisterAttached<bool, ValidationSummaryControl>
 			("ShowErrorsInSummary", true, OnShowErrorsInSummaryPropertyChanged);
 
@@ -61,27 +64,18 @@ namespace Zaaml.UI.Controls.ValidationSummary
 		public static readonly DependencyProperty HeaderTemplateProperty = DPM.Register<DataTemplate, ValidationSummaryControl>
 			("HeaderTemplate");
 
-
 		public static readonly DependencyProperty SummaryListBoxStyleProperty = DPM.Register<Style, ValidationSummaryControl>
 			("SummaryListBoxStyle");
 
 		public static readonly DependencyProperty TargetProperty = DPM.Register<UIElement, ValidationSummaryControl>
 			("Target", v => v.OnTargetPropertyChanged);
 
-		#endregion
-
-		#region Fields
-
 		private readonly ValidationSummaryItemCollection _displayedErrorsInternal;
 		private readonly Dictionary<ValidationItemKey, ValidationSummaryItem> _validationSummaryItemDictionary;
-		private ValidationSummaryItemSource _currentValidationSummaryItemSource;
+		private ValidationSummarySource _currentValidationSummarySource;
 		private FrameworkElement _registeredParent;
 		public event EventHandler<FocusingInvalidControlEventArgs> FocusingInvalidControl;
 		public event EventHandler<SelectionChangedEventArgs> SelectionChanged;
-
-		#endregion
-
-		#region Ctors
 
 		static ValidationSummaryControl()
 		{
@@ -102,10 +96,6 @@ namespace Zaaml.UI.Controls.ValidationSummary
 			Unloaded += ValidationSummary_Unloaded;
 			IsEnabledChanged += ValidationSummary_IsEnabledChanged;
 		}
-
-		#endregion
-
-		#region Properties
 
 		public ValidationSummaryItemDisplayCollection DisplayedErrors { get; }
 
@@ -179,10 +169,6 @@ namespace Zaaml.UI.Controls.ValidationSummary
 			get => GetValue(TargetProperty) as UIElement;
 			set => SetValue(TargetProperty, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		private static void AttachValidationEvent(FrameworkElement fre, EventHandler<ValidationErrorEventArgs> eventHandler)
 		{
@@ -282,9 +268,9 @@ namespace Zaaml.UI.Controls.ValidationSummary
 			if (selectedItem == null || !FocusControlsOnClick)
 				return;
 
-			_currentValidationSummaryItemSource = selectedItem.Source;
+			_currentValidationSummarySource = selectedItem.Source;
 
-			var e = new FocusingInvalidControlEventArgs(selectedItem, _currentValidationSummaryItemSource);
+			var e = new FocusingInvalidControlEventArgs(selectedItem, _currentValidationSummarySource);
 			OnFocusingInvalidControl(e);
 
 			if (!e.Handled)
@@ -293,7 +279,7 @@ namespace Zaaml.UI.Controls.ValidationSummary
 
 		private string GetHeaderString()
 		{
-			return _displayedErrorsInternal.Count != 1 ? string.Format(CultureInfo.CurrentCulture, ZaamlLocalization.ValidationSummaryHeaderErrors, _displayedErrorsInternal.Count as object) : ZaamlLocalization.ValidationSummaryHeaderError;
+			return _displayedErrorsInternal.Count != 1 ? string.Format(CultureInfo.CurrentCulture, ZaamlLocalization.ValidationSummaryHeaderErrors, _displayedErrorsInternal.Count) : ZaamlLocalization.ValidationSummaryHeaderError;
 		}
 
 		public static bool GetShowErrorsInSummary(DependencyObject inputControl)
@@ -508,7 +494,7 @@ namespace Zaaml.UI.Controls.ValidationSummary
 
 			if (currentItem == null)
 			{
-				currentItem = new ValidationSummaryItem(message, str, ValidationSummaryItemType.PropertyError, new ValidationSummaryItemSource(str, originalSource as Control));
+				currentItem = new ValidationSummaryItem(message, str, ValidationSummaryItemType.PropertyError, new ValidationSummarySource(str, originalSource as System.Windows.Controls.Control));
 
 				_validationSummaryItemDictionary[key] = currentItem;
 				Errors.Add(currentItem);
@@ -638,10 +624,6 @@ namespace Zaaml.UI.Controls.ValidationSummary
 			UpdateDisplayedErrors();
 		}
 
-		#endregion
-
-		#region  Nested Types
-
 		private struct ValidationItemKey
 		{
 			public ValidationItemKey(FrameworkElement source, string message)
@@ -672,7 +654,5 @@ namespace Zaaml.UI.Controls.ValidationSummary
 				}
 			}
 		}
-
-		#endregion
 	}
 }

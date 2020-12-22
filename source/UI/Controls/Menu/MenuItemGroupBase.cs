@@ -29,28 +29,28 @@ namespace Zaaml.UI.Controls.Menu
 		public static readonly DependencyProperty ItemStyleProperty = DPM.Register<Style, MenuItemGroupBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel>>
 			(nameof(ItemStyle), g => g.OnItemStyleChanged);
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, MenuItemGroupBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel>>
-			(nameof(ItemsSource), g => g.OnItemsSourceChanged);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, MenuItemGroupBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel>>
+			(nameof(SourceCollection), g => g.OnSourceCollectionChanged);
 
-		public static readonly DependencyProperty DisplayMemberPathProperty = DPM.Register<string, MenuItemGroupBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel>>
-			(nameof(DisplayMemberPath), g => g.OnDisplayMemberPathChangedPrivate);
+		public static readonly DependencyProperty DisplayMemberProperty = DPM.Register<string, MenuItemGroupBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel>>
+			(nameof(DisplayMember), g => g.OnDisplayMemberPathChangedPrivate);
 
 		#endregion
 
 		#region Properties
 
-		public string DisplayMemberPath
+		public string DisplayMember
 		{
-			get => (string) GetValue(DisplayMemberPathProperty);
-			set => SetValue(DisplayMemberPathProperty, value);
+			get => (string) GetValue(DisplayMemberProperty);
+			set => SetValue(DisplayMemberProperty, value);
 		}
 
 		private TMenuItemsPresenterHost ItemsPresenterHost => TemplateContract.ItemsPresenterHostInternal;
 
-		public IEnumerable ItemsSource
+		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
+			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public Style ItemStyle
@@ -76,7 +76,7 @@ namespace Zaaml.UI.Controls.Menu
 			OnDisplayMemberPathChangedInternal(oldDisplayMemberPath, newDisplayMemberPath);
 		}
 
-		private void OnItemsSourceChanged(IEnumerable oldSource, IEnumerable newSource)
+		private void OnSourceCollectionChanged(IEnumerable oldSource, IEnumerable newSource)
 		{
 			ItemsCore.Source = newSource;
 		}

@@ -9,7 +9,7 @@
   <ControlTemplate x:Key="ListViewItemsPresenterTemplate"
                    TargetType="zm:ListViewItemsPresenter">
     <zm:ItemsPresenterTemplateRoot>
-      <zm:ListViewPanel x:Name="ItemsHost" />
+      <zm:ListViewItemsPanel x:Name="ItemsHost" />
     </zm:ItemsPresenterTemplateRoot>
   </ControlTemplate>
 

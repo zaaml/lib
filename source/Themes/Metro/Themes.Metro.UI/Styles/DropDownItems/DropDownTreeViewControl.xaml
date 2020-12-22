@@ -5,7 +5,6 @@
                             xmlns:zmb="http://schemas.zaaml.com/build"
                             mc:Ignorable="zmb">
 
-
   <zm:ThemeResourceDictionary.MergedDictionaries>
     <zm:ThemeResourceDictionary Source="DropDownItemsShared.xaml" />
   </zm:ThemeResourceDictionary.MergedDictionaries>
@@ -16,14 +15,18 @@
     <zm:ControlTemplateRoot VisualStateGroups="{StaticResource VisualStates}">
 
       <!--  DropDownButton  -->
-      <zm:DropDownButton HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                         VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+      <zm:DropDownButton HorizontalContentAlignment="Stretch"
+                         VerticalContentAlignment="Stretch"
                          BorderThickness="{TemplateBinding BorderThickness}"
-                         Content="{TemplateBinding ActualContent}"
-                         Icon="{TemplateBinding ActualIcon}"
                          IsDropDownOpen="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                          IsTabStop="False"
                          Placement="{TemplateBinding Placement}">
+        <zm:DropDownButton.Content>
+          <zm:Panel>
+            <zm:ContentPresenter Content=" " />
+            <zm:ContentPresenter Content="{TemplateBinding ActualSelectionPresenter}" />
+          </zm:Panel>
+        </zm:DropDownButton.Content>
         <zm:DropDownButton.PopupControl>
 
           <!--  DropDownControl  -->
@@ -60,7 +63,7 @@
               <!--  TreeView  -->
               <zm:ContentControl HorizontalContentAlignment="Stretch"
                                  VerticalContentAlignment="Stretch"
-                                 Content="{TemplateBinding TreeView}"
+                                 Content="{TemplateBinding TreeViewControl}"
                                  EmptyVisibility="Collapsed">
                 <zm:ContentControl.ContentSetters>
                   <zm:Setter Priority="32767" Property="BorderThickness" Value="0" />
@@ -100,19 +103,10 @@
               BorderThickness="{TemplateBinding BorderThickness}">
         <zm:DockPanel>
 
-          <!--  SelectedIcon Presenter  -->
-          <zm:IconPresenter Margin="4,0,0,0"
-                            zm:DockPanel.Dock="Left"
-                            Icon="{TemplateBinding ActualIcon}"
-                            Visibility="{zm:TemplateBinding Path=ActualIcon,
-                                                            Converter={zm:VisibilityConverter}}" />
-
-          <!--  SelectedContent Presenter  -->
+          <!--  SelectionPresenter  -->
           <zm:Panel Margin="2,0">
             <zm:ContentPresenter Margin="{Binding Path=Padding, ElementName=FilterTextBox}"
-                                 Content="{TemplateBinding ActualContent}"
-                                 Visibility="{zm:TemplateBinding Path=IsEditing,
-                                                                 Converter={zm:InvertedVisibilityConverter}}" />
+                                 Content="{TemplateBinding ActualSelectionPresenter}" />
           </zm:Panel>
 
           <!--  Filter  -->
@@ -173,7 +167,7 @@
                   <!--  TreeView  -->
                   <zm:ContentControl HorizontalContentAlignment="Stretch"
                                      VerticalContentAlignment="Stretch"
-                                     Content="{TemplateBinding TreeView}"
+                                     Content="{TemplateBinding TreeViewControl}"
                                      EmptyVisibility="Collapsed">
                     <zm:ContentControl.ContentSetters>
                       <zm:Setter Priority="32767" Property="BorderThickness" Value="0" />
@@ -209,7 +203,7 @@
     <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
     <zm:Setter Property="PopupMinHeight" Value="100" />
     <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
-    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=IsEditable, Converter={zm:TernaryConverter TrueValue={StaticResource DropDownTreeViewControlEditableTemplate}, FalseValue={StaticResource DropDownTreeViewControlTemplate}}}" />
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=IsTextEditable, Converter={zm:TernaryConverter TrueValue={StaticResource DropDownTreeViewControlEditableTemplate}, FalseValue={StaticResource DropDownTreeViewControlTemplate}}}" />
   </zm:Style>
 
   <!--  Style  -->

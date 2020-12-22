@@ -7,117 +7,135 @@ using System.Windows.Markup;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.PropertyCore.Extensions;
 using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-  public abstract class IconPresenterBase : Panel
-  {
-    #region Static Fields and Constants
+	public abstract class IconPresenterBase : Panel
+	{
+		public static readonly DependencyProperty IconProperty = DPM.Register<IconBase, IconPresenterBase>
+			("Icon", i => i.OnIconChanged);
 
-    public static readonly DependencyProperty IconProperty = DPM.Register<IconBase, IconPresenterBase>
-      ("Icon", i => i.OnIconChanged);
+		public static readonly DependencyProperty VerticalIconAlignmentProperty = DPM.Register<VerticalAlignment, IconPresenterBase>
+			("VerticalIconAlignment", VerticalAlignment.Center, d => d.OnVerticalIconAlignmentPropertyChangedPrivate);
 
-    #endregion
+		public static readonly DependencyProperty HorizontalIconAlignmentProperty = DPM.Register<HorizontalAlignment, IconPresenterBase>
+			("HorizontalIconAlignment", HorizontalAlignment.Center, d => d.OnHorizontalIconAlignmentPropertyChangedPrivate);
 
-    #region Fields
+		private IconBase _actualIcon;
 
-    private IconBase _actualIcon;
-
-    #endregion
-
-    #region Ctors
-
-    internal IconPresenterBase()
-    {
+		internal IconPresenterBase()
+		{
 #if !SILVERLIGHT
-      Focusable = false;
+			Focusable = false;
 #endif
-    }
+		}
 
-    #endregion
+		protected IconBase ActualIcon
+		{
+			get => _actualIcon;
+			private set
+			{
+				if (ReferenceEquals(_actualIcon, value))
+					return;
 
-    #region Properties
+				if (_actualIcon != null)
+					_actualIcon.Presenter = null;
 
-    protected IconBase ActualIcon
-    {
-      get => _actualIcon;
-      private set
-      {
-        if (ReferenceEquals(_actualIcon, value))
-          return;
+				IconBase.UseIcon(ref _actualIcon, value, this);
 
-        if (_actualIcon != null)
-          _actualIcon.Presenter = null;
+				if (_actualIcon != null)
+					_actualIcon.Presenter = this;
 
-        IconBase.UseIcon(ref _actualIcon, value, this);
+				OnActualIconChanged();
+			}
+		}
 
-        if (_actualIcon != null)
-          _actualIcon.Presenter = this;
+		internal IconBase ActualIconInternal => ActualIcon;
 
-        OnActualIconChanged();
-      }
-    }
+		public HorizontalAlignment HorizontalIconAlignment
+		{
+			get => (HorizontalAlignment) GetValue(HorizontalIconAlignmentProperty);
+			set => SetValue(HorizontalIconAlignmentProperty, value);
+		}
 
-    internal IconBase ActualIconInternal => ActualIcon;
+		public IconBase Icon
+		{
+			get => (IconBase) GetValue(IconProperty);
+			set => SetValue(IconProperty, value);
+		}
 
-    public IconBase Icon
-    {
-      get => (IconBase) GetValue(IconProperty);
-      set => SetValue(IconProperty, value);
-    }
+		public VerticalAlignment VerticalIconAlignment
+		{
+			get => (VerticalAlignment) GetValue(VerticalIconAlignmentProperty);
+			set => SetValue(VerticalIconAlignmentProperty, value);
+		}
 
-    #endregion
+		protected virtual void OnActualIconChanged()
+		{
+			UpdateIconAlignment();
+			InvalidateMeasure();
+		}
 
-    #region  Methods
+		private void OnHorizontalIconAlignmentPropertyChangedPrivate(HorizontalAlignment oldValue, HorizontalAlignment newValue)
+		{
+			UpdateIconAlignment();
+		}
 
-    protected virtual void OnActualIconChanged()
-    {
-      InvalidateMeasure();
-    }
+		private void OnIconChanged(IconBase oldIcon, IconBase newIcon)
+		{
+			ActualIcon = newIcon?.SharedResource == true ? newIcon.Clone(false) : newIcon;
+		}
 
-    private void OnIconChanged(IconBase oldIcon, IconBase newIcon)
-    {
-      ActualIcon = newIcon?.SharedResource == true ? newIcon.Clone(false) : newIcon;
-    }
+		private void OnVerticalIconAlignmentPropertyChangedPrivate(VerticalAlignment oldValue, VerticalAlignment newValue)
+		{
+			UpdateIconAlignment();
+		}
 
-    #endregion
-  }
+		private void UpdateIconAlignment()
+		{
+			if (ActualIcon == null)
+				return;
 
-  [ContentProperty(nameof(Icon))]
-  public sealed class IconPresenter : IconPresenterBase
-  {
-    #region  Methods
+			if (ActualIcon.GetValueSource(VerticalIconAlignmentProperty) == PropertyValueSource.Default)
+				ActualIcon.SetCurrentValueInternal(VerticalAlignmentProperty, VerticalIconAlignment);
 
-    protected override Size ArrangeOverrideCore(Size finalSize)
-    {
-      var icon = ActualIcon;
+			if (ActualIcon.GetValueSource(HorizontalAlignmentProperty) == PropertyValueSource.Default)
+				ActualIcon.SetCurrentValueInternal(HorizontalAlignmentProperty, HorizontalIconAlignment);
+		}
+	}
 
-      if (icon == null)
-        return finalSize;
+	[ContentProperty(nameof(Icon))]
+	public sealed class IconPresenter : IconPresenterBase
+	{
+		protected override Size ArrangeOverrideCore(Size finalSize)
+		{
+			var icon = ActualIcon;
 
-      icon.Arrange(finalSize.Rect());
+			if (icon == null)
+				return finalSize;
 
-      return finalSize;
-    }
+			icon.Arrange(finalSize.Rect());
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      var icon = ActualIcon;
+			return finalSize;
+		}
 
-      if (icon == null)
-        return XamlConstants.ZeroSize;
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			var icon = ActualIcon;
 
-      icon.Measure(availableSize);
+			if (icon == null)
+				return XamlConstants.ZeroSize;
 
-      return icon.DesiredSize;
-    }
+			icon.Measure(availableSize);
 
-    #endregion
-  }
+			return icon.DesiredSize;
+		}
+	}
 
-  internal interface IIconPresenter
-  {
+	internal interface IIconPresenter
+	{
 		IconBase Icon { get; }
-  }
+	}
 }

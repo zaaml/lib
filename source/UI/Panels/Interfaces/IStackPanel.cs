@@ -37,6 +37,8 @@ namespace Zaaml.UI.Panels.Interfaces
 
     CompositeTransform Transform { get; } 
 
+    int LeadingTrailingLimit { get; }
+    
     #endregion
   }
 

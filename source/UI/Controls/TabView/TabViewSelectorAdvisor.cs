@@ -6,9 +6,9 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.TabView
 {
-	internal sealed class TabViewSelectorAdvisor : ItemCollectionSelectorAdvisor<TabViewControl, TabViewItem>
+	internal sealed class TabViewSelectorAdvisor : SelectorBaseControllerAdvisor<TabViewControl, TabViewItem, TabViewItemCollection, TabViewItemsPresenter, TabViewItemsPanel>
 	{
-		public TabViewSelectorAdvisor(TabViewControl tabViewControl) : base(tabViewControl, tabViewControl.Items)
+		public TabViewSelectorAdvisor(TabViewControl tabViewControl) : base(tabViewControl)
 		{
 		}
 	}

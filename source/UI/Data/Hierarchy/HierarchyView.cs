@@ -94,8 +94,6 @@ namespace Zaaml.UI.Data.Hierarchy
 
 				LoadNodes();
 				RaiseReset();
-
-				//DebugCount();
 			}
 		}
 
@@ -512,7 +510,9 @@ namespace Zaaml.UI.Data.Hierarchy
 			if (SuspendCollectionChange || count == 0)
 				return;
 
-			DataPlainListView.RaiseChange(index, count);
+			// TODO SelectionController exception
+			//DataPlainListView.RaiseChange(index, count);
+			DataPlainListView.RaiseReset();
 		}
 
 		internal void RaiseReset()

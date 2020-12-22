@@ -9,9 +9,9 @@ using Zaaml.UI.Utils;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	public sealed class ListViewPanel : VirtualStackItemsPanel<ListViewItem>
+	public sealed class ListViewItemsPanel : VirtualStackItemsPanel<ListViewItem>
 	{
-		public ListViewPanel()
+		public ListViewItemsPanel()
 		{
 			ReduceMouseHoverFlickering = true;
 		}

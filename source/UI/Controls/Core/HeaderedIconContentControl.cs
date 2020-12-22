@@ -11,206 +11,184 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-  public class HeaderedIconContentControl : IconContentControl, IHeaderedContentControl
-  {
-    #region Static Fields and Constants
+	public class HeaderedIconContentControl : IconContentControl, IHeaderedIconContentControl
+	{
+		public static readonly DependencyProperty HeaderProperty = DPM.Register<object, HeaderedIconContentControl>
+			("Header", h => h.OnHeaderChangedPrivate);
 
-    public static readonly DependencyProperty HeaderProperty = DPM.Register<object, HeaderedIconContentControl>
-      ("Header", h => h.OnHeaderChangedPrivate);
+		private static readonly DependencyPropertyKey HasHeaderPropertyKey = DPM.RegisterReadOnly<bool, HeaderedIconContentControl>
+			("HasHeader");
 
-    private static readonly DependencyPropertyKey HasHeaderPropertyKey = DPM.RegisterReadOnly<bool, HeaderedIconContentControl>
-      ("HasHeader");
+		public static readonly DependencyProperty HasHeaderProperty = HasHeaderPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty HasHeaderProperty = HasHeaderPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty HeaderTemplateProperty = DPM.Register<DataTemplate, HeaderedIconContentControl>
+			("HeaderTemplate", h => h.OnHeaderTemplateChangedPrivate);
 
-    public static readonly DependencyProperty HeaderTemplateProperty = DPM.Register<DataTemplate, HeaderedIconContentControl>
-      ("HeaderTemplate", h => h.OnHeaderTemplateChangedPrivate);
+		public static readonly DependencyProperty HeaderTemplateSelectorProperty = DPM.Register<DataTemplateSelector, HeaderedIconContentControl>
+			("HeaderTemplateSelector", h => h.OnHeaderTemplateSelectorChangedPrivate);
 
-    public static readonly DependencyProperty HeaderTemplateSelectorProperty = DPM.Register<DataTemplateSelector, HeaderedIconContentControl>
-      ("HeaderTemplateSelector", h => h.OnHeaderTemplateSelectorChangedPrivate);
+		public static readonly DependencyProperty HeaderStringFormatProperty = DPM.Register<string, HeaderedIconContentControl>
+			("HeaderStringFormat", h => h.OnHeaderStringFormatChangedPrivate);
 
-    public static readonly DependencyProperty HeaderStringFormatProperty = DPM.Register<string, HeaderedIconContentControl>
-      ("HeaderStringFormat", h => h.OnHeaderStringFormatChangedPrivate);
+		public static readonly DependencyProperty HeaderDockProperty = DPM.Register<Dock, HeaderedIconContentControl>
+			("HeaderDock", Dock.Top);
 
-    public static readonly DependencyProperty HeaderDockProperty = DPM.Register<Dock, HeaderedIconContentControl>
-      ("HeaderDock", Dock.Top);
+		public static readonly DependencyProperty HeaderDistanceProperty = DPM.Register<double, HeaderedIconContentControl>
+			("HeaderDistance");
 
-    public static readonly DependencyProperty HeaderDistanceProperty = DPM.Register<double, HeaderedIconContentControl>
-      ("HeaderDistance");
+		public static readonly DependencyProperty VerticalHeaderAlignmentProperty = DPM.Register<VerticalAlignment, HeaderedIconContentControl>
+			("VerticalHeaderAlignment", VerticalAlignment.Top);
 
-    public static readonly DependencyProperty VerticalHeaderAlignmentProperty = DPM.Register<VerticalAlignment, HeaderedIconContentControl>
-      ("VerticalHeaderAlignment", VerticalAlignment.Top);
+		public static readonly DependencyProperty HorizontalHeaderAlignmentProperty = DPM.Register<HorizontalAlignment, HeaderedIconContentControl>
+			("HorizontalHeaderAlignment", HorizontalAlignment.Left);
 
-    public static readonly DependencyProperty HorizontalHeaderAlignmentProperty = DPM.Register<HorizontalAlignment, HeaderedIconContentControl>
-      ("HorizontalHeaderAlignment", HorizontalAlignment.Left);
+		public static readonly DependencyProperty ShowHeaderProperty = DPM.Register<bool, HeaderedIconContentControl>
+			("ShowHeader", true);
 
-    public static readonly DependencyProperty ShowHeaderProperty = DPM.Register<bool, HeaderedIconContentControl>
-      ("ShowHeader", true);
+		static HeaderedIconContentControl()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<HeaderedIconContentControl>();
+		}
 
-    #endregion
+		public HeaderedIconContentControl()
+		{
+			this.OverrideStyleKey<HeaderedIconContentControl>();
+		}
 
-    #region Ctors
-
-    static HeaderedIconContentControl()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<HeaderedIconContentControl>();
-    }
-
-    public HeaderedIconContentControl()
-    {
-      this.OverrideStyleKey<HeaderedIconContentControl>();
-    }
-
-    #endregion
-
-    #region Properties
-
-    public bool HasHeader
-    {
-      get => (bool) GetValue(HasHeaderProperty);
-      set => this.SetReadOnlyValue(HasHeaderPropertyKey, value);
-    }
+		public bool HasHeader
+		{
+			get => (bool) GetValue(HasHeaderProperty);
+			set => this.SetReadOnlyValue(HasHeaderPropertyKey, value);
+		}
 
 
-    public double HeaderDistance
-    {
-      get => (double) GetValue(HeaderDistanceProperty);
-      set => SetValue(HeaderDistanceProperty, value);
-    }
+		public double HeaderDistance
+		{
+			get => (double) GetValue(HeaderDistanceProperty);
+			set => SetValue(HeaderDistanceProperty, value);
+		}
 
 
-    public Dock HeaderDock
-    {
-      get => (Dock) GetValue(HeaderDockProperty);
-      set => SetValue(HeaderDockProperty, value);
-    }
+		public Dock HeaderDock
+		{
+			get => (Dock) GetValue(HeaderDockProperty);
+			set => SetValue(HeaderDockProperty, value);
+		}
 
 
-    public HorizontalAlignment HorizontalHeaderAlignment
-    {
-      get => (HorizontalAlignment) GetValue(HorizontalHeaderAlignmentProperty);
-      set => SetValue(HorizontalHeaderAlignmentProperty, value);
-    }
+		public HorizontalAlignment HorizontalHeaderAlignment
+		{
+			get => (HorizontalAlignment) GetValue(HorizontalHeaderAlignmentProperty);
+			set => SetValue(HorizontalHeaderAlignmentProperty, value);
+		}
 
 
-    public bool ShowHeader
-    {
-      get => (bool) GetValue(ShowHeaderProperty);
-      set => SetValue(ShowHeaderProperty, value);
-    }
+		public bool ShowHeader
+		{
+			get => (bool) GetValue(ShowHeaderProperty);
+			set => SetValue(ShowHeaderProperty, value);
+		}
 
 
-    public VerticalAlignment VerticalHeaderAlignment
-    {
-      get => (VerticalAlignment) GetValue(VerticalHeaderAlignmentProperty);
-      set => SetValue(VerticalHeaderAlignmentProperty, value);
-    }
+		public VerticalAlignment VerticalHeaderAlignment
+		{
+			get => (VerticalAlignment) GetValue(VerticalHeaderAlignmentProperty);
+			set => SetValue(VerticalHeaderAlignmentProperty, value);
+		}
 
-    #endregion
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			return this.OnMeasureOverride(base.MeasureOverride, availableSize);
+		}
 
-    #region  Methods
+		protected virtual void OnHeaderChanged(object oldHeader, object newHeader)
+		{
+		}
 
-    protected override Size MeasureOverride(Size availableSize)
-    {
-      return this.OnMeasureOverride(base.MeasureOverride, availableSize);
-    }
+		internal virtual void OnHeaderChangedInternal(object oldHeader, object newHeader)
+		{
+			OnHeaderChanged(oldHeader, newHeader);
+		}
 
-    protected virtual void OnHeaderChanged(object oldHeader, object newHeader)
-    {
-    }
+		private void OnHeaderChangedPrivate(object oldHeader, object newHeader)
+		{
+			OnHeaderChangedInternal(oldHeader, newHeader);
+		}
 
-    internal virtual void OnHeaderChangedInternal(object oldHeader, object newHeader)
-    {
-      OnHeaderChanged(oldHeader, newHeader);
-    }
+		protected virtual void OnHeaderStringFormatChanged(string oldStringFormat, string newStringFormat)
+		{
+		}
 
-    private void OnHeaderChangedPrivate(object oldHeader, object newHeader)
-    {
-      OnHeaderChangedInternal(oldHeader, newHeader);
-    }
+		internal virtual void OnHeaderStringFormatChangedInternal(string oldStringFormat, string newStringFormat)
+		{
+			OnHeaderStringFormatChanged(oldStringFormat, newStringFormat);
+		}
 
-    protected virtual void OnHeaderStringFormatChanged(string oldStringFormat, string newStringFormat)
-    {
-    }
+		private void OnHeaderStringFormatChangedPrivate(string oldStringFormat, string newStringFormat)
+		{
+			OnHeaderStringFormatChangedInternal(oldStringFormat, newStringFormat);
+		}
 
-    internal virtual void OnHeaderStringFormatChangedInternal(string oldStringFormat, string newStringFormat)
-    {
-      OnHeaderStringFormatChanged(oldStringFormat, newStringFormat);
-    }
+		protected virtual void OnHeaderTemplateChanged(DataTemplate oldHeaderTemplate, DataTemplate newHeaderTemplate)
+		{
+		}
 
-    private void OnHeaderStringFormatChangedPrivate(string oldStringFormat, string newStringFormat)
-    {
-      OnHeaderStringFormatChangedInternal(oldStringFormat, newStringFormat);
-    }
+		internal virtual void OnHeaderTemplateChangedInternal(DataTemplate oldHeaderTemplate, DataTemplate newHeaderTemplate)
+		{
+			OnHeaderTemplateChanged(oldHeaderTemplate, newHeaderTemplate);
+		}
 
-    protected virtual void OnHeaderTemplateChanged(DataTemplate oldHeaderTemplate, DataTemplate newHeaderTemplate)
-    {
-    }
+		private void OnHeaderTemplateChangedPrivate(DataTemplate oldHeaderTemplate, DataTemplate newHeaderTemplate)
+		{
+			OnHeaderTemplateChangedInternal(oldHeaderTemplate, newHeaderTemplate);
+		}
 
-    internal virtual void OnHeaderTemplateChangedInternal(DataTemplate oldHeaderTemplate, DataTemplate newHeaderTemplate)
-    {
-      OnHeaderTemplateChanged(oldHeaderTemplate, newHeaderTemplate);
-    }
+		protected virtual void OnHeaderTemplateSelectorChanged(DataTemplateSelector oldHeaderTemplateSelector, DataTemplateSelector newHeaderTemplateSelector)
+		{
+		}
 
-    private void OnHeaderTemplateChangedPrivate(DataTemplate oldHeaderTemplate, DataTemplate newHeaderTemplate)
-    {
-      OnHeaderTemplateChangedInternal(oldHeaderTemplate, newHeaderTemplate);
-    }
+		internal virtual void OnHeaderTemplateSelectorChangedInternal(DataTemplateSelector oldHeaderTemplateSelector, DataTemplateSelector newHeaderTemplateSelector)
+		{
+			OnHeaderTemplateSelectorChanged(oldHeaderTemplateSelector, newHeaderTemplateSelector);
+		}
 
-    protected virtual void OnHeaderTemplateSelectorChanged(DataTemplateSelector oldHeaderTemplateSelector, DataTemplateSelector newHeaderTemplateSelector)
-    {
-    }
+		private void OnHeaderTemplateSelectorChangedPrivate(DataTemplateSelector oldHeaderTemplateSelector, DataTemplateSelector newHeaderTemplateSelector)
+		{
+			OnHeaderTemplateSelectorChangedInternal(oldHeaderTemplateSelector, newHeaderTemplateSelector);
+		}
 
-    internal virtual void OnHeaderTemplateSelectorChangedInternal(DataTemplateSelector oldHeaderTemplateSelector, DataTemplateSelector newHeaderTemplateSelector)
-    {
-      OnHeaderTemplateSelectorChanged(oldHeaderTemplateSelector, newHeaderTemplateSelector);
-    }
+		public object Header
+		{
+			get => GetValue(HeaderProperty);
+			set => SetValue(HeaderProperty, value);
+		}
 
-    private void OnHeaderTemplateSelectorChangedPrivate(DataTemplateSelector oldHeaderTemplateSelector, DataTemplateSelector newHeaderTemplateSelector)
-    {
-      OnHeaderTemplateSelectorChangedInternal(oldHeaderTemplateSelector, newHeaderTemplateSelector);
-    }
+		DependencyProperty IHeaderedIconContentControl.HeaderProperty => HeaderProperty;
 
-    #endregion
+		public string HeaderStringFormat
+		{
+			get => (string) GetValue(HeaderStringFormatProperty);
+			set => SetValue(HeaderStringFormatProperty, value);
+		}
 
-    #region Interface Implementations
+		DependencyProperty IHeaderedIconContentControl.HeaderStringFormatProperty => HeaderStringFormatProperty;
 
-    #region IHeaderedContentControl
+		public DataTemplate HeaderTemplate
+		{
+			get => (DataTemplate) GetValue(HeaderTemplateProperty);
+			set => SetValue(HeaderTemplateProperty, value);
+		}
 
-    public object Header
-    {
-      get => GetValue(HeaderProperty);
-      set => SetValue(HeaderProperty, value);
-    }
+		DependencyProperty IHeaderedIconContentControl.HeaderTemplateProperty => HeaderTemplateProperty;
 
-    DependencyProperty IHeaderedContentControl.HeaderProperty => HeaderProperty;
+		public DataTemplateSelector HeaderTemplateSelector
+		{
+			get => (DataTemplateSelector) GetValue(HeaderTemplateSelectorProperty);
+			set => SetValue(HeaderTemplateSelectorProperty, value);
+		}
 
-    public string HeaderStringFormat
-    {
-      get => (string) GetValue(HeaderStringFormatProperty);
-      set => SetValue(HeaderStringFormatProperty, value);
-    }
+		DependencyProperty IHeaderedIconContentControl.HeaderTemplateSelectorProperty => HeaderTemplateSelectorProperty;
 
-    DependencyProperty IHeaderedContentControl.HeaderStringFormatProperty => HeaderStringFormatProperty;
-
-    public DataTemplate HeaderTemplate
-    {
-      get => (DataTemplate) GetValue(HeaderTemplateProperty);
-      set => SetValue(HeaderTemplateProperty, value);
-    }
-
-    DependencyProperty IHeaderedContentControl.HeaderTemplateProperty => HeaderTemplateProperty;
-
-    public DataTemplateSelector HeaderTemplateSelector
-    {
-      get => (DataTemplateSelector) GetValue(HeaderTemplateSelectorProperty);
-      set => SetValue(HeaderTemplateSelectorProperty, value);
-    }
-
-    DependencyProperty IHeaderedContentControl.HeaderTemplateSelectorProperty => HeaderTemplateSelectorProperty;
-
-    #endregion
-
-    #endregion
-  }
+		DependencyProperty IIconContentControl.IconProperty => IconProperty;
+	}
 }

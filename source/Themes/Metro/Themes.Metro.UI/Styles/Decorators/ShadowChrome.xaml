@@ -7,9 +7,8 @@
 
   <!-- Base Style -->
   <zm:Style x:Key="ShadowChromeBaseStyle" TargetType="zm:ShadowChrome">
-    <zm:Setter Property="BlurRadius" Value="12" />
-    <zm:Setter Property="ShadowDirection" Value="0" />
-    <zm:Setter Property="ShadowOpacity" Value="0.4" />
+    <zm:Setter Property="ShadowSize" Value="24" />
+    <zm:Setter Property="ShadowOpacity" Value="0.3" />
   </zm:Style>
 
   <!-- Style -->

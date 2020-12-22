@@ -30,24 +30,24 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		protected override bool SupportsRecycling => true;
 
-		protected override void AttachItem(BackstageViewItem item, object itemSource)
+		protected override void AttachItem(BackstageViewItem item, object source)
 		{
-			Implementation.AttachItem(item, itemSource);
+			Implementation.AttachItem(item, source);
 		}
 
-		protected override BackstageViewItem CreateItem(object itemSource)
+		protected override BackstageViewItem CreateItem(object source)
 		{
-			return Implementation.CreateItem(itemSource);
+			return Implementation.CreateItem(source);
 		}
 
-		protected override void DetachItem(BackstageViewItem item, object itemSource)
+		protected override void DetachItem(BackstageViewItem item, object source)
 		{
-			Implementation.DetachItem(item, itemSource);
+			Implementation.DetachItem(item, source);
 		}
 
-		protected override void DisposeItem(BackstageViewItem item, object itemSource)
+		protected override void DisposeItem(BackstageViewItem item, object source)
 		{
-			Implementation.DisposeItem(item, itemSource);
+			Implementation.DisposeItem(item, source);
 		}
 
 		private void OnItemTemplateChanged()

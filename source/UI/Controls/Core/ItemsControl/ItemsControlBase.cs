@@ -80,7 +80,7 @@ namespace Zaaml.UI.Controls.Core
 			OnHasItemsChanged();
 		}
 
-		internal virtual void OnItemsSourceChangedInt(IEnumerable oldSource, IEnumerable newSource)
+		internal virtual void OnSourceChangedInt(IEnumerable oldSource, IEnumerable newSource)
 		{
 		}
 

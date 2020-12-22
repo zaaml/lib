@@ -20,7 +20,7 @@ namespace Zaaml.UI.Controls.Core
 
 		IEnumerable<TItem> ActualItems { get; }
 
-		IEnumerable Source { get; set; }
+		IEnumerable SourceCollection { get; set; }
 
 		#endregion
 
@@ -32,11 +32,11 @@ namespace Zaaml.UI.Controls.Core
 
 		int GetIndexFromItem(TItem item);
 
-		int GetIndexFromItemSource(object itemSource);
+		int GetIndexFromSource(object source);
 
 		TItem GetItemFromIndex(int index);
 
-		object GetItemSourceFromIndex(int index);
+		object GetSourceFromIndex(int index);
 
 		void LockItem(TItem item);
 

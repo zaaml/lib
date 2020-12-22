@@ -14,10 +14,12 @@
                              ContentStringFormat="{TemplateBinding ContentStringFormat}"
                              ContentTemplate="{TemplateBinding ContentTemplate}"
                              ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                             HorizontalIconAlignment="{TemplateBinding HorizontalIconAlignment}"
                              Icon="{TemplateBinding Icon}"
                              IconDistance="{TemplateBinding IconDistance}"
                              IconDock="{TemplateBinding IconDock}"
-                             ShowIcon="{TemplateBinding ShowIcon}" />
+                             ShowIcon="{TemplateBinding ShowIcon}"
+                             VerticalIconAlignment="{TemplateBinding VerticalIconAlignment}" />
   </ControlTemplate>
 
   <!--  Base Style  -->

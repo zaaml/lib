@@ -10,24 +10,24 @@ namespace Zaaml.UI.Controls.AccordionView
   {
     #region  Methods
 
-    protected override void AttachItem(AccordionViewItem item, object itemSource)
+    protected override void AttachItem(AccordionViewItem item, object source)
     {
-      Implementation.AttachItem(item, itemSource);
+      Implementation.AttachItem(item, source);
     }
 
-    protected override AccordionViewItem CreateItem(object itemSource)
+    protected override AccordionViewItem CreateItem(object source)
     {
-      return Implementation.CreateItem(itemSource);
+      return Implementation.CreateItem(source);
     }
 
-    protected override void DetachItem(AccordionViewItem item, object itemSource)
+    protected override void DetachItem(AccordionViewItem item, object source)
     {
-      Implementation.DetachItem(item, itemSource);
+      Implementation.DetachItem(item, source);
     }
 
-    protected override void DisposeItem(AccordionViewItem item, object itemSource)
+    protected override void DisposeItem(AccordionViewItem item, object source)
     {
-      Implementation.DisposeItem(item, itemSource);
+      Implementation.DisposeItem(item, source);
     }
 
     #endregion

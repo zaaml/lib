@@ -28,14 +28,14 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		public void AttachDataContext(TItemBase item, object itemSource)
+		public void AttachDataContext(TItemBase item, object source)
 		{
-			item.SetValue(FrameworkElement.DataContextProperty, itemSource);
+			item.SetValue(FrameworkElement.DataContextProperty, source);
 
 			_dataTemplateBindingHelper.EnsureBinding(item);
 		}
 
-		public TItemBase Load(object itemSource)
+		public TItemBase Load(object source)
 		{
 			var itemTemplate = DataTemplate;
 

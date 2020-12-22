@@ -86,15 +86,15 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 				if (SourceCount == 0)
 					return;
 				
-				MeasureLeadingCache();
+				MeasureLeading();
 				MeasureVisible();
-				MeasureTrailingCache();
+				MeasureTrailing();
 				MeasureFocusedItem(focusedIndex);
 			}
 
-			private void MeasureLeadingCache()
+			private void MeasureLeading()
 			{
-				FirstIndex = (OffsetElementIndex - CacheLength).Clamp(0, SourceCount);
+				FirstIndex = (OffsetElementIndex - Layout.Panel.LeadingTrailingLimit).Clamp(0, SourceCount);
 				FirstVisibleIndex = OffsetElementIndex.Clamp(0, SourceCount);
 
 				var constraint = OrientedConstraint.Size;
@@ -102,7 +102,14 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 				while (index < FirstVisibleIndex && index < SourceCount)
 				{
-					var element = Layout.Realize(index);
+					var element = EnsureElement(Layout.Realize(index));
+					
+					if (element == null)
+					{
+						index++;
+						
+						continue;
+					}
 
 					AddItem(element);
 					Layout.MeasureChild(element, constraint);
@@ -122,7 +129,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
         if (focusedIndex >= FirstIndex && focusedIndex <= LastIndex)
           return;
 
-        var focusedItem = Layout.Realize(focusedIndex);
+        var focusedItem = EnsureElement(Layout.Realize(focusedIndex));
 
         if (focusedItem == null)
           return;
@@ -153,6 +160,11 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 	      Layout.UIElementInserter.Add(item);
       }
 
+      private UIElement EnsureElement(UIElement element)
+      {
+	      return element;
+      }
+      
       private void MeasureVisible()
 			{
 				var constraint = OrientedConstraint.Size;
@@ -161,8 +173,15 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 				while (OrientedAvailable.Direct > OrientedResult.Direct && index < SourceCount)
 				{
-					var element = Layout.Realize(index);
+					var element = EnsureElement(Layout.Realize(index));
 
+					if (element == null)
+					{
+						index++;
+						
+						continue;
+					}
+					
 					realizedIndex = index;
 
 					AddItem(element);
@@ -200,7 +219,14 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 					while (OrientedAvailable.Direct > OrientedResult.Direct && FirstVisibleIndex > 0)
 					{
-						var element = Layout.Realize(FirstVisibleIndex - 1);
+						var element = EnsureElement(Layout.Realize(FirstVisibleIndex - 1));
+						
+						if (element == null)
+						{
+							FirstVisibleIndex--;
+							
+							continue;
+						}
 
 						InsertItem(0, element);
 						Layout.MeasureChild(element, constraint);
@@ -213,9 +239,16 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 					FirstIndex = FirstVisibleIndex;
 
 					// Remeasure leading cache
-					while (LeadingCacheCount < CacheLength && FirstIndex > 0)
+					while (LeadingCacheCount < Layout.Panel.LeadingTrailingLimit && FirstIndex > 0)
 					{
-						var element = Layout.Realize(FirstIndex - 1);
+						var element = EnsureElement(Layout.Realize(FirstIndex - 1));
+						
+						if (element == null)
+						{
+							FirstIndex--;
+							
+							continue;
+						}
 
 						InsertItem(0, element);
 						Layout.MeasureChild(element, constraint);
@@ -228,15 +261,22 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 				}
 			}
 
-      private void MeasureTrailingCache()
+      private void MeasureTrailing()
 			{
 				var constraint = OrientedConstraint.Size;
 				var index = LastVisibleIndex + 1;
 				var realizedIndex = index;
 
-				while (index < SourceCount && TrailingCacheCount <= CacheLength)
+				while (index < SourceCount && TrailingCacheCount <= Layout.Panel.LeadingTrailingLimit)
 				{
-					var element = Layout.Realize(index);
+					var element = EnsureElement(Layout.Realize(index));
+					
+					if (element == null)
+					{
+						index++;
+						
+						continue;
+					}
 
 					realizedIndex = index;
 

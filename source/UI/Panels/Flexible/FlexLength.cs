@@ -80,11 +80,11 @@ namespace Zaaml.UI.Panels.Flexible
 
     public override string ToString()
     {
-      return FlexLengthConverter.ToString(this, CultureInfo.InvariantCulture);
+      return FlexLengthTypeConverter.ToString(this, CultureInfo.InvariantCulture);
     }
   }
 
-  public class FlexLengthConverter : TypeConverter
+  public class FlexLengthTypeConverter : TypeConverter
   {
     #region Static Fields and Constants
 

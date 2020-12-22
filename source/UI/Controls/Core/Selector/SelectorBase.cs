@@ -15,7 +15,7 @@ using NativeControl = System.Windows.Controls.Control;
 namespace Zaaml.UI.Controls.Core
 {
 	public abstract class SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> : ScrollableItemsControlBase<TControl, TItem, TCollection, TPresenter, TPanel>, ISelector<TItem>
-		where TItem : NativeControl, ISelectable
+		where TItem : NativeControl
 		where TCollection : ItemCollectionBase<TControl, TItem>
 		where TPresenter : ScrollableItemsPresenterBase<TControl, TItem, TCollection, TPanel>
 		where TPanel : ItemsPanel<TItem>
@@ -24,27 +24,24 @@ namespace Zaaml.UI.Controls.Core
 		public static readonly DependencyProperty SelectedItemProperty = DPM.Register<TItem, SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>>
 			("SelectedItem", s => s.SelectorController.OnSelectedItemPropertyChanged, s => s.SelectorController.CoerceSelectedItem);
 
-		public static readonly DependencyProperty SelectedItemSourceProperty = DPM.Register<object, SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>>
-			("SelectedItemSource", s => s.SelectorController.OnSelectedItemSourcePropertyChanged, s => s.SelectorController.CoerceSelectedItemSource);
+		public static readonly DependencyProperty SelectedSourceProperty = DPM.Register<object, SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>>
+			("SelectedSource", s => s.SelectorController.OnSelectedSourcePropertyChanged, s => s.SelectorController.CoerceSelectedSource);
 
 		public static readonly DependencyProperty SelectedValueProperty = DPM.Register<object, SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>>
 			("SelectedValue", s => s.SelectorController.OnSelectedValuePropertyChanged, s => s.SelectorController.CoerceSelectedValue);
-
-		public static readonly DependencyProperty SelectedValueMemberPathProperty = DPM.Register<string, SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>>
-			("SelectedValueMemberPath", s => s.OnSelectedValuePathChanged);
 
 		public static readonly DependencyProperty SelectedValueSourceProperty = DPM.Register<SelectedValueSource, SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>>
 			("SelectedValueSource", SelectedValueSource.Auto, s => s.OnSelectedValueSourceChanged);
 
 		private byte _packedValue;
-
-		private MemberValueEvaluator _selectedValueEvaluator;
 		private SelectorController<TControl, TItem> _selectorController;
 		public event EventHandler<SelectionChangedEventArgs<TItem>> SelectionChanged;
 
 		static SelectorBase()
 		{
 		}
+
+		private protected virtual bool ActualSelectItemOnFocus => SelectItemOnFocus;
 
 		internal bool AllowNullSelection
 		{
@@ -78,10 +75,10 @@ namespace Zaaml.UI.Controls.Core
 			set => SetValue(SelectedItemProperty, value);
 		}
 
-		public object SelectedItemSource
+		public object SelectedSource
 		{
-			get => GetValue(SelectedItemSourceProperty);
-			set => SetValue(SelectedItemSourceProperty, value);
+			get => GetValue(SelectedSourceProperty);
+			set => SetValue(SelectedSourceProperty, value);
 		}
 
 		public object SelectedValue
@@ -90,11 +87,7 @@ namespace Zaaml.UI.Controls.Core
 			set => SetValue(SelectedValueProperty, value);
 		}
 
-		public string SelectedValueMemberPath
-		{
-			get => (string) GetValue(SelectedValueMemberPathProperty);
-			set => SetValue(SelectedValueMemberPathProperty, value);
-		}
+		private protected MemberValueEvaluator SelectedValueEvaluator { get; set; }
 
 		public SelectedValueSource SelectedValueSource
 		{
@@ -102,7 +95,7 @@ namespace Zaaml.UI.Controls.Core
 			set => SetValue(SelectedValueSourceProperty, value);
 		}
 
-		public Selection<TItem> Selection => new Selection<TItem>(SelectedIndexInternal, SelectedItem, SelectedItemSource, SelectedValue);
+		public Selection<TItem> Selection => new Selection<TItem>(SelectedIndexInternal, SelectedItem, SelectedSource, SelectedValue);
 
 		internal bool SelectItemOnFocus { get; set; } = true;
 
@@ -113,7 +106,7 @@ namespace Zaaml.UI.Controls.Core
 			base.BeginInit();
 
 			IsInitializing = true;
-			SelectorController.SuspendSelectionChange();
+			SelectorController.BeginInit();
 
 			SelectorController.AllowNullSelection = DefaultAllowNullSelection;
 			SelectorController.PreferSelection = DefaultPreferSelection;
@@ -121,7 +114,7 @@ namespace Zaaml.UI.Controls.Core
 
 		internal virtual SelectorController<TControl, TItem> CreateSelectorController()
 		{
-			return new SelectorController<TControl, TItem>((TControl) this, new ItemCollectionSelectorAdvisor<TControl, TItem>(this, Items));
+			return new SelectorController<TControl, TItem>((TControl) this, new SelectorBaseControllerAdvisor<TControl, TItem, TCollection, TPresenter, TPanel>(this));
 		}
 
 		private SelectorController<TControl, TItem> CreateSelectorControllerPrivate()
@@ -139,17 +132,24 @@ namespace Zaaml.UI.Controls.Core
 
 		public override void EndInit()
 		{
-			SelectorController.ResumeSelectionChange();
+			SelectorController.EndInit();
 			IsInitializing = false;
 
 			base.EndInit();
+		}
+
+		protected abstract bool GetIsSelected(TItem item);
+
+		internal bool GetIsSelectedInternal(TItem item)
+		{
+			return GetIsSelected(item);
 		}
 
 		private object GetItemValue(object item)
 		{
 			try
 			{
-				return _selectedValueEvaluator.GetValue(item);
+				return SelectedValueEvaluator.GetValue(item);
 			}
 			catch (Exception e)
 			{
@@ -176,7 +176,7 @@ namespace Zaaml.UI.Controls.Core
 							e.Handled = MoveFocus(new TraversalRequest(FocusNavigationDirection.Down));
 						else if (ReferenceEquals(this, previousFocus.PredictFocus(FocusNavigationDirection.Left)))
 							e.Handled = MoveFocus(new TraversalRequest(FocusNavigationDirection.Left));
-						else if (ReferenceEquals(this, previousFocus.PredictFocus(FocusNavigationDirection.Right))) 
+						else if (ReferenceEquals(this, previousFocus.PredictFocus(FocusNavigationDirection.Right)))
 							e.Handled = MoveFocus(new TraversalRequest(FocusNavigationDirection.Right));
 					}
 				}
@@ -188,32 +188,12 @@ namespace Zaaml.UI.Controls.Core
 			base.OnGotKeyboardFocus(e);
 		}
 
-		internal override void OnItemAttachedInternal(TItem item)
-		{
-			base.OnItemAttachedInternal(item);
-
-			var itemSource = Items.GetItemSourceInternal(item);
-
-			if (itemSource != null && ReferenceEquals(itemSource, SelectedItemSource))
-			{
-				if (ReferenceEquals(item, SelectedItem) == false)
-					SelectedItem = item;
-			}
-
-			if (ReferenceEquals(item, SelectedItem))
-				item.IsSelected = true;
-			else if (item.IsSelected)
-				item.IsSelected = false;
-		}
-
-		private protected virtual bool ActualSelectItemOnFocus => SelectItemOnFocus;
-		
 		private protected override void OnItemGotFocus(TItem item)
 		{
 			base.OnItemGotFocus(item);
-			
+
 			if (ActualSelectItemOnFocus)
-				SetIsSelectedInternal(item, true);
+				SetIsSelected(item, true);
 		}
 
 		protected override void OnLoaded()
@@ -234,7 +214,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 		}
 
-		protected virtual void OnSelectedItemSourceChanged(object oldItemSource, object newItemSource)
+		protected virtual void OnSelectedSourceChanged(object oldSource, object newSource)
 		{
 		}
 
@@ -242,39 +222,27 @@ namespace Zaaml.UI.Controls.Core
 		{
 		}
 
-		private void OnSelectedValuePathChanged(string oldValue, string newValue)
-		{
-			try
-			{
-				_selectedValueEvaluator = new MemberValueEvaluator(newValue);
-			}
-			catch (Exception ex)
-			{
-				LogService.LogError(ex);
-			}
-
-			SelectorController.UpdateSelectedValue();
-		}
-
 		private void OnSelectedValueSourceChanged()
 		{
-			SelectorController.UpdateSelectedValue();
+			SelectorController.SyncValue();
 		}
 
 		protected virtual void OnSelectionChanged(Selection<TItem> oldSelection, Selection<TItem> newSelection)
 		{
 		}
 
-		private protected virtual void SetIsSelectedInternal(TItem item, bool value)
+		protected abstract void SetIsSelected(TItem item, bool value);
+
+		internal void SetIsSelectedInternal(TItem item, bool value)
 		{
-			item.IsSelected = value;
+			SetIsSelected(item, value);
 		}
 
 		DependencyProperty ISelector<TItem>.SelectedIndexProperty => null;
 
 		DependencyProperty ISelector<TItem>.SelectedItemProperty => SelectedItemProperty;
 
-		DependencyProperty ISelector<TItem>.SelectedItemSourceProperty => SelectedItemSourceProperty;
+		DependencyProperty ISelector<TItem>.SelectedSourceProperty => SelectedSourceProperty;
 
 		DependencyProperty ISelector<TItem>.SelectedValueProperty => SelectedValueProperty;
 
@@ -288,9 +256,9 @@ namespace Zaaml.UI.Controls.Core
 			OnSelectedItemChanged(oldItem, newItem);
 		}
 
-		void ISelector<TItem>.OnSelectedItemSourceChanged(object oldItemSource, object newItemSource)
+		void ISelector<TItem>.OnSelectedSourceChanged(object oldSource, object newSource)
 		{
-			OnSelectedItemSourceChanged(oldItemSource, newItemSource);
+			OnSelectedSourceChanged(oldSource, newSource);
 		}
 
 		void ISelector<TItem>.OnSelectedValueChanged(object oldValue, object newValue)
@@ -305,21 +273,21 @@ namespace Zaaml.UI.Controls.Core
 			SelectionChanged?.Invoke(this, new SelectionChangedEventArgs<TItem>(oldSelection, newSelection));
 		}
 
-		object ISelector<TItem>.GetValue(TItem item, object itemSource)
+		object ISelector<TItem>.GetValue(TItem item, object source)
 		{
 			switch (SelectedValueSource)
 			{
 				case SelectedValueSource.Auto:
 
-					return GetItemValue(Items.SourceInternal == null ? item : itemSource);
+					return GetItemValue(Items.SourceInternal == null ? item : source);
 
 				case SelectedValueSource.Item:
 
 					return GetItemValue(item);
 
-				case SelectedValueSource.ItemSource:
+				case SelectedValueSource.Source:
 
-					return GetItemValue(itemSource);
+					return GetItemValue(source);
 
 				default:
 
@@ -343,5 +311,30 @@ namespace Zaaml.UI.Controls.Core
 	public abstract class SelectorBaseTemplateContract<TPresenter> : ScrollableItemsControlBaseTemplateContract<TPresenter>
 		where TPresenter : ItemsPresenterBase
 	{
+	}
+
+	internal class SelectorBaseControllerAdvisor<TControl, TItem, TCollection, TPresenter, TPanel> : ItemCollectionSelectorAdvisor<TControl, TItem>
+		where TControl : SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>
+		where TItem : NativeControl
+		where TCollection : ItemCollectionBase<TControl, TItem>
+		where TPresenter : ScrollableItemsPresenterBase<TControl, TItem, TCollection, TPanel>
+		where TPanel : ItemsPanel<TItem>
+	{
+		public SelectorBaseControllerAdvisor(SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> selector) : base(selector, selector.Items)
+		{
+			Selector = selector;
+		}
+
+		private SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> Selector { get; }
+
+		public override bool GetItemSelected(TItem item)
+		{
+			return Selector.GetIsSelectedInternal(item);
+		}
+
+		public override void SetItemSelected(TItem item, bool value)
+		{
+			Selector.SetIsSelectedInternal(item, value);
+		}
 	}
 }

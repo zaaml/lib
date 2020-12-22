@@ -16,11 +16,11 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 	[TemplateContractType(typeof(DropDownListViewEditorTemplateContract))]
 	public class DropDownListViewEditor : DropDownEditorBase
 	{
-		public static readonly DependencyProperty IsEditableProperty = DPM.Register<bool, DropDownListViewEditor>
-			("IsEditable", false);
+		public static readonly DependencyProperty IsTextEditableProperty = DPM.Register<bool, DropDownListViewEditor>
+			("IsTextEditable", false);
 
-		public static readonly DependencyProperty ListViewProperty = DPM.Register<ListViewControl, DropDownListViewEditor>
-			("ListView");
+		public static readonly DependencyProperty ListViewControlProperty = DPM.Register<ListViewControl, DropDownListViewEditor>
+			("ListViewControl");
 
 		private bool _suspendEditCommands;
 
@@ -36,16 +36,16 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 
 		private DropDownListViewControl DropDownListViewControl => TemplateContract.DropDownListViewControl;
 
-		public bool IsEditable
+		public bool IsTextEditable
 		{
-			get => (bool) GetValue(IsEditableProperty);
-			set => SetValue(IsEditableProperty, value);
+			get => (bool) GetValue(IsTextEditableProperty);
+			set => SetValue(IsTextEditableProperty, value);
 		}
 
-		public ListViewControl ListView
+		public ListViewControl ListViewControl
 		{
-			get => (ListViewControl) GetValue(ListViewProperty);
-			set => SetValue(ListViewProperty, value);
+			get => (ListViewControl) GetValue(ListViewControlProperty);
+			set => SetValue(ListViewControlProperty, value);
 		}
 
 		private DropDownListViewEditorTemplateContract TemplateContract => (DropDownListViewEditorTemplateContract) TemplateContractInternal;

@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -23,7 +24,7 @@ using Zaaml.UI.Data.Hierarchy;
 namespace Zaaml.UI.Controls.TreeView
 {
 	[TemplateContractType(typeof(TreeViewControlTemplateContract))]
-	public class TreeViewControl : SelectorBase<TreeViewControl, TreeViewItem, TreeViewItemRootCollection, TreeViewItemsPresenter, TreeViewPanel>, IContentItemsControl, IIndexedFocusNavigatorAdvisor<TreeViewItem>
+	public class TreeViewControl : SelectorBase<TreeViewControl, TreeViewItem, TreeViewItemRootCollection, TreeViewItemsPresenter, TreeViewItemsPanel>, IIconContentSelectorControl, IIndexedFocusNavigatorAdvisor<TreeViewItem>
 	{
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<TreeViewItemGeneratorBase, TreeViewControl>
 			("ItemGenerator", l => l.OnItemGeneratorChanged);
@@ -37,8 +38,8 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty ItemContentStringFormatProperty = DPM.Register<string, TreeViewControl>
 			("ItemContentStringFormat", l => l.DefaultGeneratorImpl.OnItemContentStringFormatChanged);
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, TreeViewControl>
-			("ItemsSource", i => i.OnItemsSourceChangedPrivate);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, TreeViewControl>
+			("SourceCollection", i => i.OnSourceCollectionPropertyChangedPrivate);
 
 		//TODO Make FilterTextBox to implement ITreeViewFilter. 
 		public static readonly DependencyProperty ItemsFilterProperty = DPM.Register<ITreeViewItemFilter, TreeViewControl>
@@ -50,7 +51,31 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty FilteringModeProperty = DPM.Register<TreeViewFilteringMode, TreeViewControl>
 			("FilteringMode", TreeViewFilteringMode.Nodes, i => i.OnFilteringModeChangedPrivate);
 
-		private DelegateContentItemGeneratorImpl<TreeViewItem, DefaultTreeViewItemGenerator> _defaultGeneratorImpl;
+		public static readonly DependencyProperty SelectionModeProperty = DPM.Register<TreeViewSelectionMode, TreeViewControl>
+			("SelectionMode", TreeViewSelectionMode.Single, l => l.OnSelectionModePropertyChangedPrivate);
+
+		private static readonly DependencyPropertyKey SelectionCollectionPropertyKey = DPM.RegisterReadOnly<TreeViewSelectionCollection, TreeViewControl>
+			("SelectionCollectionPrivate");
+
+		public static readonly DependencyProperty ItemGlyphTemplateProperty = DPM.Register<DataTemplate, TreeViewControl>
+			("ItemGlyphTemplate");
+
+		public static readonly DependencyProperty ItemContentMemberProperty = DPM.Register<string, TreeViewControl>
+			("ItemContentMember", d => d.DefaultGeneratorImpl.OnItemContentMemberChanged);
+
+		public static readonly DependencyProperty ItemIconMemberProperty = DPM.Register<string, TreeViewControl>
+			("ItemIconMember", d => d.DefaultGeneratorImpl.OnItemIconMemberChanged);
+
+		public static readonly DependencyProperty ItemValueMemberProperty = DPM.Register<string, TreeViewControl>
+			("ItemValueMember", d => d.DefaultGeneratorImpl.SelectableGeneratorImplementation.OnItemValueMemberChanged);
+
+		public static readonly DependencyProperty ItemSelectionMemberProperty = DPM.Register<string, TreeViewControl>
+			("ItemSelectionMember", d => d.DefaultGeneratorImpl.SelectableGeneratorImplementation.OnItemSelectionMemberChanged);
+
+		public static readonly DependencyProperty ItemSourceCollectionMemberProperty = DPM.Register<string, TreeViewControl>
+			("ItemSourceCollectionMember", d => d.DefaultGeneratorImpl.OnItemSourceCollectionMemberChanged);
+
+		private DefaultItemTemplateTreeViewItemGenerator _defaultGeneratorImpl;
 		private TreeViewData _treeViewData;
 
 		internal event EventHandler<ValueChangedEventArgs<TreeViewData>> TreeViewDataChanged;
@@ -85,9 +110,11 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal TreeViewItemGeneratorBase ActualGenerator => ItemGenerator ?? DefaultGenerator;
 
+		private protected override bool ActualSelectItemOnFocus => SelectionMode != TreeViewSelectionMode.Multiple && base.ActualSelectItemOnFocus;
+
 		private TreeViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImpl.Generator;
 
-		private DelegateContentItemGeneratorImpl<TreeViewItem, DefaultTreeViewItemGenerator> DefaultGeneratorImpl => _defaultGeneratorImpl ??= new DelegateContentItemGeneratorImpl<TreeViewItem, DefaultTreeViewItemGenerator>(this);
+		private DefaultItemTemplateTreeViewItemGenerator DefaultGeneratorImpl => _defaultGeneratorImpl ??= new DefaultItemTemplateTreeViewItemGenerator(this);
 
 		public bool ExpandNodesOnFiltering
 		{
@@ -117,25 +144,45 @@ namespace Zaaml.UI.Controls.TreeView
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
+		public DataTemplate ItemGlyphTemplate
+		{
+			get => (DataTemplate) GetValue(ItemGlyphTemplateProperty);
+			set => SetValue(ItemGlyphTemplateProperty, value);
+		}
+
 		public ITreeViewItemFilter ItemsFilter
 		{
 			get => (ITreeViewItemFilter) GetValue(ItemsFilterProperty);
 			set => SetValue(ItemsFilterProperty, value);
 		}
 
-		internal override IItemCollection<TreeViewItem> ItemsProxy => VirtualItemCollection;
-
-		public IEnumerable ItemsSource
+		public string ItemSourceCollectionMember
 		{
-			get => (IEnumerable) GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
+			get => (string) GetValue(ItemSourceCollectionMemberProperty);
+			set => SetValue(ItemSourceCollectionMemberProperty, value);
 		}
+
+		internal override IItemCollection<TreeViewItem> ItemsOverride => VirtualItemCollection;
 
 		internal MouseButtonSelectionOptions MouseButtonSelectionOptions { get; set; } = MouseButtonSelectionOptions.LeftButtonDown;
 
 		internal ScrollViewControl ScrollViewInternal => ScrollView;
 
+		public TreeViewSelectionCollection SelectionCollection => this.GetValueOrCreate(SelectionCollectionPropertyKey, () => new TreeViewSelectionCollection((TreeViewSelectorController) SelectorController));
+
+		public TreeViewSelectionMode SelectionMode
+		{
+			get => (TreeViewSelectionMode) GetValue(SelectionModeProperty);
+			set => SetValue(SelectionModeProperty, value);
+		}
+
 		private protected virtual bool ShouldSelectCollapsedItemParent => false;
+
+		public IEnumerable SourceCollection
+		{
+			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
+		}
 
 		internal TreeViewData TreeViewData
 		{
@@ -201,7 +248,7 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			return new TreeViewData(this, new TreeViewControlAdvisor(ActualGenerator))
 			{
-				Source = ItemsSource ?? Items,
+				Source = SourceCollection ?? Items,
 				DataFilter =
 				{
 					Filter = ItemsFilter
@@ -244,6 +291,11 @@ namespace Zaaml.UI.Controls.TreeView
 			}
 		}
 
+		protected override bool GetIsSelected(TreeViewItem item)
+		{
+			return item.IsSelected;
+		}
+
 		protected override Size MeasureOverride(Size availableSize)
 		{
 			EnsureVirtualItemCollection();
@@ -255,7 +307,8 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			if (MouseButtonSelectionHelper.ShouldSelect(mouseButtonKind, eventKind, MouseButtonSelectionOptions) && treeViewItem.ActualCanSelect)
 			{
-				treeViewItem.SelectInternal();
+				FocusItem(treeViewItem);
+				ToggleItemSelection(treeViewItem);
 
 				return true;
 			}
@@ -377,13 +430,6 @@ namespace Zaaml.UI.Controls.TreeView
 			InvalidateMeasure();
 		}
 
-		private void OnItemsSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
-		{
-			ItemsSourceCore = newSource;
-
-			UpdateData();
-		}
-
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
 			base.OnKeyDown(e);
@@ -412,6 +458,16 @@ namespace Zaaml.UI.Controls.TreeView
 
 			oldSelection.Item?.SetIsSelectedInternal(false);
 			newSelection.Item?.SetIsSelectedInternal(true);
+		}
+
+		private void OnSelectionModePropertyChangedPrivate()
+		{
+			SelectorController.MultipleSelection = SelectionMode == TreeViewSelectionMode.Multiple;
+		}
+
+		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
+		{
+			UpdateData();
 		}
 
 		protected override void OnTemplateContractAttached()
@@ -473,12 +529,25 @@ namespace Zaaml.UI.Controls.TreeView
 			if (data is TreeViewItem treeViewItem)
 				SelectorController.SelectItem(treeViewItem);
 			else
-				SelectorController.SelectItemSource(data);
+				SelectorController.SelectSource(data);
 		}
 
-		private protected override void SetIsSelectedInternal(TreeViewItem item, bool value)
+		protected override void SetIsSelected(TreeViewItem item, bool value)
 		{
 			item.SetIsSelectedInternal(value);
+		}
+
+		private void ToggleItemSelection(TreeViewItem treeViewItem)
+		{
+			if (treeViewItem.IsSelected == false)
+				treeViewItem.SelectInternal();
+			else if (SelectionMode == TreeViewSelectionMode.Multiple)
+				treeViewItem.UnselectInternal();
+		}
+
+		internal void Unselect(TreeViewItem treeViewItem)
+		{
+			SelectorController.UnselectItem(treeViewItem);
 		}
 
 		private void UpdateData()
@@ -488,6 +557,30 @@ namespace Zaaml.UI.Controls.TreeView
 			ItemsPresenter?.ItemsHostInternal?.InvalidateMeasure();
 
 			InvalidateMeasure();
+		}
+
+		public string ItemSelectionMember
+		{
+			get => (string) GetValue(ItemSelectionMemberProperty);
+			set => SetValue(ItemSelectionMemberProperty, value);
+		}
+
+		public string ItemValueMember
+		{
+			get => (string) GetValue(ItemValueMemberProperty);
+			set => SetValue(ItemValueMemberProperty, value);
+		}
+
+		public string ItemIconMember
+		{
+			get => (string) GetValue(ItemIconMemberProperty);
+			set => SetValue(ItemIconMemberProperty, value);
+		}
+
+		public string ItemContentMember
+		{
+			get => (string) GetValue(ItemContentMemberProperty);
+			set => SetValue(ItemContentMemberProperty, value);
 		}
 
 		public string ItemContentStringFormat
@@ -519,9 +612,5 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			return VirtualItemCollection.GetItemFromIndex(index);
 		}
-	}
-
-	public class TreeViewControlTemplateContract : SelectorBaseTemplateContract<TreeViewItemsPresenter>
-	{
 	}
 }

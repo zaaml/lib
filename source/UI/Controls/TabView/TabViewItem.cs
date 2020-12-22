@@ -16,13 +16,14 @@ using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.Menu;
 using Zaaml.UI.Converters;
 using ContentPresenter = System.Windows.Controls.ContentPresenter;
 
 namespace Zaaml.UI.Controls.TabView
 {
-	public partial class TabViewItem : HeaderedIconContentControl, ISelectable
+	public partial class TabViewItem : HeaderedIconContentControl, ISelectableHeaderedIconContentItem
 	{
 		private static readonly DependencyPropertyKey ActualCloseButtonVisibilityPropertyKey = DPM.RegisterReadOnly<Visibility, TabViewItem>
 			("ActualCloseButtonVisibility", Visibility.Collapsed);
@@ -74,9 +75,14 @@ namespace Zaaml.UI.Controls.TabView
 		public static readonly DependencyProperty IsPinnedProperty = DPM.Register<bool, TabViewItem>
 			("IsPinned", t => t.OnIsPinnedChanged);
 
+		public static readonly DependencyProperty ValueProperty = DPM.Register<object, TabViewItem>
+			("Value", default, d => d.OnValuePropertyChangedPrivate);
+
 		public static readonly DependencyProperty TabViewControlProperty = TabViewControlPropertyKey.DependencyProperty;
 
 		private MenuItem _menuItem;
+
+		public event EventHandler IsSelectedChanged;
 
 		static TabViewItem()
 		{
@@ -87,13 +93,19 @@ namespace Zaaml.UI.Controls.TabView
 		{
 			this.OverrideStyleKey<TabViewItem>();
 
-			ContentHost.SetBinding(ContentPresenter.ContentTemplateProperty, new Binding { Path = new PropertyPath(ContentTemplateProperty), Source = this });
-			ContentHost.SetBinding(ContentPresenter.ContentTemplateSelectorProperty, new Binding { Path = new PropertyPath(ContentTemplateSelectorProperty), Source = this });
-			ContentHost.SetBinding(ContentPresenter.ContentStringFormatProperty, new Binding { Path = new PropertyPath(ContentStringFormatProperty), Source = this });
+			ContentHost.SetBinding(ContentPresenter.ContentTemplateProperty, new Binding {Path = new PropertyPath(ContentTemplateProperty), Source = this});
+			ContentHost.SetBinding(ContentPresenter.ContentTemplateSelectorProperty, new Binding {Path = new PropertyPath(ContentTemplateSelectorProperty), Source = this});
+			ContentHost.SetBinding(ContentPresenter.ContentStringFormatProperty, new Binding {Path = new PropertyPath(ContentStringFormatProperty), Source = this});
 
 			SelectCommand = new RelayCommand(OnSelectCommandExecute);
 
 			UpdateActualCloseCommandParameter();
+		}
+
+		public Visibility ActualCloseButtonVisibility
+		{
+			get => (Visibility) GetValue(ActualCloseButtonVisibilityProperty);
+			private set => this.SetReadOnlyValue(ActualCloseButtonVisibilityPropertyKey, value);
 		}
 
 		public ICommand ActualCloseCommand
@@ -106,26 +118,6 @@ namespace Zaaml.UI.Controls.TabView
 		{
 			get => GetValue(ActualCloseCommandParameterProperty);
 			private set => this.SetReadOnlyValue(ActualCloseCommandParameterPropertyKey, value);
-		}
-
-		public ICommand CloseCommand
-		{
-			get => (ICommand) GetValue(CloseCommandProperty);
-			set => SetValue(CloseCommandProperty, value);
-		}
-
-		public object CloseCommandParameter
-		{
-			get => GetValue(CloseCommandParameterProperty);
-			set => SetValue(CloseCommandParameterProperty, value);
-		}
-
-		public ICommand SelectCommand { get; }
-
-		public Visibility ActualCloseButtonVisibility
-		{
-			get => (Visibility) GetValue(ActualCloseButtonVisibilityProperty);
-			private set => this.SetReadOnlyValue(ActualCloseButtonVisibilityPropertyKey, value);
 		}
 
 		public Visibility ActualPinButtonVisibility
@@ -144,6 +136,18 @@ namespace Zaaml.UI.Controls.TabView
 		{
 			get => (ElementVisibility) GetValue(CloseButtonVisibilityProperty);
 			set => SetValue(CloseButtonVisibilityProperty, value);
+		}
+
+		public ICommand CloseCommand
+		{
+			get => (ICommand) GetValue(CloseCommandProperty);
+			set => SetValue(CloseCommandProperty, value);
+		}
+
+		public object CloseCommandParameter
+		{
+			get => GetValue(CloseCommandParameterProperty);
+			set => SetValue(CloseCommandParameterProperty, value);
 		}
 
 		internal ContentPresenter ContentHost { get; } = new ContentPresenter();
@@ -180,10 +184,18 @@ namespace Zaaml.UI.Controls.TabView
 			set => SetValue(PinButtonVisibilityProperty, value);
 		}
 
+		public ICommand SelectCommand { get; }
+
 		public TabViewControl TabViewControl
 		{
 			get => this.GetValue<TabViewControl>(TabViewControlProperty);
 			internal set => this.SetReadOnlyValue(TabViewControlPropertyKey, value);
+		}
+
+		public object Value
+		{
+			get => GetValue(ValueProperty);
+			set => SetValue(ValueProperty, value);
 		}
 
 		private void ActivatePrivate()
@@ -340,9 +352,18 @@ namespace Zaaml.UI.Controls.TabView
 			UpdateActualCloseCommandParameter();
 		}
 
+		private void OnValuePropertyChangedPrivate(object oldValue, object newValue)
+		{
+		}
+
 		private void RaiseSelectionChanged()
 		{
 			IsSelectedChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		internal void SetIsSelectedInternal(bool isSelected)
+		{
+			SetIsSelectedPrivate(isSelected);
 		}
 
 		private void SetIsSelectedPrivate(bool isSelected)
@@ -386,12 +407,8 @@ namespace Zaaml.UI.Controls.TabView
 				ActualPinButtonVisibility = EvaluateHiddenVisibility(VisibilityUtils.EvaluateElementVisibility(extendedVisibility, IsPinned ? Visibility.Visible : PinButtonAutoVisibility), IsPinned);
 		}
 
-		public event EventHandler IsSelectedChanged;
+		DependencyProperty ISelectableItem.ValueProperty => ValueProperty;
 
-		bool ISelectable.IsSelected
-		{
-			get => IsSelected;
-			set => SetIsSelectedPrivate(value);
-		}
+		DependencyProperty ISelectableItem.SelectionProperty => IsSelectedProperty;
 	}
 }

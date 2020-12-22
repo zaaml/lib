@@ -47,7 +47,7 @@ namespace Zaaml.UI.Controls.ValidationSummary
 		{
 		}
 
-		public ValidationSummaryItem(string message, string header, ValidationSummaryItemType itemType, ValidationSummaryItemSource source)
+		public ValidationSummaryItem(string message, string header, ValidationSummaryItemType itemType, ValidationSummarySource source)
 		{
 			Header = header;
 			Message = message;
@@ -85,7 +85,7 @@ namespace Zaaml.UI.Controls.ValidationSummary
 
 		internal int ReferenceCount { get; set; }
 
-		public ValidationSummaryItemSource Source { get; }
+		public ValidationSummarySource Source { get; }
 
 		#endregion
 

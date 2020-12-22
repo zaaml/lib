@@ -7,41 +7,35 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DelegateContentItemGeneratorImpl<TItem, TGenerator> : DefaultContentItemGeneratorImpl<TItem, TGenerator> where TItem : FrameworkElement, IContentControl, new() where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
+	internal class DelegateContentItemGeneratorImpl<TItem, TGenerator> : DefaultContentItemGeneratorImpl<TItem, TGenerator>
+		where TItem : FrameworkElement, IContentControl, new() where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
-		#region Fields
-
-		private readonly IContentItemsControl _contentControl;
-
-		#endregion
-
-		#region Ctors
-
-		public DelegateContentItemGeneratorImpl(IContentItemsControl contentControl)
-			: base(contentControl.ItemContentTemplate, contentControl.ItemContentTemplateSelector, contentControl.ItemContentStringFormat)
+		public DelegateContentItemGeneratorImpl(IContentItemsControl itemsControl)
+			: base(itemsControl.ItemContentMember, itemsControl.ItemContentTemplate, itemsControl.ItemContentTemplateSelector, itemsControl.ItemContentStringFormat)
 		{
-			_contentControl = contentControl;
+			ItemsControlCore = itemsControl;
 		}
 
-		#endregion
+		private protected IContentItemsControl ItemsControlCore { get; }
 
-		#region  Methods
+		public void OnItemContentMemberChanged()
+		{
+			ItemContentMember = ItemsControlCore.ItemContentMember;
+		}
 
 		public void OnItemContentStringFormatChanged()
 		{
-			ItemContentStringFormat = _contentControl.ItemContentStringFormat;
+			ItemContentStringFormat = ItemsControlCore.ItemContentStringFormat;
 		}
 
 		public void OnItemContentTemplateChanged()
 		{
-			ItemContentTemplate = _contentControl.ItemContentTemplate;
+			ItemContentTemplate = ItemsControlCore.ItemContentTemplate;
 		}
 
 		public void OnItemContentTemplateSelectorChanged()
 		{
-			ItemContentTemplateSelector = _contentControl.ItemContentTemplateSelector;
+			ItemContentTemplateSelector = ItemsControlCore.ItemContentTemplateSelector;
 		}
-
-		#endregion
 	}
 }

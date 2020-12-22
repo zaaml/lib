@@ -26,7 +26,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			base.OnPreviewMouseLeftButtonDown(e);
 
-			var editor = Editor;
+			var editor = EditorCore;
 
 			if (e.OriginalSource is DependencyObject dependencyObject && editor != null && dependencyObject.IsSelfOrVisualDescendantOf(editor))
 				EffectiveKeyboard = MainKeyboard;

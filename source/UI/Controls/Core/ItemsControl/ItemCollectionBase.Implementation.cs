@@ -34,13 +34,16 @@ namespace Zaaml.UI.Controls.Core
 
 			_dependencyObjectCollection.Add(item);
 
-			_changeList.Add(item);
+			if (VirtualCollection == null)
+			{
+				_changeList.Add(item);
 
-			HostInsert(index, _changeList);
-			RaiseInsert(index, _changeList);
+				HostInsert(index, _changeList);
+				RaiseInsert(index, _changeList);
 
-			_changeList.Clear();
-
+				_changeList.Clear();
+			}
+			
 			return index;
 		}
 
@@ -48,8 +51,11 @@ namespace Zaaml.UI.Controls.Core
 		{
 			_dependencyObjectCollection.Clear();
 
-			HostClear();
-			RaiseReset();
+			if (VirtualCollection == null)
+			{
+				HostClear();
+				RaiseReset();
+			}
 		}
 
 		private bool ContainsImpl(TItem item)
@@ -86,12 +92,15 @@ namespace Zaaml.UI.Controls.Core
 		{
 			_dependencyObjectCollection.Insert(index, item);
 
-			_changeList.Add(item);
+			if (VirtualCollection == null)
+			{
+				_changeList.Add(item);
 
-			HostInsert(index, _changeList);
-			RaiseInsert(index, _changeList);
+				HostInsert(index, _changeList);
+				RaiseInsert(index, _changeList);
 
-			_changeList.Clear();
+				_changeList.Clear();
+			}
 		}
 
 		private void RaiseInsert(int index, List<TItem> items)
@@ -127,12 +136,15 @@ namespace Zaaml.UI.Controls.Core
 
 			_dependencyObjectCollection.RemoveAt(index);
 
-			_changeList.Add(item);
+			if (VirtualCollection == null)
+			{
+				_changeList.Add(item);
 
-			HostRemove(index, _changeList);
-			RaiseRemove(index, _changeList);
+				HostRemove(index, _changeList);
+				RaiseRemove(index, _changeList);
 
-			_changeList.Clear();
+				_changeList.Clear();
+			}
 		}
 
 		private bool RemoveImpl(TItem item)
@@ -144,12 +156,15 @@ namespace Zaaml.UI.Controls.Core
 
 			_dependencyObjectCollection.RemoveAt(index);
 
-			_changeList.Add(item);
+			if (VirtualCollection == null)
+			{
+				_changeList.Add(item);
 
-			HostRemove(index, _changeList);
-			RaiseRemove(index, _changeList);
+				HostRemove(index, _changeList);
+				RaiseRemove(index, _changeList);
 
-			_changeList.Clear();
+				_changeList.Clear();
+			}
 
 			return true;
 		}

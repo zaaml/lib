@@ -8,17 +8,16 @@ using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
-using Zaaml.UI.Controls.Core;
 using Control = System.Windows.Controls.Control;
 
 namespace Zaaml.UI.Controls.DropDown
 {
 	public abstract partial class DropDownEditableSelectorBase<TItemsControl, TItem> : DropDownSelectorBase<TItemsControl, TItem>
 		where TItemsControl : Control
-		where TItem : Control, ISelectable
+		where TItem : Control
 	{
-		public static readonly DependencyProperty IsEditableProperty = DPM.Register<bool, DropDownEditableSelectorBase<TItemsControl, TItem>>
-			("IsEditable", false, d => d.OnIsEditablePropertyChangedPrivate);
+		public static readonly DependencyProperty IsTextEditableProperty = DPM.Register<bool, DropDownEditableSelectorBase<TItemsControl, TItem>>
+			("IsTextEditable", false, d => d.OnIsTextEditablePropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey IsEditingPropertyKey = DPM.RegisterReadOnly<bool, DropDownEditableSelectorBase<TItemsControl, TItem>>
 			("IsEditing", false, d => d.OnIsEditingPropertyChangedPrivate, d => d.CoerceIsEditing);
@@ -43,10 +42,10 @@ namespace Zaaml.UI.Controls.DropDown
 			_delayOpenDropDown = new DelayAction(DelayOpenDropDown);
 		}
 
-		public bool IsEditable
+		public bool IsTextEditable
 		{
-			get => (bool) GetValue(IsEditableProperty);
-			set => SetValue(IsEditableProperty, value);
+			get => (bool) GetValue(IsTextEditableProperty);
+			set => SetValue(IsTextEditableProperty, value);
 		}
 
 		public bool IsEditing
@@ -96,7 +95,7 @@ namespace Zaaml.UI.Controls.DropDown
 			return value is DependencyObject dependencyObject && dependencyObject.IsDescendantOf(this, MixedTreeEnumerationStrategy.VisualThenLogicalInstance);
 		}
 
-		private void OnIsEditablePropertyChangedPrivate(bool oldValue, bool newValue)
+		private void OnIsTextEditablePropertyChangedPrivate(bool oldValue, bool newValue)
 		{
 			this.SetCurrentValueInternal(IsTabStopProperty, newValue ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
 		}
@@ -107,8 +106,10 @@ namespace Zaaml.UI.Controls.DropDown
 
 			Popup.Closing += PopupCloseControllerOnClosing;
 
-			if (Editor != null)
-				Editor.Visibility = Visibility.Collapsed;
+			if (IsEditing)
+				ShowEditor();
+			else
+				HideEditor();
 		}
 
 		protected override void OnTemplateContractDetaching()

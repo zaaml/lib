@@ -1,4 +1,4 @@
-// <copyright file="ValidationSummaryItemSource.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="ValidationSummarySource.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -6,36 +6,26 @@ using System.Windows.Controls;
 
 namespace Zaaml.UI.Controls.ValidationSummary
 {
-	public class ValidationSummaryItemSource
+	public class ValidationSummarySource
 	{
-		#region Ctors
-
-		public ValidationSummaryItemSource(string propertyName)
+		public ValidationSummarySource(string propertyName)
 			: this(propertyName, null)
 		{
 		}
 
-		public ValidationSummaryItemSource(string propertyName, Control control)
+		public ValidationSummarySource(string propertyName, Control control)
 		{
 			PropertyName = propertyName;
 			Control = control;
 		}
 
-		#endregion
-
-		#region Properties
-
 		public Control Control { get; }
 
 		public string PropertyName { get; }
 
-		#endregion
-
-		#region  Methods
-
 		public override bool Equals(object obj)
 		{
-			var summaryItemSource = obj as ValidationSummaryItemSource;
+			var summaryItemSource = obj as ValidationSummarySource;
 			if (summaryItemSource == null || PropertyName != summaryItemSource.PropertyName)
 				return false;
 			return Control == summaryItemSource.Control;
@@ -45,7 +35,5 @@ namespace Zaaml.UI.Controls.ValidationSummary
 		{
 			return (PropertyName + "." + Control.Name).GetHashCode();
 		}
-
-		#endregion
 	}
 }

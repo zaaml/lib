@@ -52,19 +52,19 @@ namespace Zaaml.UI.Controls.Core
 
 		#region IItemGenerator<TItem>
 
-		public void AttachItem(TItem item, object itemSource)
+		public void AttachItem(TItem item, object source)
 		{
-			_generatorDataTemplateHelper.AttachDataContext(item, itemSource);
+			_generatorDataTemplateHelper.AttachDataContext(item, source);
 		}
 
-		public TItem CreateItem(object itemSource)
+		public TItem CreateItem(object source)
 		{
 			var itemTemplate = ItemTemplate;
 
 			if (itemTemplate == null)
 				return new TItem();
 
-			var item = _generatorDataTemplateHelper.Load(itemSource);
+			var item = _generatorDataTemplateHelper.Load(source);
 
 			if (item == null)
 				throw new InvalidOperationException();
@@ -72,13 +72,13 @@ namespace Zaaml.UI.Controls.Core
 			return item;
 		}
 
-		public void DetachItem(TItem item, object itemSource)
+		public void DetachItem(TItem item, object source)
 		{
-			if (ReferenceEquals(item.DataContext, itemSource))
+			if (ReferenceEquals(item.DataContext, source))
 				item.ClearValue(FrameworkElement.DataContextProperty);
 		}
 
-		public void DisposeItem(TItem item, object itemSource)
+		public void DisposeItem(TItem item, object source)
 		{
 		}
 

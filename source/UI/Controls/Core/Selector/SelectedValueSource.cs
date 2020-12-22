@@ -8,6 +8,6 @@ namespace Zaaml.UI.Controls.Core
   {
     Auto,
     Item,
-    ItemSource
+    Source
   }
 }

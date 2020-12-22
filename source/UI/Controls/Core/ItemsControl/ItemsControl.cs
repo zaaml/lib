@@ -22,8 +22,8 @@ namespace Zaaml.UI.Controls.Core
 		public static readonly DependencyProperty ItemsPresenterTemplateProperty = DPM.Register<ControlTemplate, ItemsControl>
 			("ItemsPresenterTemplate");
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, ItemsControl>
-			("ItemsSource", i => i.OnItemsSourceChangedPrivate);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, ItemsControl>
+			("SourceCollection", i => i.OnSourceCollectionPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ItemStyleProperty = DPM.Register<Style, ItemsControl>
 			("ItemStyle", i => i.OnItemStyleChanged);
@@ -56,10 +56,10 @@ namespace Zaaml.UI.Controls.Core
 			set => SetValue(ItemsPresenterTemplateProperty, value);
 		}
 
-		public IEnumerable ItemsSource
+		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
+			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public Style ItemStyle
@@ -72,17 +72,15 @@ namespace Zaaml.UI.Controls.Core
 
 		#region  Methods
 
-		protected virtual void AttachItem(FrameworkElement item, object itemSource)
+		protected virtual void AttachItem(FrameworkElement item, object source)
 		{
-			var contentPresenter = item as ContentPresenter;
-
-			if (contentPresenter != null)
-				contentPresenter.Content = itemSource;
+			if (item is ContentPresenter contentPresenter)
+				contentPresenter.Content = source;
 		}
 
-		protected virtual NativeControl CreateItem(object itemSource)
+		protected virtual NativeControl CreateItem(object source)
 		{
-			return itemSource as NativeControl ?? new ContentControl();
+			return source as NativeControl ?? new ContentControl();
 		}
 
 		protected override ItemCollection CreateItemCollection()
@@ -93,14 +91,14 @@ namespace Zaaml.UI.Controls.Core
 			};
 		}
 
-		protected virtual void DetachItem(FrameworkElement item, object itemSource)
+		protected virtual void DetachItem(FrameworkElement item, object source)
 		{
 			var contentPresenter = item as ContentPresenter;
 
 			contentPresenter?.ClearValue(System.Windows.Controls.ContentPresenter.ContentProperty);
 		}
 
-		protected virtual void DisposeItem(FrameworkElement item, object itemSource)
+		protected virtual void DisposeItem(FrameworkElement item, object source)
 		{
 		}
 
@@ -118,9 +116,9 @@ namespace Zaaml.UI.Controls.Core
 			item.UndoItemStyle(StyleProperty, ItemStyle);
 		}
 
-		private void OnItemsSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
+		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
-			ItemsSourceCore = newSource;
+			SourceCore = newSource;
 		}
 
 		private void OnItemStyleChanged(Style oldStyle, Style newStyle)
@@ -151,24 +149,24 @@ namespace Zaaml.UI.Controls.Core
 
 			#region  Methods
 
-			protected override void AttachItem(NativeControl item, object itemSource)
+			protected override void AttachItem(NativeControl item, object source)
 			{
-				_itemsControl.AttachItem(item, itemSource);
+				_itemsControl.AttachItem(item, source);
 			}
 
-			protected override NativeControl CreateItem(object itemSource)
+			protected override NativeControl CreateItem(object source)
 			{
-				return _itemsControl.CreateItem(itemSource);
+				return _itemsControl.CreateItem(source);
 			}
 
-			protected override void DetachItem(NativeControl item, object itemSource)
+			protected override void DetachItem(NativeControl item, object source)
 			{
-				_itemsControl.DetachItem(item, itemSource);
+				_itemsControl.DetachItem(item, source);
 			}
 
-			protected override void DisposeItem(NativeControl item, object itemSource)
+			protected override void DisposeItem(NativeControl item, object source)
 			{
-				_itemsControl.DisposeItem(item, itemSource);
+				_itemsControl.DisposeItem(item, source);
 			}
 
 			#endregion

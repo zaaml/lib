@@ -37,7 +37,7 @@ namespace Zaaml.UI.Panels.Flexible
     public static readonly DependencyProperty DefinitionProperty = DPM.RegisterAttached<FlexDefinition>
       ("Definition", typeof(FlexChildDefinition), OnLayoutPropertyChanged);
 
-    [TypeConverter(typeof(FlexLengthConverter))]
+    [TypeConverter(typeof(FlexLengthTypeConverter))]
     public static readonly DependencyProperty LengthProperty = DPM.RegisterAttached
       ("Length", typeof(FlexChildDefinition), FlexElement.Default.Length, OnLayoutPropertyChanged);
 
@@ -56,7 +56,7 @@ namespace Zaaml.UI.Panels.Flexible
       return (short) element.GetValue(ExpandPriorityProperty);
     }
 
-    [TypeConverter(typeof(FlexLengthConverter))]
+    [TypeConverter(typeof(FlexLengthTypeConverter))]
     public static FlexLength GetLength(DependencyObject element)
     {
       return (FlexLength) element.GetValue(LengthProperty);
@@ -104,7 +104,7 @@ namespace Zaaml.UI.Panels.Flexible
       element.SetValue(ExpandPriorityProperty, value);
     }
 
-    [TypeConverter(typeof(FlexLengthConverter))]
+    [TypeConverter(typeof(FlexLengthTypeConverter))]
     public static void SetLength(DependencyObject element, FlexLength value)
     {
       element.SetValue(LengthProperty, value);

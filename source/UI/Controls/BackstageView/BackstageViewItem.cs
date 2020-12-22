@@ -17,21 +17,20 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.BackstageView
 {
-	public partial class BackstageViewItem : HeaderedIconContentControl, ISelectable, ISelectionStateControl
+	public partial class BackstageViewItem : HeaderedIconContentControl, ISelectableHeaderedIconContentItem
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, BackstageViewItem>
 			("IsSelected", b => b.OnIsSelectedChanged);
 
 		private static readonly DependencyPropertyKey BackstageViewControlPropertyKey = DPM.RegisterReadOnly<BackstageViewControl, BackstageViewItem>
 			("BackstageViewControl", t => t.OnBackstageViewControlChanged);
 
+		public static readonly DependencyProperty ValueProperty = DPM.Register<object, BackstageViewItem>
+			("Value", default, d => d.OnValuePropertyChangedPrivate);
+
 		public static readonly DependencyProperty BackstageViewControlProperty = BackstageViewControlPropertyKey.DependencyProperty;
 
-		#endregion
-
-		#region Ctors
+		public event EventHandler IsSelectedChanged;
 
 		static BackstageViewItem()
 		{
@@ -42,14 +41,10 @@ namespace Zaaml.UI.Controls.BackstageView
 		{
 			this.OverrideStyleKey<BackstageViewItem>();
 
-			ContentHost.SetBinding(System.Windows.Controls.ContentPresenter.ContentTemplateProperty, new Binding { Path = new PropertyPath(ContentTemplateProperty), Source = this });
+			ContentHost.SetBinding(System.Windows.Controls.ContentPresenter.ContentTemplateProperty, new Binding {Path = new PropertyPath(ContentTemplateProperty), Source = this});
 
 			AddLogicalChild(ContentHost);
 		}
-
-		#endregion
-
-		#region Properties
 
 		public BackstageViewControl BackstageViewControl
 		{
@@ -59,11 +54,19 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		internal ContentPresenter ContentHost { get; } = new ContentPresenter();
 
+		public bool IsSelected
+		{
+			get => (bool) GetValue(IsSelectedProperty);
+			set => SetValue(IsSelectedProperty, value);
+		}
+
 		protected override IEnumerator LogicalChildren => EnumeratorUtils.Concat(ContentHost, base.LogicalChildren);
 
-		#endregion
-
-		#region  Methods
+		public object Value
+		{
+			get => GetValue(ValueProperty);
+			set => SetValue(ValueProperty, value);
+		}
 
 		private void Activate()
 		{
@@ -109,27 +112,17 @@ namespace Zaaml.UI.Controls.BackstageView
 			Activate();
 		}
 
+		private void OnValuePropertyChangedPrivate(object oldValue, object newValue)
+		{
+		}
+
 		private void SetIsSelectedInt(bool isSelected)
 		{
 			this.SetCurrentValueInternal(IsSelectedProperty, isSelected ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
 		}
 
-		#endregion
+		DependencyProperty ISelectableItem.ValueProperty => ValueProperty;
 
-		#region Interface Implementations
-
-		#region ISelectable
-
-		public event EventHandler IsSelectedChanged;
-
-		public bool IsSelected
-		{
-			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
-		}
-
-		#endregion
-
-		#endregion
+		DependencyProperty ISelectableItem.SelectionProperty => IsSelectedProperty;
 	}
 }

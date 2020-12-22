@@ -12,22 +12,22 @@ namespace Zaaml.UI.Controls.Primitives.Overflow
 	{
 		#region  Methods
 
-		protected override void AttachItem(OverflowItem<TItem> overflowItem, object itemSource)
+		protected override void AttachItem(OverflowItem<TItem> overflowItem, object source)
 		{
 		}
 
-		protected override OverflowItem<TItem> CreateItem(object itemSource)
+		protected override OverflowItem<TItem> CreateItem(object source)
 		{
-			var item = (TItem) itemSource;
+			var item = (TItem) source;
 
 			return item.OverflowController.OverflowHost;
 		}
 
-		protected override void DetachItem(OverflowItem<TItem> overflowItem, object itemSource)
+		protected override void DetachItem(OverflowItem<TItem> overflowItem, object source)
 		{
 		}
 
-		protected override void DisposeItem(OverflowItem<TItem> item, object itemSource)
+		protected override void DisposeItem(OverflowItem<TItem> item, object source)
 		{
 		}
 

@@ -5,6 +5,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.PresentationCore.Interfaces;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.Interfaces
 {
@@ -30,4 +31,11 @@ namespace Zaaml.UI.Controls.Interfaces
 
     #endregion
   }
+  
+  internal interface IIconContentControl : IContentControl
+	{
+		IconBase Icon { get; set; }
+		
+		DependencyProperty IconProperty { get; }
+	}
 }

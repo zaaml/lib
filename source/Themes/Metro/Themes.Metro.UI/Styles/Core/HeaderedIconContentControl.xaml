@@ -12,6 +12,8 @@
 
       <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalHeaderAlignment}"
                                VerticalAlignment="{TemplateBinding VerticalHeaderAlignment}"
+                               HorizontalIconAlignment="{TemplateBinding HorizontalIconAlignment}"
+                               VerticalIconAlignment="{TemplateBinding VerticalIconAlignment}"
                                zm:DockPanel.Dock="{TemplateBinding HeaderDock}"
                                zm:DockPanel.DockDistance="{TemplateBinding HeaderDistance}"
                                Content="{TemplateBinding Header}"

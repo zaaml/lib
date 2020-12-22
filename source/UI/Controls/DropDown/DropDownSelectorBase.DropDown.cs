@@ -47,7 +47,10 @@ namespace Zaaml.UI.Controls.DropDown
 			else
 			{
 				if (selectorController.IsSelectionChangeSuspended)
-					selectorController.ResumeSelectionChange(false);
+				{
+					//selectorController.RestoreSelection();
+					selectorController.ResumeSelectionChange();
+				}
 			}
 		}
 

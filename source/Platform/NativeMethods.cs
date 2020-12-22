@@ -36,9 +36,12 @@ namespace Zaaml.Platform
     private const string Dwmapi = "dwmapi.dll";
     private const string Kernel32 = "kernel32.dll";
 
-    #endregion
+		#endregion
 
-    [DllImport(User32, ExactSpelling = true)]
+		[DllImport("Shcore.dll")]
+		public static extern int GetProcessDpiAwareness(IntPtr hProcess, out PROCESS_DPI_AWARENESS value);
+
+		[DllImport(User32, ExactSpelling = true)]
     public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr rcClip, NativeMethods.MonitorEnumProc lpfnEnum, IntPtr dwData);
 
     [DllImport(User32, SetLastError = true)]

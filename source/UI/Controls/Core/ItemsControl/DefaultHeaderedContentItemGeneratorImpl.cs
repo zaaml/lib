@@ -2,36 +2,55 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DefaultHeaderedContentItemGeneratorImpl<TItem, TGenerator> : DefaultContentItemGeneratorImpl<TItem, TGenerator> where TItem : FrameworkElement, IHeaderedContentControl, new() where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
+	internal class DefaultHeaderedIconContentItemGeneratorImpl<TItem, TGenerator> : DefaultIconContentItemGeneratorImpl<TItem, TGenerator>
+		where TItem : FrameworkElement, IHeaderedIconContentControl, new() where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
-		#region Fields
+		private string _itemHeaderMember;
 
 		private string _itemHeaderStringFormat;
 		private DataTemplate _itemHeaderTemplate;
 		private DataTemplateSelector _itemHeaderTemplateSelector;
 
-		#endregion
-
-		#region Ctors
-
-		public DefaultHeaderedContentItemGeneratorImpl(DataTemplate itemHeaderTemplate, DataTemplateSelector itemHeaderTemplateSelector, string itemHeaderStringFormat, DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector,
-		                                               string itemContentStringFormat)
-			: base(itemContentTemplate, itemContentTemplateSelector, itemContentStringFormat)
+		public DefaultHeaderedIconContentItemGeneratorImpl(string itemHeaderMember, DataTemplate itemHeaderTemplate, DataTemplateSelector itemHeaderTemplateSelector, string itemHeaderStringFormat, string itemIconMember, string itemContentMember,
+			DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector,
+			string itemContentStringFormat)
+			: base(itemIconMember, itemContentMember, itemContentTemplate, itemContentTemplateSelector, itemContentStringFormat)
 		{
+			_itemHeaderMember = itemHeaderMember;
 			_itemHeaderTemplate = itemHeaderTemplate;
 			_itemHeaderTemplateSelector = itemHeaderTemplateSelector;
 			_itemHeaderStringFormat = itemHeaderStringFormat;
+
+			CreateItemContentMemberBinding();
 		}
 
-		#endregion
+		public string ItemHeaderMember
+		{
+			get => _itemHeaderMember;
+			set
+			{
+				if (string.Equals(_itemHeaderMember, value, StringComparison.OrdinalIgnoreCase))
+					return;
 
-		#region Properties
+				Generator.OnGeneratorChangingInt();
+
+				_itemHeaderMember = value;
+
+				CreateItemContentMemberBinding();
+
+				Generator.OnGeneratorChangedInt();
+			}
+		}
+
+		private Binding ItemHeaderMemberBinding { get; set; }
 
 		public string ItemHeaderStringFormat
 		{
@@ -81,24 +100,31 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
-		public override void AttachItem(TItem item, object itemSource)
+		public override void AttachItem(TItem item, object source)
 		{
-			base.AttachItem(item, itemSource);
+			base.AttachItem(item, source);
 
-			item.Header = itemSource;
+			if (ItemHeaderMember == null)
+				item.Header = source;
+			else
+				ItemGenerator<TItem>.InstallBinding(item, item.HeaderProperty, ItemHeaderMemberBinding);
+
 			item.HeaderTemplate = ItemHeaderTemplate;
 			item.HeaderTemplateSelector = ItemHeaderTemplateSelector;
 			item.HeaderStringFormat = ItemHeaderStringFormat;
 		}
 
-		public override void DetachItem(TItem item, object itemSource)
+		private void CreateItemContentMemberBinding()
 		{
-			if (ReferenceEquals(item.Header, itemSource))
+			ItemHeaderMemberBinding = _itemHeaderMember != null ? new Binding(_itemHeaderMember) : null;
+		}
+
+		public override void DetachItem(TItem item, object source)
+		{
+			if (ReferenceEquals(item.Header, source))
 				item.ClearValue(item.HeaderProperty);
+			else
+				ItemGenerator<TItem>.UninstallBinding(item, item.HeaderProperty, ItemHeaderMemberBinding);
 
 			if (ReferenceEquals(item.HeaderTemplate, ItemHeaderTemplate))
 				item.ClearValue(item.HeaderTemplateProperty);
@@ -109,9 +135,7 @@ namespace Zaaml.UI.Controls.Core
 			if (ReferenceEquals(item.HeaderStringFormat, ItemHeaderStringFormat))
 				item.ClearValue(item.HeaderStringFormatProperty);
 
-			base.DetachItem(item, itemSource);
+			base.DetachItem(item, source);
 		}
-
-		#endregion
 	}
 }

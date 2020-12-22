@@ -54,8 +54,8 @@ namespace Zaaml.UI.Controls.Editors.Text
 		public static readonly DependencyProperty MaxFilteredCountProperty = DPM.Register<int, SearchTextBox>
 			("MaxFilteredCount", 6);
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<object, SearchTextBox>
-			("ItemsSource", s => s.OnItemsSourceChanged);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, SearchTextBox>
+			("SourceCollection", s => s.OnSourceCollectionChanged);
 
 		public static readonly DependencyProperty DisplayMemberProperty = DPM.Register<string, SearchTextBox>
 			("DisplayMember", s => s.OnDisplayMemberChanged);
@@ -96,7 +96,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 		private static readonly DependencyPropertyKey PreviewSelectedValuePropertyKey = DPM.RegisterReadOnly<object, SearchTextBox>
 			("PreviewSelectedValue");
 
-		private static readonly DependencyPropertyKey ActualDropDownItemsSourcePropertyKey = DPM.RegisterReadOnly<object, SearchTextBox>
+		private static readonly DependencyPropertyKey ActualDropDownItemsSourcePropertyKey = DPM.RegisterReadOnly<IEnumerable, SearchTextBox>
 			("ActualDropDownItemsSource");
 
 		public static readonly DependencyProperty DropDownItemsModeProperty = DPM.Register<SearchTextBoxDropDownItemsMode, SearchTextBox>
@@ -193,9 +193,9 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		#region Properties
 
-		public object ActualDropDownItemsSource
+		public IEnumerable ActualDropDownItemsSource
 		{
-			get => GetValue(ActualDropDownItemsSourceProperty);
+			get => (IEnumerable)GetValue(ActualDropDownItemsSourceProperty);
 			private set => this.SetReadOnlyValue(ActualDropDownItemsSourcePropertyKey, value);
 		}
 
@@ -259,7 +259,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private Control DummyFocus => TemplateContract.DummyFocus;
 
-		private IEnumerable<object> EnumerableItemsSource => (ItemsSource as IEnumerable)?.Cast<object>() ?? Enumerable.Empty<object>();
+		private IEnumerable<object> EnumerableSource => (SourceCollection as IEnumerable)?.Cast<object>() ?? Enumerable.Empty<object>();
 
 		public SearchResultCollection FilteredItemsSource { get; }
 
@@ -304,10 +304,10 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private bool IsPopupOpen => PopupBar?.IsOpen == true;
 
-		public object ItemsSource
+		public IEnumerable SourceCollection
 		{
-			get => GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
+			get => (IEnumerable)GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public DataTemplate ItemTemplate
@@ -447,13 +447,13 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private void CheckSelectedIndex(int index)
 		{
-			if ((index != -1 && index >= EnumerableItemsSource.Count()) || index < -1)
+			if ((index != -1 && index >= EnumerableSource.Count()) || index < -1)
 				throw new IndexOutOfRangeException(nameof(index));
 		}
 
 		private void CheckSelectedItem(object item)
 		{
-			if (item != null && EnumerableItemsSource.Contains(item) == false)
+			if (item != null && EnumerableSource.Contains(item) == false)
 				throw new ArgumentOutOfRangeException(nameof(item));
 		}
 
@@ -496,7 +496,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private int FindItem(object item)
 		{
-			return EnumerableItemsSource.IndexOfReference(item);
+			return EnumerableSource.IndexOfReference(item);
 		}
 
 		private void FinishEdit()
@@ -754,7 +754,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			UpdateVisualState(true);
 		}
 
-		private void OnItemsSourceChanged()
+		private void OnSourceCollectionChanged()
 		{
 			_displayGettersCache.Clear();
 
@@ -811,7 +811,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			var oldItem = SelectedItem;
 			var oldValue = SelectedValue;
 
-			this.SetValue(SelectedItemProperty, EnumerableItemsSource.ElementAtOrDefault(SelectedIndex), true);
+			this.SetValue(SelectedItemProperty, EnumerableSource.ElementAtOrDefault(SelectedIndex), true);
 			this.SetValue(SelectedValueProperty, GetItemValue(SelectedItem), true);
 
 			OnSelectionChangedInt();
@@ -839,7 +839,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			var value = SelectedValue;
 			var index = 0;
 
-			foreach (var item in EnumerableItemsSource)
+			foreach (var item in EnumerableSource)
 			{
 				var itemValue = GetItemValue(item);
 
@@ -967,7 +967,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			{
 				_skipSyncPreviewSelectedItem = true;
 
-				var enumerableSource = EnumerableItemsSource;
+				var enumerableSource = EnumerableSource;
 
 				if (string.IsNullOrWhiteSpace(SearchText))
 				{
@@ -1000,7 +1000,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			var advisor = Advisor;
 			var searchText = SearchText;
 
-			return EnumerableItemsSource.Where(i => advisor.AcceptItem(i, searchText)).Take(count);
+			return EnumerableSource.Where(i => advisor.AcceptItem(i, searchText)).Take(count);
 		}
 
 		private IEnumerable<object> SearchThroughDictionary(int count)
@@ -1010,7 +1010,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private bool ShouldOpenResultPopup()
 		{
-			return ItemsSource != null;
+			return SourceCollection != null;
 		}
 
 		private bool ShouldTakeItem(string item)
@@ -1066,7 +1066,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private void UpdateActualDropDownItemsSource()
 		{
-			ActualDropDownItemsSource = DropDownItemsMode == SearchTextBoxDropDownItemsMode.All ? ItemsSource : FilteredItemsSource;
+			ActualDropDownItemsSource = DropDownItemsMode == SearchTextBoxDropDownItemsMode.All ? SourceCollection : FilteredItemsSource;
 		}
 
 		private void UpdateActualSelectedItemText()
@@ -1128,7 +1128,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			if (Advisor != null)
 				return;
 
-			foreach (var item in EnumerableItemsSource.SkipNull())
+			foreach (var item in EnumerableSource.SkipNull())
 			{
 				var searchData = GetDisplayValue(item);
 

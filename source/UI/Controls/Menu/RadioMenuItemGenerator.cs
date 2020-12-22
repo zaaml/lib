@@ -28,12 +28,12 @@ namespace Zaaml.UI.Controls.Menu
 
 		#region Properties
 
-		internal string DisplayMemberPath
+		internal string DisplayMember
 		{
 			get => _displayMemberEvaluator.ValuePath;
 			set
 			{
-				if (string.Equals(DisplayMemberPath, value))
+				if (string.Equals(DisplayMember, value))
 					return;
 
 				_displayMemberEvaluator = new MemberValueEvaluator(value);
@@ -52,31 +52,31 @@ namespace Zaaml.UI.Controls.Menu
 
 		#region  Methods
 
-		protected override void AttachItem(RadioMenuItem item, object itemSource)
+		protected override void AttachItem(RadioMenuItem item, object source)
 		{
-			_generatorDataTemplateHelper.AttachDataContext(item, itemSource);
+			_generatorDataTemplateHelper.AttachDataContext(item, source);
 
 			if (ItemTemplate != null)
 				return;
 
-			item.Header = _displayMemberEvaluator.GetValue(itemSource) ?? itemSource;
+			item.Header = _displayMemberEvaluator.GetValue(source) ?? source;
 		}
 
-		protected override RadioMenuItem CreateItem(object itemSource)
+		protected override RadioMenuItem CreateItem(object source)
 		{
-			return _generatorDataTemplateHelper.Load(itemSource);
+			return _generatorDataTemplateHelper.Load(source);
 		}
 
-		protected override void DetachItem(RadioMenuItem item, object itemSource)
+		protected override void DetachItem(RadioMenuItem item, object source)
 		{
-			if (ReferenceEquals(item.DataContext, itemSource))
+			if (ReferenceEquals(item.DataContext, source))
 				item.ClearValue(FrameworkElement.DataContextProperty);
 
-			if (ReferenceEquals(item.Header, itemSource))
+			if (ReferenceEquals(item.Header, source))
 				item.ClearValue(HeaderedMenuItem.HeaderProperty);
 		}
 
-		protected override void DisposeItem(RadioMenuItem item, object itemSource)
+		protected override void DisposeItem(RadioMenuItem item, object source)
 		{
 		}
 

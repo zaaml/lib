@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Windows;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.ScrollView;
 using NativeControl = System.Windows.Controls.Control;
@@ -9,7 +10,7 @@ using NativeControl = System.Windows.Controls.Control;
 namespace Zaaml.UI.Panels.Core
 {
 	public abstract class ItemsPanel<TItem> : Panel, IItemsHost<TItem>
-		where TItem : NativeControl
+		where TItem : FrameworkElement
 	{
 		private ItemHostCollection<TItem> _hostCollection;
 

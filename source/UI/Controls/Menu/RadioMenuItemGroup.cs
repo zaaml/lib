@@ -36,8 +36,8 @@ namespace Zaaml.UI.Controls.Menu
 		public static readonly DependencyProperty SelectedItemProperty = DPM.Register<RadioMenuItem, RadioMenuItemGroup>
 			("SelectedItem", s => s.SelectorController.OnSelectedItemPropertyChanged, s => s.SelectorController.CoerceSelectedItem);
 
-		public static readonly DependencyProperty SelectedItemSourceProperty = DPM.Register<object, RadioMenuItemGroup>
-			("SelectedItemSource", s => s.SelectorController.OnSelectedItemSourcePropertyChanged, s => s.SelectorController.CoerceSelectedItemSource);
+		public static readonly DependencyProperty SelectedSourceProperty = DPM.Register<object, RadioMenuItemGroup>
+			("SelectedSource", s => s.SelectorController.OnSelectedSourcePropertyChanged, s => s.SelectorController.CoerceSelectedSource);
 
 		public static readonly DependencyProperty SelectedValueProperty = DPM.Register<object, RadioMenuItemGroup>
 			("SelectedValue", s => s.SelectorController.OnSelectedValuePropertyChanged, s => s.SelectorController.CoerceSelectedValue);
@@ -78,7 +78,7 @@ namespace Zaaml.UI.Controls.Menu
 				ActualOrientation = Orientation.Vertical
 			};
 
-			SelectorController = new SelectorController<RadioMenuItemGroup, RadioMenuItem>(this, new ItemCollectionSelectorAdvisor<Control, RadioMenuItem>(this, Items))
+			SelectorController = new SelectorController<RadioMenuItemGroup, RadioMenuItem>(this, new RadioMenuItemGroupSelectorAdvisor(this))
 			{
 				AllowNullSelection = false
 			};
@@ -122,10 +122,10 @@ namespace Zaaml.UI.Controls.Menu
 			set => SetValue(SelectedItemProperty, value);
 		}
 
-		public object SelectedItemSource
+		public object SelectedSource
 		{
-			get => GetValue(SelectedItemSourceProperty);
-			set => SetValue(SelectedItemSourceProperty, value);
+			get => GetValue(SelectedSourceProperty);
+			set => SetValue(SelectedSourceProperty, value);
 		}
 
 		public object SelectedValue
@@ -175,7 +175,7 @@ namespace Zaaml.UI.Controls.Menu
 		internal override void OnDisplayMemberPathChangedInternal(string oldDisplayMemberPath, string newDisplayMemberPath)
 		{
 			base.OnDisplayMemberPathChangedInternal(oldDisplayMemberPath, newDisplayMemberPath);
-			Items.DefaultRadioGenerator.DisplayMemberPath = newDisplayMemberPath;
+			Items.DefaultRadioGenerator.DisplayMember = newDisplayMemberPath;
 		}
 
 		private void OnItemGeneratorChanged(RadioMenuItemGeneratorBase oldGenerator, RadioMenuItemGeneratorBase newGenerator)
@@ -206,12 +206,12 @@ namespace Zaaml.UI.Controls.Menu
 				LogService.LogError(ex);
 			}
 
-			SelectorController.UpdateSelectedValue();
+			SelectorController.SyncValue();
 		}
 
 		private void OnSelectedValueSourceChanged()
 		{
-			SelectorController.UpdateSelectedValue();
+			SelectorController.SyncValue();
 		}
 
 		protected override void OnTemplateContractAttached()
@@ -237,20 +237,20 @@ namespace Zaaml.UI.Controls.Menu
 
 		DependencyProperty ISelector<RadioMenuItem>.SelectedItemProperty => SelectedItemProperty;
 
-		DependencyProperty ISelector<RadioMenuItem>.SelectedItemSourceProperty => SelectedItemSourceProperty;
+		DependencyProperty ISelector<RadioMenuItem>.SelectedSourceProperty => SelectedSourceProperty;
 
 		DependencyProperty ISelector<RadioMenuItem>.SelectedValueProperty => SelectedValueProperty;
 
-		object ISelector<RadioMenuItem>.GetValue(RadioMenuItem item, object itemSource)
+		object ISelector<RadioMenuItem>.GetValue(RadioMenuItem item, object source)
 		{
 			switch (SelectedValueSource)
 			{
 				case SelectedValueSource.Auto:
-					return GetItemValue(Items.SourceInternal == null ? item : itemSource);
+					return GetItemValue(Items.SourceInternal == null ? item : source);
 				case SelectedValueSource.Item:
 					return GetItemValue(item);
-				case SelectedValueSource.ItemSource:
-					return GetItemValue(itemSource);
+				case SelectedValueSource.Source:
+					return GetItemValue(source);
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -264,7 +264,7 @@ namespace Zaaml.UI.Controls.Menu
 		{
 		}
 
-		void ISelector<RadioMenuItem>.OnSelectedItemSourceChanged(object oldItemSource, object newItemSource)
+		void ISelector<RadioMenuItem>.OnSelectedSourceChanged(object oldSource, object newSource)
 		{
 		}
 
@@ -287,15 +287,15 @@ namespace Zaaml.UI.Controls.Menu
 			BeginInit();
 #endif
 			IsInitializing = true;
+			SelectorController.BeginInit();
 			SelectorController.AllowNullSelection = true;
 			SelectorController.PreferSelection = false;
-			SelectorController.SuspendSelectionChange();
 		}
 
 		void ISupportInitialize.EndInit()
 		{
 			IsInitializing = false;
-			SelectorController.ResumeSelectionChange();
+			SelectorController.EndInit();
 			SelectorController.AllowNullSelection = false;
 			SelectorController.PreferSelection = true;
 
@@ -343,5 +343,22 @@ namespace Zaaml.UI.Controls.Menu
 		protected override RadioMenuItemsPresenterHost ItemsPresenterHostCore => ItemsPresenterHost;
 
 		#endregion
+	}
+
+	internal sealed class RadioMenuItemGroupSelectorAdvisor : ItemCollectionSelectorAdvisor<Control, RadioMenuItem>
+	{
+		public RadioMenuItemGroupSelectorAdvisor(RadioMenuItemGroup radioMenuItemGroup) : base(radioMenuItemGroup, radioMenuItemGroup.Items)
+		{
+		}
+		
+		public override bool GetItemSelected(RadioMenuItem item)
+		{
+			return item.IsChecked == true;
+		}
+
+		public override void SetItemSelected(RadioMenuItem item, bool value)
+		{
+			item.SetCurrentValueInternal(ToggleMenuItem.IsCheckedProperty, value);
+		}
 	}
 }

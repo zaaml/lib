@@ -7,12 +7,13 @@ using System.Windows.Controls;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
+using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.Core
 {
 	[TemplateContractType(typeof(IconContentControlTemplateContract))]
-	public class IconContentControl : TemplateContractContentControl, IIconOwner
+	public class IconContentControl : TemplateContractContentControl, IIconOwner, IIconContentControl
 	{
 		public static readonly DependencyProperty IconProperty = DPM.Register<IconBase, IconContentControl>
 			("Icon", null, i => i.LogicalChildMentor.OnLogicalChildPropertyChanged);
@@ -29,6 +30,12 @@ namespace Zaaml.UI.Controls.Core
 		public static readonly DependencyProperty ShowIconProperty = DPM.Register<bool, IconContentControl>
 			("ShowIcon", true);
 
+		public static readonly DependencyProperty VerticalIconAlignmentProperty = DPM.Register<VerticalAlignment, IconContentControl>
+			("VerticalIconAlignment", VerticalAlignment.Center);
+
+		public static readonly DependencyProperty HorizontalIconAlignmentProperty = DPM.Register<HorizontalAlignment, IconContentControl>
+			("HorizontalIconAlignment", HorizontalAlignment.Center);
+
 		static IconContentControl()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<IconContentControl>();
@@ -37,6 +44,12 @@ namespace Zaaml.UI.Controls.Core
 		public IconContentControl()
 		{
 			this.OverrideStyleKey<IconContentControl>();
+		}
+
+		public HorizontalAlignment HorizontalIconAlignment
+		{
+			get => (HorizontalAlignment) GetValue(HorizontalIconAlignmentProperty);
+			set => SetValue(HorizontalIconAlignmentProperty, value);
 		}
 
 		public double IconDistance
@@ -62,6 +75,20 @@ namespace Zaaml.UI.Controls.Core
 			get => (bool) GetValue(ShowIconProperty);
 			set => SetValue(ShowIconProperty, value);
 		}
+
+		public VerticalAlignment VerticalIconAlignment
+		{
+			get => (VerticalAlignment) GetValue(VerticalIconAlignmentProperty);
+			set => SetValue(VerticalIconAlignmentProperty, value);
+		}
+
+		IconBase IIconContentControl.Icon
+		{
+			get => Icon;
+			set => Icon = value;
+		}
+
+		DependencyProperty IIconContentControl.IconProperty => IconProperty;
 
 		public IconBase Icon
 		{

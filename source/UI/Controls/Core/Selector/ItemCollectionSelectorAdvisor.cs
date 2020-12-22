@@ -6,14 +6,14 @@ using System.Collections.Specialized;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class ItemCollectionSelectorAdvisor<TControl, TItem> : CollectionSelectorAdvisorBase<TItem>, IItemCollectionObserver<TItem> 
-		where TItem : System.Windows.Controls.Control, ISelectable 
+	internal abstract class ItemCollectionSelectorAdvisor<TControl, TItem> : CollectionSelectorAdvisorBase<TItem>, IItemCollectionObserver<TItem> 
+		where TItem : System.Windows.Controls.Control
 		where TControl : System.Windows.Controls.Control
 	{
 		#region Ctors
 
 		// ReSharper disable once SuggestBaseTypeForParameter
-		public ItemCollectionSelectorAdvisor(ISelector<TItem> selector, ItemCollectionBase<TControl, TItem> collection) : base(selector, collection)
+		protected ItemCollectionSelectorAdvisor(ISelector<TItem> selector, ItemCollectionBase<TControl, TItem> collection) : base(selector, collection)
 		{
 			collection.AttachObserver(this);
 		}
@@ -24,7 +24,9 @@ namespace Zaaml.UI.Controls.Core
 
 		public override int Count => ItemCollection.ActualCountInternal;
 
-		public override bool HasSource => ItemCollection.SourceInternal != null;
+		public override bool HasSource => ItemCollection.HasSourceInternal;
+
+		public override bool IsVirtualizing => ItemCollection.VirtualCollection != null;
 
 		private ItemCollectionBase<TControl, TItem> ItemCollection => (ItemCollectionBase<TControl, TItem>) Collection;
 
@@ -37,29 +39,64 @@ namespace Zaaml.UI.Controls.Core
 			return ItemCollection.GetIndexFromItemInternal(item);
 		}
 
-		public override int GetIndexOfItemSource(object itemSource)
+		public override int GetIndexOfSource(object source)
 		{
-			return ItemCollection.GetIndexFromItemSourceInternal(itemSource);
+			return ItemCollection.GetIndexFromSourceInternal(source);
 		}
 
-		public override bool TryGetItem(int index, out TItem item)
+		public override bool TryGetItem(int index, bool ensure, out TItem item)
 		{
-			return ItemCollection.TryEnsureItemFromIndexInternal(index, out item);
+			return ensure ? ItemCollection.TryEnsureItemFromIndexInternal(index, out item) : (item = ItemCollection.GetItemFromIndexInternal(index)) != null;
 		}
 
-		public override bool TryGetItemBySource(object itemSource, out TItem item)
+		public override bool TryGetItemBySource(object source, bool ensure, out TItem item)
 		{
-			return ItemCollection.TryEnsureItemFromSourceInternal(itemSource, out item);
+			return ensure ? ItemCollection.TryEnsureItemFromSourceInternal(source, out item) : (item = ItemCollection.GetItemFromSourceInternal(source)) != null;
 		}
 
-		public override object GetItemSource(int index)
+		public override object GetSource(int index)
 		{
-			return ItemCollection.GetItemSourceFromIndexInternal(index);
+			return ItemCollection.GetSourceFromIndexInternal(index);
 		}
 
-		public override object GetItemSource(TItem item)
+		public override object GetSource(TItem item)
 		{
-			return ItemCollection.GetItemSourceInternal(item);
+			return ItemCollection.GetSourceInternal(item);
+		}
+
+		public override void SetSourceSelected(TItem item, bool value)
+		{
+		}
+
+		public override bool TryGetSelection(int index, bool ensure, out Selection<TItem> selection)
+		{
+			TryGetItem(index, ensure, out var item);
+			var source = GetSource(index);
+			var value = SelectorCore.GetValue(item, source);
+
+			selection = new Selection<TItem>(index, item, source, value);
+
+			return selection.IsEmpty == false;
+		}
+
+		public override bool TryGetSelection(object source, bool ensure, out Selection<TItem> selection)
+		{
+			var index = GetIndexOfSource(source);
+			
+			if (index == -1)
+			{
+				selection = Selection<TItem>.Empty;
+
+				return false;
+			}
+
+			TryGetItem(index, ensure, out var item);
+
+			var value = SelectorCore.GetValue(item, source);
+
+			selection = new Selection<TItem>(index, item, source, value);
+			
+			return true;
 		}
 
 		public override void Lock(TItem item)
@@ -70,6 +107,11 @@ namespace Zaaml.UI.Controls.Core
 		public override void Unlock(TItem item)
 		{
 			ItemCollection.UnlockItemInternal(item);
+		}
+
+		public override bool GetSourceSelected(TItem item)
+		{
+			return false;
 		}
 
 		#endregion

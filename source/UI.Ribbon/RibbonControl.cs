@@ -72,7 +72,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
       Pages = new RibbonPageCollection(ribbonPageCategory);
 
-      SelectorController = new SelectorController<RibbonControl, RibbonPage>(this, new ItemCollectionSelectorAdvisor<RibbonPageCategory, RibbonPage>(ribbonPageCategory, Pages))
+      SelectorController = new SelectorController<RibbonControl, RibbonPage>(this,  new RibbonControlSelectorAdvisor(this, ribbonPageCategory))
       {
         AllowNullSelection = false
       };
@@ -341,11 +341,11 @@ namespace Zaaml.UI.Controls.Ribbon
 
     DependencyProperty ISelector<RibbonPage>.SelectedItemProperty => SelectedPageProperty;
 
-    DependencyProperty ISelector<RibbonPage>.SelectedItemSourceProperty => null;
+    DependencyProperty ISelector<RibbonPage>.SelectedSourceProperty => null;
 
     DependencyProperty ISelector<RibbonPage>.SelectedValueProperty => null;
 
-    object ISelector<RibbonPage>.GetValue(RibbonPage item, object itemSource)
+    object ISelector<RibbonPage>.GetValue(RibbonPage item, object source)
     {
       return null;
     }
@@ -359,7 +359,7 @@ namespace Zaaml.UI.Controls.Ribbon
       UpdateSelectedGroupContainer();
     }
 
-    void ISelector<RibbonPage>.OnSelectedItemSourceChanged(object oldItemSource, object newItemSource)
+    void ISelector<RibbonPage>.OnSelectedSourceChanged(object oldSource, object newSource)
     {
     }
 
@@ -381,14 +381,14 @@ namespace Zaaml.UI.Controls.Ribbon
       BeginInit();
 #endif
       IsInitializing = true;
-      PreferSelection = false;
-      SelectorController.SuspendSelectionChange();
+			SelectorController.BeginInit();
+			PreferSelection = false;
     }
 
     void ISupportInitialize.EndInit()
     {
       IsInitializing = false;
-      SelectorController.ResumeSelectionChange();
+      SelectorController.EndInit();
       UpdatePreferSelection();
 
 #if !SILVERLIGHT

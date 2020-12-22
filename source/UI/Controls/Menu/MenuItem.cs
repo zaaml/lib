@@ -46,8 +46,8 @@ namespace Zaaml.UI.Controls.Menu
 
 		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, MenuItem>
-			(nameof(ItemsSource), m => m.OnItemsSourceChangedPrivate);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, MenuItem>
+			(nameof(SourceCollection), m => m.OnSourceCollectionPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<MenuItemGeneratorBase, MenuItem>
 			(nameof(ItemGenerator), m => m.OnItemGeneratorChanged);
@@ -116,10 +116,10 @@ namespace Zaaml.UI.Controls.Menu
 
 		internal override IMenuItemCollection ItemsCore => Items;
 
-		public IEnumerable ItemsSource
+		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
+			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		private MenuItemsPresenter MenuItemsPresenter { get; }
@@ -218,7 +218,7 @@ namespace Zaaml.UI.Controls.Menu
 			UpdateGenerator();
 		}
 
-		private void OnItemsSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
+		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
 			Items.SourceInternal = newSource;
 

@@ -5,11 +5,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
 	internal abstract class ItemCollectionSourceBase<TControl, TItem> : IDisposable
-		where TItem : System.Windows.Controls.Control
+		where TItem : FrameworkElement
 		where TControl : System.Windows.Controls.Control
 	{
 		#region Fields
@@ -89,11 +90,11 @@ namespace Zaaml.UI.Controls.Core
 			return GetIndexFromItem(item);
 		}
 
-		protected abstract int GetIndexFromItemSource(object itemSource);
+		protected abstract int GetIndexFromSource(object source);
 
-		internal int GetIndexFromItemSourceInt(object itemSource)
+		internal int GetIndexFromItemInt(object source)
 		{
-			return GetIndexFromItemSource(itemSource);
+			return GetIndexFromSource(source);
 		}
 
 		protected abstract TItem GetItemFromIndex(int index);
@@ -103,11 +104,11 @@ namespace Zaaml.UI.Controls.Core
 			return GetItemFromIndex(index);
 		}
 
-		protected abstract object GetItemSourceFromIndex(int index);
+		protected abstract object GetSourceFromIndex(int index);
 
-		internal object GetItemSourceFromIndexInt(int index)
+		internal object GetSourceFromIndexInt(int index)
 		{
-			return GetItemSourceFromIndex(index);
+			return GetSourceFromIndex(index);
 		}
 
 		public abstract void LockItem(TItem item);

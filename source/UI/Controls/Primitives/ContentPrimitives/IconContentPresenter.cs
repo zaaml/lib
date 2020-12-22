@@ -243,9 +243,11 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 		{
 			var visibility = Content == null && ContentTemplate == null && ContentTemplateSelector == null ? Visibility.Collapsed : Visibility.Visible;
 
-			if (_contentPresenter.Visibility == visibility) return;
+			if (_contentPresenter.Visibility == visibility)
+				return;
 
 			_contentPresenter.Visibility = visibility;
+			
 			UpdateContentMargin();
 		}
 

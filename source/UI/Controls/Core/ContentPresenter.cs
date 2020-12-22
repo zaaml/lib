@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using Zaaml.PresentationCore.Behaviors;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
@@ -16,6 +17,7 @@ namespace Zaaml.UI.Controls.Core
 #if SILVERLIGHT
   public partial class ContentPresenter : System.Windows.Controls.ContentPresenter
 #else
+	[ContentProperty(nameof(Content))]
 	public class ContentPresenter : System.Windows.Controls.ContentPresenter
 #endif
 	{

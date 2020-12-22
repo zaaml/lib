@@ -189,13 +189,13 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		public DependencyProperty SelectedItemProperty => Selector.SelectedItemProperty;
 
-		public DependencyProperty SelectedItemSourceProperty => Selector.SelectedItemSourceProperty;
+		public DependencyProperty SelectedSourceProperty => Selector.SelectedSourceProperty;
 
 		public DependencyProperty SelectedValueProperty => Selector.SelectedValueProperty;
 
-		public object GetValue(RibbonPage item, object itemSource)
+		public object GetValue(RibbonPage item, object source)
 		{
-			return Selector.GetValue(item, itemSource);
+			return Selector.GetValue(item, source);
 		}
 
 		public void OnSelectedIndexChanged(int oldIndex, int newIndex)
@@ -208,9 +208,9 @@ namespace Zaaml.UI.Controls.Ribbon
 			Selector.OnSelectedItemChanged(oldItem, newItem);
 		}
 
-		public void OnSelectedItemSourceChanged(object oldItemSource, object newItemSource)
+		public void OnSelectedSourceChanged(object oldSource, object newSource)
 		{
-			Selector.OnSelectedItemSourceChanged(oldItemSource, newItemSource);
+			Selector.OnSelectedSourceChanged(oldSource, newSource);
 		}
 
 		public void OnSelectedValueChanged(object oldValue, object newValue)
@@ -260,5 +260,22 @@ namespace Zaaml.UI.Controls.Ribbon
 
 	public sealed class RibbonPageCategoryTemplateContract : ItemsControlBaseTemplateContract<RibbonPagesPresenter>
 	{
+	}
+
+	internal sealed class RibbonControlSelectorAdvisor : ItemCollectionSelectorAdvisor<RibbonPageCategory, RibbonPage>
+	{
+		public RibbonControlSelectorAdvisor(RibbonControl ribbonControl, RibbonPageCategory ribbonPageCategory) : base(ribbonPageCategory, ribbonControl.Pages)
+		{
+		}
+
+		public override bool GetItemSelected(RibbonPage item)
+		{
+			return item.IsSelected;
+		}
+
+		public override void SetItemSelected(RibbonPage item, bool value)
+		{
+			item.SetCurrentValueInternal(RibbonPage.IsSelectedProperty, value);
+		}
 	}
 }

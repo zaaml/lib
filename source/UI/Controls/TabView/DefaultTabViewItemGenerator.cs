@@ -10,24 +10,24 @@ namespace Zaaml.UI.Controls.TabView
   {
     #region  Methods
 
-    protected override void AttachItem(TabViewItem item, object itemSource)
+    protected override void AttachItem(TabViewItem item, object source)
     {
-      Implementation.AttachItem(item, itemSource);
+      Implementation.AttachItem(item, source);
     }
 
-    protected override TabViewItem CreateItem(object itemSource)
+    protected override TabViewItem CreateItem(object source)
     {
-      return Implementation.CreateItem(itemSource);
+      return Implementation.CreateItem(source);
     }
 
-    protected override void DetachItem(TabViewItem item, object itemSource)
+    protected override void DetachItem(TabViewItem item, object source)
     {
-      Implementation.DetachItem(item, itemSource);
+      Implementation.DetachItem(item, source);
     }
 
-    protected override void DisposeItem(TabViewItem item, object itemSource)
+    protected override void DisposeItem(TabViewItem item, object source)
     {
-      Implementation.DisposeItem(item, itemSource);
+      Implementation.DisposeItem(item, source);
     }
 
     #endregion
@@ -41,5 +41,12 @@ namespace Zaaml.UI.Controls.TabView
     #endregion
 
     #endregion
+  }
+
+  internal class DefaultItemTemplateTabViewItemGenerator : DelegateHeaderedIconContentSelectableItemGeneratorImpl<TabViewItem, DefaultTabViewItemGenerator>
+  {
+	  public DefaultItemTemplateTabViewItemGenerator(TabViewControl tabViewControl) : base(tabViewControl)
+	  {
+	  }
   }
 }

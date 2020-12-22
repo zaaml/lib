@@ -4,15 +4,19 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
-	public abstract class SelectionCollectionBase<TItem> : IEnumerable<Selection<TItem>> where TItem : FrameworkElement, ISelectable
+	public abstract partial class SelectionCollectionBase<TItem> : IEnumerable<Selection<TItem>>, INotifyCollectionChanged, INotifyPropertyChanged where TItem : FrameworkElement
 	{
 		internal SelectionCollectionBase(SelectorController<TItem> selectorController)
 		{
 			SelectorController = selectorController;
+			selectorController.SelectionCollectionChanged += SelectorControllerOnSelectionCollectionChanged;
+			selectorController.SelectionCollectionPropertyChanged += SelectorControllerOnSelectionCollectionPropertyChanged;
 		}
 
 		internal SelectorController<TItem> SelectorController { get; }
@@ -20,6 +24,16 @@ namespace Zaaml.UI.Controls.Core
 		public SelectionCollectionEnumerator GetEnumerator()
 		{
 			return new SelectionCollectionEnumerator(SelectorController);
+		}
+
+		private void SelectorControllerOnSelectionCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			CollectionChanged?.Invoke(this, e);
+		}
+
+		private void SelectorControllerOnSelectionCollectionPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			PropertyChanged?.Invoke(this, e);
 		}
 
 		IEnumerator<Selection<TItem>> IEnumerable<Selection<TItem>>.GetEnumerator()
@@ -31,6 +45,10 @@ namespace Zaaml.UI.Controls.Core
 		{
 			return GetEnumerator();
 		}
+
+		public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+		public event PropertyChangedEventHandler PropertyChanged;
 
 		public struct SelectionCollectionEnumerator : IEnumerator<Selection<TItem>>
 		{

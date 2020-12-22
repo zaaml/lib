@@ -14,7 +14,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		private bool ActualSuspendFocusHandler => IsSelectionHandling || SuspendFocusHandlerCount > 0;
 
-		private bool IsEditorFocused => Editor != null && FocusHelper.IsKeyboardFocusWithin(Editor);
+		private bool IsEditorFocused => EditorCore != null && FocusHelper.IsKeyboardFocusWithin(EditorCore);
 
 		private bool IsItemsControlFocused => ItemsControl != null && FocusHelper.IsKeyboardFocusWithin(ItemsControl);
 
@@ -43,7 +43,7 @@ namespace Zaaml.UI.Controls.DropDown
 			if (updateLayout)
 				UpdateLayout();
 
-			var editor = Editor;
+			var editor = EditorCore;
 
 			if (editor != null)
 				FocusHelper.SetKeyboardFocusedElement(editor);
@@ -56,11 +56,11 @@ namespace Zaaml.UI.Controls.DropDown
 				if (ActualSuspendFocusHandler)
 					return;
 
-				if (IsEditable && IsEditing == false)
+				if (IsEditing == false)
 				{
 					BeginEditDropDownSuspended();
 
-					if (IsEditing)
+					if (IsEditing && IsTextEditable)
 						FocusEditor(true);
 
 					e.Handled = true;

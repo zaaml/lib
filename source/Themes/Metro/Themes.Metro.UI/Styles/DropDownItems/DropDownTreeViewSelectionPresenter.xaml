@@ -1,0 +1,32 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="DropDownTreeViewSelectionPresenterTemplate"
+                   TargetType="zm:DropDownTreeViewSelectionPresenter">
+    <zm:DropDownTreeViewSelectionItemsPresenter x:Name="ItemsPresenter"
+                                                ClipToBounds="True">
+      <zm:DropDownTreeViewSelectionItemsPresenter.Template>
+        <ControlTemplate TargetType="zm:DropDownTreeViewSelectionItemsPresenter">
+          <zm:DropDownTreeViewSelectionItemsPanel x:Name="ItemsHost" />
+        </ControlTemplate>
+      </zm:DropDownTreeViewSelectionItemsPresenter.Template>
+    </zm:DropDownTreeViewSelectionItemsPresenter>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="DropDownTreeViewSelectionPresenterBaseStyle" TargetType="zm:DropDownTreeViewSelectionPresenter">
+    <zm:Setter Property="Template" Value="{StaticResource DropDownTreeViewSelectionPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="DropDownTreeViewSelectionPresenterStyle" BasedOn="{StaticResource DropDownTreeViewSelectionPresenterBaseStyle}" Skin="Metro.DropDownTreeViewSelectionPresenter" TargetType="zm:DropDownTreeViewSelectionPresenter" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="DropDownTreeViewSelectionPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource DropDownTreeViewSelectionPresenterStyle}" TargetType="zm:DropDownTreeViewSelectionPresenter" />
+
+</zm:ThemeResourceDictionary>

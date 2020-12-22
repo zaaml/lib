@@ -76,8 +76,15 @@ namespace Zaaml.UI.Controls.DropDown
 			return new SplitButtonBaseTemplateContract();
 		}
 
-		private static void DropDownButtonOnClick(object sender, RoutedEventArgsSL e)
+		private void DropDownButtonOnClick(object sender, RoutedEventArgsSL e)
 		{
+			if (IsDropDownOpen == false)
+				OpenDropDown();
+			else
+				CloseDropDown();
+
+			DropDownButton.IsChecked = IsDropDownOpen;
+			
 			e.Handled = true;
 		}
 
@@ -97,7 +104,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override void OnClick()
 		{
-			IsDropDownOpen = false;
+			CloseDropDown();
 
 			base.OnClick();
 		}

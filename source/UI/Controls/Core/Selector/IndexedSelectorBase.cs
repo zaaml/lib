@@ -10,7 +10,7 @@ using NativeControl = System.Windows.Controls.Control;
 namespace Zaaml.UI.Controls.Core
 {
 	public abstract class IndexedSelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> : SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel>, ISelector<TItem>
-		where TItem : NativeControl, ISelectable
+		where TItem : NativeControl
 		where TCollection : ItemCollectionBase<TControl, TItem>
 		where TPresenter : ScrollableItemsPresenterBase<TControl, TItem, TCollection, TPanel>
 		where TPanel : ItemsPanel<TItem>

@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 				_treeViewData = value;
 
-				Source = _treeViewData.DataPlainListView;
+				Init(_treeViewData.DataPlainListView, ReferenceEquals(_treeViewData.Source, TreeViewControl.Items) ? OperatingMode.Real : OperatingMode.Virtual);
 			}
 		}
 
@@ -71,7 +71,7 @@ namespace Zaaml.UI.Controls.TreeView
 		public override int GetIndexFromItem(TreeViewItem item)
 		{
 			if (TreeViewData == null || item?.TreeViewItemData == null)
-				return -1;
+				return base.GetIndexFromItem(item);
 
 			return TreeViewData.FindIndex(item.TreeViewItemData);
 		}

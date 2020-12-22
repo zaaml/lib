@@ -10,13 +10,13 @@ namespace Zaaml.UI.Controls.Core
 	{
 		#region  Methods
 
-		void AttachItem(T item, object itemSource);
+		void AttachItem(T item, object source);
 
-		T CreateItem(object itemSource);
+		T CreateItem(object source);
 
-		void DetachItem(T item, object itemSource);
+		void DetachItem(T item, object source);
 
-		void DisposeItem(T item, object itemSource);
+		void DisposeItem(T item, object source);
 
 		#endregion
 	}

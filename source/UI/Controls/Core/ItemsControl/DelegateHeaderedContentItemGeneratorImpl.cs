@@ -7,56 +7,62 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DelegateHeaderedContentItemGeneratorImpl<TItem, TGenerator> : DefaultHeaderedContentItemGeneratorImpl<TItem, TGenerator> where TItem : FrameworkElement, IHeaderedContentControl, new() where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
+	internal class DelegateHeaderedIconContentItemGeneratorImpl<TItem, TGenerator> : DefaultHeaderedIconContentItemGeneratorImpl<TItem, TGenerator>
+		where TItem : FrameworkElement, IHeaderedIconContentControl, new()
+		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
-		#region Fields
-
-		private readonly IHeaderedContentItemsControl _headeredContentControl;
-
-		#endregion
-
-		#region Ctors
-
-		public DelegateHeaderedContentItemGeneratorImpl(IHeaderedContentItemsControl headeredContentControl)
-			: base(headeredContentControl.ItemHeaderTemplate, headeredContentControl.ItemHeaderTemplateSelector, headeredContentControl.ItemHeaderStringFormat, headeredContentControl.ItemContentTemplate, headeredContentControl.ItemContentTemplateSelector, headeredContentControl.ItemContentStringFormat)
+		public DelegateHeaderedIconContentItemGeneratorImpl(IHeaderedIconContentItemsControl headeredContentControl)
+			: base(headeredContentControl.ItemHeaderMember, headeredContentControl.ItemHeaderTemplate, headeredContentControl.ItemHeaderTemplateSelector, headeredContentControl.ItemHeaderStringFormat, headeredContentControl.ItemIconMember,
+				headeredContentControl.ItemContentMember, headeredContentControl.ItemContentTemplate, headeredContentControl.ItemContentTemplateSelector, headeredContentControl.ItemContentStringFormat)
 		{
-			_headeredContentControl = headeredContentControl;
+			ItemsControlCore = headeredContentControl;
 		}
 
-		#endregion
+		private protected IHeaderedIconContentItemsControl ItemsControlCore { get; }
 
-		#region  Methods
+		public void OnItemContentMemberChanged()
+		{
+			ItemContentMember = ItemsControlCore.ItemContentMember;
+		}
 
 		public void OnItemContentStringFormatChanged()
 		{
-			ItemContentStringFormat = _headeredContentControl.ItemContentStringFormat;
+			ItemContentStringFormat = ItemsControlCore.ItemContentStringFormat;
 		}
 
 		public void OnItemContentTemplateChanged()
 		{
-			ItemContentTemplate = _headeredContentControl.ItemContentTemplate;
+			ItemContentTemplate = ItemsControlCore.ItemContentTemplate;
 		}
 
 		public void OnItemContentTemplateSelectorChanged()
 		{
-			ItemContentTemplateSelector = _headeredContentControl.ItemContentTemplateSelector;
+			ItemContentTemplateSelector = ItemsControlCore.ItemContentTemplateSelector;
+		}
+
+		public void OnItemHeaderMemberChanged()
+		{
+			ItemHeaderMember = ItemsControlCore.ItemHeaderMember;
 		}
 
 		public void OnItemHeaderStringFormatChanged()
 		{
-			ItemHeaderStringFormat = _headeredContentControl.ItemHeaderStringFormat;
+			ItemHeaderStringFormat = ItemsControlCore.ItemHeaderStringFormat;
 		}
 
 		public void OnItemHeaderTemplateChanged()
 		{
-			ItemHeaderTemplate = _headeredContentControl.ItemHeaderTemplate;
+			ItemHeaderTemplate = ItemsControlCore.ItemHeaderTemplate;
 		}
 
 		public void OnItemHeaderTemplateSelectorChanged()
 		{
-			ItemHeaderTemplateSelector = _headeredContentControl.ItemHeaderTemplateSelector;
+			ItemHeaderTemplateSelector = ItemsControlCore.ItemHeaderTemplateSelector;
 		}
 
-		#endregion
+		public void OnItemIconMemberChanged()
+		{
+			ItemIconMember = ItemsControlCore.ItemIconMember;
+		}
 	}
 }

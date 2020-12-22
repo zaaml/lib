@@ -10,7 +10,7 @@ namespace Zaaml.UI.Controls.ValidationSummary
 	{
 		#region Ctors
 
-		public FocusingInvalidControlEventArgs(ValidationSummaryItem item, ValidationSummaryItemSource target)
+		public FocusingInvalidControlEventArgs(ValidationSummaryItem item, ValidationSummarySource target)
 		{
 			Handled = false;
 			Item = item;
@@ -27,7 +27,7 @@ namespace Zaaml.UI.Controls.ValidationSummary
 		public ValidationSummaryItem Item { get; }
 
 
-		public ValidationSummaryItemSource Target { get; set; }
+		public ValidationSummarySource Target { get; set; }
 
 		#endregion
 	}

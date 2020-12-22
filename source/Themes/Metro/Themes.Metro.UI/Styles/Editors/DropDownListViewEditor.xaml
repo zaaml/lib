@@ -11,9 +11,9 @@
     <zm:ControlTemplateRoot Background="Transparent">
 
       <zm:DropDownListViewControl x:Name="DropDownListViewControl"
-                                  ListView="{TemplateBinding ListView}"
+                                  ListViewControl="{TemplateBinding ListViewControl}"
                                   BorderThickness="{TemplateBinding BorderThickness}"
-                                  IsEditable="{TemplateBinding IsEditable}"
+                                  IsTextEditable="{TemplateBinding IsTextEditable}"
                                   ShowDropDownButton="{TemplateBinding ActualShowDropDownButton}" />
 
     </zm:ControlTemplateRoot>

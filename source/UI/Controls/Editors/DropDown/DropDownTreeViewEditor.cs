@@ -16,11 +16,11 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 	[TemplateContractType(typeof(DropDownTreeViewEditorTemplateContract))]
 	public class DropDownTreeViewEditor : DropDownEditorBase
 	{
-		public static readonly DependencyProperty IsEditableProperty = DPM.Register<bool, DropDownTreeViewEditor>
-			("IsEditable", false);
+		public static readonly DependencyProperty IsTextEditableProperty = DPM.Register<bool, DropDownTreeViewEditor>
+			("IsTextEditable", false);
 
-		public static readonly DependencyProperty TreeViewProperty = DPM.Register<TreeViewControl, DropDownTreeViewEditor>
-			("TreeView");
+		public static readonly DependencyProperty TreeViewControlProperty = DPM.Register<TreeViewControl, DropDownTreeViewEditor>
+			("TreeViewControl");
 
 		static DropDownTreeViewEditor()
 		{
@@ -34,18 +34,18 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 
 		private DropDownTreeViewControl DropDownTreeViewControl => TemplateContract.DropDownTreeViewControl;
 
-		public bool IsEditable
+		public bool IsTextEditable
 		{
-			get => (bool) GetValue(IsEditableProperty);
-			set => SetValue(IsEditableProperty, value);
+			get => (bool) GetValue(IsTextEditableProperty);
+			set => SetValue(IsTextEditableProperty, value);
 		}
 
 		private DropDownTreeViewEditorTemplateContract TemplateContract => (DropDownTreeViewEditorTemplateContract) TemplateContractInternal;
 
-		public TreeViewControl TreeView
+		public TreeViewControl TreeViewControl
 		{
-			get => (TreeViewControl) GetValue(TreeViewProperty);
-			set => SetValue(TreeViewProperty, value);
+			get => (TreeViewControl) GetValue(TreeViewControlProperty);
+			set => SetValue(TreeViewControlProperty, value);
 		}
 
 		private void DropDownTreeViewControlOnEditingEnded(object sender, EditingEndedEventArgs e)

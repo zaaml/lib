@@ -19,9 +19,9 @@ namespace Zaaml.UI.Controls.TreeView
 		private readonly Dictionary<Type, Evaluator> _evaluatorDictionary;
 		private readonly TreeViewItemGenerator _generator;
 		private readonly Binding _isExpandedBinding;
-		private readonly Binding _itemsSourceBinding;
+		private readonly Binding _sourceBinding;
 		private readonly bool _staticIsExpanded;
-		private readonly IEnumerable _staticItemsSource;
+		private readonly IEnumerable _staticSource;
 		private readonly TreeViewItem _treeViewItem;
 
 		public TreeViewItemTemplateAdvisor(TreeViewItemGenerator generator)
@@ -33,16 +33,16 @@ namespace Zaaml.UI.Controls.TreeView
 			_treeViewItem.ClearValue(IconContentControl.IconProperty);
 			_treeViewItem.ClearValue(NativeContentControl.ContentProperty);
 
-			_itemsSourceBinding = _treeViewItem.ReadLocalBinding(TreeViewItem.ItemsSourceProperty);
+			_sourceBinding = _treeViewItem.ReadLocalBinding(TreeViewItem.SourceCollectionProperty);
 			_isExpandedBinding = _treeViewItem.ReadLocalBinding(TreeViewItem.IsExpandedProperty);
 
 			if (_isExpandedBinding == null)
 				_staticIsExpanded = _treeViewItem.IsExpanded;
 
-			if (_itemsSourceBinding == null)
-				_staticItemsSource = _treeViewItem.ItemsSource;
+			if (_sourceBinding == null)
+				_staticSource = _treeViewItem.SourceCollection;
 
-			if (_itemsSourceBinding == null && _isExpandedBinding == null)
+			if (_sourceBinding == null && _isExpandedBinding == null)
 				return;
 
 			_evaluatorDictionary = new Dictionary<Type, Evaluator>();
@@ -56,7 +56,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (_evaluatorDictionary.TryGetValue(type, out var evaluator))
 				return evaluator;
 
-			evaluator = new Evaluator(new DataContextMemberEvaluator<object>(_itemsSourceBinding, type), new DataContextMemberEvaluator<bool>(_isExpandedBinding, type));
+			evaluator = new Evaluator(new DataContextMemberEvaluator<object>(_sourceBinding, type), new DataContextMemberEvaluator<bool>(_isExpandedBinding, type));
 
 			_evaluatorDictionary.Add(type, evaluator);
 
@@ -73,18 +73,18 @@ namespace Zaaml.UI.Controls.TreeView
 
 			var evaluator = GetEvaluator(treeNodeData.GetType());
 
-			if (evaluator.ItemsSourceEvaluator.IsEmpty == false)
+			if (evaluator.SourceEvaluator.IsEmpty == false)
 				// ReSharper disable once ImpureMethodCallOnReadonlyValueField
-				return evaluator.ItemsSourceEvaluator.GetValue(treeNodeData) as IEnumerable;
+				return evaluator.SourceEvaluator.GetValue(treeNodeData) as IEnumerable;
 
-			if (_itemsSourceBinding == null)
-				return _staticItemsSource;
+			if (_sourceBinding == null)
+				return _staticSource;
 
 			_treeViewItem.DataContext = treeNodeData;
 
-			BindingUtil.EnsureBindingAttached(_treeViewItem, TreeViewItem.ItemsSourceProperty);
+			BindingUtil.EnsureBindingAttached(_treeViewItem, TreeViewItem.SourceCollectionProperty);
 
-			var itemsSource = _treeViewItem.ItemsSource;
+			var itemsSource = _treeViewItem.SourceCollection;
 
 			_treeViewItem.DataContext = null;
 
@@ -122,13 +122,13 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private readonly struct Evaluator
 		{
-			public Evaluator(DataContextMemberEvaluator<object> itemsSourceEvaluator, DataContextMemberEvaluator<bool> isExpandedEvaluator)
+			public Evaluator(DataContextMemberEvaluator<object> sourceEvaluator, DataContextMemberEvaluator<bool> isExpandedEvaluator)
 			{
-				ItemsSourceEvaluator = itemsSourceEvaluator;
+				SourceEvaluator = sourceEvaluator;
 				IsExpandedEvaluator = isExpandedEvaluator;
 			}
 
-			public readonly DataContextMemberEvaluator<object> ItemsSourceEvaluator;
+			public readonly DataContextMemberEvaluator<object> SourceEvaluator;
 
 			public readonly DataContextMemberEvaluator<bool> IsExpandedEvaluator;
 		}

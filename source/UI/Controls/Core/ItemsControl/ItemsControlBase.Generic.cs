@@ -21,7 +21,7 @@ namespace Zaaml.UI.Controls.Core
 	[ContentProperty(nameof(Items))]
 	public abstract class ItemsControlBase<TControl, TItem, TCollection, TPresenter, TPanel> : ItemsControlBase,
 		IItemsControl<TItem>
-		where TItem : System.Windows.Controls.Control
+		where TItem : FrameworkElement
 		where TCollection : ItemCollectionBase<TControl, TItem>
 		where TPresenter : ItemsPresenterBase<TControl, TItem, TCollection, TPanel>
 		where TPanel : ItemsPanel<TItem>
@@ -33,24 +33,24 @@ namespace Zaaml.UI.Controls.Core
 		// ReSharper disable once StaticMemberInGenericType
 		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
 
-		protected IEnumerable<TItem> ActualItems => ItemsProxy.ActualItems;
+		protected IEnumerable<TItem> ActualItems => ItemsOverride.ActualItems;
 
 		internal virtual bool IsItemsHostVisible => true;
 
 		public TCollection Items => this.GetValueOrCreate(ItemsPropertyKey, CreateItemCollectionPrivate);
 
-		internal int ItemsCount => ItemsProxy.ActualCount;
+		internal int ItemsCount => ItemsOverride.ActualCount;
 
 		protected TPresenter ItemsPresenter => TemplateContract.ItemsPresenter;
 
 		internal TPresenter ItemsPresenterInternal => ItemsPresenter;
 
-		internal virtual IItemCollection<TItem> ItemsProxy => Items;
+		internal virtual IItemCollection<TItem> ItemsOverride => Items;
 
-		protected IEnumerable ItemsSourceCore
+		protected IEnumerable SourceCore
 		{
-			get => ItemsProxy.Source;
-			set => ItemsProxy.Source = value;
+			get => ItemsOverride.SourceCollection;
+			set => ItemsOverride.SourceCollection = value;
 		}
 
 		internal override Type ItemType => typeof(TItem);
@@ -86,12 +86,12 @@ namespace Zaaml.UI.Controls.Core
 
 		protected int GetIndexFromItem(TItem item)
 		{
-			return ItemsProxy.GetIndexFromItem(item);
+			return ItemsOverride.GetIndexFromItem(item);
 		}
 
 		protected TItem GetItemFromIndex(int index)
 		{
-			return ItemsProxy.GetItemFromIndex(index);
+			return ItemsOverride.GetItemFromIndex(index);
 		}
 
 		private protected virtual void InvalidatePanelCore()
@@ -172,9 +172,9 @@ namespace Zaaml.UI.Controls.Core
 			OnItemDetachingInternal(item);
 		}
 
-		internal override void OnItemsSourceChangedInt(IEnumerable oldSource, IEnumerable newSource)
+		internal override void OnSourceChangedInt(IEnumerable oldSource, IEnumerable newSource)
 		{
-			ItemsProxy.Source = newSource;
+			ItemsOverride.SourceCollection = newSource;
 		}
 
 		internal override void OnSourceChangedInternal()

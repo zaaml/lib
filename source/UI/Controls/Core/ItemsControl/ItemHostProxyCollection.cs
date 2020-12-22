@@ -4,10 +4,11 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal sealed class ItemHostProxyCollection<TItem> : IEnumerable<TItem> where TItem : System.Windows.Controls.Control
+	internal sealed class ItemHostProxyCollection<TItem> : IEnumerable<TItem> where TItem : FrameworkElement
 	{
 		#region Fields
 

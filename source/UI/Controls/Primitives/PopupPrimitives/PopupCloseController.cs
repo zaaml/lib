@@ -8,7 +8,6 @@ using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 #endif
 using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -16,6 +15,7 @@ using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
+using DispatcherPriority = System.Windows.Threading.DispatcherPriority;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
@@ -51,7 +51,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			_popup.Opened += PopupControllerOnOpened;
 			_popup.Closed += PopupControllerOnClosed;
 
-			this.SetBinding(PopupChildProperty, new Binding { Path = new PropertyPath(Popup.ChildProperty), Source = _popup });
+			this.SetBinding(PopupChildProperty, new Binding {Path = new PropertyPath(Popup.ChildProperty), Source = _popup});
 		}
 
 		private bool HasKeyboardFocus
@@ -94,25 +94,31 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			mouseEvents.PreviewMouseRightButtonUp += OnGlobalPreviewMouseRightButtonUp;
 		}
 
-		private void Close()
+		private void Close(bool immediate)
 		{
-			if (_onClose != null)
-				_onClose();
-			else
-				_popup.IsOpen = false;
-
-			if (_popup.IsOpen && _state == State.Closing)
-				_state = State.Open;
+			//CloseImpl(immediate == false);
+			CloseImpl(false);
 		}
 
-		private void DelayedClose(bool immediate)
+		private void CloseImpl(bool inputDispatcher)
 		{
 			_state = State.Closing;
 
-			if (immediate)
-				Close();
+			if (_onClose != null)
+				_onClose();
 			else
-				Dispatcher.BeginInvoke(Close);
+			{
+				if (inputDispatcher)
+				{
+					_popup.CloseDispatcher();
+					_popup.DisableOpenUntilNextLayoutUpdate();
+				}
+				else
+					_popup.Close();
+			}
+
+			if (_popup.IsOpen && _state == State.Closing)
+				_state = State.Open;
 		}
 
 		private void DetachGlobalMouseEvents()
@@ -172,17 +178,18 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private bool IsInsideClick(UIElement uie, MouseButtonEventArgsInt e)
 		{
+			var isMouseEventSourceHitTestVisible = Popup.IsMouseEventSourceHitTestVisible(uie);
 			var queryIsInsideClickEventArgs = new QueryCloseOnClickEventArgs(_popup, e.OriginalSource);
 
 			QueryCloseOnClick?.Invoke(this, queryIsInsideClickEventArgs);
+
+			if (isMouseEventSourceHitTestVisible == false)
+				return false;
 
 			if (queryIsInsideClickEventArgs.CanClose == false)
 				return true;
 
 			if (ReferenceEquals(uie, _popup.Panel))
-				return false;
-
-			if (uie.GetAncestorsAndSelf(VisualTreeEnumerationStrategy.Instance).OfType<FrameworkElement>().Any(f => Popup.GetHitTestVisible(f) == false))
 				return false;
 
 			var screenPosition = e.ScreenPosition;
@@ -349,7 +356,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			if (args.Cancel)
 				return;
 
-			DelayedClose(immediate);
+			Close(immediate);
 		}
 
 		private void QueryCloseCoreImmediate()

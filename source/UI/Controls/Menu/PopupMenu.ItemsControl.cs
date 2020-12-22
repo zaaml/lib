@@ -22,8 +22,8 @@ namespace Zaaml.UI.Controls.Menu
 
 		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
 
-		public static readonly DependencyProperty ItemsSourceProperty = DPM.Register<IEnumerable, PopupMenu>
-			("ItemsSource", m => m.OnItemsSourceChanged);
+		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, PopupMenu>
+			("SourceCollection", m => m.OnSourceCollectionChanged);
 
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<MenuItemGeneratorBase, PopupMenu>
 			("ItemGenerator", m => m.OnItemGeneratorChanged);
@@ -42,10 +42,10 @@ namespace Zaaml.UI.Controls.Menu
 
 		protected MenuItemsPresenter ItemsPresenter => TemplateContract.ItemsPresenter;
 
-		public IEnumerable ItemsSource
+		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(ItemsSourceProperty);
-			set => SetValue(ItemsSourceProperty, value);
+			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public Style ItemStyle
@@ -65,7 +65,7 @@ namespace Zaaml.UI.Controls.Menu
 			Items.Generator = newGenerator;
 		}
 
-		private void OnItemsSourceChanged(IEnumerable oldSource, IEnumerable newSource)
+		private void OnSourceCollectionChanged(IEnumerable oldSource, IEnumerable newSource)
 		{
 			Items.SourceInternal = newSource;
 		}

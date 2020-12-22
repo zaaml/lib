@@ -6,12 +6,11 @@ using System;
 using System.Windows;
 using Zaaml.PresentationCore;
 using Zaaml.UI.Controls.Core;
-using Control = System.Windows.Controls.Control;
 
 namespace Zaaml.UI.Panels.Core
 {
 	internal abstract class PanelHostCollectionBase<TItem, TPanel> : ItemHostCollection<TItem>
-		where TItem : Control
+		where TItem : FrameworkElement
 		where TPanel : ItemsPanel<TItem>
 	{
 		protected PanelHostCollectionBase(TPanel panel)

@@ -6,46 +6,36 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal abstract class DefaultGeneratorImpl<TItem, TGenerator> : IItemGenerator<TItem> where TItem : FrameworkElement where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
+	internal abstract class DefaultGeneratorImpl<TItem, TGenerator> : IItemGenerator<TItem>, IDelegatedItemGenerator<TItem>
+		where TItem : FrameworkElement
+		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
-		#region Ctors
-
 		protected DefaultGeneratorImpl()
 		{
-			Generator = new TGenerator { Implementation = this };
+			Generator = new TGenerator {Implementation = this};
 		}
-
-		#endregion
-
-		#region Properties
 
 		public TGenerator Generator { get; }
 
-		#endregion
+		public abstract void AttachItem(TItem item, object source);
 
-		#region Interface Implementations
+		public abstract TItem CreateItem(object source);
 
-		#region IItemGenerator<TItem>
+		public abstract void DetachItem(TItem item, object source);
 
-		public abstract void AttachItem(TItem item, object itemSource);
+		public abstract void DisposeItem(TItem item, object source);
 
-		public abstract TItem CreateItem(object itemSource);
-
-		public abstract void DetachItem(TItem item, object itemSource);
-
-		public abstract void DisposeItem(TItem item, object itemSource);
-
-		#endregion
-
-		#endregion
+		ItemGenerator<TItem> IDelegatedItemGenerator<TItem>.Implementation => Generator;
 	}
 
 	internal interface IDelegatedGenerator<TItem> where TItem : FrameworkElement
 	{
-		#region Properties
-
 		IItemGenerator<TItem> Implementation { set; }
+	}
 
-		#endregion
+	internal interface IDelegatedItemGenerator<TItem>
+		where TItem : FrameworkElement
+	{
+		ItemGenerator<TItem> Implementation { get; }
 	}
 }

@@ -9,7 +9,7 @@
   <ControlTemplate x:Key="TreeViewItemsPresenterTemplate"
                    TargetType="zm:TreeViewItemsPresenter">
     <zm:ItemsPresenterTemplateRoot>
-      <zm:TreeViewPanel x:Name="ItemsHost" />
+      <zm:TreeViewItemsPanel x:Name="ItemsHost" />
     </zm:ItemsPresenterTemplateRoot>
   </ControlTemplate>
 

@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Windows.Data;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.DropDown
@@ -10,16 +9,6 @@ namespace Zaaml.UI.Controls.DropDown
 	public abstract partial class DropDownSelectorBase<TItemsControl, TItem>
 	{
 		internal SelectorController<TItem> SelectorController => GetSelectorController(ItemsControl);
-
-		private protected void BindSelectedContent(Binding binding)
-		{
-			SetBinding(SelectedContentProperty, binding);
-		}
-
-		private protected void BindSelectedIcon(Binding binding)
-		{
-			SetBinding(SelectedIconProperty, binding);
-		}
 
 		protected void CancelSelection()
 		{
@@ -37,7 +26,13 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected virtual bool CancelSelectionCore()
 		{
-			SelectorController?.ResumeSelectionChange(false);
+			var selectorController = SelectorController;
+
+			if (selectorController != null)
+			{
+				selectorController.RestoreSelection();
+				selectorController.ResumeSelectionChange();
+			}
 
 			CloseDropDown();
 

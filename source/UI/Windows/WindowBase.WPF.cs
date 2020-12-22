@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
 
@@ -135,8 +134,6 @@ namespace Zaaml.UI.Windows
 
 			_presentationWindowService = new PresentationWindowService(this);
 		}
-
-
 
 		partial void UpdateDraggableBehavior()
 		{

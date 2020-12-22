@@ -33,8 +33,10 @@
         <zm:DockPanel>
           <zm:IconContentPresenter Margin="{TemplateBinding Padding}"
                                    Visibility="{zm:SelfBinding Path=ActualShow, Converter={zm:VisibilityConverter}}"
-                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch"
+                                   HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                   VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
                                    zm:PathIcon.Brush="{TemplateBinding Foreground}"
                                    Content="{TemplateBinding Content}"
                                    ContentTemplate="{TemplateBinding ContentTemplate}"

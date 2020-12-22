@@ -42,6 +42,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Page Update="Styles\Decorators\PopupShadowChrome.xaml">
+		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		</Page>
+		<Page Update="Styles\DropDownItems\DropDownTreeViewSelectionPresenter.xaml">
+		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		  <SubType>Designer</SubType>
+		</Page>
 		<Page Update="Styles\Editors\TextEditor.xaml">
 			<SubType>Designer</SubType>
 		</Page>

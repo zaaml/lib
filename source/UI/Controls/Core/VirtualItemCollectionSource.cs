@@ -10,177 +10,137 @@ using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Core
 {
-  internal sealed class VirtualItemCollectionSource<TControl, T> : ItemCollectionSourceBase<TControl, T>
-	  where T : System.Windows.Controls.Control
+	internal sealed class VirtualItemCollectionSource<TControl, TItem> : ItemCollectionSourceBase<TControl, TItem>
+		where TItem : FrameworkElement
 		where TControl : System.Windows.Controls.Control
-  {
-    #region Fields
+	{
+		private IEnumerable _source;
 
-    private IEnumerable _source;
+		public VirtualItemCollectionSource(IVirtualItemsHost<TItem> itemsHost, ItemCollectionBase<TControl, TItem> itemCollection) : base(itemsHost, itemCollection)
+		{
+			VirtualCollection = new VirtualItemCollection(itemCollection);
 
-    #endregion
+			itemsHost.VirtualSource = VirtualCollection;
+		}
 
-    #region Ctors
+		public override IEnumerable<TItem> ActualItems => VirtualCollection.ActualItems;
 
-    public VirtualItemCollectionSource(IVirtualItemsHost<T> itemsHost, ItemCollectionBase<TControl, T> itemCollection) : base(itemsHost, itemCollection)
-    {
-      VirtualCollection = new VirtualItemCollection(itemCollection);
+		public override int Count => VirtualCollection.Count;
 
-      itemsHost.VirtualSource = VirtualCollection;
-    }
+		public override IEnumerable Source
+		{
+			get => _source;
+			set
+			{
+				if (ReferenceEquals(_source, value))
+					return;
 
-    #endregion
+				_source = value;
 
-    #region Properties
+				VirtualCollection.SourceCollection = value;
 
-    private VirtualItemCollection<TControl, T> VirtualCollection { get; }
+				OnInvalidated();
+			}
+		}
 
-    public override IEnumerable<T> ActualItems => VirtualCollection.ActualItems;
+		private VirtualItemCollection<TControl, TItem> VirtualCollection { get; }
 
-    public override int Count => VirtualCollection.Count;
+		public override void Dispose()
+		{
+			base.Dispose();
 
-    public override IEnumerable Source
-    {
-      get => _source;
-      set
-      {
-        if (ReferenceEquals(_source, value))
-          return;
+			((IVirtualItemsHost<TItem>) ItemsHost).VirtualSource = null;
+		}
 
-        _source = value;
+		public override TItem EnsureItem(int index)
+		{
+			return VirtualCollection.EnsureItem(index);
+		}
 
-        VirtualCollection.Source = value;
+		protected override int GetIndexFromItem(TItem item)
+		{
+			return VirtualCollection.GetIndexFromItem(item);
+		}
 
-        OnInvalidated();
-      }
-    }
+		protected override int GetIndexFromSource(object source)
+		{
+			return VirtualCollection.GetIndexFromSource(source);
+		}
 
-    #endregion
+		protected override TItem GetItemFromIndex(int index)
+		{
+			return VirtualCollection.GetItemFromIndex(index);
+		}
 
-    #region  Methods
+		protected override object GetSourceFromIndex(int index)
+		{
+			return VirtualCollection.GetSourceFromIndex(index);
+		}
 
-    protected override void OnGeneratorChanged()
-    {
-      base.OnGeneratorChanged();
+		public override void LockItem(TItem item)
+		{
+			VirtualCollection.LockItem(item);
+		}
 
-      VirtualCollection.Generator = Generator;
-    }
+		protected override void OnGeneratorChanged()
+		{
+			base.OnGeneratorChanged();
 
-    private void OnInvalidated()
-    {
-      (ItemsHost as Panel)?.InvalidateMeasure();
-    }
+			VirtualCollection.Generator = Generator;
+		}
 
-    public override T EnsureItem(int index)
-    {
-      return VirtualCollection.EnsureItem(index);
-    }
+		private void OnInvalidated()
+		{
+			(ItemsHost as Panel)?.InvalidateMeasure();
+		}
 
-    protected override int GetIndexFromItem(T item)
-    {
-      return VirtualCollection.GetIndexFromItem(item);
-    }
+		public override void UnlockItem(TItem item)
+		{
+			VirtualCollection.UnlockItem(item);
+		}
 
-    protected override int GetIndexFromItemSource(object itemSource)
-    {
-      return VirtualCollection.GetIndexFromItemSource(itemSource);
-    }
+		private class VirtualItemCollection : VirtualItemCollection<TControl, TItem>
+		{
+			public VirtualItemCollection(ItemCollectionBase<TControl, TItem> itemCollection)
+			{
+				ItemCollection = itemCollection;
+			}
 
-    protected override T GetItemFromIndex(int index)
-    {
-      return VirtualCollection.GetItemFromIndex(index);
-    }
+			private ItemCollectionBase<TControl, TItem> ItemCollection { get; }
 
-    protected override object GetItemSourceFromIndex(int index)
-    {
-      return VirtualCollection.GetItemSourceFromIndex(index);
-    }
+			protected override void ObservableSourceOnCollectionChanged(NotifyCollectionChangedEventArgs e)
+			{
+				base.ObservableSourceOnCollectionChanged(e);
 
-    public override void LockItem(T item)
-    {
-      VirtualCollection.LockItem(item);
-    }
+				ItemCollection.OnSourceCollectionChanged(e);
+			}
 
-    public override void UnlockItem(T item)
-    {
-      VirtualCollection.UnlockItem(item);
-    }
+			protected override void OnGeneratedItemAttached(int index, TItem item)
+			{
+				ItemCollection.AttachGeneratedItem(index, item);
+			}
 
-    public override void Dispose()
-    {
-      base.Dispose();
+			protected override void OnGeneratedItemDetached(int index, TItem item)
+			{
+				ItemCollection.DetachGeneratedItem(index, item);
+			}
+		}
+	}
 
-      ((IVirtualItemsHost<T>) ItemsHost).VirtualSource = null;
-    }
+	internal interface IVirtualItemCollection
+	{
+		int Count { get; }
 
-    #endregion
+		IVirtualItemsHost ItemHost { get; set; }
 
-    #region  Nested Types
+		void EnterGeneration();
 
-    private class VirtualItemCollection : VirtualItemCollection<TControl, T>
-    {
-      #region Ctors
+		UIElement GetCurrent(int index);
 
-      public VirtualItemCollection(ItemCollectionBase<TControl, T> itemCollection)
-      {
-        ItemCollection = itemCollection;
-      }
+		int GetIndexFromItem(FrameworkElement frameworkElement);
 
-      #endregion
+		void LeaveGeneration();
 
-      #region Properties
-
-      private ItemCollectionBase<TControl, T> ItemCollection { get; }
-
-      #endregion
-
-      #region  Methods
-
-      protected override void ObservableSourceOnCollectionChanged(NotifyCollectionChangedEventArgs e)
-      {
-        base.ObservableSourceOnCollectionChanged(e);
-
-        ItemCollection.OnSourceCollectionChanged(e);
-      }
-
-      protected override void OnGeneratedItemAttached(int index, T item)
-      {
-        ItemCollection.AttachGeneratedItem(index, item);
-      }
-
-      protected override void OnGeneratedItemDetached(int index, T item)
-      {
-        ItemCollection.DetachGeneratedItem(index, item);
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
-
-  internal interface IVirtualItemCollection
-  {
-    #region Properties
-
-    int Count { get; }
-
-    IVirtualItemsHost ItemHost { get; set; }
-
-    #endregion
-
-    #region  Methods
-
-    void EnterGeneration();
-
-    int GetIndexFromItem(FrameworkElement frameworkElement);
-
-    void LeaveGeneration();
-
-    UIElement Realize(int index);
-
-    UIElement GetCurrent(int index);
-
-    #endregion
-  }
+		UIElement Realize(int index);
+	}
 }

@@ -30,8 +30,8 @@ namespace Zaaml.UI.Controls.ListView
 					return;
 
 				_listViewData = value;
-
-				Source = _listViewData.DataPlainListView;
+				
+				Init(_listViewData.DataPlainListView, ReferenceEquals(_listViewData.Source, ListViewControl.Items) ? OperatingMode.Real : OperatingMode.Virtual);
 			}
 		}
 
@@ -71,7 +71,7 @@ namespace Zaaml.UI.Controls.ListView
 		public override int GetIndexFromItem(ListViewItem item)
 		{
 			if (ListViewData == null || item?.ListViewItemData == null)
-				return -1;
+				return base.GetIndexFromItem(item);
 
 			return ListViewData.FindIndex(item.ListViewItemData);
 		}

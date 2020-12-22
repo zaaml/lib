@@ -21,9 +21,9 @@ namespace Zaaml.UI.Controls.PropertyView
 
 		public PropertyViewControl PropertyView { get; }
 
-		protected override void AttachItem(TreeViewItem item, object itemSource)
+		protected override void AttachItem(TreeViewItem item, object source)
 		{
-			switch (item, itemSource)
+			switch (item, source)
 			{
 				case (PropertyViewItem viewItem, PropertyItem dataItem):
 
@@ -41,9 +41,9 @@ namespace Zaaml.UI.Controls.PropertyView
 			throw new InvalidOperationException();
 		}
 
-		protected override TreeViewItem CreateItem(object itemSource)
+		protected override TreeViewItem CreateItem(object source)
 		{
-			return itemSource switch
+			return source switch
 			{
 				PropertyCategory _ => _categories.Count > 0 ? _categories.Pop() : new PropertyViewCategory(PropertyView),
 				PropertyItem _ => _items.Count > 0 ? _items.Pop() : new PropertyViewItem(PropertyView),
@@ -51,9 +51,9 @@ namespace Zaaml.UI.Controls.PropertyView
 			};
 		}
 
-		protected override void DetachItem(TreeViewItem item, object itemSource)
+		protected override void DetachItem(TreeViewItem item, object source)
 		{
-			switch (item, itemSource)
+			switch (item, source)
 			{
 				case (PropertyViewItem viewItem, PropertyItem _):
 
@@ -71,7 +71,7 @@ namespace Zaaml.UI.Controls.PropertyView
 			throw new InvalidOperationException();
 		}
 
-		protected override void DisposeItem(TreeViewItem item, object itemSource)
+		protected override void DisposeItem(TreeViewItem item, object source)
 		{
 			switch (item)
 			{

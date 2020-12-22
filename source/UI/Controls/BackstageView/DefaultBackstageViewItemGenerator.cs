@@ -10,24 +10,24 @@ namespace Zaaml.UI.Controls.BackstageView
 	{
 		#region  Methods
 
-		protected override void AttachItem(BackstageViewItem item, object itemSource)
+		protected override void AttachItem(BackstageViewItem item, object source)
 		{
-			Implementation.AttachItem(item, itemSource);
+			Implementation.AttachItem(item, source);
 		}
 
-		protected override BackstageViewItem CreateItem(object itemSource)
+		protected override BackstageViewItem CreateItem(object source)
 		{
-			return Implementation.CreateItem(itemSource);
+			return Implementation.CreateItem(source);
 		}
 
-		protected override void DetachItem(BackstageViewItem item, object itemSource)
+		protected override void DetachItem(BackstageViewItem item, object source)
 		{
-			Implementation.DetachItem(item, itemSource);
+			Implementation.DetachItem(item, source);
 		}
 
-		protected override void DisposeItem(BackstageViewItem item, object itemSource)
+		protected override void DisposeItem(BackstageViewItem item, object source)
 		{
-			Implementation.DisposeItem(item, itemSource);
+			Implementation.DisposeItem(item, source);
 		}
 
 		#endregion
@@ -41,5 +41,12 @@ namespace Zaaml.UI.Controls.BackstageView
 		#endregion
 
 		#endregion
+	}
+
+	internal class DefaultItemTemplateBackstageViewItemGenerator : DelegateHeaderedIconContentSelectableItemGeneratorImpl<BackstageViewItem, DefaultBackstageViewItemGenerator>
+	{
+		public DefaultItemTemplateBackstageViewItemGenerator(BackstageViewControl backstageViewControl) : base(backstageViewControl)
+		{
+		}
 	}
 }

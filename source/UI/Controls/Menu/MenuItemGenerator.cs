@@ -40,36 +40,36 @@ namespace Zaaml.UI.Controls.Menu
 
 		#region  Methods
 
-		protected override void AttachItem(MenuItemBase item, object itemSource)
+		protected override void AttachItem(MenuItemBase item, object source)
 		{
-			_generatorDataTemplateHelper.AttachDataContext(item, itemSource);
+			_generatorDataTemplateHelper.AttachDataContext(item, source);
 
 			if (ItemTemplate != null)
 				return;
 
 			if (item is HeaderedMenuItem headeredMenuItem)
-				headeredMenuItem.Header = itemSource;
+				headeredMenuItem.Header = source;
 		}
 
-		protected override MenuItemBase CreateItem(object itemSource)
+		protected override MenuItemBase CreateItem(object source)
 		{
-			var item = _generatorDataTemplateHelper.Load(itemSource);
+			var item = _generatorDataTemplateHelper.Load(source);
 
 			SetGenerator(item, this);
 
 			return item;
 		}
 
-		protected override void DetachItem(MenuItemBase item, object itemSource)
+		protected override void DetachItem(MenuItemBase item, object source)
 		{
-			if (ReferenceEquals(item.DataContext, itemSource))
+			if (ReferenceEquals(item.DataContext, source))
 				item.ClearValue(FrameworkElement.DataContextProperty);
 
-			if (item is HeaderedMenuItem headeredMenuItem && ReferenceEquals(headeredMenuItem.Header, itemSource)) 
+			if (item is HeaderedMenuItem headeredMenuItem && ReferenceEquals(headeredMenuItem.Header, source)) 
 				headeredMenuItem.ClearValue(HeaderedMenuItem.HeaderProperty);
 		}
 
-		protected override void DisposeItem(MenuItemBase item, object itemSource)
+		protected override void DisposeItem(MenuItemBase item, object source)
 		{
 			item.ClearValue(GeneratorPropertyKey);
 		}

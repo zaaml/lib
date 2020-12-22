@@ -74,21 +74,18 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
             return new BitmapIcon { Source = imageSource };
         }
 
-        var stringValue = value as string;
-
-        if (stringValue != null)
+        if (value is string stringValue)
           return UpdateBaseUri(context, new BitmapIcon {Source = new BitmapImage(new Uri(stringValue, UriKind.RelativeOrAbsolute))});
 
         var uriValue = value as Uri;
+        
         if (uriValue != null)
           return UpdateBaseUri(context, new BitmapIcon {Source = new BitmapImage(uriValue)});
 
-        var imageSourceValue = value as ImageSource;
-        if (imageSourceValue != null)
+        if (value is ImageSource imageSourceValue)
           return new BitmapIcon { Source = imageSourceValue };
 
-        var geometry = value as Geometry;
-        if (geometry != null)
+        if (value is Geometry geometry)
           return new PathIcon { Data = geometry };
 
         throw new InvalidOperationException();
@@ -106,8 +103,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 #if !SILVERLIGHT
       var rootProvider = context?.GetService(typeof(IRootObjectProvider)) as IRootObjectProvider;
 
-      var ro = rootProvider?.RootObject as DependencyObject;
-      if (ro != null)
+      if (rootProvider?.RootObject is DependencyObject ro)
         icon.BaseUri = BaseUriHelper.GetBaseUri(ro);
 #endif
 

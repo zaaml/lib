@@ -4,7 +4,9 @@
 
 using System;
 using System.Windows;
+using System.Windows.Data;
 using Zaaml.PresentationCore;
+using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -17,32 +19,38 @@ namespace Zaaml.UI.Controls.Core
 
 		internal bool SupportsRecyclingInternal => SupportsRecycling;
 
-		protected abstract void AttachItem(T item, object itemSource);
+		protected abstract void AttachItem(T item, object source);
 
-		internal virtual void AttachItemCore(T item, object itemSource)
+		internal virtual void AttachItemCore(T item, object source)
 		{
-			AttachItem(item, itemSource);
+			AttachItem(item, source);
 		}
 
-		protected abstract T CreateItem(object itemSource);
+		protected abstract T CreateItem(object source);
 
-		internal virtual T CreateItemCore(object itemSource)
+		internal virtual T CreateItemCore(object source)
 		{
-			return CreateItem(itemSource);
+			return CreateItem(source);
 		}
 
-		protected abstract void DetachItem(T item, object itemSource);
+		protected abstract void DetachItem(T item, object source);
 
-		internal virtual void DetachItemCore(T item, object itemSource)
+		internal virtual void DetachItemCore(T item, object source)
 		{
-			DetachItem(item, itemSource);
+			DetachItem(item, source);
 		}
 
-		protected abstract void DisposeItem(T item, object itemSource);
+		protected abstract void DisposeItem(T item, object source);
 
-		internal virtual void DisposeItemCore(T item, object itemSource)
+		internal virtual void DisposeItemCore(T item, object source)
 		{
-			DisposeItem(item, itemSource);
+			DisposeItem(item, source);
+		}
+
+		internal static void InstallBinding(T item, DependencyProperty property, Binding binding)
+		{
+			if (binding != null)
+				item.SetBinding(property, binding);
 		}
 
 		protected virtual void OnGeneratorChanged()
@@ -65,24 +73,30 @@ namespace Zaaml.UI.Controls.Core
 			OnGeneratorChanging();
 		}
 
-		void IItemGenerator<T>.AttachItem(T item, object itemSource)
+		internal static void UninstallBinding(T item, DependencyProperty property, Binding binding)
 		{
-			AttachItemCore(item, itemSource);
+			if (binding != null && item.ReadLocalBinding(property) == binding)
+				item.ClearValue(property);
 		}
 
-		T IItemGenerator<T>.CreateItem(object itemSource)
+		void IItemGenerator<T>.AttachItem(T item, object source)
 		{
-			return CreateItemCore(itemSource);
+			AttachItemCore(item, source);
 		}
 
-		void IItemGenerator<T>.DetachItem(T item, object itemSource)
+		T IItemGenerator<T>.CreateItem(object source)
 		{
-			DetachItemCore(item, itemSource);
+			return CreateItemCore(source);
 		}
 
-		void IItemGenerator<T>.DisposeItem(T item, object itemSource)
+		void IItemGenerator<T>.DetachItem(T item, object source)
 		{
-			DisposeItemCore(item, itemSource);
+			DetachItemCore(item, source);
+		}
+
+		void IItemGenerator<T>.DisposeItem(T item, object source)
+		{
+			DisposeItemCore(item, source);
 		}
 	}
 }

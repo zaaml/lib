@@ -9,9 +9,9 @@ using Zaaml.UI.Utils;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	public sealed class TreeViewPanel : VirtualStackItemsPanel<TreeViewItem>
+	public sealed class TreeViewItemsPanel : VirtualStackItemsPanel<TreeViewItem>
 	{
-		public TreeViewPanel()
+		public TreeViewItemsPanel()
 		{
 			ReduceMouseHoverFlickering = true;
 		}

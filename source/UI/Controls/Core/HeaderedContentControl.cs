@@ -13,7 +13,7 @@ using ZaamlContentControl = Zaaml.UI.Controls.Core.ContentControl;
 namespace Zaaml.UI.Controls.Core
 {
   public class HeaderedContentControl : ZaamlContentControl, IHeaderedContentControl
-  {
+	{
     #region Static Fields and Constants
 
     public static readonly DependencyProperty HeaderProperty = DPM.Register<object, HeaderedContentControl>

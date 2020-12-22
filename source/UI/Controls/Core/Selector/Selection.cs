@@ -8,9 +8,9 @@ namespace Zaaml.UI.Controls.Core
 {
 	internal static class Selection
 	{
-		public static Selection<T> Create<T>(int index, T item, object itemSource, object value)
+		public static Selection<T> Create<T>(int index, T item, object source, object value)
 		{
-			return Selection<T>.Create(index, item, itemSource, value);
+			return Selection<T>.Create(index, item, source, value);
 		}
 
 		public static Selection<T> Empty<T>() => Selection<T>.Empty;
@@ -20,42 +20,44 @@ namespace Zaaml.UI.Controls.Core
 	{
 		internal static readonly Selection<T> Empty = new Selection<T>(-1, default, null, null);
 
-		public Selection(int index, T item, object itemSource, object value)
+		public Selection(int index, T item, object source, object value)
 		{
 			Index = index;
 			Item = item;
-			ItemSource = itemSource;
+			Source = source;
 			Value = value;
 		}
 
-		internal Selection<T> ChangeIndex(int index)
+		public bool IsEmpty => Index == -1 && Source == null && Value == null && Equals(Item, default);
+
+		internal Selection<T> WithIndex(int index)
 		{
-			return Create(index, Item, ItemSource, Value);
+			return Create(index, Item, Source, Value);
 		}
 
-		public static Selection<T> Create(int index, T item, object itemSource, object value)
+		public static Selection<T> Create(int index, T item, object source, object value)
 		{
-			return new Selection<T>(index, item, itemSource, value);
+			return new Selection<T>(index, item, source, value);
 		}
 
-		internal Selection<T> ChangeItem(T item)
+		internal Selection<T> WithItem(T item)
 		{
-			return Create(Index, item, ItemSource, Value);
+			return Create(Index, item, Source, Value);
 		}
 
-		internal Selection<T> ChangeItemSource(object itemSource)
+		internal Selection<T> WithSource(object source)
 		{
-			return Create(Index, Item, itemSource, Value);
+			return Create(Index, Item, source, Value);
 		}
 
-		internal Selection<T> ChangeValue(object value)
+		internal Selection<T> WithValue(object value)
 		{
-			return Create(Index, Item, ItemSource, value);
+			return Create(Index, Item, Source, value);
 		}
 
 		public bool Equals(Selection<T> other)
 		{
-			return Index == other.Index && Equals(ItemSource, other.ItemSource) && EqualityComparer<T>.Default.Equals(Item, other.Item) && Equals(Value, other.Value);
+			return Index == other.Index && Equals(Source, other.Source) && EqualityComparer<T>.Default.Equals(Item, other.Item) && Equals(Value, other.Value);
 		}
 
 		public override bool Equals(object obj)
@@ -72,7 +74,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				var hashCode = Index;
 
-				hashCode = (hashCode * 397) ^ (ItemSource != null ? ItemSource.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (Source != null ? Source.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ EqualityComparer<T>.Default.GetHashCode(Item);
 				hashCode = (hashCode * 397) ^ (Value != null ? Value.GetHashCode() : 0);
 
@@ -80,9 +82,12 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		public readonly int Index;
-		public readonly object ItemSource;
-		public readonly T Item;
-		public readonly object Value;
+		public int Index { get; }
+		
+		public object Source { get; }
+		
+		public T Item { get; }
+		
+		public object Value { get; }
 	}
 }

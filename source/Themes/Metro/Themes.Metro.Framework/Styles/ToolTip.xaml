@@ -7,11 +7,7 @@
 
   <!-- Template -->
   <ControlTemplate x:Key="ToolTipTemplate" TargetType="ToolTip">
-    <zm:ControlTemplateRoot Background="Transparent">
-
-      <!-- Shadow -->
-      <zm:ShadowChrome />
-
+    <zm:ControlTemplateRoot Background="Transparent" >
       <Border x:Name="Root" 
               Padding="{TemplateBinding Padding}"
               BorderThickness="{TemplateBinding BorderThickness}" 
@@ -23,7 +19,6 @@
                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                           Cursor="{TemplateBinding Cursor}" />
-
       </Border>
 
       <!-- Disabled Veil -->

@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
-  internal interface ISelector<T> where T : FrameworkElement, ISelectable
+  internal interface ISelector<T> where T : FrameworkElement
   {
     #region Properties
 
@@ -14,7 +14,7 @@ namespace Zaaml.UI.Controls.Core
 
     DependencyProperty SelectedItemProperty { get; }
 
-    DependencyProperty SelectedItemSourceProperty { get; }
+    DependencyProperty SelectedSourceProperty { get; }
 
     DependencyProperty SelectedValueProperty { get; }
 
@@ -22,13 +22,13 @@ namespace Zaaml.UI.Controls.Core
 
     #region  Methods
 
-    object GetValue(T item, object itemSource);
+    object GetValue(T item, object source);
 
     void OnSelectedIndexChanged(int oldIndex, int newIndex);
 
     void OnSelectedItemChanged(T oldItem, T newItem);
 
-    void OnSelectedItemSourceChanged(object oldItemSource, object newItemSource);
+    void OnSelectedSourceChanged(object oldSource, object newSource);
 
     void OnSelectedValueChanged(object oldValue, object newValue);
 

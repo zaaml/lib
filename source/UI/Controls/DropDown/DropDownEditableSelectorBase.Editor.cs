@@ -36,7 +36,9 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected virtual bool AutoPreserveText => true;
 
-		protected abstract FrameworkElement Editor { get; }
+		protected abstract FrameworkElement EditorCore { get; }
+		
+		protected abstract FrameworkElement SelectionPresenterCore { get; }
 
 		private void BeginEditDropDownSuspended()
 		{
@@ -54,7 +56,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		public bool BeginEdit()
 		{
-			if (IsEditing || IsEditable == false)
+			if (IsEditing)
 				return false;
 
 			IsEditing = true;
@@ -100,7 +102,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			var boolIsEditing = (bool) isEditing;
 
-			return boolIsEditing && IsEditable;
+			return boolIsEditing;
 		}
 
 		private static string CoerceText(string text)
@@ -135,23 +137,33 @@ namespace Zaaml.UI.Controls.DropDown
 			if (IsTemplateAttached == false)
 				ApplyTemplate();
 
-			if (Editor != null)
-				Editor.Visibility = Visibility.Visible;
+			if (IsTextEditable)
+			{
+				ShowEditor();
 
-			if (Editor is TemplateContractControl templateContractControl && templateContractControl.IsTemplateAttached == false)
-				templateContractControl.ApplyTemplate();
+				if (EditorCore is TemplateContractControl templateContractControl && templateContractControl.IsTemplateAttached == false)
+					templateContractControl.ApplyTemplate();
 
-			if (IsEditorFocused == false)
-				FocusEditor(false);
+				if (IsEditorFocused == false)
+					FocusEditor(false);
+			}
 
 			if (SuspendOpenDropDown == false && ActualOpenDropDownOnEditing && IsEditing && IsDropDownOpen != true)
 				OpenDropDown();
 		}
 
+		private void ShowEditor()
+		{
+			if (SelectionPresenterCore != null)
+				SelectionPresenterCore.Visibility = Visibility.Collapsed;
+
+			if (EditorCore != null)
+				EditorCore.Visibility = Visibility.Visible;
+		}
+
 		private protected virtual void LeaveEditState()
 		{
-			if (Editor != null)
-				Editor.Visibility = Visibility.Collapsed;
+			HideEditor();
 
 			if (ActualShouldPreserveText == false)
 				ResetText();
@@ -180,6 +192,15 @@ namespace Zaaml.UI.Controls.DropDown
 				ResumeFocusHandler();
 				ResumeDropDownHandler();
 			}
+		}
+
+		private void HideEditor()
+		{
+			if (EditorCore != null)
+				EditorCore.Visibility = Visibility.Hidden;
+
+			if (SelectionPresenterCore != null)
+				SelectionPresenterCore.Visibility = Visibility.Visible;
 		}
 
 		protected virtual void OnBeginEdit()

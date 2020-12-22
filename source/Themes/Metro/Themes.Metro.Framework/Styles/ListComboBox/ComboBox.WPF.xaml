@@ -55,10 +55,10 @@
 
         <Grid MinWidth="{TemplateBinding ActualWidth}"
               MaxHeight="{TemplateBinding MaxDropDownHeight}"
-              Margin="6"
+              Margin="16"
               SnapsToDevicePixels="True">
 
-          <zm:ShadowChrome Margin="-6" />
+          <zm:ShadowChrome Margin="-16" ShadowSize="16" IsHitTestVisible="False"/>
 
           <ScrollViewer x:Name="ScrollViewer"
                         Padding="1"
@@ -98,8 +98,6 @@
     <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
     <Setter Property="Template" Value="{StaticResource ComboBoxTextBox}" />
   </Style>
-
-
 
   <!--  Editable Template  -->
   <ControlTemplate x:Key="ComboBoxBaseEditableTemplate"
@@ -153,10 +151,10 @@
 
         <Grid MinWidth="{TemplateBinding ActualWidth}"
               MaxHeight="{TemplateBinding MaxDropDownHeight}"
-              Margin="6"
+              Margin="16"
               SnapsToDevicePixels="True">
 
-          <zm:ShadowChrome Margin="-6" />
+          <zm:ShadowChrome Margin="-16" ShadowSize="16"  IsHitTestVisible="False"/>
 
           <ScrollViewer x:Name="ScrollViewer"
                         Padding="1"

@@ -10,18 +10,18 @@ namespace Zaaml.UI.Controls.Menu
 	{
 		#region  Methods
 
-		internal override MenuItemBase CreateItemCore(object itemSource)
+		internal override MenuItemBase CreateItemCore(object source)
 		{
-			var menuItemBase = base.CreateItemCore(itemSource);
+			var menuItemBase = base.CreateItemCore(source);
 
 			menuItemBase.ParentGenerator = this;
 
 			return menuItemBase;
 		}
 
-		internal override void DisposeItemCore(MenuItemBase item, object itemSource)
+		internal override void DisposeItemCore(MenuItemBase item, object source)
 		{
-			base.DisposeItemCore(item, itemSource);
+			base.DisposeItemCore(item, source);
 
 			item.ParentGenerator = null;
 		}

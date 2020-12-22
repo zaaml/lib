@@ -9,7 +9,7 @@ namespace Zaaml.UI.Windows
 {
   [TemplateContractType(typeof(WindowHeaderPresenterTemplateContract))]
   public class WindowHeaderPresenter : WindowButtonsElement
-  {
+	{
     #region Ctors
 
     static WindowHeaderPresenter()

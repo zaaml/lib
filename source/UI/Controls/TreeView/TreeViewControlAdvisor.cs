@@ -18,7 +18,7 @@ namespace Zaaml.UI.Controls.TreeView
 		public IEnumerable GetNodes(object treeNodeData)
 		{
 			if (treeNodeData is TreeViewItem treeViewItem)
-				return treeViewItem.ItemsSource ?? treeViewItem.Items;
+				return treeViewItem.SourceCollection ?? treeViewItem.Items;
 
 			return _actualAdvisor.GetNodes(treeNodeData);
 		}

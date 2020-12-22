@@ -150,7 +150,7 @@ namespace Zaaml.UI.Controls.Core
 
 			if (IsVirtualizing)
 			{
-				ItemsProxy.BringIntoView(index);
+				ItemsOverride.BringIntoView(index);
 
 				ScrollView?.UpdateLayout();
 			}

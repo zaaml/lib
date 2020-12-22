@@ -7,12 +7,11 @@ using System.Windows;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
-using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Primitives;
 
 namespace Zaaml.UI.Controls.Menu
 {
-	public class RadioMenuItem : ToggleMenuItem, IRadio, ISelectable
+	public class RadioMenuItem : ToggleMenuItem, IRadio
 	{
 		#region Static Fields and Constants
 
@@ -101,22 +100,6 @@ namespace Zaaml.UI.Controls.Menu
 		bool? IRadio.IsChecked
 		{
 			get => IsChecked;
-			set => this.SetCurrentValueInternal(IsCheckedProperty, value);
-		}
-
-		#endregion
-
-		#region ISelectable
-
-		event EventHandler ISelectable.IsSelectedChanged
-		{
-			add => IsSelectedChanged += value;
-			remove => IsSelectedChanged -= value;
-		}
-
-		bool ISelectable.IsSelected
-		{
-			get => IsChecked == true;
 			set => this.SetCurrentValueInternal(IsCheckedProperty, value);
 		}
 

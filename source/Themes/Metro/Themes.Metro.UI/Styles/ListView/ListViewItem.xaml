@@ -54,6 +54,7 @@
 
       <zm:DockPanel>
 
+        <!-- Glyph presenter -->
         <zm:ContentPresenter zm:DockPanel.Dock="Left"
                              EmptyVisibility="Collapsed"
                              Content="{TemplateBinding Glyph}"

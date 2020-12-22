@@ -6,30 +6,47 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	internal sealed class ListViewSelectorAdvisor : ItemCollectionSelectorAdvisor<ListViewControl, ListViewItem>
+	internal sealed class ListViewSelectorAdvisor : SelectorBaseControllerAdvisor<ListViewControl, ListViewItem, ListViewItemCollection, ListViewItemsPresenter, ListViewItemsPanel>
 	{
-		public ListViewSelectorAdvisor(ListViewControl listViewControl) : base(listViewControl, listViewControl.Items)
+		public ListViewSelectorAdvisor(ListViewControl listViewControl) : base(listViewControl)
 		{
 			ListViewControl = listViewControl;
+			ListViewControl.VirtualItemCollection.AttachObserver(this);
 		}
 
 		public ListViewControl ListViewControl { get; }
 
-		public override bool TryGetItem(int index, out ListViewItem item)
+		public override bool TryGetItem(int index, bool ensure, out ListViewItem item)
 		{
+			if (index == -1)
+			{
+				item = null;
+				
+				return false;
+			}
+			
 			ListViewControl.EnsureVirtualItemCollection();
 
-			item = ListViewControl.VirtualItemCollection.EnsureItem(index);
+			var viewItemCollection = ListViewControl.VirtualItemCollection;
+			
+			item = ensure ? viewItemCollection.EnsureItem(index) : viewItemCollection.GetItemFromIndex(index);
 
 			return item != null;
 		}
 
-		public override bool TryGetItemBySource(object itemSource, out ListViewItem item)
+		public override bool CanSelect(ListViewItem item)
+		{
+			return item.CanSelectInternal;
+		}
+
+		public override bool HasSource => ListViewControl.SourceCollection != null;
+
+		public override bool TryGetItemBySource(object source, bool ensure, out ListViewItem item)
 		{
 			ListViewControl.EnsureVirtualItemCollection();
 
 			var listViewData = ListViewControl.EnsureListViewData();
-			var listViewItemData = listViewData.FindNode(itemSource);
+			var listViewItemData = listViewData.FindNode(source);
 
 			if (listViewItemData == null)
 			{
@@ -40,14 +57,10 @@ namespace Zaaml.UI.Controls.ListView
 
 			item = listViewItemData.ListViewItem;
 
-			if (item == null)
-			{
-				var index = listViewData.FindIndex(listViewItemData);
+			if (item != null) 
+				return true;
 
-				item = ListViewControl.VirtualItemCollection.EnsureItem(index);
-			}
-
-			return item != null;
+			return TryGetItem(listViewData.FindIndex(listViewItemData), ensure, out item);
 		}
 	}
 }

@@ -56,7 +56,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 			if (ListView == null)
 				return;
 
-			ListView.ItemsSource = Items;
+			ListView.SourceCollection = Items;
 		}
 
 		protected override void OnPropertyItemChanged(PropertyItem oldValue, PropertyItem newValue)
@@ -80,7 +80,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 		{
 			base.OnTemplateContractAttached();
 
-			ListView.ItemsSource = Items;
+			ListView.SourceCollection = Items;
 			ListView.ItemsFilter = new PropertyListViewItemTextFilter();
 			ListView.SelectionChanged += ListViewOnSelectionChanged;
 
@@ -90,7 +90,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 		protected override void OnTemplateContractDetaching()
 		{
 			ListView.SelectionChanged -= ListViewOnSelectionChanged;
-			ListView.ItemsSource = null;
+			ListView.SourceCollection = null;
 			ListView.ItemsFilter = null;
 
 			base.OnTemplateContractDetaching();
@@ -112,7 +112,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 
 				var value = ((PropertyItem<T>) propertyItem).Value;
 
-				ListView.SelectedItemSource = GetItemByValue(value);
+				ListView.SelectedSource = GetItemByValue(value);
 			}
 			finally
 			{
@@ -126,7 +126,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 			{
 				_suspendValueChangedHandler = true;
 
-				if (PropertyItem is PropertyItem<T> propertyItem && ListView.SelectedItemSource is PropertyListViewItemSource<T> propertyValueSource)
+				if (PropertyItem is PropertyItem<T> propertyItem && ListView.SelectedSource is PropertyListViewItemSource<T> propertyValueSource)
 					propertyItem.Value = propertyValueSource.Value;
 			}
 			finally

@@ -6,16 +6,16 @@ namespace Zaaml.UI.Controls.Core
 {
 	//internal class ItemGeneratorImpl<T> where T : FrameworkElement, new()
 	//{
-	//  public void AttachItem(T item, object itemSource)
+	//  public void AttachItem(T item, object source)
 	//  {
-	//    item.DataContext = itemSource;
+	//    item.DataContext = source;
 
 	//    if (ItemTemplate != null) return;
 
-	//    item.Content = itemSource;
+	//    item.Content = source;
 	//  }
 
-	//  public T CreateItem(object itemSource)
+	//  public T CreateItem(object source)
 	//  {
 	//    var itemTemplate = ItemTemplate;
 	//    if (itemTemplate == null)
@@ -28,16 +28,16 @@ namespace Zaaml.UI.Controls.Core
 	//    return item;
 	//  }
 
-	//  public void DetachItem(T item, object itemSource)
+	//  public void DetachItem(T item, object source)
 	//  {
-	//    if (ReferenceEquals(item.DataContext, itemSource))
+	//    if (ReferenceEquals(item.DataContext, source))
 	//      item.ClearValue(FrameworkElement.DataContextProperty);
 
-	//    if (ReferenceEquals(item.Content, itemSource))
+	//    if (ReferenceEquals(item.Content, source))
 	//      item.ClearValue(ContentControl.ContentProperty);
 	//  }
 
-	//  public void DisposeItem(T item, object itemSource)
+	//  public void DisposeItem(T item, object source)
 	//  {
 	//  }
 	//}

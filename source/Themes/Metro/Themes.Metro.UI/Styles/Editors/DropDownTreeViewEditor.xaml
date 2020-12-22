@@ -11,9 +11,9 @@
     <zm:ControlTemplateRoot Background="Transparent">
 
       <zm:DropDownTreeViewControl x:Name="DropDownTreeViewControl"
-                                  TreeView="{TemplateBinding TreeView}"
+                                  TreeViewControl="{TemplateBinding TreeViewControl}"
                                   BorderThickness="{TemplateBinding BorderThickness}"
-                                  IsEditable="{TemplateBinding IsEditable}"
+                                  IsTextEditable="{TemplateBinding IsTextEditable}"
                                   ShowDropDownButton="{TemplateBinding ActualShowDropDownButton}" />
 
     </zm:ControlTemplateRoot>

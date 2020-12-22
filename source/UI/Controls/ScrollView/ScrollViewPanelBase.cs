@@ -522,8 +522,9 @@ namespace Zaaml.UI.Controls.ScrollView
 
 			if (ChildMeasured == false)
 			{
-				// Measure first time to apply template
-				child.Measure(new Size(0, 0));
+				// Ensure template
+				if (child.ApplyTemplate() == false)
+					child.Measure(new Size(0, 0));
 
 				ChildMeasured = true;
 			}

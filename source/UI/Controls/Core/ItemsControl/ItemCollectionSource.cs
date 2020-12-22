@@ -7,11 +7,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
 	internal sealed class ItemCollectionSource<TControl, TItem> : ItemCollectionSourceBase<TControl, TItem>
-		where TItem : System.Windows.Controls.Control
+		where TItem : FrameworkElement
 		where TControl : System.Windows.Controls.Control
 	{
 		private IEnumerable _source;
@@ -116,13 +117,13 @@ namespace Zaaml.UI.Controls.Core
 			return -1;
 		}
 
-		protected override int GetIndexFromItemSource(object itemSource)
+		protected override int GetIndexFromSource(object source)
 		{
 			var index = 0;
 
 			foreach (var generatedItem in GeneratedItems)
 			{
-				if (ReferenceEquals(itemSource, generatedItem.Source))
+				if (ReferenceEquals(source, generatedItem.Source))
 					return index;
 
 				index++;
@@ -136,7 +137,7 @@ namespace Zaaml.UI.Controls.Core
 			return GeneratedItems[index].Item;
 		}
 
-		protected override object GetItemSourceFromIndex(int index)
+		protected override object GetSourceFromIndex(int index)
 		{
 			return GeneratedItems[index].Source;
 		}

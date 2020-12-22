@@ -10,7 +10,7 @@ using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal abstract class CollectionSelectorAdvisorBase<T> : ISelectorAdvisor<T> where T : FrameworkElement, ISelectable
+	internal abstract class CollectionSelectorAdvisorBase<T> : ISelectorAdvisor<T> where T : FrameworkElement
 	{
 		#region Fields
 
@@ -22,7 +22,7 @@ namespace Zaaml.UI.Controls.Core
 
 		protected CollectionSelectorAdvisorBase(ISelector<T> selector, IList<T> collection)
 		{
-			Selector = selector;
+			SelectorCore = selector;
 			Collection = collection;
 		}
 
@@ -32,25 +32,15 @@ namespace Zaaml.UI.Controls.Core
 
 		protected IList<T> Collection { get; }
 
-		private ISelector<T> Selector { get; }
+		private protected ISelector<T> SelectorCore { get; }
 
 		#endregion
 
 		#region  Methods
 
-		public virtual bool GetIsSelected(T item)
-		{
-			return item.IsSelected;
-		}
-
 		protected virtual void OnItemSelectionChanged(ItemSelectionChangedEventArgs<T> e)
 		{
 			ItemSelectionChanged?.Invoke(this, e);
-		}
-
-		public virtual void SetIsSelected(T item, bool value)
-		{
-			item.IsSelected = value;
 		}
 
 		#endregion
@@ -67,7 +57,7 @@ namespace Zaaml.UI.Controls.Core
 
 		#region ISelectorAdvisor<T>
 
-		public abstract object GetItemSource(T item);
+		public abstract object GetSource(T item);
 
 		public virtual object GetValue(int index)
 		{
@@ -75,6 +65,19 @@ namespace Zaaml.UI.Controls.Core
 		}
 
 		public abstract void Unlock(T item);
+		
+		public virtual bool CanSelect(T item)
+		{
+			return true;
+		}
+
+		public abstract bool GetItemSelected(T item);
+		
+		public abstract void SetItemSelected(T item, bool value);
+		
+		public abstract bool GetSourceSelected(T item);
+		
+		public abstract void SetSourceSelected(T item, bool value);
 
 		public abstract void Lock(T item);
 
@@ -84,14 +87,16 @@ namespace Zaaml.UI.Controls.Core
 
 		public abstract bool HasSource { get; }
 
+		public abstract bool IsVirtualizing { get; }
+
 		public virtual int GetIndexOfItem(T item)
 		{
 			return Collection.FindIndex(t => ReferenceEquals(t, item));
 		}
 
-		public abstract int GetIndexOfItemSource(object itemSource);
+		public abstract int GetIndexOfSource(object source);
 
-		public virtual bool TryGetItem(int index, out T item)
+		public virtual bool TryGetItem(int index, bool ensure, out T item)
 		{
 			if (index >= 0 && index < Collection.Count && Collection.Count > 0)
 			{
@@ -105,9 +110,13 @@ namespace Zaaml.UI.Controls.Core
 			return false;
 		}
 
-		public abstract bool TryGetItemBySource(object itemSource, out T item);
+		public abstract bool TryGetSelection(int index, bool ensure, out Selection<T> selection);
+		
+		public abstract bool TryGetSelection(object source, bool ensure, out Selection<T> selection);
 
-		public abstract object GetItemSource(int index);
+		public abstract bool TryGetItemBySource(object source, bool ensure, out T item);
+
+		public abstract object GetSource(int index);
 
 		public bool CompareValues(object value1, object value2)
 		{
@@ -120,10 +129,10 @@ namespace Zaaml.UI.Controls.Core
 
 			for (var i = 0; i < count; i++)
 			{
-				TryGetItem(i, out var item);
+				TryGetItem(i, false, out var item);
 
-				var itemSource = GetItemSource(i);
-				var itemValue = Selector.GetValue(item, itemSource);
+				var source = GetSource(i);
+				var itemValue = SelectorCore.GetValue(item, source);
 
 				if (CompareValues(itemValue, value))
 					return i;

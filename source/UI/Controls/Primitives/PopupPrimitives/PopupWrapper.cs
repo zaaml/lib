@@ -3,7 +3,6 @@
 // </copyright>
 
 using System;
-using System.ComponentModel;
 using System.Windows;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -111,10 +110,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
     private void OnIsOpenChangedInt()
     {
-      if (_suspendHandle || _popup == null) return;
+      if (_suspendHandle || _popup == null)
+	      return;
+      
       try
       {
         _suspendHandle = false;
+        
         _popup.IsOpen = this.GetValue<bool>(IsOpenProperty);
       }
       finally
@@ -125,10 +127,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
     private void OnPlacementChanged()
     {
-      if (_suspendHandle || _popup == null) return;
+      if (_suspendHandle || _popup == null) 
+	      return;
+      
       try
       {
         _suspendHandle = false;
+        
         _popup.Placement = this.GetValue<PopupPlacement>(PlacementProperty);
       }
       finally
@@ -139,10 +144,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
     private void PopupOnIsOpenChanged(object sender, EventArgs eventArgs)
     {
-      if (_suspendHandle || _popup == null) return;
+      if (_suspendHandle || _popup == null) 
+	      return;
+      
       try
       {
         _suspendHandle = false;
+        
         SetValue(IsOpenProperty, _popup.IsOpen);
       }
       finally
@@ -153,10 +161,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
     private void PopupOnPlacementChanged(object sender, EventArgs eventArgs)
     {
-      if (_suspendHandle || _popup == null) return;
+      if (_suspendHandle || _popup == null) 
+	      return;
+      
       try
       {
         _suspendHandle = false;
+        
         SetValue(PlacementProperty, _popup.Placement);
       }
       finally
@@ -171,9 +182,11 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
       {
         case PopupWrapperSyncDirection.None:
           return;
+        
         case PopupWrapperSyncDirection.SyncWrapper:
           SyncWrapper();
           break;
+        
         case PopupWrapperSyncDirection.SyncPopup:
           SyncPopup();
           break;

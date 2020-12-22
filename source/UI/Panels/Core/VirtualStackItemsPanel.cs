@@ -20,7 +20,7 @@ using NativeControl = System.Windows.Controls.Control;
 namespace Zaaml.UI.Panels.Core
 {
 	public abstract class VirtualStackItemsPanel<TItem> : ItemsPanel<TItem>, IVirtualStackPanel, IVirtualItemsHost<TItem>
-		where TItem : NativeControl
+		where TItem : FrameworkElement
 	{
 		private IVirtualItemCollection _actualVirtualItemCollection;
 		private FlickeringReducer<TItem> _flickeringReducer;
@@ -49,6 +49,8 @@ namespace Zaaml.UI.Panels.Core
 					AttachVirtualCollection();
 			}
 		}
+
+		private protected virtual int LeadingTrailingLimitCore => 2;
 
 		protected abstract int FocusedIndex { get; }
 
@@ -114,17 +116,17 @@ namespace Zaaml.UI.Panels.Core
 			ScrollView?.UpdateScrollOffsetCacheInternal();
 		}
 
-		private protected override void EnqueueBringIntoView(BringIntoViewRequest<TItem> request)
-		{
-			Layout.EnqueueBringIntoView(request);
-		}
-
 		private protected abstract FlickeringReducer<TItem> CreateFlickeringReducer();
 
 		private void DetachVirtualCollection()
 		{
 			ActualVirtualItemCollection.ItemHost = null;
 			Children.Clear();
+		}
+
+		private protected override void EnqueueBringIntoView(BringIntoViewRequest<TItem> request)
+		{
+			Layout.EnqueueBringIntoView(request);
 		}
 
 		protected override Geometry GetLayoutClip(Size layoutSlotSize)
@@ -204,6 +206,8 @@ namespace Zaaml.UI.Panels.Core
 		{
 			Layout.OnItemDetachedInternal(element);
 		}
+
+		int IVirtualStackPanel.LeadingTrailingLimit => LeadingTrailingLimitCore;
 
 		CompositeTransform IVirtualStackPanel.Transform => Transform;
 

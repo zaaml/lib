@@ -19,7 +19,7 @@ namespace Zaaml.UI.Controls.TableView
 
 		internal bool IsImplicit { get; set; }
 
-		[TypeConverter(typeof(FlexLengthConverter))]
+		[TypeConverter(typeof(FlexLengthTypeConverter))]
 		public FlexLength Length
 		{
 			get => (FlexLength) GetValue(LengthProperty);

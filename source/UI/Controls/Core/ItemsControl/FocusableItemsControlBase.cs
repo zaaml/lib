@@ -122,7 +122,7 @@ namespace Zaaml.UI.Controls.Core
 
 		TItem IIndexedFocusNavigatorAdvisor<TItem>.EnsureItem(int index)
 		{
-			return ItemsProxy.EnsureItem(index);
+			return ItemsOverride.EnsureItem(index);
 		}
 
 		TItem IIndexedFocusNavigatorAdvisor<TItem>.GetItemFromIndex(int index)
@@ -137,12 +137,12 @@ namespace Zaaml.UI.Controls.Core
 
 		void IIndexedFocusNavigatorAdvisor<TItem>.LockItem(TItem item)
 		{
-			ItemsProxy.LockItem(item);
+			ItemsOverride.LockItem(item);
 		}
 
 		void IIndexedFocusNavigatorAdvisor<TItem>.UnlockItem(TItem item)
 		{
-			ItemsProxy.UnlockItem(item);
+			ItemsOverride.UnlockItem(item);
 		}
 	}
 }

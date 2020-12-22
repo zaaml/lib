@@ -30,24 +30,24 @@ namespace Zaaml.UI.Controls.TableView
 
 		protected override bool SupportsRecycling => true;
 
-		protected override void AttachItem(TableViewItem item, object itemSource)
+		protected override void AttachItem(TableViewItem item, object source)
 		{
-			Implementation.AttachItem(item, itemSource);
+			Implementation.AttachItem(item, source);
 		}
 
-		protected override TableViewItem CreateItem(object itemSource)
+		protected override TableViewItem CreateItem(object source)
 		{
-			return Implementation.CreateItem(itemSource);
+			return Implementation.CreateItem(source);
 		}
 
-		protected override void DetachItem(TableViewItem item, object itemSource)
+		protected override void DetachItem(TableViewItem item, object source)
 		{
-			Implementation.DetachItem(item, itemSource);
+			Implementation.DetachItem(item, source);
 		}
 
-		protected override void DisposeItem(TableViewItem item, object itemSource)
+		protected override void DisposeItem(TableViewItem item, object source)
 		{
-			Implementation.DisposeItem(item, itemSource);
+			Implementation.DisposeItem(item, source);
 		}
 
 		private void OnItemTemplateChanged()

@@ -37,36 +37,36 @@ namespace Zaaml.UI.Controls.TreeView
 
 		protected override bool SupportsRecycling => true;
 
-		protected override void AttachItem(TreeViewItem item, object itemSource)
+		protected override void AttachItem(TreeViewItem item, object source)
 		{
-			Implementation.AttachItem(item, itemSource);
+			Implementation.AttachItem(item, source);
 		}
 
-		protected override TreeViewItem CreateItem(object itemSource)
+		protected override TreeViewItem CreateItem(object source)
 		{
-			var treeViewItem = Implementation.CreateItem(itemSource);
+			var treeViewItem = Implementation.CreateItem(source);
 
 			if (treeViewItem.Items.Count > 0)
-				_explicitItemsDictionary[itemSource] = treeViewItem;
+				_explicitItemsDictionary[source] = treeViewItem;
 
 			return treeViewItem;
 		}
 
-		protected override void DetachItem(TreeViewItem item, object itemSource)
+		protected override void DetachItem(TreeViewItem item, object source)
 		{
-			Implementation.DetachItem(item, itemSource);
+			Implementation.DetachItem(item, source);
 		}
 
-		protected override void DisposeItem(TreeViewItem item, object itemSource)
+		protected override void DisposeItem(TreeViewItem item, object source)
 		{
-			Implementation.DisposeItem(item, itemSource);
+			Implementation.DisposeItem(item, source);
 
 			_explicitItemsDictionary.Remove(item);
 		}
 
-		internal TreeViewItem GetExplicitItem(object itemSource)
+		internal TreeViewItem GetExplicitItem(object source)
 		{
-			return _explicitItemsDictionary.TryGetValue(itemSource, out var item) ? item : null;
+			return _explicitItemsDictionary.TryGetValue(source, out var item) ? item : null;
 		}
 
 		protected override IEnumerable GetTreeNodes(object treeNodeData)

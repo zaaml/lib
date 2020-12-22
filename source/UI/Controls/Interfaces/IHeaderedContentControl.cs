@@ -7,44 +7,98 @@ using System.Windows.Controls;
 
 namespace Zaaml.UI.Controls.Interfaces
 {
-  internal interface IHeaderedContentControl : IContentControl
-  {
-    #region Properties
+	internal interface IHeaderedContentControl
+	{
+		object Header { get; set; }
 
-    object Header { get; set; }
+		DependencyProperty HeaderProperty { get; }
 
-    DependencyProperty HeaderProperty { get; }
+		string HeaderStringFormat { get; set; }
 
-    string HeaderStringFormat { get; set; }
+		DependencyProperty HeaderStringFormatProperty { get; }
 
-    DependencyProperty HeaderStringFormatProperty { get; }
+		DataTemplate HeaderTemplate { get; set; }
 
-    DataTemplate HeaderTemplate { get; set; }
+		DependencyProperty HeaderTemplateProperty { get; }
 
-    DependencyProperty HeaderTemplateProperty { get; }
+		DataTemplateSelector HeaderTemplateSelector { get; set; }
 
-    DataTemplateSelector HeaderTemplateSelector { get; set; }
+		DependencyProperty HeaderTemplateSelectorProperty { get; }
+	}
 
-    DependencyProperty HeaderTemplateSelectorProperty { get; }
+	internal interface IHeaderedIconContentControl : IIconContentControl
+	{
+		object Header { get; set; }
 
-    #endregion
-  }
+		DependencyProperty HeaderProperty { get; }
 
-  internal interface IContentItemsControl
-  {
-    DataTemplate ItemContentTemplate { get; }
+		string HeaderStringFormat { get; set; }
 
-    DataTemplateSelector ItemContentTemplateSelector { get; }
+		DependencyProperty HeaderStringFormatProperty { get; }
 
-    string ItemContentStringFormat { get; }
-  }
+		DataTemplate HeaderTemplate { get; set; }
 
-  internal interface IHeaderedContentItemsControl : IContentItemsControl
-  {
-    DataTemplate ItemHeaderTemplate { get; }
+		DependencyProperty HeaderTemplateProperty { get; }
 
-    DataTemplateSelector ItemHeaderTemplateSelector { get; }
+		DataTemplateSelector HeaderTemplateSelector { get; set; }
 
-    string ItemHeaderStringFormat { get; }
-  }
+		DependencyProperty HeaderTemplateSelectorProperty { get; }
+	}
+
+	internal interface ISelectableItem
+	{
+		DependencyProperty ValueProperty { get; }
+
+		DependencyProperty SelectionProperty { get; }
+	}
+	
+	internal interface ISelectableIconContentItem: IIconContentControl, ISelectableItem
+	{
+	}
+	
+	internal interface ISelectableHeaderedIconContentItem: IHeaderedIconContentControl, ISelectableItem
+	{
+	}
+
+	internal interface IContentItemsControl
+	{
+		string ItemContentMember { get; }
+
+		string ItemContentStringFormat { get; }
+		
+		DataTemplate ItemContentTemplate { get; }
+
+		DataTemplateSelector ItemContentTemplateSelector { get; }
+	}
+
+	internal interface IIconContentItemsControl : IContentItemsControl
+	{
+		string ItemIconMember { get; }
+	}
+
+	internal interface IHeaderedIconContentItemsControl : IIconContentItemsControl
+	{
+		string ItemHeaderMember { get; }
+
+		string ItemHeaderStringFormat { get; }
+		
+		DataTemplate ItemHeaderTemplate { get; }
+
+		DataTemplateSelector ItemHeaderTemplateSelector { get; }
+	}
+
+	internal interface ISelectableItemsControl
+	{
+		string ItemValueMember { get; }
+		
+		string ItemSelectionMember { get;}
+	}
+	
+	internal interface IHeaderedIconContentSelectorControl : IHeaderedIconContentItemsControl, ISelectableItemsControl
+	{
+	}
+	
+	internal interface IIconContentSelectorControl : IIconContentItemsControl, ISelectableItemsControl
+	{
+	}
 }
