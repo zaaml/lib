@@ -139,8 +139,8 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			Unload(SourceValueProperty, ref _sourceValue);
 
-			SubjectResolver.UnresolveSubject(this);
-			PropertyResolver.UnresolveProperty(this);
+			SubjectResolver.UnResolveSubject(this);
+			PropertyResolver.UnResolveProperty(this);
 
 			base.UnloadCore(root);
 		}

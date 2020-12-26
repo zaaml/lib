@@ -32,8 +32,7 @@ namespace Zaaml.PresentationCore.Animation
     {
       transition = null;
 
-      TimeSpan timeSpan;
-      if (TimeSpan.TryParse(strValue, CultureInfo.InvariantCulture, out timeSpan))
+      if (TimeSpan.TryParse(strValue, CultureInfo.InvariantCulture, out var timeSpan))
       {
         transition = new Transition
         {
@@ -58,7 +57,7 @@ namespace Zaaml.PresentationCore.Animation
 
     #region Properties
 
-    private Transition ActualTransition => _transition ?? (_transition = new Transition());
+    private Transition ActualTransition => _transition ??= new Transition();
 
     public TimeSpan BeginTime
     {

@@ -7,49 +7,25 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-	internal class TriggerComparer : ITriggerValueComparer
+	public sealed class TriggerComparer : ITriggerValueComparer
 	{
-		#region Static Fields and Constants
-
 		private static readonly Dictionary<ComparerOperator, TriggerComparer> Comparers = new Dictionary<ComparerOperator, TriggerComparer>();
-
-		#endregion
-
-		#region Fields
-
-		private readonly ComparerOperator _comparerOperator;
-
-		#endregion
-
-		#region Ctors
 
 		private TriggerComparer(ComparerOperator comparerOperator)
 		{
-			_comparerOperator = comparerOperator;
+			Operator = comparerOperator;
 		}
 
-		#endregion
-
-		#region  Methods
+		public ComparerOperator Operator { get; }
 
 		public static ITriggerValueComparer GetComparer(ComparerOperator comparerOperator)
 		{
 			return Comparers.GetValueOrCreate(comparerOperator, () => new TriggerComparer(comparerOperator));
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region ITriggerValueComparer
-
 		public bool Compare(object triggerSourceValue, object operand)
 		{
-			return XamlValueComparer.EvaluateCompare(triggerSourceValue, operand, _comparerOperator);
+			return XamlValueComparer.EvaluateCompare(triggerSourceValue, operand, Operator);
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

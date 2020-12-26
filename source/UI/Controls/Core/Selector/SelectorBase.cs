@@ -87,7 +87,7 @@ namespace Zaaml.UI.Controls.Core
 			set => SetValue(SelectedValueProperty, value);
 		}
 
-		private protected MemberValueEvaluator SelectedValueEvaluator { get; set; }
+		private protected MemberEvaluator SelectedValueEvaluator { get; set; }
 
 		public SelectedValueSource SelectedValueSource
 		{
@@ -203,7 +203,7 @@ namespace Zaaml.UI.Controls.Core
 			var selectedItem = SelectedItem;
 
 			if (selectedItem != null)
-				Items.BringIntoViewInternal(new BringIntoViewRequest<TItem>(selectedItem, DefaultBringIntoViewMode, 0));
+				ItemCollection.BringIntoViewInternal(new BringIntoViewRequest<TItem>(selectedItem, DefaultBringIntoViewMode, 0));
 		}
 
 		protected virtual void OnSelectedIndexChanged(int oldIndex, int newIndex)
@@ -279,7 +279,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				case SelectedValueSource.Auto:
 
-					return GetItemValue(Items.SourceInternal == null ? item : source);
+					return GetItemValue(ItemCollection.SourceCollectionInternal == null ? item : source);
 
 				case SelectedValueSource.Item:
 
@@ -320,7 +320,7 @@ namespace Zaaml.UI.Controls.Core
 		where TPresenter : ScrollableItemsPresenterBase<TControl, TItem, TCollection, TPanel>
 		where TPanel : ItemsPanel<TItem>
 	{
-		public SelectorBaseControllerAdvisor(SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> selector) : base(selector, selector.Items)
+		public SelectorBaseControllerAdvisor(SelectorBase<TControl, TItem, TCollection, TPresenter, TPanel> selector) : base(selector, selector.ItemCollection)
 		{
 			Selector = selector;
 		}

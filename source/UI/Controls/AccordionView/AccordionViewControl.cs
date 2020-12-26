@@ -23,36 +23,36 @@ namespace Zaaml.UI.Controls.AccordionView
 			("ItemGenerator", a => a.OnItemGeneratorChanged);
 
 		public static readonly DependencyProperty ItemContentTemplateProperty = DPM.Register<DataTemplate, AccordionViewControl>
-			("ItemContentTemplate", a => a.DefaultGeneratorImpl.OnItemContentTemplateChanged);
+			("ItemContentTemplate", a => a.DefaultGeneratorImplementation.OnItemContentTemplateChanged);
 
 		public static readonly DependencyProperty ItemContentTemplateSelectorProperty = DPM.Register<DataTemplateSelector, AccordionViewControl>
-			("ItemContentTemplateSelector", a => a.DefaultGeneratorImpl.OnItemContentTemplateSelectorChanged);
+			("ItemContentTemplateSelector", a => a.DefaultGeneratorImplementation.OnItemContentTemplateSelectorChanged);
 
 		public static readonly DependencyProperty ItemContentStringFormatProperty = DPM.Register<string, AccordionViewControl>
-			("ItemContentStringFormat", a => a.DefaultGeneratorImpl.OnItemContentStringFormatChanged);
+			("ItemContentStringFormat", a => a.DefaultGeneratorImplementation.OnItemContentStringFormatChanged);
 
 		public static readonly DependencyProperty ItemHeaderTemplateProperty = DPM.Register<DataTemplate, AccordionViewControl>
-			("ItemHeaderTemplate", a => a.DefaultGeneratorImpl.OnItemHeaderTemplateChanged);
+			("ItemHeaderTemplate", a => a.DefaultGeneratorImplementation.OnItemHeaderTemplateChanged);
 
 		public static readonly DependencyProperty ItemHeaderTemplateSelectorProperty = DPM.Register<DataTemplateSelector, AccordionViewControl>
-			("ItemHeaderTemplateSelector", a => a.DefaultGeneratorImpl.OnItemHeaderTemplateSelectorChanged);
+			("ItemHeaderTemplateSelector", a => a.DefaultGeneratorImplementation.OnItemHeaderTemplateSelectorChanged);
 
 		public static readonly DependencyProperty ItemHeaderStringFormatProperty = DPM.Register<string, AccordionViewControl>
-			("ItemHeaderStringFormat", a => a.DefaultGeneratorImpl.OnItemHeaderStringFormatChanged);
+			("ItemHeaderStringFormat", a => a.DefaultGeneratorImplementation.OnItemHeaderStringFormatChanged);
 
 		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, AccordionViewControl>
 			("SourceCollection", i => i.OnSourceCollectionPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ItemContentMemberProperty = DPM.Register<string, AccordionViewControl>
-			("ItemContentMember", d => d.DefaultGeneratorImpl.OnItemContentMemberChanged);
+			("ItemContentMember", d => d.DefaultGeneratorImplementation.OnItemContentMemberChanged);
 
 		public static readonly DependencyProperty ItemHeaderMemberProperty = DPM.Register<string, AccordionViewControl>
-			("ItemHeaderMember", d => d.DefaultGeneratorImpl.OnItemHeaderMemberChanged);
+			("ItemHeaderMember", d => d.DefaultGeneratorImplementation.OnItemHeaderMemberChanged);
 
 		public static readonly DependencyProperty ItemIconMemberProperty = DPM.Register<string, AccordionViewControl>
-			("ItemIconMember", d => d.DefaultGeneratorImpl.OnItemIconMemberChanged);
+			("ItemIconMember", d => d.DefaultGeneratorImplementation.OnItemIconMemberChanged);
 
-		private DelegateHeaderedIconContentItemGeneratorImpl<AccordionViewItem, DefaultAccordionViewItemGenerator> _defaultGeneratorImpl;
+		private DelegateHeaderedIconContentItemGeneratorImplementation<AccordionViewItem, DefaultAccordionViewItemGenerator> _defaultGeneratorImplementation;
 
 		static AccordionViewControl()
 		{
@@ -66,10 +66,10 @@ namespace Zaaml.UI.Controls.AccordionView
 
 		private AccordionViewItemGeneratorBase ActualGenerator => ItemGenerator ?? DefaultGenerator;
 
-		private AccordionViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImpl.Generator;
+		private AccordionViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImplementation.Generator;
 
-		private DelegateHeaderedIconContentItemGeneratorImpl<AccordionViewItem, DefaultAccordionViewItemGenerator> DefaultGeneratorImpl =>
-			_defaultGeneratorImpl ??= new DelegateHeaderedIconContentItemGeneratorImpl<AccordionViewItem, DefaultAccordionViewItemGenerator>(this);
+		private DelegateHeaderedIconContentItemGeneratorImplementation<AccordionViewItem, DefaultAccordionViewItemGenerator> DefaultGeneratorImplementation =>
+			_defaultGeneratorImplementation ??= new DelegateHeaderedIconContentItemGeneratorImplementation<AccordionViewItem, DefaultAccordionViewItemGenerator>(this);
 
 		public AccordionViewItemGeneratorBase ItemGenerator
 		{
@@ -113,12 +113,12 @@ namespace Zaaml.UI.Controls.AccordionView
 
 		internal virtual void OnItemGeneratorChanged(AccordionViewItemGeneratorBase oldGenerator, AccordionViewItemGeneratorBase newGenerator)
 		{
-			Items.Generator = ActualGenerator;
+			ItemCollection.Generator = ActualGenerator;
 		}
 
 		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
-			SourceCore = newSource;
+			SourceCollectionCore = newSource;
 		}
 
 		public string ItemIconMember

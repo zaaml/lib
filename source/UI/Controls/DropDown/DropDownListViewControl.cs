@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Markup;
@@ -18,6 +19,7 @@ using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Editors.Text;
 using Zaaml.UI.Controls.ListView;
 using Zaaml.UI.Controls.ScrollView;
+using ListViewItem = Zaaml.UI.Controls.ListView.ListViewItem;
 
 namespace Zaaml.UI.Controls.DropDown
 {
@@ -34,8 +36,8 @@ namespace Zaaml.UI.Controls.DropDown
 		public static readonly DependencyProperty SelectionPresenterProperty = DPM.Register<DropDownListViewSelectionPresenter, DropDownListViewControl>
 			("SelectionPresenter", d => d.OnSelectionPresenterPropertyChangedPrivate);
 
-		public static readonly DependencyProperty ItemSelectionTemplateProperty = DPM.Register<DataTemplate, DropDownListViewControl>
-			("ItemSelectionTemplate", d => d.OnItemSelectionTemplate);
+		public static readonly DependencyProperty SelectionItemTemplateProperty = DPM.Register<DataTemplate, DropDownListViewControl>
+			("SelectionItemTemplate", d => d.OnSelectionItemTemplatePropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey ActualSelectionPresenterPropertyKey = DPM.RegisterReadOnly<DropDownListViewSelectionPresenter, DropDownListViewControl>
 			("ActualSelectionPresenter");
@@ -67,21 +69,17 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override bool AutoPreserveText => ListViewControl?.ItemsFilter == null;
 
+		private DefaultListViewItemTextFilter DefaultFilter { get; set; }
+
 		private DropDownListViewSelectionPresenter DefaultSelectionPresenter => _defaultSelectionPresenter ??= CreteDefaultSelectionPresenter();
 
 		protected override FrameworkElement EditorCore => FilterTextBox;
 
 		private FilterTextBox FilterTextBox => TemplateContract.FilterTextBox;
 
-		protected override ItemCollectionBase<ListViewControl, ListViewItem> ItemCollection => ListViewControl.Items;
+		protected override ItemCollectionBase<ListViewControl, ListViewItem> ItemCollection => ListViewControl.ItemCollection;
 
 		protected override ListViewControl ItemsControl => ListViewControl;
-
-		public DataTemplate ItemSelectionTemplate
-		{
-			get => (DataTemplate) GetValue(ItemSelectionTemplateProperty);
-			set => SetValue(ItemSelectionTemplateProperty, value);
-		}
 
 		public ListViewControl ListViewControl
 		{
@@ -90,6 +88,12 @@ namespace Zaaml.UI.Controls.DropDown
 		}
 
 		protected override ScrollViewControl ScrollView => ListViewControl?.ScrollViewInternal;
+
+		public DataTemplate SelectionItemTemplate
+		{
+			get => (DataTemplate) GetValue(SelectionItemTemplateProperty);
+			set => SetValue(SelectionItemTemplateProperty, value);
+		}
 
 		public DropDownListViewSelectionPresenter SelectionPresenter
 		{
@@ -103,7 +107,13 @@ namespace Zaaml.UI.Controls.DropDown
 
 		private DropDownListViewSelectionPresenter CreteDefaultSelectionPresenter()
 		{
-			return new DropDownListViewSelectionPresenter {DropDownListViewControl = this, ItemContentTemplate = ItemSelectionTemplate};
+			return new DropDownListViewSelectionPresenter
+			{
+				IsDefault = true,
+				DropDownListViewControl = this,
+				ItemContentTemplate = SelectionItemTemplate,
+				ContentMode = SelectionItemContentMode.None
+			};
 		}
 
 		private protected override void ForceFilterUpdate()
@@ -139,11 +149,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 			return base.MeasureOverride(availableSize);
 		}
-
-		private void OnActualSelectionPresenterPropertyChangedPrivate(DropDownListViewSelectionPresenter oldValue, DropDownListViewSelectionPresenter newValue)
-		{
-		}
-
+		
 		private void OnItemFilterPropertyChangedPrivate(IListViewItemFilter oldValue, IListViewItemFilter newValue)
 		{
 			if (ReferenceEquals(oldValue, newValue))
@@ -162,18 +168,13 @@ namespace Zaaml.UI.Controls.DropDown
 			}
 		}
 
-		private void OnItemSelectionTemplate()
-		{
-			if (_defaultSelectionPresenter != null)
-				_defaultSelectionPresenter.ItemContentTemplate = ItemSelectionTemplate;
-		}
-
 		private void OnListViewChanged(ListViewControl oldListViewControl, ListViewControl newListViewControl)
 		{
 			if (oldListViewControl != null)
 			{
+				oldListViewControl.ItemsDefaultFilter = DefaultFilter = null;
 				oldListViewControl.ItemMouseButtonUp -= OnListViewItemMouseButtonUp;
-				oldListViewControl.MouseButtonSelectionOptions = MouseButtonSelectionOptions.LeftButtonDown;
+				oldListViewControl.ItemClickMode = ClickMode.Release;
 				oldListViewControl.FocusItemOnMouseHover = false;
 				oldListViewControl.SelectItemOnFocus = true;
 				oldListViewControl.PreserveMinSize = false;
@@ -184,15 +185,18 @@ namespace Zaaml.UI.Controls.DropDown
 
 			if (newListViewControl != null)
 			{
+				newListViewControl.ItemsDefaultFilter = DefaultFilter = new DefaultListViewItemTextFilter(newListViewControl);
 				newListViewControl.ItemMouseButtonUp += OnListViewItemMouseButtonUp;
-				newListViewControl.MouseButtonSelectionOptions = MouseButtonSelectionOptions.LeftButtonUp;
+				newListViewControl.ItemClickMode = ClickMode.Release;
 				newListViewControl.FocusItemOnMouseHover = true;
 				newListViewControl.SelectItemOnFocus = false;
 				newListViewControl.PreserveMinSize = true;
 				newListViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Top;
 
-				this.BindProperties(ItemFilterProperty, newListViewControl, ListViewControl.ItemsFilterProperty);
+				this.BindProperties(ItemFilterProperty, newListViewControl, ListViewControl.ItemsFilterProperty, targetNullValue: DefaultFilter);
 			}
+
+			LogicalChildMentor.OnLogicalChildPropertyChanged(oldListViewControl, newListViewControl);
 
 			OnItemsControlChanged(oldListViewControl, newListViewControl);
 
@@ -208,6 +212,12 @@ namespace Zaaml.UI.Controls.DropDown
 
 				e.MouseEventArgs.Handled = true;
 			}
+		}
+
+		private void OnSelectionItemTemplatePropertyChangedPrivate()
+		{
+			if (_defaultSelectionPresenter != null)
+				_defaultSelectionPresenter.ItemContentTemplate = SelectionItemTemplate;
 		}
 
 		private void OnSelectionPresenterPropertyChangedPrivate(DropDownListViewSelectionPresenter oldValue, DropDownListViewSelectionPresenter newValue)

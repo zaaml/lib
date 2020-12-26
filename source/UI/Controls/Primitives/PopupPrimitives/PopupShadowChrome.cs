@@ -10,6 +10,7 @@ using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Decorators;
 using Zaaml.UI.Panels.Core;
+using DispatcherPriority = System.Windows.Threading.DispatcherPriority;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
@@ -37,6 +38,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private bool IsOpen
 		{
+			get => _isOpen;
 			set
 			{
 				if (_isOpen == value)
@@ -45,13 +47,24 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				_isOpen = value;
 
 				if (_isOpen)
-				{
-					UpdatePosition();
-
-					ShadowWindow.IsOpen = true;
-				}
+					ParentPopup?.Panel?.InvalidateArrange();
 				else
-					ShadowWindow.IsOpen = false;
+					Close();
+			}
+		}
+
+		private void Close()
+		{
+			ShadowWindow.IsOpen = false;
+		}
+
+		private void Open()
+		{
+			if (IsOpen)
+			{
+				UpdatePosition();
+
+				ShadowWindow.IsOpen = true;
 			}
 		}
 
@@ -108,6 +121,9 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		private void OnArranged(object sender, EventArgs e)
 		{
 			UpdatePosition();
+
+			if (IsOpen && ShadowWindow.IsOpen == false)
+				ShadowWindow.IsOpen = true;
 		}
 
 		protected override void OnLoaded()
@@ -155,13 +171,17 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			var actualOffset = popupPanel.ActualOffset;
 			var panelActualSize = popupPanel.ActualSize;
 
-			ShadowChrome.Width = panelActualSize.Width;
-			ShadowChrome.Height = panelActualSize.Height;
+			var panelRect = new Rect(new Point(actualOffset.X, actualOffset.Y), panelActualSize);
+			var chromeRect = panelRect.GetInflated(popupPanel.CalcInflate().Negate());
+			var windowRect = chromeRect.GetInflated(ShadowSize, ShadowSize);
 
-			ShadowWindow.Left = actualOffset.X - ShadowSize;
-			ShadowWindow.Top = actualOffset.Y - ShadowSize;
-			ShadowWindow.Width = panelActualSize.Width + ShadowSize * 2;
-			ShadowWindow.Height = panelActualSize.Height + ShadowSize * 2;
+			ShadowChrome.Width = chromeRect.Width;
+			ShadowChrome.Height = chromeRect.Height;
+
+			ShadowWindow.Left = windowRect.Left;
+			ShadowWindow.Top = windowRect.Top;
+			ShadowWindow.Width = windowRect.Width;
+			ShadowWindow.Height = windowRect.Height;
 		}
 	}
 }

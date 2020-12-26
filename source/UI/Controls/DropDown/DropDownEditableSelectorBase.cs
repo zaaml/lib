@@ -2,16 +2,19 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
-using Control = System.Windows.Controls.Control;
 
 namespace Zaaml.UI.Controls.DropDown
 {
+	[SuppressMessage("ReSharper", "StaticMemberInGenericType")]
 	public abstract partial class DropDownEditableSelectorBase<TItemsControl, TItem> : DropDownSelectorBase<TItemsControl, TItem>
 		where TItemsControl : Control
 		where TItem : Control
@@ -27,11 +30,22 @@ namespace Zaaml.UI.Controls.DropDown
 		public static readonly DependencyProperty TextProperty = DPM.Register<string, DropDownEditableSelectorBase<TItemsControl, TItem>>
 			("Text", string.Empty, d => d.OnTextPropertyChangedPrivate, d => CoerceText);
 
+		public static readonly DependencyProperty PostTextDelayProperty = DPM.Register<TimeSpan, DropDownSelectorBase<TItemsControl, TItem>>
+			("PostTextDelay", TimeSpan.Zero);
+
 		public static readonly DependencyProperty OpenDropDownOnEditingProperty = DPM.Register<bool, DropDownEditableSelectorBase<TItemsControl, TItem>>
 			("OpenDropDownOnEditing", true);
 
 		public static readonly DependencyProperty PreserveTextProperty = DPM.Register<PreserveTextMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
 			("PreserveText", PreserveTextMode.Auto);
+
+		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<DropDownEditableSelectorDisplayMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
+			("DisplayMode", default, d => d.OnDisplayModePropertyChangedPrivate);
+
+		private static readonly DependencyPropertyKey ActualDisplayModePropertyKey = DPM.RegisterReadOnly<DropDownEditableSelectorDisplayMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
+			("ActualDisplayMode", DropDownEditableSelectorDisplayMode.DropDownButton);
+
+		public static readonly DependencyProperty ActualDisplayModeProperty = ActualDisplayModePropertyKey.DependencyProperty;
 
 		private readonly DelayAction _delayOpenDropDown;
 
@@ -42,10 +56,16 @@ namespace Zaaml.UI.Controls.DropDown
 			_delayOpenDropDown = new DelayAction(DelayOpenDropDown);
 		}
 
-		public bool IsTextEditable
+		public DropDownEditableSelectorDisplayMode ActualDisplayMode
 		{
-			get => (bool) GetValue(IsTextEditableProperty);
-			set => SetValue(IsTextEditableProperty, value);
+			get => (DropDownEditableSelectorDisplayMode) GetValue(ActualDisplayModeProperty);
+			private set => this.SetReadOnlyValue(ActualDisplayModePropertyKey, value);
+		}
+
+		public DropDownEditableSelectorDisplayMode DisplayMode
+		{
+			get => (DropDownEditableSelectorDisplayMode) GetValue(DisplayModeProperty);
+			set => SetValue(DisplayModeProperty, value);
 		}
 
 		public bool IsEditing
@@ -54,10 +74,22 @@ namespace Zaaml.UI.Controls.DropDown
 			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value);
 		}
 
+		public bool IsTextEditable
+		{
+			get => (bool) GetValue(IsTextEditableProperty);
+			set => SetValue(IsTextEditableProperty, value);
+		}
+
 		public bool OpenDropDownOnEditing
 		{
 			get => (bool) GetValue(OpenDropDownOnEditingProperty);
 			set => SetValue(OpenDropDownOnEditingProperty, value);
+		}
+
+		public TimeSpan PostTextDelay
+		{
+			get => (TimeSpan) GetValue(PostTextDelayProperty);
+			set => SetValue(PostTextDelayProperty, value);
 		}
 
 		public PreserveTextMode PreserveText
@@ -95,8 +127,15 @@ namespace Zaaml.UI.Controls.DropDown
 			return value is DependencyObject dependencyObject && dependencyObject.IsDescendantOf(this, MixedTreeEnumerationStrategy.VisualThenLogicalInstance);
 		}
 
+		private void OnDisplayModePropertyChangedPrivate(DropDownEditableSelectorDisplayMode oldValue, DropDownEditableSelectorDisplayMode newValue)
+		{
+			UpdateActualDisplayMode();
+		}
+
 		private void OnIsTextEditablePropertyChangedPrivate(bool oldValue, bool newValue)
 		{
+			UpdateActualDisplayMode();
+
 			this.SetCurrentValueInternal(IsTabStopProperty, newValue ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
 		}
 
@@ -119,6 +158,14 @@ namespace Zaaml.UI.Controls.DropDown
 			base.OnTemplateContractDetaching();
 		}
 
+		private void UpdateActualDisplayMode()
+		{
+			if (DisplayMode == DropDownEditableSelectorDisplayMode.Auto)
+				ActualDisplayMode = IsTextEditable ? DropDownEditableSelectorDisplayMode.TextEditor : DropDownEditableSelectorDisplayMode.DropDownButton;
+			else
+				ActualDisplayMode = DisplayMode;
+		}
+
 		private static class PackedDefinition
 		{
 			public static readonly PackedUIntItemDefinition SuspendDropDownHandlerCount;
@@ -134,5 +181,12 @@ namespace Zaaml.UI.Controls.DropDown
 				SuspendOpenDropDown = allocator.AllocateBoolItem();
 			}
 		}
+	}
+
+	public enum DropDownEditableSelectorDisplayMode
+	{
+		Auto,
+		TextEditor,
+		DropDownButton
 	}
 }

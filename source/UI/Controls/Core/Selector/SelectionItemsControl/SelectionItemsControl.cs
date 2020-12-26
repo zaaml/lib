@@ -29,7 +29,7 @@ namespace Zaaml.UI.Controls.Core
 			("SelectionCollection", d => d.OnSelectionCollectionPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ContentModeProperty = DPM.Register<SelectionItemContentMode, SelectionItemsControl<TSelectionItem, TItem>>
-			("ContentMode", SelectionItemContentMode.Auto, d => d.OnContentModePropertyChangedPrivate);
+			("ContentMode", SelectionItemContentMode.None, d => d.OnContentModePropertyChangedPrivate);
 
 		public static readonly DependencyProperty ItemContentMemberProperty = DPM.Register<string, SelectionItemsControl<TSelectionItem, TItem>>
 			("ItemContentMember", d => d.DefaultGeneratorImpl.OnItemContentMemberChanged);
@@ -49,10 +49,23 @@ namespace Zaaml.UI.Controls.Core
 		private DelegateContentItemGenerator<TSelectionItem, TItem> DefaultGeneratorImpl =>
 			_defaultGeneratorImpl ??= new DelegateContentItemGenerator<TSelectionItem, TItem>(this);
 
+		private protected virtual bool IsAttachDetachOverriden => false;
+
+		internal bool IsAttachDetachOverridenInternal => IsAttachDetachOverriden;
+
 		public SelectionCollectionBase<TItem> SelectionCollection
 		{
 			get => (SelectionCollectionBase<TItem>) GetValue(SelectionCollectionProperty);
 			set => SetValue(SelectionCollectionProperty, value);
+		}
+
+		private protected virtual void AttachOverride(SelectionItem<TItem> selectionItem, Selection<TItem> selection)
+		{
+		}
+
+		internal void AttachOverrideInternal(SelectionItem<TItem> selectionItem, Selection<TItem> selection)
+		{
+			AttachOverride(selectionItem, selection);
 		}
 
 		protected override SelectionItemCollection<TSelectionItem, TItem> CreateItemCollection()
@@ -66,6 +79,15 @@ namespace Zaaml.UI.Controls.Core
 		protected override TemplateContract CreateTemplateContract()
 		{
 			return new SelectionItemsControlTemplateContract<TSelectionItem, TItem>();
+		}
+
+		private protected virtual void DetachOverride(SelectionItem<TItem> selectionItem, Selection<TItem> selection)
+		{
+		}
+
+		internal void DetachOverrideInternal(SelectionItem<TItem> selectionItem, Selection<TItem> selection)
+		{
+			DetachOverride(selectionItem, selection);
 		}
 
 		private void InvalidateItemsHost()
@@ -94,7 +116,7 @@ namespace Zaaml.UI.Controls.Core
 			if (newValue != null)
 				newValue.CollectionChanged += OnSelectionCollectionChanged;
 
-			SourceCore = newValue;
+			SourceCollectionCore = newValue;
 
 			InvalidateItemsHost();
 		}

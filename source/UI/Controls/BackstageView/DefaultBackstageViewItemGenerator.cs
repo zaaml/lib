@@ -43,7 +43,7 @@ namespace Zaaml.UI.Controls.BackstageView
 		#endregion
 	}
 
-	internal class DefaultItemTemplateBackstageViewItemGenerator : DelegateHeaderedIconContentSelectableItemGeneratorImpl<BackstageViewItem, DefaultBackstageViewItemGenerator>
+	internal class DefaultItemTemplateBackstageViewItemGenerator : DelegateHeaderedIconContentSelectableItemGeneratorImplementation<BackstageViewItem, DefaultBackstageViewItemGenerator>
 	{
 		public DefaultItemTemplateBackstageViewItemGenerator(BackstageViewControl backstageViewControl) : base(backstageViewControl)
 		{

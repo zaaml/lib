@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class TemplatedGeneratorImpl<TItem> : IItemGenerator<TItem> where TItem : FrameworkElement, new()
+	internal class TemplatedGeneratorImplementation<TItem> : IItemGenerator<TItem> where TItem : FrameworkElement, new()
 	{
 		#region Fields
 
@@ -18,7 +18,7 @@ namespace Zaaml.UI.Controls.Core
 
 		#region Ctors
 
-		public TemplatedGeneratorImpl(ItemGenerator<TItem> generator)
+		public TemplatedGeneratorImplementation(ItemGenerator<TItem> generator)
 		{
 			Generator = generator;
 		}

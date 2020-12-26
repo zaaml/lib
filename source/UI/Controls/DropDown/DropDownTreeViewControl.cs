@@ -5,6 +5,7 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Markup;
@@ -20,6 +21,7 @@ using Zaaml.UI.Controls.Editors.Text;
 using Zaaml.UI.Controls.ScrollView;
 using Zaaml.UI.Controls.TreeView;
 using Zaaml.UI.Data.Hierarchy;
+using TreeViewItem = Zaaml.UI.Controls.TreeView.TreeViewItem;
 
 namespace Zaaml.UI.Controls.DropDown
 {
@@ -39,8 +41,8 @@ namespace Zaaml.UI.Controls.DropDown
 		public static readonly DependencyProperty SelectionPresenterProperty = DPM.Register<DropDownTreeViewSelectionPresenter, DropDownTreeViewControl>
 			("SelectionPresenter", d => d.OnSelectionPresenterPropertyChangedPrivate);
 
-		public static readonly DependencyProperty ItemSelectionTemplateProperty = DPM.Register<DataTemplate, DropDownTreeViewControl>
-			("ItemSelectionTemplate", d => d.OnItemSelectionTemplate);
+		public static readonly DependencyProperty SelectionItemTemplateProperty = DPM.Register<DataTemplate, DropDownTreeViewControl>
+			("SelectionItemTemplate", d => d.OnSelectionItemTemplatePropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey ActualSelectionPresenterPropertyKey = DPM.RegisterReadOnly<DropDownTreeViewSelectionPresenter, DropDownTreeViewControl>
 			("ActualSelectionPresenter");
@@ -73,21 +75,17 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override bool AutoPreserveText => TreeViewControl?.ItemsFilter == null;
 
+		private DefaultTreeViewItemTextFilter DefaultFilter { get; set; }
+
 		private DropDownTreeViewSelectionPresenter DefaultSelectionPresenter => _defaultSelectionPresenter ??= CreteDefaultSelectionPresenter();
 
 		protected override FrameworkElement EditorCore => FilterTextBox;
 
 		private FilterTextBox FilterTextBox => TemplateContract.FilterTextBox;
 
-		protected override ItemCollectionBase<TreeViewControl, TreeViewItem> ItemCollection => TreeViewControl.Items;
+		protected override ItemCollectionBase<TreeViewControl, TreeViewItem> ItemCollection => TreeViewControl.ItemCollection;
 
 		protected override TreeViewControl ItemsControl => TreeViewControl;
-
-		public DataTemplate ItemSelectionTemplate
-		{
-			get => (DataTemplate) GetValue(ItemSelectionTemplateProperty);
-			set => SetValue(ItemSelectionTemplateProperty, value);
-		}
 
 		public bool PreserveExpandedNodes
 		{
@@ -96,6 +94,12 @@ namespace Zaaml.UI.Controls.DropDown
 		}
 
 		protected override ScrollViewControl ScrollView => TreeViewControl?.ScrollViewInternal;
+
+		public DataTemplate SelectionItemTemplate
+		{
+			get => (DataTemplate) GetValue(SelectionItemTemplateProperty);
+			set => SetValue(SelectionItemTemplateProperty, value);
+		}
 
 		public DropDownTreeViewSelectionPresenter SelectionPresenter
 		{
@@ -115,7 +119,13 @@ namespace Zaaml.UI.Controls.DropDown
 
 		private DropDownTreeViewSelectionPresenter CreteDefaultSelectionPresenter()
 		{
-			return new DropDownTreeViewSelectionPresenter {DropDownTreeViewControl = this, ItemContentTemplate = ItemSelectionTemplate};
+			return new DropDownTreeViewSelectionPresenter
+			{
+				IsDefault = true,
+				DropDownTreeViewControl = this,
+				ItemContentTemplate = SelectionItemTemplate,
+				ContentMode = SelectionItemContentMode.None
+			};
 		}
 
 		private protected override void ForceFilterUpdate()
@@ -193,16 +203,16 @@ namespace Zaaml.UI.Controls.DropDown
 			}
 		}
 
-		private void OnItemIsExpandedChanged(object sender, TreeViewItemEventEventArgs e)
+		private void OnItemIsExpandedChanged(object sender, TreeViewItemEventArgs e)
 		{
 			foreach (var visualAncestor in TreeViewControl.GetVisualAncestorsAndSelf().OfType<FrameworkElement>())
 				visualAncestor.InvalidateMeasure();
 		}
 
-		private void OnItemSelectionTemplate()
+		private void OnSelectionItemTemplatePropertyChangedPrivate()
 		{
 			if (_defaultSelectionPresenter != null)
-				_defaultSelectionPresenter.ItemContentTemplate = ItemSelectionTemplate;
+				_defaultSelectionPresenter.ItemContentTemplate = SelectionItemTemplate;
 		}
 
 		private void OnSelectionPresenterPropertyChangedPrivate(DropDownTreeViewSelectionPresenter oldValue, DropDownTreeViewSelectionPresenter newValue)
@@ -223,9 +233,10 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			if (oldTreeViewControl != null)
 			{
+				oldTreeViewControl.ItemsDefaultFilter = DefaultFilter = null;
 				oldTreeViewControl.ItemMouseButtonUp -= OnTreeViewItemMouseButtonUp;
 				oldTreeViewControl.ItemIsExpandedChanged -= OnItemIsExpandedChanged;
-				oldTreeViewControl.MouseButtonSelectionOptions = MouseButtonSelectionOptions.LeftButtonDown;
+				oldTreeViewControl.ItemClickMode = ClickMode.Release;
 				oldTreeViewControl.FocusItemOnMouseHover = false;
 				oldTreeViewControl.SelectItemOnFocus = true;
 				oldTreeViewControl.PreserveMinSize = false;
@@ -236,15 +247,16 @@ namespace Zaaml.UI.Controls.DropDown
 
 			if (newTreeViewControl != null)
 			{
+				newTreeViewControl.ItemsDefaultFilter = DefaultFilter = new DefaultTreeViewItemTextFilter(newTreeViewControl);
 				newTreeViewControl.ItemMouseButtonUp += OnTreeViewItemMouseButtonUp;
 				newTreeViewControl.ItemIsExpandedChanged += OnItemIsExpandedChanged;
-				newTreeViewControl.MouseButtonSelectionOptions = MouseButtonSelectionOptions.LeftButtonUp;
+				newTreeViewControl.ItemClickMode = ClickMode.Release;
 				newTreeViewControl.FocusItemOnMouseHover = true;
 				newTreeViewControl.SelectItemOnFocus = false;
 				newTreeViewControl.PreserveMinSize = true;
 				newTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Top;
 
-				this.BindProperties(ItemFilterProperty, newTreeViewControl, TreeViewControl.ItemsFilterProperty);
+				this.BindProperties(ItemFilterProperty, newTreeViewControl, TreeViewControl.ItemsFilterProperty, targetNullValue: DefaultFilter);
 			}
 
 			OnItemsControlChanged(oldTreeViewControl, newTreeViewControl);

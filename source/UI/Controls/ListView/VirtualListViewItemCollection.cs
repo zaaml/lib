@@ -17,7 +17,7 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewControl = listViewControl;
 		}
 
-		public ListViewItemCollection Items => ListViewControl.Items;
+		public ListViewItemCollection Items => ListViewControl.ItemCollection;
 
 		public ListViewControl ListViewControl { get; }
 
@@ -30,8 +30,8 @@ namespace Zaaml.UI.Controls.ListView
 					return;
 
 				_listViewData = value;
-				
-				Init(_listViewData.DataPlainListView, ReferenceEquals(_listViewData.Source, ListViewControl.Items) ? OperatingMode.Real : OperatingMode.Virtual);
+
+				Init(_listViewData.DataPlainListView, ReferenceEquals(_listViewData.Source, ListViewControl.ItemCollection) ? OperatingMode.Real : OperatingMode.Virtual);
 			}
 		}
 
@@ -48,8 +48,11 @@ namespace Zaaml.UI.Controls.ListView
 
 			item.ListViewItemData = ListViewData.GetNode(index);
 
-			var itemsControl = (IItemsControl<ListViewItem>)ListViewControl;
+			var itemsControl = (IItemsControl<ListViewItem>) ListViewControl;
 
+			if (ItemCollectionBase.GetInItemCollection(item))
+				ListViewControl.DetachLogical(item);
+			
 			itemsControl.OnItemAttaching(item);
 			itemsControl.OnItemAttached(item);
 		}
@@ -58,15 +61,18 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			item.ListViewItemData = null;
 
-			var itemsControl = (IItemsControl<ListViewItem>)ListViewControl;
+			var itemsControl = (IItemsControl<ListViewItem>) ListViewControl;
 
 			itemsControl.OnItemDetaching(item);
 			itemsControl.OnItemDetached(item);
 
+			if (ItemCollectionBase.GetInItemCollection(item))
+				ListViewControl.AttachLogical(item);
+
 			base.OnGeneratedItemDetached(index, item);
 		}
 
-		public int ActualCount => ListViewData?.VisibleFlatCount ?? 0;
+		int IItemCollection<ListViewItem>.ActualCount => ListViewData?.VisibleFlatCount ?? 0;
 
 		public override int GetIndexFromItem(ListViewItem item)
 		{
@@ -76,11 +82,11 @@ namespace Zaaml.UI.Controls.ListView
 			return ListViewData.FindIndex(item.ListViewItemData);
 		}
 
-		public void BringIntoView(int index)
+		public void BringIntoView(BringIntoViewRequest<ListViewItem> bringIntoViewRequest)
 		{
-			var virtualPanel = (IItemsHost<ListViewItem>)ListViewControl?.ItemsPresenterInternal?.ItemsHostInternal;
+			var virtualPanel = (IItemsHost<ListViewItem>) ListViewControl?.ItemsPresenterInternal?.ItemsHostInternal;
 
-			virtualPanel?.BringIntoView(new BringIntoViewRequest<ListViewItem>(index, ListViewControl.DefaultBringIntoViewMode));
+			virtualPanel?.BringIntoView(bringIntoViewRequest);
 		}
 	}
 }

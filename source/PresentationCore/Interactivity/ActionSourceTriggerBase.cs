@@ -64,7 +64,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		internal override void UnloadCore(IInteractivityRoot root)
 		{
-			SubjectResolver.UnresolveSubject(this);
+			SubjectResolver.UnResolveSubject(this);
 			base.UnloadCore(root);
 		}
 

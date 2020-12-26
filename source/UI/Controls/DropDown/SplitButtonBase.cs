@@ -2,11 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-#if SILVERLIGHT
-using RoutedEventArgsSL = System.Windows.RoutedEventArgsSL;
-#else
-using RoutedEventArgsSL = System.Windows.RoutedEventArgs;
-#endif
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -76,7 +71,7 @@ namespace Zaaml.UI.Controls.DropDown
 			return new SplitButtonBaseTemplateContract();
 		}
 
-		private void DropDownButtonOnClick(object sender, RoutedEventArgsSL e)
+		private void DropDownButtonOnClick(object sender, RoutedEventArgs e)
 		{
 			if (IsDropDownOpen == false)
 				OpenDropDown();
@@ -118,6 +113,8 @@ namespace Zaaml.UI.Controls.DropDown
 			DropDownButton.Click += DropDownButtonOnClick;
 			DropDownButton.MouseEnter += DropDownButtonOnMouseEnter;
 			DropDownButton.MouseLeave += DropDownButtonOnMouseLeave;
+			
+			UpdateDropDownButton();
 		}
 
 		protected override void OnTemplateContractDetaching()
@@ -129,6 +126,18 @@ namespace Zaaml.UI.Controls.DropDown
 			base.OnTemplateContractDetaching();
 
 			UpdatePopupPlacement();
+		}
+
+		private protected override void OnIsDropDownOpenChangedInternal()
+		{
+			base.OnIsDropDownOpenChangedInternal();
+
+			UpdateDropDownButton();
+		}
+
+		private void UpdateDropDownButton()
+		{
+			DropDownButton.IsChecked = IsDropDownOpen;
 		}
 
 		private void UpdatePopupPlacement()

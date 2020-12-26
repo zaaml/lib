@@ -17,8 +17,22 @@ namespace Zaaml.UI.Controls.ListView
 			("ListViewItem", g => g.OnListViewItemPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ListViewItemProperty = ListViewItemPropertyKey.DependencyProperty;
-		
+
 		private static readonly PropertyPath ListViewItemIsSelectedPropertyPath = new PropertyPath(ListViewItem.IsSelectedProperty);
+		private static readonly PropertyPath ListViewItemIsCheckedPropertyPath = new PropertyPath(ToggleSelectionListViewItem.IsCheckedInternalProperty);
+
+		public ListViewCheckGlyph()
+		{
+		}
+
+		public ListViewCheckGlyph(ListViewItem listViewItem)
+		{
+			ListViewItem = listViewItem;
+
+			IsExplicit = true;
+		}
+
+		private bool IsExplicit { get; }
 
 		public ListViewItem ListViewItem
 		{
@@ -30,26 +44,33 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			if (ReferenceEquals(oldListViewItem, newListViewItem))
 				return;
-			
+
 			if (oldListViewItem != null)
 				ClearValue(IsCheckedProperty);
 
-			if (newListViewItem != null) 
-				SetBinding(IsCheckedProperty, new Binding {Path = ListViewItemIsSelectedPropertyPath, Source = newListViewItem, Mode = BindingMode.TwoWay});
+			if (newListViewItem != null)
+			{
+				var propertyPath = newListViewItem is ToggleSelectionListViewItem ? ListViewItemIsCheckedPropertyPath : ListViewItemIsSelectedPropertyPath;
+
+				SetBinding(IsCheckedProperty, new Binding {Path = propertyPath, Source = newListViewItem, Mode = BindingMode.TwoWay});
+			}
 		}
 
 		protected override void OnLoaded()
 		{
 			base.OnLoaded();
 
-			var parent = TemplatedParent;
+			if (IsExplicit)
+				return;
 
-			if (parent is ContentPresenter contentPresenter)
+			var templatedParent = TemplatedParent;
+
+			if (templatedParent is ContentPresenter contentPresenter)
 			{
 				if (contentPresenter.TemplatedParent is ListViewItem listViewItem)
 					ListViewItem = listViewItem;
 			}
-			else if (parent is ListViewItem listViewItem)
+			else if (templatedParent is ListViewItem listViewItem)
 				ListViewItem = listViewItem;
 			else
 				ListViewItem = null;
@@ -57,7 +78,8 @@ namespace Zaaml.UI.Controls.ListView
 
 		protected override void OnUnloaded()
 		{
-			ListViewItem = null;
+			if (IsExplicit == false)
+				ListViewItem = null;
 
 			base.OnUnloaded();
 		}

@@ -9,13 +9,13 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DefaultSelectableIconContentItemGeneratorImpl<TItem>
+	internal class DefaultSelectableIconContentItemGeneratorImplementation<TItem>
 		where TItem : FrameworkElement, ISelectableItem, new()
 	{
 		private string _itemSelectionMember;
 		private string _itemValueMember;
 
-		public DefaultSelectableIconContentItemGeneratorImpl(string itemValueMember, string itemSelectionMember, IDelegatedItemGenerator<TItem> delegatedItemGenerator)
+		public DefaultSelectableIconContentItemGeneratorImplementation(string itemValueMember, string itemSelectionMember, IDelegatedItemGenerator<TItem> delegatedItemGenerator)
 		{
 			_itemValueMember = itemValueMember;
 			_itemSelectionMember = itemSelectionMember;

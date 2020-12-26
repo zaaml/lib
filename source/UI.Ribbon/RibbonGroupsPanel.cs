@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.Ribbon
       _phantomGroup = new RibbonGroup
       {
         Header = "RibbonGroup",
-        Items =
+        ItemCollection =
         {
           new RibbonButton
           {

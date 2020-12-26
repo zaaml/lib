@@ -22,11 +22,11 @@ namespace Zaaml.PresentationCore.Interactivity
 
     #region Properties
 
-    public TriggerActionCollection Actions => _actions ?? (_actions = new TriggerActionCollection(this));
+    public TriggerActionCollection Actions => _actions ??= new TriggerActionCollection(this);
 
     protected IEnumerable<TriggerActionBase> ActualActions => _actions ?? Enumerable.Empty<TriggerActionBase>();
 
-    private DelayAction ActualDelayAction => _delayTrigger ?? (_delayTrigger = new DelayAction(InvokeCore, TimeSpan.Zero));
+    private DelayAction ActualDelayAction => _delayTrigger ??= new DelayAction(InvokeCore, TimeSpan.Zero);
 
     internal sealed override IEnumerable<InteractivityObject> Children => base.Children.Concat(ActualActions);
 
@@ -51,6 +51,7 @@ namespace Zaaml.PresentationCore.Interactivity
       base.CopyMembersOverride(source);
 
       var sourceTrigger = (ActionTriggerBase) source;
+      
       _actions = sourceTrigger._actions?.DeepCloneCollection<TriggerActionCollection, TriggerActionBase>(this);
 
       Delay = sourceTrigger.Delay;
@@ -58,7 +59,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
     protected void Invoke()
     {
-      if (IsLoaded == false) return;
+      if (IsLoaded == false)
+	      return;
 
       if (_delayTrigger == null || _delayTrigger.Delay.Equals(TimeSpan.Zero))
         InvokeCore();

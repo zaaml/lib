@@ -67,7 +67,7 @@ namespace Zaaml.UI.Controls.Ribbon
 			SelectCommand = new RelayCommand(OnSelectCommandExecute, () => true);
 		}
 
-		internal IEnumerable<RibbonGroup> ActualGroupSizeReductionOrder => GroupSizeReductionOrder == null ? Items.Reverse() : GroupSizeReductionOrder.Cast<string>().Select(GetRibbonGroup).SkipNull();
+		internal IEnumerable<RibbonGroup> ActualGroupSizeReductionOrder => GroupSizeReductionOrder == null ? ItemCollection.Reverse() : GroupSizeReductionOrder.Cast<string>().Select(GetRibbonGroup).SkipNull();
 
 		public RibbonGroupsPresenter ActualGroupsPresenter
 		{

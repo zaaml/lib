@@ -21,9 +21,11 @@ namespace Zaaml.PresentationCore.Interactivity
 				case PropertyKind.Expando:
 					SetExpandoProperty(target, GetExpandoProperty(source));
 					break;
+				
 				case PropertyKind.Explicit:
 					SetProperty(target, GetProperty(source));
 					break;
+				
 				case PropertyKind.Implicit:
 					SetProperty(target, GetProperty(source));
 					break;
@@ -34,6 +36,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			var propertyKind = interactivityObject.PropertyKind;
 			var isResolved = IsResolved(interactivityObject);
+			
 			propertyKind &= PropertyKind.Unspecified;
 
 			if (propertyKind == PropertyKind.Unspecified || propertyKind != PropertyKind.Expando)
@@ -82,8 +85,10 @@ namespace Zaaml.PresentationCore.Interactivity
 					return (DependencyProperty) interactivityObject.PropertyStore;
 
 				var resolvedProperty = DependencyPropertyManager.GetExpandoProperty((string) interactivityObject.PropertyStore);
+				
 				interactivityObject.PropertyStore = resolvedProperty;
 				interactivityObject.PropertyKind |= PropertyKind.Resolved;
+				
 				return resolvedProperty;
 			}
 
@@ -134,24 +139,30 @@ namespace Zaaml.PresentationCore.Interactivity
 				case PropertyKind.Explicit:
 					interactivityObject.PropertyKind |= PropertyKind.Resolved;
 					return (DependencyProperty)interactivityObject.PropertyStore;
+				
 				case PropertyKind.Implicit:
 					{
 						var subject = interactivityObject.ActualSubject;
+						
 						if (subject == null)
 							return null;
 
 						var resolvedProperty = DependencyPropertyManager.GetDependencyProperty((string)interactivityObject.PropertyStore, subject.GetType());
+						
 						if (resolvedProperty != null)
 							interactivityObject.PropertyStore = resolvedProperty;
 
 						interactivityObject.PropertyKind |= PropertyKind.Resolved;
+						
 						return resolvedProperty;
 					}
 				case PropertyKind.Expando:
 					{
 						var resolvedProperty = DependencyPropertyManager.GetExpandoProperty((string)interactivityObject.PropertyStore);
+						
 						interactivityObject.PropertyStore = resolvedProperty;
 						interactivityObject.PropertyKind |= PropertyKind.Resolved;
+						
 						return resolvedProperty;
 					}
 			}
@@ -164,7 +175,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (ReferenceEquals(interactivityObject.PropertyStore, property))
 				return;
 
-			UnresolveProperty(interactivityObject);
+			UnResolveProperty(interactivityObject);
 
 			interactivityObject.PropertyStore = property;
 			interactivityObject.PropertyKind = PropertyKind.Expando;
@@ -175,24 +186,22 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (ReferenceEquals(interactivityObject.PropertyStore, property))
 				return;
 
-			UnresolveProperty(interactivityObject);
+			UnResolveProperty(interactivityObject);
 
-			var dependencyProperty = property as DependencyProperty;
-			if (dependencyProperty != null)
+			if (property is DependencyProperty dependencyProperty)
 			{
 				interactivityObject.PropertyStore = dependencyProperty;
 				interactivityObject.PropertyKind = PropertyKind.Explicit;
 			}
 
-			var stringProperty = property as string;
-			if (stringProperty != null)
+			if (property is string stringProperty)
 			{
 				interactivityObject.PropertyStore = stringProperty;
 				interactivityObject.PropertyKind = PropertyKind.Implicit;
 			}
 		}
 
-		public static void UnresolveProperty(IPropertySubject interactivityObject)
+		public static void UnResolveProperty(IPropertySubject interactivityObject)
 		{
 			if (IsResolved(interactivityObject) == false || IsSpecified(interactivityObject) == false)
 				return;

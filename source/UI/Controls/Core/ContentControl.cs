@@ -20,7 +20,7 @@ using TriggerCollection = Zaaml.PresentationCore.Interactivity.TriggerCollection
 
 namespace Zaaml.UI.Controls.Core
 {
-	public partial class ContentControl : NativeContentControl, IContentControl, ILogicalOwner, ILogicalMentorOwner
+	public partial class ContentControl : NativeContentControl, IContentControl, ILogicalOwner, ILogicalMentorOwner, IDependencyPropertyChangedInvocator
 	{
 		private static readonly DependencyPropertyKey ActualHasContentPropertyKey = DPM.RegisterReadOnly<bool, ContentControl>
 			("ActualHasContent", false);
@@ -47,6 +47,8 @@ namespace Zaaml.UI.Controls.Core
 
 		private ContentPresenter _contentPresenter;
 		private LogicalChildMentor<ContentControl> _logicalChildMentor;
+
+		internal event DependencyPropertyChangedEventHandler DependencyPropertyChangedInternal;
 
 		static ContentControl()
 		{
@@ -189,6 +191,17 @@ namespace Zaaml.UI.Controls.Core
 			Update();
 		}
 
+		private protected virtual void OnDependencyPropertyChangedInternal(DependencyPropertyChangedEventArgs args)
+		{
+		}
+
+		private void OnDependencyPropertyChangedPrivate(DependencyPropertyChangedEventArgs args)
+		{
+			OnDependencyPropertyChangedInternal(args);
+
+			DependencyPropertyChangedInternal?.Invoke(this, args);
+		}
+
 		private void OnEmptyVisibilityChanged()
 		{
 			UpdateVisibility();
@@ -247,17 +260,10 @@ namespace Zaaml.UI.Controls.Core
 
 		DependencyProperty IContentControl.ContentTemplateSelectorProperty => ContentTemplateSelectorProperty;
 
-		void ILogicalOwner.AddLogicalChild(object child)
+		void IDependencyPropertyChangedInvocator.InvokeDependencyPropertyChangedEvent(DependencyPropertyChangedEventArgs dependencyPropertyChangedEventArgs)
 		{
-			LogicalChildMentor.AddLogicalChild(child);
+			OnDependencyPropertyChangedPrivate(dependencyPropertyChangedEventArgs);
 		}
-
-		void ILogicalOwner.RemoveLogicalChild(object child)
-		{
-			LogicalChildMentor.RemoveLogicalChild(child);
-		}
-
-		IEnumerator ILogicalOwner.BaseLogicalChildren => base.LogicalChildren;
 
 		void ILogicalMentorOwner.RemoveLogicalChild(object child)
 		{
@@ -270,5 +276,17 @@ namespace Zaaml.UI.Controls.Core
 		{
 			AddLogicalChild(child);
 		}
+
+		void ILogicalOwner.AddLogicalChild(object child)
+		{
+			LogicalChildMentor.AddLogicalChild(child);
+		}
+
+		void ILogicalOwner.RemoveLogicalChild(object child)
+		{
+			LogicalChildMentor.RemoveLogicalChild(child);
+		}
+
+		IEnumerator ILogicalOwner.BaseLogicalChildren => base.LogicalChildren;
 	}
 }

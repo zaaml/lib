@@ -21,5 +21,19 @@ namespace Zaaml.UI.Controls.ListView
 		}
 
 		internal override VirtualItemCollection<ListViewItem> VirtualCollection => Control.VirtualItemCollection;
+
+		private protected override void OnItemAdded(ListViewItem item)
+		{
+			base.OnItemAdded(item);
+
+			Control.OnItemAttachedCollection(item);
+		}
+
+		private protected override void OnItemRemoved(ListViewItem item)
+		{
+			base.OnItemRemoved(item);
+
+			Control.OnItemDetachedCollection(item);
+		}
 	}
 }

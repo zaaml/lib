@@ -7,9 +7,9 @@ using System.Windows.Input;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	public class TreeViewItemEventEventArgs : EventArgs
+	public class TreeViewItemEventArgs : EventArgs
 	{
-		public TreeViewItemEventEventArgs(TreeViewItem item)
+		public TreeViewItemEventArgs(TreeViewItem item)
 		{
 			Item = item;
 		}
@@ -17,7 +17,7 @@ namespace Zaaml.UI.Controls.TreeView
 		public TreeViewItem Item { get; }
 	}
 
-	public class TreeViewItemMouseButtonEventArgs : TreeViewItemEventEventArgs
+	public class TreeViewItemMouseButtonEventArgs : TreeViewItemEventArgs
 	{
 		public TreeViewItemMouseButtonEventArgs(TreeViewItem item, MouseButtonEventArgs mouseEventArgs) : base(item)
 		{
@@ -25,5 +25,12 @@ namespace Zaaml.UI.Controls.TreeView
 		}
 
 		public MouseButtonEventArgs MouseEventArgs { get; }
+	}
+
+	public class TreeViewItemClickEventArgs : TreeViewItemEventArgs
+	{
+		public TreeViewItemClickEventArgs(TreeViewItem item) : base(item)
+		{
+		}
 	}
 }

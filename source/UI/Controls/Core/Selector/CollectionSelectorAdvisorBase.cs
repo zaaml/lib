@@ -59,14 +59,24 @@ namespace Zaaml.UI.Controls.Core
 
 		public abstract object GetSource(T item);
 
-		public virtual object GetValue(int index)
-		{
-			return null;
-		}
-
 		public abstract void Unlock(T item);
 		
-		public virtual bool CanSelect(T item)
+		public virtual bool CanSelectItem(T item)
+		{
+			return true;
+		}		
+		
+		public virtual bool CanSelectSource(object source)
+		{
+			return true;
+		}		
+		
+		public virtual bool CanSelectValue(object value)
+		{
+			return true;
+		}		
+		
+		public virtual bool CanSelectIndex(int index)
 		{
 			return true;
 		}
@@ -75,9 +85,9 @@ namespace Zaaml.UI.Controls.Core
 		
 		public abstract void SetItemSelected(T item, bool value);
 		
-		public abstract bool GetSourceSelected(T item);
+		public abstract bool GetSourceSelected(object source);
 		
-		public abstract void SetSourceSelected(T item, bool value);
+		public abstract void SetSourceSelected(object source, bool value);
 
 		public abstract void Lock(T item);
 
@@ -110,11 +120,11 @@ namespace Zaaml.UI.Controls.Core
 			return false;
 		}
 
-		public abstract bool TryGetSelection(int index, bool ensure, out Selection<T> selection);
+		public abstract bool TryCreateSelection(int index, bool ensure, out Selection<T> selection);
 		
-		public abstract bool TryGetSelection(object source, bool ensure, out Selection<T> selection);
+		public abstract bool TryCreateSelection(object source, bool ensure, out Selection<T> selection);
 
-		public abstract bool TryGetItemBySource(object source, bool ensure, out T item);
+		public abstract bool TryGetItem(object source, bool ensure, out T item);
 
 		public abstract object GetSource(int index);
 

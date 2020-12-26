@@ -8,10 +8,6 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem>
 	{
-		#region Interface Implementations
-
-		#region ICollection<TItem>
-
 		void ICollection<TItem>.Add(TItem item)
 		{
 			Add(item);
@@ -40,9 +36,5 @@ namespace Zaaml.UI.Controls.Core
 		int ICollection<TItem>.Count => Count;
 
 		bool ICollection<TItem>.IsReadOnly => IsReadOnly;
-
-		#endregion
-
-		#endregion
 	}
 }

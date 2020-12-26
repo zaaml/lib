@@ -13,7 +13,9 @@ namespace Zaaml.UI.Controls.Core
 {
 	internal partial class VirtualItemCollection<T>
 	{
-		public IEnumerable<T> ActualItems => GetGeneratedItems();
+		public int ActualCount => Mode == OperatingMode.Real ? RealActualCount : VirtualActualCount;
+		
+		public IEnumerable<T> ActualItems => Mode == OperatingMode.Real ? RealGetGeneratedItems() : VirtualGetGeneratedItems();
 
 		public ItemGenerator<T> Generator
 		{
@@ -57,16 +59,7 @@ namespace Zaaml.UI.Controls.Core
 		}
 
 		private OperatingMode Mode { get; set; } = OperatingMode.Virtual;
-		
-		protected void Init(IEnumerable source, OperatingMode operatingMode)
-		{
-			SourceCollection = null;
 
-			Mode = operatingMode;
-
-			SourceCollection = source;
-		}
-		
 		public IEnumerable SourceCollection
 		{
 			get => _sourceCollection;
@@ -75,8 +68,6 @@ namespace Zaaml.UI.Controls.Core
 				if (ReferenceEquals(_sourceCollection, value))
 					return;
 
-				var oldSource = _sourceCollection;
-				
 				{
 					if (_sourceCollection is INotifyCollectionChanged notifyCollectionChanged)
 						notifyCollectionChanged.CollectionChanged -= ObservableSourceOnCollectionChanged;
@@ -109,111 +100,54 @@ namespace Zaaml.UI.Controls.Core
 
 		public T EnsureItem(int index)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealGetItemFromIndex(index);
-			
-			return GetItemFromIndex(index) ?? Realize(index);
+			return Mode == OperatingMode.Real ? RealEnsureItem(index) : VirtualEnsureItem(index);
 		}
 
 		protected virtual T GetCurrent(int index)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealGetCurrent(index);
-			
-			if (index >= 0 && index < Count && Count > 0)
-			{
-				var nextItems = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
-
-				return nextItems[index].Item;
-			}
-
-			return null;
+			return Mode == OperatingMode.Real ? RealGetCurrent(index) : VirtualGetCurrent(index);
 		}
 
 		public virtual int GetIndexFromItem(T item)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealGetIndexFromItem(item);
-			
-			return FindGeneratedItem(item).Index;
+			return Mode == OperatingMode.Real ? RealGetIndexFromItem(item) : VirtualGetIndexFromItem(item);
 		}
 
 		public int GetIndexFromSource(object source)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealGetIndexFromSource(source);
-			
-			return IndexedSource.IndexOf(source);
+			return Mode == OperatingMode.Real ? RealGetIndexFromSource(source) : VirtualGetIndexFromSource(source);
 		}
 
 		public T GetItemFromIndex(int index)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealGetItemFromIndex(index);
-
-			var items = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
-			
-			if (index < 0 || index >= items.Count)
-				return null;
-
-			var generatedItem = items[index];
-
-			if (generatedItem != null)
-				return generatedItem.Item;
-
-			var source = GetSourceFromIndex(index);
-			
-			if (source != null)
-			{
-				if (LockedSourceDictionary.TryGetValue(source, out var lockedItem))
-				{
-					return lockedItem.Item;
-				}
-			}
-
-			return null;
+			return Mode == OperatingMode.Real ? RealGetItemFromIndex(index) : VirtualGetItemFromIndex(index);
 		}
 
 		public object GetSourceFromIndex(int index)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealGetSourceFromIndex(index);
-			
-			return IndexedSource[index];
+			return Mode == OperatingMode.Real ? RealGetSourceFromIndex(index) : VirtualGetSourceFromIndex(index);
 		}
 
 		public object GetSourceFromItem(T item)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealGetSourceFromItem(item);
-			
-			return FindGeneratedItem(item).Item?.Source;
+			return Mode == OperatingMode.Real ? RealGetSourceFromItem(item) : FindGeneratedItem(item).Item?.Source;
+		}
+
+		protected void Init(IEnumerable source, OperatingMode operatingMode)
+		{
+			SourceCollection = null;
+
+			Mode = operatingMode;
+
+			SourceCollection = source;
 		}
 
 		public void LockItem(T item)
 		{
 			if (Mode == OperatingMode.Real)
-			{
 				RealLockItem(item);
-				
-				return;
-			}
-			
-			if (LockedItemDictionary.TryGetValue(item, out var lockedItem) == false)
-			{
-				var generatedItem = FindGeneratedItemEverywhere(item).Item;
-
-				if (generatedItem == null)
-					return;
-
-				generatedItem.Lock();
-				LockedItemDictionary.Add(item, generatedItem);
-				AddLockedSource(generatedItem);
-			}
 			else
-			{
-				lockedItem.Lock();
-			}
+				VirtualLockItem(item);
 		}
 
 		protected virtual void ObservableSourceOnCollectionChanged(NotifyCollectionChangedEventArgs args)
@@ -255,25 +189,17 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
+		private UIElement Realize(int index)
+		{
+			return Mode == OperatingMode.Real ? RealRealize(index) : VirtualRealize(index);
+		}
+
 		public void UnlockItem(T item)
 		{
 			if (Mode == OperatingMode.Real)
-			{
 				RealUnlockItem(item);
-
-				return;
-			}
-			
-			if (LockedItemDictionary.TryGetValue(item, out var generatedItem) == false)
-				LogService.LogWarning($"Item {item} is not locked.");
 			else
-			{
-				if (generatedItem.Unlock() == false)
-					return;
-
-				LockedItemDictionary.Remove(item);
-				RemoveLockedSource(generatedItem);
-			}
+				VirtualUnlockItem(item);
 		}
 
 		int IVirtualItemCollection.GetIndexFromItem(FrameworkElement frameworkElement)
@@ -283,17 +209,11 @@ namespace Zaaml.UI.Controls.Core
 
 		UIElement IVirtualItemCollection.Realize(int index)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealRealize(index);
-			
 			return Realize(index);
 		}
 
 		UIElement IVirtualItemCollection.GetCurrent(int index)
 		{
-			if (Mode == OperatingMode.Real)
-				return RealGetCurrent(index);
-			
 			return GetCurrent(index);
 		}
 
@@ -303,26 +223,12 @@ namespace Zaaml.UI.Controls.Core
 				throw new InvalidOperationException();
 
 			if (Mode == OperatingMode.Real)
-			{
 				RealLeaveGeneration();
-				
-				return;
-			}
-
-			var items = PrevGeneratedItems;
-
-			PrevGeneratedItems = NextGeneratedItems;
-			NextGeneratedItems = items;
-
-			items.Clear();
-
-			EnsureCount();
-
-			Version++;
-			IsGenerating = false;
+			else
+				VirtualLeaveGeneration();
 		}
 
-		public int Count => IndexedSource.Count;
+		int IVirtualItemCollection.Count => ActualCount;
 
 		IVirtualItemsHost IVirtualItemCollection.ItemHost
 		{
@@ -336,31 +242,9 @@ namespace Zaaml.UI.Controls.Core
 				throw new InvalidOperationException();
 
 			if (Mode == OperatingMode.Real)
-			{
 				RealEnterGeneration();
-				
-				return;
-			}
-			
-			IsGenerating = true;
-
-			foreach (var tempGeneratedItemPair in EnumerateRealizedItems(TempGeneratedItems))
-			{
-				var tempGeneratedItem = tempGeneratedItemPair.Item;
-
-				tempGeneratedItem.IsInTemp = false;
-
-				if (IsLocked(tempGeneratedItem) == false)
-					ReleaseItem(tempGeneratedItem, true);
-			}
-
-			SuspendReleaseGeneratedItems = true;
-
-			TempGeneratedItems.Clear();
-
-			SuspendReleaseGeneratedItems = false;
-
-			EnsureCount();
+			else
+				VirtualEnterGeneration();
 		}
 	}
 }

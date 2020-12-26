@@ -28,7 +28,7 @@ namespace Zaaml.PresentationCore.Animation.Animators
       var start = Start ?? NullBrush;
       var end = End ?? NullBrush;
 
-      _brush.Color = ColorInterpolator.Instance.Evaluate(start.Color, end.Color, Time, EasingFunction);
+      _brush.Color = ColorInterpolator.Instance.Evaluate(start.Color, end.Color, RelativeTime, EasingFunction);
       return _brush;
     }
 

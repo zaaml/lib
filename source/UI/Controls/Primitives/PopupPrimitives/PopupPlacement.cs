@@ -29,6 +29,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
     #region Properties
 
+    internal virtual PopupPlacement ActualPlacement => this;
+
     protected bool IsPopupOpen
     {
       get => _isPopupOpen;

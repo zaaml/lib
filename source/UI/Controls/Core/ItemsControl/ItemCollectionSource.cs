@@ -21,7 +21,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 		}
 
-		public override IEnumerable<TItem> ActualItems => GeneratedItems.Select(g => g.Item);
+		public override IEnumerable<TItem> Items => GeneratedItems.Select(g => g.Item);
 
 		public override int Count => GeneratedItems.Count;
 

@@ -56,7 +56,7 @@ namespace Zaaml.UI.Controls.Menu
 		#region Fields
 
 		private byte _packedValue;
-		private MemberValueEvaluator _selectedValueEvaluator;
+		private MemberEvaluator _selectedValueEvaluator;
 
 		#endregion
 
@@ -199,7 +199,7 @@ namespace Zaaml.UI.Controls.Menu
 		{
 			try
 			{
-				_selectedValueEvaluator = new MemberValueEvaluator(newValue);
+				_selectedValueEvaluator = new MemberEvaluator(newValue);
 			}
 			catch (Exception ex)
 			{
@@ -246,7 +246,7 @@ namespace Zaaml.UI.Controls.Menu
 			switch (SelectedValueSource)
 			{
 				case SelectedValueSource.Auto:
-					return GetItemValue(Items.SourceInternal == null ? item : source);
+					return GetItemValue(Items.SourceCollectionInternal == null ? item : source);
 				case SelectedValueSource.Item:
 					return GetItemValue(item);
 				case SelectedValueSource.Source:

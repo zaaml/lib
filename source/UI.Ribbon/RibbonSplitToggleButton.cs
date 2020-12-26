@@ -53,12 +53,15 @@ namespace Zaaml.UI.Controls.Ribbon
       {
         case true:
           OnChecked();
+
           break;
         case false:
           OnUnchecked();
+
           break;
         default:
           OnIndeterminate();
+
           break;
       }
 

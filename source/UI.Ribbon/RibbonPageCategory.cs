@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
@@ -18,7 +17,7 @@ using Zaaml.UI.Panels;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	[TemplateContractType(typeof(RibbonPageCategoryTemplateContract))]
 	public class RibbonPageCategory : ItemsControlBase<RibbonPageCategory, RibbonPage, RibbonPageCollection, RibbonPagesPresenter, RibbonPagesPanel>, ISelector<RibbonPage>
 	{
@@ -153,8 +152,8 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private void OnRibbonChanged(RibbonControl oldRibbon, RibbonControl newRibbon)
 		{
-			oldRibbon?.Pages.RemoveRange(Items);
-			newRibbon?.Pages.AddRange(Items);
+			oldRibbon?.Pages.RemoveRange(ItemCollection);
+			newRibbon?.Pages.AddRange(ItemCollection);
 		}
 
 		internal void UpdatePagesSize()
@@ -164,7 +163,7 @@ namespace Zaaml.UI.Controls.Ribbon
 			var orientedSize = new OrientedSize(Orientation.Horizontal);
 			var first = true;
 
-			foreach (var item in Items.ActualItemsInternal)
+			foreach (var item in ItemCollection.ActualItemsInternal)
 			{
 				var desiredOriented = item.GetDesiredOrientedSize(Orientation.Horizontal);
 

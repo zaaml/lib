@@ -11,26 +11,40 @@ namespace Zaaml.UI.Controls.Core
 	{
 		internal void AdvisorOnItemAttached(int index, TItem item)
 		{
-			OnItemAttached(index, item);
+			using (SelectionHandlingScope)
+			{
+				OnItemAttachedSafe(index, item);
+			}
 		}
 
 		internal void AdvisorOnItemCollectionChanged(NotifyCollectionChangedEventArgs e)
 		{
-			OnItemCollectionChanged(e);
+			using (SelectionHandlingScope)
+			{
+				OnItemCollectionChangedSafe(e);
+			}
 		}
 
 		internal void AdvisorOnItemCollectionSourceChanged(NotifyCollectionChangedEventArgs e)
 		{
-			OnItemCollectionSourceChanged(e);
+			using (SelectionHandlingScope)
+			{
+				OnItemCollectionSourceChangedSafe(e);
+			}
 		}
 
 		internal void AdvisorOnItemDetached(int index, TItem item)
 		{
-			OnItemDetached(index, item);
+			using (SelectionHandlingScope)
+			{
+				OnItemDetachedSafe(index, item);
+			}
 		}
 
-		private void OnItemCollectionSourceChanged(NotifyCollectionChangedEventArgs e)
+		private void OnItemCollectionSourceChangedSafe(NotifyCollectionChangedEventArgs e)
 		{
+			VerifySafe();
+			
 			if (e.Action == NotifyCollectionChangedAction.Move)
 			{
 			}
@@ -41,7 +55,7 @@ namespace Zaaml.UI.Controls.Core
 
 				if (CurrentSelectedIndex != -1)
 				{
-					var source = GetSource(ResumeSelectedIndex);
+					var source = GetSource(CurrentSelectedIndex);
 
 					Sync(source != null ? CurrentSelection.WithSource(source) : CurrentSelection.WithIndex(-1));
 				}
@@ -71,8 +85,10 @@ namespace Zaaml.UI.Controls.Core
 			EnsureSelection();
 		}
 
-		private void OnItemDetached([UsedImplicitly] int index, TItem item)
+		private void OnItemDetachedSafe([UsedImplicitly] int index, TItem item)
 		{
+			VerifySafe();
+			
 			if (HasSource)
 			{
 				if (IsLocked(item) == false)
@@ -96,8 +112,10 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private void OnItemCollectionChanged(NotifyCollectionChangedEventArgs e)
+		private void OnItemCollectionChangedSafe(NotifyCollectionChangedEventArgs e)
 		{
+			VerifySafe();
+			
 			if (e.Action == NotifyCollectionChangedAction.Reset)
 			{
 			}
@@ -129,8 +147,10 @@ namespace Zaaml.UI.Controls.Core
 			EnsureSelection();
 		}
 
-		private void OnItemAttached(int index, TItem item)
+		private void OnItemAttachedSafe(int index, TItem item)
 		{
+			VerifySafe();
+			
 			var itemSelected = GetIsItemSelected(item);
 
 			if (HasSource)
@@ -156,7 +176,12 @@ namespace Zaaml.UI.Controls.Core
 					var itemSourceInSelection = IsSourceInSelection(source);
 
 					if (itemSourceInSelection && itemSelected == false)
-						SetItemSelected(item, true);
+					{
+						if (CanSelectItem(item))
+							SetItemSelected(item, true);
+						else
+							UnselectItemSafe(item);
+					}
 
 					if (itemSourceInSelection == false && itemSelected)
 						SetItemSelected(item, false);
@@ -186,7 +211,12 @@ namespace Zaaml.UI.Controls.Core
 				var itemInSelection = IsItemInSelection(item);
 
 				if (itemInSelection && itemSelected == false)
-					SetItemSelected(item, true);
+				{
+					if (CanSelectItem(item))
+						SetItemSelected(item, true);
+					else
+						UnselectItemSafe(item);
+				}
 
 				if (itemSelected && itemInSelection == false)
 					SelectItem(item);
@@ -195,7 +225,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private void Sync(Selection<TItem> selection)
 		{
-			if (IsSelectionChangeSuspended)
+			if (IsSelectionSuspended)
 				SelectionResume = selection;
 			else
 				CommitSelection(selection);
@@ -203,8 +233,11 @@ namespace Zaaml.UI.Controls.Core
 
 		public void SyncValue()
 		{
-			if (SelectedItem != null || SelectedSource != null)
-				SelectValue(GetValue(SelectedItem, SelectedSource));
+			using (SelectionHandlingScope)
+			{
+				if (SelectedItem != null || SelectedSource != null)
+					SelectValue(GetValue(SelectedItem, SelectedSource));
+			}
 		}
 
 		private void SyncIndex(int itemIndex)

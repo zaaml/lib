@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.Core;
@@ -244,8 +245,6 @@ namespace Zaaml.UI.Controls.Primitives
 			set => SetValue(IconProperty, value);
 		}
 
-		bool IManagedButton.ShouldFocusOnClick => Focusable;
-
 		bool IManagedButton.IsMouseOver => IsMouseOver;
 
 		ClickMode IManagedButton.ClickMode => ClickMode;
@@ -258,9 +257,25 @@ namespace Zaaml.UI.Controls.Primitives
 
 		bool IManagedButton.CanClick => CanClick;
 
+		bool IManagedButton.InvokeCommandBeforeClick => false;
+		
 		void IManagedButton.OnClick()
 		{
 			OnClick();
+		}
+
+		void IManagedButton.OnPreClick()
+		{
+		}
+
+		void IManagedButton.OnPostClick()
+		{
+		}
+		
+		void IManagedButton.FocusControl()
+		{
+			if (Focusable)
+				FocusHelper.SetKeyboardFocusedElement(this);
 		}
 	}
 

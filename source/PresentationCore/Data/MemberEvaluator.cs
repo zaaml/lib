@@ -9,21 +9,22 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Data
 {
-	internal struct MemberValueEvaluator
+	internal readonly struct MemberEvaluator
 	{
 		private readonly BindingValueSite _valueSite;
 
-		public MemberValueEvaluator(string valuePath)
+		public MemberEvaluator(string member)
 		{
-			ValuePath = valuePath;
+			Member = member;
 
-			if (ValuePath == null)
+			if (Member == null)
 			{
 				_valueSite = null;
+
 				return;
 			}
 
-			_valueSite = new BindingValueSite(ValuePath);
+			_valueSite = new BindingValueSite(Member);
 		}
 
 		public object GetValue(object source)
@@ -31,30 +32,20 @@ namespace Zaaml.PresentationCore.Data
 			return _valueSite?.Evaluate(source);
 		}
 
-		public string ValuePath { get; }
+		public string Member { get; }
 
 		private class BindingValueSite : DependencyObject
 		{
-			#region Static Fields and Constants
-
 			private static readonly DependencyProperty ValueProperty = DPM.Register<object, BindingValueSite>
 				("Value");
 
 			public static readonly DependencyProperty SourceProperty = DPM.Register<object, BindingValueSite>
 				("Source");
 
-			#endregion
-
-			#region Ctors
-
 			public BindingValueSite(string valuePath)
 			{
-				this.SetBinding(ValueProperty, new Binding($"Source.{valuePath}") { Source = this });
+				this.SetBinding(ValueProperty, new Binding($"Source.{valuePath}") {Source = this});
 			}
-
-			#endregion
-
-			#region Properties
 
 			private object Source
 			{
@@ -62,10 +53,6 @@ namespace Zaaml.PresentationCore.Data
 			}
 
 			private object Value => GetValue(ValueProperty);
-
-			#endregion
-
-			#region  Methods
 
 			public object Evaluate(object source)
 			{
@@ -77,8 +64,6 @@ namespace Zaaml.PresentationCore.Data
 
 				return value;
 			}
-
-			#endregion
 		}
 	}
 }

@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core;
 using Zaaml.Core.Utils;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -18,210 +19,256 @@ using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  [TemplateContractType(typeof(RibbonDropDownButtonBaseTemplateContract))]
-  public abstract class RibbonDropDownButtonBase : RibbonButtonBase, IDropDownControlHost
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(RibbonDropDownButtonBaseTemplateContract))]
+	public abstract class RibbonDropDownButtonBase : RibbonButtonBase, IDropDownControlHost
+	{
+		#region Ctors
 
-    public static readonly DependencyProperty PopupControlProperty = DPM.Register<PopupControlBase, RibbonDropDownButtonBase>
-      ("PopupControl", d => d.OnDropDownControlChanged);
+		protected RibbonDropDownButtonBase()
+		{
+			_dropDownPopupWrapper = new DropDownPopupWrapper(this, IsDropDownOpenProperty, PlacementProperty);
 
-    public static readonly DependencyProperty DropDownGlyphProperty = DPM.Register<IconBase, RibbonDropDownButtonBase>
-      ("DropDownGlyph");
+			LayoutUpdated += OnLayoutUpdated;
+		}
 
-    public static readonly DependencyProperty IsDropDownOpenProperty = DPM.Register<bool, RibbonDropDownButtonBase>
-      ("IsDropDownOpen", b => b.OnIsDropDownOpenChanged);
+		#endregion
 
-    public static readonly DependencyProperty PlacementProperty = DependencyPropertyManager.Register<Dock, RibbonDropDownButtonBase>
-      ("Placement", Dock.Bottom);
+		#region Static Fields and Constants
 
-    #endregion
+		public static readonly DependencyProperty PopupControlProperty =
+			DPM.Register<PopupControlBase, RibbonDropDownButtonBase>
+				("PopupControl", d => d.OnDropDownControlChanged);
 
-    #region Fields
+		public static readonly DependencyProperty DropDownGlyphProperty = DPM.Register<IconBase, RibbonDropDownButtonBase>
+			("DropDownGlyph");
 
-    [UsedImplicitly] private readonly DropDownPopupWrapper _dropDownPopupWrapper;
-    private bool _isDropDownOpenInt;
-    private object _logicalChild;
+		public static readonly DependencyProperty IsDropDownOpenProperty = DPM.Register<bool, RibbonDropDownButtonBase>
+			("IsDropDownOpen", b => b.OnIsDropDownOpenPropertyChangedPrivate);
 
-    public event EventHandler DropDownClosed;
-    public event EventHandler DropDownOpened;
+		public static readonly DependencyProperty PlacementProperty =
+			DependencyPropertyManager.Register<Dock, RibbonDropDownButtonBase>
+				("Placement", Dock.Bottom);
 
-    #endregion
+		#endregion
 
-    #region Ctors
+		#region Fields
 
-    protected RibbonDropDownButtonBase()
-    {
-      _dropDownPopupWrapper = new DropDownPopupWrapper(this, IsDropDownOpenProperty, PlacementProperty);
+		[UsedImplicitly] private readonly DropDownPopupWrapper _dropDownPopupWrapper;
+		private bool _isDropDownOpenInt;
+		private object _logicalChild;
 
-      LayoutUpdated += OnLayoutUpdated;
-    }
+		public event EventHandler DropDownClosed;
+		public event EventHandler DropDownOpened;
 
-    #endregion
+		#endregion
 
-    #region Properties
+		#region Properties
 
-    internal virtual bool CanFocusOnClose => true;
+		internal virtual bool CanFocusOnClose => true;
 
-    public IconBase DropDownGlyph
-    {
-      get => (IconBase) GetValue(DropDownGlyphProperty);
-      set => SetValue(DropDownGlyphProperty, value);
-    }
+		public IconBase DropDownGlyph
+		{
+			get => (IconBase) GetValue(DropDownGlyphProperty);
+			set => SetValue(DropDownGlyphProperty, value);
+		}
 
-    public bool IsDropDownOpen
-    {
-      get => (bool) GetValue(IsDropDownOpenProperty);
-      set => SetValue(IsDropDownOpenProperty, value);
-    }
+		public bool IsDropDownOpen
+		{
+			get => (bool) GetValue(IsDropDownOpenProperty);
+			set => SetValue(IsDropDownOpenProperty, value);
+		}
 
-    private bool IsDropDownOpenInt
-    {
-      get => _isDropDownOpenInt;
-      set
-      {
-        if (_isDropDownOpenInt == value)
-          return;
+		private bool IsDropDownOpenInt
+		{
+			get => _isDropDownOpenInt;
+			set
+			{
+				if (_isDropDownOpenInt == value)
+					return;
 
-        _isDropDownOpenInt = value;
-        UpdateVisualState(true);
-      }
-    }
+				_isDropDownOpenInt = value;
+				UpdateVisualState(true);
+			}
+		}
 
-    protected override IEnumerator LogicalChildren => _logicalChild != null ? EnumeratorUtils.Concat(_logicalChild, base.LogicalChildren) : base.LogicalChildren;
+		protected override IEnumerator LogicalChildren => _logicalChild != null
+			? EnumeratorUtils.Concat(_logicalChild, base.LogicalChildren)
+			: base.LogicalChildren;
 
-    public Dock Placement
-    {
-      get => (Dock) GetValue(PlacementProperty);
-      set => SetValue(PlacementProperty, value);
-    }
+		public Dock Placement
+		{
+			get => (Dock) GetValue(PlacementProperty);
+			set => SetValue(PlacementProperty, value);
+		}
 
-    protected FrameworkElement PlacementTarget
-    {
-      get => _dropDownPopupWrapper.PlacementTarget;
-      set => _dropDownPopupWrapper.PlacementTarget = value;
-    }
+		protected FrameworkElement PlacementTarget
+		{
+			get => _dropDownPopupWrapper.PlacementTarget;
+			set => _dropDownPopupWrapper.PlacementTarget = value;
+		}
 
-    public PopupControlBase PopupControl
-    {
-      get => (PopupControlBase) GetValue(PopupControlProperty);
-      set => SetValue(PopupControlProperty, value);
-    }
+		public PopupControlBase PopupControl
+		{
+			get => (PopupControlBase) GetValue(PopupControlProperty);
+			set => SetValue(PopupControlProperty, value);
+		}
 
-    private PopupControlHost PopupHost => TemplateContract.PopupHost;
+		private PopupControlHost PopupHost => TemplateContract.PopupHost;
 
-    private RibbonDropDownButtonBaseTemplateContract TemplateContract => (RibbonDropDownButtonBaseTemplateContract) TemplateContractInternal;
+		private RibbonDropDownButtonBaseTemplateContract TemplateContract =>
+			(RibbonDropDownButtonBaseTemplateContract) TemplateContractInternal;
 
-    #endregion
+		#endregion
 
-    #region  Methods
+		#region Methods
 
-    protected virtual void OnClosed()
-    {
-      DropDownClosed?.Invoke(this, EventArgs.Empty);
-    }
+		private void CoerceIsDropDownOpen()
+		{
+			var popupIsOpen = PopupControl?.PopupController?.Popup?.IsOpen;
 
-    private void OnClosedCore()
-    {
-      if (CanFocusOnClose && FocusHelper.IsKeyboardFocusWithin(this))
-        FocusHelper.SetKeyboardFocusedElement(this);
+			if (popupIsOpen == false)
+				this.SetCurrentValueInternal(IsDropDownOpenProperty, false);
+			else if (popupIsOpen == true)
+				this.SetCurrentValueInternal(IsDropDownOpenProperty, true);
+		}
 
-      OnClosed();
-    }
+		public void CloseDropDown()
+		{
+			if (IsDropDownOpen == false)
+				return;
 
-    private void OnDropDownControlChanged(PopupControlBase oldControl, PopupControlBase newControl)
-    {
-      _dropDownPopupWrapper.Popup = newControl;
+			this.SetCurrentValueInternal(IsDropDownOpenProperty, false);
 
-      DropDownControlHostHelper.OnDropDownControlChanged(this, oldControl, newControl);
-    }
+			CoerceIsDropDownOpen();
+		}
 
-    private void OnIsDropDownOpenChanged()
-    {
-      if (IsDropDownOpen)
-        OnOpenedCore();
-      else
-        OnClosedCore();
+		public void OpenDropDown()
+		{
+			if (IsDropDownOpen)
+				return;
 
-      UpdateVisualState(true);
-    }
+			if (PopupControl == null)
+				return;
 
-    private void OnLayoutUpdated(object sender, EventArgs eventArgs)
-    {
-      IsDropDownOpenInt = IsDropDownOpen;
-    }
+			this.SetCurrentValueInternal(IsDropDownOpenProperty, true);
 
-    protected virtual void OnOpened()
-    {
-      DropDownOpened?.Invoke(this, EventArgs.Empty);
-    }
+			CoerceIsDropDownOpen();
+		}
+		
+		protected virtual void OnClosed()
+		{
+			DropDownClosed?.Invoke(this, EventArgs.Empty);
+		}
 
-    private void OnOpenedCore()
-    {
-      OnOpened();
-    }
+		private void OnClosedCore()
+		{
+			if (CanFocusOnClose && FocusHelper.IsKeyboardFocusWithin(this))
+				FocusHelper.SetKeyboardFocusedElement(this);
 
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
+			OnClosed();
+		}
 
-      DropDownControlHostHelper.OnHostAttached(this);
-    }
+		private void OnDropDownControlChanged(PopupControlBase oldControl, PopupControlBase newControl)
+		{
+			_dropDownPopupWrapper.Popup = newControl;
 
-    protected override void OnTemplateContractDetaching()
-    {
-      DropDownControlHostHelper.OnHostDetaching(this);
+			DropDownControlHostHelper.OnDropDownControlChanged(this, oldControl, newControl);
+		}
 
-      base.OnTemplateContractDetaching();
-    }
+		private void OnIsDropDownOpenPropertyChangedPrivate()
+		{
+			if (IsDropDownOpen)
+				OnOpenedCore();
+			else
+				OnClosedCore();
 
-    protected override void UpdateVisualState(bool useTransitions)
-    {
-      base.UpdateVisualState(useTransitions);
+			OnIsDropDownOpenChangedInternal();
 
-      GotoVisualState(IsDropDownOpen || IsDropDownOpenInt ? CommonVisualStates.PopupOpened : CommonVisualStates.PopupClosed, useTransitions);
-    }
+			UpdateVisualState(true);
+		}
 
-    #endregion
+		private protected virtual void OnIsDropDownOpenChangedInternal()
+		{
+		}
 
-    #region Interface Implementations
+		private void OnLayoutUpdated(object sender, EventArgs eventArgs)
+		{
+			IsDropDownOpenInt = IsDropDownOpen;
+		}
 
-    #region IDropDownControlHost
+		protected virtual void OnOpened()
+		{
+			DropDownOpened?.Invoke(this, EventArgs.Empty);
+		}
 
-    object IDropDownControlHost.LogicalChild
-    {
-      get => _logicalChild;
-      set
-      {
-        if (ReferenceEquals(_logicalChild, value))
-          return;
+		private void OnOpenedCore()
+		{
+			OnOpened();
+		}
 
-        if (_logicalChild != null)
-          RemoveLogicalChild(_logicalChild);
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-        _logicalChild = value;
+			DropDownControlHostHelper.OnHostAttached(this);
+		}
 
-        if (_logicalChild != null)
-          AddLogicalChild(_logicalChild);
-      }
-    }
+		protected override void OnTemplateContractDetaching()
+		{
+			DropDownControlHostHelper.OnHostDetaching(this);
 
-    PopupControlHost IDropDownControlHost.PopupHost => PopupHost;
+			base.OnTemplateContractDetaching();
+		}
 
-    PopupControlBase IDropDownControlHost.PopupControl => PopupControl;
+		protected override void UpdateVisualState(bool useTransitions)
+		{
+			base.UpdateVisualState(useTransitions);
 
-    #endregion
+			GotoVisualState(
+				IsDropDownOpen || IsDropDownOpenInt ? CommonVisualStates.PopupOpened : CommonVisualStates.PopupClosed,
+				useTransitions);
+		}
 
-    #endregion
-  }
+		#endregion
 
-  public class RibbonDropDownButtonBaseTemplateContract : RibbonButtonBaseTemplateContract
-  {
-    #region Properties
+		#region Interface Implementations
 
-    [TemplateContractPart]
-    public PopupControlHost PopupHost { get; [UsedImplicitly] private set; }
+		#region IDropDownControlHost
 
-    #endregion
-  }
+		object IDropDownControlHost.LogicalChild
+		{
+			get => _logicalChild;
+			set
+			{
+				if (ReferenceEquals(_logicalChild, value))
+					return;
+
+				if (_logicalChild != null)
+					RemoveLogicalChild(_logicalChild);
+
+				_logicalChild = value;
+
+				if (_logicalChild != null)
+					AddLogicalChild(_logicalChild);
+			}
+		}
+
+		PopupControlHost IDropDownControlHost.PopupHost => PopupHost;
+
+		PopupControlBase IDropDownControlHost.PopupControl => PopupControl;
+
+		#endregion
+
+		#endregion
+	}
+
+	public class RibbonDropDownButtonBaseTemplateContract : RibbonButtonBaseTemplateContract
+	{
+		#region Properties
+
+		[TemplateContractPart]
+		public PopupControlHost PopupHost { get; [UsedImplicitly] private set; }
+
+		#endregion
+	}
 }

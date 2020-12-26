@@ -118,7 +118,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
-			SourceCore = newSource;
+			SourceCollectionCore = newSource;
 		}
 
 		private void OnItemStyleChanged(Style oldStyle, Style newStyle)

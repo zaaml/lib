@@ -63,7 +63,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		private void AttachVisualStateObserver()
 		{
-			if (VisualState == null) return;
+			if (VisualState == null)
+				return;
 
 			IsCurrentState = false;
 			GetService<IVisualStateObserver>()?.AttachListener(this);
@@ -86,12 +87,14 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void DeinitializeTrigger(IInteractivityRoot root)
 		{
 			DetachVisualStateObserver();
+			
 			base.DeinitializeTrigger(root);
 		}
 
 		private void DetachVisualStateObserver()
 		{
-			if (VisualState == null) return;
+			if (VisualState == null) 
+				return;
 
 			GetService<IVisualStateObserver>()?.DetachListener(this);
 
@@ -101,6 +104,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void InitializeTrigger(IInteractivityRoot root)
 		{
 			AttachVisualStateObserver();
+			
 			base.InitializeTrigger(root);
 		}
 

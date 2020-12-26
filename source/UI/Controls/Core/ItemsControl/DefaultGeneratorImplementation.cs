@@ -6,11 +6,11 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal abstract class DefaultGeneratorImpl<TItem, TGenerator> : IItemGenerator<TItem>, IDelegatedItemGenerator<TItem>
+	internal abstract class DefaultGeneratorImplementation<TItem, TGenerator> : IItemGenerator<TItem>, IDelegatedItemGenerator<TItem>
 		where TItem : FrameworkElement
 		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
-		protected DefaultGeneratorImpl()
+		protected DefaultGeneratorImplementation()
 		{
 			Generator = new TGenerator {Implementation = this};
 		}

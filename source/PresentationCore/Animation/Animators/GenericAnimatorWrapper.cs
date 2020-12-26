@@ -46,10 +46,10 @@ namespace Zaaml.PresentationCore.Animation.Animators
       set => _animator.Start = CoerceValue(value);
     }
 
-    public double Time
+    public double RelativeTime
     {
-      get => _animator.Time;
-      set => _animator.Time = value;
+      get => _animator.RelativeTime;
+      set => _animator.RelativeTime = value;
     }
 
     #endregion

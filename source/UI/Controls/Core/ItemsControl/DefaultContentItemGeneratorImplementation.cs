@@ -10,7 +10,7 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DefaultContentItemGeneratorImpl<TItem, TGenerator> : DefaultGeneratorImpl<TItem, TGenerator>
+	internal class DefaultContentItemGeneratorImplementation<TItem, TGenerator> : DefaultGeneratorImplementation<TItem, TGenerator>
 		where TItem : FrameworkElement, IContentControl, new()
 		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
@@ -19,7 +19,7 @@ namespace Zaaml.UI.Controls.Core
 		private DataTemplate _itemContentTemplate;
 		private DataTemplateSelector _itemContentTemplateSelector;
 
-		public DefaultContentItemGeneratorImpl(string itemContentMember, DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector, string itemContentStringFormat)
+		public DefaultContentItemGeneratorImplementation(string itemContentMember, DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector, string itemContentStringFormat)
 		{
 			_itemContentMember = itemContentMember;
 			_itemContentTemplate = itemContentTemplate;
@@ -56,12 +56,9 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private void CreateItemContentMemberBinding()
-		{
-			ItemContentMemberBinding = _itemContentMember != null ? new Binding(_itemContentMember) : null;
-		}
+		private protected Binding ItemContentMemberBinding { get; private set; }
 
-		private Binding ItemContentMemberBinding { get; set; }
+		internal Binding ItemContentMemberBindingInternal => ItemContentMemberBinding;
 
 		public string ItemContentStringFormat
 		{
@@ -137,6 +134,11 @@ namespace Zaaml.UI.Controls.Core
 		public override TItem CreateItem(object source)
 		{
 			return new TItem();
+		}
+
+		private void CreateItemContentMemberBinding()
+		{
+			ItemContentMemberBinding = _itemContentMember != null ? new Binding(_itemContentMember) : null;
 		}
 
 		public override void DetachItem(TItem item, object source)

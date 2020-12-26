@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using Zaaml.PresentationCore.Input;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.DropDown
@@ -30,8 +31,8 @@ namespace Zaaml.UI.Controls.DropDown
 
 			if (selectorController != null)
 			{
-				selectorController.RestoreSelection();
-				selectorController.ResumeSelectionChange();
+				//selectorController.RestoreSelection();
+				//selectorController.ResumeSelection();
 			}
 
 			CloseDropDown();
@@ -64,7 +65,7 @@ namespace Zaaml.UI.Controls.DropDown
 				if (selectedItem != null && selectorController.SelectItem(selectedItem) == false)
 					return false;
 
-				selectorController.ResumeSelectionChange();
+				//selectorController.ResumeSelection();
 			}
 
 			CloseDropDown();
@@ -79,8 +80,44 @@ namespace Zaaml.UI.Controls.DropDown
 			if (IsDropDownOpen == false)
 				return;
 
-			oldSelectorController?.ResumeSelectionChange();
-			newSelectorController?.SuspendSelectionChange();
+			//oldSelectorController?.ResumeSelection();
+			//newSelectorController?.SuspendSelection();
+		}
+
+		private void OnIsDropDownOpenChangedSelector()
+		{
+			var selectorController = SelectorController;
+
+			if (selectorController == null)
+				return;
+
+			if (IsDropDownOpen)
+			{
+				//selectorController.SuspendSelection();
+
+				var selectedItem = selectorController.SelectedItem;
+
+				if (selectedItem != null)
+				{
+					ItemCollection.BringIntoViewInternal(new BringIntoViewRequest<TItem>(selectedItem, BringIntoViewMode.Top));
+
+					FocusNavigator.FocusedItem = selectedItem;
+					FocusHelper.QueryFocus(selectedItem);
+				}
+				else
+				{
+					ItemCollection.BringIntoViewInternal(0);
+					FocusNavigator.ClearFocus();
+				}
+			}
+			else
+			{
+				if (selectorController.IsSelectionSuspended)
+				{
+					//selectorController.RestoreSelection();
+					//selectorController.ResumeSelection();
+				}
+			}
 		}
 	}
 }

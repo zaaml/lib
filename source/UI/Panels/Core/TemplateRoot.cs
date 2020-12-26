@@ -91,6 +91,7 @@ namespace Zaaml.UI.Panels.Core
         MeasureStack.Push(this);
 
         ImplementationRootLoadedService.PulseImplementationRoot(this);
+
         return MeasureCoreOverride(availableSize);
       }
       catch (Exception e)

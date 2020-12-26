@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.Core
 
 		#region Properties
 
-		public abstract IEnumerable<TItem> ActualItems { get; }
+		public abstract IEnumerable<TItem> Items { get; }
 
 		public abstract int Count { get; }
 

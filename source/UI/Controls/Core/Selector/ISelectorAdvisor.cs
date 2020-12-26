@@ -17,6 +17,14 @@ namespace Zaaml.UI.Controls.Core
 
 		bool IsVirtualizing { get; }
 
+		bool CanSelectIndex(int index);
+
+		bool CanSelectItem(T item);
+
+		bool CanSelectSource(object source);
+
+		bool CanSelectValue(object value);
+
 		bool CompareValues(object value1, object value2);
 
 		int GetIndexOfItem(T item);
@@ -31,26 +39,22 @@ namespace Zaaml.UI.Controls.Core
 
 		object GetSource(T item);
 
-		bool GetSourceSelected(T item);
-
-		object GetValue(int index);
+		bool GetSourceSelected(object source);
 
 		void Lock(T item);
 
 		void SetItemSelected(T item, bool value);
 
-		void SetSourceSelected(T item, bool value);
+		void SetSourceSelected(object source, bool value);
+
+		bool TryCreateSelection(int index, bool ensure, out Selection<T> selection);
+
+		bool TryCreateSelection(object source, bool ensure, out Selection<T> selection);
 
 		bool TryGetItem(int index, bool ensure, out T item);
 
-		bool TryGetSelection(int index, bool ensure, out Selection<T> selection);
-		
-		bool TryGetSelection(object source, bool ensure, out Selection<T> selection);
-
-		bool TryGetItemBySource(object source, bool ensure, out T item);
+		bool TryGetItem(object source, bool ensure, out T item);
 
 		void Unlock(T item);
-		
-		bool CanSelect(T item);
 	}
 }

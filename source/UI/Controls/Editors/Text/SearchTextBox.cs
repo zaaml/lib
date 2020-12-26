@@ -96,8 +96,8 @@ namespace Zaaml.UI.Controls.Editors.Text
 		private static readonly DependencyPropertyKey PreviewSelectedValuePropertyKey = DPM.RegisterReadOnly<object, SearchTextBox>
 			("PreviewSelectedValue");
 
-		private static readonly DependencyPropertyKey ActualDropDownItemsSourcePropertyKey = DPM.RegisterReadOnly<IEnumerable, SearchTextBox>
-			("ActualDropDownItemsSource");
+		private static readonly DependencyPropertyKey ActualDropDownISourceCollectionPropertyKey = DPM.RegisterReadOnly<IEnumerable, SearchTextBox>
+			("ActualDropDownISourceCollection");
 
 		public static readonly DependencyProperty DropDownItemsModeProperty = DPM.Register<SearchTextBoxDropDownItemsMode, SearchTextBox>
 			("DropDownItemsMode", SearchTextBoxDropDownItemsMode.All, s => s.OnDropDownItemsModeChanged);
@@ -136,7 +136,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			("ActualShowWatermark", true);
 
 		public static readonly DependencyProperty ActualShowWatermarkProperty = ActualShowWatermarkPropertyKey.DependencyProperty;
-		public static readonly DependencyProperty ActualDropDownItemsSourceProperty = ActualDropDownItemsSourcePropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ActualDropDownISourceCollectionProperty = ActualDropDownISourceCollectionPropertyKey.DependencyProperty;
 		public static readonly DependencyProperty ActualSelectedItemTextProperty = ActualSelectedItemTextPropertyKey.DependencyProperty;
 		public static readonly DependencyProperty AutoCompleteTextProperty = AutoCompleteTextPropertyKey.DependencyProperty;
 		public static readonly DependencyProperty PreviewSelectedItemProperty = PreviewSelectedItemPropertyKey.DependencyProperty;
@@ -186,17 +186,17 @@ namespace Zaaml.UI.Controls.Editors.Text
 			_delaySearch = new DelayAction(Search);
 
 			UpdateStringComparison();
-			UpdateActualDropDownItemsSource();
+			UpdateActualDropDownISourceCollection();
 		}
 
 		#endregion
 
 		#region Properties
 
-		public IEnumerable ActualDropDownItemsSource
+		public IEnumerable ActualDropDownISourceCollection
 		{
-			get => (IEnumerable)GetValue(ActualDropDownItemsSourceProperty);
-			private set => this.SetReadOnlyValue(ActualDropDownItemsSourcePropertyKey, value);
+			get => (IEnumerable)GetValue(ActualDropDownISourceCollectionProperty);
+			private set => this.SetReadOnlyValue(ActualDropDownISourceCollectionPropertyKey, value);
 		}
 
 		public string ActualSelectedItemText
@@ -715,7 +715,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private void OnDropDownItemsModeChanged()
 		{
-			UpdateActualDropDownItemsSource();
+			UpdateActualDropDownISourceCollection();
 		}
 
 		protected virtual void OnEndEdit()
@@ -758,7 +758,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 		{
 			_displayGettersCache.Clear();
 
-			UpdateActualDropDownItemsSource();
+			UpdateActualDropDownISourceCollection();
 			UpdateSearchDictionary();
 		}
 
@@ -1064,9 +1064,9 @@ namespace Zaaml.UI.Controls.Editors.Text
 			UpdateActualSelectedItemText();
 		}
 
-		private void UpdateActualDropDownItemsSource()
+		private void UpdateActualDropDownISourceCollection()
 		{
-			ActualDropDownItemsSource = DropDownItemsMode == SearchTextBoxDropDownItemsMode.All ? SourceCollection : FilteredItemsSource;
+			ActualDropDownISourceCollection = DropDownItemsMode == SearchTextBoxDropDownItemsMode.All ? SourceCollection : FilteredItemsSource;
 		}
 
 		private void UpdateActualSelectedItemText()

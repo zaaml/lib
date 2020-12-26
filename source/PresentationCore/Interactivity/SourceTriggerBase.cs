@@ -63,12 +63,14 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.CopyMembersOverride(source);
 
 			var triggerSource = (SourceTriggerBase) source;
+			
 			SubjectResolver.CopyFrom(this, triggerSource);
 		}
 
 		internal override void DeinitializeTrigger(IInteractivityRoot root)
 		{
-			SubjectResolver.UnresolveSubject(this);
+			SubjectResolver.UnResolveSubject(this);
+			
 			base.DeinitializeTrigger(root);
 		}
 
@@ -89,8 +91,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			get => SubjectKind;
 			set => SubjectKind = value;
 		}
-
-
+		
 		void IInteractivitySubject.OnSubjectChanged(DependencyObject oldSubject, DependencyObject newSubject)
 		{
 			OnActualSourceChanged(oldSubject);

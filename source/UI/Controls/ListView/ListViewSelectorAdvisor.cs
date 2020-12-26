@@ -14,34 +14,61 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewControl.VirtualItemCollection.AttachObserver(this);
 		}
 
+		public override bool HasSource => ListViewControl.SourceCollection != null;
+
 		public ListViewControl ListViewControl { get; }
+
+		public override bool CanSelectIndex(int index)
+		{
+			return ListViewControl.CanSelectIndexInternal(index);
+		}
+
+		public override bool CanSelectItem(ListViewItem item)
+		{
+			return item.CanSelectInternal;
+		}
+
+		public override bool CanSelectSource(object source)
+		{
+			return ListViewControl.CanSelectSourceInternal(source);
+		}
+
+		public override bool CanSelectValue(object value)
+		{
+			return ListViewControl.CanSelectValueInternal(value);
+		}
+
+		public override int Count => ListViewControl.ListViewData?.IndexedSource.Count ?? 0;
 
 		public override bool TryGetItem(int index, bool ensure, out ListViewItem item)
 		{
 			if (index == -1)
 			{
 				item = null;
-				
+
 				return false;
 			}
-			
+
 			ListViewControl.EnsureVirtualItemCollection();
 
 			var viewItemCollection = ListViewControl.VirtualItemCollection;
-			
+
 			item = ensure ? viewItemCollection.EnsureItem(index) : viewItemCollection.GetItemFromIndex(index);
 
 			return item != null;
 		}
 
-		public override bool CanSelect(ListViewItem item)
+		public override int GetIndexOfSource(object source)
 		{
-			return item.CanSelectInternal;
+			return ListViewControl.ListViewData?.IndexedSource.IndexOf(source) ?? -1;
 		}
 
-		public override bool HasSource => ListViewControl.SourceCollection != null;
+		public override object GetSource(int index)
+		{
+			return ListViewControl.ListViewData?.IndexedSource[index];
+		}
 
-		public override bool TryGetItemBySource(object source, bool ensure, out ListViewItem item)
+		public override bool TryGetItem(object source, bool ensure, out ListViewItem item)
 		{
 			ListViewControl.EnsureVirtualItemCollection();
 
@@ -57,7 +84,7 @@ namespace Zaaml.UI.Controls.ListView
 
 			item = listViewItemData.ListViewItem;
 
-			if (item != null) 
+			if (item != null)
 				return true;
 
 			return TryGetItem(listViewData.FindIndex(listViewItemData), ensure, out item);

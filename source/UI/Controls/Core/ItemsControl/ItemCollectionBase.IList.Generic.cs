@@ -8,10 +8,6 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem> : IList<TItem>
 	{
-		#region Interface Implementations
-
-		#region IList<TItem>
-
 		int IList<TItem>.IndexOf(TItem item)
 		{
 			return IndexOf(item);
@@ -32,9 +28,5 @@ namespace Zaaml.UI.Controls.Core
 			get => this[index];
 			set => this[index] = value;
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

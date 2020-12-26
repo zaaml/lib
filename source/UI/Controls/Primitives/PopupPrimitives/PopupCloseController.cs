@@ -97,7 +97,11 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		private void Close(bool immediate)
 		{
 			//CloseImpl(immediate == false);
-			CloseImpl(false);
+
+			if (immediate)
+				CloseImpl(false);
+			else
+				Dispatcher.BeginInvoke(() => CloseImpl(false));
 		}
 
 		private void CloseImpl(bool inputDispatcher)

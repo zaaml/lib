@@ -17,6 +17,7 @@ namespace Zaaml.UI.Data.Hierarchy
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
 	{
 		private static readonly IEnumerator<TNode> EmptyEnumerator = Enumerable.Empty<TNode>().GetEnumerator();
+		private static readonly List<TNode> EmptyCollection = new List<TNode>();
 
 		private readonly Func<object, TNode> _nodeFactory;
 		private List<TNode> _collection;
@@ -78,7 +79,7 @@ namespace Zaaml.UI.Data.Hierarchy
 			}
 		}
 
-		internal IReadOnlyList<TNode> SourceCollection => _collection;
+		internal IReadOnlyList<TNode> SourceCollection => _collection ?? EmptyCollection;
 
 		internal void HandleAdd(int newIndex, IList newItems)
 		{
@@ -129,7 +130,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 				var filter = Hierarchy.FilterInternal;
 
-				foreach (var node in _collection)
+				foreach (var node in SourceCollection)
 				{
 					node.PassedFilterField = filter.Pass(node);
 					node.VisibleField = false;

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,7 +16,6 @@ using Zaaml.UI.Controls.ScrollView;
 using Zaaml.UI.Panels.Interfaces;
 using Zaaml.UI.Panels.VirtualStackPanelLayout;
 using Zaaml.UI.Utils;
-using NativeControl = System.Windows.Controls.Control;
 
 namespace Zaaml.UI.Panels.Core
 {
@@ -106,6 +106,7 @@ namespace Zaaml.UI.Panels.Core
 		private void AttachVirtualCollection()
 		{
 			ActualVirtualItemCollection.ItemHost = this;
+
 			InvalidateMeasure();
 		}
 
@@ -121,6 +122,7 @@ namespace Zaaml.UI.Panels.Core
 		private void DetachVirtualCollection()
 		{
 			ActualVirtualItemCollection.ItemHost = null;
+
 			Children.Clear();
 		}
 
@@ -161,6 +163,9 @@ namespace Zaaml.UI.Panels.Core
 			}
 
 			var measureOverrideCore = Layout.Measure(availableSize);
+
+			if (layoutContext != null && Layout.ScrollInfoDirty)
+				layoutContext.OnDescendantMeasureDirty(this);
 
 			return measureOverrideCore;
 		}
@@ -208,6 +213,14 @@ namespace Zaaml.UI.Panels.Core
 		}
 
 		int IVirtualStackPanel.LeadingTrailingLimit => LeadingTrailingLimitCore;
+		
+		private protected virtual ICollection<UIElement> LeadingElementsCore => null;
+		
+		private protected virtual ICollection<UIElement> TrailingElementsCore => null;
+
+		ICollection<UIElement> IVirtualStackPanel.LeadingElements => LeadingElementsCore;
+
+		ICollection<UIElement> IVirtualStackPanel.TrailingElements => TrailingElementsCore;
 
 		CompositeTransform IVirtualStackPanel.Transform => Transform;
 

@@ -154,13 +154,13 @@ namespace Zaaml.UI.Controls.Ribbon
     internal virtual void BeginMeasurePass()
     {
       IsFullMeasurePass = true;
-      _reduceLevelsCount = Reducer.GetReduceLevelsCount(Items);
+      _reduceLevelsCount = Reducer.GetReduceLevelsCount(ItemCollection);
       _reducedGroups.Clear();
       _reducedGroups.AddRange(Enumerable.Range(0, _reduceLevelsCount).Select(i => (RibbonControlGroupCollection) null));
 
       ReduceLevel = 0;
 
-      foreach (var ribbonItem in Items)
+      foreach (var ribbonItem in ItemCollection)
         ribbonItem.BeginMeasurePass();
     }
 
@@ -172,7 +172,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
     internal virtual void EndMeasurePass()
     {
-      foreach (var ribbonItem in Items)
+      foreach (var ribbonItem in ItemCollection)
         ribbonItem.EndMeasurePass();
 
       IsFullMeasurePass = false;
@@ -183,7 +183,7 @@ namespace Zaaml.UI.Controls.Ribbon
       if (IsCollapsed)
         return _reducedGroups[0];
 
-      return _reducedGroups[ReduceLevel] ?? (_reducedGroups[ReduceLevel] = Reducer.Reduce(Items, ReduceLevel));
+      return _reducedGroups[ReduceLevel] ?? (_reducedGroups[ReduceLevel] = Reducer.Reduce(ItemCollection, ReduceLevel));
     }
 
     internal void Invalidate()
@@ -195,7 +195,7 @@ namespace Zaaml.UI.Controls.Ribbon
     {
       RibbonItemsPresenter?.InvalidateInt(ribbonGroupPanel);
 
-      foreach (var ribbonItem in Items)
+      foreach (var ribbonItem in ItemCollection)
         ribbonItem.InvalidateMeasureInt();
     }
 

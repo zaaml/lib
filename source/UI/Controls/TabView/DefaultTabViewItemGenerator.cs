@@ -43,7 +43,7 @@ namespace Zaaml.UI.Controls.TabView
     #endregion
   }
 
-  internal class DefaultItemTemplateTabViewItemGenerator : DelegateHeaderedIconContentSelectableItemGeneratorImpl<TabViewItem, DefaultTabViewItemGenerator>
+  internal class DefaultItemTemplateTabViewItemGenerator : DelegateHeaderedIconContentSelectableItemGeneratorImplementation<TabViewItem, DefaultTabViewItemGenerator>
   {
 	  public DefaultItemTemplateTabViewItemGenerator(TabViewControl tabViewControl) : base(tabViewControl)
 	  {

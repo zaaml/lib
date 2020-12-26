@@ -8,15 +8,9 @@ namespace Zaaml.UI.Controls.Core
 {
 	public sealed class ItemCollection : ItemCollectionBase<ItemsControl, NativeControl>
 	{
-		#region Ctors
-
 		internal ItemCollection(ItemsControl itemsControl) : base(itemsControl)
 		{
 		}
-
-		#endregion
-
-		#region Properties
 
 		protected override ItemGenerator<NativeControl> DefaultGenerator => null;
 
@@ -24,7 +18,5 @@ namespace Zaaml.UI.Controls.Core
 		{
 			set => GeneratorCore = value;
 		}
-
-		#endregion
 	}
 }

@@ -55,11 +55,9 @@
       <zm:DockPanel>
 
         <!-- Glyph presenter -->
-        <zm:ContentPresenter zm:DockPanel.Dock="Left"
-                             EmptyVisibility="Collapsed"
-                             Content="{TemplateBinding Glyph}"
-                             ContentTemplate="{zm:TemplateBinding Path=ListViewControl.ItemGlyphTemplate}"
-                             Margin="2,0" />
+        <zm:ListViewItemGlyphPresenter x:Name="GlyphPresenter" 
+                                       zm:DockPanel.Dock="Left"
+                                       Margin="2,0" />
 
         <!--  CommonStatesBorder  -->
         <Border Padding="{TemplateBinding Padding}"

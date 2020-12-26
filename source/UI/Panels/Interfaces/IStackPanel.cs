@@ -2,6 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
 using Zaaml.PresentationCore;
 using Zaaml.UI.Controls.Core;
@@ -38,6 +40,10 @@ namespace Zaaml.UI.Panels.Interfaces
     CompositeTransform Transform { get; } 
 
     int LeadingTrailingLimit { get; }
+    
+    ICollection<UIElement> LeadingElements { get; }
+
+    ICollection<UIElement> TrailingElements { get; }
     
     #endregion
   }

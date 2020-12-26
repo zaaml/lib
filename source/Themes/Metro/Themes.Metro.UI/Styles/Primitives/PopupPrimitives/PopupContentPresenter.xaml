@@ -73,23 +73,20 @@
       <!--  Shadow  -->
       <zm:PopupShadowChrome ShadowSize="16"
                             Visibility="{zm:TemplateBinding Path=DropShadow,
-                                                       Converter={zm:VisibilityConverter}}" />
+                                                            Converter={zm:VisibilityConverter}}" />
 
-      <Border x:Name="BarBorder"
-              Width="{TemplateBinding PopupWidth}"
-              Height="{TemplateBinding PopupHeight}"
-              MinWidth="{TemplateBinding PopupMinWidth}"
-              MinHeight="{TemplateBinding PopupMinHeight}"
-              MaxWidth="{TemplateBinding PopupMaxWidth}"
-              MaxHeight="{TemplateBinding PopupMaxHeight}"
-              Margin="{zm:TemplateBinding Path=(zm:Popup.Inflate)}"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}">
+      <Grid Margin="12">
 
-        <ContentPresenter x:Name="ContentPresenter" />
+        <!--  ContentHost  -->
+        <Border x:Name="ContentHost"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}">
 
-      </Border>
+          <zm:ContentPresenter x:Name="ContentPresenter" />
+
+        </Border>
+      </Grid>
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -101,19 +98,22 @@
       <!--  Shadow  -->
       <zm:PopupShadowChrome ShadowSize="16"
                             Visibility="{zm:TemplateBinding Path=DropShadow,
-                                                       Converter={zm:VisibilityConverter}}" />
+                                                            Converter={zm:VisibilityConverter}}" />
+
+      <Grid Margin="12">
+
+        <!--  ContentHost  -->
+        <Border x:Name="ContentHost"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}">
+
+          <zm:ContentPresenter x:Name="ContentPresenter" />
+
+        </Border>
 
 
-      <!--  Content border  -->
-      <Border x:Name="BarBorder"
-              Margin="{zm:TemplateBinding Path=(zm:Popup.Inflate)}"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}">
-
-        <ContentPresenter x:Name="ContentPresenter" />
-
-      </Border>
+      </Grid>
 
       <Grid Margin="12">
         <!--  Arrow  -->
@@ -217,7 +217,7 @@
   <zm:Style x:Key="PopupContentPresenterBaseStyle" TargetType="zm:PopupContentPresenter">
     <zm:Setter Property="Template" Value="{zm:SelfBinding Path=BorderStyle, Converter={StaticResource TemplateConverter}}" />
     <zm:Setter Property="BorderThickness" Value="1" />
-    <zm:Setter Property="zm:Popup.Inflate" Value="0" />
+    <zm:Setter Property="zm:Popup.Inflate" Value="12" />
 
     <zm:Setter Property="{zm:DependencyProperty Property=zm:SnapPlacement.AttachedAdjustment}" Value="{zm:SelfBinding Path=BorderStyle, Converter={StaticResource AdjustmentConverter}}" />
   </zm:Style>

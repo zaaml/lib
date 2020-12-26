@@ -52,30 +52,30 @@ namespace Zaaml.UI.Controls.ScrollView
 			(nameof(HorizontalScrollBarVisibility), ScrollBarVisibility.Auto, OnHorizontalScrollBarVisibilityChanged);
 
 		private static readonly DependencyPropertyKey ScrollableHeightPropertyKey = DPM.RegisterReadOnly<double, ScrollViewControlBase>
-			(nameof(ScrollableHeight));
+			(nameof(ScrollableHeight), s => s.OnScrollableSizeChanged);
 
 		public static readonly DependencyProperty ScrollableHeightProperty = ScrollableHeightPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey ViewportHeightPropertyKey = DPM.RegisterReadOnly<double, ScrollViewControlBase>
-			(nameof(ViewportHeight));
+			(nameof(ViewportHeight), s => s.OnViewportSizeChanged);
 
 		public static readonly DependencyProperty ViewportHeightProperty = ViewportHeightPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey ScrollableWidthPropertyKey = DPM.RegisterReadOnly<double, ScrollViewControlBase>
-			(nameof(ScrollableWidth));
+			(nameof(ScrollableWidth), s => s.OnScrollableSizeChanged);
 
 		public static readonly DependencyProperty ScrollableWidthProperty = ScrollableWidthPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey ExtentHeightPropertyKey = DPM.RegisterReadOnly<double, ScrollViewControlBase>
-			(nameof(ExtentHeight));
+			(nameof(ExtentHeight), s => s.OnExtentSizeChanged);
 
 		public static readonly DependencyProperty ExtentHeightProperty = ExtentHeightPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey ExtentWidthPropertyKey = DPM.RegisterReadOnly<double, ScrollViewControlBase>
-			(nameof(ExtentWidth));
+			(nameof(ExtentWidth), s => s.OnExtentSizeChanged);
 
 		private static readonly DependencyPropertyKey ViewportWidthPropertyKey = DPM.RegisterReadOnly<double, ScrollViewControlBase>
-			(nameof(ViewportWidth));
+			(nameof(ViewportWidth), s => s.OnViewportSizeChanged);
 
 		public static readonly DependencyProperty VerticalOffsetProperty = DPM.Register<double, ScrollViewControlBase>
 			(nameof(VerticalOffset), s => s.OnVerticalOffsetChangedPrivate, s => s.CoerceVerticalOffsetPrivate);
@@ -407,30 +407,6 @@ namespace Zaaml.UI.Controls.ScrollView
 			}
 		}
 
-		private void UpdateScrollOffsetCache(Orientation? orientation)
-		{
-			if (orientation == Orientation.Horizontal)
-				_horizontalOffsetCache = HorizontalOffset;
-			else
-				_verticalOffsetCache = VerticalOffset;
-		}
-
-		private void UpdateScrollOffsetCache()
-		{
-			_horizontalOffsetCache = HorizontalOffset;
-			_verticalOffsetCache = VerticalOffset;
-		}
-
-		internal void UpdateScrollOffsetCacheInternal(Orientation orientation)
-		{
-			UpdateScrollOffsetCache(orientation);
-		}
-
-		internal void UpdateScrollOffsetCacheInternal()
-		{
-			UpdateScrollOffsetCache();
-		}
-
 		internal ElementBounds? GetChildBoundsInternal(bool round)
 		{
 			return ScrollViewPanel?.GetChildBoundsInternal(round);
@@ -607,6 +583,10 @@ namespace Zaaml.UI.Controls.ScrollView
 			OnChildChangedInternal(oldChild, newChild);
 		}
 
+		private void OnExtentSizeChanged()
+		{
+		}
+
 		private protected virtual void OnHorizontalOffsetChangedInternal()
 		{
 		}
@@ -672,6 +652,10 @@ namespace Zaaml.UI.Controls.ScrollView
 			}
 		}
 
+		private void OnScrollableSizeChanged()
+		{
+		}
+
 		protected virtual void OnScrollBarDragCompleted(ScrollBar scrollBar)
 		{
 		}
@@ -730,6 +714,10 @@ namespace Zaaml.UI.Controls.ScrollView
 				scrollView.UpdateCanVerticallyScroll();
 				scrollView.UpdateVerticalScrollBarVisibility(null, true);
 			}
+		}
+
+		private void OnViewportSizeChanged()
+		{
 		}
 
 		protected virtual void OnWheelOrientationChanged(Orientation oldOrientation, Orientation newOrientation)
@@ -890,6 +878,30 @@ namespace Zaaml.UI.Controls.ScrollView
 			{
 				SuspendOffsetHandler = false;
 			}
+		}
+
+		private void UpdateScrollOffsetCache(Orientation? orientation)
+		{
+			if (orientation == Orientation.Horizontal)
+				_horizontalOffsetCache = HorizontalOffset;
+			else
+				_verticalOffsetCache = VerticalOffset;
+		}
+
+		private void UpdateScrollOffsetCache()
+		{
+			_horizontalOffsetCache = HorizontalOffset;
+			_verticalOffsetCache = VerticalOffset;
+		}
+
+		internal void UpdateScrollOffsetCacheInternal(Orientation orientation)
+		{
+			UpdateScrollOffsetCache(orientation);
+		}
+
+		internal void UpdateScrollOffsetCacheInternal()
+		{
+			UpdateScrollOffsetCache();
 		}
 
 		private void UpdateScrollViewPanel()

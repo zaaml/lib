@@ -8,17 +8,9 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem>
 	{
-		#region Interface Implementations
-
-		#region IEnumerable<TItem>
-
 		IEnumerator<TItem> IEnumerable<TItem>.GetEnumerator()
 		{
 			return GetEnumerator();
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

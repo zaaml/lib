@@ -46,12 +46,12 @@ namespace Zaaml.UI.Controls.Core
 
 		public override bool TryGetItem(int index, bool ensure, out TItem item)
 		{
-			return ensure ? ItemCollection.TryEnsureItemFromIndexInternal(index, out item) : (item = ItemCollection.GetItemFromIndexInternal(index)) != null;
+			return ensure ? ItemCollection.TryEnsureItemInternal(index, out item) : (item = ItemCollection.GetItemFromIndexInternal(index)) != null;
 		}
 
-		public override bool TryGetItemBySource(object source, bool ensure, out TItem item)
+		public override bool TryGetItem(object source, bool ensure, out TItem item)
 		{
-			return ensure ? ItemCollection.TryEnsureItemFromSourceInternal(source, out item) : (item = ItemCollection.GetItemFromSourceInternal(source)) != null;
+			return ensure ? ItemCollection.TryEnsureItemInternal(source, out item) : (item = ItemCollection.GetItemFromSourceInternal(source)) != null;
 		}
 
 		public override object GetSource(int index)
@@ -64,14 +64,17 @@ namespace Zaaml.UI.Controls.Core
 			return ItemCollection.GetSourceInternal(item);
 		}
 
-		public override void SetSourceSelected(TItem item, bool value)
+		public override void SetSourceSelected(object source, bool value)
 		{
 		}
 
-		public override bool TryGetSelection(int index, bool ensure, out Selection<TItem> selection)
+		public override bool TryCreateSelection(int index, bool ensure, out Selection<TItem> selection)
 		{
-			TryGetItem(index, ensure, out var item);
 			var source = GetSource(index);
+
+			if (TryGetItem(source, ensure, out var item) == false)
+				TryGetItem(index, ensure, out item);
+
 			var value = SelectorCore.GetValue(item, source);
 
 			selection = new Selection<TItem>(index, item, source, value);
@@ -79,18 +82,12 @@ namespace Zaaml.UI.Controls.Core
 			return selection.IsEmpty == false;
 		}
 
-		public override bool TryGetSelection(object source, bool ensure, out Selection<TItem> selection)
+		public override bool TryCreateSelection(object source, bool ensure, out Selection<TItem> selection)
 		{
 			var index = GetIndexOfSource(source);
 			
-			if (index == -1)
-			{
-				selection = Selection<TItem>.Empty;
-
-				return false;
-			}
-
-			TryGetItem(index, ensure, out var item);
+			if (TryGetItem(source, ensure, out var item) == false && index != -1)
+				TryGetItem(index, ensure, out item);
 
 			var value = SelectorCore.GetValue(item, source);
 
@@ -109,7 +106,7 @@ namespace Zaaml.UI.Controls.Core
 			ItemCollection.UnlockItemInternal(item);
 		}
 
-		public override bool GetSourceSelected(TItem item)
+		public override bool GetSourceSelected(object source)
 		{
 			return false;
 		}

@@ -58,7 +58,11 @@ namespace Zaaml.UI.Controls.ToolBar
     protected override void OnClick()
     {
       base.OnClick();
-      IsDropDownOpen = !IsDropDownOpen;
+      
+			if (IsDropDownOpen == false)
+				OpenDropDown();
+			else
+				CloseDropDown();
     }
 
     #endregion

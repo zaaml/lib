@@ -2,15 +2,20 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Windows;
+using Zaaml.Core;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
-using ZaamlContentControl = Zaaml.UI.Controls.Core.ContentControl;
+using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-	public sealed class PopupContentPresenter : ZaamlContentControl, IPopupChild
+	[TemplateContractType(typeof(PopupContentPresenterTemplateContract))]
+	public sealed class PopupContentPresenter : TemplateContractContentControl, IPopupChild
 	{
 		private static readonly DependencyPropertyKey ActualIsOpenPropertyKey = DPM.RegisterReadOnly<bool, PopupContentPresenter>
 			("ActualIsOpen", p => p.OnIsOpenChanged);
@@ -34,23 +39,23 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		public static readonly DependencyProperty AllowOpacityAnimationProperty = DPM.Register<bool, PopupContentPresenter>
 			("AllowOpacityAnimation");
 
-		public static readonly DependencyProperty PopupMinWidthProperty = DPM.Register<double, PopupContentPresenter>
-			("PopupMinWidth", 0.0);
+		public static readonly DependencyProperty PopupMinWidthProperty = DPM.Register<PopupLength, PopupContentPresenter>
+			("PopupMinWidth", new PopupLength(0.0), p => p.OnPopupSizePropertyChanged);
 
-		public static readonly DependencyProperty PopupMaxWidthProperty = DPM.Register<double, PopupContentPresenter>
-			("PopupMaxWidth", double.PositiveInfinity);
+		public static readonly DependencyProperty PopupMaxWidthProperty = DPM.Register<PopupLength, PopupContentPresenter>
+			("PopupMaxWidth", new PopupLength(double.PositiveInfinity), p => p.OnPopupSizePropertyChanged);
 
-		public static readonly DependencyProperty PopupWidthProperty = DPM.Register<double, PopupContentPresenter>
-			("PopupWidth", double.NaN);
+		public static readonly DependencyProperty PopupWidthProperty = DPM.Register<PopupLength, PopupContentPresenter>
+			("PopupWidth", PopupLength.Auto, p => p.OnPopupSizePropertyChanged);
 
-		public static readonly DependencyProperty PopupMinHeightProperty = DPM.Register<double, PopupContentPresenter>
-			("PopupMinHeight", 0.0);
+		public static readonly DependencyProperty PopupMinHeightProperty = DPM.Register<PopupLength, PopupContentPresenter>
+			("PopupMinHeight", new PopupLength(0.0), p => p.OnPopupSizePropertyChanged);
 
-		public static readonly DependencyProperty PopupMaxHeightProperty = DPM.Register<double, PopupContentPresenter>
-			("PopupMaxHeight", double.PositiveInfinity);
+		public static readonly DependencyProperty PopupMaxHeightProperty = DPM.Register<PopupLength, PopupContentPresenter>
+			("PopupMaxHeight", new PopupLength(double.PositiveInfinity), p => p.OnPopupSizePropertyChanged);
 
-		public static readonly DependencyProperty PopupHeightProperty = DPM.Register<double, PopupContentPresenter>
-			("PopupHeight", double.NaN);
+		public static readonly DependencyProperty PopupHeightProperty = DPM.Register<PopupLength, PopupContentPresenter>
+			("PopupHeight", PopupLength.Auto, p => p.OnPopupSizePropertyChanged);
 
 		static PopupContentPresenter()
 		{
@@ -94,6 +99,10 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			set => SetValue(BorderStyleProperty, value);
 		}
 
+		private FrameworkElement ContentHost => TemplateContract.ContentHost;
+
+		private ContentPresenter ContentPresenter => TemplateContract.ContentPresenter;
+
 		public bool DropShadow
 		{
 			get => (bool) GetValue(DropShadowProperty);
@@ -105,52 +114,107 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			get => this.GetReadOnlyValue<Popup>(PopupPropertyKey);
 			internal set => this.SetReadOnlyValue(PopupPropertyKey, value);
 		}
-		
-		public double PopupHeight
+
+		public PopupLength PopupHeight
 		{
-			get => (double) GetValue(PopupHeightProperty);
+			get => (PopupLength) GetValue(PopupHeightProperty);
 			set => SetValue(PopupHeightProperty, value);
 		}
 
-		public double PopupMaxHeight
+		public PopupLength PopupMaxHeight
 		{
-			get => (double) GetValue(PopupMaxHeightProperty);
+			get => (PopupLength) GetValue(PopupMaxHeightProperty);
 			set => SetValue(PopupMaxHeightProperty, value);
 		}
 
-		public double PopupMaxWidth
+		public PopupLength PopupMaxWidth
 		{
-			get => (double) GetValue(PopupMaxWidthProperty);
+			get => (PopupLength) GetValue(PopupMaxWidthProperty);
 			set => SetValue(PopupMaxWidthProperty, value);
 		}
 
-		public double PopupMinHeight
+		public PopupLength PopupMinHeight
 		{
-			get => (double) GetValue(PopupMinHeightProperty);
+			get => (PopupLength) GetValue(PopupMinHeightProperty);
 			set => SetValue(PopupMinHeightProperty, value);
 		}
 
-		public double PopupMinWidth
+		public PopupLength PopupMinWidth
 		{
-			get => (double) GetValue(PopupMinWidthProperty);
+			get => (PopupLength) GetValue(PopupMinWidthProperty);
 			set => SetValue(PopupMinWidthProperty, value);
 		}
 
-		public double PopupWidth
+		public PopupLength PopupWidth
 		{
-			get => (double) GetValue(PopupWidthProperty);
+			get => (PopupLength) GetValue(PopupWidthProperty);
 			set => SetValue(PopupWidthProperty, value);
 		}
 
-		public override void OnApplyTemplate()
-		{
-			base.OnApplyTemplate();
+		private PopupContentPresenterTemplateContract TemplateContract => (PopupContentPresenterTemplateContract) TemplateContractInternal;
 
-			Dispatcher.BeginInvoke(UpdateVisualStateInt);
+		private double GetSize(PopupLength popupLength, SizePart sizePart, double autoSize)
+		{
+			if (popupLength.UnitType == PopupLengthUnitType.Auto)
+				return autoSize;
+
+			if (popupLength.UnitType == PopupLengthUnitType.Absolute)
+				return popupLength.Value;
+
+			if (popupLength.RelativeElement == null)
+				return autoSize;
+
+			if (popupLength.RelativeElement.Equals("Target", StringComparison.OrdinalIgnoreCase))
+			{
+				if (Popup.Placement?.ActualPlacement is RelativePlacementBase relativePlacement && relativePlacement.Target != null)
+					return popupLength.Value * GetSizePart(relativePlacement.Target.RenderSize, sizePart);
+			}
+
+			if (popupLength.RelativeElement.Equals("Screen", StringComparison.OrdinalIgnoreCase))
+			{
+				var screen = Screen.FromElement(this);
+
+				if (screen != null)
+					return popupLength.Value * GetSizePart(screen.Bounds.Size, sizePart);
+			}
+
+			return autoSize;
+		}
+
+		private static double GetSizePart(Size size, SizePart sizePart)
+		{
+			return sizePart == SizePart.Width ? size.Width : size.Height;
+		}
+
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			if (ContentHost != null)
+			{
+				ContentHost.MinWidth = GetSize(PopupMinWidth, SizePart.Width, 0);
+				ContentHost.MinHeight = GetSize(PopupMinHeight, SizePart.Height, 0);
+				ContentHost.MaxWidth = GetSize(PopupMaxWidth, SizePart.Width, double.PositiveInfinity);
+				ContentHost.MaxHeight = GetSize(PopupMaxHeight, SizePart.Height, double.PositiveInfinity);
+				ContentHost.Width = GetSize(PopupWidth, SizePart.Width, double.NaN);
+				ContentHost.Height = GetSize(PopupHeight, SizePart.Height, double.NaN);
+			}
+
+			return base.MeasureOverride(availableSize);
 		}
 
 		private void OnIsOpenChanged()
 		{
+			Dispatcher.BeginInvoke(UpdateVisualStateInt);
+		}
+
+		private void OnPopupSizePropertyChanged()
+		{
+			InvalidateMeasure();
+		}
+
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
+
 			Dispatcher.BeginInvoke(UpdateVisualStateInt);
 		}
 
@@ -177,5 +241,20 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		{
 			set => ActualIsOpen = value;
 		}
+
+		private enum SizePart
+		{
+			Width,
+			Height
+		}
+	}
+
+	public class PopupContentPresenterTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = true)]
+		public FrameworkElement ContentHost { get; [UsedImplicitly] private set; }
+
+		[TemplateContractPart(Required = true)]
+		public ContentPresenter ContentPresenter { get; [UsedImplicitly] private set; }
 	}
 }

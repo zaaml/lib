@@ -62,8 +62,6 @@
                            ClickMode="Press"
                            Icon="{zm:TemplateBinding Path=DropDownGlyph,
                                                      TargetNullValue={StaticResource FallbackDropDownGlyph}}"
-                           IsChecked="{zm:TemplateBinding Path=IsDropDownOpen,
-                                                          Mode=TwoWay}"
                            IsTabStop="False"
                            ShowContent="False"
                            Visibility="{zm:TemplateBinding Path=ShowDropDownButton,

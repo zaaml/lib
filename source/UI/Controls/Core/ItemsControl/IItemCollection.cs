@@ -26,7 +26,7 @@ namespace Zaaml.UI.Controls.Core
 
 		#region  Methods
 
-		void BringIntoView(int index);
+		void BringIntoView(BringIntoViewRequest<TItem> bringIntoViewRequest);
 
 		TItem EnsureItem(int index);
 

@@ -23,7 +23,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
     protected abstract object ActualSourceValue { get; }
 
-    public CaseTriggerCollection CaseTriggers => _caseTriggers ?? (_caseTriggers = new CaseTriggerCollection(this));
+    public CaseTriggerCollection CaseTriggers => _caseTriggers ??= new CaseTriggerCollection(this);
 
     internal override IEnumerable<InteractivityObject> Children => base.Children.Concat(ActualCaseTriggers);
 
@@ -51,6 +51,7 @@ namespace Zaaml.PresentationCore.Interactivity
     protected override void OnIsEnabledChanged()
     {
       UpdateCaseTriggers();
+      
       base.OnIsEnabledChanged();
     }
 
@@ -77,9 +78,10 @@ namespace Zaaml.PresentationCore.Interactivity
     {
       var defaultCase = _caseTriggers?.DefaultCaseTrigger;
       var isAnyOpen = false;
+      
       foreach (var trigger in ActualCaseTriggers.OfType<CaseTrigger>())
       {
-        trigger.IsOpen = TriggerCompareUtil.Compare(ActualSourceValue, trigger.Value, null);
+				trigger.IsOpen = TriggerCompareUtil.Compare(ActualSourceValue, trigger.GetActualValue(ActualSourceValue?.GetType()), null);
         isAnyOpen |= trigger.IsOpen;
       }
 

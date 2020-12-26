@@ -76,9 +76,19 @@ namespace Zaaml.UI.Controls.Ribbon
 
     #region  Methods
 
+    bool IManagedButton.InvokeCommandBeforeClick => false;
+
     protected virtual void OnClick()
     {
       RaiseOnClick();
+    }
+
+    void IManagedButton.OnPreClick()
+    {
+    }
+
+    void IManagedButton.OnPostClick()
+    {
     }
 
     private void OnCommandChanged()
@@ -230,7 +240,9 @@ namespace Zaaml.UI.Controls.Ribbon
 
     bool IManagedButton.IsMouseOver => IsMouseOver;
 
-    bool IManagedButton.ShouldFocusOnClick => false;
+    void IManagedButton.FocusControl()
+    {
+    }
 
     ClickMode IManagedButton.ClickMode => ClickMode;
 

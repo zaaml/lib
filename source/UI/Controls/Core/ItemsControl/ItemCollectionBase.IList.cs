@@ -8,10 +8,6 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem> : IList
 	{
-		#region Interface Implementations
-
-		#region IList
-
 		int IList.Add(object value)
 		{
 			return Add((TItem) value);
@@ -56,9 +52,5 @@ namespace Zaaml.UI.Controls.Core
 		bool IList.IsReadOnly => IsReadOnly;
 
 		bool IList.IsFixedSize => IsFixedSize;
-
-		#endregion
-
-		#endregion
 	}
 }

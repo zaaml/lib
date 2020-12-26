@@ -25,8 +25,8 @@ namespace Zaaml.UI.Controls.Core
 
 		internal BringIntoViewMode DefaultBringIntoViewMode
 		{
-			get => Items.DefaultBringIntoViewMode;
-			set => Items.DefaultBringIntoViewMode = value;
+			get => ItemCollection.DefaultBringIntoViewMode;
+			set => ItemCollection.DefaultBringIntoViewMode = value;
 		}
 
 		protected ScrollViewControl ScrollView => TemplateContract.ScrollView;
@@ -137,20 +137,20 @@ namespace Zaaml.UI.Controls.Core
 			base.OnTemplateContractDetaching();
 		}
 
-		internal void ScrollIntoView(int index)
+		internal void ScrollIntoView(BringIntoViewRequest<TItem> bringIntoViewRequest)
 		{
 			if (CanScrollIntoView == false)
 				return;
 
-			if (index == -1 || ScrollView == null || IsItemsHostVisible == false)
+			if (bringIntoViewRequest.Index == -1 || ScrollView == null || IsItemsHostVisible == false)
 				return;
 
-			if (IsOnCurrentPage(index, out var itemsHostRect, out var itemRect))
+			if (IsOnCurrentPage(bringIntoViewRequest.Index, out var itemsHostRect, out var itemRect))
 				return;
 
 			if (IsVirtualizing)
 			{
-				ItemsOverride.BringIntoView(index);
+				ItemCollectionOverride.BringIntoView(bringIntoViewRequest);
 
 				ScrollView?.UpdateLayout();
 			}
@@ -186,9 +186,9 @@ namespace Zaaml.UI.Controls.Core
 			return IsOnCurrentPage(index);
 		}
 
-		void IIndexedScrollableFocusNavigatorAdvisor<TItem>.ScrollIntoView(int index)
+		void IIndexedScrollableFocusNavigatorAdvisor<TItem>.ScrollIntoView(BringIntoViewRequest<TItem> bringIntoViewRequest)
 		{
-			ScrollIntoView(index);
+			ScrollIntoView(bringIntoViewRequest);
 		}
 
 		ScrollViewControl IScrollableFocusNavigatorAdvisor<TItem>.ScrollView => ScrollView;

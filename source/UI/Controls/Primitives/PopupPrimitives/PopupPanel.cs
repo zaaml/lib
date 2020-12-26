@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core;
@@ -10,7 +11,6 @@ using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
-using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Panels;
 using Zaaml.UI.Panels.Core;
@@ -19,24 +19,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
 	public sealed partial class PopupPanel : SingleChildPanel, ILayoutContextPanel
 	{
-		internal static readonly DependencyProperty PopupMinWidthProperty = DPM.RegisterAttached<double, PopupPanel>
-			("PopupMinWidth", 0, OnPopupSizeChanged);
-
-		internal static readonly DependencyProperty PopupMinHeightProperty = DPM.RegisterAttached<double, PopupPanel>
-			("PopupMinHeight", 0, OnPopupSizeChanged);
-
-		internal static readonly DependencyProperty PopupMaxWidthProperty = DPM.RegisterAttached<double, PopupPanel>
-			("PopupMaxWidth", double.PositiveInfinity, OnPopupSizeChanged);
-
-		internal static readonly DependencyProperty PopupMaxHeightProperty = DPM.RegisterAttached<double, PopupPanel>
-			("PopupMaxHeight", double.PositiveInfinity, OnPopupSizeChanged);
-
-		internal static readonly DependencyProperty PopupWidthProperty = DPM.RegisterAttached<double, PopupPanel>
-			("PopupWidth", double.NaN, OnPopupSizeChanged);
-
-		internal static readonly DependencyProperty PopupHeightProperty = DPM.RegisterAttached<double, PopupPanel>
-			("PopupHeight", double.NaN, OnPopupSizeChanged);
-
 		private Point _calculatedOffset;
 		private Rect _calculatedRect;
 		private bool _firstMeasure = true;
@@ -47,13 +29,18 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private Point _popupCoerceOffset;
 
+		internal event EventHandler ArrangedInternal;
+
 		internal PopupPanel(Popup popup)
 		{
 			Popup = popup;
 			LayoutContext = new PopupLayoutContext(this);
 			UseLayoutRounding = true;
-			//CompositionTarget.Rendering += CompositionTargetOnRendering;
 		}
+
+		internal Point ActualOffset => _calculatedOffset.Offset(Offset);
+
+		internal Size ActualSize { get; private set; }
 
 		internal bool IsMouseVisited { get; private set; }
 
@@ -108,12 +95,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				PopupSource.VerticalOffset = calculatedOffset.Y;
 		}
 
-		internal event EventHandler ArrangedInternal;
-
-		internal Point ActualOffset => _calculatedOffset.Offset(Offset);
-		
-		internal Size ActualSize { get; private set; }
-		
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
 			if (Popup?.IsOpen != true)
@@ -134,7 +115,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			}
 
 			ActualSize = finalSize;
-				
+
 			ApplyOffset();
 
 			ArrangedInternal?.Invoke(this, EventArgs.Empty);
@@ -199,36 +180,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			return popupCoerceOffset;
 		}
 
-		internal static double GetPopupHeight(UIElement element)
-		{
-			return (double) element.GetValue(PopupHeightProperty);
-		}
-
-		internal static double GetPopupMaxHeight(UIElement element)
-		{
-			return (double) element.GetValue(PopupMaxHeightProperty);
-		}
-
-		internal static double GetPopupMaxWidth(UIElement element)
-		{
-			return (double) element.GetValue(PopupMaxWidthProperty);
-		}
-
-		internal static double GetPopupMinHeight(UIElement element)
-		{
-			return (double) element.GetValue(PopupMinHeightProperty);
-		}
-
-		internal static double GetPopupMinWidth(UIElement element)
-		{
-			return (double) element.GetValue(PopupMinWidthProperty);
-		}
-
-		internal static double GetPopupWidth(UIElement element)
-		{
-			return (double) element.GetValue(PopupWidthProperty);
-		}
-
 		internal void InvalidatePlacement()
 		{
 			InvalidateMeasure();
@@ -277,6 +228,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 				MeasureChild(child, XamlConstants.InfiniteSize, false);
 
+				LayoutContext.UpdateInvalidElements();
+
 				measureContext = new MeasureContext(this, child.DesiredSize);
 
 				LayoutContext.MeasureContextPassCore = MeasureContextPass.PreviewMeasure;
@@ -285,6 +238,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 				if (LayoutContext.IsMeasureInvalidated)
 				{
+					LayoutContext.UpdateInvalidElements();
+
 					LayoutContext.MeasureContextPassCore = MeasureContextPass.MeasureToContent;
 
 					MeasureChild(child, XamlConstants.InfiniteSize, true);
@@ -357,21 +312,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			return false;
 		}
 
-		//private int _offsetDirty;
-
-		//private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
-		//{
-		//  if (_offsetDirty == 0)
-		//  {
-		//    ApplyOffset();
-		//    _offsetDirty = -1;
-		//  }
-		//  else if (_offsetDirty > 0)
-		//    _offsetDirty--;
-		//  else if (NeedChangeOffset())
-		//    _offsetDirty = 0;
-
-		//}
 		internal void OnIsHiddenChanged()
 		{
 			if (Popup.IsHidden)
@@ -403,15 +343,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			InvalidateMeasure();
 		}
 
-		private static void OnPopupSizeChanged(DependencyObject dependencyObject)
-		{
-			if (dependencyObject is FrameworkElement fre && fre.GetVisualParent() is PopupPanel popupPanel)
-			{
-				fre.InvalidateMeasure();
-				popupPanel.InvalidateMeasure();
-			}
-		}
-
 		LayoutContext ILayoutContextPanel.Context => LayoutContext;
 
 		private readonly struct MeasureContext
@@ -419,32 +350,17 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			public MeasureContext(PopupPanel panel, Size desiredContentSize)
 			{
 				var popup = panel.Popup;
-				var child = popup.Child;
 
 				DesiredContentSize = desiredContentSize;
 				Inflate = panel.CalcInflate();
 				PopupPlacement = popup.Placement ?? DefaultPlacement.GetDefault(popup);
 				ScreenBounds = PopupPlacement.ScreenBoundsCore;
-				PopupSize = new Size(GetPopupWidth(child), GetPopupHeight(child));
-				PopupMinSize = new Size(GetPopupMinWidth(child) + Inflate.Width(), GetPopupMinHeight(child) + Inflate.Height());
-				PopupMaxSize = new Size(GetPopupMaxWidth(child), GetPopupMaxHeight(child));
-
-				//if (double.IsNaN(PopupSize.Width) == false)
-				//	AvailableSize.Width = PopupSize.Width;
-
-				//if (double.IsNaN(PopupSize.Height) == false)
-				//	AvailableSize.Height = PopupSize.Height;
-
-				//AvailableSize = AvailableSize.Clamp(PopupMinSize, PopupMaxSize);
 			}
 
 			public readonly Size DesiredContentSize;
 			public readonly PopupPlacement PopupPlacement;
 			public readonly Rect ScreenBounds;
 			public readonly Thickness Inflate;
-			public readonly Size PopupMinSize;
-			public readonly Size PopupMaxSize;
-			public readonly Size PopupSize;
 		}
 
 		private class DefaultPlacement : PopupPlacement
@@ -472,6 +388,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		private sealed class PopupLayoutContext : LayoutContext
 		{
 			private MeasureContextPass _measureContextPassCore;
+			private readonly List<UIElement> _invalidMeasureElements = new List<UIElement>();
 
 			public PopupLayoutContext(PopupPanel popupPanel)
 			{
@@ -511,36 +428,20 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				base.OnDescendantMeasureDirty(element);
 
 				if (MeasureContextPassCore < MeasureContextPass.FinalMeasure)
+				{
 					IsMeasureInvalidated = true;
+
+					_invalidMeasureElements.Add(element);
+				}
+			}
+
+			public void UpdateInvalidElements()
+			{
+				foreach (var invalidMeasureElement in _invalidMeasureElements) 
+					invalidMeasureElement.InvalidateAncestorsMeasure(PopupPanel);
+
+				_invalidMeasureElements.Clear();
 			}
 		}
-
-#if !SILVERLIGHT //private bool _suspendFocus;
-//protected override void OnPreviewGotKeyboardFocus(KeyboardFocusChangedEventArgs e)
-//{
-//  if (_suspendFocus)
-//    return;
-
-//  base.OnPreviewGotKeyboardFocus(e);
-//  e.Handled = true;
-
-//  try
-//  {
-//    _suspendFocus = true;
-
-//    if (ReferenceEquals(e.NewFocus, this))
-//    {
-//      var control = Child?.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => c.Focusable);
-//      if (control != null)
-//        Keyboard.Focus(control);
-//    }
-
-//  }
-//  finally
-//  {
-//    _suspendFocus = false;
-//  }
-//}
-#endif
 	}
 }

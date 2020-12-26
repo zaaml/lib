@@ -39,6 +39,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.CopyMembersOverride(source);
 
 			var triggerSource = (SwitchDataTrigger) source;
+			
 			Binding = triggerSource.Binding;
 		}
 
@@ -61,9 +62,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			UpdateTrigger();
 		}
 
-		private static void OnValueChanged(InteractivityObject interactivityobject, object oldvalue, object newvalue)
+		private static void OnValueChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
-			((SwitchDataTrigger) interactivityobject).OnValueChanged();
+			((SwitchDataTrigger) interactivityObject).OnValueChanged();
 		}
 
 		internal override void UnloadCore(IInteractivityRoot root)

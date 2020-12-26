@@ -68,8 +68,8 @@ namespace Zaaml.UI.Controls.TreeView
 			if (treeNodeData == null)
 				return null;
 
-			if (_treeViewItem.Items.Count > 0)
-				return _generator.GetExplicitItem(treeNodeData)?.Items;
+			if (_treeViewItem.ItemCollection.Count > 0)
+				return _generator.GetExplicitItem(treeNodeData)?.ItemCollection;
 
 			var evaluator = GetEvaluator(treeNodeData.GetType());
 

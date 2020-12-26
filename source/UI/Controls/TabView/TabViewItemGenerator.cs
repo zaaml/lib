@@ -17,10 +17,10 @@ namespace Zaaml.UI.Controls.TabView
 
 		public TabViewItemGenerator()
 		{
-			Implementation = new TemplatedGeneratorImpl<TabViewItem>(this);
+			Implementation = new TemplatedGeneratorImplementation<TabViewItem>(this);
 		}
 
-		private TemplatedGeneratorImpl<TabViewItem> Implementation { get; }
+		private TemplatedGeneratorImplementation<TabViewItem> Implementation { get; }
 
 		public TabViewItemTemplate ItemTemplate
 		{

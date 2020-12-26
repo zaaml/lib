@@ -34,21 +34,19 @@
         <Border Width="16"
                 zm:DockPanel.Dock="Left">
           <zm:ToggleButton x:Name="ExpanderButton"
+                           Focusable="False"
                            IsChecked="{zm:TemplateBinding Path=IsExpanded,
                                                           Mode=TwoWay}"
                            IsTabStop="False"
-                           Focusable="False"
                            Template="{StaticResource ToggleButtonTemplate}"
                            Visibility="{zm:TemplateBinding Path=HasItems,
                                                            Converter={zm:VisibilityConverter}}" />
         </Border>
 
-        <!-- Glyph presenter -->
-        <zm:ContentPresenter zm:DockPanel.Dock="Left"
-                             EmptyVisibility="Collapsed"
-                             Content="{TemplateBinding Glyph}"
-                             ContentTemplate="{zm:TemplateBinding Path=TreeViewControl.ItemGlyphTemplate}"
-                             Margin="2,0" />
+        <!--  Glyph presenter  -->
+        <zm:TreeViewItemGlyphPresenter x:Name="GlyphPresenter"
+                                       Margin="2,0"
+                                       zm:DockPanel.Dock="Left" />
 
         <!--  CommonStatesBorder  -->
         <Border Padding="{TemplateBinding Padding}"
@@ -82,7 +80,7 @@
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="TreeViewItemStyle" BasedOn="{StaticResource TreeViewItemBaseStyle}" TargetType="zm:TreeViewItem" Skin="Metro.TreeViewItem">
+  <zm:Style x:Key="TreeViewItemStyle" BasedOn="{StaticResource TreeViewItemBaseStyle}" Skin="Metro.TreeViewItem" TargetType="zm:TreeViewItem">
 
     <zm:SetterGroup ValuePathSource="Skin">
 

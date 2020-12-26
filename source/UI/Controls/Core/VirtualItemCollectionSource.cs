@@ -23,9 +23,9 @@ namespace Zaaml.UI.Controls.Core
 			itemsHost.VirtualSource = VirtualCollection;
 		}
 
-		public override IEnumerable<TItem> ActualItems => VirtualCollection.ActualItems;
+		public override IEnumerable<TItem> Items => VirtualCollection.ActualItems;
 
-		public override int Count => VirtualCollection.Count;
+		public override int Count => VirtualCollection.ActualCount;
 
 		public override IEnumerable Source
 		{

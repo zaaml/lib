@@ -27,14 +27,14 @@ namespace Zaaml.UI.Controls.TreeView
 			return base.GetSource(item);
 		}
 
-		public override bool CanSelect(TreeViewItem item)
+		public override bool CanSelectItem(TreeViewItem item)
 		{
 			return item.CanSelectInternal;
 		}
 
 		public override bool HasSource => TreeViewControl.SourceCollection != null;
 		
-		public override bool TryGetItemBySource(object source, bool ensure, out TreeViewItem item)
+		public override bool TryGetItem(object source, bool ensure, out TreeViewItem item)
 		{
 			TreeViewControl.EnsureVirtualItemCollection();
 

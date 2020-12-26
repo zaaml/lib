@@ -19,13 +19,19 @@ namespace Zaaml.UI.Controls.Primitives
 
 		bool IsPressed { get; set; }
 
-    bool ShouldFocusOnClick { get; }
-
+		bool InvokeCommandBeforeClick { get; }
+		
 		#endregion
 
 		#region  Methods
 
 		void OnClick();
+		
+		void OnPreClick();
+		
+		void OnPostClick();
+
+		void FocusControl();
 
 		#endregion
 	}

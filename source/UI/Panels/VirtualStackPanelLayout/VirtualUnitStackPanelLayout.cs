@@ -31,6 +31,8 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		internal bool PreserveScrollInfo { get; set; }
 
+		public bool ScrollInfoDirty { get; private set; }
+
 		private VirtualUIElementCollectionInserter UIElementInserter { get; } = new VirtualUIElementCollectionInserter();
 
 		protected override Size ArrangeCore(Size finalSize)
@@ -95,6 +97,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			orientedViewer.Offset = orientedViewer.Offset - index > 0.0 || mode == BringIntoViewMode.Top
 				? index
 				: index - orientedViewer.Viewport + 1.0;
+
 			orientedOffset.Direct = orientedViewer.Offset;
 
 			return orientedOffset.Vector;
@@ -170,6 +173,38 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			return LayoutInformation.GetLayoutSlot(item);
 		}
 
+		private void HandleBringIntoView()
+		{
+			var bringIntoViewIndex = -1;
+			var bringIntoViewMode = BringIntoViewMode.Default;
+
+			if (_enqueueBringIntoViewRequest != null)
+			{
+				bringIntoViewMode = _enqueueBringIntoViewRequest.Mode;
+
+				var frameworkElement = _enqueueBringIntoViewRequest.ElementInternal;
+
+				bringIntoViewIndex = frameworkElement != null
+					? Source.GetIndexFromItem(frameworkElement)
+					: _enqueueBringIntoViewRequest.Index;
+
+				if (bringIntoViewIndex == -1)
+					bringIntoViewIndex = _enqueueBringIntoViewRequest.FallbackIndex;
+			}
+
+			if (bringIntoViewIndex != -1)
+			{
+				var orientation = Orientation;
+				var extent = Extent.AsOriented(orientation);
+
+				extent.Direct = extent.Direct.Clamp(bringIntoViewIndex + Viewport.AsOriented(orientation).Direct, double.MaxValue);
+
+				Offset = CalcBringIntoViewOffset(bringIntoViewIndex, bringIntoViewMode, Viewport, extent.Size, Offset);
+			}
+
+			_enqueueBringIntoViewRequest = null;
+		}
+
 		private void MeasureChild(UIElement element, Size constraint)
 		{
 			element.Measure(constraint);
@@ -206,10 +241,19 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 				UIElementInserter.Leave();
 			}
 
+			var offset = context.CalcOffset();
+			var scrollInfo = context.CalcScrollInfo();
+
 			if (PreserveScrollInfo == false)
 			{
-				Offset = context.CalcOffset();
-				ScrollInfo = context.CalcScrollInfo();
+				Offset = offset;
+				ScrollInfo = scrollInfo;
+
+				ScrollInfoDirty = false;
+			}
+			else
+			{
+				ScrollInfoDirty = offset.Equals(Offset) == false || scrollInfo.Equals(ScrollInfo) == false;
 			}
 
 			_pixelViewport = context.CalcFinalSize();
@@ -218,39 +262,6 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			UpdateTransform();
 
 			return _pixelViewport;
-		}
-
-		private void HandleBringIntoView()
-		{
-			var bringIntoViewIndex = -1;
-			var bringIntoViewMode = BringIntoViewMode.Default;
-
-			if (_enqueueBringIntoViewRequest != null)
-			{
-				bringIntoViewMode = _enqueueBringIntoViewRequest.Mode;
-
-				var frameworkElement = _enqueueBringIntoViewRequest.ElementInternal;
-
-				bringIntoViewIndex = frameworkElement != null
-					? Source.GetIndexFromItem(frameworkElement)
-					: _enqueueBringIntoViewRequest.Index;
-
-				if (bringIntoViewIndex == -1)
-					bringIntoViewIndex = _enqueueBringIntoViewRequest.FallbackIndex;
-			}
-
-			if (bringIntoViewIndex != -1)
-			{
-				var orientation = Orientation;
-				var extent = Extent.AsOriented(orientation);
-
-				extent.Direct =
-					extent.Direct.Clamp(bringIntoViewIndex + Viewport.AsOriented(orientation).Direct, double.MaxValue);
-
-				Offset = CalcBringIntoViewOffset(bringIntoViewIndex, bringIntoViewMode, Viewport, extent.Size, Offset);
-			}
-
-			_enqueueBringIntoViewRequest = null;
 		}
 
 		internal void OnItemAttachedInternal(UIElement element)

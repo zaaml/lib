@@ -1,4 +1,4 @@
-﻿// <copyright file="VirtualTreeItemCollection.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="VirtualTreeViewItemCollection.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -17,7 +17,7 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewControl = treeViewControl;
 		}
 
-		public TreeViewItemRootCollection Items => TreeViewControl.Items;
+		public TreeViewItemRootCollection Items => TreeViewControl.ItemCollection;
 
 		public TreeViewControl TreeViewControl { get; }
 
@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 				_treeViewData = value;
 
-				Init(_treeViewData.DataPlainListView, ReferenceEquals(_treeViewData.Source, TreeViewControl.Items) ? OperatingMode.Real : OperatingMode.Virtual);
+				Init(_treeViewData.DataPlainListView, ReferenceEquals(_treeViewData.Source, TreeViewControl.ItemCollection) ? OperatingMode.Real : OperatingMode.Virtual);
 			}
 		}
 
@@ -47,8 +47,8 @@ namespace Zaaml.UI.Controls.TreeView
 			base.OnGeneratedItemAttached(index, item);
 
 			item.TreeViewItemData = TreeViewData.GetNode(index);
-			
-			var itemsControl = (IItemsControl<TreeViewItem>)TreeViewControl;
+
+			var itemsControl = (IItemsControl<TreeViewItem>) TreeViewControl;
 
 			itemsControl.OnItemAttaching(item);
 			itemsControl.OnItemAttached(item);
@@ -58,15 +58,15 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			item.TreeViewItemData = null;
 
-			var itemsControl = (IItemsControl<TreeViewItem>)TreeViewControl;
+			var itemsControl = (IItemsControl<TreeViewItem>) TreeViewControl;
 
 			itemsControl.OnItemDetaching(item);
 			itemsControl.OnItemDetached(item);
-			
+
 			base.OnGeneratedItemDetached(index, item);
 		}
 
-		public int ActualCount => TreeViewData?.VisibleFlatCount ?? 0;
+		int IItemCollection<TreeViewItem>.ActualCount => TreeViewData?.VisibleFlatCount ?? 0;
 
 		public override int GetIndexFromItem(TreeViewItem item)
 		{
@@ -76,11 +76,11 @@ namespace Zaaml.UI.Controls.TreeView
 			return TreeViewData.FindIndex(item.TreeViewItemData);
 		}
 
-		public void BringIntoView(int index)
+		public void BringIntoView(BringIntoViewRequest<TreeViewItem> bringIntoViewRequest)
 		{
 			var virtualPanel = (IItemsHost<TreeViewItem>) TreeViewControl?.ItemsPresenterInternal?.ItemsHostInternal;
 
-			virtualPanel?.BringIntoView(new BringIntoViewRequest<TreeViewItem>(index, TreeViewControl.DefaultBringIntoViewMode));
+			virtualPanel?.BringIntoView(bringIntoViewRequest);
 		}
 	}
 }

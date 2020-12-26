@@ -15,7 +15,8 @@
     <zm:ControlTemplateRoot VisualStateGroups="{StaticResource VisualStates}">
 
       <!--  DropDownButton  -->
-      <zm:DropDownButton HorizontalContentAlignment="Stretch"
+      <zm:DropDownButton Padding="5,2"
+                         HorizontalContentAlignment="Stretch"
                          VerticalContentAlignment="Stretch"
                          BorderThickness="{TemplateBinding BorderThickness}"
                          IsDropDownOpen="{Binding Path=IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
@@ -32,19 +33,12 @@
           <!--  DropDownControl  -->
           <zm:PopupBar x:Name="Popup"
                        PlacementOptions="{TemplateBinding PlacementOptions}"
-                       PopupHeight="{zm:TemplateBinding Path=PopupHeight}"
-                       PopupMaxHeight="{zm:TemplateBinding Path=PopupMaxHeight}"
-                       PopupMaxWidth="{zm:TemplateBinding Path=PopupMaxWidth}"
-                       PopupMinHeight="{zm:TemplateBinding Path=PopupMinHeight}"
-                       PopupMinWidth="{zm:Binding Path=ActualValue,
-                                                  ElementName=PopupMinWidthAsset}"
-                       PopupWidth="{zm:TemplateBinding Path=PopupWidth}">
-
-            <zm:Extension.Assets>
-              <zm:DoubleClampAsset x:Name="PopupMinWidthAsset"
-                                   Minimum="{zm:TemplateBinding Path=ActualWidth}"
-                                   Value="{zm:TemplateBinding Path=PopupMinWidth}" />
-            </zm:Extension.Assets>
+                       PopupHeight="{TemplateBinding PopupHeight}"
+                       PopupMaxHeight="{TemplateBinding PopupMaxHeight}"
+                       PopupMaxWidth="{TemplateBinding PopupMaxWidth}"
+                       PopupMinHeight="{TemplateBinding PopupMinHeight}"
+                       PopupMinWidth="{TemplateBinding PopupMinWidth}"
+                       PopupWidth="{TemplateBinding PopupWidth}">
 
             <zm:DockPanel>
 
@@ -112,6 +106,7 @@
           <!--  Filter  -->
           <zm:FilterTextBox x:Name="FilterTextBox"
                             BorderThickness="0"
+                            Delay="{TemplateBinding PostTextDelay}"
                             FilterText="{zm:TemplateBinding Path=Text,
                                                             Mode=TwoWay,
                                                             UpdateSourceTrigger=PropertyChanged}"
@@ -136,19 +131,12 @@
               <!--  DropDownControl  -->
               <zm:PopupBar x:Name="Popup"
                            PlacementOptions="{TemplateBinding PlacementOptions}"
-                           PopupHeight="{zm:TemplateBinding Path=PopupHeight}"
-                           PopupMaxHeight="{zm:TemplateBinding Path=PopupMaxHeight}"
-                           PopupMaxWidth="{zm:TemplateBinding Path=PopupMaxWidth}"
-                           PopupMinHeight="{zm:TemplateBinding Path=PopupMinHeight}"
-                           PopupMinWidth="{zm:Binding Path=ActualValue,
-                                                      ElementName=PopupMinWidthAsset}"
-                           PopupWidth="{zm:TemplateBinding Path=PopupWidth}">
-
-                <zm:Extension.Assets>
-                  <zm:DoubleClampAsset x:Name="PopupMinWidthAsset"
-                                       Minimum="{zm:TemplateBinding Path=ActualWidth}"
-                                       Value="{zm:TemplateBinding Path=PopupMinWidth}" />
-                </zm:Extension.Assets>
+                           PopupHeight="{TemplateBinding PopupHeight}"
+                           PopupMaxHeight="{TemplateBinding PopupMaxHeight}"
+                           PopupMaxWidth="{TemplateBinding PopupMaxWidth}"
+                           PopupMinHeight="{TemplateBinding PopupMinHeight}"
+                           PopupMinWidth="{TemplateBinding PopupMinWidth}"
+                           PopupWidth="{TemplateBinding PopupWidth}">
 
                 <zm:DockPanel>
 
@@ -196,14 +184,23 @@
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
+  <!--  TemplateConverter  -->
+  <zm:SwitchConverter x:Key="TemplateConverter">
+    <zm:Case Key="{zm:Static Member=zm:DropDownEditableSelectorDisplayMode.TextEditor}" Value="{StaticResource DropDownTreeViewControlEditableTemplate}" />
+    <zm:Default Value="{StaticResource DropDownTreeViewControlTemplate}" />
+  </zm:SwitchConverter>
+
   <!--  Base Style  -->
   <zm:Style x:Key="DropDownTreeViewControlBaseStyle" TargetType="zm:DropDownTreeViewControl">
+    <zm:Setter Property="PopupMinWidth" Value="*Target" />
+    <zm:Setter Property="PopupMaxHeight" Value="0.33*Screen" />
+
     <zm:Setter Property="BorderThickness" Value="1" />
     <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
     <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
     <zm:Setter Property="PopupMinHeight" Value="100" />
     <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
-    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=IsTextEditable, Converter={zm:TernaryConverter TrueValue={StaticResource DropDownTreeViewControlEditableTemplate}, FalseValue={StaticResource DropDownTreeViewControlTemplate}}}" />
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualDisplayMode, Converter={StaticResource TemplateConverter}}" />
   </zm:Style>
 
   <!--  Style  -->

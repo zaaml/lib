@@ -32,7 +32,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			item.SetValue(FrameworkElement.DataContextProperty, source);
 
-			_dataTemplateBindingHelper.EnsureBinding(item);
+			_dataTemplateBindingHelper?.EnsureBinding(item);
 		}
 
 		public TItemBase Load(object source)

@@ -34,12 +34,12 @@ namespace Zaaml.UI.Controls.Core
 					return;
 
 				if (focusedItem != null)
-					Items.UnlockItemInternal(focusedItem);
+					ItemCollection.UnlockItemInternal(focusedItem);
 
 				_weakFocusedItem = value != null ? new WeakReference<TItem>(value) : null;
 
 				if (value != null)
-					Items.LockItemInternal(value);
+					ItemCollection.LockItemInternal(value);
 			}
 		}
 
@@ -60,6 +60,11 @@ namespace Zaaml.UI.Controls.Core
 				FocusManager.SetFocusedElement(focusScope, item);
 		}
 
+		internal void FocusItemInternal(TItem item)
+		{
+			FocusItem(item);
+		}
+		
 		protected bool IsNavigationKey(Key key)
 		{
 			return FocusNavigator.IsNavigationKey(key);
@@ -122,7 +127,7 @@ namespace Zaaml.UI.Controls.Core
 
 		TItem IIndexedFocusNavigatorAdvisor<TItem>.EnsureItem(int index)
 		{
-			return ItemsOverride.EnsureItem(index);
+			return ItemCollectionOverride.EnsureItem(index);
 		}
 
 		TItem IIndexedFocusNavigatorAdvisor<TItem>.GetItemFromIndex(int index)
@@ -137,12 +142,12 @@ namespace Zaaml.UI.Controls.Core
 
 		void IIndexedFocusNavigatorAdvisor<TItem>.LockItem(TItem item)
 		{
-			ItemsOverride.LockItem(item);
+			ItemCollectionOverride.LockItem(item);
 		}
 
 		void IIndexedFocusNavigatorAdvisor<TItem>.UnlockItem(TItem item)
 		{
-			ItemsOverride.UnlockItem(item);
+			ItemCollectionOverride.UnlockItem(item);
 		}
 	}
 }

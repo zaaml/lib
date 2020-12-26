@@ -10,6 +10,7 @@ using System.Linq;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.Core.Trees;
+using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
@@ -90,12 +91,16 @@ namespace Zaaml.UI.Data.Hierarchy
 				if (ReferenceEquals(Source, value))
 					return;
 
+				IndexedSource = value != null ? new IndexedEnumerable(value) : IndexedEnumerable.Empty;
+
 				Nodes.Source = value;
 
 				LoadNodes();
 				RaiseReset();
 			}
 		}
+
+		internal IndexedEnumerable IndexedSource { get; private set; } = IndexedEnumerable.Empty;
 
 		private bool SuspendCollectionChange
 		{

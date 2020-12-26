@@ -23,7 +23,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		protected TimeSpan ActualCloseDelay => DelayTrigger?.CloseDelay ?? TimeSpan.Zero;
 
-		protected DelayStateTrigger ActualDelayTrigger => DelayTrigger ?? (DelayTrigger = new DelayStateTrigger(base.OpenTriggerCore, TimeSpan.Zero, base.CloseTriggerCore, TimeSpan.Zero));
+		protected DelayStateTrigger ActualDelayTrigger => DelayTrigger ??= new DelayStateTrigger(base.OpenTriggerCore, TimeSpan.Zero, base.CloseTriggerCore, TimeSpan.Zero);
 
 		protected TimeSpan ActualOpenDelay => DelayTrigger?.OpenDelay ?? TimeSpan.Zero;
 
@@ -76,7 +76,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			var sourceDelayTrigger = (DelayStateTriggerBase) source;
 
-			if (sourceDelayTrigger.DelayTrigger == null) return;
+			if (sourceDelayTrigger.DelayTrigger == null) 
+				return;
 
 			OpenDelay = sourceDelayTrigger.OpenDelay;
 			CloseDelay = sourceDelayTrigger.CloseDelay;

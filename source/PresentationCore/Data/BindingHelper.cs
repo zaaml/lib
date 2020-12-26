@@ -20,9 +20,20 @@ namespace Zaaml.PresentationCore.Data
     #region  Methods
 
     public static void BindProperties(this DependencyObject target, DependencyProperty targetProperty, DependencyObject source,
-      DependencyProperty sourceProperty, BindingMode mode = BindingMode.OneWay, IValueConverter converter = null)
+      DependencyProperty sourceProperty, BindingMode mode = BindingMode.OneWay, IValueConverter converter = null, object targetNullValue = null)
     {
-      target.SetBinding(targetProperty, new Binding { Path = new PropertyPath(sourceProperty), Source = source, Mode = mode, Converter = converter });
+	    var binding = new Binding
+	    {
+		    Path = new PropertyPath(sourceProperty), 
+		    Source = source, 
+		    Mode = mode, 
+		    Converter = converter 
+	    };
+
+	    if (targetNullValue != null)
+		    binding.TargetNullValue = targetNullValue;
+
+	    target.SetBinding(targetProperty, binding);
     }
 
     public static IDisposable BindPropertiesDisposable(this DependencyObject target, DependencyProperty targetProperty, DependencyObject source,

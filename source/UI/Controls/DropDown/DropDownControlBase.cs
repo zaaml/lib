@@ -2,65 +2,73 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.ComponentModel;
 using System.Windows;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 
 namespace Zaaml.UI.Controls.DropDown
 {
 	public class DropDownControlBase : TemplateContractControl
 	{
-		public static readonly DependencyProperty PopupMinHeightProperty = DPM.Register<double, DropDownControlBase>
-			("PopupMinHeight", 0.0);
+		public static readonly DependencyProperty PopupMinHeightProperty = DPM.Register<PopupLength, DropDownControlBase>
+			("PopupMinHeight", new PopupLength(0.0));
 
-		public static readonly DependencyProperty PopupMinWidthProperty = DPM.Register<double, DropDownControlBase>
-			("PopupMinWidth", 0.0);
+		public static readonly DependencyProperty PopupMinWidthProperty = DPM.Register<PopupLength, DropDownControlBase>
+			("PopupMinWidth", new PopupLength(0.0));
 
-		public static readonly DependencyProperty PopupMaxHeightProperty = DPM.Register<double, DropDownControlBase>
-			("PopupMaxHeight", double.PositiveInfinity);
+		public static readonly DependencyProperty PopupMaxHeightProperty = DPM.Register<PopupLength, DropDownControlBase>
+			("PopupMaxHeight", new PopupLength(double.PositiveInfinity));
 
-		public static readonly DependencyProperty PopupMaxWidthProperty = DPM.Register<double, DropDownControlBase>
-			("PopupMaxWidth", double.PositiveInfinity);
+		public static readonly DependencyProperty PopupMaxWidthProperty = DPM.Register<PopupLength, DropDownControlBase>
+			("PopupMaxWidth", new PopupLength(double.PositiveInfinity));
 
-		public static readonly DependencyProperty PopupWidthProperty = DPM.Register<double, DropDownControlBase>
-			("PopupWidth", double.NaN);
+		public static readonly DependencyProperty PopupWidthProperty = DPM.Register<PopupLength, DropDownControlBase>
+			("PopupWidth", PopupLength.Auto);
 
-		public static readonly DependencyProperty PopupHeightProperty = DPM.Register<double, DropDownControlBase>
-			("PopupHeight", double.NaN);
+		public static readonly DependencyProperty PopupHeightProperty = DPM.Register<PopupLength, DropDownControlBase>
+			("PopupHeight", PopupLength.Auto);
 
-		public double PopupHeight
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupHeight
 		{
-			get => (double) GetValue(PopupHeightProperty);
+			get => (PopupLength) GetValue(PopupHeightProperty);
 			set => SetValue(PopupHeightProperty, value);
 		}
 
-		public double PopupMaxHeight
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupMaxHeight
 		{
-			get => (double) GetValue(PopupMaxHeightProperty);
+			get => (PopupLength) GetValue(PopupMaxHeightProperty);
 			set => SetValue(PopupMaxHeightProperty, value);
 		}
 
-		public double PopupMaxWidth
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupMaxWidth
 		{
-			get => (double) GetValue(PopupMaxWidthProperty);
+			get => (PopupLength) GetValue(PopupMaxWidthProperty);
 			set => SetValue(PopupMaxWidthProperty, value);
 		}
 
-		public double PopupMinHeight
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupMinHeight
 		{
-			get => (double) GetValue(PopupMinHeightProperty);
+			get => (PopupLength) GetValue(PopupMinHeightProperty);
 			set => SetValue(PopupMinHeightProperty, value);
 		}
 
-		public double PopupMinWidth
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupMinWidth
 		{
-			get => (double) GetValue(PopupMinWidthProperty);
+			get => (PopupLength) GetValue(PopupMinWidthProperty);
 			set => SetValue(PopupMinWidthProperty, value);
 		}
 
-		public double PopupWidth
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupWidth
 		{
-			get => (double) GetValue(PopupWidthProperty);
+			get => (PopupLength) GetValue(PopupWidthProperty);
 			set => SetValue(PopupWidthProperty, value);
 		}
 	}

@@ -134,6 +134,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			protected TriggerRuntimeBase(EventStateTriggerBase trigger)
 			{
 				ActualSource = trigger.ActualSource;
+				
 				_weakTriggerReference = new WeakReference(trigger);
 			}
 

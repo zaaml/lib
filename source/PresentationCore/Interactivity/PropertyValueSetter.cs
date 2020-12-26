@@ -680,7 +680,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
     protected virtual void OnActualTargetChanged(DependencyObject oldTarget, DependencyObject newTarget)
     {
-      PropertyResolver.UnresolveProperty(this);
+      PropertyResolver.UnResolveProperty(this);
       Reapply();
     }
 
@@ -781,8 +781,8 @@ namespace Zaaml.PresentationCore.Interactivity
     {
       base.UnloadCore(root);
 
-      PropertyResolver.UnresolveProperty(this);
-      SubjectResolver.UnresolveSubject(this);
+      PropertyResolver.UnResolveProperty(this);
+      SubjectResolver.UnResolveSubject(this);
     }
 
     #endregion

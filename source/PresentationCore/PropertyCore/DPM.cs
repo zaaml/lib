@@ -132,6 +132,11 @@ namespace Zaaml.PresentationCore.PropertyCore
 			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
+		public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action<DependencyPropertyChangedEventArgs>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
+		{
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable)));
+		}
+
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty, TProperty, TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
 			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));

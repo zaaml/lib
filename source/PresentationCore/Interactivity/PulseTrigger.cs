@@ -31,7 +31,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
-		public PulseTriggerBehavior PulseBehavior
+		public PulseTriggerBehavior Behavior
 		{
 			get => Trigger?.PulseBehavior ?? PulseTriggerBehavior.Default;
 			set => ActualTrigger.PulseBehavior = value;
@@ -70,7 +70,6 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			return new PulseTrigger();
 		}
-
 
 		protected override void InvokeCore()
 		{
@@ -164,6 +163,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			protected override void OnOpenedCore()
 			{
 				State = StateKind.Closing;
+				
 				ActualDelayTrigger.InvokeClose();
 			}
 
@@ -172,6 +172,7 @@ namespace Zaaml.PresentationCore.Interactivity
 				if (State == StateKind.Closed)
 				{
 					State = StateKind.Opening;
+					
 					ActualDelayTrigger.InvokeOpen();
 				}
 				else if (State == StateKind.Opening)

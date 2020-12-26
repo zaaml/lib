@@ -18,7 +18,7 @@ namespace Zaaml.PresentationCore.Animation.Animators
 
     object Start { get; set; }
 
-    double Time { get; set; }
+    double RelativeTime { get; set; }
 
     #endregion
   }
@@ -35,7 +35,7 @@ namespace Zaaml.PresentationCore.Animation.Animators
 
     T Start { get; set; }
 
-    double Time { get; set; }
+    double RelativeTime { get; set; }
 
     #endregion
   }

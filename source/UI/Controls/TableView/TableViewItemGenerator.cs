@@ -17,10 +17,10 @@ namespace Zaaml.UI.Controls.TableView
 
 		public TableViewItemGenerator()
 		{
-			Implementation = new TemplatedGeneratorImpl<TableViewItem>(this);
+			Implementation = new TemplatedGeneratorImplementation<TableViewItem>(this);
 		}
 
-		private TemplatedGeneratorImpl<TableViewItem> Implementation { get; }
+		private TemplatedGeneratorImplementation<TableViewItem> Implementation { get; }
 
 		public TableViewItemTemplate ItemTemplate
 		{

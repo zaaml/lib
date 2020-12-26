@@ -2,6 +2,11 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+#if SILVERLIGHT
+using RoutedEventArgsSL = System.Windows.RoutedEventArgsSL;
+#else
+using RoutedEventArgsSL = System.Windows.RoutedEventArgs;
+#endif
 using System.Windows;
 using System.Windows.Input;
 using Zaaml.Core;
@@ -11,147 +16,173 @@ using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.DropDown;
 using Zaaml.UI.Controls.Primitives;
-#if SILVERLIGHT
-using RoutedEventArgsSL = System.Windows.RoutedEventArgsSL;
-#else
-using RoutedEventArgsSL = System.Windows.RoutedEventArgs;
-
-#endif
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  [TemplateContractType(typeof(RibbonSplitButtonBaseTemplateContract))]
-  public class RibbonSplitButtonBase : RibbonDropDownButtonBase
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(RibbonSplitButtonBaseTemplateContract))]
+	public class RibbonSplitButtonBase : RibbonDropDownButtonBase
+	{
+		#region Fields
 
-    public static readonly DependencyProperty DropDownPlacementProperty = DPM.Register<SplitButtonPopupPlacementTarget, RibbonSplitButtonBase>
-      ("DropDownPlacement", SplitButtonPopupPlacementTarget.SplitButton, b => b.UpdateDropDownPlacement);
+		private byte _packedValue;
 
-    public static readonly DependencyProperty ShowDropDownButtonProperty = DPM.Register<bool, RibbonSplitButtonBase>
-      ("ShowDropDownButton", true);
+		#endregion
 
-    #endregion
+		#region Nested Types
 
-    #region Fields
+		private static class PackedDefinition
+		{
+			#region Static Fields and Constants
 
-    private byte _packedValue;
+			public static readonly PackedBoolItemDefinition IsDropDownButtonMouseOver;
 
-    #endregion
+			#endregion
 
-    #region Properties
+			#region Ctors
 
-    internal override bool CanFocusOnClose => DropDownButton?.IsPressed == false;
+			static PackedDefinition()
+			{
+				var allocator = new PackedValueAllocator();
 
-    private ToggleButton DropDownButton => TemplateContract.DropDownButton;
+				IsDropDownButtonMouseOver = allocator.AllocateBoolItem();
+			}
 
-    public SplitButtonPopupPlacementTarget DropDownPlacement
-    {
-      get => this.GetValue<SplitButtonPopupPlacementTarget>(DropDownPlacementProperty);
-      set => this.SetValue<SplitButtonPopupPlacementTarget>(DropDownPlacementProperty, value);
-    }
+			#endregion
+		}
 
-    private bool IsDropDownButtonMouseOver
-    {
-      get => PackedDefinition.IsDropDownButtonMouseOver.GetValue(_packedValue);
-      set => PackedDefinition.IsDropDownButtonMouseOver.SetValue(ref _packedValue, value);
-    }
+		#endregion
 
-    public bool ShowDropDownButton
-    {
-      get => this.GetValue<bool>(ShowDropDownButtonProperty);
-      set => this.SetValue<bool>(ShowDropDownButtonProperty, value);
-    }
+		#region Static Fields and Constants
 
-    private RibbonSplitButtonBaseTemplateContract TemplateContract => (RibbonSplitButtonBaseTemplateContract) TemplateContractInternal;
+		public static readonly DependencyProperty DropDownPlacementProperty =
+			DPM.Register<SplitButtonPopupPlacementTarget, RibbonSplitButtonBase>
+				("DropDownPlacement", SplitButtonPopupPlacementTarget.SplitButton, b => b.UpdateDropDownPlacement);
 
-    #endregion
+		public static readonly DependencyProperty ShowDropDownButtonProperty = DPM.Register<bool, RibbonSplitButtonBase>
+			("ShowDropDownButton", true);
 
-    #region  Methods
+		#endregion
 
-    private static void DropDownButtonOnClick(object sender, RoutedEventArgsSL e)
-    {
-      e.Handled = true;
-    }
+		#region Properties
 
-    private void DropDownButtonOnMouseEnter(object sender, MouseEventArgs e)
-    {
-      IsDropDownButtonMouseOver = true;
-      UpdateVisualState(true);
-    }
+		internal override bool CanFocusOnClose => DropDownButton?.IsPressed == false;
 
-    private void DropDownButtonOnMouseLeave(object sender, MouseEventArgs e)
-    {
-      IsDropDownButtonMouseOver = false;
-      UpdateVisualState(true);
-    }
+		private ToggleButton DropDownButton => TemplateContract.DropDownButton;
 
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
-      UpdateDropDownPlacement();
+		public SplitButtonPopupPlacementTarget DropDownPlacement
+		{
+			get => this.GetValue<SplitButtonPopupPlacementTarget>(DropDownPlacementProperty);
+			set => this.SetValue<SplitButtonPopupPlacementTarget>(DropDownPlacementProperty, value);
+		}
 
-      DropDownButton.Click += DropDownButtonOnClick;
-      DropDownButton.MouseEnter += DropDownButtonOnMouseEnter;
-      DropDownButton.MouseLeave += DropDownButtonOnMouseLeave;
-    }
+		private bool IsDropDownButtonMouseOver
+		{
+			get => PackedDefinition.IsDropDownButtonMouseOver.GetValue(_packedValue);
+			set => PackedDefinition.IsDropDownButtonMouseOver.SetValue(ref _packedValue, value);
+		}
 
-    protected override void OnTemplateContractDetaching()
-    {
-      DropDownButton.Click -= DropDownButtonOnClick;
-      DropDownButton.MouseEnter -= DropDownButtonOnMouseEnter;
-      DropDownButton.MouseLeave -= DropDownButtonOnMouseLeave;
+		public bool ShowDropDownButton
+		{
+			get => this.GetValue<bool>(ShowDropDownButtonProperty);
+			set => this.SetValue<bool>(ShowDropDownButtonProperty, value);
+		}
 
-      base.OnTemplateContractDetaching();
-      UpdateDropDownPlacement();
-    }
+		private RibbonSplitButtonBaseTemplateContract TemplateContract =>
+			(RibbonSplitButtonBaseTemplateContract) TemplateContractInternal;
 
-    private void UpdateDropDownPlacement()
-    {
-      PlacementTarget = DropDownPlacement == SplitButtonPopupPlacementTarget.SplitButton ? this : (FrameworkElement) DropDownButton ?? this;
-    }
+		#endregion
 
-    protected override void UpdateVisualState(bool useTransitions)
-    {
-      base.UpdateVisualState(useTransitions);
+		#region Methods
 
-      GotoVisualState(IsDropDownButtonMouseOver ? "DropDownButtonMouseOver" : "DropDownButtonNormal", useTransitions);
-    }
+		private void DropDownButtonOnMouseEnter(object sender, MouseEventArgs e)
+		{
+			IsDropDownButtonMouseOver = true;
+			UpdateVisualState(true);
+		}
 
-    #endregion
+		private void DropDownButtonOnClick(object sender, RoutedEventArgsSL e)
+		{
+			if (IsDropDownOpen == false)
+				OpenDropDown();
+			else
+				CloseDropDown();
 
-    #region  Nested Types
+			UpdateDropDownButton();
 
-    private static class PackedDefinition
-    {
-      #region Static Fields and Constants
+			e.Handled = true;
+		}
 
-      public static readonly PackedBoolItemDefinition IsDropDownButtonMouseOver;
+		private void DropDownButtonOnMouseLeave(object sender, MouseEventArgs e)
+		{
+			IsDropDownButtonMouseOver = false;
+			UpdateVisualState(true);
+		}
 
-      #endregion
+		private void UpdateDropDownButton()
+		{
+			DropDownButton.IsChecked = IsDropDownOpen;
+		}
 
-      #region Ctors
+		private protected override void OnIsDropDownOpenChangedInternal()
+		{
+			base.OnIsDropDownOpenChangedInternal();
 
-      static PackedDefinition()
-      {
-        var allocator = new PackedValueAllocator();
+			UpdateDropDownButton();
+		}
 
-        IsDropDownButtonMouseOver = allocator.AllocateBoolItem();
-      }
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-      #endregion
-    }
+			UpdateDropDownPlacement();
 
-    #endregion
-  }
+			DropDownButton.Click += DropDownButtonOnClick;
+			DropDownButton.MouseEnter += DropDownButtonOnMouseEnter;
+			DropDownButton.MouseLeave += DropDownButtonOnMouseLeave;
+		}
 
-  public class RibbonSplitButtonBaseTemplateContract : RibbonDropDownButtonBaseTemplateContract
-  {
-    #region Properties
+		protected override void OnTemplateContractDetaching()
+		{
+			DropDownButton.Click -= DropDownButtonOnClick;
+			DropDownButton.MouseEnter -= DropDownButtonOnMouseEnter;
+			DropDownButton.MouseLeave -= DropDownButtonOnMouseLeave;
 
-    [TemplateContractPart]
-    public ToggleButton DropDownButton { get; [UsedImplicitly] private set; }
+			base.OnTemplateContractDetaching();
 
-    #endregion
-  }
+			UpdateDropDownPlacement();
+		}
+
+		private void UpdateDropDownPlacement()
+		{
+			PlacementTarget = DropDownPlacement == SplitButtonPopupPlacementTarget.SplitButton
+				? this
+				: (FrameworkElement) DropDownButton ?? this;
+		}
+
+		protected override void OnClick()
+		{
+			CloseDropDown();
+
+			base.OnClick();
+		}
+
+		protected override void UpdateVisualState(bool useTransitions)
+		{
+			base.UpdateVisualState(useTransitions);
+
+			GotoVisualState(IsDropDownButtonMouseOver ? "DropDownButtonMouseOver" : "DropDownButtonNormal", useTransitions);
+		}
+
+		#endregion
+	}
+
+	public class RibbonSplitButtonBaseTemplateContract : RibbonDropDownButtonBaseTemplateContract
+	{
+		#region Properties
+
+		[TemplateContractPart]
+		public ToggleButton DropDownButton { get; [UsedImplicitly] private set; }
+
+		#endregion
+	}
 }

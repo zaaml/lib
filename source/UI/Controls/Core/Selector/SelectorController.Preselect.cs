@@ -21,102 +21,83 @@ namespace Zaaml.UI.Controls.Core
 			if (index == -1)
 				return PreselectNull(selection, out preSelection);
 
-			if (TryGetItem(index, force, out var item))
-			{
-				if (CanSelect(item) == false)
-					return false;
-			}
-
+			TryGetItem(index, force, out var item);
 			var source = GetSource(index);
 			var itemValue = GetValue(item, source);
 
 			preSelection = new Selection<TItem>(index, item, source, itemValue);
 
-			return true;
+			if (CanSelect(preSelection)) 
+				return true;
+			
+			preSelection = Selection<TItem>.Empty;
+
+			return false;
 		}
 
-		private bool PreselectItem(TItem value, bool force, Selection<TItem> selection, out Selection<TItem> preSelection)
+		private bool PreselectItem(TItem item, bool force, Selection<TItem> selection, out Selection<TItem> preSelection)
 		{
 			preSelection = selection;
 
 			if (SupportsItem == false)
 				return false;
 
-			if (force == false && ReferenceEquals(selection.Item, value))
+			if (force == false && ReferenceEquals(selection.Item, item))
 				return true;
 
-			if (value == null)
+			if (item == null)
 				return PreselectNull(selection, out preSelection);
 
-			var item = value;
-
-			if (CanSelect(item) == false)
-				return false;
-
-			var index = GetIndexOfItem(item);
 			var source = GetSource(item);
+			var index = GetIndexOfSource(source);
+
+			if (index == -1)
+				index = GetIndexOfItem(item);
+
 			var itemValue = GetValue(item, source);
 
 			preSelection = new Selection<TItem>(index, item, source, itemValue);
 
-			return true;
+			if (CanSelect(preSelection))
+				return true;
+
+			preSelection = Selection<TItem>.Empty;
+
+			return false;
 		}
 
-		private bool PreselectSource(object value, bool force, Selection<TItem> selection, out Selection<TItem> preSelection)
+		private bool PreselectSource(object source, bool force, Selection<TItem> selection, out Selection<TItem> preSelection)
 		{
 			preSelection = selection;
 
 			if (SupportsSource == false)
 				return false;
 
-			if (force == false && ReferenceEquals(selection.Source, value))
+			if (force == false && ReferenceEquals(selection.Source, source))
 				return true;
-
-			var source = value;
 
 			if (source == null)
 				return PreselectNull(selection, out preSelection);
 
-			if (SupportsIndex)
-			{
-				var index = GetIndexOfSource(source);
+			TryGetItemBySource(source, force, out var item);
+			var value = GetValue(item, source);
+			var index = GetIndexOfSource(source);
+			
+			preSelection = new Selection<TItem>(index, item, source, value);
 
-				if (index == -1)
-					return PreselectNull(selection, out preSelection);
-
-				if (TryGetItem(index, force, out var item))
-				{
-					if (CanSelect(item) == false)
-						return false;
-				}
-
-				var itemValue = GetValue(item, source);
-
-				preSelection = new Selection<TItem>(index, item, source, itemValue);
-
+			if (CanSelect(preSelection))
 				return true;
-			}
-			else
-			{
-				if (TryGetItemBySource(source, true, out var item))
-				{
-					if (CanSelect(item) == false)
-						return false;
-				}
 
-				var itemValue = GetValue(item, source);
+			preSelection = Selection<TItem>.Empty;
 
-				preSelection = new Selection<TItem>(-1, item, source, itemValue);
-
-				return true;
-			}
+			return false;
 		}
 
 		private bool PreselectNull(Selection<TItem> selection, out Selection<TItem> preSelection)
 		{
 			preSelection = selection;
 
-			var count = Advisor.Count;
+			var count = Count;
 
 			if (AllowNullSelection || count <= 0)
 			{
@@ -127,15 +108,25 @@ namespace Zaaml.UI.Controls.Core
 
 			for (var i = 0; i < count; i++)
 			{
+				if (CanSelectIndex(i) == false)
+					continue;
+				
 				if (TryGetItem(i, true , out var item))
 				{
-					if (CanSelect(item) == false)
+					if (CanSelectItem(item) == false)
 						continue;
 				}
 				
 				var source = GetSource(item);
+				
+				if (CanSelectSource(source) == false)
+					continue;
+				
 				var value = GetValue(item, source);
 
+				if (CanSelectValue(value) == false)
+					continue;
+				
 				preSelection = new Selection<TItem>(0, item, source, value);
 
 				return true;
@@ -154,24 +145,21 @@ namespace Zaaml.UI.Controls.Core
 			if (force == false && CompareValues(selection.Value, value))
 				return true;
 
-			var itemValue = value;
-
-			if (itemValue == null)
+			if (value == null)
 				return PreselectNull(selection, out preSelection);
 
-			var index = GetIndexOfValue(itemValue);
-
-			if (TryGetItem(index, force, out var item))
-			{
-				if (CanSelect(item) == false)
-					return false;
-			}
-
+			var index = GetIndexOfValue(value);
 			var source = GetSource(index);
+			TryGetItem(index, force, out var item);
+			
+			preSelection = new Selection<TItem>(index, item, source, value);
+			
+			if (CanSelect(preSelection))
+				return true;
 
-			preSelection = new Selection<TItem>(index, item, source, itemValue);
+			preSelection = Selection<TItem>.Empty;
 
-			return true;
+			return false;
 		}
 	}
 }

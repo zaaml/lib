@@ -67,12 +67,12 @@ namespace Zaaml.UI.Controls.PropertyView
 					return;
 
 				if (_hasValidationError)
-					Items.UnlockItemInternal(this);
+					ItemCollection.UnlockItemInternal(this);
 
 				_hasValidationError = value;
 
 				if (_hasValidationError)
-					Items.LockItemInternal(this);
+					ItemCollection.LockItemInternal(this);
 			}
 		}
 

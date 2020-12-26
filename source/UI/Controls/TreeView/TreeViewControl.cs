@@ -10,8 +10,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
+using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Extensions;
-using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
@@ -30,13 +30,13 @@ namespace Zaaml.UI.Controls.TreeView
 			("ItemGenerator", l => l.OnItemGeneratorChanged);
 
 		public static readonly DependencyProperty ItemContentTemplateProperty = DPM.Register<DataTemplate, TreeViewControl>
-			("ItemContentTemplate", l => l.DefaultGeneratorImpl.OnItemContentTemplateChanged);
+			("ItemContentTemplate", l => l.DefaultGeneratorImplementation.OnItemContentTemplateChanged);
 
 		public static readonly DependencyProperty ItemContentTemplateSelectorProperty = DPM.Register<DataTemplateSelector, TreeViewControl>
-			("ItemContentTemplateSelector", l => l.DefaultGeneratorImpl.OnItemContentTemplateSelectorChanged);
+			("ItemContentTemplateSelector", l => l.DefaultGeneratorImplementation.OnItemContentTemplateSelectorChanged);
 
 		public static readonly DependencyProperty ItemContentStringFormatProperty = DPM.Register<string, TreeViewControl>
-			("ItemContentStringFormat", l => l.DefaultGeneratorImpl.OnItemContentStringFormatChanged);
+			("ItemContentStringFormat", l => l.DefaultGeneratorImplementation.OnItemContentStringFormatChanged);
 
 		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, TreeViewControl>
 			("SourceCollection", i => i.OnSourceCollectionPropertyChangedPrivate);
@@ -61,21 +61,32 @@ namespace Zaaml.UI.Controls.TreeView
 			("ItemGlyphTemplate");
 
 		public static readonly DependencyProperty ItemContentMemberProperty = DPM.Register<string, TreeViewControl>
-			("ItemContentMember", d => d.DefaultGeneratorImpl.OnItemContentMemberChanged);
+			("ItemContentMember", d => d.DefaultGeneratorImplementation.OnItemContentMemberChanged);
 
 		public static readonly DependencyProperty ItemIconMemberProperty = DPM.Register<string, TreeViewControl>
-			("ItemIconMember", d => d.DefaultGeneratorImpl.OnItemIconMemberChanged);
+			("ItemIconMember", d => d.DefaultGeneratorImplementation.OnItemIconMemberChanged);
 
 		public static readonly DependencyProperty ItemValueMemberProperty = DPM.Register<string, TreeViewControl>
-			("ItemValueMember", d => d.DefaultGeneratorImpl.SelectableGeneratorImplementation.OnItemValueMemberChanged);
+			("ItemValueMember", d => d.DefaultGeneratorImplementation.SelectableGeneratorImplementation.OnItemValueMemberChanged);
 
 		public static readonly DependencyProperty ItemSelectionMemberProperty = DPM.Register<string, TreeViewControl>
-			("ItemSelectionMember", d => d.DefaultGeneratorImpl.SelectableGeneratorImplementation.OnItemSelectionMemberChanged);
+			("ItemSelectionMember", d => d.DefaultGeneratorImplementation.SelectableGeneratorImplementation.OnItemSelectionMemberChanged);
 
 		public static readonly DependencyProperty ItemSourceCollectionMemberProperty = DPM.Register<string, TreeViewControl>
-			("ItemSourceCollectionMember", d => d.DefaultGeneratorImpl.OnItemSourceCollectionMemberChanged);
+			("ItemSourceCollectionMember", d => d.DefaultGeneratorImplementation.OnItemSourceCollectionMemberChanged);
 
-		private DefaultItemTemplateTreeViewItemGenerator _defaultGeneratorImpl;
+		public static readonly DependencyProperty ItemCommandProperty = DPM.Register<ICommand, TreeViewControl>
+			("ItemCommand");
+
+		public static readonly DependencyProperty ItemCommandTargetProperty = DPM.Register<DependencyObject, TreeViewControl>
+			("ItemCommandTarget");
+
+		public static readonly DependencyProperty ItemGlyphKindProperty = DPM.Register<TreeViewGlyphKind, TreeViewControl>
+			("ItemGlyphKind");
+
+		private DefaultItemTemplateTreeViewItemGenerator _defaultGeneratorImplementation;
+
+		private ITreeViewItemFilter _itemsDefaultFilter;
 		private TreeViewData _treeViewData;
 
 		internal event EventHandler<ValueChangedEventArgs<TreeViewData>> TreeViewDataChanged;
@@ -86,7 +97,9 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public event EventHandler<TreeViewItemMouseButtonEventArgs> ItemMouseButtonUp;
 
-		public event EventHandler<TreeViewItemEventEventArgs> ItemIsExpandedChanged;
+		public event EventHandler<TreeViewItemEventArgs> ItemIsExpandedChanged;
+
+		public event EventHandler<TreeViewItemClickEventArgs> ItemClick;
 
 		static TreeViewControl()
 		{
@@ -104,6 +117,10 @@ namespace Zaaml.UI.Controls.TreeView
 			VirtualItemCollection = new VirtualTreeViewItemCollection(this);
 		}
 
+		protected virtual bool ActualFocusItemOnClick => FocusItemOnClick;
+
+		internal bool ActualFocusItemOnClickInternal => ActualFocusItemOnClick;
+
 		protected virtual bool ActualFocusItemOnMouseHover => FocusItemOnMouseHover;
 
 		protected virtual bool ActualFocusItemOnSelect => FocusItemOnSelect;
@@ -112,9 +129,11 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private protected override bool ActualSelectItemOnFocus => SelectionMode != TreeViewSelectionMode.Multiple && base.ActualSelectItemOnFocus;
 
-		private TreeViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImpl.Generator;
+		private TreeViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImplementation.Generator;
 
-		private DefaultItemTemplateTreeViewItemGenerator DefaultGeneratorImpl => _defaultGeneratorImpl ??= new DefaultItemTemplateTreeViewItemGenerator(this);
+		private DefaultItemTemplateTreeViewItemGenerator DefaultGeneratorImplementation => _defaultGeneratorImplementation ??= new DefaultItemTemplateTreeViewItemGenerator(this);
+
+		internal DefaultItemTemplateTreeViewItemGenerator DefaultGeneratorImplementationInternal => DefaultGeneratorImplementation;
 
 		public bool ExpandNodesOnFiltering
 		{
@@ -132,11 +151,29 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal int FocusedIndexInternal => TreeViewFocusNavigator.FocusedIndex;
 
+		internal bool FocusItemOnClick { get; set; } = true;
+
 		internal bool FocusItemOnMouseHover { get; set; }
 
 		internal bool FocusItemOnSelect { get; set; } = true;
 
 		private bool IsFocusOnMouseEventLocked { get; set; }
+
+		internal ClickMode ItemClickMode { get; set; } = ClickMode.Release;
+
+		internal override IItemCollection<TreeViewItem> ItemCollectionOverride => VirtualItemCollection;
+
+		public ICommand ItemCommand
+		{
+			get => (ICommand) GetValue(ItemCommandProperty);
+			set => SetValue(ItemCommandProperty, value);
+		}
+
+		public DependencyObject ItemCommandTarget
+		{
+			get => (DependencyObject) GetValue(ItemCommandTargetProperty);
+			set => SetValue(ItemCommandTargetProperty, value);
+		}
 
 		public TreeViewItemGeneratorBase ItemGenerator
 		{
@@ -144,10 +181,30 @@ namespace Zaaml.UI.Controls.TreeView
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
+		public TreeViewGlyphKind ItemGlyphKind
+		{
+			get => (TreeViewGlyphKind) GetValue(ItemGlyphKindProperty);
+			set => SetValue(ItemGlyphKindProperty, value);
+		}
+
 		public DataTemplate ItemGlyphTemplate
 		{
 			get => (DataTemplate) GetValue(ItemGlyphTemplateProperty);
 			set => SetValue(ItemGlyphTemplateProperty, value);
+		}
+
+		internal ITreeViewItemFilter ItemsDefaultFilter
+		{
+			get => _itemsDefaultFilter;
+			set
+			{
+				if (ReferenceEquals(_itemsDefaultFilter, value))
+					return;
+
+				_itemsDefaultFilter = value;
+
+				UpdateFilter();
+			}
 		}
 
 		public ITreeViewItemFilter ItemsFilter
@@ -161,10 +218,6 @@ namespace Zaaml.UI.Controls.TreeView
 			get => (string) GetValue(ItemSourceCollectionMemberProperty);
 			set => SetValue(ItemSourceCollectionMemberProperty, value);
 		}
-
-		internal override IItemCollection<TreeViewItem> ItemsOverride => VirtualItemCollection;
-
-		internal MouseButtonSelectionOptions MouseButtonSelectionOptions { get; set; } = MouseButtonSelectionOptions.LeftButtonDown;
 
 		internal ScrollViewControl ScrollViewInternal => ScrollView;
 
@@ -248,10 +301,10 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			return new TreeViewData(this, new TreeViewControlAdvisor(ActualGenerator))
 			{
-				Source = SourceCollection ?? Items,
+				Source = SourceCollection ?? ItemCollection,
 				DataFilter =
 				{
-					Filter = ItemsFilter
+					Filter = ItemsFilter ?? ItemsDefaultFilter
 				}
 			};
 		}
@@ -303,19 +356,6 @@ namespace Zaaml.UI.Controls.TreeView
 			return base.MeasureOverride(availableSize);
 		}
 
-		private bool MouseSelect(TreeViewItem treeViewItem, MouseButtonKind mouseButtonKind, MouseButtonEventKind eventKind)
-		{
-			if (MouseButtonSelectionHelper.ShouldSelect(mouseButtonKind, eventKind, MouseButtonSelectionOptions) && treeViewItem.ActualCanSelect)
-			{
-				FocusItem(treeViewItem);
-				ToggleItemSelection(treeViewItem);
-
-				return true;
-			}
-
-			return false;
-		}
-
 		internal override void OnCollectionChangedInternal(object sender, NotifyCollectionChangedEventArgs args)
 		{
 			base.OnCollectionChangedInternal(sender, args);
@@ -343,7 +383,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal void OnFilterUpdatedInternal()
 		{
-			var item = TreeViewFocusNavigator.FocusedItemCache ?? SelectedItem ?? Items.ActualItemsInternal.FirstOrDefault(null);
+			var item = TreeViewFocusNavigator.FocusedItemCache ?? SelectedItem ?? ItemCollection.ActualItemsInternal.FirstOrDefault(null);
 
 			BringItemIntoView(item, true);
 
@@ -366,6 +406,17 @@ namespace Zaaml.UI.Controls.TreeView
 			base.OnItemAttachedInternal(item);
 		}
 
+		internal void OnItemClick(TreeViewItem treeViewItem)
+		{
+			ItemClick?.Invoke(this, new TreeViewItemClickEventArgs(treeViewItem));
+
+			var itemCommand = ItemCommand;
+			var itemCommandTarget = ItemCommandTarget;
+
+			if (CommandHelper.CanExecute(itemCommand, treeViewItem, itemCommandTarget ?? this))
+				CommandHelper.Execute(itemCommand, treeViewItem, itemCommandTarget ?? this);
+		}
+
 		internal override void OnItemDetachedInternal(TreeViewItem item)
 		{
 			base.OnItemDetachedInternal(item);
@@ -375,7 +426,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal virtual void OnItemGeneratorChanged(TreeViewItemGeneratorBase oldGenerator, TreeViewItemGeneratorBase newGenerator)
 		{
-			Items.Generator = ActualGenerator;
+			ItemCollection.Generator = ActualGenerator;
 
 			if (oldGenerator != null)
 				oldGenerator.GeneratorChangedCore -= OnGeneratorChanged;
@@ -390,13 +441,11 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			SelectCollapsedItemParent(treeViewItem);
 
-			ItemIsExpandedChanged?.Invoke(this, new TreeViewItemEventEventArgs(treeViewItem));
+			ItemIsExpandedChanged?.Invoke(this, new TreeViewItemEventArgs(treeViewItem));
 		}
 
 		internal void OnItemMouseButton(TreeViewItem treeViewItem, MouseButtonEventArgs e)
 		{
-			e.Handled = MouseSelect(treeViewItem, MouseUtils.FromMouseButton(e.ChangedButton), MouseUtils.FromButtonState(e.ButtonState));
-
 			if (e.ButtonState == MouseButtonState.Released)
 				ItemMouseButtonUp?.Invoke(this, new TreeViewItemMouseButtonEventArgs(treeViewItem, e));
 			else
@@ -417,17 +466,25 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 		}
 
+		internal void OnItemPostClick(TreeViewItem treeViewItem)
+		{
+			if (treeViewItem.ActualCanSelect == false)
+				return;
+
+			FocusItem(treeViewItem);
+			ToggleItemSelection(treeViewItem);
+		}
+
+		internal void OnItemPreClick(TreeViewItem listViewItem)
+		{
+		}
+
 		private void OnItemsFilterChangedPrivate(ITreeViewItemFilter oldFilter, ITreeViewItemFilter newFilter)
 		{
 			if (ReferenceEquals(oldFilter, newFilter))
 				return;
 
-			if (TreeViewData == null)
-				return;
-
-			TreeViewData.DataFilter.Filter = ItemsFilter;
-
-			InvalidateMeasure();
+			UpdateFilter();
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)
@@ -555,6 +612,21 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewData = null;
 
 			ItemsPresenter?.ItemsHostInternal?.InvalidateMeasure();
+
+			InvalidateMeasure();
+		}
+
+		private void UpdateFilter()
+		{
+			if (TreeViewData == null)
+				return;
+
+			var itemsFilter = ItemsFilter ?? ItemsDefaultFilter;
+
+			if (ReferenceEquals(itemsFilter, TreeViewData.DataFilter.Filter))
+				return;
+
+			TreeViewData.DataFilter.Filter = itemsFilter;
 
 			InvalidateMeasure();
 		}

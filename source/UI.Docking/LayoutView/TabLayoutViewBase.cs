@@ -39,7 +39,7 @@ namespace Zaaml.UI.Controls.Docking
         var tabViewItem = item.TabViewItem;
 
         tabViewItem.Content = item;
-        TabViewControl?.Items.Add(tabViewItem);
+        TabViewControl?.ItemCollection.Add(tabViewItem);
 
         item.ActualSelectionScope.Resume();
 
@@ -63,7 +63,7 @@ namespace Zaaml.UI.Controls.Docking
         var tabViewItem = item.TabViewItem;
 
         item.TabViewItem.Content = null;
-        TabViewControl?.Items.Remove(tabViewItem);
+        TabViewControl?.ItemCollection.Remove(tabViewItem);
 
         item.ActualSelectionScope.Resume();
 

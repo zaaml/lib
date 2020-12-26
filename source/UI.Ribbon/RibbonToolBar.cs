@@ -84,7 +84,7 @@ namespace Zaaml.UI.Controls.Ribbon
     {
       ItemsPresenter.ToolBar = this;
       OverflowItemsPresenter.ToolBar = this;
-      OverflowItemsPresenter.OverflowItems.SourceInternal = Items;
+      OverflowItemsPresenter.OverflowItems.SourceCollectionInternal = ItemCollection;
 
       base.OnTemplateContractAttached();
     }
@@ -93,7 +93,7 @@ namespace Zaaml.UI.Controls.Ribbon
     {
       base.OnTemplateContractDetaching();
 
-      OverflowItemsPresenter.OverflowItems.SourceInternal = null;
+      OverflowItemsPresenter.OverflowItems.SourceCollectionInternal = null;
       OverflowItemsPresenter.ToolBar = null;
       ItemsPresenter.ToolBar = null;
     }

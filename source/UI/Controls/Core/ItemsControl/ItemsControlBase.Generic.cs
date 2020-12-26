@@ -18,7 +18,7 @@ using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Core
 {
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	public abstract class ItemsControlBase<TControl, TItem, TCollection, TPresenter, TPanel> : ItemsControlBase,
 		IItemsControl<TItem>
 		where TItem : FrameworkElement
@@ -27,33 +27,33 @@ namespace Zaaml.UI.Controls.Core
 		where TPanel : ItemsPanel<TItem>
 		where TControl : System.Windows.Controls.Control
 	{
-		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<TCollection, ItemsControlBase<TControl, TItem, TCollection, TPresenter, TPanel>>
-			("ItemsPrivate");
+		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<TCollection, ItemsControlBase<TControl, TItem, TCollection, TPresenter, TPanel>>
+			("ItemCollectionPrivate");
 
 		// ReSharper disable once StaticMemberInGenericType
-		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 
-		protected IEnumerable<TItem> ActualItems => ItemsOverride.ActualItems;
+		protected IEnumerable<TItem> ActualItems => ItemCollectionOverride.ActualItems;
 
 		internal virtual bool IsItemsHostVisible => true;
 
-		public TCollection Items => this.GetValueOrCreate(ItemsPropertyKey, CreateItemCollectionPrivate);
+		public TCollection ItemCollection => this.GetValueOrCreate(ItemCollectionPropertyKey, CreateItemCollectionPrivate);
 
-		internal int ItemsCount => ItemsOverride.ActualCount;
+		internal virtual IItemCollection<TItem> ItemCollectionOverride => ItemCollection;
+
+		internal int ItemsCount => ItemCollectionOverride.ActualCount;
 
 		protected TPresenter ItemsPresenter => TemplateContract.ItemsPresenter;
 
 		internal TPresenter ItemsPresenterInternal => ItemsPresenter;
 
-		internal virtual IItemCollection<TItem> ItemsOverride => Items;
-
-		protected IEnumerable SourceCore
-		{
-			get => ItemsOverride.SourceCollection;
-			set => ItemsOverride.SourceCollection = value;
-		}
-
 		internal override Type ItemType => typeof(TItem);
+
+		protected IEnumerable SourceCollectionCore
+		{
+			get => ItemCollectionOverride.SourceCollection;
+			set => ItemCollectionOverride.SourceCollection = value;
+		}
 
 		private ItemsControlBaseTemplateContract<TPresenter> TemplateContract => (ItemsControlBaseTemplateContract<TPresenter>) TemplateContractInternal;
 
@@ -86,12 +86,12 @@ namespace Zaaml.UI.Controls.Core
 
 		protected int GetIndexFromItem(TItem item)
 		{
-			return ItemsOverride.GetIndexFromItem(item);
+			return ItemCollectionOverride.GetIndexFromItem(item);
 		}
 
 		protected TItem GetItemFromIndex(int index)
 		{
-			return ItemsOverride.GetItemFromIndex(index);
+			return ItemCollectionOverride.GetItemFromIndex(index);
 		}
 
 		private protected virtual void InvalidatePanelCore()
@@ -174,7 +174,7 @@ namespace Zaaml.UI.Controls.Core
 
 		internal override void OnSourceChangedInt(IEnumerable oldSource, IEnumerable newSource)
 		{
-			ItemsOverride.SourceCollection = newSource;
+			ItemCollectionOverride.SourceCollection = newSource;
 		}
 
 		internal override void OnSourceChangedInternal()
@@ -187,7 +187,7 @@ namespace Zaaml.UI.Controls.Core
 			base.OnTemplateContractAttached();
 
 			if (ItemsPresenter != null)
-				ItemsPresenter.ItemsCore = Items;
+				ItemsPresenter.ItemsCore = ItemCollection;
 		}
 
 		protected override void OnTemplateContractDetaching()

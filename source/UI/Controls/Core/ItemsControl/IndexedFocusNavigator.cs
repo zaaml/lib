@@ -50,7 +50,7 @@ namespace Zaaml.UI.Controls.Core
 	{
 		bool IsOnCurrentPage(int index);
 
-		void ScrollIntoView(int index);
+		void ScrollIntoView(BringIntoViewRequest<TItem> bringIntoViewRequest);
 	}
 
 	internal class IndexedFocusNavigator<TControl, TItem> : FocusNavigator<TControl, TItem>
@@ -101,7 +101,7 @@ namespace Zaaml.UI.Controls.Core
 					else
 					{
 						if (newFocusedItem.IsMouseOver == false)
-							ScrollIntoView(FocusedIndex);
+							ScrollIntoView(new BringIntoViewRequest<TItem>(FocusedIndex));
 
 						if (_suspendFocus == false)
 							FocusItem(newFocusedItem);
@@ -315,7 +315,7 @@ namespace Zaaml.UI.Controls.Core
 			var focusedItem = FocusedItem;
 
 			if (focusedItem != null && IsOnCurrentPage(FocusedIndex) == false)
-				ScrollIntoView(FocusedIndex);
+				ScrollIntoView(new BringIntoViewRequest<TItem>(FocusedIndex));
 
 			if (focusedItem == null)
 			{
@@ -379,9 +379,9 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private void ScrollIntoView(int index)
+		private void ScrollIntoView(BringIntoViewRequest<TItem> bringIntoViewRequest)
 		{
-			ScrollableControl?.ScrollIntoView(index);
+			ScrollableControl?.ScrollIntoView(bringIntoViewRequest);
 		}
 
 		protected void SyncFocusIndex(int focusIndex)

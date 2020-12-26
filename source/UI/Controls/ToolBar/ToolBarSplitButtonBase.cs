@@ -12,12 +12,6 @@ using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.DropDown;
 using Zaaml.UI.Controls.Primitives;
-#if SILVERLIGHT
-using RoutedEventArgsSL = System.Windows.RoutedEventArgsSL;
-#else
-using RoutedEventArgsSL = System.Windows.RoutedEventArgs;
-
-#endif
 
 namespace Zaaml.UI.Controls.ToolBar
 {
@@ -76,7 +70,6 @@ namespace Zaaml.UI.Controls.ToolBar
 			set => this.SetValue<bool>(ShowDropDownButtonProperty, value);
 		}
 
-
 		public bool ShowSeparator
 		{
 			get => (bool) GetValue(ShowSeparatorProperty);
@@ -85,36 +78,59 @@ namespace Zaaml.UI.Controls.ToolBar
 
 		private ToolBarSplitButtonBaseTemplateContract TemplateContract => (ToolBarSplitButtonBaseTemplateContract) TemplateContractInternal;
 
-    #endregion
+		#endregion
 
-    #region  Methods
+		#region  Methods
 
-	  private static void DropDownButtonOnClick(object sender, RoutedEventArgsSL e)
+		private void DropDownButtonOnClick(object sender, RoutedEventArgs e)
 		{
+			if (IsDropDownOpen == false)
+				OpenDropDown();
+			else
+				CloseDropDown();
+
+			UpdateDropDownButton();
+
 			e.Handled = true;
+		}
+
+		private void UpdateDropDownButton()
+		{
+			DropDownButton.IsChecked = IsDropDownOpen;
+		}
+
+		private protected override void OnIsDropDownOpenChangedInternal()
+		{
+			base.OnIsDropDownOpenChangedInternal();
+
+			UpdateDropDownButton();
 		}
 
 		private void DropDownButtonOnMouseEnter(object sender, MouseEventArgs e)
 		{
 			IsDropDownButtonMouseOver = true;
+
 			UpdateVisualState(true);
 		}
 
 		private void DropDownButtonOnMouseLeave(object sender, MouseEventArgs e)
 		{
 			IsDropDownButtonMouseOver = false;
+
 			UpdateVisualState(true);
 		}
 
 		protected override void OnClick()
 		{
-			IsDropDownOpen = false;
+			CloseDropDown();
+
 			base.OnClick();
 		}
 
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
+
 			UpdateDropDownPlacement();
 
 			DropDownButton.Click += DropDownButtonOnClick;
@@ -129,6 +145,7 @@ namespace Zaaml.UI.Controls.ToolBar
 			DropDownButton.MouseLeave -= DropDownButtonOnMouseLeave;
 
 			base.OnTemplateContractDetaching();
+
 			UpdateDropDownPlacement();
 		}
 

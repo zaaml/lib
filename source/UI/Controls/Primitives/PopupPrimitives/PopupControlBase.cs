@@ -11,7 +11,6 @@ using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.CommandCore;
-using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
@@ -49,23 +48,23 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		public static readonly DependencyProperty StaysOpenProperty = DPM.Register<bool, PopupControlBase>
 			("StaysOpen", false);
 
-		public static readonly DependencyProperty PopupMinWidthProperty = DPM.Register<double, PopupControlBase>
-			("PopupMinWidth", 0.0);
+		public static readonly DependencyProperty PopupMinWidthProperty = DPM.Register<PopupLength, PopupControlBase>
+			("PopupMinWidth", new PopupLength(0.0));
 
-		public static readonly DependencyProperty PopupMaxWidthProperty = DPM.Register<double, PopupControlBase>
-			("PopupMaxWidth", double.PositiveInfinity);
+		public static readonly DependencyProperty PopupMaxWidthProperty = DPM.Register<PopupLength, PopupControlBase>
+			("PopupMaxWidth", new PopupLength(double.PositiveInfinity));
 
-		public static readonly DependencyProperty PopupWidthProperty = DPM.Register<double, PopupControlBase>
-			("PopupWidth", double.NaN);
+		public static readonly DependencyProperty PopupWidthProperty = DPM.Register<PopupLength, PopupControlBase>
+			("PopupWidth", PopupLength.Auto);
 
-		public static readonly DependencyProperty PopupMinHeightProperty = DPM.Register<double, PopupControlBase>
-			("PopupMinHeight", 0.0);
+		public static readonly DependencyProperty PopupMinHeightProperty = DPM.Register<PopupLength, PopupControlBase>
+			("PopupMinHeight", new PopupLength(0.0));
 
-		public static readonly DependencyProperty PopupMaxHeightProperty = DPM.Register<double, PopupControlBase>
-			("PopupMaxHeight", double.PositiveInfinity);
+		public static readonly DependencyProperty PopupMaxHeightProperty = DPM.Register<PopupLength, PopupControlBase>
+			("PopupMaxHeight", new PopupLength(double.PositiveInfinity));
 
-		public static readonly DependencyProperty PopupHeightProperty = DPM.Register<double, PopupControlBase>
-			("PopupHeight", double.NaN);
+		public static readonly DependencyProperty PopupHeightProperty = DPM.Register<PopupLength, PopupControlBase>
+			("PopupHeight", PopupLength.Auto);
 
 		public static readonly DependencyProperty TriggerProperty = DPM.Register<PopupTrigger, PopupControlBase>
 			("Trigger", default, d => d.OnTriggerPropertyChangedPrivate);
@@ -137,41 +136,47 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		internal PopupControlController<PopupControlBase> PopupController { get; }
 
-		public double PopupHeight
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupHeight
 		{
-			get => (double) GetValue(PopupHeightProperty);
+			get => (PopupLength) GetValue(PopupHeightProperty);
 			set => SetValue(PopupHeightProperty, value);
 		}
 
-		public double PopupMaxHeight
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupMaxHeight
 		{
-			get => (double) GetValue(PopupMaxHeightProperty);
+			get => (PopupLength) GetValue(PopupMaxHeightProperty);
 			set => SetValue(PopupMaxHeightProperty, value);
 		}
 
-		public double PopupMaxWidth
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupMaxWidth
 		{
-			get => (double) GetValue(PopupMaxWidthProperty);
+			get => (PopupLength) GetValue(PopupMaxWidthProperty);
 			set => SetValue(PopupMaxWidthProperty, value);
 		}
 
-		public double PopupMinHeight
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupMinHeight
 		{
-			get => (double) GetValue(PopupMinHeightProperty);
+			get => (PopupLength) GetValue(PopupMinHeightProperty);
 			set => SetValue(PopupMinHeightProperty, value);
 		}
 
-		public double PopupMinWidth
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupMinWidth
 		{
-			get => (double) GetValue(PopupMinWidthProperty);
+			get => (PopupLength) GetValue(PopupMinWidthProperty);
 			set => SetValue(PopupMinWidthProperty, value);
 		}
 
 		protected PopupContentPresenter PopupPresenter => TemplateContract.PopupPresenter;
 
-		public double PopupWidth
+		[TypeConverter(typeof(PopupLengthTypeConverter))]
+		public PopupLength PopupWidth
 		{
-			get => (double) GetValue(PopupWidthProperty);
+			get => (PopupLength) GetValue(PopupWidthProperty);
 			set => SetValue(PopupWidthProperty, value);
 		}
 
@@ -384,15 +389,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			MountContent();
 
-			PopupPresenter.BindProperties(PopupPanel.PopupMinWidthProperty, this, PopupMinWidthProperty);
-			PopupPresenter.BindProperties(PopupPanel.PopupMinHeightProperty, this, PopupMinHeightProperty);
-
-			PopupPresenter.BindProperties(PopupPanel.PopupMaxWidthProperty, this, PopupMaxWidthProperty);
-			PopupPresenter.BindProperties(PopupPanel.PopupMaxHeightProperty, this, PopupMaxHeightProperty);
-
-			PopupPresenter.BindProperties(PopupPanel.PopupWidthProperty, this, PopupWidthProperty);
-			PopupPresenter.BindProperties(PopupPanel.PopupHeightProperty, this, PopupHeightProperty);
-
 			// TODO DropDownBar refactoring. Investigate
 #if !SILVERLIGHT
 			//Popup.TreeMode = PopupTreeMode.Detached;
@@ -404,15 +400,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		{
 			if (Trigger != null)
 				Trigger.Popup = null;
-
-			PopupPresenter.ClearValue(PopupPanel.PopupMinWidthProperty);
-			PopupPresenter.ClearValue(PopupPanel.PopupMinHeightProperty);
-
-			PopupPresenter.ClearValue(PopupPanel.PopupMaxWidthProperty);
-			PopupPresenter.ClearValue(PopupPanel.PopupMaxHeightProperty);
-
-			PopupPresenter.ClearValue(PopupPanel.PopupWidthProperty);
-			PopupPresenter.ClearValue(PopupPanel.PopupHeightProperty);
 
 			ReleaseContent();
 

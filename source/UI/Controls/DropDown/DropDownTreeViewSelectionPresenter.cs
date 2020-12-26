@@ -2,14 +2,14 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
+using System.Linq;
 using System.Windows;
 using Zaaml.Core;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
-using Zaaml.UI.Controls.Editors.Core;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 using Zaaml.UI.Controls.TreeView;
 
 namespace Zaaml.UI.Controls.DropDown
@@ -17,10 +17,10 @@ namespace Zaaml.UI.Controls.DropDown
 	public class DropDownTreeViewSelectionPresenter : DropDownSelectionPresenterBase<DropDownTreeViewSelectionItem, TreeViewItem>
 	{
 		private static readonly DependencyPropertyKey TreeViewControlPropertyKey = DPM.RegisterReadOnly<TreeViewControl, DropDownTreeViewSelectionPresenter>
-			("TreeViewControl", default, d => d.OnTreeViewControlPropertyChangedPrivate);
+			("TreeViewControl", d => d.OnTreeViewControlPropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey DropDownTreeViewControlPropertyKey = DPM.RegisterReadOnly<DropDownTreeViewControl, DropDownTreeViewSelectionPresenter>
-			("DropDownTreeViewControl", default, d => d.OnDropDownTreeViewControlPropertyChangedPrivate);
+			("DropDownTreeViewControl", d => d.OnDropDownTreeViewControlPropertyChangedPrivate);
 
 		public static readonly DependencyProperty DropDownTreeViewControlProperty = DropDownTreeViewControlPropertyKey.DependencyProperty;
 
@@ -38,15 +38,58 @@ namespace Zaaml.UI.Controls.DropDown
 
 		public DropDownTreeViewControl DropDownTreeViewControl
 		{
-			get => (DropDownTreeViewControl)GetValue(DropDownTreeViewControlProperty);
+			get => (DropDownTreeViewControl) GetValue(DropDownTreeViewControlProperty);
 			internal set => this.SetReadOnlyValue(DropDownTreeViewControlPropertyKey, value);
 		}
 
+		internal bool IsDefault { get; set; }
+
 		public TreeViewControl TreeViewControl
 		{
-			get => (TreeViewControl)GetValue(TreeViewControlProperty);
+			get => (TreeViewControl) GetValue(TreeViewControlProperty);
 			private set => this.SetReadOnlyValue(TreeViewControlPropertyKey, value);
 		}
+
+		private protected override void AttachOverride(SelectionItem<TreeViewItem> selectionItem, Selection<TreeViewItem> selection)
+		{
+			selectionItem.ItemsControl = this;
+			selectionItem.Selection = selection;
+
+			var defaultGeneratorImplementation = TreeViewControl.DefaultGeneratorImplementationInternal;
+			var contentBinding = defaultGeneratorImplementation.ItemContentMemberBindingInternal;
+			var iconBinding = defaultGeneratorImplementation.ItemIconMemberBindingInternal;
+			var listViewItem = selection.Item;
+
+			selectionItem.DataContext = selection.Source;
+
+			if (listViewItem != null && ItemCollectionBase.GetInItemCollection(listViewItem))
+			{
+				selectionItem.Content = listViewItem.Content;
+				selectionItem.Icon = listViewItem.Icon;
+			}
+			else
+			{
+				if (contentBinding != null)
+					ItemGenerator<SelectionItem<TreeViewItem>>.InstallBinding(selectionItem, IconContentPresenter.ContentProperty, contentBinding);
+				else
+					selectionItem.Content = selection.Source;
+
+				if (iconBinding != null)
+					ItemGenerator<SelectionItem<TreeViewItem>>.InstallBinding(selectionItem, IconPresenterBase.IconProperty, iconBinding);
+			}
+		}
+
+		private protected override void DetachOverride(SelectionItem<TreeViewItem> selectionItem, Selection<TreeViewItem> selection)
+		{
+			selectionItem.ItemsControl = null;
+			selectionItem.Selection = Selection<TreeViewItem>.Empty;
+
+			selectionItem.ClearValue(DataContextProperty);
+			selectionItem.ClearValue(IconContentPresenter.ContentProperty);
+			selectionItem.ClearValue(IconPresenterBase.IconProperty);
+		}
+
+		private protected override bool IsAttachDetachOverriden => IsDefault;
 
 		private void OnDropDownTreeViewControlPropertyChangedPrivate(DropDownTreeViewControl oldValue, DropDownTreeViewControl newValue)
 		{
@@ -54,29 +97,12 @@ namespace Zaaml.UI.Controls.DropDown
 				return;
 
 			if (oldValue != null)
-			{
-				oldValue.EditingEnded -= OnEditingEnded;
-				oldValue.EditingStarted -= OnEditingStarted;
 				oldValue.TreeViewControlChanged -= OnTreeViewControlChanged;
-			}
 
 			if (newValue != null)
-			{
-				newValue.EditingEnded += OnEditingEnded;
-				newValue.EditingStarted += OnEditingStarted;
 				newValue.TreeViewControlChanged += OnTreeViewControlChanged;
-			}
 
 			UpdateTreeViewControl();
-		}
-
-		private void OnEditingEnded(object sender, EditingEndedEventArgs e)
-		{
-			UpdateContent();
-		}
-
-		private void OnEditingStarted(object sender, EventArgs e)
-		{
 		}
 
 		private void OnTreeViewControlChanged(object sender, ValueChangedEventArgs<TreeViewControl> e)
@@ -89,22 +115,7 @@ namespace Zaaml.UI.Controls.DropDown
 			if (ReferenceEquals(oldValue, newValue))
 				return;
 
-			if (oldValue != null)
-				oldValue.SelectionChanged -= OnTreeViewSelectionChanged;
-
-			if (newValue != null)
-				newValue.SelectionChanged += OnTreeViewSelectionChanged;
-
 			SelectionCollection = newValue?.SelectionCollection;
-		}
-
-		private void OnTreeViewSelectionChanged(object sender, SelectionChangedEventArgs<TreeViewItem> e)
-		{
-			UpdateContent();
-		}
-
-		private void UpdateContent()
-		{
 		}
 
 		private void UpdateTreeViewControl()
@@ -115,6 +126,15 @@ namespace Zaaml.UI.Controls.DropDown
 
 	public class DropDownTreeViewSelectionItem : SelectionItem<TreeViewItem>
 	{
+		private protected override bool IsLast
+		{
+			get
+			{
+				var selectionPresenter = (DropDownTreeViewSelectionPresenter) ItemsControl;
+
+				return ReferenceEquals(Selection.Source, selectionPresenter?.SelectionCollection.LastOrDefault().Source);
+			}
+		}
 	}
 
 	public class DropDownTreeViewSelectionItemsPresenter : SelectionItemsPresenter<DropDownTreeViewSelectionItem, TreeViewItem>

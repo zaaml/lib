@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.Primitives;
@@ -229,8 +230,6 @@ namespace Zaaml.UI.Controls.DropDown
 
 		bool IManagedButton.IsMouseOver => IsMouseOver;
 
-		bool IManagedButton.ShouldFocusOnClick => Focusable;
-
 		ClickMode IManagedButton.ClickMode => ClickMode;
 
 		bool IManagedButton.IsPressed
@@ -242,6 +241,22 @@ namespace Zaaml.UI.Controls.DropDown
 		void IManagedButton.OnClick()
 		{
 			OnClick();
+		}
+		
+		void IManagedButton.OnPreClick()
+		{
+		}		
+		
+		void IManagedButton.OnPostClick()
+		{
+		}
+
+		bool IManagedButton.InvokeCommandBeforeClick => false;
+		
+		void IManagedButton.FocusControl()
+		{
+			if (Focusable)
+				FocusHelper.SetKeyboardFocusedElement(this);
 		}
 	}
 }

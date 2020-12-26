@@ -265,8 +265,18 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			}
 		}
 
-		Dock? IDockPanel.GetDock(UIElement element) => ReferenceEquals(element, _contentPresenter) ? null : (ShowContent ? IconDock : (Dock?) null);
+		private protected virtual Dock? GetDockCore(UIElement element)
+		{
+			return ReferenceEquals(element, _contentPresenter) ? null : (ShowContent ? IconDock : (Dock?)null);
+		}
 
-		double IDockPanel.GetDockDistance(UIElement element) => 0;
+		private protected virtual double GetDockDistanceCore(UIElement element)
+		{
+			return 0;
+		}
+
+		Dock? IDockPanel.GetDock(UIElement element) => GetDockCore(element);
+
+		double IDockPanel.GetDockDistance(UIElement element) => GetDockDistanceCore(element);
 	}
 }

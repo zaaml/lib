@@ -9,6 +9,7 @@ using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.Interfaces;
@@ -293,8 +294,6 @@ namespace Zaaml.UI.Controls.ToolBar
 
     bool IManagedButton.IsMouseOver => IsMouseOver;
 
-    bool IManagedButton.ShouldFocusOnClick => false;
-
     ClickMode IManagedButton.ClickMode => ClickMode;
 
     bool IManagedButton.CanClick => CanClick;
@@ -305,17 +304,31 @@ namespace Zaaml.UI.Controls.ToolBar
       set => IsPressed = value;
     }
 
-    void IManagedButton.OnClick()
+		bool IManagedButton.InvokeCommandBeforeClick => false;
+
+		void IManagedButton.OnClick()
     {
       OnClickCore();
     }
 
-    #endregion
+		void IManagedButton.OnPreClick()
+		{
+		}
 
-    #endregion
-  }
+		void IManagedButton.OnPostClick()
+		{
+		}
+		
+		void IManagedButton.FocusControl()
+		{
+		}
+		
+		#endregion
 
-  public class ToolBarButtonBaseTemplateContract : ToolBarItemTemplateContract
+		#endregion
+	}
+
+	public class ToolBarButtonBaseTemplateContract : ToolBarItemTemplateContract
   {
   }
 }

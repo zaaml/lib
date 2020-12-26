@@ -46,9 +46,11 @@ namespace Zaaml.UI.Controls.Primitives
         case true:
           GotoVisualState("Checked", useTransitions);
           break;
+        
         case false:
           GotoVisualState("Unchecked", useTransitions);
           break;
+        
         default:
           GotoVisualState("Indeterminate", useTransitions);
           break;

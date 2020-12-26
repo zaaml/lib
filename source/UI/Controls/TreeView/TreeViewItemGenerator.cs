@@ -24,10 +24,10 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public TreeViewItemGenerator()
 		{
-			Implementation = new TemplatedGeneratorImpl<TreeViewItem>(this);
+			Implementation = new TemplatedGeneratorImplementation<TreeViewItem>(this);
 		}
 
-		private TemplatedGeneratorImpl<TreeViewItem> Implementation { get; }
+		private TemplatedGeneratorImplementation<TreeViewItem> Implementation { get; }
 
 		public TreeViewItemTemplate ItemTemplate
 		{
@@ -46,7 +46,7 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			var treeViewItem = Implementation.CreateItem(source);
 
-			if (treeViewItem.Items.Count > 0)
+			if (treeViewItem.ItemCollection.Count > 0)
 				_explicitItemsDictionary[source] = treeViewItem;
 
 			return treeViewItem;

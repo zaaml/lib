@@ -27,8 +27,12 @@ namespace Zaaml.UI.Controls.Ribbon
     protected override void OnClick()
     {
       base.OnClick();
-      IsDropDownOpen = !IsDropDownOpen;
-    }
+
+			if (IsDropDownOpen)
+				CloseDropDown();
+			else
+				OpenDropDown();
+		}
 
     #endregion
   }

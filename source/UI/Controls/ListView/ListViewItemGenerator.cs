@@ -17,10 +17,10 @@ namespace Zaaml.UI.Controls.ListView
 
 		public ListViewItemGenerator()
 		{
-			Implementation = new TemplatedGeneratorImpl<ListViewItem>(this);
+			Implementation = new TemplatedGeneratorImplementation<ListViewItem>(this);
 		}
 
-		private TemplatedGeneratorImpl<ListViewItem> Implementation { get; }
+		private TemplatedGeneratorImplementation<ListViewItem> Implementation { get; }
 
 		public ListViewItemTemplate ItemTemplate
 		{

@@ -136,7 +136,7 @@
               <ListBox x:Name="DropDownListBox"
                        BorderThickness="0"
                        ItemTemplate="{TemplateBinding ItemTemplate}"
-                       ItemsSource="{TemplateBinding ActualDropDownItemsSource}"
+                       ItemsSource="{TemplateBinding ActualDropDownISourceCollection}"
                        SelectionMode="Single" />
 
               <ContentPresenter zm:DockPanel.Dock="Bottom"

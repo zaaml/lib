@@ -36,6 +36,8 @@ namespace Zaaml.UI.Controls.Core
 			PropertyChanged?.Invoke(this, e);
 		}
 
+		public int Count => SelectorController.SelectedCount;
+
 		IEnumerator<Selection<TItem>> IEnumerable<Selection<TItem>>.GetEnumerator()
 		{
 			return GetEnumerator();

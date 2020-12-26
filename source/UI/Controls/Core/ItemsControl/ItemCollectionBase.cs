@@ -18,18 +18,33 @@ namespace Zaaml.UI.Controls.Core
 	{
 		internal static readonly DependencyProperty ItemCollectionProperty = DPM.RegisterAttached<object, ItemCollectionBase>
 			("ItemCollection");
+
+		private static readonly DependencyProperty InItemCollectionProperty = DependencyProperty.RegisterAttached(
+			"InItemCollection", typeof(bool), typeof(ItemCollectionBase), new PropertyMetadata(default(bool)));
+
+		internal static void SetInItemCollection(DependencyObject element, bool value)
+		{
+			element.SetValue(InItemCollectionProperty, value);
+		}
+
+		internal static bool GetInItemCollection(DependencyObject element)
+		{
+			return (bool) element.GetValue(InItemCollectionProperty);
+		}
 	}
 
-	public abstract class ItemCollectionBase<TItem> : ItemCollectionBase, IItemCollection<TItem>
+	public abstract class ItemCollectionBase<TItem> : ItemCollectionBase, IItemCollection<TItem>, INotifyCollectionChanged
 		where TItem : FrameworkElement
 	{
+		public abstract int Count { get; }
+		
 		protected abstract int ActualCountCore { get; }
 
 		protected abstract IEnumerable<TItem> ActualItemsCore { get; }
 
 		protected abstract IEnumerable SourceCollectionCore { get; set; }
 
-		protected abstract void BringIntoViewCore(int index);
+		internal abstract void BringIntoViewCore(BringIntoViewRequest<TItem> bringIntoViewRequest);
 
 		protected abstract TItem EnsureItemCore(int index);
 
@@ -37,19 +52,19 @@ namespace Zaaml.UI.Controls.Core
 
 		protected abstract int GetIndexFromSourceCore(object source);
 
-		protected abstract TItem GetItemFromSourceCore(object source);
-
 		protected abstract TItem GetItemFromIndexCore(int index);
 
-		protected abstract bool TryEnsureItemFromSourceCore(object source, out TItem item);
-
-		protected abstract bool TryEnsureItemFromIndexCore(int index, out TItem item);
+		protected abstract TItem GetItemFromSourceCore(object source);
 
 		protected abstract object GetSourceCore(TItem item);
 
 		protected abstract object GetSourceFromIndexCore(int index);
 
 		protected abstract void LockItemCore(TItem item);
+
+		protected abstract bool TryEnsureItemCore(int index, out TItem item);
+
+		protected abstract bool TryEnsureItemCore(object source, out TItem item);
 
 		protected abstract void UnlockItemCore(TItem item);
 
@@ -63,9 +78,9 @@ namespace Zaaml.UI.Controls.Core
 			set => SourceCollectionCore = value;
 		}
 
-		void IItemCollection<TItem>.BringIntoView(int index)
+		void IItemCollection<TItem>.BringIntoView(BringIntoViewRequest<TItem> bringIntoViewRequest)
 		{
-			BringIntoViewCore(index);
+			BringIntoViewCore(bringIntoViewRequest);
 		}
 
 		int IItemCollection<TItem>.GetIndexFromItem(TItem item)
@@ -102,6 +117,16 @@ namespace Zaaml.UI.Controls.Core
 		{
 			return EnsureItemCore(index);
 		}
+
+		public abstract TItem this[int index] { get; set; }
+
+		private protected abstract event NotifyCollectionChangedEventHandler CollectionChanged;
+
+		event NotifyCollectionChangedEventHandler INotifyCollectionChanged.CollectionChanged
+		{
+			add => CollectionChanged += value;
+			remove => CollectionChanged -= value;
+		}
 	}
 
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem> : ItemCollectionBase<TItem>
@@ -113,21 +138,19 @@ namespace Zaaml.UI.Controls.Core
 		private readonly List<IItemCollectionObserver<TItem>> _observers = new List<IItemCollectionObserver<TItem>>();
 
 		private ItemGenerator<TItem> _generatorCore;
-		private IEnumerable _source;
+		private IEnumerable _sourceCollection;
 		private ItemCollectionSourceBase<TItemsControl, TItem> _sourceView;
 
 		protected ItemCollectionBase(TItemsControl control)
 		{
 			Control = control;
-
-			Control.SetValue(ItemCollectionProperty, _dependencyObjectCollection);
+			DependencyObjectCollection = new ItemDependencyObjectCollection(this);
+			Control.SetValue(ItemCollectionProperty, DependencyObjectCollection);
 		}
 
 		protected override int ActualCountCore => ActualCountInternal;
 
 		internal int ActualCountInternal => ActualSource == null ? Count : ActualIndexedSource.Count;
-
-		private IEnumerable ActualSource => VirtualCollection?.SourceCollection ?? SourceInternal;
 
 		private IndexedEnumerable ActualIndexedSource => VirtualCollection?.IndexedSourceInternal ?? IndexedSource;
 
@@ -144,13 +167,17 @@ namespace Zaaml.UI.Controls.Core
 					return VirtualCollection.ActualItems;
 
 				if (_sourceView != null)
-					return _sourceView.ActualItems;
+					return _sourceView.Items;
 
 				return EmptyActualItems;
 			}
 		}
 
+		private IEnumerable ActualSource => VirtualCollection?.SourceCollection ?? SourceCollectionInternal;
+
 		public TItemsControl Control { get; }
+
+		internal BringIntoViewMode DefaultBringIntoViewMode { get; set; }
 
 		protected abstract ItemGenerator<TItem> DefaultGenerator { get; }
 
@@ -169,11 +196,13 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		internal virtual VirtualItemCollection<TItem> VirtualCollection => null;
+		private protected bool HasSource => VirtualCollection != null ? VirtualCollection.SourceCollection != null : SourceCollectionInternal != null;
+
+		internal bool HasSourceInternal => HasSource;
 
 		private IndexedEnumerable IndexedSource { get; set; } = IndexedEnumerable.Empty;
 
-		private bool IsClient => ActualSource == null;
+		internal IndexedEnumerable IndexedSourceInternal => IndexedSource;
 
 		protected bool IsLogicalParent => ItemsHost == null;
 
@@ -181,28 +210,24 @@ namespace Zaaml.UI.Controls.Core
 
 		protected override IEnumerable SourceCollectionCore
 		{
-			get => SourceInternal;
-			set => SourceInternal = value;
+			get => SourceCollectionInternal;
+			set => SourceCollectionInternal = value;
 		}
-		
-		private protected bool HasSource => VirtualCollection != null ? VirtualCollection.SourceCollection != null : SourceInternal != null;
 
-		internal bool HasSourceInternal => HasSource;
-		
-		internal IEnumerable SourceInternal
+		internal IEnumerable SourceCollectionInternal
 		{
-			get => _source;
+			get => _sourceCollection;
 			set
 			{
-				if (ReferenceEquals(_source, value))
+				if (ReferenceEquals(_sourceCollection, value))
 					return;
 
 				{
-					if (_source is INotifyCollectionChanged notifyCollectionChanged)
+					if (_sourceCollection is INotifyCollectionChanged notifyCollectionChanged)
 						notifyCollectionChanged.CollectionChanged -= ObservableSourceOnCollectionChanged;
 				}
 
-				_source = value;
+				_sourceCollection = value;
 
 				if (_sourceView != null)
 					_sourceView.Source = value;
@@ -210,13 +235,15 @@ namespace Zaaml.UI.Controls.Core
 				IndexedSource = value != null ? new IndexedEnumerable(value) : IndexedEnumerable.Empty;
 
 				{
-					if (_source is INotifyCollectionChanged notifyCollectionChanged)
+					if (_sourceCollection is INotifyCollectionChanged notifyCollectionChanged)
 						notifyCollectionChanged.CollectionChanged += ObservableSourceOnCollectionChanged;
 				}
 
 				OnSourceChangedPrivate();
 			}
 		}
+
+		internal virtual VirtualItemCollection<TItem> VirtualCollection => null;
 
 		internal void AttachGeneratedItem(int index, TItem item)
 		{
@@ -245,12 +272,10 @@ namespace Zaaml.UI.Controls.Core
 			_observers.Add(observer);
 		}
 
-		protected override void BringIntoViewCore(int index)
+		internal override void BringIntoViewCore(BringIntoViewRequest<TItem> bringIntoViewRequest)
 		{
-			BringIntoViewInternal(index);
+			BringIntoViewInternal(bringIntoViewRequest);
 		}
-
-		internal BringIntoViewMode DefaultBringIntoViewMode { get; set; }
 
 		internal void BringIntoViewInternal(int index)
 		{
@@ -342,40 +367,6 @@ namespace Zaaml.UI.Controls.Core
 			return GetIndexFromSourceCore(source);
 		}
 
-		protected override TItem GetItemFromSourceCore(object source)
-		{
-			var index = GetIndexFromSourceCore(source);
-
-			return index != -1 ? GetItemFromIndexCore(index) : default;
-		}
-
-		protected override bool TryEnsureItemFromSourceCore(object source, out TItem item)
-		{
-			var index = GetIndexFromSourceCore(source);
-
-			if (index != -1)
-				return TryEnsureItemFromIndexCore(index, out item);
-
-			item = default;
-
-			return false;
-		}
-
-		internal bool TryEnsureItemFromSourceInternal(object source, out TItem item)
-		{
-			return TryEnsureItemFromSourceCore(source, out item);
-		}
-
-		internal TItem GetItemFromIndexInternal(int index)
-		{
-			return GetItemFromIndexCore(index);
-		}
-		
-		internal TItem GetItemFromSourceInternal(object source)
-		{
-			return GetItemFromSourceCore(source);
-		}
-		
 		protected override TItem GetItemFromIndexCore(int index)
 		{
 			if (ActualSource == null)
@@ -383,30 +374,28 @@ namespace Zaaml.UI.Controls.Core
 
 			if (VirtualCollection != null)
 				return VirtualCollection.GetItemFromIndex(index);
-			
+
 			if (_sourceView != null)
 				return _sourceView.GetItemFromIndexInt(index);
 
 			return null;
 		}
 
-		protected override bool TryEnsureItemFromIndexCore(int index, out TItem item)
+		internal TItem GetItemFromIndexInternal(int index)
 		{
-			if (ActualSource == null)
-			{
-				item = this[index];
-
-				return item != null;
-			}
-
-			item = VirtualCollection != null ? VirtualCollection.EnsureItem(index) : _sourceView?.EnsureItem(index);
-
-			return item != null;
+			return GetItemFromIndexCore(index);
 		}
 
-		internal bool TryEnsureItemFromIndexInternal(int index, out TItem item)
+		protected override TItem GetItemFromSourceCore(object source)
 		{
-			return TryEnsureItemFromIndexCore(index, out item);
+			var index = GetIndexFromSourceCore(source);
+
+			return index != -1 ? GetItemFromIndexCore(index) : default;
+		}
+
+		internal TItem GetItemFromSourceInternal(object source)
+		{
+			return GetItemFromSourceCore(source);
 		}
 
 		protected override object GetSourceCore(TItem item)
@@ -415,7 +404,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				return VirtualCollection.GetSourceFromItem(item);
 			}
-			
+
 			var index = GetIndexFromItemCore(item);
 
 			return index != -1 ? GetSourceFromIndexCore(index) : default;
@@ -508,7 +497,43 @@ namespace Zaaml.UI.Controls.Core
 
 		internal void OnSourceCollectionChanged(NotifyCollectionChangedEventArgs e)
 		{
-			OnCollectionChangedPrivate(SourceInternal, e);
+			OnCollectionChangedPrivate(SourceCollectionInternal, e);
+		}
+
+		protected override bool TryEnsureItemCore(int index, out TItem item)
+		{
+			if (ActualSource == null)
+			{
+				item = this[index];
+
+				return item != null;
+			}
+
+			item = VirtualCollection != null ? VirtualCollection.EnsureItem(index) : _sourceView?.EnsureItem(index);
+
+			return item != null;
+		}
+
+		internal bool TryEnsureItemInternal(int index, out TItem item)
+		{
+			return TryEnsureItemCore(index, out item);
+		}
+
+		protected override bool TryEnsureItemCore(object source, out TItem item)
+		{
+			var index = GetIndexFromSourceCore(source);
+
+			if (index != -1)
+				return TryEnsureItemCore(index, out item);
+
+			item = default;
+
+			return false;
+		}
+
+		internal bool TryEnsureItemInternal(object source, out TItem item)
+		{
+			return TryEnsureItemCore(source, out item);
 		}
 
 		protected override void UnlockItemCore(TItem item)

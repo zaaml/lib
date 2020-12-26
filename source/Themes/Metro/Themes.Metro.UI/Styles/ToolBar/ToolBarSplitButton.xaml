@@ -56,8 +56,7 @@
                            ClickMode="Press"
                            Icon="{zm:TemplateBinding Path=DropDownGlyph, TargetNullValue={StaticResource FallbackDropDownGlyph}}"
                            VerticalContentAlignment="Stretch"
-                           Visibility="{Binding Path=ShowDropDownButton, RelativeSource={RelativeSource TemplatedParent}, Converter={zm:VisibilityConverter}}"
-                           IsChecked="{zm:TemplateBinding Path=IsDropDownOpen, Mode=TwoWay}"
+                           Visibility="{zm:TemplateBinding Path=ShowDropDownButton, Converter={zm:VisibilityConverter}}"
                            BorderBrush="Transparent"
                            Margin="{zm:TemplateBinding Path=BorderThickness, Converter={zm:NegateConverter}}"
                            BorderThickness="{TemplateBinding BorderThickness}" />

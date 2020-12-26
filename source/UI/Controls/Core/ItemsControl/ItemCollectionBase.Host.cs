@@ -12,14 +12,8 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem>
 	{
-		#region Fields
-
 		private readonly ItemHostProxyCollection<TItem> _itemHostCollection = new ItemHostProxyCollection<TItem>();
 		private IItemsHost<TItem> _itemsHost;
-
-		#endregion
-
-		#region Properties
 
 		internal IItemsHost<TItem> ItemsHost
 		{
@@ -29,7 +23,7 @@ namespace Zaaml.UI.Controls.Core
 				if (ReferenceEquals(_itemsHost, value))
 					return;
 
-				if (SourceInternal == null)
+				if (SourceCollectionInternal == null)
 				{
 					var attachLogical = _itemsHost != null && value == null;
 					var detachLogical = _itemsHost == null && value != null;
@@ -51,7 +45,7 @@ namespace Zaaml.UI.Controls.Core
 				}
 				else
 				{
-					var notifyCollectionChanged = _source as INotifyCollectionChanged;
+					var notifyCollectionChanged = _sourceCollection as INotifyCollectionChanged;
 
 					if (_sourceView != null)
 					{
@@ -68,22 +62,18 @@ namespace Zaaml.UI.Controls.Core
 					if (_itemsHost == null)
 						return;
 
-					_sourceView = _itemsHost is IVirtualItemsHost<TItem> virtualItemsHost && virtualItemsHost.IsVirtualizing ? 
-						(ItemCollectionSourceBase<TItemsControl, TItem>) new VirtualItemCollectionSource<TItemsControl, TItem>(virtualItemsHost, this) :
-						new ItemCollectionSource<TItemsControl, TItem>(_itemsHost, this);
+					_sourceView = _itemsHost is IVirtualItemsHost<TItem> virtualItemsHost && virtualItemsHost.IsVirtualizing
+						? (ItemCollectionSourceBase<TItemsControl, TItem>) new VirtualItemCollectionSource<TItemsControl, TItem>(virtualItemsHost, this)
+						: new ItemCollectionSource<TItemsControl, TItem>(_itemsHost, this);
 
 					if (notifyCollectionChanged != null)
 						notifyCollectionChanged.CollectionChanged -= ObservableSourceOnCollectionChanged;
 
-					_sourceView.Source = _source;
+					_sourceView.Source = _sourceCollection;
 					_sourceView.Generator = GeneratorCore ?? DefaultGenerator;
 				}
 			}
 		}
-
-		#endregion
-
-		#region  Methods
 
 		protected virtual void AttachLogicalCore(TItem item)
 		{
@@ -243,12 +233,10 @@ namespace Zaaml.UI.Controls.Core
 
 		protected virtual void OnItemDetached(TItem item)
 		{
-			}
+		}
 
 		protected virtual void OnItemDetaching(TItem item)
 		{
 		}
-
-		#endregion
 	}
 }

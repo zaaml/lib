@@ -313,14 +313,14 @@
 
         <!-- Foreground -->
         <zm:SkinDictionary x:Key="Foreground">
-          <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
-          <SolidColorBrush x:Key="Active" Color="#FFFFFFFF" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Active" Color="#E3000000" zmb:Skin="Office" />
         </zm:SkinDictionary>
 
         <!-- Background -->
         <zm:SkinDictionary x:Key="Background">
-          <SolidColorBrush x:Key="Normal" Color="#FF2576C4" zmb:Skin="Office" />
-          <SolidColorBrush x:Key="Active" Color="#FF2576C4" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Normal" Color="#FFE6E6E6" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Active" Color="#FFE6E6E6" zmb:Skin="Office" />
         </zm:SkinDictionary>
 
         <!-- Default Button-->
@@ -328,9 +328,9 @@
 
           <!-- Foreground -->
           <zm:SkinDictionary x:Key="Foreground">
-            <SolidColorBrush x:Key="Normal" Color="#FFFEFEFE" zmb:Skin="Office" />
-            <SolidColorBrush x:Key="MouseOver" Color="#FFFEFEFE" zmb:Skin="Office" />
-            <SolidColorBrush x:Key="Pressed" Color="#FFFEFEFE" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Normal" Color="#FF606060"  zmb:Skin="Office"/>
+            <SolidColorBrush x:Key="MouseOver" Color="#FF606060"  zmb:Skin="Office"/>
+            <SolidColorBrush x:Key="Pressed" Color="#FF606060"  zmb:Skin="Office"/>
           </zm:SkinDictionary>
 
           <!-- Background -->
@@ -353,9 +353,9 @@
 
           <!-- Foreground -->
           <zm:SkinDictionary x:Key="Foreground">
-            <SolidColorBrush x:Key="Normal" Color="#FFFEFEFE" zmb:Skin="Office" />
-            <SolidColorBrush x:Key="MouseOver" Color="#FFFEFEFE" zmb:Skin="Office" />
-            <SolidColorBrush x:Key="Pressed" Color="#FFFEFEFE" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Normal" Color="#FF606060"  zmb:Skin="Office"/>
+            <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF"  zmb:Skin="Office"/>
+            <SolidColorBrush x:Key="Pressed" Color="#FFFFFFFF"  zmb:Skin="Office"/>
           </zm:SkinDictionary>
 
           <!-- Background -->
@@ -376,7 +376,7 @@
         <!-- Buttons -->
         <zm:SkinDictionary x:Key="Buttons">
 
-          <Thickness x:Key="Margin">5,-1,-1,0</Thickness>
+          <Thickness x:Key="Margin">0,-1,-1,0</Thickness>
 
           <!-- Minimize -->
           <zm:SkinDictionary x:Key="Minimize"  BasedOn="Metro.AppWindow.Header.DefaultButton">

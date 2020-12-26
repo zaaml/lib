@@ -33,7 +33,7 @@ namespace Zaaml.UI.Controls.ListView
 		public IItemGenerator<ListViewItem> Implementation { get; set; }
 	}
 
-	internal class DefaultItemTemplateListViewItemGenerator : DelegateIconContentSelectableItemGeneratorImpl<ListViewItem, DefaultListViewItemGenerator>
+	internal class DefaultItemTemplateListViewItemGenerator : DelegateIconContentSelectableItemGeneratorImplementation<ListViewItem, DefaultListViewItemGenerator>
 	{
 		public DefaultItemTemplateListViewItemGenerator(ListViewControl listViewControl) : base(listViewControl)
 		{

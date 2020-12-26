@@ -12,27 +12,21 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem>
 	{
-		#region Fields
-
 		private readonly List<TItem> _changeList = new List<TItem>();
-		private readonly DependencyObjectCollectionRaw<TItem> _dependencyObjectCollection = new DependencyObjectCollectionRaw<TItem>();
-		private event NotifyCollectionChangedEventHandler CollectionChangedImpl;
+		
+		private protected override event NotifyCollectionChangedEventHandler CollectionChanged;
 
-		#endregion
+		private int CountImpl => DependencyObjectCollection.Count;
 
-		#region Properties
+		private ItemDependencyObjectCollection DependencyObjectCollection { get; }
 
-		private int CountImpl => _dependencyObjectCollection.Count;
-
-		#endregion
-
-		#region  Methods
+		internal DependencyObjectCollectionBase<TItem> InternalCollection => DependencyObjectCollection;
 
 		private int AddImpl(TItem item)
 		{
 			var index = Count;
 
-			_dependencyObjectCollection.Add(item);
+			DependencyObjectCollection.Add(item);
 
 			if (VirtualCollection == null)
 			{
@@ -43,13 +37,13 @@ namespace Zaaml.UI.Controls.Core
 
 				_changeList.Clear();
 			}
-			
+
 			return index;
 		}
 
 		private void ClearImpl()
 		{
-			_dependencyObjectCollection.Clear();
+			DependencyObjectCollection.Clear();
 
 			if (VirtualCollection == null)
 			{
@@ -60,37 +54,39 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool ContainsImpl(TItem item)
 		{
-			return _dependencyObjectCollection.Contains(item);
+			return DependencyObjectCollection.Contains(item);
 		}
 
 		private void CopyToImpl(Array array, int index)
 		{
-			((ICollection) _dependencyObjectCollection).CopyTo(array, index);
+			((ICollection) DependencyObjectCollection).CopyTo(array, index);
 		}
 
 		private void CopyToImpl(TItem[] array, int index)
 		{
-			_dependencyObjectCollection.CopyTo(array, index);
+			DependencyObjectCollection.CopyTo(array, index);
 		}
 
 		private IEnumerator<TItem> GetEnumeratorImpl()
 		{
-			return _dependencyObjectCollection.GetEnumerator();
+			return DependencyObjectCollection.GetEnumerator();
 		}
 
 		private TItem GetItemImpl(int index)
 		{
-			return _dependencyObjectCollection[index];
+			return DependencyObjectCollection[index];
 		}
 
 		private int IndexOfImpl(TItem item)
 		{
-			return _dependencyObjectCollection.IndexOf(item);
+			return DependencyObjectCollection.IndexOf(item);
 		}
 
 		private void InsertImpl(int index, TItem item)
 		{
-			_dependencyObjectCollection.Insert(index, item);
+			DependencyObjectCollection.Insert(index, item);
+
+			OnItemAdded(item);
 
 			if (VirtualCollection == null)
 			{
@@ -103,11 +99,19 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
+		private protected virtual void OnItemAdded(TItem item)
+		{
+		}
+
+		private protected virtual void OnItemRemoved(TItem item)
+		{
+		}
+
 		private void RaiseInsert(int index, List<TItem> items)
 		{
 			var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items, index);
 
-			CollectionChangedImpl?.Invoke(this, args);
+			CollectionChanged?.Invoke(this, args);
 
 			OnCollectionChangedPrivate(this, args);
 		}
@@ -116,7 +120,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, items, index);
 
-			CollectionChangedImpl?.Invoke(this, args);
+			CollectionChanged?.Invoke(this, args);
 
 			OnCollectionChangedPrivate(this, args);
 		}
@@ -125,7 +129,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
 
-			CollectionChangedImpl?.Invoke(this, args);
+			CollectionChanged?.Invoke(this, args);
 
 			OnCollectionChangedPrivate(this, args);
 		}
@@ -134,7 +138,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var item = GetItemImpl(index);
 
-			_dependencyObjectCollection.RemoveAt(index);
+			DependencyObjectCollection.RemoveAt(index);
 
 			if (VirtualCollection == null)
 			{
@@ -154,7 +158,7 @@ namespace Zaaml.UI.Controls.Core
 			if (index == -1)
 				return false;
 
-			_dependencyObjectCollection.RemoveAt(index);
+			DependencyObjectCollection.RemoveAt(index);
 
 			if (VirtualCollection == null)
 			{
@@ -175,6 +179,32 @@ namespace Zaaml.UI.Controls.Core
 			InsertImpl(index, item);
 		}
 
-		#endregion
+		private sealed class ItemDependencyObjectCollection : DependencyObjectCollectionBase<TItem>
+		{
+			public ItemDependencyObjectCollection(ItemCollectionBase<TItemsControl, TItem> itemCollection)
+			{
+				ItemCollection = itemCollection;
+			}
+
+			public ItemCollectionBase<TItemsControl, TItem> ItemCollection { get; }
+
+			protected override void OnItemAdded(TItem item)
+			{
+				base.OnItemAdded(item);
+
+				SetInItemCollection(item, true);
+
+				ItemCollection.OnItemAdded(item);
+			}
+
+			protected override void OnItemRemoved(TItem item)
+			{
+				base.OnItemRemoved(item);
+
+				SetInItemCollection(item, false);
+
+				ItemCollection.OnItemRemoved(item);
+			}
+		}
 	}
 }

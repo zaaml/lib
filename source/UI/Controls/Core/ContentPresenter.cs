@@ -222,6 +222,14 @@ namespace Zaaml.UI.Controls.Core
 			UpdateActualHasContent();
 		}
 
+		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			base.OnPropertyChanged(e);
+			
+			if (e.Property == ContentProperty)
+				UpdateActualHasContent();
+		}
+
 		private void UpdateActualHasContent()
 		{
 			var actualHasContent = Content != null || ContentTemplate != null || ContentTemplateSelector != null || ContentStringFormat != null || VisualChild != null;

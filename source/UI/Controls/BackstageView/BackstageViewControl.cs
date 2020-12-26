@@ -18,7 +18,7 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.BackstageView
 {
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	[TemplateContractType(typeof(BackstageViewControlTemplateContract))]
 	public class BackstageViewControl : IndexedSelectorBase<BackstageViewControl, BackstageViewItem, BackstageViewItemCollection, BackstageViewItemsPresenter, BackstageViewItemsPanel>, IHeaderedIconContentSelectorControl
 	{
@@ -185,7 +185,7 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		internal virtual void OnItemGeneratorChanged(BackstageViewItemGeneratorBase oldGenerator, BackstageViewItemGeneratorBase newGenerator)
 		{
-			Items.Generator = ActualGenerator;
+			ItemCollection.Generator = ActualGenerator;
 		}
 
 		private void OnOpenDelayChanged()
@@ -202,7 +202,7 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
-			SourceCore = newSource;
+			SourceCollectionCore = newSource;
 		}
 
 		protected override void OnTemplateContractAttached()

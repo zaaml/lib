@@ -30,7 +30,7 @@ namespace Zaaml.PresentationCore.Animation.Animators
       var start = Start ?? NullTransform;
       var end = End ?? NullTransform;
 
-      _transform.Matrix = interpolator.Evaluate(start.Matrix, end.Matrix, Time, EasingFunction);
+      _transform.Matrix = interpolator.Evaluate(start.Matrix, end.Matrix, RelativeTime, EasingFunction);
 
       return _transform;
     }

@@ -158,7 +158,7 @@ namespace Zaaml.UI.Controls.Ribbon
       }
     }
 
-    public RibbonItemCollection QuickAccessItems => QuickAccessToolBar.Items;
+    public RibbonItemCollection QuickAccessItemCollection => QuickAccessToolBar.ItemCollection;
 
     public RibbonToolBar QuickAccessToolBar
     {

@@ -17,10 +17,10 @@ namespace Zaaml.UI.Controls.AccordionView
 
 		public AccordionViewItemGenerator()
 		{
-			Implementation = new TemplatedGeneratorImpl<AccordionViewItem>(this);
+			Implementation = new TemplatedGeneratorImplementation<AccordionViewItem>(this);
 		}
 
-		private TemplatedGeneratorImpl<AccordionViewItem> Implementation { get; }
+		private TemplatedGeneratorImplementation<AccordionViewItem> Implementation { get; }
 
 		public AccordionViewItemTemplate ItemTemplate
 		{

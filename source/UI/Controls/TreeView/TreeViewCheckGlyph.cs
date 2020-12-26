@@ -22,6 +22,19 @@ namespace Zaaml.UI.Controls.TreeView
 			private set => this.SetReadOnlyValue(TreeViewItemPropertyKey, value);
 		}
 
+		public TreeViewCheckGlyph()
+		{
+		}
+
+		public TreeViewCheckGlyph(TreeViewItem listViewItem)
+		{
+			TreeViewItem = listViewItem;
+
+			IsExplicit = true;
+		}
+
+		private bool IsExplicit { get; }
+
 		private void OnTreeViewItemPropertyChangedPrivate(TreeViewItem oldTreeViewItem, TreeViewItem newTreeViewItem)
 		{
 			if (ReferenceEquals(oldTreeViewItem, newTreeViewItem))
@@ -38,14 +51,17 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			base.OnLoaded();
 
-			var parent = TemplatedParent;
+			if (IsExplicit)
+				return;
 
-			if (parent is ContentPresenter contentPresenter)
+			var templatedParent = TemplatedParent;
+
+			if (templatedParent is ContentPresenter contentPresenter)
 			{
 				if (contentPresenter.TemplatedParent is TreeViewItem listViewItem)
 					TreeViewItem = listViewItem;
 			}
-			else if (parent is TreeViewItem listViewItem)
+			else if (templatedParent is TreeViewItem listViewItem)
 				TreeViewItem = listViewItem;
 			else
 				TreeViewItem = null;
@@ -53,7 +69,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		protected override void OnUnloaded()
 		{
-			TreeViewItem = null;
+			if (IsExplicit == false)
+				TreeViewItem = null;
 
 			base.OnUnloaded();
 		}

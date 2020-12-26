@@ -7,16 +7,16 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DelegateIconContentSelectableItemGeneratorImpl<TItem, TDefaultGenerator> : DelegateIconContentItemGeneratorImpl<TItem, TDefaultGenerator>
+	internal class DelegateIconContentSelectableItemGeneratorImplementation<TItem, TDefaultGenerator> : DelegateIconContentItemGeneratorImplementation<TItem, TDefaultGenerator>
 		where TItem : FrameworkElement, ISelectableIconContentItem, new()
 		where TDefaultGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
-		public DelegateIconContentSelectableItemGeneratorImpl(IIconContentSelectorControl iconContentSelectorControl) : base(iconContentSelectorControl)
+		public DelegateIconContentSelectableItemGeneratorImplementation(IIconContentSelectorControl iconContentSelectorControl) : base(iconContentSelectorControl)
 		{
-			SelectableGeneratorImplementation = new DefaultSelectableIconContentItemGeneratorImpl<TItem>(iconContentSelectorControl.ItemValueMember, iconContentSelectorControl.ItemSelectionMember, this);
+			SelectableGeneratorImplementation = new DefaultSelectableIconContentItemGeneratorImplementation<TItem>(iconContentSelectorControl.ItemValueMember, iconContentSelectorControl.ItemSelectionMember, this);
 		}
 
-		public DefaultSelectableIconContentItemGeneratorImpl<TItem> SelectableGeneratorImplementation { get; }
+		public DefaultSelectableIconContentItemGeneratorImplementation<TItem> SelectableGeneratorImplementation { get; }
 
 		public override void AttachItem(TItem item, object source)
 		{

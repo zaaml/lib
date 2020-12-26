@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
@@ -10,6 +11,13 @@ namespace Zaaml.UI.Controls.Core
 	internal partial class VirtualItemCollection<T>
 	{
 		private List<GeneratedItem> RealGeneratedItems { get; } = new List<GeneratedItem>();
+
+		private int RealActualCount => RealGeneratedItems.Count;
+
+		private T RealEnsureItem(int index)
+		{
+			return RealGetItemFromIndex(index);
+		}
 
 		private void RealEnterGeneration()
 		{
@@ -19,6 +27,11 @@ namespace Zaaml.UI.Controls.Core
 		private T RealGetCurrent(int index)
 		{
 			return RealGeneratedItems[index].Item;
+		}
+
+		private IEnumerable<T> RealGetGeneratedItems()
+		{
+			return RealGeneratedItems.Select(g => g.Item);
 		}
 
 		private int RealGetIndexFromItem(T item)

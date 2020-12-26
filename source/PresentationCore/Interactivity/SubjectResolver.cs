@@ -16,6 +16,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		public static void CopyFrom(IInteractivitySubject target, IInteractivitySubject source)
 		{
 			var sourceSubjectKind = source.SubjectKind & SubjectKind.Unspecified;
+			
 			if (sourceSubjectKind == 0)
 				sourceSubjectKind = SubjectKind.Unspecified;
 
@@ -59,6 +60,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		private static DependencyObject InstallBinding(IInteractivitySubject interactivitySubject, NativeBinding binding)
 		{
 			var interactivityTarget = interactivitySubject.GetInteractivityObject().InteractivityTarget;
+			
 			if (interactivityTarget == null)
 				return null;
 
@@ -107,9 +109,8 @@ namespace Zaaml.PresentationCore.Interactivity
 			{
 				var binding = subject as NativeBinding;
 
-				var bindinBase = subject as BindingBaseExtension;
-				if (bindinBase != null)
-					binding = bindinBase.GetBinding(interactivityTarget, null);
+				if (subject is BindingBaseExtension bindingBase)
+					binding = bindingBase.GetBinding(interactivityTarget, null);
 
 				if (binding != null)
 					return InstallBinding(interactivitySubject, binding);
@@ -137,7 +138,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (ReferenceEquals(interactivitySubject.SubjectStore, value))
 				return;
 
-			UnresolveSubject(interactivitySubject);
+			UnResolveSubject(interactivitySubject);
 
 			interactivitySubject.SubjectStore = value;
 			interactivitySubject.SubjectKind = SubjectKind.Explicit;
@@ -148,13 +149,13 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (ReferenceEquals(interactivitySubject.SubjectStore, value))
 				return;
 
-			UnresolveSubject(interactivitySubject);
+			UnResolveSubject(interactivitySubject);
 
 			interactivitySubject.SubjectStore = value;
 			interactivitySubject.SubjectKind = SubjectKind.Name;
 		}
 
-		public static void UnresolveSubject(IInteractivitySubject interactivitySubject)
+		public static void UnResolveSubject(IInteractivitySubject interactivitySubject)
 		{
 			if (IsResolved(interactivitySubject) == false)
 				return;
@@ -162,6 +163,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (IsSpecified(interactivitySubject) == false)
 			{
 				interactivitySubject.SubjectStore = null;
+				
 				return;
 			}
 
@@ -169,13 +171,13 @@ namespace Zaaml.PresentationCore.Interactivity
 			switch (interactivitySubject.SubjectKind)
 			{
 				case SubjectKind.Explicit:
-					var bindingProxy = interactivitySubject.SubjectStore as BindingProxyBase;
-					if (bindingProxy != null)
+					if (interactivitySubject.SubjectStore is BindingProxyBase bindingProxy)
 					{
 						interactivitySubject.SubjectStore = bindingProxy.Binding;
 						bindingProxy.Dispose();
 					}
 					break;
+				
 				case SubjectKind.Name:
 					interactivitySubject.SubjectStore = GetSubjectName(interactivitySubject);
 					break;
@@ -184,8 +186,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		private static DependencyObject UnwrapResolved(IInteractivitySubject interactivitySubject)
 		{
-			var bindingProxyBase = interactivitySubject.SubjectStore as BindingProxyBase;
-			if (bindingProxyBase != null)
+			if (interactivitySubject.SubjectStore is BindingProxyBase bindingProxyBase)
 				return bindingProxyBase.Value as DependencyObject;
 
 			return (DependencyObject) interactivitySubject.SubjectStore;
@@ -218,6 +219,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			{
 				var oldSubject = oldValue as DependencyObject;
 				var newSubject = newValue as DependencyObject;
+				
 				if (ReferenceEquals(oldSubject, newSubject))
 					return;
 

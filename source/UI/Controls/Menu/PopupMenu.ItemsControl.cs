@@ -67,7 +67,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		private void OnSourceCollectionChanged(IEnumerable oldSource, IEnumerable newSource)
 		{
-			Items.SourceInternal = newSource;
+			Items.SourceCollectionInternal = newSource;
 		}
 
 		protected override void OnTemplateContractAttached()

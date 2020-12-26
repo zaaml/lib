@@ -92,9 +92,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			UpdateTriggerState();
 		}
 
-		private static void OnValueChanged(InteractivityObject interactivityobject, object oldvalue, object newvalue)
+		private static void OnValueChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
-			((DataTrigger) interactivityobject).OnValueChanged();
+			((DataTrigger) interactivityObject).OnValueChanged();
 		}
 
 		protected override TriggerState UpdateTriggerStateCore()

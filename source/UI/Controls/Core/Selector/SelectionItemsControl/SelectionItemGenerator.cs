@@ -18,10 +18,10 @@ namespace Zaaml.UI.Controls.Core
 
 		public SelectionItemGenerator()
 		{
-			Implementation = new TemplatedGeneratorImpl<TSelectionItem>(this);
+			Implementation = new TemplatedGeneratorImplementation<TSelectionItem>(this);
 		}
 
-		private TemplatedGeneratorImpl<TSelectionItem> Implementation { get; }
+		private TemplatedGeneratorImplementation<TSelectionItem> Implementation { get; }
 
 		public SelectionItemTemplate ItemTemplate
 		{

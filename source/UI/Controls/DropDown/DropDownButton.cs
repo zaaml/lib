@@ -32,19 +32,19 @@ namespace Zaaml.UI.Controls.DropDown
 
 		public Dock? DropDownGlyphDock
 		{
-			get => (Dock?) GetValue(DropDownGlyphDockProperty);
+			get => (Dock?)GetValue(DropDownGlyphDockProperty);
 			set => SetValue(DropDownGlyphDockProperty, value);
 		}
 
 		public FrameworkElement PlacementTarget
 		{
-			get => (FrameworkElement) GetValue(PlacementTargetProperty);
+			get => (FrameworkElement)GetValue(PlacementTargetProperty);
 			set => SetValue(PlacementTargetProperty, value);
 		}
 
 		public bool ShowDropDownGlyph
 		{
-			get => (bool) GetValue(ShowDropDownGlyphProperty);
+			get => (bool)GetValue(ShowDropDownGlyphProperty);
 			set => SetValue(ShowDropDownGlyphProperty, value);
 		}
 
@@ -52,9 +52,6 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			base.OnClick();
 
-			if (PopupControl == null) 
-				return;
-			
 			if (IsDropDownOpen)
 				CloseDropDown();
 			else

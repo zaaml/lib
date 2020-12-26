@@ -376,7 +376,7 @@
         <!-- Buttons -->
         <zm:SkinDictionary x:Key="Buttons">
 
-          <Thickness x:Key="Margin">5,-1,-1,0</Thickness>
+          <Thickness x:Key="Margin">0,-1,-1,0</Thickness>
 
           <!-- Minimize -->
           <zm:SkinDictionary x:Key="Minimize"  BasedOn="Metro.AppWindow.Header.DefaultButton">

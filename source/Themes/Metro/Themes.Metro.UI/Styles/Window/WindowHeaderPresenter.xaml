@@ -36,10 +36,21 @@
 
         <zm:DockPanel>
 
+          <!--  Icon  -->
+          <zm:BitmapIcon Margin="6,0,0,0"
+                         zm:DockPanel.Dock="Left"
+                         Source="{zm:TemplateBinding Path=Window.Icon}"
+                         Visibility="{zm:TemplateBinding Path=Window.ShowIcon,
+                                                         Converter={zm:VisibilityConverter}}" />
+
+          <!-- TitleBarHeadContent -->
+          <zm:ContentPresenter zm:DockPanel.Dock="Left" 
+                               Content="{zm:TemplateBinding Path=Window.TitleBarHeadContent}"/>
+
           <!--  Title  -->
-          <ContentPresenter Margin="10,0,0,0"
-                            VerticalAlignment="Center"
-                            Content="{zm:TemplateBinding Path=Window.Title}" />
+          <zm:ContentPresenter Margin="6,0,6,0"
+                               VerticalAlignment="Center"
+                               Content="{zm:TemplateBinding Path=Window.Title}" />
 
           <!--  Window Buttons  -->
           <zm:WindowButtonsPresenter Margin="{zm:TemplateSkinBinding SkinPath=Buttons.Margin}"
@@ -66,6 +77,10 @@
                                    Kind="Close" />
 
           </zm:WindowButtonsPresenter>
+
+          <!-- TitleBarTailContent -->
+          <zm:ContentPresenter zm:DockPanel.Dock="Right" 
+                               Content="{zm:TemplateBinding Path=Window.TitleBarTailContent}"/>
 
         </zm:DockPanel>
       </Border>

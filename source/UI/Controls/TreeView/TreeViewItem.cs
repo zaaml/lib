@@ -12,6 +12,7 @@ using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
@@ -23,14 +24,15 @@ using Zaaml.UI.Utils;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
+	[TemplateContractType(typeof(TreeViewItemTemplateContract))]
 	public partial class TreeViewItem : IconContentControl, IContextPopupTarget, MouseHoverVisualStateFlickeringReducer<TreeViewItem>.IClient, ISelectableIconContentItem
 	{
 		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, TreeViewItem>
 			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
 
-		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<TreeViewItemCollection, TreeViewItem>
-			("ItemsPrivate");
+		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<TreeViewItemCollection, TreeViewItem>
+			("ItemCollectionPrivate");
 
 		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, TreeViewItem>
 			("SourceCollection", i => i.OnSourceChangedPrivate);
@@ -57,16 +59,25 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty HasItemsProperty = HasItemsPropertyKey.DependencyProperty;
 
 		// ReSharper disable once StaticMemberInGenericType
-		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey TreeViewControlPropertyKey = DPM.RegisterReadOnly<TreeViewControl, TreeViewItem>
 			("TreeViewControl", default, d => d.OnTreeViewControlPropertyChangedPrivate);
 
 		public static readonly DependencyProperty GlyphProperty = DPM.Register<GlyphBase, TreeViewItem>
-			("Glyph", i => i.OnGlyphPropertyChangedPrivate);
+			("Glyph", i => i.LogicalChildMentor.OnLogicalChildPropertyChanged);
 
 		public static readonly DependencyProperty ValueProperty = DPM.Register<object, TreeViewItem>
 			("Value", d => d.OnValuePropertyChangedPrivate);
+
+		public static readonly DependencyProperty CommandProperty = DPM.Register<ICommand, TreeViewItem>
+			("Command", d => d.ButtonController.OnCommandChanged);
+
+		public static readonly DependencyProperty CommandParameterProperty = DPM.Register<object, TreeViewItem>
+			("CommandParameter", d => d.ButtonController.OnCommandParameterChanged);
+
+		public static readonly DependencyProperty CommandTargetProperty = DPM.Register<DependencyObject, TreeViewItem>
+			("CommandTarget", d => d.ButtonController.OnCommandTargetChanged);
 
 		public static readonly DependencyProperty TreeViewControlProperty = TreeViewControlPropertyKey.DependencyProperty;
 
@@ -83,7 +94,15 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public TreeViewItem()
 		{
+			ButtonController = new ButtonController<TreeViewItem>(this);
+
 			this.OverrideStyleKey<TreeViewItem>();
+		}
+
+		public ICommand Command
+		{
+			get => (ICommand) GetValue(CommandProperty);
+			set => SetValue(CommandProperty, value);
 		}
 
 		internal bool ActualCanCollapse => HasItems && CanCollapse;
@@ -120,7 +139,28 @@ namespace Zaaml.UI.Controls.TreeView
 			set => PackedDefinition.CoerceIsExpanded.SetValue(ref _packedValue, value);
 		}
 
+		public object CommandParameter
+		{
+			get => GetValue(CommandParameterProperty);
+			set => SetValue(CommandParameterProperty, value);
+		}
+
+		public DependencyObject CommandTarget
+		{
+			get => (DependencyObject) GetValue(CommandTargetProperty);
+			set => SetValue(CommandTargetProperty, value);
+		}
+
 		private bool FocusOnMouseHover => TreeViewControl?.FocusItemOnMouseHover ?? false;
+
+		public GlyphBase Glyph
+		{
+			get => (GlyphBase) GetValue(GlyphProperty);
+			set => SetValue(GlyphProperty, value);
+		}
+
+
+		private TreeViewItemGlyphPresenter GlyphPresenter => TemplateContract.GlyphPresenter;
 
 		public bool HasItems
 		{
@@ -148,7 +188,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		protected virtual bool IsValid => this.HasValidationError() == false;
 
-		public TreeViewItemCollection Items => this.GetValueOrCreate(ItemsPropertyKey, CreateItemCollectionPrivate);
+		public TreeViewItemCollection ItemCollection => this.GetValueOrCreate(ItemCollectionPropertyKey, CreateItemCollectionPrivate);
 
 		private int Level => TreeViewItemData?.ActualLevel ?? 0;
 
@@ -168,8 +208,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		protected IEnumerable SourceCore
 		{
-			get => Items.SourceInternal;
-			set => Items.SourceInternal = value;
+			get => ItemCollection.SourceCollectionInternal;
+			set => ItemCollection.SourceCollectionInternal = value;
 		}
 
 		private bool SuspendPushIsExpanded
@@ -177,6 +217,8 @@ namespace Zaaml.UI.Controls.TreeView
 			get => PackedDefinition.SuspendPushIsExpanded.GetValue(_packedValue);
 			set => PackedDefinition.SuspendPushIsExpanded.SetValue(ref _packedValue, value);
 		}
+
+		private TreeViewItemTemplateContract TemplateContract => (TreeViewItemTemplateContract) TemplateContractInternal;
 
 		public TreeViewControl TreeViewControl
 		{
@@ -213,6 +255,15 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			get => GetValue(ValueProperty);
 			set => SetValue(ValueProperty, value);
+		}
+
+		private void CleanGlyphPresenter()
+		{
+			if (GlyphPresenter == null)
+				return;
+
+			GlyphPresenter.ContentTemplate = null;
+			GlyphPresenter.Content = null;
 		}
 
 		private bool CoerceIsExpandedProperty(bool value)
@@ -252,6 +303,12 @@ namespace Zaaml.UI.Controls.TreeView
 			return base.MeasureOverride(availableSize);
 		}
 
+		protected virtual void OnClick()
+		{
+			RaiseClickEvent();
+			TreeViewControl?.OnItemClick(this);
+		}
+
 		private object OnCoerceSelection(object arg)
 		{
 			var isSelected = (bool) arg;
@@ -262,8 +319,12 @@ namespace Zaaml.UI.Controls.TreeView
 			return arg;
 		}
 
-		private void OnGlyphPropertyChangedPrivate(GlyphBase oldGlyph, GlyphBase newGlyph)
+		private protected override void OnDependencyPropertyChangedInternal(DependencyPropertyChangedEventArgs args)
 		{
+			base.OnDependencyPropertyChangedInternal(args);
+
+			if (args.Property == GlyphProperty)
+				UpdateGlyphPresenter();
 		}
 
 		protected override void OnGotFocus(RoutedEventArgs e)
@@ -293,7 +354,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 			PushIsExpanded(newIsExpanded);
 
-			Items.IsExpanded = newIsExpanded;
+			ItemCollection.IsExpanded = newIsExpanded;
 
 			if (IsExpanded)
 				RaiseExpandedEvent();
@@ -398,6 +459,20 @@ namespace Zaaml.UI.Controls.TreeView
 			SourceCore = newSource;
 		}
 
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
+
+			UpdateGlyphPresenter();
+		}
+
+		protected override void OnTemplateContractDetaching()
+		{
+			CleanGlyphPresenter();
+
+			base.OnTemplateContractDetaching();
+		}
+
 		protected virtual void OnTreeViewControlChanged(TreeViewControl oldTreeView, TreeViewControl newTreeView)
 		{
 		}
@@ -407,8 +482,25 @@ namespace Zaaml.UI.Controls.TreeView
 			OnTreeViewControlChanged(oldTreeView, newTreeView);
 		}
 
+		private void OnTreeViewControlPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
+		{
+			if (e.Property == TreeViewControl.ItemGlyphKindProperty)
+				UpdateGlyphPresenter();
+			else if (e.Property == TreeViewControl.ItemGlyphTemplateProperty)
+				UpdateGlyphPresenter();
+		}
+
 		private void OnTreeViewControlPropertyChangedPrivate(TreeViewControl oldTreeView, TreeViewControl newTreeView)
 		{
+			if (ReferenceEquals(oldTreeView, newTreeView))
+				return;
+
+			if (oldTreeView != null)
+				oldTreeView.DependencyPropertyChangedInternal -= OnTreeViewControlPropertyChanged;
+
+			if (newTreeView != null)
+				newTreeView.DependencyPropertyChangedInternal += OnTreeViewControlPropertyChanged;
+
 			OnTreeViewControlChangedInternal(oldTreeView, newTreeView);
 		}
 
@@ -469,9 +561,39 @@ namespace Zaaml.UI.Controls.TreeView
 			ActualLevelPadding = new Thickness(LevelDistance * level, 0, 0, 0);
 		}
 
+		private void UpdateGlyphPresenter()
+		{
+			if (GlyphPresenter == null)
+				return;
+
+			if (Glyph != null)
+			{
+				GlyphPresenter.ContentTemplate = null;
+				GlyphPresenter.Content = Glyph;
+			}
+			else if (TreeViewControl != null)
+			{
+				if (TreeViewControl.ItemGlyphKind == TreeViewGlyphKind.Check)
+				{
+					GlyphPresenter.ContentTemplate = null;
+					GlyphPresenter.Content = new TreeViewCheckGlyph(this);
+				}
+				else
+				{
+					GlyphPresenter.ContentTemplate = TreeViewControl.ItemGlyphTemplate;
+					GlyphPresenter.Content = null;
+				}
+			}
+			else
+			{
+				GlyphPresenter.ContentTemplate = null;
+				GlyphPresenter.Content = null;
+			}
+		}
+
 		internal void UpdateHasItemsInternal()
 		{
-			var hasItems = Items.ActualCountInternal > 0;
+			var hasItems = ItemCollection.ActualCountInternal > 0;
 
 			if (TreeViewItemData != null)
 			{

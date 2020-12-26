@@ -28,7 +28,7 @@ namespace Zaaml.UI.Controls.DropDown
 			("DropDownGlyph");
 
 		public static readonly DependencyProperty IsDropDownOpenProperty = DPM.Register<bool, DropDownButtonBase>
-			("IsDropDownOpen", b => b.OnIsDropDownOpenChanged);
+			("IsDropDownOpen", b => b.OnIsDropDownOpenPropertyChangedPrivate);
 
 		public static readonly DependencyProperty PlacementProperty = DPM.Register<Dock, DropDownButtonBase>
 			("Placement", Dock.Bottom);
@@ -107,6 +107,9 @@ namespace Zaaml.UI.Controls.DropDown
 			if (IsDropDownOpen)
 				return;
 			
+			if (PopupControl == null)
+				return;
+
 			this.SetCurrentValueInternal(IsDropDownOpenProperty, true);
 
 			CoerceIsDropDownOpen();
@@ -147,14 +150,20 @@ namespace Zaaml.UI.Controls.DropDown
 			DropDownControlHostHelper.OnDropDownControlChanged(this, oldControl, newControl);
 		}
 
-		private void OnIsDropDownOpenChanged()
+		private void OnIsDropDownOpenPropertyChangedPrivate()
 		{
 			if (IsDropDownOpen)
 				OnOpenedCore();
 			else
 				OnClosedCore();
 
+			OnIsDropDownOpenChangedInternal();
+
 			UpdateVisualState(true);
+		}
+
+		private protected virtual void OnIsDropDownOpenChangedInternal()
+		{
 		}
 
 		private void OnLayoutUpdated(object sender, EventArgs eventArgs)

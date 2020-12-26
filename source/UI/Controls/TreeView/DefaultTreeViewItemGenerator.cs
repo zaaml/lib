@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.TreeView
 		public IItemGenerator<TreeViewItem> Implementation { get; set; }
 	}
 
-	internal class DefaultItemTemplateTreeViewItemGenerator : DelegateIconContentSelectableItemGeneratorImpl<TreeViewItem, DefaultTreeViewItemGenerator>
+	internal class DefaultItemTemplateTreeViewItemGenerator : DelegateIconContentSelectableItemGeneratorImplementation<TreeViewItem, DefaultTreeViewItemGenerator>
 	{
 		private readonly TreeNodesEvaluator _treeNodesEvaluator = new TreeNodesEvaluator();
 		private string _itemSourceCollectionMember;

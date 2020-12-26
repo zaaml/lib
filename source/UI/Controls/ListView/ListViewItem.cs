@@ -2,13 +2,13 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Input;
-using Zaaml.PresentationCore;
+using Zaaml.Core;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
@@ -20,25 +20,30 @@ using Zaaml.UI.Utils;
 
 namespace Zaaml.UI.Controls.ListView
 {
+	[TemplateContractType(typeof(ListViewItemTemplateContract))]
 	public partial class ListViewItem : IconContentControl, MouseHoverVisualStateFlickeringReducer<ListViewItem>.IClient, ISelectableIconContentItem, IContextPopupTarget
 	{
-		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, ListViewItem>
-			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
-
 		public static readonly DependencyProperty GlyphProperty = DPM.Register<GlyphBase, ListViewItem>
-			("Glyph", i => i.OnGlyphPropertyChangedPrivate);
+			("Glyph", i => i.LogicalChildMentor.OnLogicalChildPropertyChanged);
 
 		private static readonly DependencyPropertyKey ListViewControlPropertyKey = DPM.RegisterReadOnly<ListViewControl, ListViewItem>
-			("ListViewControl", default, d => d.OnListViewControlPropertyChangedPrivate);
+			("ListViewControl", d => d.OnListViewControlPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ValueProperty = DPM.Register<object, ListViewItem>
 			("Value", default, d => d.OnValuePropertyChangedPrivate);
 
+		public static readonly DependencyProperty CommandProperty = DPM.Register<ICommand, ListViewItem>
+			("Command", d => d.ButtonController.OnCommandChanged);
+
+		public static readonly DependencyProperty CommandParameterProperty = DPM.Register<object, ListViewItem>
+			("CommandParameter", d => d.ButtonController.OnCommandParameterChanged);
+
+		public static readonly DependencyProperty CommandTargetProperty = DPM.Register<DependencyObject, ListViewItem>
+			("CommandTarget", d => d.ButtonController.OnCommandTargetChanged);
+
 		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
 
 		private ListViewItemData _listViewItemData;
-
-		public event EventHandler IsSelectedChanged;
 
 		static ListViewItem()
 		{
@@ -47,16 +52,30 @@ namespace Zaaml.UI.Controls.ListView
 
 		public ListViewItem()
 		{
+			ButtonController = new ButtonController<ListViewItem>(this);
+
 			this.OverrideStyleKey<ListViewItem>();
 		}
 
-		internal bool ActualCanSelect => CanSelect && ListViewControl?.CanSelectItemInternal(this) != false;
+		public ICommand Command
+		{
+			get => (ICommand) GetValue(CommandProperty);
+			set => SetValue(CommandProperty, value);
+		}
 
 		internal Rect ArrangeRect { get; private set; }
 
-		protected virtual bool CanSelect => true;
+		public object CommandParameter
+		{
+			get => GetValue(CommandParameterProperty);
+			set => SetValue(CommandParameterProperty, value);
+		}
 
-		internal bool CanSelectInternal => CanSelect;
+		public DependencyObject CommandTarget
+		{
+			get => (DependencyObject) GetValue(CommandTargetProperty);
+			set => SetValue(CommandTargetProperty, value);
+		}
 
 		private bool FocusOnMouseHover => ListViewControl?.FocusItemOnMouseHover ?? false;
 
@@ -66,17 +85,13 @@ namespace Zaaml.UI.Controls.ListView
 			set => SetValue(GlyphProperty, value);
 		}
 
+		private ListViewItemGlyphPresenter GlyphPresenter => TemplateContract.GlyphPresenter;
+
 		private bool IsActuallyFocused => IsFocused;
 
 		private bool IsFocusedVisualState { get; set; }
 
 		private bool IsMouseOverVisualState { get; set; }
-
-		public bool IsSelected
-		{
-			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
-		}
 
 		protected virtual bool IsValid => this.HasValidationError() == false;
 
@@ -111,24 +126,35 @@ namespace Zaaml.UI.Controls.ListView
 			}
 		}
 
+		private ListViewItemTemplateContract TemplateContract => (ListViewItemTemplateContract) TemplateContractInternal;
+
 		public object Value
 		{
 			get => GetValue(ValueProperty);
 			set => SetValue(ValueProperty, value);
 		}
 
-		private object OnCoerceSelection(object arg)
+		private void CleanGlyphPresenter()
 		{
-			var isSelected = (bool) arg;
+			if (GlyphPresenter == null)
+				return;
 
-			if (isSelected && CanSelect == false)
-				return KnownBoxes.BoolFalse;
-
-			return arg;
+			GlyphPresenter.ContentTemplate = null;
+			GlyphPresenter.Content = null;
 		}
 
-		private void OnGlyphPropertyChangedPrivate(GlyphBase oldGlyph, GlyphBase newGlyph)
+		protected virtual void OnClick()
 		{
+			RaiseClickEvent();
+			ListViewControl?.OnItemClick(this);
+		}
+
+		private protected override void OnDependencyPropertyChangedInternal(DependencyPropertyChangedEventArgs args)
+		{
+			base.OnDependencyPropertyChangedInternal(args);
+
+			if (args.Property == GlyphProperty)
+				UpdateGlyphPresenter();
 		}
 
 		protected override void OnGotFocus(RoutedEventArgs e)
@@ -136,33 +162,6 @@ namespace Zaaml.UI.Controls.ListView
 			base.OnGotFocus(e);
 
 			ListViewControl?.OnItemGotFocusInternal(this);
-		}
-
-		protected virtual void OnIsSelectedChanged()
-		{
-			var selected = IsSelected;
-
-			if (selected)
-				RaiseSelectedEvent();
-			else
-				RaiseUnselectedEvent();
-
-			if (selected == IsSelected)
-				IsSelectedChanged?.Invoke(this, EventArgs.Empty);
-		}
-
-		private void OnIsSelectedPropertyChangedPrivate()
-		{
-			var selected = IsSelected;
-
-			if (selected)
-				ListViewControl?.Select(this);
-			else
-				ListViewControl?.Unselect(this);
-
-			OnIsSelectedChanged();
-
-			UpdateVisualState(true);
 		}
 
 		protected virtual void OnListViewControlChanged(ListViewControl oldListView, ListViewControl newListView)
@@ -174,8 +173,25 @@ namespace Zaaml.UI.Controls.ListView
 			OnListViewControlChanged(oldListView, newListView);
 		}
 
+		private void OnListViewControlPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
+		{
+			if (e.Property == ListViewControl.ItemGlyphKindProperty)
+				UpdateGlyphPresenter();
+			else if (e.Property == ListViewControl.ItemGlyphTemplateProperty)
+				UpdateGlyphPresenter();
+		}
+
 		private void OnListViewControlPropertyChangedPrivate(ListViewControl oldListView, ListViewControl newListView)
 		{
+			if (ReferenceEquals(oldListView, newListView))
+				return;
+
+			if (oldListView != null)
+				oldListView.DependencyPropertyChangedInternal -= OnListViewControlPropertyChanged;
+
+			if (newListView != null)
+				newListView.DependencyPropertyChangedInternal += OnListViewControlPropertyChanged;
+
 			OnListViewControlChangedInternal(oldListView, newListView);
 		}
 
@@ -190,11 +206,15 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			base.OnMouseEnter(e);
 
+			ButtonController.OnMouseEnter(e);
+
 			ListViewControl?.OnItemMouseEnter(this, e);
 		}
 
 		protected override void OnMouseLeave(MouseEventArgs e)
 		{
+			ButtonController.OnMouseLeave(e);
+
 			ListViewControl?.OnItemMouseLeave(this, e);
 
 			base.OnMouseLeave(e);
@@ -205,6 +225,8 @@ namespace Zaaml.UI.Controls.ListView
 			if (e.Handled)
 				return;
 
+			ButtonController.OnMouseLeftButtonDown(e);
+
 			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
@@ -213,12 +235,16 @@ namespace Zaaml.UI.Controls.ListView
 			if (e.Handled)
 				return;
 
+			ButtonController.OnMouseLeftButtonUp(e);
+
 			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
+
+			ButtonController.OnMouseMove(e);
 
 			ListViewControl?.OnItemMouseMove(this, e);
 		}
@@ -239,28 +265,57 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
+
+			UpdateGlyphPresenter();
+		}
+
+		protected override void OnTemplateContractDetaching()
+		{
+			CleanGlyphPresenter();
+
+			base.OnTemplateContractDetaching();
+		}
+
 		private void OnValuePropertyChangedPrivate(object oldValue, object newValue)
 		{
 			ListViewControl?.OnItemValueChanged(this);
-		}
-
-		internal void SelectInternal()
-		{
-			SetIsSelectedInternal(true);
-		}
-
-		internal void SetIsSelectedInternal(bool value)
-		{
-			this.SetCurrentValueInternal(IsSelectedProperty, value ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
 		}
 
 		private protected virtual void SyncListNodeState()
 		{
 		}
 
-		internal void UnselectInternal()
+		private void UpdateGlyphPresenter()
 		{
-			SetIsSelectedInternal(false);
+			if (GlyphPresenter == null)
+				return;
+
+			if (Glyph != null)
+			{
+				GlyphPresenter.ContentTemplate = null;
+				GlyphPresenter.Content = Glyph;
+			}
+			else if (ListViewControl != null)
+			{
+				if (ListViewControl.ItemGlyphKind == ListViewGlyphKind.Check)
+				{
+					GlyphPresenter.ContentTemplate = null;
+					GlyphPresenter.Content = new ListViewCheckGlyph(this);
+				}
+				else
+				{
+					GlyphPresenter.ContentTemplate = ListViewControl.ItemGlyphTemplate;
+					GlyphPresenter.Content = null;
+				}
+			}
+			else
+			{
+				GlyphPresenter.ContentTemplate = null;
+				GlyphPresenter.Content = null;
+			}
 		}
 
 		protected override void UpdateVisualState(bool useTransitions)
@@ -323,8 +378,6 @@ namespace Zaaml.UI.Controls.ListView
 
 		DependencyProperty ISelectableItem.ValueProperty => ValueProperty;
 
-		DependencyProperty ISelectableItem.SelectionProperty => IsSelectedProperty;
-
 		Rect ILayoutInformation.ArrangeRect
 		{
 			get => ArrangeRect;
@@ -348,5 +401,11 @@ namespace Zaaml.UI.Controls.ListView
 
 			UpdateVisualStateImpl(true, newMouse, newFocus);
 		}
+	}
+
+	public class ListViewItemTemplateContract : IconContentControlTemplateContract
+	{
+		[TemplateContractPart(Required = true)]
+		public ListViewItemGlyphPresenter GlyphPresenter { get; [UsedImplicitly] private set; }
 	}
 }

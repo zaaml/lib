@@ -20,38 +20,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			base.OnIsDropDownOpenChangedInternal();
 
-			var selectorController = SelectorController;
-
-			if (selectorController == null)
-				return;
-
-			if (IsDropDownOpen)
-			{
-				selectorController.SuspendSelectionChange();
-
-				var selectedItem = selectorController.SelectedItem;
-
-				if (selectedItem != null)
-				{
-					ItemCollection.BringIntoViewInternal(new BringIntoViewRequest<TItem>(selectedItem, BringIntoViewMode.Top));
-
-					FocusNavigator.FocusedItem = selectedItem;
-					FocusHelper.QueryFocus(selectedItem);
-				}
-				else
-				{
-					ItemCollection.BringIntoViewInternal(0);
-					FocusNavigator.ClearFocus();
-				}
-			}
-			else
-			{
-				if (selectorController.IsSelectionChangeSuspended)
-				{
-					//selectorController.RestoreSelection();
-					selectorController.ResumeSelectionChange();
-				}
-			}
+			OnIsDropDownOpenChangedSelector();
 		}
 
 		public virtual void OpenDropDown()

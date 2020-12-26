@@ -8,12 +8,12 @@ namespace Zaaml.UI.Controls.Core
 	{
 		public int CoerceSelectedIndex(int selectedIndex)
 		{
-			if (_selectionHandling)
-				return CoerceSelection.Index;
+			if (SelectionHandling)
+				return ForcedCoerceSelection.Index;
 
 			var preselectIndex = PreselectIndex(selectedIndex, true, SelectionResume, out var preSelection);
 
-			if (IsSelectionChangeSuspended)
+			if (IsSelectionSuspended)
 			{
 				if (preselectIndex)
 				{
@@ -21,13 +21,13 @@ namespace Zaaml.UI.Controls.Core
 					ModifySelectionCollection(preSelection);
 				}
 
-				CoerceSelection = Selection;
+				ForcedCoerceSelection = Selection;
 				PushSelectedIndexBoundValue(Selection.Index);
 
 				return Selection.Index;
 			}
 
-			var coerceSelectedIndex = _selectionHandling || preselectIndex == false ? SelectedIndex : preSelection.Index;
+			var coerceSelectedIndex = SelectionHandling || preselectIndex == false ? SelectedIndex : preSelection.Index;
 
 			if (Equals(coerceSelectedIndex, selectedIndex))
 				return coerceSelectedIndex;
@@ -39,12 +39,12 @@ namespace Zaaml.UI.Controls.Core
 
 		public TItem CoerceSelectedItem(TItem selectedItem)
 		{
-			if (_selectionHandling)
-				return CoerceSelection.Item;
+			if (SelectionHandling)
+				return ForcedCoerceSelection.Item;
 
 			var preselectItem = PreselectItem(selectedItem, true, SelectionResume, out var preSelection);
 
-			if (IsSelectionChangeSuspended)
+			if (IsSelectionSuspended)
 			{
 				if (preselectItem)
 				{
@@ -52,7 +52,7 @@ namespace Zaaml.UI.Controls.Core
 					ModifySelectionCollection(preSelection);
 				}
 
-				CoerceSelection = Selection;
+				ForcedCoerceSelection = Selection;
 				PushSelectedItemBoundValue(Selection.Item);
 
 				return Selection.Item;
@@ -70,12 +70,12 @@ namespace Zaaml.UI.Controls.Core
 
 		public object CoerceSelectedSource(object selectedSource)
 		{
-			if (_selectionHandling)
-				return CoerceSelection.Source;
+			if (SelectionHandling)
+				return ForcedCoerceSelection.Source;
 
 			var preselectSource = PreselectSource(selectedSource, true, SelectionResume, out var preSelection);
 
-			if (IsSelectionChangeSuspended)
+			if (IsSelectionSuspended)
 			{
 				if (preselectSource)
 				{
@@ -83,7 +83,7 @@ namespace Zaaml.UI.Controls.Core
 					ModifySelectionCollection(preSelection);
 				}
 
-				CoerceSelection = Selection;
+				ForcedCoerceSelection = Selection;
 				PushSelectedSourceBoundValue(Selection.Source);
 
 				return Selection.Source;
@@ -101,12 +101,12 @@ namespace Zaaml.UI.Controls.Core
 
 		public object CoerceSelectedValue(object selectedValue)
 		{
-			if (_selectionHandling)
-				return CoerceSelection.Value;
+			if (SelectionHandling)
+				return ForcedCoerceSelection.Value;
 
 			var preselectValue = PreselectValue(selectedValue, true, SelectionResume, out var preSelection);
 
-			if (IsSelectionChangeSuspended)
+			if (IsSelectionSuspended)
 			{
 				if (preselectValue)
 				{
@@ -114,13 +114,13 @@ namespace Zaaml.UI.Controls.Core
 					ModifySelectionCollection(preSelection);
 				}
 
-				CoerceSelection = Selection;
+				ForcedCoerceSelection = Selection;
 				PushSelectedValueBoundValue(Selection.Value);
 
 				return Selection.Value;
 			}
 
-			var coerceSelectedValue = _selectionHandling || preselectValue == false ? SelectedValue : preSelection.Value;
+			var coerceSelectedValue = SelectionHandling || preselectValue == false ? SelectedValue : preSelection.Value;
 
 			if (Equals(coerceSelectedValue, selectedValue))
 				return coerceSelectedValue;
@@ -130,6 +130,6 @@ namespace Zaaml.UI.Controls.Core
 			return coerceSelectedValue;
 		}
 
-		private Selection<TItem> CoerceSelection { get; set; }
+		private Selection<TItem> ForcedCoerceSelection { get; set; }
 	}
 }

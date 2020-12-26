@@ -51,18 +51,18 @@ namespace Zaaml.PresentationCore.Animation
 
 		private void OnAnimationAdded(AnimationBase animation)
 		{
-			animation.Time = Time;
+			animation.RelativeTime = RelativeTime;
 		}
 
 		private void OnAnimationRemoved(AnimationBase animation)
 		{
-			animation.Time = 0.0;
+			animation.RelativeTime = 0.0;
 		}
 
-		internal override void OnTimeChanged()
+		internal override void OnRelativeTimeChanged()
 		{
 			foreach (var animation in AnimationCollection)
-				animation.Time = Time;
+				animation.RelativeTime = RelativeTime;
 		}
 
 		#endregion
@@ -101,7 +101,7 @@ namespace Zaaml.PresentationCore.Animation
 			{
 				InheritanceContext?.Detach(animation);
 
-				animation.Time = 0.0;
+				animation.RelativeTime = 0.0;
 
 				_compositeAnimation.OnAnimationRemoved(animation);
 

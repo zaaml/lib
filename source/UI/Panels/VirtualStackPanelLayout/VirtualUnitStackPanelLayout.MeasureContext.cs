@@ -3,7 +3,9 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core.Extensions;
@@ -51,6 +53,10 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 			private OrientedSize OrientedTrailingSize { get; set; }
 
+			private ICollection<UIElement> LeadingElements { get; }
+			
+			private ICollection<UIElement> TrailingElements { get; }
+			
 			public double PreCacheDelta => OrientedLeadingSize.Direct;
 
 			public VirtualMeasureContext(VirtualUnitStackPanelLayout layout, Size availableSize)
@@ -59,11 +65,14 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 				Orientation = layout.Orientation;
 
-				SourceCount = Layout.ItemsCount;
+				var canScrollDirect = Orientation == Orientation.Vertical ? layout.CanVerticallyScroll : layout.CanHorizontallyScroll;
+				var canScrollIndirect = Orientation == Orientation.Vertical ? layout.CanHorizontallyScroll : layout.CanVerticallyScroll;
 
-				var canScrollDirect = Orientation == Orientation.Vertical ? Layout.CanVerticallyScroll : Layout.CanHorizontallyScroll;
-				var canScrollIndirect = Orientation == Orientation.Vertical ? Layout.CanHorizontallyScroll : Layout.CanVerticallyScroll;
+				LeadingElements = layout.Panel.LeadingElements;
+				TrailingElements = layout.Panel.TrailingElements;
 
+				SourceCount = layout.ItemsCount + (LeadingElements?.Count ?? 0) + (TrailingElements?.Count ?? 0);
+				
 				OrientedResult = new OrientedSize(Orientation);
 				OrientedLeadingSize = new OrientedSize(Orientation);
 				OrientedTrailingSize = new OrientedSize(Orientation);
@@ -102,7 +111,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 				while (index < FirstVisibleIndex && index < SourceCount)
 				{
-					var element = EnsureElement(Layout.Realize(index));
+					var element = Realize(index);
 					
 					if (element == null)
 					{
@@ -121,6 +130,40 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 				}
 			}
 
+			private UIElement Realize(int index)
+			{
+				var leadingDelta = 0;
+				
+				if (LeadingElements != null)
+				{
+					leadingDelta += LeadingElements.Count;
+					
+					if (index >= 0 && index < LeadingElements.Count && LeadingElements.Count > 0)
+					{
+						var element = LeadingElements.ElementAt(index);
+
+						return EnsureElement(element);
+					}
+				}
+
+				if (TrailingElements != null)
+				{
+					if (index - leadingDelta >= Layout.Source.Count)
+					{
+						if (index >= 0 && index < TrailingElements.Count && TrailingElements.Count > 0)
+						{
+							var element = TrailingElements.ElementAt(index - leadingDelta - Layout.Source.Count);
+
+							return EnsureElement(element);
+						}
+
+						throw new IndexOutOfRangeException(nameof(index));
+					}
+				}
+
+				return EnsureElement(Layout.Realize(index - leadingDelta));
+			}
+			
 			private void MeasureFocusedItem(int focusedIndex)
       {
         if (focusedIndex < 0 || focusedIndex >= SourceCount)
@@ -129,7 +172,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
         if (focusedIndex >= FirstIndex && focusedIndex <= LastIndex)
           return;
 
-        var focusedItem = EnsureElement(Layout.Realize(focusedIndex));
+        var focusedItem = Realize(focusedIndex);
 
         if (focusedItem == null)
           return;
@@ -173,7 +216,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 				while (OrientedAvailable.Direct > OrientedResult.Direct && index < SourceCount)
 				{
-					var element = EnsureElement(Layout.Realize(index));
+					var element = Realize(index);
 
 					if (element == null)
 					{
@@ -219,7 +262,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 					while (OrientedAvailable.Direct > OrientedResult.Direct && FirstVisibleIndex > 0)
 					{
-						var element = EnsureElement(Layout.Realize(FirstVisibleIndex - 1));
+						var element = Realize(FirstVisibleIndex - 1);
 						
 						if (element == null)
 						{
@@ -241,7 +284,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 					// Remeasure leading cache
 					while (LeadingCacheCount < Layout.Panel.LeadingTrailingLimit && FirstIndex > 0)
 					{
-						var element = EnsureElement(Layout.Realize(FirstIndex - 1));
+						var element = Realize(FirstIndex - 1);
 						
 						if (element == null)
 						{
@@ -269,7 +312,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 				while (index < SourceCount && TrailingCacheCount <= Layout.Panel.LeadingTrailingLimit)
 				{
-					var element = EnsureElement(Layout.Realize(index));
+					var element = Realize(index);
 					
 					if (element == null)
 					{

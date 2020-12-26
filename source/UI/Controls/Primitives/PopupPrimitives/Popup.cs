@@ -391,27 +391,4 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public Popup Popup { get; }
 	}
-
-	public readonly struct PopupLength
-	{
-		public PopupLength(double unitValue, PopupLengthUnitType unitType)
-		{
-			_unitValue = unitValue;
-			UnitType = unitType;
-		}
-
-		private readonly double _unitValue;
-
-		public PopupLengthUnitType UnitType { get; }
-
-		public double Value => UnitType != PopupLengthUnitType.Auto ? _unitValue : 1.0;
-	}
-
-	public enum PopupLengthUnitType
-	{
-		Auto,
-		Fixed,
-		ScreenRatio,
-		TargetRatio
-	}
 }

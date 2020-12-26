@@ -113,7 +113,6 @@ namespace Zaaml.PresentationCore.CommandCore
 			_execute(parameter);
 		}
 
-
 		bool ICommand.CanExecute(object parameter)
 		{
 			return CanExecute((T) parameter);

@@ -105,15 +105,32 @@ namespace Zaaml.UI.Controls.Primitives
 
 		private void OnClick()
 		{
-			Control.OnClick();
-			InvokeCommand();
+			try
+			{
+				Control.OnPreClick();
+				
+				if (Control.InvokeCommandBeforeClick)
+				{
+					InvokeCommand();
+					Control.OnClick();
+				}
+				else
+				{
+					Control.OnClick();
+					InvokeCommand();
+				}
 
-			if (Control.IsInPopupTree() == false)
-				return;
+				if (Control.IsInPopupTree() == false)
+					return;
 
-			IsPressed = false;
+				IsPressed = false;
 
-			Control.ClosePopupTree();
+				Control.ClosePopupTree();
+			}
+			finally
+			{
+				Control.OnPostClick();
+			}
 		}
 
 		private void OnKeyDown(KeyEventArgs e)
@@ -264,8 +281,7 @@ namespace Zaaml.UI.Controls.Primitives
 
 			e.Handled = true;
 
-			if (Control.ShouldFocusOnClick)
-				FocusHelper.SetKeyboardFocusedElement(Control);
+			Control.FocusControl();
 
 			// MouseButton could be released during method calls. Check here and after to ensure it is still pressed.
 			if (IsLeftButtonPressed)

@@ -98,5 +98,6 @@ namespace Zaaml.UI.Controls.Core
 		{
 			PushValue(SelectorInt.SelectedValueProperty, value);
 		}
+
 	}
 }

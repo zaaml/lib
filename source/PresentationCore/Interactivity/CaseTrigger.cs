@@ -2,33 +2,21 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
+
 namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class CaseTrigger : CaseTriggerBase
 	{
-		#region Static Fields and Constants
-
 		private static readonly InteractivityProperty TargetValueProperty = RegisterInteractivityProperty(OnValueChanged);
 
-		#endregion
-
-		#region Fields
-
 		private object _targetValue;
-
-		#endregion
-
-		#region Properties
 
 		public object Value
 		{
 			get => GetOriginalValue(TargetValueProperty, _targetValue);
 			set => SetValue(TargetValueProperty, ref _targetValue, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
@@ -47,12 +35,19 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void DeinitializeTrigger(IInteractivityRoot root)
 		{
 			Unload(TargetValueProperty, ref _targetValue);
+
 			base.DeinitializeTrigger(root);
+		}
+
+		internal object GetActualValue(Type targetType)
+		{
+			return CacheConvert(TargetValueProperty, targetType, ref _targetValue);
 		}
 
 		internal override void InitializeTrigger(IInteractivityRoot root)
 		{
 			Load(TargetValueProperty, ref _targetValue);
+
 			base.InitializeTrigger(root);
 		}
 
@@ -61,16 +56,14 @@ namespace Zaaml.PresentationCore.Interactivity
 			UpdateSwitchTrigger();
 		}
 
-		private static void OnValueChanged(InteractivityObject interactivityobject, object oldvalue, object newvalue)
+		private static void OnValueChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
-			((CaseTrigger) interactivityobject).OnValueChanged();
+			((CaseTrigger) interactivityObject).OnValueChanged();
 		}
 
 		internal void UpdateSwitchTrigger()
 		{
 			SwitchDataTrigger?.UpdateTrigger();
 		}
-
-		#endregion
 	}
 }

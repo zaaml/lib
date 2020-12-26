@@ -210,7 +210,7 @@ namespace Zaaml.UI.Controls.TableView
 
 		private void OnItemGeneratorPropertyChangedPrivate(TableViewItemGenerator oldValue, TableViewItemGenerator newValue)
 		{
-			Items.Generator = newValue;
+			ItemCollection.Generator = newValue;
 		}
 
 		private void OnItemSpacingPropertyChangedPrivate(double oldValue, double newValue)
@@ -220,7 +220,7 @@ namespace Zaaml.UI.Controls.TableView
 
 		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldValue, IEnumerable newValue)
 		{
-			SourceCore = newValue;
+			SourceCollectionCore = newValue;
 		}
 
 		private void OnOrientationPropertyChangedPrivate(Orientation oldValue, Orientation newValue)

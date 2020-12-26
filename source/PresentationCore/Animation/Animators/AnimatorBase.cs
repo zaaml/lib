@@ -37,7 +37,7 @@ namespace Zaaml.PresentationCore.Animation.Animators
         if (_isCurrentDirty == false)
           return _current;
 
-        _current = Time.IsCloseTo(1.0) ? End : EvaluateCurrent();
+        _current = RelativeTime.IsCloseTo(1.0) ? End : EvaluateCurrent();
         _isCurrentDirty = false;
 
         return _current;
@@ -74,7 +74,7 @@ namespace Zaaml.PresentationCore.Animation.Animators
       }
     }
 
-    public double Time
+    public double RelativeTime
     {
       get => _time;
       set

@@ -208,7 +208,7 @@ namespace Zaaml.UI.Controls.ToolBar
 		{
 			if (IsMeasureToMinLength)
 			{
-				if (Items.ActualCountInternal > 1)
+				if (ItemCollection.ActualCountInternal > 1)
 				{
 					HasOverflowItems = true;
 
@@ -285,7 +285,7 @@ namespace Zaaml.UI.Controls.ToolBar
 		{
 			ItemsPresenter.ToolBar = this;
 			OverflowItemsPresenter.ToolBar = this;
-			OverflowItemsPresenter.OverflowItems.SourceInternal = Items;
+			OverflowItemsPresenter.OverflowItems.SourceCollectionInternal = ItemCollection;
 
 			DraggableBehavior.Handle = new DraggableElementHandle { Element = DragHandle };
 
@@ -302,7 +302,7 @@ namespace Zaaml.UI.Controls.ToolBar
 
 			DraggableBehavior.Handle = null;
 
-			OverflowItemsPresenter.OverflowItems.SourceInternal = null;
+			OverflowItemsPresenter.OverflowItems.SourceCollectionInternal = null;
 			OverflowItemsPresenter.ToolBar = null;
 			ItemsPresenter.ToolBar = null;
 		}

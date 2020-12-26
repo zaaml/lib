@@ -10,7 +10,7 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DefaultHeaderedIconContentItemGeneratorImpl<TItem, TGenerator> : DefaultIconContentItemGeneratorImpl<TItem, TGenerator>
+	internal class DefaultHeaderedIconContentItemGeneratorImplementation<TItem, TGenerator> : DefaultIconContentItemGeneratorImplementation<TItem, TGenerator>
 		where TItem : FrameworkElement, IHeaderedIconContentControl, new() where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
 		private string _itemHeaderMember;
@@ -19,7 +19,7 @@ namespace Zaaml.UI.Controls.Core
 		private DataTemplate _itemHeaderTemplate;
 		private DataTemplateSelector _itemHeaderTemplateSelector;
 
-		public DefaultHeaderedIconContentItemGeneratorImpl(string itemHeaderMember, DataTemplate itemHeaderTemplate, DataTemplateSelector itemHeaderTemplateSelector, string itemHeaderStringFormat, string itemIconMember, string itemContentMember,
+		public DefaultHeaderedIconContentItemGeneratorImplementation(string itemHeaderMember, DataTemplate itemHeaderTemplate, DataTemplateSelector itemHeaderTemplateSelector, string itemHeaderStringFormat, string itemIconMember, string itemContentMember,
 			DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector,
 			string itemContentStringFormat)
 			: base(itemIconMember, itemContentMember, itemContentTemplate, itemContentTemplateSelector, itemContentStringFormat)

@@ -52,7 +52,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
     private object _mutableField = Unset.Value;
     private object _parentOrXamlRootStore;
-    protected uint PackedValue;
+    internal uint PackedValue;
 
     #endregion
 
@@ -494,7 +494,14 @@ namespace Zaaml.PresentationCore.Interactivity
       set => PackedDefinition.Debug.SetValue(ref PackedValue, value);
     }
 
+    public string DebugName { get; set; }
+    
     public int Id { get; }
+
+    public override string ToString()
+    {
+	    return DebugName ?? base.ToString();
+    }
 #endif
   }
 

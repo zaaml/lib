@@ -6,11 +6,11 @@ namespace Zaaml.UI.Controls.Core
 {
 	public enum SelectionItemContentMode
 	{
-		Auto,
-		Selection,
+		None,
 		Item,
-		Source,
+		Index,
 		Value,
-		Index
+		Source,
+		Selection
 	}
 }

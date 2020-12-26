@@ -8,7 +8,6 @@ using System.Windows.Media;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
-using NativePopup = System.Windows.Controls.Primitives.Popup;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
@@ -35,14 +34,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			return XamlConstants.ZeroSize;
 		}
 
-		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
-		{
-			base.OnPropertyChanged(e);
-
-			if (e.Property == IsHitTestVisibleProperty)
-				UpdateHitTest();
-		}
-
 		partial void PlatformCtor()
 		{
 			PopupSource.Child = Panel;
@@ -52,10 +43,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			Focusable = false;
 			Panel.Focusable = true;
-
-			//HandleMouseEvents = true;
-			//Panel.FocusVisualStyle = null;
-			//FocusManager.SetIsFocusScope(Panel, true);
 		}
 
 		partial void PlatformOnChildChanged(UIElement oldChild, UIElement newChild)
@@ -72,24 +59,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				ApplyTemplate();
 
 			BringToFront();
-		}
-
-		private static void UpdateHitTest()
-		{
-			//if (IsHitTestVisible == false)
-			//{
-			//  var popupHwndSource = PresentationSource.FromVisual(Panel) as HwndSource;
-			//  if (popupHwndSource != null)
-			//  {
-			//    var extendedStyle = NativeMethodsSafe.GetWindowStyleEx(popupHwndSource.Handle);
-			//    extendedStyle |= WS_EX.TRANSPARENT;
-			//    NativeMethods.SetWindowLongPtr(popupHwndSource.Handle, GWL.EXSTYLE, new IntPtr((int) extendedStyle));
-			//  }
-			//  else
-			//  {
-			//    this.InvokeOnLayoutUpdate(UpdateHitTest);
-			//  }
-			//}
 		}
 
 		private static class PackedDefinition

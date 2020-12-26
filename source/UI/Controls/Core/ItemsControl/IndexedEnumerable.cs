@@ -4,8 +4,10 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
+using Zaaml.Core.Extensions;
 #if !SILVERLIGHT
 using System.Windows.Data;
 
@@ -16,8 +18,9 @@ namespace Zaaml.UI.Controls.Core
 	internal sealed class IndexedEnumerable : IEnumerable
 	{
 		#region Static Fields and Constants
-
-		public static readonly IndexedEnumerable Empty = new IndexedEnumerable(new object[0]);
+		
+		private static readonly object[] EmptyArray = new object[0];
+		public static readonly IndexedEnumerable Empty = new IndexedEnumerable(EmptyArray);
 
 		#endregion
 
@@ -40,7 +43,7 @@ namespace Zaaml.UI.Controls.Core
 		#region Ctors
 
 		internal IndexedEnumerable(IEnumerable collection)
-			: this(collection, null)
+			: this(collection ?? EmptyArray, null)
 		{
 		}
 
@@ -50,18 +53,11 @@ namespace Zaaml.UI.Controls.Core
 
 			SetCollection(collection);
 
-			if (List != null)
+			if (List != null || ReadOnlyList != null)
 				return;
 
-			if (collection is INotifyCollectionChanged icc)
-			{
-#if SILVERLIGHT
-				// TODO: Implement weak event pattern
-	      icc.CollectionChanged += OnCollectionChanged;
-#else
+			if (collection is INotifyCollectionChanged icc) 
 				CollectionChangedEventManager.AddHandler(icc, OnCollectionChanged);
-#endif
-			}
 		}
 
 		#endregion
@@ -167,6 +163,8 @@ namespace Zaaml.UI.Controls.Core
 		}
 
 		internal IList List { get; private set; }
+		
+		internal IReadOnlyList<object> ReadOnlyList { get; private set; }
 
 		#endregion
 
@@ -188,9 +186,7 @@ namespace Zaaml.UI.Controls.Core
 
 		internal static void CopyTo(IEnumerable collection, Array array, int index)
 		{
-			var ic = collection as ICollection;
-
-			if (ic != null)
+			if (collection is ICollection ic)
 				ic.CopyTo(array, index);
 			else
 			{
@@ -201,6 +197,7 @@ namespace Zaaml.UI.Controls.Core
 					if (index < array.Length)
 					{
 						list[index] = item;
+						
 						++index;
 					}
 					else
@@ -309,18 +306,21 @@ namespace Zaaml.UI.Controls.Core
 
 			value = -1;
 
-			if ((List != null) && (FilterCallback == null))
+			if (ReadOnlyList != null && FilterCallback == null)
+			{
+				value = ReadOnlyList.IndexOf(item);
+				isNativeValue = true;
+			}
+			else if (List != null && FilterCallback == null)
 			{
 				value = List.IndexOf(item);
 				isNativeValue = true;
 			}
-#if !SILVERLIGHT
 			else if (CollectionView != null)
 			{
 				value = CollectionView.IndexOf(item);
 				isNativeValue = true;
 			}
-#endif
 			else if (_reflectedIndexOf != null)
 			{
 				try
@@ -384,13 +384,16 @@ namespace Zaaml.UI.Controls.Core
 				value = List[index];
 				isNativeValue = true;
 			}
-#if !SILVERLIGHT
+			else if (ReadOnlyList != null)
+			{
+				value = ReadOnlyList[index];
+				isNativeValue = true;
+			}
 			else if (CollectionView != null)
 			{
 				value = CollectionView.GetItemAt(index);
 				isNativeValue = true;
 			}
-#endif
 			else if (_reflectedItemAt != null)
 			{
 				try
@@ -455,7 +458,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			ClearAllCaches();
 
-			if (List == null)
+			if (List == null && ReadOnlyList == null)
 			{
 				if (Enumerable is INotifyCollectionChanged icc)
 				{
@@ -475,6 +478,7 @@ namespace Zaaml.UI.Controls.Core
 
 			Collection = null;
 			List = null;
+			ReadOnlyList = null;
 			FilterCallback = null;
 		}
 
@@ -501,13 +505,11 @@ namespace Zaaml.UI.Controls.Core
 			Enumerable = collection;
 			Collection = collection as ICollection;
 			List = collection as IList;
-#if !SILVERLIGHT
+			ReadOnlyList = collection as IReadOnlyList<object>;
+			
 			CollectionView = collection as CollectionView;
 
 			if (List == null && CollectionView == null)
-#else
-      if (List == null)
-#endif
 			{
 				var srcType = collection.GetType();
 				var mi = srcType.GetMethod("IndexOf", new[] { typeof(object) });

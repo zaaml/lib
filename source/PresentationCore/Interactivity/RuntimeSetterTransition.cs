@@ -48,9 +48,9 @@ namespace Zaaml.PresentationCore.Interactivity
     private RuntimeSetterTransition(IAnimator animator, RuntimeTransitionPool pool)
     {
       _releaseAction = Release;
-
-      _animator = animator;
+			_animator = animator;
       _pool = pool;
+      
       var doubleAnimation = new DoubleAnimation
       {
         From = 0.0,
@@ -62,8 +62,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
       _storyboard = new Storyboard
       {
-        Children = {doubleAnimation}
-      };
+				Children = { doubleAnimation }
+			};
 
       _storyboard.Begin();
       _storyboard.Stop();
@@ -91,9 +91,10 @@ namespace Zaaml.PresentationCore.Interactivity
         return;
 
       if (timeLineFinished)
-        _animator.Time = 1.0;
+        _animator.RelativeTime = 1.0;
 
       var setter = _setter;
+      
       _setter = null;
 
       setter.OnTransitionCompleted();
@@ -110,7 +111,7 @@ namespace Zaaml.PresentationCore.Interactivity
       if (IsAnimating == false)
         return;
 
-      _animator.Time = newValue;
+      _animator.RelativeTime = newValue;
 
       if (_setter.SetAnimatedValue(_animator.Current) == false)
         StopImpl();
@@ -155,7 +156,7 @@ namespace Zaaml.PresentationCore.Interactivity
       _animator.Start = from;
       _animator.End = to;
       _animator.EasingFunction = transition.EasingFunction;
-      _animator.Time = 0;
+      _animator.RelativeTime = 0;
 
       var doubleAnimation = (DoubleAnimation) _storyboard.Children[0];
 

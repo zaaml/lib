@@ -236,7 +236,7 @@ namespace Zaaml.UI.Controls.TabView
 			private set => this.SetReadOnlyValue(ActualMenuSourceCollectionPropertyKey, value);
 		}
 
-		private IEnumerable<TabViewItem> ActualTabViewItems => Items.ActualItemsInternal;
+		private IEnumerable<TabViewItem> ActualTabViewItems => ItemCollection.ActualItemsInternal;
 
 		public object BackContent
 		{
@@ -412,7 +412,7 @@ namespace Zaaml.UI.Controls.TabView
 
 			_menuItemsCollectionViewSource.SetBinding(CollectionViewSource.SourceProperty, new Binding
 			{
-				Path = new PropertyPath("ItemsSource"),
+				Path = new PropertyPath("SourceCollection"),
 				Source = this,
 				TargetNullValue = itemCollection
 			});
@@ -552,7 +552,7 @@ namespace Zaaml.UI.Controls.TabView
 			if (nextItem == null)
 				return;
 
-			var preferredIndex = Items.GetIndexFromItemInternal(nextItem);
+			var preferredIndex = ItemCollection.GetIndexFromItemInternal(nextItem);
 
 			if (preferredIndex != -1)
 				SelectorController.PreferredIndex = preferredIndex;
@@ -562,7 +562,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		internal virtual void OnItemGeneratorChanged(TabViewItemGeneratorBase oldGenerator, TabViewItemGeneratorBase newGenerator)
 		{
-			Items.Generator = ActualItemGenerator;
+			ItemCollection.Generator = ActualItemGenerator;
 		}
 
 		protected override void OnLoaded()
@@ -642,7 +642,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		private void OnSourceCollectionChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
-			SourceCore = newSource;
+			SourceCollectionCore = newSource;
 		}
 
 		private void OnTabContainerVisibilityChanged()

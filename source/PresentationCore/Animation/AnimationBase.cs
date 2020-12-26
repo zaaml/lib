@@ -79,7 +79,7 @@ namespace Zaaml.PresentationCore.Animation
         return;
 
       _animator = CreateAnimator();
-      _animator.Time = Time;
+      _animator.RelativeTime = RelativeTime;
 
       UpdateCurrent();
     }
@@ -104,12 +104,12 @@ namespace Zaaml.PresentationCore.Animation
       UpdateCurrent();
     }
 
-    internal override void OnTimeChanged()
+    internal override void OnRelativeTimeChanged()
     {
       EnsureTimeline();
 
       if (_animator != null)
-        _animator.Time = Time;
+        _animator.RelativeTime = RelativeTime;
 
       UpdateCurrent();
     }

@@ -7,10 +7,10 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DelegateContentItemGeneratorImpl<TItem, TGenerator> : DefaultContentItemGeneratorImpl<TItem, TGenerator>
+	internal class DelegateContentItemGeneratorImplementation<TItem, TGenerator> : DefaultContentItemGeneratorImplementation<TItem, TGenerator>
 		where TItem : FrameworkElement, IContentControl, new() where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
-		public DelegateContentItemGeneratorImpl(IContentItemsControl itemsControl)
+		public DelegateContentItemGeneratorImplementation(IContentItemsControl itemsControl)
 			: base(itemsControl.ItemContentMember, itemsControl.ItemContentTemplate, itemsControl.ItemContentTemplateSelector, itemsControl.ItemContentStringFormat)
 		{
 			ItemsControlCore = itemsControl;

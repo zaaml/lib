@@ -22,416 +22,377 @@ using NativeStyle = System.Windows.Style;
 
 namespace Zaaml.UI.Windows
 {
-  public partial class WindowBase : IWindow, INotifyPropertyChanging, INotifyPropertyChanged, IImplementationRootProvider
-  {
-    #region Static Fields and Constants
+	public partial class WindowBase : IWindow, INotifyPropertyChanging, INotifyPropertyChanged, IImplementationRootProvider
+	{
+		internal static readonly RoutedCommand CloseCommand = new RoutedCommand();
+		internal static readonly RoutedCommand MinimizeCommand = new RoutedCommand();
+		internal static readonly RoutedCommand ToggleMaximizeNormalStateCommand = new RoutedCommand();
+		internal static readonly RoutedCommand CloseWithDialogResultCommand = new RoutedCommand();
 
-    internal static readonly RoutedCommand CloseCommand = new RoutedCommand();
-    internal static readonly RoutedCommand MinimizeCommand = new RoutedCommand();
-    internal static readonly RoutedCommand ToggleMaximizeNormalStateCommand = new RoutedCommand();
-    internal static readonly RoutedCommand CloseWithDialogResultCommand = new RoutedCommand();
+		private static readonly ITreeEnumeratorAdvisor<IWindowElement> TreeEnumeratorAdvisor = new DelegateTreeEnumeratorAdvisor<IWindowElement>(e => e.EnumerateWindowElements().GetEnumerator());
 
-    private static readonly ITreeEnumeratorAdvisor<IWindowElement> TreeEnumeratorAdvisor = new DelegateTreeEnumeratorAdvisor<IWindowElement>(e => e.EnumerateWindowElements().GetEnumerator());
+		public static readonly DependencyProperty DropShadowProperty = DPM.Register<bool, WindowBase>
+			("DropShadow", false);
 
-    public static readonly DependencyProperty DropShadowProperty = DPM.Register<bool, WindowBase>
-      ("DropShadow", false);
+		public static readonly DependencyProperty FooterPresenterStyleProperty = DPM.Register<NativeStyle, WindowBase>
+			("FooterPresenterStyle");
 
-    public static readonly DependencyProperty FooterPresenterStyleProperty = DPM.Register<NativeStyle, WindowBase>
-      ("FooterPresenterStyle");
+		public static readonly DependencyProperty HeaderPresenterStyleProperty = DPM.Register<NativeStyle, WindowBase>
+			("HeaderPresenterStyle");
 
-    public static readonly DependencyProperty HeaderPresenterStyleProperty = DPM.Register<NativeStyle, WindowBase>
-      ("HeaderPresenterStyle");
+		public static readonly DependencyProperty ContentPresenterStyleProperty = DPM.Register<NativeStyle, WindowBase>
+			("ContentPresenterStyle");
 
-    public static readonly DependencyProperty ContentPresenterStyleProperty = DPM.Register<NativeStyle, WindowBase>
-      ("ContentPresenterStyle");
+		public static readonly DependencyProperty IsDraggableProperty = DPM.Register<bool, WindowBase>
+			("IsDraggable", true, w => w.OnIsDraggableChanged);
 
-    public static readonly DependencyProperty IsDraggableProperty = DPM.Register<bool, WindowBase>
-      ("IsDraggable", true, w => w.OnIsDraggableChanged);
+		public static readonly DependencyProperty IsResizableProperty = DPM.Register<bool, WindowBase>
+			("IsResizable", true, w => w.OnIsResizableChanged);
 
-    public static readonly DependencyProperty IsResizableProperty = DPM.Register<bool, WindowBase>
-      ("IsResizable", true, w => w.OnIsResizableChanged);
+		public static readonly DependencyProperty ShowCloseButtonProperty = DPM.Register<bool, WindowBase>
+			("ShowCloseButton", true, w => w.OnHeaderButtonVisibilityRelatedPropertyChanged);
 
-    public static readonly DependencyProperty ShowCloseButtonProperty = DPM.Register<bool, WindowBase>
-      ("ShowCloseButton", true, w => w.OnHeaderButtonVisibilityRelatedPropertyChanged);
+		public static readonly DependencyProperty ShowMaximizeButtonProperty = DPM.Register<bool, WindowBase>
+			("ShowMaximizeButton", true, w => w.OnHeaderButtonVisibilityRelatedPropertyChanged);
 
-    public static readonly DependencyProperty ShowMaximizeButtonProperty = DPM.Register<bool, WindowBase>
-      ("ShowMaximizeButton", true, w => w.OnHeaderButtonVisibilityRelatedPropertyChanged);
+		public static readonly DependencyProperty ShowMinimizeButtonProperty = DPM.Register<bool, WindowBase>
+			("ShowMinimizeButton", true, w => w.OnHeaderButtonVisibilityRelatedPropertyChanged);
 
-    public static readonly DependencyProperty ShowMinimizeButtonProperty = DPM.Register<bool, WindowBase>
-      ("ShowMinimizeButton", true, w => w.OnHeaderButtonVisibilityRelatedPropertyChanged);
+		public static readonly DependencyProperty ShowTitleProperty = DPM.Register<bool, WindowBase>
+			("ShowTitle", true);
 
-    public static readonly DependencyProperty ShowTitleProperty = DPM.Register<bool, WindowBase>
-      ("ShowTitle", true);
+		public static readonly DependencyProperty ShowIconProperty = DPM.Register<bool, WindowBase>
+			("ShowIcon", true);
 
-    #endregion
+		public static readonly DependencyProperty TitleBarHeadContentProperty = DPM.Register<object, WindowBase>
+			("TitleBarHeadContent");
 
-    #region Fields
+		public static readonly DependencyProperty TitleBarTailContentProperty = DPM.Register<object, WindowBase>
+			("TitleBarTailContent");
 
-    private WindowFooterPresenter _footerPresenter;
-    private WindowHeaderPresenter _headerPresenter;
-    private byte _packedValue;
-    public event EventHandler IsResizableChanged;
-    public event EventHandler IsDraggableChanged;
-    internal event EventHandler HeaderButtonVisibilityRelatedPropertyChanged;
-    public event PropertyChangedEventHandler PropertyChanged;
-    public event PropertyChangingEventHandler PropertyChanging;
-    public event EventHandler IsActiveChanged;
+		private WindowFooterPresenter _footerPresenter;
+		private WindowHeaderPresenter _headerPresenter;
+		private byte _packedValue;
+		public event EventHandler IsResizableChanged;
+		public event EventHandler IsDraggableChanged;
+		internal event EventHandler HeaderButtonVisibilityRelatedPropertyChanged;
+		public event EventHandler IsActiveChanged;
 
-    event EventHandler IWindow.IsActiveChanged
-    {
-      add => IsActiveChanged += value;
-      remove => IsActiveChanged -= value;
-    }
+		public WindowBase()
+		{
+			this.OverrideStyleKey<WindowBase>();
 
-    #endregion
+			var commandBindings = CommandBindings;
 
-    #region Ctors
+			commandBindings.Add(new CommandBinding(CloseCommand, ExecutedCloseCommand, CanExecuteCloseCommand));
+			commandBindings.Add(new CommandBinding(MinimizeCommand, ExecuteMinimizeCommand));
+			commandBindings.Add(new CommandBinding(ToggleMaximizeNormalStateCommand, ExecuteToggleMaximizeNormalStateCommand, CanExecuteToggleMaximizeNormalStateCommand));
+			commandBindings.Add(new CommandBinding(CloseWithDialogResultCommand, ExecutedCloseWithDialogResultCommand));
 
-    public WindowBase()
-    {
-      this.OverrideStyleKey<WindowBase>();
+			PlatformCtor();
+		}
 
-      var commandBindings = CommandBindings;
+		protected virtual bool ActualShowCloseButton => ShowCloseButton;
 
-      commandBindings.Add(new CommandBinding(CloseCommand, ExecutedCloseCommand, CanExecuteCloseCommand));
-      commandBindings.Add(new CommandBinding(MinimizeCommand, ExecuteMinimizeCommand));
-      commandBindings.Add(new CommandBinding(ToggleMaximizeNormalStateCommand, ExecuteToggleMaximizeNormalStateCommand, CanExecuteToggleMaximizeNormalStateCommand));
-      commandBindings.Add(new CommandBinding(CloseWithDialogResultCommand, ExecutedCloseWithDialogResultCommand));
+		internal bool ActualShowCloseButtonInt => ActualShowCloseButton;
 
-      PlatformCtor();
-    }
+		protected virtual bool ActualShowMaximizeButton => IsResizable && ShowMaximizeButton && WindowState != WindowState.Maximized;
 
-    #endregion
+		internal bool ActualShowMaximizeButtonInt => ActualShowMaximizeButton;
 
-    #region Properties
+		protected virtual bool ActualShowMinimizeButton => ShowMinimizeButton;
 
-    protected WindowPresenter WindowPresenter { get; private set; }
+		internal bool ActualShowMinimizeButtonInt => ActualShowMinimizeButton;
+
+		protected bool ActualShowRestoreButton => IsResizable && ShowMaximizeButton && WindowState == WindowState.Maximized;
 
-    public NativeStyle ContentPresenterStyle
-    {
-      get => (NativeStyle) GetValue(ContentPresenterStyleProperty);
-      set => SetValue(ContentPresenterStyleProperty, value);
-    }
-
-    protected virtual bool ActualShowCloseButton => ShowCloseButton;
-
-    internal bool ActualShowCloseButtonInt => ActualShowCloseButton;
-
-    protected virtual bool ActualShowMaximizeButton => IsResizable && ShowMaximizeButton && WindowState != WindowState.Maximized;
-
-    internal bool ActualShowMaximizeButtonInt => ActualShowMaximizeButton;
-
-    protected virtual bool ActualShowMinimizeButton => ShowMinimizeButton;
-
-    internal bool ActualShowMinimizeButtonInt => ActualShowMinimizeButton;
-
-    protected bool ActualShowRestoreButton => IsResizable && ShowMaximizeButton && WindowState == WindowState.Maximized;
-
-    internal bool ActualShowRestoreButtonInt => ActualShowRestoreButton;
-
-    public bool DropShadow
-    {
-      get => (bool) GetValue(DropShadowProperty);
-      set => SetValue(DropShadowProperty, value);
-    }
-
-    internal WindowFooterPresenter FooterPresenter
-    {
-      get => _footerPresenter;
-      set
-      {
-        if (ReferenceEquals(_footerPresenter, value))
-          return;
-
-        if (_footerPresenter != null)
-          OnFooterPresenterDetachingPrivate(_footerPresenter);
-
-        _footerPresenter = value;
-
-        if (_footerPresenter != null)
-          OnFooterPresenterAttachedPrivate(_footerPresenter);
-      }
-    }
-
-    private void OnFooterPresenterDetachingPrivate(WindowFooterPresenter footerPresenter)
-    {
-      OnFooterPresenterDetachingInternal(footerPresenter);
-    }
-
-    private void OnFooterPresenterAttachedPrivate(WindowFooterPresenter footerPresenter)
-    {
-      OnFooterPresenterAttachedInternal(footerPresenter);
-    }
-
-    internal virtual void OnFooterPresenterDetachingInternal(WindowFooterPresenter footerPresenter)
-    {
-
-    }
-
-    internal virtual void OnFooterPresenterAttachedInternal(WindowFooterPresenter footerPresenter)
-    {
-
-    }
-
-    public NativeStyle FooterPresenterStyle
-    {
-      get => (NativeStyle) GetValue(FooterPresenterStyleProperty);
-      set => SetValue(FooterPresenterStyleProperty, value);
-    }
-
-    internal WindowHeaderPresenter HeaderPresenter
-    {
-      get => _headerPresenter;
-      set
-      {
-        if (ReferenceEquals(_headerPresenter, value))
-          return;
-
-        if (_headerPresenter != null)
-          OnHeaderPresenterDetachingPrivate(_headerPresenter);
-
-        _headerPresenter = value;
-
-        if (_headerPresenter != null)
-          OnHeaderPresenterAttachedPrivate(_headerPresenter);
-      }
-    }
-
-    private void OnHeaderPresenterAttachedPrivate(WindowHeaderPresenter headerPresenter)
-    {
-      OnHeaderPresenterAttachedInternal(headerPresenter);
-    }
-
-    private void OnHeaderPresenterDetachingPrivate(WindowHeaderPresenter headerPresenter)
-    {
-      OnHeaderPresenterDetachingInternal(headerPresenter);
-    }
-
-    internal virtual void OnHeaderPresenterAttachedInternal(WindowHeaderPresenter headerPresenter)
-    {
-    }
-
-    internal virtual void OnHeaderPresenterDetachingInternal(WindowHeaderPresenter headerPresenter)
-    {
-    }
-
-    public NativeStyle HeaderPresenterStyle
-    {
-      get => (NativeStyle) GetValue(HeaderPresenterStyleProperty);
-      set => SetValue(HeaderPresenterStyleProperty, value);
-    }
-
-    public bool IsDraggable
-    {
-      get => (bool) GetValue(IsDraggableProperty);
-      set => SetValue(IsDraggableProperty, value);
-    }
-
-    protected internal bool IsManualLocation
-    {
-      get => PackedDefinition.IsManualLocation.GetValue(_packedValue);
-      set => PackedDefinition.IsManualLocation.SetValue(ref _packedValue, value);
-    }
-
-    protected internal bool IsManualSize
-    {
-      get => PackedDefinition.IsManualSize.GetValue(_packedValue);
-      set => PackedDefinition.IsManualSize.SetValue(ref _packedValue, value);
-    }
-
-    public bool IsResizable
-    {
-      get => (bool) GetValue(IsResizableProperty);
-      set => SetValue(IsResizableProperty, value);
-    }
-
-    private bool QueryWindowToCenter
-    {
-      get => PackedDefinition.QueryWindowToCenter.GetValue(_packedValue);
-      set => PackedDefinition.QueryWindowToCenter.SetValue(ref _packedValue, value);
-    }
-
-    public bool ShowCloseButton
-    {
-      get => (bool) GetValue(ShowCloseButtonProperty);
-      set => SetValue(ShowCloseButtonProperty, value);
-    }
-		
-    public bool ShowMaximizeButton
-    {
-      get => (bool) GetValue(ShowMaximizeButtonProperty);
-      set => SetValue(ShowMaximizeButtonProperty, value);
-    }
-
-    public bool ShowMinimizeButton
-    {
-      get => (bool) GetValue(ShowMinimizeButtonProperty);
-      set => SetValue(ShowMinimizeButtonProperty, value);
-    }
-
-    public bool ShowTitle
-    {
-      get => (bool) GetValue(ShowTitleProperty);
-      set => SetValue(ShowTitleProperty, value);
-    }
-
-    public WindowStatus Status
-    {
-      get => PackedDefinition.Status.GetValue(_packedValue);
-      internal set
-      {
-        if (Status == value)
-          return;
-
-        PackedDefinition.Status.SetValue(ref _packedValue, value);
-
-        Status = value;
-        OnPropertyChanged(nameof(Status));
-      }
-    }
-
-    FrameworkElement IImplementationRootProvider.ImplementationRoot => Content as FrameworkElement;
-
-    #endregion
-
-    #region  Methods
-
-    protected override Size ArrangeOverride(Size finalSize)
-    {
-      // This code aligns window content with device pixels for non-standard Dpi
-
-      var shouldRound = DpiUtils.DpiX != 96 || DpiUtils.DpiY != 96;
-
-      if (shouldRound)
-      {
-        finalSize.Width += 0.001;
-        finalSize.Height += 0.001;
-      }
-
-      var finalArrange = base.ArrangeOverride(finalSize);
-
-      if (shouldRound)
-        finalArrange = finalArrange.Round(2);
-
-      if (QueryWindowToCenter)
-      {
-	      QueryWindowToCenter = false;
+		internal bool ActualShowRestoreButtonInt => ActualShowRestoreButton;
+
+		public NativeStyle ContentPresenterStyle
+		{
+			get => (NativeStyle) GetValue(ContentPresenterStyleProperty);
+			set => SetValue(ContentPresenterStyleProperty, value);
+		}
+
+		public bool DropShadow
+		{
+			get => (bool) GetValue(DropShadowProperty);
+			set => SetValue(DropShadowProperty, value);
+		}
+
+		internal WindowFooterPresenter FooterPresenter
+		{
+			get => _footerPresenter;
+			set
+			{
+				if (ReferenceEquals(_footerPresenter, value))
+					return;
+
+				if (_footerPresenter != null)
+					OnFooterPresenterDetachingPrivate(_footerPresenter);
+
+				_footerPresenter = value;
+
+				if (_footerPresenter != null)
+					OnFooterPresenterAttachedPrivate(_footerPresenter);
+			}
+		}
+
+		public NativeStyle FooterPresenterStyle
+		{
+			get => (NativeStyle) GetValue(FooterPresenterStyleProperty);
+			set => SetValue(FooterPresenterStyleProperty, value);
+		}
+
+		internal WindowHeaderPresenter HeaderPresenter
+		{
+			get => _headerPresenter;
+			set
+			{
+				if (ReferenceEquals(_headerPresenter, value))
+					return;
+
+				if (_headerPresenter != null)
+					OnHeaderPresenterDetachingPrivate(_headerPresenter);
+
+				_headerPresenter = value;
+
+				if (_headerPresenter != null)
+					OnHeaderPresenterAttachedPrivate(_headerPresenter);
+			}
+		}
+
+		public NativeStyle HeaderPresenterStyle
+		{
+			get => (NativeStyle) GetValue(HeaderPresenterStyleProperty);
+			set => SetValue(HeaderPresenterStyleProperty, value);
+		}
+
+		public bool IsDraggable
+		{
+			get => (bool) GetValue(IsDraggableProperty);
+			set => SetValue(IsDraggableProperty, value);
+		}
+
+		protected internal bool IsManualLocation
+		{
+			get => PackedDefinition.IsManualLocation.GetValue(_packedValue);
+			set => PackedDefinition.IsManualLocation.SetValue(ref _packedValue, value);
+		}
+
+		protected internal bool IsManualSize
+		{
+			get => PackedDefinition.IsManualSize.GetValue(_packedValue);
+			set => PackedDefinition.IsManualSize.SetValue(ref _packedValue, value);
+		}
+
+		public bool IsResizable
+		{
+			get => (bool) GetValue(IsResizableProperty);
+			set => SetValue(IsResizableProperty, value);
+		}
+
+		private bool QueryWindowToCenter
+		{
+			get => PackedDefinition.QueryWindowToCenter.GetValue(_packedValue);
+			set => PackedDefinition.QueryWindowToCenter.SetValue(ref _packedValue, value);
+		}
+
+		public bool ShowCloseButton
+		{
+			get => (bool) GetValue(ShowCloseButtonProperty);
+			set => SetValue(ShowCloseButtonProperty, value);
+		}
+
+		public bool ShowIcon
+		{
+			get => (bool) GetValue(ShowIconProperty);
+			set => SetValue(ShowIconProperty, value);
+		}
+
+		public bool ShowMaximizeButton
+		{
+			get => (bool) GetValue(ShowMaximizeButtonProperty);
+			set => SetValue(ShowMaximizeButtonProperty, value);
+		}
+
+		public bool ShowMinimizeButton
+		{
+			get => (bool) GetValue(ShowMinimizeButtonProperty);
+			set => SetValue(ShowMinimizeButtonProperty, value);
+		}
+
+		public bool ShowTitle
+		{
+			get => (bool) GetValue(ShowTitleProperty);
+			set => SetValue(ShowTitleProperty, value);
+		}
+
+		public WindowStatus Status
+		{
+			get => PackedDefinition.Status.GetValue(_packedValue);
+			internal set
+			{
+				if (Status == value)
+					return;
+
+				PackedDefinition.Status.SetValue(ref _packedValue, value);
+
+				Status = value;
+				OnPropertyChanged(nameof(Status));
+			}
+		}
+
+		public object TitleBarHeadContent
+		{
+			get => GetValue(TitleBarHeadContentProperty);
+			set => SetValue(TitleBarHeadContentProperty, value);
+		}
+
+		public object TitleBarTailContent
+		{
+			get => GetValue(TitleBarTailContentProperty);
+			set => SetValue(TitleBarTailContentProperty, value);
+		}
+
+		protected WindowPresenter WindowPresenter { get; private set; }
+
+		protected override Size ArrangeOverride(Size finalSize)
+		{
+			// This code aligns window content with device pixels for non-standard Dpi
+
+			var shouldRound = DpiUtils.DpiX != 96 || DpiUtils.DpiY != 96;
+
+			if (shouldRound)
+			{
+				finalSize.Width += 0.001;
+				finalSize.Height += 0.001;
+			}
+
+			var finalArrange = base.ArrangeOverride(finalSize);
+
+			if (shouldRound)
+				finalArrange = finalArrange.Round(2);
+
+			if (QueryWindowToCenter)
+			{
+				QueryWindowToCenter = false;
 				MoveWindowToCenter(finalArrange);
-      }
+			}
 
-      return finalArrange;
-    }
+			return finalArrange;
+		}
 
-    protected virtual void AttachWindowPresenter()
-    {
-      WindowPresenter = (WindowPresenter) GetTemplateChild("WindowPresenter");
+		protected virtual void AttachWindowPresenter()
+		{
+			WindowPresenter = (WindowPresenter) GetTemplateChild("WindowPresenter");
 
-      if (WindowPresenter == null)
-        return;
+			if (WindowPresenter == null)
+				return;
 
-      WindowPresenter.TemplateContractAttached += OnWindowPresenterTemplateContractAttached;
-      WindowPresenter.TemplateContractDetaching += OnWindowPresenterTemplateContractDetaching;
-    }
+			WindowPresenter.TemplateContractAttached += OnWindowPresenterTemplateContractAttached;
+			WindowPresenter.TemplateContractDetaching += OnWindowPresenterTemplateContractDetaching;
+		}
 
-    internal void BeginDragMove(bool async)
-    {
-      BeginDragMoveImpl(async);
-    }
+		internal void BeginDragMove(bool async)
+		{
+			BeginDragMoveImpl(async);
+		}
 
-    partial void BeginDragMoveImpl(bool async);
+		partial void BeginDragMoveImpl(bool async);
 
-    protected virtual Rect CalcClientBox(Size finalArrange)
-    {
-      return finalArrange.Rect();
-    }
+		protected virtual Rect CalcClientBox(Size finalArrange)
+		{
+			return finalArrange.Rect();
+		}
 
-    private void CanExecuteCloseCommand(object sender, CanExecuteRoutedEventArgs e)
-    {
-      e.CanExecute = true;
-      e.Handled = true;
-      e.ContinueRouting = false;
-    }
+		private void CanExecuteCloseCommand(object sender, CanExecuteRoutedEventArgs e)
+		{
+			e.CanExecute = true;
+			e.Handled = true;
+			e.ContinueRouting = false;
+		}
 
-    private void CanExecuteToggleMaximizeNormalStateCommand(object sender, CanExecuteRoutedEventArgs e)
-    {
-      e.CanExecute = IsResizable;
-      e.Handled = true;
-    }
+		private void CanExecuteToggleMaximizeNormalStateCommand(object sender, CanExecuteRoutedEventArgs e)
+		{
+			e.CanExecute = IsResizable;
+			e.Handled = true;
+		}
 
-    protected virtual void CloseByEnter()
-    {
-      SetDialogResultAndClose(true);
-    }
+		protected virtual void CloseByEnter()
+		{
+			SetDialogResultAndClose(true);
+		}
 
-    protected virtual void CloseByEscape()
-    {
-      SetDialogResultAndClose(false);
-    }
+		protected virtual void CloseByEscape()
+		{
+			SetDialogResultAndClose(false);
+		}
 
-    protected virtual void DetachWindowPresenter()
-    {
-      if (WindowPresenter == null)
-	      return;
+		protected virtual void DetachWindowPresenter()
+		{
+			if (WindowPresenter == null)
+				return;
 
-      WindowPresenter.TemplateContractAttached -= OnWindowPresenterTemplateContractAttached;
-      WindowPresenter.TemplateContractDetaching -= OnWindowPresenterTemplateContractDetaching;
-    }
+			WindowPresenter.TemplateContractAttached -= OnWindowPresenterTemplateContractAttached;
+			WindowPresenter.TemplateContractDetaching -= OnWindowPresenterTemplateContractDetaching;
+		}
 
-    private IEnumerable<IWindowElement> EnumerateDescendantWindowElements()
-    {
-      return EnumerateWindowElements().SelectMany(w => TreeEnumerator.GetEnumerator(w, TreeEnumeratorAdvisor).Enumerate());
-    }
+		private IEnumerable<IWindowElement> EnumerateDescendantWindowElements()
+		{
+			return EnumerateWindowElements().SelectMany(w => TreeEnumerator.GetEnumerator(w, TreeEnumeratorAdvisor).Enumerate());
+		}
 
-    private IEnumerable<IWindowElement> EnumerateWindowElements()
-    {
-      if (WindowPresenter != null)
-        yield return WindowPresenter;
-    }
+		private IEnumerable<IWindowElement> EnumerateWindowElements()
+		{
+			if (WindowPresenter != null)
+				yield return WindowPresenter;
+		}
 
-    private void ExecutedCloseCommand(object sender, ExecutedRoutedEventArgs e)
-    {
-      OnExecutedCloseCommand(e.Parameter);
+		private void ExecutedCloseCommand(object sender, ExecutedRoutedEventArgs e)
+		{
+			OnExecutedCloseCommand(e.Parameter);
 
-      e.Handled = true;
-    }
+			e.Handled = true;
+		}
 
-    private void ExecutedCloseWithDialogResultCommand(object sender, ExecutedRoutedEventArgs e)
-    {
-      SetDialogResultAndClose((bool?) e.Parameter);
+		private void ExecutedCloseWithDialogResultCommand(object sender, ExecutedRoutedEventArgs e)
+		{
+			SetDialogResultAndClose((bool?) e.Parameter);
 
-      e.Handled = true;
-    }
+			e.Handled = true;
+		}
 
-    private void ExecuteMinimizeCommand(object sender, ExecutedRoutedEventArgs e)
-    {
-      WindowState = WindowState.Minimized;
+		private void ExecuteMinimizeCommand(object sender, ExecutedRoutedEventArgs e)
+		{
+			WindowState = WindowState.Minimized;
 
-      e.Handled = true;
-    }
+			e.Handled = true;
+		}
 
-    private void ExecuteToggleMaximizeNormalStateCommand(object sender, ExecutedRoutedEventArgs e)
-    {
-      ToggleMaximizeNormalState();
+		private void ExecuteToggleMaximizeNormalStateCommand(object sender, ExecutedRoutedEventArgs e)
+		{
+			ToggleMaximizeNormalState();
 
-      e.Handled = true;
-    }
+			e.Handled = true;
+		}
 
-    private void FocusInt()
-    {
-      Focus();
-    }
+		private void FocusInt()
+		{
+			Focus();
+		}
 
-    internal static Window GetWindowInternal(FrameworkElement element)
-    {
+		internal static Window GetWindowInternal(FrameworkElement element)
+		{
 #if SILVERLIGHT
 			return element.GetAncestorsAndSelf<Window>(MixedTreeEnumerationStrategy.VisualThenLogicalInstance).FirstOrDefault();
 #else
-      return GetWindow(element);
+			return GetWindow(element);
 #endif
-    }
+		}
 
-    private void MoveWindowToCenter(Size finalArrange)
-    {
+		private void MoveWindowToCenter(Size finalArrange)
+		{
 			if (IsManualLocation || WindowStartupLocation != WindowStartupLocation.CenterScreen)
 				return;
 
@@ -446,247 +407,279 @@ namespace Zaaml.UI.Windows
 		}
 
 		internal void MoveWindowToCenterInternal()
-    {
-      QueryWindowToCenter = true;
+		{
+			QueryWindowToCenter = true;
 
-      InvalidateMeasure();
-      InvalidateArrange();
-    }
+			InvalidateMeasure();
+			InvalidateArrange();
+		}
 
-    public sealed override void OnApplyTemplate()
-    {
-      OnPlatformBeforeApplyTemplate();
-      OnTemplateDetach();
+		protected override void OnActivated(EventArgs e)
+		{
+			base.OnActivated(e);
 
-      foreach (var windowElement in EnumerateWindowElements())
-        windowElement.Window = null;
+			OnIsActiveChangedPrivate();
+		}
 
-      DetachWindowPresenter();
+		public sealed override void OnApplyTemplate()
+		{
+			OnPlatformBeforeApplyTemplate();
+			OnTemplateDetach();
 
-      base.OnApplyTemplate();
+			foreach (var windowElement in EnumerateWindowElements())
+				windowElement.Window = null;
 
-      AttachWindowPresenter();
+			DetachWindowPresenter();
 
-      foreach (var windowElement in EnumerateWindowElements())
-        windowElement.Window = this;
+			base.OnApplyTemplate();
 
-      OnPlatformAfterApplyTemplate();
+			AttachWindowPresenter();
 
-      OnTemplateAttach();
-    }
+			foreach (var windowElement in EnumerateWindowElements())
+				windowElement.Window = this;
 
-    internal virtual void OnBeginDragMove()
-    {
-    }
+			OnPlatformAfterApplyTemplate();
 
-    internal virtual void OnDragMove()
-    {
-    }
+			OnTemplateAttach();
+		}
 
-    internal virtual void OnEndDragMove()
-    {
-    }
+		internal virtual void OnBeginDragMove()
+		{
+		}
 
-    protected virtual void OnExecutedCloseCommand(object commandParameter)
-    {
-      SetDialogResultAndClose(commandParameter as bool?);
-    }
+		internal void OnBeginResize()
+		{
+			foreach (var windowElement in EnumerateDescendantWindowElements().OfType<IWindowEventListener>())
+				windowElement.OnResizeStarted();
+		}
 
-    private void OnHeaderButtonVisibilityRelatedPropertyChanged()
-    {
-      HeaderButtonVisibilityRelatedPropertyChanged?.Invoke(this, EventArgs.Empty);
-    }
+		protected override void OnDeactivated(EventArgs e)
+		{
+			base.OnDeactivated(e);
 
-    private void OnHeaderMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-      if (e.ClickCount == 2 && e.Handled == false)
-        ToggleMaximizeNormalState();
-    }
+			OnIsActiveChangedPrivate();
+		}
 
-    protected override void OnActivated(EventArgs e)
-    {
-      base.OnActivated(e);
+		internal virtual void OnDragMove()
+		{
+		}
 
-      OnIsActiveChangedPrivate();
-    }
+		internal virtual void OnEndDragMove()
+		{
+		}
 
-    protected override void OnDeactivated(EventArgs e)
-    {
-      base.OnDeactivated(e);
+		protected virtual void OnExecutedCloseCommand(object commandParameter)
+		{
+			SetDialogResultAndClose(commandParameter as bool?);
+		}
 
-      OnIsActiveChangedPrivate();
-    }
+		internal virtual void OnFooterPresenterAttachedInternal(WindowFooterPresenter footerPresenter)
+		{
+		}
 
-    private void OnIsActiveChangedPrivate()
-    {
-      OnIsActiveChanged();
+		private void OnFooterPresenterAttachedPrivate(WindowFooterPresenter footerPresenter)
+		{
+			OnFooterPresenterAttachedInternal(footerPresenter);
+		}
 
-      IsActiveChanged?.Invoke(this, EventArgs.Empty);
-    }
+		internal virtual void OnFooterPresenterDetachingInternal(WindowFooterPresenter footerPresenter)
+		{
+		}
 
-    protected virtual void OnIsActiveChanged()
-    {
-    }
+		private void OnFooterPresenterDetachingPrivate(WindowFooterPresenter footerPresenter)
+		{
+			OnFooterPresenterDetachingInternal(footerPresenter);
+		}
 
-    private void OnIsDraggableChanged()
-    {
-      UpdateDraggableBehavior();
+		private void OnHeaderButtonVisibilityRelatedPropertyChanged()
+		{
+			HeaderButtonVisibilityRelatedPropertyChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-      OnHeaderButtonVisibilityRelatedPropertyChanged();
+		private void OnHeaderMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			if (e.ClickCount == 2 && e.Handled == false)
+				ToggleMaximizeNormalState();
+		}
 
-      IsDraggableChanged?.Invoke(this, EventArgs.Empty);
-    }
+		internal virtual void OnHeaderPresenterAttachedInternal(WindowHeaderPresenter headerPresenter)
+		{
+		}
 
-    protected virtual void OnIsResizableChanged()
-    {
-      UpdateResizableBehavior();
+		private void OnHeaderPresenterAttachedPrivate(WindowHeaderPresenter headerPresenter)
+		{
+			OnHeaderPresenterAttachedInternal(headerPresenter);
+		}
 
-      OnHeaderButtonVisibilityRelatedPropertyChanged();
+		internal virtual void OnHeaderPresenterDetachingInternal(WindowHeaderPresenter headerPresenter)
+		{
+		}
 
-      IsResizableChanged?.Invoke(this, EventArgs.Empty);
-    }
+		private void OnHeaderPresenterDetachingPrivate(WindowHeaderPresenter headerPresenter)
+		{
+			OnHeaderPresenterDetachingInternal(headerPresenter);
+		}
 
-    protected override void OnKeyDown(KeyEventArgs e)
-    {
-      base.OnKeyDown(e);
+		protected virtual void OnIsActiveChanged()
+		{
+		}
 
-      if (e.Handled)
-        return;
+		private void OnIsActiveChangedPrivate()
+		{
+			OnIsActiveChanged();
 
-      if (ReferenceEquals(this, FocusHelper.GetFocusedElement()) == false)
-        return;
-
-      if (e.Key == Key.Escape)
-        CloseByEscape();
-      else if (e.Key == Key.Enter)
-        CloseByEnter();
-    }
+			IsActiveChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-      base.OnMouseLeftButtonDown(e);
+		private void OnIsDraggableChanged()
+		{
+			UpdateDraggableBehavior();
 
-      FocusInt();
-    }
+			OnHeaderButtonVisibilityRelatedPropertyChanged();
 
-    protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
-    {
-      base.OnMouseRightButtonDown(e);
+			IsDraggableChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-      FocusInt();
-    }
+		protected virtual void OnIsResizableChanged()
+		{
+			UpdateResizableBehavior();
 
-    partial void OnPlatformAfterApplyTemplate();
+			OnHeaderButtonVisibilityRelatedPropertyChanged();
 
-    partial void OnPlatformBeforeApplyTemplate();
+			IsResizableChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    protected virtual void OnPositionChanged()
-    {
-    }
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			base.OnKeyDown(e);
 
-    protected virtual void OnPropertyChanged(string propertyName)
-    {
-      PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
+			if (e.Handled)
+				return;
 
-    protected virtual void OnPropertyChanging(string propertyName)
-    {
-      PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
-    }
+			if (ReferenceEquals(this, FocusHelper.GetFocusedElement()) == false)
+				return;
 
-    internal void OnOnEndResize()
-    {
-      foreach (var windowElement in EnumerateDescendantWindowElements().OfType<IWindowEventListener>())
-        windowElement.OnResizeFinished();
-    }
+			if (e.Key == Key.Escape)
+				CloseByEscape();
+			else if (e.Key == Key.Enter)
+				CloseByEnter();
+		}
 
-    internal void OnBeginResize()
-    {
-      foreach (var windowElement in EnumerateDescendantWindowElements().OfType<IWindowEventListener>())
-        windowElement.OnResizeStarted();
-    }
+		protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			base.OnMouseLeftButtonDown(e);
 
-    protected virtual void OnTemplateAttach()
-    {
-    }
+			FocusInt();
+		}
 
-    protected virtual void OnTemplateDetach()
-    {
-    }
+		protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
+		{
+			base.OnMouseRightButtonDown(e);
 
-    partial void OnWindowPresenterTemplateContractAttachedPartial();
+			FocusInt();
+		}
 
-    partial void OnWindowPresenterTemplateContractDetachingPartial();
-
-    partial void PlatformCtor();
-
-    internal void SetDialogResultAndClose(bool? dialogResult)
-    {
-      if (DialogResult != dialogResult)
-        DialogResult = dialogResult;
-      else
-        Close();
-    }
-
-    internal virtual void ToggleMaximizeNormalState()
-    {
-      WindowState = WindowState == WindowState.Normal && IsResizable ? WindowState.Maximized : WindowState.Normal;
-    }
-
-    partial void UpdateDraggableBehavior();
-
-    partial void UpdateResizableBehavior();
-
-    private void OnWindowPresenterTemplateContractAttached(object sender, EventArgs eventArgs)
-    {
-      OnWindowPresenterTemplateContractAttachedPartial();
-      OnWindowPresenterTemplateContractAttachedInternal();
-    }
-
-    internal virtual void OnWindowPresenterTemplateContractAttachedInternal()
-    {
-    }
-
-    internal virtual void OnWindowPresenterTemplateContractDetachingInternal()
-    {
-    }
-
-    private void OnWindowPresenterTemplateContractDetaching(object sender, EventArgs eventArgs)
-    {
-      OnWindowPresenterTemplateContractDetachingInternal();
-      OnWindowPresenterTemplateContractDetachingPartial();
-    }
-
-    #endregion
-
-    #region  Nested Types
-
-    private static class PackedDefinition
-    {
-      #region Static Fields and Constants
-
-      public static readonly PackedBoolItemDefinition QueryWindowToCenter;
-      public static readonly PackedBoolItemDefinition IsManualLocation;
-      public static readonly PackedBoolItemDefinition IsManualSize;
-      public static readonly PackedEnumItemDefinition<WindowStatus> Status;
-
-      #endregion
-
-      #region Ctors
-
-      static PackedDefinition()
-      {
-        var allocator = new PackedValueAllocator();
-
-        QueryWindowToCenter = allocator.AllocateBoolItem();
-        IsManualLocation = allocator.AllocateBoolItem();
-        IsManualSize = allocator.AllocateBoolItem();
-        Status = allocator.AllocateEnumItem<WindowStatus>();
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+		internal void OnOnEndResize()
+		{
+			foreach (var windowElement in EnumerateDescendantWindowElements().OfType<IWindowEventListener>())
+				windowElement.OnResizeFinished();
+		}
+
+		partial void OnPlatformAfterApplyTemplate();
+
+		partial void OnPlatformBeforeApplyTemplate();
+
+		protected virtual void OnPositionChanged()
+		{
+		}
+
+		protected virtual void OnPropertyChanged(string propertyName)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
+
+		protected virtual void OnPropertyChanging(string propertyName)
+		{
+			PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
+		}
+
+		protected virtual void OnTemplateAttach()
+		{
+		}
+
+		protected virtual void OnTemplateDetach()
+		{
+		}
+
+		private void OnWindowPresenterTemplateContractAttached(object sender, EventArgs eventArgs)
+		{
+			OnWindowPresenterTemplateContractAttachedPartial();
+			OnWindowPresenterTemplateContractAttachedInternal();
+		}
+
+		internal virtual void OnWindowPresenterTemplateContractAttachedInternal()
+		{
+		}
+
+		partial void OnWindowPresenterTemplateContractAttachedPartial();
+
+		private void OnWindowPresenterTemplateContractDetaching(object sender, EventArgs eventArgs)
+		{
+			OnWindowPresenterTemplateContractDetachingInternal();
+			OnWindowPresenterTemplateContractDetachingPartial();
+		}
+
+		internal virtual void OnWindowPresenterTemplateContractDetachingInternal()
+		{
+		}
+
+		partial void OnWindowPresenterTemplateContractDetachingPartial();
+
+		partial void PlatformCtor();
+
+		internal void SetDialogResultAndClose(bool? dialogResult)
+		{
+			if (DialogResult != dialogResult)
+				DialogResult = dialogResult;
+			else
+				Close();
+		}
+
+		internal virtual void ToggleMaximizeNormalState()
+		{
+			WindowState = WindowState == WindowState.Normal && IsResizable ? WindowState.Maximized : WindowState.Normal;
+		}
+
+		partial void UpdateDraggableBehavior();
+
+		partial void UpdateResizableBehavior();
+
+		FrameworkElement IImplementationRootProvider.ImplementationRoot => Content as FrameworkElement;
+		public event PropertyChangedEventHandler PropertyChanged;
+		public event PropertyChangingEventHandler PropertyChanging;
+
+		event EventHandler IWindow.IsActiveChanged
+		{
+			add => IsActiveChanged += value;
+			remove => IsActiveChanged -= value;
+		}
+
+		private static class PackedDefinition
+		{
+			public static readonly PackedBoolItemDefinition QueryWindowToCenter;
+			public static readonly PackedBoolItemDefinition IsManualLocation;
+			public static readonly PackedBoolItemDefinition IsManualSize;
+			public static readonly PackedEnumItemDefinition<WindowStatus> Status;
+
+			static PackedDefinition()
+			{
+				var allocator = new PackedValueAllocator();
+
+				QueryWindowToCenter = allocator.AllocateBoolItem();
+				IsManualLocation = allocator.AllocateBoolItem();
+				IsManualSize = allocator.AllocateBoolItem();
+				Status = allocator.AllocateEnumItem<WindowStatus>();
+			}
+		}
+	}
 }

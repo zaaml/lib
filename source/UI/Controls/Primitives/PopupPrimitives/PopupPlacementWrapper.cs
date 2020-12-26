@@ -6,52 +6,38 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  internal class PopupPlacementWrapper : PopupPlacement
-  {
-    #region Fields
+	internal class PopupPlacementWrapper : PopupPlacement
+	{
+		private readonly PopupPlacement _placement;
 
-    private readonly PopupPlacement _placement;
+		public PopupPlacementWrapper(PopupPlacement placement)
+		{
+			_placement = placement;
+		}
 
-    #endregion
+		internal override PopupPlacement ActualPlacement => _placement;
 
-    #region Ctors
+		internal override Popup Popup
+		{
+			get => _placement.Popup;
+			set => _placement.Popup = value;
+		}
 
-    public PopupPlacementWrapper(PopupPlacement placement)
-    {
-      _placement = placement;
-    }
+		protected override Rect ScreenBoundsOverride => _placement.ScreenBoundsCore;
 
-    #endregion
+		protected override Rect ArrangeOverride(Size desiredSize)
+		{
+			return _placement.Arrange(desiredSize);
+		}
 
-    #region Properties
+		internal override void OnPopupClosedInt()
+		{
+			_placement.OnPopupClosedInt();
+		}
 
-    internal override Popup Popup
-    {
-      get => _placement.Popup;
-      set => _placement.Popup = value;
-    }
-
-    protected override Rect ScreenBoundsOverride => _placement.ScreenBoundsCore;
-
-    #endregion
-
-    #region  Methods
-
-    protected override Rect ArrangeOverride(Size desiredSize)
-    {
-      return _placement.Arrange(desiredSize);
-    }
-
-    internal override void OnPopupClosedInt()
-    {
-      _placement.OnPopupClosedInt();
-    }
-
-    internal override void OnPopupOpenedInt()
-    {
-      _placement.OnPopupOpenedInt();
-    }
-
-    #endregion
-  }
+		internal override void OnPopupOpenedInt()
+		{
+			_placement.OnPopupOpenedInt();
+		}
+	}
 }

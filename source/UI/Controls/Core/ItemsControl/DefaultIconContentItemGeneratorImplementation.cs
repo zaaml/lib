@@ -11,13 +11,13 @@ using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DefaultIconContentItemGeneratorImpl<TItem, TGenerator> : DefaultContentItemGeneratorImpl<TItem, TGenerator>
+	internal class DefaultIconContentItemGeneratorImplementation<TItem, TGenerator> : DefaultContentItemGeneratorImplementation<TItem, TGenerator>
 		where TItem : FrameworkElement, IIconContentControl, new()
 		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
 		private string _itemIconMember;
 
-		public DefaultIconContentItemGeneratorImpl(string itemIconMember, string itemContentMember, DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector, string itemContentStringFormat)
+		public DefaultIconContentItemGeneratorImplementation(string itemIconMember, string itemContentMember, DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector, string itemContentStringFormat)
 			: base(itemContentMember, itemContentTemplate, itemContentTemplateSelector, itemContentStringFormat)
 		{
 			_itemIconMember = itemIconMember;
@@ -43,7 +43,9 @@ namespace Zaaml.UI.Controls.Core
 		}
 
 		private Binding ItemIconMemberBinding { get; set; }
-		
+
+		internal Binding ItemIconMemberBindingInternal => ItemIconMemberBinding;
+
 		public override void AttachItem(TItem item, object source)
 		{
 			base.AttachItem(item, source);

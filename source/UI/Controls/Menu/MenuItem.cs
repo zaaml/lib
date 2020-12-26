@@ -220,7 +220,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
-			Items.SourceInternal = newSource;
+			Items.SourceCollectionInternal = newSource;
 
 			UpdateHasSubmenu();
 		}

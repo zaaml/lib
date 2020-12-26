@@ -8,20 +8,65 @@ namespace Zaaml.UI.Controls.Core
 	{
 		private void CommitSelection(Selection<TItem> selection)
 		{
-			try
+			using (SelectionHandlingScope)
 			{
-				_selectionHandling = true;
-
 				CommitSelectionSafe(selection);
 			}
-			finally
+		}
+
+		private void CoerceSelection(bool ensureItem, ref Selection<TItem> selection)
+		{
+			var source = selection.Source;
+			var item = selection.Item;
+			var index = selection.Index;
+			var value = selection.Value;
+
+			if (source == null)
 			{
-				_selectionHandling = false;
+				if (selection.Item != null)
+					source = GetSource(item);
+				else if (index != -1)
+					source = GetSource(index);
 			}
+
+			if (item == null)
+			{
+				if (source != null)
+					TryGetItemBySource(source, ensureItem, out item);
+
+				if (item == null && index != -1)
+					TryGetItem(index, ensureItem, out item);
+			}
+
+			if (index == -1)
+			{
+				if (source != null)
+					index = GetIndexOfSource(source);
+
+				if (index == -1 && item != null)
+					index = GetIndexOfItem(item);
+			}
+
+			value ??= GetValue(item, source);
+
+			selection = new Selection<TItem>(index, item, source, value);
 		}
 
 		private void CommitSelectionSafe(Selection<TItem> selection)
 		{
+			VerifySafe();
+
+			var originalSelection = selection;
+
+			CoerceSelection(false, ref selection);
+
+			if (CanSelect(selection) == false)
+			{
+				CurrentSelectionCollection.Unselect(originalSelection, true);
+
+				PreselectNull(Selection<TItem>.Empty, out selection);
+			}
+
 			var selectedItemChanged = false;
 			var selectedIndexChanged = false;
 			var selectedValueChanged = false;
@@ -37,7 +82,7 @@ namespace Zaaml.UI.Controls.Core
 			object newSelectedValue = null;
 			object newSelectedSource = null;
 
-			CoerceSelection = selection;
+			ForcedCoerceSelection = selection;
 
 			if (SupportsItem)
 			{
@@ -122,15 +167,9 @@ namespace Zaaml.UI.Controls.Core
 
 		private void PushSelectedIndexBoundValue(int index)
 		{
-			try
+			using (SelectionHandlingScope)
 			{
-				_selectionHandling = true;
-
 				PushSelectedIndexBoundValueCore(index);
-			}
-			finally
-			{
-				_selectionHandling = false;
 			}
 		}
 
@@ -138,15 +177,9 @@ namespace Zaaml.UI.Controls.Core
 
 		private void PushSelectedItemBoundValue(TItem coerceSelectedItem)
 		{
-			try
+			using (SelectionHandlingScope)
 			{
-				_selectionHandling = true;
-
 				PushSelectedItemBoundValueCore(coerceSelectedItem);
-			}
-			finally
-			{
-				_selectionHandling = false;
 			}
 		}
 
@@ -154,15 +187,9 @@ namespace Zaaml.UI.Controls.Core
 
 		private void PushSelectedSourceBoundValue(object coerceSelectedSource)
 		{
-			try
+			using (SelectionHandlingScope)
 			{
-				_selectionHandling = true;
-
 				PushSelectedSourceBoundValueCore(coerceSelectedSource);
-			}
-			finally
-			{
-				_selectionHandling = false;
 			}
 		}
 
@@ -170,15 +197,9 @@ namespace Zaaml.UI.Controls.Core
 
 		private void PushSelectedValueBoundValue(object coerceSelectedValue)
 		{
-			try
+			using (SelectionHandlingScope)
 			{
-				_selectionHandling = true;
-
 				PushSelectedValueBoundValueCore(coerceSelectedValue);
-			}
-			finally
-			{
-				_selectionHandling = false;
 			}
 		}
 

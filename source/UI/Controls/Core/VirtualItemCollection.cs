@@ -9,6 +9,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using Zaaml.Core;
 using Zaaml.Core.Collections;
 
 // ReSharper disable StaticMemberInGenericType
@@ -75,6 +76,8 @@ namespace Zaaml.UI.Controls.Core
 		private GeneratedItemList TempGeneratedItems { get; }
 
 		private int Version { get; set; }
+
+		private int VirtualActualCount => IndexedSource.Count;
 
 		private void AddLockedSource(GeneratedItem generatedItem)
 		{
@@ -158,7 +161,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private void EnsureCount()
 		{
-			var count = Count;
+			var count = IndexedSource.Count;
 
 			NextGeneratedItems.EnsureCount(count);
 			PrevGeneratedItems.EnsureCount(count);
@@ -341,7 +344,7 @@ namespace Zaaml.UI.Controls.Core
 			return null;
 		}
 
-		private IEnumerable<T> GetGeneratedItems()
+		private IEnumerable<T> VirtualGetGeneratedItems()
 		{
 			var generatedItems = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
 
@@ -442,7 +445,7 @@ namespace Zaaml.UI.Controls.Core
 			TempGeneratedItems.Add(item);
 		}
 
-		private T Realize(int index)
+		private T VirtualRealize(int index)
 		{
 			var generator = Generator;
 
@@ -590,10 +593,10 @@ namespace Zaaml.UI.Controls.Core
 			if (Mode == OperatingMode.Real)
 			{
 				RealReset();
-				
+
 				return;
 			}
-			
+
 			foreach (var generatedItem in EnumerateRealizedItems(PrevGeneratedItems))
 				PushIntoTempItems(generatedItem.Item);
 
@@ -605,6 +608,134 @@ namespace Zaaml.UI.Controls.Core
 			EnsureCount();
 
 			SuspendReleaseGeneratedItems = false;
+		}
+
+		private void VirtualEnterGeneration()
+		{
+			IsGenerating = true;
+
+			foreach (var tempGeneratedItemPair in EnumerateRealizedItems(TempGeneratedItems))
+			{
+				var tempGeneratedItem = tempGeneratedItemPair.Item;
+
+				tempGeneratedItem.IsInTemp = false;
+
+				if (IsLocked(tempGeneratedItem) == false)
+					ReleaseItem(tempGeneratedItem, true);
+			}
+
+			SuspendReleaseGeneratedItems = true;
+
+			TempGeneratedItems.Clear();
+
+			SuspendReleaseGeneratedItems = false;
+
+			EnsureCount();
+		}
+
+		private void VirtualLeaveGeneration()
+		{
+			var items = PrevGeneratedItems;
+
+			PrevGeneratedItems = NextGeneratedItems;
+			NextGeneratedItems = items;
+
+			items.Clear();
+
+			EnsureCount();
+
+			Version++;
+			IsGenerating = false;
+		}
+
+		private void VirtualLockItem(T item)
+		{
+			if (LockedItemDictionary.TryGetValue(item, out var lockedItem) == false)
+			{
+				var generatedItem = FindGeneratedItemEverywhere(item).Item;
+
+				if (generatedItem == null)
+					return;
+
+				generatedItem.Lock();
+				LockedItemDictionary.Add(item, generatedItem);
+				AddLockedSource(generatedItem);
+			}
+			else
+			{
+				lockedItem.Lock();
+			}
+		}
+
+		private void VirtualUnlockItem(T item)
+		{
+			if (LockedItemDictionary.TryGetValue(item, out var generatedItem) == false)
+				LogService.LogWarning($"Item {item} is not locked.");
+			else
+			{
+				if (generatedItem.Unlock() == false)
+					return;
+
+				LockedItemDictionary.Remove(item);
+				RemoveLockedSource(generatedItem);
+			}
+		}
+
+		private T VirtualGetItemFromIndex(int index)
+		{
+			var items = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
+
+			if (index < 0 || index >= items.Count)
+				return null;
+
+			var generatedItem = items[index];
+
+			if (generatedItem != null)
+				return generatedItem.Item;
+
+			var source = GetSourceFromIndex(index);
+
+			if (source != null)
+			{
+				if (LockedSourceDictionary.TryGetValue(source, out var lockedItem))
+					return lockedItem.Item;
+			}
+
+			return null;
+		}
+
+		private int VirtualGetIndexFromSource(object source)
+		{
+			return IndexedSource.IndexOf(source);
+		}
+
+		private object VirtualGetSourceFromIndex(int index)
+		{
+			return IndexedSource[index];
+		}
+
+		private int VirtualGetIndexFromItem(T item)
+		{
+			return FindGeneratedItem(item).Index;
+		}
+
+		private T VirtualGetCurrent(int index)
+		{
+			var count = IndexedSource.Count;
+			
+			if (index >= 0 && index < count && count > 0)
+			{
+				var nextItems = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
+
+				return nextItems[index].Item;
+			}
+
+			return null;
+		}
+
+		private T VirtualEnsureItem(int index)
+		{
+			return GetItemFromIndex(index) ?? VirtualRealize(index);
 		}
 	}
 

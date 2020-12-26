@@ -9,10 +9,6 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem>
 	{
-		#region Interface Implementations
-
-		#region ICollection
-
 		void ICollection.CopyTo(Array array, int index)
 		{
 			CopyTo(array, index);
@@ -23,9 +19,5 @@ namespace Zaaml.UI.Controls.Core
 		object ICollection.SyncRoot => SyncRoot;
 
 		bool ICollection.IsSynchronized => IsSynchronized;
-
-		#endregion
-
-		#endregion
 	}
 }

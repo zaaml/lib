@@ -57,8 +57,15 @@ namespace Zaaml.PresentationCore.Interactivity
 					return;
 
 				_comparer = value;
+				
 				UpdateTriggerState();
 			}
+		}
+
+		public ComparerOperator ComparerOperator
+		{
+			get => (Comparer as TriggerComparer)?.Operator ?? ComparerOperator.Equal;
+			set => Comparer = TriggerComparer.GetComparer(value);
 		}
 
 		public string ExpandoProperty
@@ -99,6 +106,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.CopyMembersOverride(source);
 
 			var triggerSource = (Trigger) source;
+			
 			PropertyResolver.CopyFrom(this, triggerSource);
 
 			Value = triggerSource.Value;
@@ -115,7 +123,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			Unload(TargetValueProperty, ref _targetValue);
 			Unload(SourceValueProperty, ref _sourceValue);
 
-			PropertyResolver.UnresolveProperty(this);
+			PropertyResolver.UnResolveProperty(this);
 
 			base.DeinitializeTrigger(root);
 		}
@@ -136,12 +144,13 @@ namespace Zaaml.PresentationCore.Interactivity
 		protected override void OnActualSourceChanged(DependencyObject oldSource)
 		{
 			base.OnActualSourceChanged(oldSource);
+			
 			UpdateSourceBinding();
 		}
 
-		private static void OnValueChanged(InteractivityObject interactivityobject, object oldvalue, object newvalue)
+		private static void OnValueChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
-			((Trigger) interactivityobject).UpdateTriggerState();
+			((Trigger) interactivityObject).UpdateTriggerState();
 		}
 
 		private void UpdateSourceBinding()

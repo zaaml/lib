@@ -30,9 +30,9 @@ namespace Zaaml.PresentationCore.Animation.Animators
       var start = Start ?? NullTransform;
       var end = End ?? NullTransform;
 
-      _transform.Angle = interpolator.Evaluate(start.Angle, end.Angle, Time, EasingFunction);
-      _transform.CenterX = interpolator.Evaluate(start.CenterX, end.CenterX, Time, EasingFunction);
-      _transform.CenterY = interpolator.Evaluate(start.CenterY, end.CenterY, Time, EasingFunction);
+      _transform.Angle = interpolator.Evaluate(start.Angle, end.Angle, RelativeTime, EasingFunction);
+      _transform.CenterX = interpolator.Evaluate(start.CenterX, end.CenterX, RelativeTime, EasingFunction);
+      _transform.CenterY = interpolator.Evaluate(start.CenterY, end.CenterY, RelativeTime, EasingFunction);
 
       return _transform;
     }

@@ -22,7 +22,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		private readonly GeneratorDataTemplateHelper<RadioMenuItem, RadioMenuItem> _generatorDataTemplateHelper = new GeneratorDataTemplateHelper<RadioMenuItem, RadioMenuItem>();
 
-		private MemberValueEvaluator _displayMemberEvaluator;
+		private MemberEvaluator _displayMemberEvaluator;
 
 		#endregion
 
@@ -30,13 +30,13 @@ namespace Zaaml.UI.Controls.Menu
 
 		internal string DisplayMember
 		{
-			get => _displayMemberEvaluator.ValuePath;
+			get => _displayMemberEvaluator.Member;
 			set
 			{
 				if (string.Equals(DisplayMember, value))
 					return;
 
-				_displayMemberEvaluator = new MemberValueEvaluator(value);
+				_displayMemberEvaluator = new MemberEvaluator(value);
 
 				OnGeneratorChanged();
 			}

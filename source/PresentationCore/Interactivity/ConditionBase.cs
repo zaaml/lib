@@ -80,6 +80,7 @@ namespace Zaaml.PresentationCore.Interactivity
       base.CopyMembersOverride(source);
 
       var conditionSource = (ConditionBase) source;
+      
       PackedDefinition.Invert.SetValue(ref PackedValue, conditionSource.Invert);
     }
 

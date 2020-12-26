@@ -15,9 +15,11 @@ namespace Zaaml.UI.Controls.Core
 
 		private int SelectNext(int index, SelectNextMode mode)
 		{
-			if (Count == 0)
+			var count = Count;
+
+			if (count == 0)
 				index = -1;
-			else if (Count == 1)
+			else if (count == 1)
 				index = 0;
 			else
 			{
@@ -37,25 +39,25 @@ namespace Zaaml.UI.Controls.Core
 
 					case SelectNextMode.Prev:
 
-						index = index == 0 ? Count - 1 : index - 1;
+						index = index == 0 ? count - 1 : index - 1;
 
 						break;
 
 					case SelectNextMode.Next:
 
-						index = index == Count - 1 ? 0 : index + 1;
+						index = index == count - 1 ? 0 : index + 1;
 
 						break;
 
 					case SelectNextMode.NextOrNearest:
 
-						index = index < Count - 1 ? index + 1 : index - 1;
+						index = index < count - 1 ? index + 1 : index - 1;
 
 						break;
 
 					case SelectNextMode.Last:
 
-						index = Count - 1;
+						index = count - 1;
 
 						break;
 				}

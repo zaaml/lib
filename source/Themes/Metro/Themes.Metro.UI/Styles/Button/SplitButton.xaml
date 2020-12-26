@@ -58,10 +58,11 @@
                            BorderBrush="Transparent"
                            BorderThickness="{TemplateBinding BorderThickness}"
                            ClickMode="Press"
+                           ShowContent="False"
                            Icon="{zm:TemplateBinding Path=DropDownGlyph,
                                                      TargetNullValue={StaticResource FallbackDropDownGlyph}}"
                            IsTabStop="False"
-                           Visibility="{Binding Path=ShowDropDownButton, RelativeSource={RelativeSource TemplatedParent}, Converter={zm:VisibilityConverter}}" />
+                           Visibility="{zm:TemplateBinding Path=ShowDropDownButton, Converter={zm:VisibilityConverter}}" />
 
           <!--  Separator  -->
           <Border zm:DockPanel.Dock="{TemplateBinding DropDownButtonDock}"

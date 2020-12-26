@@ -17,10 +17,10 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		public BackstageViewItemGenerator()
 		{
-			Implementation = new TemplatedGeneratorImpl<BackstageViewItem>(this);
+			Implementation = new TemplatedGeneratorImplementation<BackstageViewItem>(this);
 		}
 
-		private TemplatedGeneratorImpl<BackstageViewItem> Implementation { get; }
+		private TemplatedGeneratorImplementation<BackstageViewItem> Implementation { get; }
 
 		public BackstageViewItemTemplate ItemTemplate
 		{

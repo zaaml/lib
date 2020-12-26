@@ -72,8 +72,8 @@ namespace Zaaml.UI.Controls.Menu
 
 		IEnumerable IMenuItemCollection.Source
 		{
-			get => SourceInternal;
-			set => SourceInternal = value;
+			get => SourceCollectionInternal;
+			set => SourceCollectionInternal = value;
 		}
 
 		IEnumerator IMenuItemCollection.LogicalChildren => LogicalChildren;
