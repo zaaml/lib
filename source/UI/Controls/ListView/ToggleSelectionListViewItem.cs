@@ -38,6 +38,8 @@ namespace Zaaml.UI.Controls.ListView
 
 			if (newListView != null)
 				newListView.SelectionCollection.CollectionChanged += SelectionCollectionOnCollectionChanged;
+
+			UpdateIsChecked();
 		}
 
 		private void SelectionCollectionOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

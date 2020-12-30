@@ -12,13 +12,12 @@ using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
-using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 using Control = Zaaml.UI.Controls.Core.Control;
 
 namespace Zaaml.UI.Controls.BreadCrumb
 {
-  [ContentProperty(nameof(Items))]
+  [ContentProperty(nameof(ItemCollection))]
   public class BreadCrumbControl : Control, IBreadCrumbItemsOwner
   {
     #region Static Fields and Constants
@@ -31,10 +30,10 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
     public static readonly DependencyProperty SelectedItemProperty = SelectedItemPropertyKey.DependencyProperty;
 
-    private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<BreadCrumbItemCollection, BreadCrumbControl>
-      ("ItemsInt");
+    private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<BreadCrumbItemCollection, BreadCrumbControl>
+      ("ItemCollectionPrivate");
 
-    public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+    public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 
     public static readonly DependencyProperty IconProperty = DPM.Register<IconBase, BreadCrumbControl>
       ("Icon", i => i.LogicalChildMentor.OnLogicalChildPropertyChanged);
@@ -43,7 +42,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
       ("HasItems", b => b.OnHasItemsChanged);
 
     public static readonly DependencyProperty HasItemsProperty = HasItemsPropertyKey.DependencyProperty;
-    private static readonly ITreeEnumeratorAdvisor<BreadCrumbItem> BreadCrumbEnumeratorAdvisor = new DelegateTreeEnumeratorAdvisor<BreadCrumbItem>(b => b.Items.GetEnumerator());
+    private static readonly ITreeEnumeratorAdvisor<BreadCrumbItem> BreadCrumbEnumeratorAdvisor = new DelegateTreeEnumeratorAdvisor<BreadCrumbItem>(b => b.ItemCollection.GetEnumerator());
 
     #endregion
 
@@ -66,7 +65,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
     public BreadCrumbControl()
     {
       this.OverrideStyleKey<BreadCrumbControl>();
-      Items = new BreadCrumbItemCollection(this);
+      ItemCollection = new BreadCrumbItemCollection(this);
     }
 
     #endregion
@@ -146,7 +145,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
     private void OnHasItemsChanged(bool oldValue, bool newValue)
     {
       if (newValue && SelectedItem == null)
-        SelectedItem = Items.First();
+        SelectedItem = ItemCollection.First();
       else if (newValue == false)
         SelectedItem = null;
     }
@@ -173,7 +172,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
     private void OnItemsIconVisibilityChanged()
     {
-      foreach (var breadCrumbItem in BreadCrumbEnumeratorAdvisor.GetEnumerator(Items).Enumerate())
+      foreach (var breadCrumbItem in BreadCrumbEnumeratorAdvisor.GetEnumerator(ItemCollection).Enumerate())
         breadCrumbItem.UpdateIconVisibility();
     }
 
@@ -209,7 +208,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
     private void UpdateHasItems()
     {
-      HasItems = Items.Count > 0;
+      HasItems = ItemCollection.Count > 0;
     }
 
     #endregion
@@ -218,10 +217,10 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
     #region IBreadCrumbItemsOwner
 
-    public BreadCrumbItemCollection Items
+    public BreadCrumbItemCollection ItemCollection
     {
-      get => (BreadCrumbItemCollection) GetValue(ItemsProperty);
-      private set => this.SetReadOnlyValue(ItemsPropertyKey, value);
+      get => (BreadCrumbItemCollection) GetValue(ItemCollectionProperty);
+      private set => this.SetReadOnlyValue(ItemCollectionPropertyKey, value);
     }
 
     void IBreadCrumbItemsOwner.OnItemAdded(BreadCrumbItem item)
@@ -243,7 +242,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
   {
     #region Properties
 
-    BreadCrumbItemCollection Items { get; }
+    BreadCrumbItemCollection ItemCollection { get; }
 
     #endregion
 

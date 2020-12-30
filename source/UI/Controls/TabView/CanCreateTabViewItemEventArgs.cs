@@ -6,12 +6,26 @@ using System;
 
 namespace Zaaml.UI.Controls.TabView
 {
-  public class CanCreateTabViewItemEventArgs : EventArgs
-  {
-    #region Properties
+	public class TabViewControlEventArgs : EventArgs
+	{
+		public TabViewControlEventArgs(TabViewControl tabViewControl)
+		{
+			TabViewControl = tabViewControl;
+		}
 
-    public bool CanCreate { get; set; }
+		public TabViewControl TabViewControl { get; }
+	}
 
-    #endregion
-  }
+	public class CanCreateTabViewItemEventArgs : TabViewControlEventArgs
+	{
+		public CanCreateTabViewItemEventArgs(TabViewControl tabViewControl) : base(tabViewControl)
+		{
+		}
+
+		#region Properties
+
+		public bool CanCreate { get; set; }
+
+		#endregion
+	}
 }

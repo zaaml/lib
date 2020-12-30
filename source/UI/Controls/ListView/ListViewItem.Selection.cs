@@ -21,11 +21,9 @@ namespace Zaaml.UI.Controls.ListView
 
 		public event EventHandler IsSelectedChanged;
 
-		internal bool ActualCanSelect => IsSelectable && CanSelect && ListViewControl?.CanSelectItemInternal(this) != false;
+		internal bool ActualCanSelect => CanSelect && ListViewControl?.CanSelectItemInternal(this) != false;
 
-		protected virtual bool CanSelect => true;
-
-		internal bool CanSelectInternal => ActualCanSelect;
+		protected virtual bool CanSelect => IsSelectable;
 
 		public bool IsSelectable
 		{

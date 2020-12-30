@@ -82,6 +82,10 @@ namespace Zaaml.UI.Controls.DropDown
 			base.OnPreviewKeyUp(e);
 		}
 
+		private protected virtual void RaiseFocusedItemClick()
+		{
+		}
+
 		private protected abstract class DropDownSelectorKeyboardEventProcessor : KeyboardEventProcessor
 		{
 			protected DropDownSelectorKeyboardEventProcessor(DropDownSelectorBase<TItemsControl, TItem> dropDownSelector)
@@ -141,6 +145,13 @@ namespace Zaaml.UI.Controls.DropDown
 			{
 				if (DropDownSelector.IsDropDownOpen == false)
 					return BaseHandleKey(key);
+
+				if (key == Key.Space)
+				{
+					DropDownSelector.RaiseFocusedItemClick();
+
+					return true;
+				}
 
 				var focusNavigator = DropDownSelector.FocusNavigator;
 

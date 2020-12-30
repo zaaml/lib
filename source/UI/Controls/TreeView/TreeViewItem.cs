@@ -31,6 +31,9 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, TreeViewItem>
 			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
 
+		public static readonly DependencyProperty IsSelectableProperty = DPM.Register<bool, TreeViewItem>
+			("IsSelectable", true, i => i.OnIsSelectablePropertyChangedPrivate);
+
 		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<TreeViewItemCollection, TreeViewItem>
 			("ItemCollectionPrivate");
 
@@ -129,9 +132,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		protected virtual bool CanExpand => true;
 
-		protected virtual bool CanSelect => true;
-
-		internal bool CanSelectInternal => CanSelect;
+		protected virtual bool CanSelect => IsSelectable;
 
 		private bool CoerceIsExpanded
 		{
@@ -179,6 +180,12 @@ namespace Zaaml.UI.Controls.TreeView
 		private bool IsFocusedVisualState { get; set; }
 
 		private bool IsMouseOverVisualState { get; set; }
+
+		public bool IsSelectable
+		{
+			get => (bool) GetValue(IsSelectableProperty);
+			set => SetValue(IsSelectableProperty, value);
+		}
 
 		public bool IsSelected
 		{
@@ -313,7 +320,7 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			var isSelected = (bool) arg;
 
-			if (isSelected && CanSelect == false)
+			if (isSelected && ActualCanSelect == false)
 				return KnownBoxes.BoolFalse;
 
 			return arg;
@@ -360,6 +367,12 @@ namespace Zaaml.UI.Controls.TreeView
 				RaiseExpandedEvent();
 			else
 				RaiseCollapsedEvent();
+		}
+
+		private void OnIsSelectablePropertyChangedPrivate(bool oldValue, bool newValue)
+		{
+			if (newValue == false && IsSelected)
+				SetIsSelectedInternal(false);
 		}
 
 		protected virtual void OnIsSelectedChanged()
@@ -420,6 +433,8 @@ namespace Zaaml.UI.Controls.TreeView
 			if (e.Handled)
 				return;
 
+			ButtonController.OnMouseLeftButtonDown(e);
+
 			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
@@ -428,12 +443,16 @@ namespace Zaaml.UI.Controls.TreeView
 			if (e.Handled)
 				return;
 
+			ButtonController.OnMouseLeftButtonUp(e);
+
 			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
+
+			ButtonController.OnMouseMove(e);
 
 			TreeViewControl?.OnItemMouseMove(this, e);
 		}

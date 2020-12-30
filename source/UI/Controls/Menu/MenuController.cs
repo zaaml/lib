@@ -793,7 +793,7 @@ namespace Zaaml.UI.Controls.Menu
 						ProceedFocus(menuItem, ref focusState);
 
 				// TODO Inspect this (Review History before MenuItemGroupBase)
-				foreach (var menuItem in MenuOwner.Items)
+				foreach (var menuItem in MenuOwner.ItemCollection)
 					ProceedFocus(menuItem, ref focusState);
 
 				return focusState;

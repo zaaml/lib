@@ -50,12 +50,12 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 				var index = Index + 1;
 
-				if (CollectionUtils.IsWithinRanges(index, TrackBar.Items) == false)
+				if (CollectionUtils.IsWithinRanges(index, TrackBar.ItemCollection) == false)
 					return null;
 
-				for (var i = index; i < TrackBar.Items.Count; i++)
+				for (var i = index; i < TrackBar.ItemCollection.Count; i++)
 				{
-					if (TrackBar.Items[i] is TrackBarValueItem thumb)
+					if (TrackBar.ItemCollection[i] is TrackBarValueItem thumb)
 						return thumb;
 				}
 
@@ -72,12 +72,12 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 				var index = Index - 1;
 
-				if (CollectionUtils.IsWithinRanges(index, TrackBar.Items) == false)
+				if (CollectionUtils.IsWithinRanges(index, TrackBar.ItemCollection) == false)
 					return null;
 
 				for (var i = index; i >= 0; i--)
 				{
-					if (TrackBar.Items[i] is TrackBarValueItem thumb)
+					if (TrackBar.ItemCollection[i] is TrackBarValueItem thumb)
 						return thumb;
 				}
 

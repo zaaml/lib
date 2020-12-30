@@ -25,7 +25,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private void SelectCore(Selection<TItem> selection)
 		{
-			ModifySelectionCollection(selection);
+			CurrentSelectionCollection.Select(selection);
 
 			if (MultipleSelection)
 			{
@@ -34,22 +34,14 @@ namespace Zaaml.UI.Controls.Core
 				return;
 			}
 
-			if (IsSelectionSuspended)
-				SelectionResume = selection;
-			else
-				CommitSelection(selection);
+			ApplySelection(selection);
 
 			Version++;
 		}
 
 		private void SelectFirst()
 		{
-			var selection = CurrentSelectionCollection.Count > 0 ? CurrentSelectionCollection.First() : Selection<TItem>.Empty;
-
-			if (IsSelectionSuspended)
-				SelectionResume = selection;
-			else
-				CommitSelection(selection);
+			ApplySelection(CurrentSelectionCollection.Count > 0 ? CurrentSelectionCollection.First() : Selection<TItem>.Empty);
 
 			Version++;
 		}
@@ -74,7 +66,7 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 
 			using (SelectionHandlingScope)
-				return IsInverted == false ? SelectIndexCore(index, false) : EnsureInvertedSelection(UnselectIndexCore(index, false));
+				return SelectIndexSafe(index);
 		}
 
 		private bool SelectIndexCore(int index, bool force)
@@ -89,13 +81,20 @@ namespace Zaaml.UI.Controls.Core
 			return false;
 		}
 
+		private bool SelectIndexSafe(int index)
+		{
+			VerifySafe();
+
+			return SelectIndexCore(index, false);
+		}
+
 		public bool SelectItem(TItem item)
 		{
 			if (SelectionHandling)
 				return false;
-			
+
 			using (SelectionHandlingScope)
-				return IsInverted == false ? SelectItemCore(item, false) : EnsureInvertedSelection(UnselectItemCore(item, false));
+				return SelectItemSafe(item);
 		}
 
 		private bool SelectItemCore(TItem item, bool force)
@@ -110,13 +109,20 @@ namespace Zaaml.UI.Controls.Core
 			return false;
 		}
 
+		private bool SelectItemSafe(TItem item)
+		{
+			VerifySafe();
+
+			return SelectItemCore(item, false);
+		}
+
 		public bool SelectSource(object source)
 		{
 			if (SelectionHandling)
 				return false;
 
 			using (SelectionHandlingScope)
-				return IsInverted == false ? SelectSourceCore(source, false) : EnsureInvertedSelection(UnselectSourceCore(source, false));
+				return SelectSourceSafe(source);
 		}
 
 		public void SelectSourceCollection(IEnumerable<object> sourceCollection)
@@ -149,11 +155,10 @@ namespace Zaaml.UI.Controls.Core
 						}
 					}
 
-					RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
 					SelectFirst();
 				}
 				else
-					SelectSource(sourceCollection.FirstOrDefault());
+					SelectSourceSafe(sourceCollection.FirstOrDefault());
 			}
 		}
 
@@ -169,13 +174,20 @@ namespace Zaaml.UI.Controls.Core
 			return false;
 		}
 
+		private bool SelectSourceSafe(object source)
+		{
+			VerifySafe();
+
+			return SelectSourceCore(source, false);
+		}
+
 		public bool SelectValue(object value)
 		{
 			if (SelectionHandling)
 				return false;
 
 			using (SelectionHandlingScope)
-				return IsInverted == false ? SelectValueCore(value, false) : EnsureInvertedSelection(UnselectValueCore(value, false));
+				return SelectValueSafe(value);
 		}
 
 		private bool SelectValueCore(object value, bool force)
@@ -188,6 +200,18 @@ namespace Zaaml.UI.Controls.Core
 			}
 
 			return false;
+		}
+
+		private bool SelectValueSafe(object value)
+		{
+			VerifySafe();
+
+			return SelectValueCore(value, false);
+		}
+
+		public bool ToggleItem(TItem item)
+		{
+			return MultipleSelection && GetIsItemSelected(item) ? UnselectItem(item) : SelectItem(item);
 		}
 	}
 }

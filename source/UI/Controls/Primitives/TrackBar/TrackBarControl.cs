@@ -16,20 +16,19 @@ using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
-using Zaaml.UI.Utils;
 
 namespace Zaaml.UI.Controls.Primitives.TrackBar
 {
-  [ContentProperty(nameof(Items))]
+  [ContentProperty(nameof(ItemCollection))]
   [TemplateContractType(typeof(TrackBarTemplateContract))]
   public partial class TrackBarControl : RangeControlBase
   {
     #region Static Fields and Constants
 
-    private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<TrackBarItemCollection, TrackBarControl>
-      ("ItemsInt");
+    private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<TrackBarItemCollection, TrackBarControl>
+      ("ItemCollectionPrivate");
 
-    public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+    public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 
     public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, TrackBarControl>
       ("Orientation", Orientation.Horizontal);
@@ -71,9 +70,9 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
       set => PackedDefinition.Initializing.SetValue(ref _packedValue, value);
     }
 
-    public TrackBarItemCollection Items
+    public TrackBarItemCollection ItemCollection
     {
-      get { return this.GetValueOrCreate(ItemsPropertyKey, () => new TrackBarItemCollection(this)); }
+      get { return this.GetValueOrCreate(ItemCollectionPropertyKey, () => new TrackBarItemCollection(this)); }
     }
 
     public Orientation Orientation
@@ -94,8 +93,8 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
     private void AssignIndices()
     {
-      for (var index = 0; index < Items.Count; index++)
-        Items[index].Index = index;
+      for (var index = 0; index < ItemCollection.Count; index++)
+        ItemCollection[index].Index = index;
     }
 
     private void BeginInitImpl()
@@ -105,11 +104,11 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
     private void Clamp()
     {
-      foreach (var item in Items.OfType<TrackBarValueItem>())
+      foreach (var item in ItemCollection.OfType<TrackBarValueItem>())
         item.Clamp();
 
       TrackBarValueItem prev = null;
-      foreach (var item in Items.OfType<TrackBarValueItem>())
+      foreach (var item in ItemCollection.OfType<TrackBarValueItem>())
       {
         ClampRange(prev, item);
         prev = item;
@@ -124,7 +123,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
       var maximum = second?.Value ?? Maximum;
 
       var startIndex = first?.Index ?? 0;
-      var endIndex = second?.Index ?? Items.Count - 1;
+      var endIndex = second?.Index ?? ItemCollection.Count - 1;
 
       var count = endIndex - startIndex - 2;
 
@@ -135,7 +134,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
       for (var i = startIndex; i < endIndex; i++)
       {
-	      if (Items[i] is TrackBarRangeItem contentItem)
+	      if (ItemCollection[i] is TrackBarRangeItem contentItem)
           contentItem.Range = range;
       }
     }
@@ -353,7 +352,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
       base.OnTemplateContractAttached();
 
       TrackBarPanel.TrackBar = this;
-      TrackBarPanel.Children.AddRange(Items);
+      TrackBarPanel.Children.AddRange(ItemCollection);
     }
 
     protected override void OnTemplateContractDetaching()

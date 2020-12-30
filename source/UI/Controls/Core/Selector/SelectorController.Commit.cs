@@ -2,167 +2,169 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
+
 namespace Zaaml.UI.Controls.Core
 {
 	internal abstract partial class SelectorController<TItem>
 	{
-		private void CommitSelection(Selection<TItem> selection)
+		private void ApplySelection(Selection<TItem> selection)
 		{
-			using (SelectionHandlingScope)
+			if (IsSelectionSuspended)
+				SelectionResume = selection;
+			else
 			{
-				CommitSelectionSafe(selection);
+				using (SelectionHandlingScope)
+					ApplySelectionSafe(selection);
 			}
 		}
 
-		private void CoerceSelection(bool ensureItem, ref Selection<TItem> selection)
-		{
-			var source = selection.Source;
-			var item = selection.Item;
-			var index = selection.Index;
-			var value = selection.Value;
-
-			if (source == null)
-			{
-				if (selection.Item != null)
-					source = GetSource(item);
-				else if (index != -1)
-					source = GetSource(index);
-			}
-
-			if (item == null)
-			{
-				if (source != null)
-					TryGetItemBySource(source, ensureItem, out item);
-
-				if (item == null && index != -1)
-					TryGetItem(index, ensureItem, out item);
-			}
-
-			if (index == -1)
-			{
-				if (source != null)
-					index = GetIndexOfSource(source);
-
-				if (index == -1 && item != null)
-					index = GetIndexOfItem(item);
-			}
-
-			value ??= GetValue(item, source);
-
-			selection = new Selection<TItem>(index, item, source, value);
-		}
-
-		private void CommitSelectionSafe(Selection<TItem> selection)
+		private void ApplySelectionSafe(Selection<TItem> selection)
 		{
 			VerifySafe();
 
-			var originalSelection = selection;
+			SelectionResume = selection;
+		}
 
-			CoerceSelection(false, ref selection);
+		private void CommitSelection()
+		{
+			if (SelectionHandlingCount != 0)
+				throw new InvalidOperationException();
 
-			if (CanSelect(selection) == false)
+			try
 			{
-				CurrentSelectionCollection.Unselect(originalSelection, true);
+				SelectionHandlingCount = -1;
 
-				PreselectNull(Selection<TItem>.Empty, out selection);
-			}
+				CoerceSelectionResume();
 
-			var selectedItemChanged = false;
-			var selectedIndexChanged = false;
-			var selectedValueChanged = false;
-			var selectedSourceChanged = false;
+				if (Selection.Equals(SelectionResume) && SelectionCollection.Version == SelectionCollectionResume.Version)
+					return;
 
-			var oldSelectedItem = SupportsItem ? ReadSelectedItem() : null;
-			var oldSelectedIndex = SupportsIndex ? ReadSelectedIndex() : -1;
-			var oldSelectedValue = SupportsValue ? ReadSelectedValue() : null;
-			var oldSelectedSource = SupportsSource ? ReadSelectedSource() : null;
+				var selection = SelectionResume;
+				var oldSelection = Selection;
 
-			TItem newSelectedItem = null;
-			var newSelectedIndex = -1;
-			object newSelectedValue = null;
-			object newSelectedSource = null;
+				var oldSelectedItem = oldSelection.Item;
+				var oldSelectedIndex = oldSelection.Index;
+				var oldSelectedValue = oldSelection.Value;
+				var oldSelectedSource = oldSelection.Source;
 
-			ForcedCoerceSelection = selection;
+				var newSelectedItem = selection.Item;
+				var newSelectedIndex = selection.Index;
+				var newSelectedValue = selection.Value;
+				var newSelectedSource = selection.Source;
 
-			if (SupportsItem)
-			{
-				if (ReferenceEquals(oldSelectedItem, selection.Item) == false)
-					WriteSelectedItem(selection.Item);
+				Selection = selection;
 
-				newSelectedItem = ReadSelectedItem();
-				selectedItemChanged = ReferenceEquals(oldSelectedItem, newSelectedItem) == false;
-			}
-
-			if (SupportsSource)
-			{
-				if (ReferenceEquals(oldSelectedSource, selection.Source) == false)
-					WriteSelectedSource(selection.Source);
-
-				newSelectedSource = ReadSelectedSource();
-				selectedSourceChanged = ReferenceEquals(oldSelectedSource, newSelectedSource) == false;
-			}
-
-			if (SupportsIndex)
-			{
-				if (oldSelectedIndex != selection.Index)
-					WriteSelectedIndex(selection.Index);
-
-				newSelectedIndex = ReadSelectedIndex();
-				selectedIndexChanged = oldSelectedIndex != newSelectedIndex;
-			}
-
-			if (SupportsValue)
-			{
-				if (CompareValues(oldSelectedValue, selection.Value) == false)
-					WriteSelectedValue(selection.Value);
-
-				newSelectedValue = ReadSelectedValue();
-				selectedValueChanged = CompareValues(oldSelectedValue, newSelectedValue) == false;
-			}
-
-			var oldSelection = new Selection<TItem>(oldSelectedIndex, oldSelectedItem, oldSelectedSource, oldSelectedValue);
-			var newSelection = new Selection<TItem>(newSelectedIndex, newSelectedItem, newSelectedSource, newSelectedValue);
-
-			Selection = newSelection;
-
-			if (selectedItemChanged)
-			{
-				if (oldSelectedItem != null)
+				if (SupportsItem)
 				{
-					if (MultipleSelection == false)
-						SetItemSelected(oldSelectedItem, false);
+					if (ReferenceEquals(ReadSelectedItem(), newSelectedItem) == false)
+					{
+						WriteSelectedItem(newSelectedItem);
+
+						newSelectedItem = ReadSelectedItem();
+					}
 				}
 
-				if (newSelectedItem != null)
+				if (SupportsSource)
+				{
+					if (ReferenceEquals(ReadSelectedSource(), newSelectedSource) == false)
+					{
+						WriteSelectedSource(newSelectedSource);
+
+						newSelectedSource = ReadSelectedSource();
+					}
+				}
+
+				if (SupportsIndex)
+				{
+					if (ReadSelectedIndex() != newSelectedIndex)
+					{
+						WriteSelectedIndex(newSelectedIndex);
+
+						newSelectedIndex = ReadSelectedIndex();
+					}
+				}
+
+				if (SupportsValue)
+				{
+					if (CompareValues(ReadSelectedValue(), newSelectedValue) == false)
+					{
+						WriteSelectedValue(newSelectedValue);
+
+						newSelectedValue = ReadSelectedValue();
+					}
+				}
+
+				var newSelection = new Selection<TItem>(newSelectedIndex, newSelectedItem, newSelectedSource, newSelectedValue);
+
+				if (newSelection.Equals(Selection) == false)
+					throw new InvalidOperationException();
+
+				if (MultipleSelection)
+				{
+					foreach (var oldSelectionCollection in SelectionCollection)
+					{
+						if (SelectionCollectionResume.ContainsItem(oldSelectionCollection.Item) == false)
+							SetItemSelected(oldSelectionCollection.Item, false);
+					}
+
+					foreach (var newSelectionCollection in SelectionCollectionResume)
+					{
+						if (SelectionCollection.ContainsItem(newSelectionCollection.Item) == false)
+							SetItemSelected(newSelectionCollection.Item, true);
+					}
+
+					SelectionCollection.CopyFrom(SelectionCollectionResume);
+					SelectionCollectionResume.Clear();
+				}
+				else if (ReferenceEquals(oldSelectedItem, newSelectedItem) == false)
+				{
+					SetItemSelected(oldSelectedItem, false);
 					SetItemSelected(newSelectedItem, true);
+				}
+
+				var raiseSelectionChanged = false;
+
+				if (ReferenceEquals(newSelectedItem, oldSelectedItem) == false)
+				{
+					RaiseOnSelectedItemChanged(oldSelectedItem, newSelectedItem);
+
+					raiseSelectionChanged = true;
+				}
+
+				if (ReferenceEquals(newSelectedSource, oldSelectedSource) == false)
+				{
+					RaiseOnSelectedSourceChanged(oldSelectedSource, newSelectedSource);
+
+					raiseSelectionChanged = true;
+				}
+
+				if (newSelectedIndex != oldSelectedIndex)
+				{
+					RaiseOnSelectedIndexChanged(oldSelectedIndex, newSelectedIndex);
+
+					raiseSelectionChanged = true;
+				}
+
+				if (CompareValues(oldSelectedValue, newSelectedValue) == false)
+				{
+					RaiseOnSelectedValueChanged(oldSelectedValue, newSelectedValue);
+
+					raiseSelectionChanged = true;
+				}
+
+				if (raiseSelectionChanged)
+					RaiseOnSelectionChanged(oldSelection, newSelection);
+
+				LockedItem = SelectedItem;
+
+				SelectionCollectionChanged?.Invoke(SelectionCollection, ResetNotifyCollectionChangedEventArgs);
+				SelectionCollectionPropertyChanged?.Invoke(SelectionCollection, CountPropertyChangedEventArgs);
 			}
-			else
+			finally
 			{
-				if (newSelectedItem != null && GetIsItemSelected(newSelectedItem) == false)
-					SetItemSelected(newSelectedItem, true);
+				SelectionHandlingCount = 0;
 			}
-
-			if (selectedItemChanged)
-				RaiseOnSelectedItemChanged(oldSelectedItem, newSelectedItem);
-
-			if (selectedSourceChanged)
-				RaiseOnSelectedSourceChanged(oldSelectedSource, newSelectedSource);
-
-			if (selectedIndexChanged)
-				RaiseOnSelectedIndexChanged(oldSelectedIndex, newSelectedIndex);
-
-			if (selectedValueChanged)
-				RaiseOnSelectedValueChanged(oldSelectedValue, newSelectedValue);
-
-			var raiseSelectionChanged = selectedItemChanged |
-			                            selectedIndexChanged |
-			                            selectedValueChanged |
-			                            selectedSourceChanged;
-
-			if (raiseSelectionChanged)
-				RaiseOnSelectionChanged(oldSelection, newSelection);
-
-			LockedItem = SelectedItem;
 		}
 
 		private void PushSelectedIndexBoundValue(int index)

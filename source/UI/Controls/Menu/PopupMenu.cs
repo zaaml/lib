@@ -14,7 +14,7 @@ using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 namespace Zaaml.UI.Controls.Menu
 {
 	[TemplateContractType(typeof(PopupMenuTemplateContract))]
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	public partial class PopupMenu : PopupControlBase, IMenuBase
 	{
 		#region Ctors
@@ -134,7 +134,7 @@ namespace Zaaml.UI.Controls.Menu
 			LogicalChildMentor.RemoveLogicalChild(menuItem);
 		}
 
-		IMenuItemCollection IMenuItemOwner.Items => Items;
+		IMenuItemCollection IMenuItemOwner.ItemCollection => ItemCollection;
 
 		IMenuItemOwner IMenuItemOwner.Owner => null;
 

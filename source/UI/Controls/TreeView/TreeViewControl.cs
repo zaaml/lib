@@ -84,6 +84,8 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty ItemGlyphKindProperty = DPM.Register<TreeViewGlyphKind, TreeViewControl>
 			("ItemGlyphKind");
 
+		private TreeViewItem _currentItem;
+
 		private DefaultItemTemplateTreeViewItemGenerator _defaultGeneratorImplementation;
 
 		private ITreeViewItemFilter _itemsDefaultFilter;
@@ -128,6 +130,23 @@ namespace Zaaml.UI.Controls.TreeView
 		internal TreeViewItemGeneratorBase ActualGenerator => ItemGenerator ?? DefaultGenerator;
 
 		private protected override bool ActualSelectItemOnFocus => SelectionMode != TreeViewSelectionMode.Multiple && base.ActualSelectItemOnFocus;
+
+		private TreeViewItem CurrentItem
+		{
+			set
+			{
+				if (ReferenceEquals(_currentItem, value))
+					return;
+
+				if (_currentItem != null)
+					ItemCollection.UnlockItemInternal(_currentItem);
+
+				_currentItem = value;
+
+				if (_currentItem != null)
+					ItemCollection.LockItemInternal(_currentItem);
+			}
+		}
 
 		private TreeViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImplementation.Generator;
 
@@ -439,6 +458,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal void OnItemIsExpandedChangedInternal(TreeViewItem treeViewItem)
 		{
+			CurrentItem = treeViewItem;
+
 			SelectCollapsedItemParent(treeViewItem);
 
 			ItemIsExpandedChanged?.Invoke(this, new TreeViewItemEventArgs(treeViewItem));

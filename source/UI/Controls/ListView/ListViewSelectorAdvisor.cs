@@ -25,7 +25,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		public override bool CanSelectItem(ListViewItem item)
 		{
-			return item.CanSelectInternal;
+			return item.ActualCanSelect;
 		}
 
 		public override bool CanSelectSource(object source)

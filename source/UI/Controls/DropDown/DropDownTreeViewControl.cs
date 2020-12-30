@@ -275,6 +275,13 @@ namespace Zaaml.UI.Controls.DropDown
 			}
 		}
 
+		private protected override void RaiseFocusedItemClick()
+		{
+			base.RaiseFocusedItemClick();
+
+			FocusNavigator.FocusedItem?.RaiseClickInternal();
+		}
+
 		private void UpdateActualSelectionPresenter()
 		{
 			ActualSelectionPresenter = SelectionPresenter ?? DefaultSelectionPresenter;

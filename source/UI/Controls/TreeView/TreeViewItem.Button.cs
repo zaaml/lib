@@ -1,4 +1,4 @@
-﻿// <copyright file="TreeViewItem.TreeViewItem.Button.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="TreeViewItem.Button.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -74,9 +74,26 @@ namespace Zaaml.UI.Controls.TreeView
 			ButtonController.OnLostMouseCapture(e);
 		}
 
+		private void OnPostClick()
+		{
+			TreeViewControl?.OnItemPostClick(this);
+		}
+
+		private void OnPreClick()
+		{
+			TreeViewControl?.OnItemPreClick(this);
+		}
+
 		protected void RaiseClick()
 		{
 			ButtonController.RaiseOnClick();
+		}
+
+		internal void RaiseClickInternal()
+		{
+			OnPreClick();
+			OnClick();
+			OnPostClick();
 		}
 
 		public void UpdateCanExecute()
@@ -111,12 +128,12 @@ namespace Zaaml.UI.Controls.TreeView
 
 		void IManagedButton.OnPreClick()
 		{
-			TreeViewControl?.OnItemPreClick(this);
+			OnPreClick();
 		}
 
 		void IManagedButton.OnPostClick()
 		{
-			TreeViewControl?.OnItemPostClick(this);
+			OnPostClick();
 		}
 
 		void IManagedButton.FocusControl()

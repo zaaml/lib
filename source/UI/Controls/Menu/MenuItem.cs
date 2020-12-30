@@ -16,15 +16,11 @@ using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.Primitives;
 using Style = System.Windows.Style;
 
-#if SILVERLIGHT
-using Zaaml.UI.Extensions;
-#endif
-
 #pragma warning disable 109
 
 namespace Zaaml.UI.Controls.Menu
 {
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	public partial class MenuItem : HeaderedMenuItem, IButton
 	{
 		#region Static Fields and Constants
@@ -41,10 +37,10 @@ namespace Zaaml.UI.Controls.Menu
 		public static readonly DependencyProperty ItemContainerStyleProperty = DPM.Register<Style, MenuItem>
 			(nameof(ItemContainerStyle));
 
-		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<MenuItemCollection, MenuItem>
-			("ItemsInt");
+		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<MenuItemCollection, MenuItem>
+			("ItemCollectionPrivate");
 
-		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, MenuItem>
 			(nameof(SourceCollection), m => m.OnSourceCollectionPropertyChangedPrivate);
@@ -77,11 +73,11 @@ namespace Zaaml.UI.Controls.Menu
 		{
 			this.OverrideStyleKey<MenuItem>();
 
-			Items = new MenuItemCollection(this);
+			ItemCollection = new MenuItemCollection(this);
 
 			MenuItemsPresenter = new MenuItemsPresenter
 			{
-				Items = Items,
+				Items = ItemCollection,
 				ActualOrientation = Orientation.Vertical
 			};
 
@@ -94,7 +90,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		private MenuItemGeneratorBase ActualGenerator => ItemGenerator ?? ParentGenerator;
 
-		private bool IsItem => Items.Count == 0;
+		private bool IsItem => ItemCollection.Count == 0;
 
 		public Style ItemContainerStyle
 		{
@@ -108,13 +104,13 @@ namespace Zaaml.UI.Controls.Menu
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
-		public MenuItemCollection Items
+		public MenuItemCollection ItemCollection
 		{
-			get => (MenuItemCollection) GetValue(ItemsProperty);
-			private set => this.SetReadOnlyValue(ItemsPropertyKey, value);
+			get => (MenuItemCollection) GetValue(ItemCollectionProperty);
+			private set => this.SetReadOnlyValue(ItemCollectionPropertyKey, value);
 		}
 
-		internal override IMenuItemCollection ItemsCore => Items;
+		internal override IMenuItemCollection ItemsCore => ItemCollection;
 
 		public IEnumerable SourceCollection
 		{
@@ -220,7 +216,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
-			Items.SourceCollectionInternal = newSource;
+			ItemCollection.SourceCollectionInternal = newSource;
 
 			UpdateHasSubmenu();
 		}
@@ -248,12 +244,12 @@ namespace Zaaml.UI.Controls.Menu
 
 		private void UpdateGenerator()
 		{
-			Items.Generator = ActualGenerator;
+			ItemCollection.Generator = ActualGenerator;
 		}
 
 		private void UpdateHasSubmenu()
 		{
-			HasSubmenu = Items.ActualCountInternal > 0;
+			HasSubmenu = ItemCollection.ActualCountInternal > 0;
 		}
 
 		#endregion

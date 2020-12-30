@@ -13,7 +13,7 @@ using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 namespace Zaaml.UI.Controls.Menu
 {
 	[TemplateContractType(typeof(MenuBaseTemplateContract))]
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	public abstract partial class MenuBase : TemplateContractControl, IMenuBase
 	{
 		#region Ctors
@@ -74,7 +74,7 @@ namespace Zaaml.UI.Controls.Menu
 			LogicalChildMentor.RemoveLogicalChild(menuItem);
 		}
 
-		IMenuItemCollection IMenuItemOwner.Items => Items;
+		IMenuItemCollection IMenuItemOwner.ItemCollection => ItemCollection;
 
 		IMenuItemOwner IMenuItemOwner.Owner => null;
 

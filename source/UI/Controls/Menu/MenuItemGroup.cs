@@ -15,19 +15,19 @@ using Zaaml.UI.Extensions;
 #endif
 namespace Zaaml.UI.Controls.Menu
 {
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	[TemplateContractType(typeof(MenuItemGroupTemplateContract))]
 	public class MenuItemGroup : MenuItemGroupBase<MenuItemBase, MenuItemsPresenterHost, MenuItemsPanel>
 	{
 		#region Static Fields and Constants
 
-		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<MenuItemCollection, MenuItemGroup>
-			("ItemsInt");
+		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<MenuItemCollection, MenuItemGroup>
+			("ItemCollectionPrivate");
 
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<MenuItemGeneratorBase, MenuItemGroup>
 			("ItemGenerator", g => g.OnItemGeneratorChanged);
 
-		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 
 		#endregion
 
@@ -42,10 +42,10 @@ namespace Zaaml.UI.Controls.Menu
 		{
 			this.OverrideStyleKey<MenuItemGroup>();
 
-			Items = new MenuItemCollection(this);
+			ItemCollection = new MenuItemCollection(this);
 			MenuItemsPresenter = new MenuItemsPresenter
 			{
-				Items = Items,
+				Items = ItemCollection,
 				ActualOrientation = Orientation.Vertical
 			};
 		}
@@ -60,13 +60,13 @@ namespace Zaaml.UI.Controls.Menu
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
-		public MenuItemCollection Items
+		public MenuItemCollection ItemCollection
 		{
-			get => (MenuItemCollection) GetValue(ItemsProperty);
-			private set => this.SetReadOnlyValue(ItemsPropertyKey, value);
+			get => (MenuItemCollection) GetValue(ItemCollectionProperty);
+			private set => this.SetReadOnlyValue(ItemCollectionPropertyKey, value);
 		}
 
-		internal override IMenuItemCollection ItemsCore => Items;
+		internal override IMenuItemCollection ItemsCore => ItemCollection;
 
 		protected override MenuItemsPresenterBase<MenuItemBase, MenuItemsPanel> MenuItemsPresenter { get; }
 
@@ -76,7 +76,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		private void OnItemGeneratorChanged(MenuItemGeneratorBase oldGenerator, MenuItemGeneratorBase newGenerator)
 		{
-			Items.Generator = newGenerator;
+			ItemCollection.Generator = newGenerator;
 		}
 
 		#endregion

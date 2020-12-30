@@ -13,7 +13,7 @@ using ContentPresenter = System.Windows.Controls.ContentPresenter;
 
 namespace Zaaml.UI.Controls.TabView
 {
-  [TemplateContractType(typeof(TabControlContentPresenterTemplateContract))]
+  [TemplateContractType(typeof(TabViewControlContentPresenterTemplateContract))]
   public sealed class TabViewContentPresenter : TemplateContractControl
   {
     #region Static Fields and Constants
@@ -65,12 +65,12 @@ namespace Zaaml.UI.Controls.TabView
       internal set => this.SetReadOnlyValue(TabViewControlPropertyKey, value);
     }
 
-    private TabControlContentPresenterTemplateContract TemplateContract => (TabControlContentPresenterTemplateContract) TemplateContractInternal;
+    private TabViewControlContentPresenterTemplateContract TemplateContract => (TabViewControlContentPresenterTemplateContract) TemplateContractInternal;
 
     #endregion
   }
 
-  public class TabControlContentPresenterTemplateContract : TemplateContract
+  public class TabViewControlContentPresenterTemplateContract : TemplateContract
   {
     #region Properties
 

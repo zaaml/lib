@@ -177,7 +177,7 @@ namespace Zaaml.UI.Controls.TabView
 		public event EventHandler<CanCloseTabViewItemEventArgs> QueryCanCloseTab;
 		public event EventHandler<CanCreateTabViewItemEventArgs> QueryCanCreateTab;
 		public event EventHandler<TabViewItemEventArgs> QueryCloseTab;
-		public event EventHandler QueryCreateTab;
+		public event EventHandler<TabViewControlEventArgs> QueryCreateTab;
 		public event EventHandler<TabViewItemEventArgs> QueryDragOutTab;
 
 		static TabViewControl()
@@ -604,7 +604,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		protected virtual bool OnQueryCanCreateTab()
 		{
-			var canCreateTabItemEventArgs = new CanCreateTabViewItemEventArgs {CanCreate = true};
+			var canCreateTabItemEventArgs = new CanCreateTabViewItemEventArgs(this) { CanCreate = true };
 
 			QueryCanCreateTab?.Invoke(this, canCreateTabItemEventArgs);
 
@@ -618,7 +618,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		protected virtual void OnQueryCreateTab()
 		{
-			QueryCreateTab?.Invoke(this, EventArgs.Empty);
+			QueryCreateTab?.Invoke(this, new TabViewControlEventArgs(this));
 		}
 
 		protected override void OnSelectionChanged(Selection<TabViewItem> oldSelection, Selection<TabViewItem> newSelection)
@@ -677,9 +677,14 @@ namespace Zaaml.UI.Controls.TabView
 			base.OnTemplateContractDetaching();
 		}
 
-		internal void SelectItemInternal(TabViewItem tabViewItem)
+		internal void Select(TabViewItem tabViewItem)
 		{
 			SelectorController.SelectItem(tabViewItem);
+		}
+
+		internal void Unselect(TabViewItem tabViewItem)
+		{
+			SelectorController.UnselectItem(tabViewItem);
 		}
 
 		protected override void SetIsSelected(TabViewItem item, bool value)

@@ -58,14 +58,19 @@ namespace Zaaml.UI.Controls.DropDown
 			var defaultGeneratorImplementation = TreeViewControl.DefaultGeneratorImplementationInternal;
 			var contentBinding = defaultGeneratorImplementation.ItemContentMemberBindingInternal;
 			var iconBinding = defaultGeneratorImplementation.ItemIconMemberBindingInternal;
-			var listViewItem = selection.Item;
+			var treeViewItem = selection.Item;
 
 			selectionItem.DataContext = selection.Source;
 
-			if (listViewItem != null && ItemCollectionBase.GetInItemCollection(listViewItem))
+			if (treeViewItem != null && ItemCollectionBase.GetInItemCollection(treeViewItem))
 			{
-				selectionItem.Content = listViewItem.Content;
-				selectionItem.Icon = listViewItem.Icon;
+				selectionItem.Content = treeViewItem.Content;
+				selectionItem.Icon = treeViewItem.Icon;
+			}
+			else if (selection.Source is TreeViewItem treeViewItemSource)
+			{
+				selectionItem.Content = treeViewItemSource.Content;
+				selectionItem.Icon = treeViewItemSource.Icon;
 			}
 			else
 			{

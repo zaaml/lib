@@ -50,8 +50,9 @@
           </zm:SetterGroup>
         </zm:Extension.Setters>
 
-        <Border Background="{TemplateBinding Background}"
-                CornerRadius="2">
+        <Border  x:Name="ContentHost"
+                 Background="{TemplateBinding Background}"
+                 CornerRadius="2">
           <zm:ContentPresenter x:Name="ContentPresenter" />
         </Border>
       </Grid>

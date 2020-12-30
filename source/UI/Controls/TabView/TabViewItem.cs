@@ -302,7 +302,9 @@ namespace Zaaml.UI.Controls.TabView
 			var selected = IsSelected;
 
 			if (selected)
-				TabViewControl?.SelectItemInternal(this);
+				TabViewControl?.Select(this);
+			else
+				TabViewControl?.Unselect(this);
 
 			UpdateVisualState(true);
 			UpdateButtonsVisibility();
@@ -312,7 +314,7 @@ namespace Zaaml.UI.Controls.TabView
 			else
 				RaiseUnselectedEvent();
 
-			if (selected == IsSelected)
+			if (selected == IsSelected) 
 				RaiseSelectionChanged();
 		}
 
@@ -410,5 +412,10 @@ namespace Zaaml.UI.Controls.TabView
 		DependencyProperty ISelectableItem.ValueProperty => ValueProperty;
 
 		DependencyProperty ISelectableItem.SelectionProperty => IsSelectedProperty;
+
+		public override string ToString()
+		{
+			return Header?.ToString() ?? base.ToString();
+		}
 	}
 }

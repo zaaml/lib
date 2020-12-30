@@ -60,7 +60,7 @@
 
         <zm:SplitButton.PopupControl>
           <zm:PopupMenu ItemGenerator="{StaticResource MenuItemGenerator}"
-                        SourceCollection="{zm:TemplateBinding Path=Items}" />
+                        SourceCollection="{zm:TemplateBinding Path=ItemCollection}" />
         </zm:SplitButton.PopupControl>
       </zm:SplitButton>
     </zm:ControlTemplateRoot>

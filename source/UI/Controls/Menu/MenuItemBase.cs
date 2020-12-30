@@ -146,7 +146,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		#region IMenuItemOwner
 
-		IMenuItemCollection IMenuItemOwner.Items => ItemsCore;
+		IMenuItemCollection IMenuItemOwner.ItemCollection => ItemsCore;
 
 		IMenuItemOwner IMenuItemOwner.Owner => Owner;
 

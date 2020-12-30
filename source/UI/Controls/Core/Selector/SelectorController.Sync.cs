@@ -1,4 +1,4 @@
-// <copyright file="SelectorController.SourceChanges.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="SelectorController.Sync.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -41,116 +41,37 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private void OnItemCollectionSourceChangedSafe(NotifyCollectionChangedEventArgs e)
+		private bool IsItemInSelection(TItem item)
 		{
-			VerifySafe();
-			
-			if (e.Action == NotifyCollectionChangedAction.Move)
-			{
-			}
-			else if (e.Action == NotifyCollectionChangedAction.Reset)
-			{
-				if (MultipleSelection)
-					CurrentSelectionCollection.UpdateIndicesSources();
+			if (item == null)
+				return false;
 
-				if (CurrentSelectedIndex != -1)
-				{
-					var source = GetSource(CurrentSelectedIndex);
+			if (ReferenceEquals(item, CurrentSelectedItem))
+				return true;
 
-					Sync(source != null ? CurrentSelection.WithSource(source) : CurrentSelection.WithIndex(-1));
-				}
-			}
-			else
-			{
-				if (e.NewItems != null)
-				{
-					foreach (var source in e.NewItems)
-					{
-						if (IsSourceSelected(source))
-							SelectSource(source);
-					}
-				}
-
-				if (e.OldItems != null)
-				{
-					foreach (var source in e.OldItems)
-					{
-						if (IsSourceInSelection(source))
-							UnselectSource(source);
-					}
-				}
-			}
-
-			SyncIndex(false);
-			EnsureSelection();
+			return MultipleSelection && CurrentSelectionCollection.ContainsItem(item);
 		}
 
-		private void OnItemDetachedSafe([UsedImplicitly] int index, TItem item)
+		private bool IsSourceInSelection(object source)
 		{
-			VerifySafe();
-			
-			if (HasSource)
-			{
-				if (IsLocked(item) == false)
-				{
-					var source = GetSource(item);
+			if (source == null)
+				return false;
 
-					if (MultipleSelection)
-						if (CurrentSelectionCollection.FindBySource(source, false, out var selection))
-							if (ReferenceEquals(item, selection.Item))
-								CurrentSelectionCollection.UpdateSelection(selection.Index, selection.WithItem(null));
+			if (ReferenceEquals(source, CurrentSelectedSource))
+				return true;
 
-					if (ReferenceEquals(source, CurrentSelectedSource))
-						if (ReferenceEquals(item, CurrentSelectedItem))
-							Sync(CurrentSelection.WithItem(null));
-				}
-			}
-			else
-			{
-				if (IsVirtualizing == false)
-					UnselectItem(item);
-			}
+			return MultipleSelection && CurrentSelectionCollection.ContainsSource(source);
 		}
 
-		private void OnItemCollectionChangedSafe(NotifyCollectionChangedEventArgs e)
+		private bool IsSourceSelected(object source)
 		{
-			VerifySafe();
-			
-			if (e.Action == NotifyCollectionChangedAction.Reset)
-			{
-			}
-			else if (e.Action == NotifyCollectionChangedAction.Move)
-			{
-			}
-			else
-			{
-				if (e.NewItems != null)
-				{
-					foreach (TItem item in e.NewItems)
-					{
-						if (GetIsItemSelected(item))
-							SelectItem(item);
-					}
-				}
-
-				if (e.OldItems != null)
-				{
-					foreach (TItem item in e.OldItems)
-					{
-						if (IsItemInSelection(item))
-							UnselectItem(item);
-					}
-				}
-			}
-
-			SyncIndex(true);
-			EnsureSelection();
+			return false;
 		}
 
 		private void OnItemAttachedSafe(int index, TItem item)
 		{
 			VerifySafe();
-			
+
 			var itemSelected = GetIsItemSelected(item);
 
 			if (HasSource)
@@ -219,25 +140,119 @@ namespace Zaaml.UI.Controls.Core
 				}
 
 				if (itemSelected && itemInSelection == false)
-					SelectItem(item);
+					SelectItemSafe(item);
+			}
+		}
+
+		private void OnItemCollectionChangedSafe(NotifyCollectionChangedEventArgs e)
+		{
+			VerifySafe();
+
+			if (e.Action == NotifyCollectionChangedAction.Reset)
+			{
+			}
+			else if (e.Action == NotifyCollectionChangedAction.Move)
+			{
+			}
+			else
+			{
+				if (e.NewItems != null)
+				{
+					foreach (TItem item in e.NewItems)
+					{
+						if (GetIsItemSelected(item))
+							SelectItemSafe(item);
+					}
+				}
+
+				if (e.OldItems != null)
+				{
+					foreach (TItem item in e.OldItems)
+					{
+						if (IsItemInSelection(item))
+							UnselectItemSafe(item);
+					}
+				}
+			}
+
+			SyncIndex(true);
+			EnsureSelection();
+		}
+
+		private void OnItemCollectionSourceChangedSafe(NotifyCollectionChangedEventArgs e)
+		{
+			VerifySafe();
+
+			if (e.Action == NotifyCollectionChangedAction.Move)
+			{
+			}
+			else if (e.Action == NotifyCollectionChangedAction.Reset)
+			{
+				if (MultipleSelection)
+					CurrentSelectionCollection.UpdateIndicesSources();
+
+				if (CurrentSelectedIndex != -1)
+				{
+					var source = GetSource(CurrentSelectedIndex);
+
+					Sync(source != null ? CurrentSelection.WithSource(source) : CurrentSelection.WithIndex(-1));
+				}
+			}
+			else
+			{
+				if (e.NewItems != null)
+				{
+					foreach (var source in e.NewItems)
+					{
+						if (IsSourceSelected(source))
+							SelectSourceSafe(source);
+					}
+				}
+
+				if (e.OldItems != null)
+				{
+					foreach (var source in e.OldItems)
+					{
+						if (IsSourceInSelection(source))
+							UnselectSourceSafe(source);
+					}
+				}
+			}
+
+			SyncIndex(false);
+			EnsureSelection();
+		}
+
+		private void OnItemDetachedSafe([UsedImplicitly] int index, TItem item)
+		{
+			VerifySafe();
+
+			if (HasSource)
+			{
+				if (IsLocked(item) == false)
+				{
+					var source = GetSource(item);
+
+					if (MultipleSelection)
+						if (CurrentSelectionCollection.FindBySource(source, false, out var selection))
+							if (ReferenceEquals(item, selection.Item))
+								CurrentSelectionCollection.UpdateSelection(selection.Index, selection.WithItem(null));
+
+					if (ReferenceEquals(source, CurrentSelectedSource))
+						if (ReferenceEquals(item, CurrentSelectedItem))
+							Sync(CurrentSelection.WithItem(null));
+				}
+			}
+			else
+			{
+				if (IsVirtualizing == false)
+					UnselectItemSafe(item);
 			}
 		}
 
 		private void Sync(Selection<TItem> selection)
 		{
-			if (IsSelectionSuspended)
-				SelectionResume = selection;
-			else
-				CommitSelection(selection);
-		}
-
-		public void SyncValue()
-		{
-			using (SelectionHandlingScope)
-			{
-				if (SelectedItem != null || SelectedSource != null)
-					SelectValue(GetValue(SelectedItem, SelectedSource));
-			}
+			ApplySelection(selection);
 		}
 
 		private void SyncIndex(int itemIndex)
@@ -261,31 +276,13 @@ namespace Zaaml.UI.Controls.Core
 			SyncIndex(forItem ? GetIndexOfItem(CurrentSelectedItem) : GetIndexOfSource(CurrentSelectedSource));
 		}
 
-		private bool IsSourceInSelection(object source)
+		public void SyncValue()
 		{
-			if (source == null)
-				return false;
-
-			if (ReferenceEquals(source, CurrentSelectedSource))
-				return true;
-
-			return MultipleSelection && CurrentSelectionCollection.ContainsSource(source);
-		}
-
-		private bool IsItemInSelection(TItem item)
-		{
-			if (item == null)
-				return false;
-
-			if (ReferenceEquals(item, CurrentSelectedItem))
-				return true;
-
-			return MultipleSelection && CurrentSelectionCollection.ContainsItem(item);
-		}
-
-		private bool IsSourceSelected(object source)
-		{
-			return false;
+			using (SelectionHandlingScope)
+			{
+				if (SelectedItem != null || SelectedSource != null)
+					SelectValueSafe(GetValue(SelectedItem, SelectedSource));
+			}
 		}
 	}
 }

@@ -14,20 +14,18 @@ namespace Zaaml.UI.Controls.Core
 			{
 				UnselectAllSafe();
 				EnsureSelection();
-				
-				RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
 			}
 		}
 
 		private void UnselectAllSafe()
 		{
 			VerifySafe();
-			
+
 			foreach (var selection in CurrentSelectionCollection)
 				SetItemSelected(selection.Item, false);
 
 			CurrentSelectionCollection.Clear();
-			CommitSelectionSafe(Selection<TItem>.Empty);
+			ApplySelectionSafe(Selection<TItem>.Empty);
 
 			IsInverted = false;
 		}
@@ -41,16 +39,10 @@ namespace Zaaml.UI.Controls.Core
 				return UnselectIndexSafe(index);
 		}
 
-		private bool UnselectIndexSafe(int index)
-		{
-			VerifySafe();
-			
-			return IsInverted == false ? UnselectIndexCore(index, false) : EnsureInvertedSelection(SelectIndexCore(index, false));
-		}
-
 		private bool UnselectIndexCore(int index, bool force)
 		{
-			CurrentSelectionCollection.RemoveIndex(index);
+			if (CurrentSelectionCollection.FindByIndex(index, IsInverted, out var selection))
+				CurrentSelectionCollection.Unselect(selection);
 
 			if (SelectedIndex == index)
 			{
@@ -61,12 +53,19 @@ namespace Zaaml.UI.Controls.Core
 					return true;
 				}
 
-				return SelectIndex(-1);
+				return SelectIndexSafe(-1);
 			}
 
 			EnsureSelection();
 
 			return true;
+		}
+
+		private bool UnselectIndexSafe(int index)
+		{
+			VerifySafe();
+
+			return UnselectIndexCore(index, false);
 		}
 
 		public bool UnselectItem(TItem item)
@@ -78,16 +77,10 @@ namespace Zaaml.UI.Controls.Core
 				return UnselectItemSafe(item);
 		}
 
-		private bool UnselectItemSafe(TItem item)
-		{
-			VerifySafe();
-
-			return IsInverted == false ? UnselectItemCore(item, false) : EnsureInvertedSelection(SelectItemCore(item, false));
-		}
-		
 		private bool UnselectItemCore(TItem item, bool force)
 		{
-			CurrentSelectionCollection.RemoveItem(item);
+			if (CurrentSelectionCollection.FindByItem(item, IsInverted, out var selection))
+				CurrentSelectionCollection.Unselect(selection);
 
 			if (ReferenceEquals(CurrentSelectedItem, item))
 			{
@@ -98,12 +91,19 @@ namespace Zaaml.UI.Controls.Core
 					return true;
 				}
 
-				return SelectItem(null);
+				return SelectItemSafe(null);
 			}
 
 			EnsureSelection();
 
 			return true;
+		}
+
+		private bool UnselectItemSafe(TItem item)
+		{
+			VerifySafe();
+
+			return UnselectItemCore(item, false);
 		}
 
 		public bool UnselectSource(object source)
@@ -113,13 +113,6 @@ namespace Zaaml.UI.Controls.Core
 
 			using (SelectionHandlingScope)
 				return UnselectSourceSafe(source);
-		}
-
-		private bool UnselectSourceSafe(object source)
-		{
-			VerifySafe();
-			
-			return IsInverted == false ? UnselectSourceCore(source, false) : EnsureInvertedSelection(SelectSourceCore(source, false));
 		}
 
 		public void UnselectSourceCollection(IEnumerable<object> sourceCollection)
@@ -134,7 +127,7 @@ namespace Zaaml.UI.Controls.Core
 						{
 							if (Advisor.TryCreateSelection(source, false, out var advisorSelection) && ReferenceEquals(source, advisorSelection.Source))
 							{
-								CurrentSelectionCollection.Add(advisorSelection, false);
+								CurrentSelectionCollection.Add(advisorSelection);
 
 								SetItemSelected(advisorSelection.Item, false);
 							}
@@ -150,8 +143,6 @@ namespace Zaaml.UI.Controls.Core
 					}
 				}
 
-				RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
-
 				SelectFirst();
 			}
 
@@ -160,7 +151,8 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool UnselectSourceCore(object source, bool force)
 		{
-			CurrentSelectionCollection.RemoveSource(source);
+			if (CurrentSelectionCollection.FindBySource(source, IsInverted, out var selection))
+				CurrentSelectionCollection.Unselect(selection);
 
 			if (ReferenceEquals(SelectedSource, source))
 			{
@@ -171,12 +163,19 @@ namespace Zaaml.UI.Controls.Core
 					return true;
 				}
 
-				return SelectSource(null);
+				return SelectSourceSafe(null);
 			}
 
 			EnsureSelection();
 
 			return true;
+		}
+
+		private bool UnselectSourceSafe(object source)
+		{
+			VerifySafe();
+
+			return UnselectSourceCore(source, false);
 		}
 
 		public bool UnselectValue(object value)
@@ -188,16 +187,10 @@ namespace Zaaml.UI.Controls.Core
 				return UnselectValueSafe(value);
 		}
 
-		private bool UnselectValueSafe(object value)
-		{
-			VerifySafe();
-			
-			return IsInverted == false ? UnselectValueCore(value, false) : EnsureInvertedSelection(SelectValueCore(value, false));
-		}
-
 		private bool UnselectValueCore(object value, bool force)
 		{
-			CurrentSelectionCollection.RemoveValue(value);
+			if (CurrentSelectionCollection.FindByValue(value, IsInverted, out var selection))
+				CurrentSelectionCollection.Unselect(selection);
 
 			if (ReferenceEquals(SelectedValue, value))
 			{
@@ -208,12 +201,19 @@ namespace Zaaml.UI.Controls.Core
 					return true;
 				}
 
-				return SelectValue(null);
+				return SelectValueSafe(null);
 			}
 
 			EnsureSelection();
 
 			return true;
+		}
+
+		private bool UnselectValueSafe(object value)
+		{
+			VerifySafe();
+
+			return UnselectValueCore(value, false);
 		}
 	}
 }

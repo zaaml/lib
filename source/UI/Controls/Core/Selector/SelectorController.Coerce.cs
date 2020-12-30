@@ -9,19 +9,15 @@ namespace Zaaml.UI.Controls.Core
 		public int CoerceSelectedIndex(int selectedIndex)
 		{
 			if (SelectionHandling)
-				return ForcedCoerceSelection.Index;
+				return Selection.Index;
 
 			var preselectIndex = PreselectIndex(selectedIndex, true, SelectionResume, out var preSelection);
 
 			if (IsSelectionSuspended)
 			{
 				if (preselectIndex)
-				{
 					SelectionResume = preSelection;
-					ModifySelectionCollection(preSelection);
-				}
 
-				ForcedCoerceSelection = Selection;
 				PushSelectedIndexBoundValue(Selection.Index);
 
 				return Selection.Index;
@@ -40,19 +36,15 @@ namespace Zaaml.UI.Controls.Core
 		public TItem CoerceSelectedItem(TItem selectedItem)
 		{
 			if (SelectionHandling)
-				return ForcedCoerceSelection.Item;
+				return Selection.Item;
 
 			var preselectItem = PreselectItem(selectedItem, true, SelectionResume, out var preSelection);
 
 			if (IsSelectionSuspended)
 			{
 				if (preselectItem)
-				{
 					SelectionResume = preSelection;
-					ModifySelectionCollection(preSelection);
-				}
 
-				ForcedCoerceSelection = Selection;
 				PushSelectedItemBoundValue(Selection.Item);
 
 				return Selection.Item;
@@ -71,19 +63,15 @@ namespace Zaaml.UI.Controls.Core
 		public object CoerceSelectedSource(object selectedSource)
 		{
 			if (SelectionHandling)
-				return ForcedCoerceSelection.Source;
+				return Selection.Source;
 
 			var preselectSource = PreselectSource(selectedSource, true, SelectionResume, out var preSelection);
 
 			if (IsSelectionSuspended)
 			{
 				if (preselectSource)
-				{
 					SelectionResume = preSelection;
-					ModifySelectionCollection(preSelection);
-				}
 
-				ForcedCoerceSelection = Selection;
 				PushSelectedSourceBoundValue(Selection.Source);
 
 				return Selection.Source;
@@ -102,19 +90,15 @@ namespace Zaaml.UI.Controls.Core
 		public object CoerceSelectedValue(object selectedValue)
 		{
 			if (SelectionHandling)
-				return ForcedCoerceSelection.Value;
+				return Selection.Value;
 
 			var preselectValue = PreselectValue(selectedValue, true, SelectionResume, out var preSelection);
 
 			if (IsSelectionSuspended)
 			{
 				if (preselectValue)
-				{
 					SelectionResume = preSelection;
-					ModifySelectionCollection(preSelection);
-				}
 
-				ForcedCoerceSelection = Selection;
 				PushSelectedValueBoundValue(Selection.Value);
 
 				return Selection.Value;
@@ -130,6 +114,42 @@ namespace Zaaml.UI.Controls.Core
 			return coerceSelectedValue;
 		}
 
-		private Selection<TItem> ForcedCoerceSelection { get; set; }
+		private void CoerceSelection(bool ensureItem, ref Selection<TItem> selection)
+		{
+			var source = selection.Source;
+			var item = selection.Item;
+			var index = selection.Index;
+			var value = selection.Value;
+
+			if (source == null)
+			{
+				if (selection.Item != null)
+					source = GetSource(item);
+				else if (index != -1)
+					source = GetSource(index);
+			}
+
+			if (item == null)
+			{
+				if (source != null)
+					TryGetItemBySource(source, ensureItem, out item);
+
+				if (item == null && index != -1)
+					TryGetItem(index, ensureItem, out item);
+			}
+
+			if (index == -1)
+			{
+				if (source != null)
+					index = GetIndexOfSource(source);
+
+				if (index == -1 && item != null)
+					index = GetIndexOfItem(item);
+			}
+
+			value ??= GetValue(item, source);
+
+			selection = new Selection<TItem>(index, item, source, value);
+		}
 	}
 }

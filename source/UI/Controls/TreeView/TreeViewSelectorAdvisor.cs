@@ -29,7 +29,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public override bool CanSelectItem(TreeViewItem item)
 		{
-			return item.CanSelectInternal;
+			return item.ActualCanSelect;
 		}
 
 		public override bool HasSource => TreeViewControl.SourceCollection != null;

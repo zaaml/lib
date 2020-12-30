@@ -193,7 +193,7 @@ namespace Zaaml.UI.Controls.Core
 			base.OnItemGotFocus(item);
 
 			if (ActualSelectItemOnFocus)
-				SetIsSelected(item, true);
+				SelectorController.SelectItem(item);
 		}
 
 		protected override void OnLoaded()

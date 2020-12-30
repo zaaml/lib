@@ -59,7 +59,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 				var offset = new OrientedPoint(orientation);
 				var finalOriented = finalSize.AsOriented(orientation);
 				var prevSize = 0.0;
-				var items = trackBar.Items;
+				var items = trackBar.ItemCollection;
 				var itemsCount = items.Count;
 				bool? prevIsRange = null;
 
@@ -118,7 +118,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			var itemConstraint = availableOriented.Clone.ChangeDirect(double.PositiveInfinity).Size;
 			var fixedOriented = new OrientedSize(orientation);
 			var currentRangeOriented = new OrientedSize(orientation);
-			var items = trackBar.Items;
+			var items = trackBar.ItemCollection;
 			var itemsCount = items.Count;
 
 			ArrayUtils.EnsureArrayLength(ref _measure, itemsCount, false);
@@ -162,7 +162,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private double MeasureRange(int startIndex, int endIndex, Orientation orientation)
 		{
-			var items = TrackBar.Items;
+			var items = TrackBar.ItemCollection;
 
 			if (startIndex == -1 && endIndex == 0)
 				return PixelRatio * (((TrackBarValueItem) items[endIndex]).Value - TrackBar.Minimum);
@@ -218,7 +218,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 				return;
 
 			var orientation = trackBar.Orientation;
-			var items = trackBar.Items;
+			var items = trackBar.ItemCollection;
 			var itemsCount = items.Count;
 			var prevValueIndex = -1;
 

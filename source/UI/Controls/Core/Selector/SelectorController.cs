@@ -62,9 +62,27 @@ namespace Zaaml.UI.Controls.Core
 
 		public object CurrentSelectedValue => CurrentSelection.Value;
 
-		private Selection<TItem> CurrentSelection => IsSelectionSuspended ? SelectionResume : Selection;
+		private Selection<TItem> CurrentSelection
+		{
+			get
+			{
+				if (SelectionHandlingCount < 0)
+					return Selection;
 
-		private SelectionCollectionImpl CurrentSelectionCollection => IsSelectionSuspended ? SelectionCollectionResume : SelectionCollection;
+				return SelectionHandling || IsSelectionSuspended ? SelectionResume : Selection;
+			}
+		}
+
+		private SelectionCollectionImpl CurrentSelectionCollection
+		{
+			get
+			{
+				if (SelectionHandlingCount < 0)
+					return SelectionCollection;
+
+				return SelectionHandling || IsSelectionSuspended ? SelectionCollectionResume : SelectionCollection;
+			}
+		}
 
 		private bool HasSource => Advisor.HasSource;
 
@@ -159,7 +177,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private SelectionCollectionImpl SelectionCollectionResume { get; set; }
 
-		public bool SelectionHandling => SelectionHandlingCount > 0;
+		public bool SelectionHandling => SelectionHandlingCount != 0;
 
 		private int SelectionHandlingCount { get; set; }
 
@@ -194,6 +212,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private int Version { get; set; }
 
+
 		private bool AreSelectionEquals(Selection<TItem> first, Selection<TItem> second)
 		{
 			return first.Index == second.Index &&
@@ -209,43 +228,67 @@ namespace Zaaml.UI.Controls.Core
 			SuspendSelection();
 		}
 
-		private bool CanSelectItem(TItem item)
-		{
-			if (SupportsItem == false)
-				return true;
-					
-			return item == null || Advisor.CanSelectItem(item);
-		}
-		
-		private bool CanSelectSource(object source)
-		{
-			if (SupportsSource == false)
-				return true;
-			
-			return source == null || Advisor.CanSelectSource(source);
-		}
-		
-		private bool CanSelectIndex(int index)
-		{
-			if (SupportsIndex == false)
-				return true;
-			
-			return index == -1 || Advisor.CanSelectIndex(index);
-		}
-		
-		private bool CanSelectValue(object value)
-		{
-			if (SupportsValue == false)
-				return true;
-			
-			return value == null || Advisor.CanSelectValue(value);
-		}
-
 		private bool CanSelect(Selection<TItem> selection)
 		{
 			return CanSelectIndex(selection.Index) && CanSelectItem(selection.Item) && CanSelectSource(selection.Source) && CanSelectValue(selection.Value);
 		}
-		
+
+		private bool CanSelectIndex(int index)
+		{
+			if (SupportsIndex == false)
+				return true;
+
+			return index == -1 || Advisor.CanSelectIndex(index);
+		}
+
+		private bool CanSelectItem(TItem item)
+		{
+			if (SupportsItem == false)
+				return true;
+
+			return item == null || Advisor.CanSelectItem(item);
+		}
+
+		private bool CanSelectSource(object source)
+		{
+			if (SupportsSource == false)
+				return true;
+
+			return source == null || Advisor.CanSelectSource(source);
+		}
+
+		private bool CanSelectValue(object value)
+		{
+			if (SupportsValue == false)
+				return true;
+
+			return value == null || Advisor.CanSelectValue(value);
+		}
+
+		private void CoerceSelectionResume()
+		{
+			var selectionResume = SelectionResume;
+
+			CoerceSelection(false, ref selectionResume);
+
+			if (CanSelect(selectionResume) == false)
+			{
+				CurrentSelectionCollection.Unselect(selectionResume);
+
+				if (MultipleSelection)
+				{
+					if (CurrentSelectionCollection.Count > 0)
+						selectionResume = CurrentSelectionCollection.First();
+					else if (PreselectNull(out selectionResume))
+						CurrentSelectionCollection.Select(selectionResume);
+				}
+				else
+					PreselectNull(out selectionResume);
+			}
+
+			SelectionResume = selectionResume;
+		}
+
 		private bool CompareValues(object itemValue, object value)
 		{
 			return Advisor.CompareValues(itemValue, value);
@@ -256,19 +299,6 @@ namespace Zaaml.UI.Controls.Core
 			ResumeSelection();
 
 			IsInitializing = false;
-		}
-
-		private bool EnsureInvertedSelection(bool selectionResult)
-		{
-			if (SelectionHandling)
-				return false;
-
-			if (selectionResult == false)
-				return false;
-
-			SelectFirst();
-
-			return true;
 		}
 
 		internal void EnsureSelection()
@@ -300,6 +330,15 @@ namespace Zaaml.UI.Controls.Core
 
 		private void EnterSelectionHandling()
 		{
+			if (SelectionHandlingCount < 0)
+				return;
+
+			if (SelectionHandlingCount == 0)
+			{
+				SelectionResume = Selection;
+				SelectionCollectionResume.CopyFrom(SelectionCollection);
+			}
+
 			SelectionHandlingCount++;
 		}
 
@@ -321,6 +360,20 @@ namespace Zaaml.UI.Controls.Core
 		private bool GetIsItemSelected(TItem item)
 		{
 			return item != null && Advisor.GetItemSelected(item);
+		}
+
+		public int GetSelectableCount()
+		{
+			var count = Count;
+			var selectableCount = 0;
+
+			for (var i = 0; i < count; i++)
+			{
+				if (Advisor.TryCreateSelection(i, false, out var selection) && CanSelect(selection))
+					selectableCount++;
+			}
+
+			return selectableCount;
 		}
 
 		internal SelectionCollectionImpl.SelectionCollectionEnumerator GetSelectionCollectionEnumerator()
@@ -352,8 +405,6 @@ namespace Zaaml.UI.Controls.Core
 			{
 				InvertSelectionSafe();
 			}
-
-			EnsureSelection();
 		}
 
 		private void InvertSelectionSafe()
@@ -376,9 +427,7 @@ namespace Zaaml.UI.Controls.Core
 			}
 
 			CurrentSelectionCollection.CommitDeferUnselect();
-
-			RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
-			CommitSelectionSafe(currentSelection);
+			ApplySelectionSafe(currentSelection);
 		}
 
 		private bool IsLocked(TItem item)
@@ -396,23 +445,9 @@ namespace Zaaml.UI.Controls.Core
 		private void LeaveSelectionHandling()
 		{
 			SelectionHandlingCount--;
-		}
 
-		private void ModifySelectionCollection(Selection<TItem> selection, bool raiseEvent = true)
-		{
-			if (MultipleSelection == false)
-			{
-				if (IsSelectionSuspended == false)
-				{
-					if (raiseEvent)
-						RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
-				}
-
-				return;
-			}
-
-			if (selection.IsEmpty == false)
-				CurrentSelectionCollection.Add(selection);
+			if (SelectionHandlingCount == 0)
+				CommitSelection();
 		}
 
 		public void OnSelectedIndexPropertyChanged(int oldIndex, int newIndex)
@@ -420,12 +455,11 @@ namespace Zaaml.UI.Controls.Core
 			if (SelectionHandling)
 				return;
 
-			SuspendSelection();
-
-			UnselectIndex(oldIndex);
-			SelectIndex(newIndex);
-
-			ResumeSelection();
+			using (SelectionHandlingScope)
+			{
+				UnselectIndexSafe(oldIndex);
+				SelectIndexSafe(newIndex);
+			}
 		}
 
 		public void OnSelectedItemPropertyChanged(TItem oldItem, TItem newItem)
@@ -433,12 +467,11 @@ namespace Zaaml.UI.Controls.Core
 			if (SelectionHandling)
 				return;
 
-			SuspendSelection();
-
-			UnselectItem(oldItem);
-			SelectItem(newItem);
-
-			ResumeSelection();
+			using (SelectionHandlingScope)
+			{
+				UnselectItemSafe(oldItem);
+				SelectItemSafe(newItem);
+			}
 		}
 
 		public void OnSelectedSourcePropertyChanged(object oldSource, object newSource)
@@ -446,12 +479,11 @@ namespace Zaaml.UI.Controls.Core
 			if (SelectionHandling)
 				return;
 
-			SuspendSelection();
-
-			UnselectSource(oldSource);
-			SelectSource(newSource);
-
-			ResumeSelection();
+			using (SelectionHandlingScope)
+			{
+				UnselectSourceSafe(oldSource);
+				SelectSourceSafe(newSource);
+			}
 		}
 
 		public void OnSelectedValuePropertyChanged(object oldValue, object newValue)
@@ -459,12 +491,11 @@ namespace Zaaml.UI.Controls.Core
 			if (SelectionHandling)
 				return;
 
-			SuspendSelection();
-
-			UnselectValue(oldValue);
-			SelectValue(newValue);
-
-			ResumeSelection();
+			using (SelectionHandlingScope)
+			{
+				UnselectValueSafe(oldValue);
+				SelectValueSafe(newValue);
+			}
 		}
 
 		private void OnSelectionChangeSuspended()
@@ -473,25 +504,9 @@ namespace Zaaml.UI.Controls.Core
 			SelectionCollectionResume.CopyFrom(SelectionCollection);
 		}
 
-		private void RaiseSelectionCollectionChanged(NotifyCollectionChangedEventArgs args)
-		{
-			if (IsSelectionSuspended)
-				return;
-
-			SelectionCollectionChanged?.Invoke(this, args);
-		}
-
-		private void RaiseSelectionCollectionPropertyChanged(PropertyChangedEventArgs args)
-		{
-			if (IsSelectionSuspended)
-				return;
-
-			SelectionCollectionPropertyChanged?.Invoke(this, args);
-		}
-
 		private void ResetMultipleSelection()
 		{
-			CurrentSelectionCollection.Clear(false);
+			CurrentSelectionCollection.Clear();
 
 			if (MultipleSelection)
 			{
@@ -504,11 +519,11 @@ namespace Zaaml.UI.Controls.Core
 
 		public void RestoreSelection()
 		{
-			if (IsSelectionSuspended)
-			{
-				SelectionResume = Selection;
-				SelectionCollectionResume.CopyFrom(SelectionCollection);
-			}
+			if (IsSelectionSuspended == false)
+				return;
+
+			SelectionResume = Selection;
+			SelectionCollectionResume.CopyFrom(SelectionCollection);
 		}
 
 		public void ResumeSelection()
@@ -521,14 +536,8 @@ namespace Zaaml.UI.Controls.Core
 			else
 				return;
 
-			if (SuspendSelectionCount > 0)
-				return;
-
-			SelectionCollection.CopyFrom(SelectionCollectionResume);
-			RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
-
-			CommitSelection(SelectionResume);
-			EnsureSelection();
+			if (SuspendSelectionCount == 0)
+				CommitSelection();
 		}
 
 		private void SetItemSelected(TItem item, bool selection)
@@ -560,20 +569,6 @@ namespace Zaaml.UI.Controls.Core
 				UnselectAll();
 		}
 
-		public int GetSelectableCount()
-		{
-			var count = Count;
-			var selectableCount = 0;
-			
-			for (var i = 0; i < count; i++)
-			{
-				if (Advisor.TryCreateSelection(i, false, out var selection) && CanSelect(selection))
-					selectableCount++;
-			}
-
-			return selectableCount;
-		}
-		
 		private void ToggleSelectionCore()
 		{
 			using (SelectionHandlingScope)
@@ -581,7 +576,7 @@ namespace Zaaml.UI.Controls.Core
 				var selectionCount = 0;
 				var currentSelectionCount = CurrentSelectionCollection.Count;
 
-				CurrentSelectionCollection.Clear(false);
+				CurrentSelectionCollection.Clear();
 
 				IsInverted = true;
 
@@ -611,10 +606,7 @@ namespace Zaaml.UI.Controls.Core
 					IsInverted = false;
 				}
 
-				var currentSelection = CurrentSelectionCollection.Count > 0 ? CurrentSelectionCollection.First() : Selection<TItem>.Empty;
-
-				RaiseSelectionCollectionChanged(ResetNotifyCollectionChangedEventArgs);
-				CommitSelectionSafe(currentSelection);
+				ApplySelectionSafe(CurrentSelectionCollection.Count > 0 ? CurrentSelectionCollection.First() : Selection<TItem>.Empty);
 			}
 		}
 

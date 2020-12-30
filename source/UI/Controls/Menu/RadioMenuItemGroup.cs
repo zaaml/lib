@@ -19,16 +19,16 @@ using Control = System.Windows.Controls.Control;
 
 namespace Zaaml.UI.Controls.Menu
 {
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	[TemplateContractType(typeof(RadioMenuItemGroupTemplateContract))]
 	public class RadioMenuItemGroup : MenuItemGroupBase<RadioMenuItem, RadioMenuItemsPresenterHost, RadioMenuItemsPanel>, ISelector<RadioMenuItem>, ISupportInitialize
 	{
 		#region Static Fields and Constants
 
-		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<RadioMenuItemCollection, RadioMenuItemGroup>
-			("ItemsInt");
+		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<RadioMenuItemCollection, RadioMenuItemGroup>
+			("ItemCollectionPrivate");
 
-		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty SelectedIndexProperty = DPM.Register<int, RadioMenuItemGroup>
 			("SelectedIndex", -1, s => s.SelectorController.OnSelectedIndexPropertyChanged, s => s.SelectorController.CoerceSelectedIndex);
@@ -71,10 +71,10 @@ namespace Zaaml.UI.Controls.Menu
 		{
 			this.OverrideStyleKey<RadioMenuItemGroup>();
 
-			Items = new RadioMenuItemCollection(this);
+			ItemCollection = new RadioMenuItemCollection(this);
 			MenuItemsPresenter = new RadioMenuItemsPresenter
 			{
-				Items = Items,
+				Items = ItemCollection,
 				ActualOrientation = Orientation.Vertical
 			};
 
@@ -100,13 +100,13 @@ namespace Zaaml.UI.Controls.Menu
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
-		public RadioMenuItemCollection Items
+		public RadioMenuItemCollection ItemCollection
 		{
-			get => (RadioMenuItemCollection) GetValue(ItemsProperty);
-			private set => this.SetReadOnlyValue(ItemsPropertyKey, value);
+			get => (RadioMenuItemCollection) GetValue(ItemCollectionProperty);
+			private set => this.SetReadOnlyValue(ItemCollectionPropertyKey, value);
 		}
 
-		internal override IMenuItemCollection ItemsCore => Items;
+		internal override IMenuItemCollection ItemsCore => ItemCollection;
 
 		protected override MenuItemsPresenterBase<RadioMenuItem, RadioMenuItemsPanel> MenuItemsPresenter { get; }
 
@@ -175,12 +175,12 @@ namespace Zaaml.UI.Controls.Menu
 		internal override void OnDisplayMemberPathChangedInternal(string oldDisplayMemberPath, string newDisplayMemberPath)
 		{
 			base.OnDisplayMemberPathChangedInternal(oldDisplayMemberPath, newDisplayMemberPath);
-			Items.DefaultRadioGenerator.DisplayMember = newDisplayMemberPath;
+			ItemCollection.DefaultRadioGenerator.DisplayMember = newDisplayMemberPath;
 		}
 
 		private void OnItemGeneratorChanged(RadioMenuItemGeneratorBase oldGenerator, RadioMenuItemGeneratorBase newGenerator)
 		{
-			Items.Generator = newGenerator;
+			ItemCollection.Generator = newGenerator;
 		}
 
 		protected override void OnMenuItemAdded(MenuItemBase menuItem)
@@ -246,7 +246,7 @@ namespace Zaaml.UI.Controls.Menu
 			switch (SelectedValueSource)
 			{
 				case SelectedValueSource.Auto:
-					return GetItemValue(Items.SourceCollectionInternal == null ? item : source);
+					return GetItemValue(ItemCollection.SourceCollectionInternal == null ? item : source);
 				case SelectedValueSource.Item:
 					return GetItemValue(item);
 				case SelectedValueSource.Source:
@@ -347,7 +347,7 @@ namespace Zaaml.UI.Controls.Menu
 
 	internal sealed class RadioMenuItemGroupSelectorAdvisor : ItemCollectionSelectorAdvisor<Control, RadioMenuItem>
 	{
-		public RadioMenuItemGroupSelectorAdvisor(RadioMenuItemGroup radioMenuItemGroup) : base(radioMenuItemGroup, radioMenuItemGroup.Items)
+		public RadioMenuItemGroupSelectorAdvisor(RadioMenuItemGroup radioMenuItemGroup) : base(radioMenuItemGroup, radioMenuItemGroup.ItemCollection)
 		{
 		}
 		

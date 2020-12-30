@@ -17,7 +17,7 @@ using Zaaml.UI.Controls.DropDown;
 
 namespace Zaaml.UI.Controls.BreadCrumb
 {
-	[ContentProperty(nameof(Items))]
+	[ContentProperty(nameof(ItemCollection))]
 	public class BreadCrumbItem : HeaderedIconContentControl, IBreadCrumbItemsOwner
 	{
 		private static readonly DependencyPropertyKey ActualShowIconPropertyKey = DPM.RegisterReadOnly<bool, BreadCrumbItem>
@@ -34,8 +34,8 @@ namespace Zaaml.UI.Controls.BreadCrumb
 		private static readonly DependencyPropertyKey BreadCrumbControlPropertyKey = DPM.RegisterReadOnly<BreadCrumbControl, BreadCrumbItem>
 			("BreadCrumbControl", b => b.OnBreadCrumbControlChanged);
 
-		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<BreadCrumbItemCollection, BreadCrumbItem>
-			("ItemsInt");
+		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<BreadCrumbItemCollection, BreadCrumbItem>
+			("ItemCollectionPrivate");
 
 		private static readonly DependencyPropertyKey HasItemsPropertyKey = DPM.RegisterReadOnly<bool, BreadCrumbItem>
 			("HasItems");
@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
 		public static readonly DependencyProperty ParentItemProperty = ParentItemPropertyKey.DependencyProperty;
 		public static readonly DependencyProperty HasItemsProperty = HasItemsPropertyKey.DependencyProperty;
-		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 		public static readonly DependencyProperty BreadCrumbControlProperty = BreadCrumbControlPropertyKey.DependencyProperty;
 
 		private IBreadCrumbItemsOwner _owner;
@@ -65,7 +65,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 			this.OverrideStyleKey<BreadCrumbItem>();
 
 			SelectCommand = new RelayCommand(OnSelectCommandExecute, () => true);
-			Items = new BreadCrumbItemCollection(this);
+			ItemCollection = new BreadCrumbItemCollection(this);
 		}
 
 		public bool ActualShowIcon
@@ -159,7 +159,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 					oldControl.SelectedItem = null;
 			}
 
-			foreach (var item in Items)
+			foreach (var item in ItemCollection)
 				item.BreadCrumbControl = newControl;
 
 			UpdateIconVisibility();
@@ -265,7 +265,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
 		private void UpdateHasItems()
 		{
-			HasItems = Items.Count > 0;
+			HasItems = ItemCollection.Count > 0;
 		}
 
 		internal void UpdateIconVisibility()
@@ -279,10 +279,10 @@ namespace Zaaml.UI.Controls.BreadCrumb
 			ActualShowIcon = VisibilityUtils.EvaluateElementVisibility(iconVisibility, Visibility.Visible) == Visibility.Visible;
 		}
 
-		public BreadCrumbItemCollection Items
+		public BreadCrumbItemCollection ItemCollection
 		{
-			get => (BreadCrumbItemCollection) GetValue(ItemsProperty);
-			private set => this.SetReadOnlyValue(ItemsPropertyKey, value);
+			get => (BreadCrumbItemCollection) GetValue(ItemCollectionProperty);
+			private set => this.SetReadOnlyValue(ItemCollectionPropertyKey, value);
 		}
 
 		void IBreadCrumbItemsOwner.OnItemAdded(BreadCrumbItem item)

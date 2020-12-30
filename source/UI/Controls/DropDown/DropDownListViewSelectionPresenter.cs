@@ -69,6 +69,11 @@ namespace Zaaml.UI.Controls.DropDown
 				selectionItem.Content = listViewItem.Content;
 				selectionItem.Icon = listViewItem.Icon;
 			}
+			else if (selection.Source is ListViewItem listViewItemSource)
+			{
+				selectionItem.Content = listViewItemSource.Content;
+				selectionItem.Icon = listViewItemSource.Icon;
+			}
 			else
 			{
 				if (contentBinding != null)

@@ -74,9 +74,26 @@ namespace Zaaml.UI.Controls.ListView
 			ButtonController.OnLostMouseCapture(e);
 		}
 
+		private void OnPostClick()
+		{
+			ListViewControl?.OnItemPostClick(this);
+		}
+
+		private void OnPreClick()
+		{
+			ListViewControl?.OnItemPreClick(this);
+		}
+
 		protected void RaiseClick()
 		{
 			ButtonController.RaiseOnClick();
+		}
+
+		internal void RaiseClickInternal()
+		{
+			OnPreClick();
+			OnClick();
+			OnPostClick();
 		}
 
 		public void UpdateCanExecute()
@@ -103,7 +120,7 @@ namespace Zaaml.UI.Controls.ListView
 		}
 
 		bool IManagedButton.InvokeCommandBeforeClick => false;
-		
+
 		void IManagedButton.OnClick()
 		{
 			OnClick();
@@ -111,12 +128,12 @@ namespace Zaaml.UI.Controls.ListView
 
 		void IManagedButton.OnPreClick()
 		{
-			ListViewControl?.OnItemPreClick(this);
+			OnPreClick();
 		}
 
 		void IManagedButton.OnPostClick()
 		{
-			ListViewControl?.OnItemPostClick(this);
+			OnPostClick();
 		}
 
 		void IManagedButton.FocusControl()

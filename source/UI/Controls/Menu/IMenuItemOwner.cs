@@ -29,7 +29,7 @@ namespace Zaaml.UI.Controls.Menu
 	{
 		#region Properties
 
-		IMenuItemCollection Items { get; }
+		IMenuItemCollection ItemCollection { get; }
 
 		Orientation Orientation { get; }
 

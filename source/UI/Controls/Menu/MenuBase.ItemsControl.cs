@@ -16,10 +16,10 @@ namespace Zaaml.UI.Controls.Menu
 		public static readonly DependencyProperty ItemStyleProperty = DPM.Register<Style, MenuBase>
 			("ItemStyle");
 
-		private static readonly DependencyPropertyKey ItemsPropertyKey = DPM.RegisterReadOnly<MenuItemCollection, MenuBase>
-			("ItemsInt");
+		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<MenuItemCollection, MenuBase>
+			("ItemCollectionPrivate");
 
-		public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ItemCollectionProperty = ItemCollectionPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty SourceCollectionProperty = DPM.Register<IEnumerable, MenuBase>
 			("SourceCollection", m => m.OnSourceCollectionChanged);
@@ -37,7 +37,7 @@ namespace Zaaml.UI.Controls.Menu
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
-		public MenuItemCollection Items => this.GetValueOrCreate(ItemsPropertyKey, () => new MenuItemCollection(this));
+		public MenuItemCollection ItemCollection => this.GetValueOrCreate(ItemCollectionPropertyKey, () => new MenuItemCollection(this));
 
 		protected MenuItemsPresenter ItemsPresenter => TemplateContract.ItemsPresenter;
 
@@ -53,7 +53,7 @@ namespace Zaaml.UI.Controls.Menu
 			set => SetValue(ItemStyleProperty, value);
 		}
 
-		protected override IEnumerator LogicalChildren => Items.LogicalChildren;
+		protected override IEnumerator LogicalChildren => ItemCollection.LogicalChildren;
 
 		private MenuBaseTemplateContract TemplateContract => (MenuBaseTemplateContract) TemplateContractInternal;
 
@@ -63,19 +63,19 @@ namespace Zaaml.UI.Controls.Menu
 
 		private void OnItemGeneratorChanged(MenuItemGeneratorBase oldGenerator, MenuItemGeneratorBase newGenerator)
 		{
-			Items.Generator = newGenerator;
+			ItemCollection.Generator = newGenerator;
 		}
 
 		private void OnSourceCollectionChanged(IEnumerable oldSource, IEnumerable newSource)
 		{
-			Items.SourceCollectionInternal = newSource;
+			ItemCollection.SourceCollectionInternal = newSource;
 		}
 
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
 
-			ItemsPresenter.Items = Items;
+			ItemsPresenter.Items = ItemCollection;
 			ItemsPresenter.ActualOrientation = Orientation;
 		}
 
