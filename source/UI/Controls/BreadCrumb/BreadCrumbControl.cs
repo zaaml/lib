@@ -65,6 +65,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
     public BreadCrumbControl()
     {
       this.OverrideStyleKey<BreadCrumbControl>();
+
       ItemCollection = new BreadCrumbItemCollection(this);
     }
 
@@ -108,7 +109,6 @@ namespace Zaaml.UI.Controls.BreadCrumb
       private set => this.SetReadOnlyValue(HasItemsPropertyKey, value);
     }
 
-
     public IconBase Icon
     {
       get => (IconBase) GetValue(IconProperty);
@@ -120,7 +120,6 @@ namespace Zaaml.UI.Controls.BreadCrumb
       get => (ElementVisibility) GetValue(ItemsIconVisibilityProperty);
       set => SetValue(ItemsIconVisibilityProperty, value);
     }
-
 
     public BreadCrumbItem SelectedItem
     {

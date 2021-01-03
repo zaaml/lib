@@ -132,7 +132,6 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
 		private SplitButton SplitButton
 		{
-			get => _splitButton;
 			set
 			{
 				if (ReferenceEquals(_splitButton, value))

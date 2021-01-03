@@ -34,12 +34,15 @@ namespace Zaaml.UI.Controls.BreadCrumb
       base.OnItemAdded(item);
 
       item.Owner = _owner;
+
       _owner.OnItemAdded(item);
     }
 
     protected override void OnItemRemoved(BreadCrumbItem item)
     {
       _owner.OnItemRemoved(item);
+
+      item.Owner = null;
 
       base.OnItemRemoved(item);
     }
