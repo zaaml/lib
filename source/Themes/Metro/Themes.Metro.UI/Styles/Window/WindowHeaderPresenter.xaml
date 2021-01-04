@@ -38,6 +38,10 @@
 
           <!--  Icon  -->
           <zm:BitmapIcon Margin="6,0,0,0"
+                         MaxWidth="24"
+                         MaxHeight="24"
+                         Stretch="Fill"
+                         StretchDirection="Both"
                          zm:DockPanel.Dock="Left"
                          Source="{zm:TemplateBinding Path=Window.Icon}"
                          Visibility="{zm:TemplateBinding Path=Window.ShowIcon,
