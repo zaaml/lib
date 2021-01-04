@@ -74,13 +74,13 @@ namespace Zaaml.UI.Controls.TreeView
 			("Value", d => d.OnValuePropertyChangedPrivate);
 
 		public static readonly DependencyProperty CommandProperty = DPM.Register<ICommand, TreeViewItem>
-			("Command", d => d.ButtonController.OnCommandChanged);
+			("Command", d => d.OnCommandChanged);
 
 		public static readonly DependencyProperty CommandParameterProperty = DPM.Register<object, TreeViewItem>
-			("CommandParameter", d => d.ButtonController.OnCommandParameterChanged);
+			("CommandParameter", d => d.OnCommandParameterChanged);
 
 		public static readonly DependencyProperty CommandTargetProperty = DPM.Register<DependencyObject, TreeViewItem>
-			("CommandTarget", d => d.ButtonController.OnCommandTargetChanged);
+			("CommandTarget", d => d.OnCommandTargetChanged);
 
 		public static readonly DependencyProperty TreeViewControlProperty = TreeViewControlPropertyKey.DependencyProperty;
 
@@ -97,8 +97,6 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public TreeViewItem()
 		{
-			ButtonController = new ButtonController<TreeViewItem>(this);
-
 			this.OverrideStyleKey<TreeViewItem>();
 		}
 
@@ -402,6 +400,20 @@ namespace Zaaml.UI.Controls.TreeView
 			UpdateVisualState(true);
 		}
 
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			base.OnKeyDown(e);
+
+			TreeViewControl?.OnItemKeyDown(this, e);
+		}
+
+		protected override void OnKeyUp(KeyEventArgs e)
+		{
+			base.OnKeyUp(e);
+
+			TreeViewControl?.OnItemKeyUp(this, e);
+		}
+
 		private void OnLevelDistanceChanged()
 		{
 			UpdateActualLevelPadding();
@@ -433,8 +445,6 @@ namespace Zaaml.UI.Controls.TreeView
 			if (e.Handled)
 				return;
 
-			ButtonController.OnMouseLeftButtonDown(e);
-
 			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
@@ -443,16 +453,12 @@ namespace Zaaml.UI.Controls.TreeView
 			if (e.Handled)
 				return;
 
-			ButtonController.OnMouseLeftButtonUp(e);
-
 			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
-
-			ButtonController.OnMouseMove(e);
 
 			TreeViewControl?.OnItemMouseMove(this, e);
 		}

@@ -25,11 +25,17 @@ namespace Zaaml.UI.Controls.ListView
 
 		public override bool CanSelectItem(ListViewItem item)
 		{
+			if (item is ToggleSelectionListViewItem)
+				return false;
+
 			return item.ActualCanSelect;
 		}
 
 		public override bool CanSelectSource(object source)
 		{
+			if (source is ToggleSelectionListViewItem)
+				return false;
+
 			return ListViewControl.CanSelectSourceInternal(source);
 		}
 

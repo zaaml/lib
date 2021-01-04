@@ -39,7 +39,7 @@ namespace Zaaml.UI.Controls.Core
 				get
 				{
 					if (Controller.MultipleSelection)
-						return Controller.IsInverted ? Controller.Count - ListCount : ListCount;
+						return IsInverted ? Controller.Count - ListCount : ListCount;
 
 					return SingleSelection.IsEmpty ? 0 : 1;
 				}
@@ -47,7 +47,7 @@ namespace Zaaml.UI.Controls.Core
 
 			private List<Selection<TItem>> DeferList { get; } = new List<Selection<TItem>>();
 
-			public bool IsInverted => Controller.IsInverted;
+			public bool IsInverted { get; set; }
 
 			private IEnumerable<int> Keys => List.Select(s => s.Index);
 
@@ -120,7 +120,7 @@ namespace Zaaml.UI.Controls.Core
 				if (index == -1)
 					return false;
 
-				return Invert(FindByIndex(index, false, out var _));
+				return FindByIndex(index, out var _);
 			}
 
 			public bool ContainsItem(TItem item)
@@ -128,7 +128,7 @@ namespace Zaaml.UI.Controls.Core
 				if (item == null)
 					return false;
 
-				return Invert(FindByItem(item, false, out _));
+				return FindByItem(item, out _);
 			}
 
 			public bool ContainsSelection(Selection<TItem> selection)
@@ -136,7 +136,7 @@ namespace Zaaml.UI.Controls.Core
 				if (selection.IsEmpty)
 					return false;
 
-				return Invert(FindBySelection(selection, false, out _));
+				return FindBySelection(selection, out _);
 			}
 
 			public bool ContainsSource(object source)
@@ -144,7 +144,7 @@ namespace Zaaml.UI.Controls.Core
 				if (source == null)
 					return false;
 
-				return Invert(FindBySource(source, false, out _));
+				return FindBySource(source, out _);
 			}
 
 			public bool ContainsValue(object value)
@@ -152,7 +152,7 @@ namespace Zaaml.UI.Controls.Core
 				if (value == null)
 					return false;
 
-				return Invert(FindByValue(value, false, out _));
+				return FindByValue(value, out _);
 			}
 
 			public void CopyFrom(SelectionCollectionImpl selectionCollection)
@@ -161,6 +161,7 @@ namespace Zaaml.UI.Controls.Core
 
 				ListAddRange(selectionCollection.List);
 
+				IsInverted = selectionCollection.IsInverted;
 				Version = selectionCollection.Version;
 			}
 
@@ -185,8 +186,10 @@ namespace Zaaml.UI.Controls.Core
 				DeferList.Add(selection);
 			}
 
-			public bool FindByIndex(int index, bool inverted, out Selection<TItem> selection)
+			public bool FindByIndex(int index, out Selection<TItem> selection)
 			{
+				var inverted = IsInverted;
+
 				if (FindIndexOfKeyIndex(index, out var keyIndex))
 				{
 					if (inverted)
@@ -213,8 +216,10 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-			public bool FindByItem(TItem item, bool inverted, out Selection<TItem> selection)
+			public bool FindByItem(TItem item, out Selection<TItem> selection)
 			{
+				var inverted = IsInverted;
+
 				if (FindItemKeyIndex(item, out var keyIndex))
 				{
 					if (inverted)
@@ -245,8 +250,10 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-			public bool FindBySelection(Selection<TItem> searchSelection, bool inverted, out Selection<TItem> selection)
+			public bool FindBySelection(Selection<TItem> searchSelection, out Selection<TItem> selection)
 			{
+				var inverted = IsInverted;
+
 				if (FindSelectionKeyIndex(searchSelection, out var keyIndex))
 				{
 					if (inverted)
@@ -273,8 +280,10 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-			public bool FindBySource(object source, bool inverted, out Selection<TItem> selection)
+			public bool FindBySource(object source, out Selection<TItem> selection)
 			{
+				var inverted = IsInverted;
+
 				if (FindSourceKeyIndex(source, out var keyIndex))
 				{
 					if (inverted)
@@ -301,8 +310,10 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-			public bool FindByValue(object value, bool inverted, out Selection<TItem> selection)
+			public bool FindByValue(object value, out Selection<TItem> selection)
 			{
+				var inverted = IsInverted;
+
 				if (FindValueKeyIndex(value, out var keyIndex))
 				{
 					if (inverted)
@@ -466,11 +477,6 @@ namespace Zaaml.UI.Controls.Core
 				ListAdd(selection);
 			}
 
-			private bool Invert(bool value)
-			{
-				return IsInverted == false ? value : !value;
-			}
-
 			private void ListAdd(Selection<TItem> selection)
 			{
 				List.Add(selection);
@@ -526,30 +532,33 @@ namespace Zaaml.UI.Controls.Core
 
 			public void RemoveIndex(int index)
 			{
-				if (FindByIndex(index, false, out var selection))
+				if (FindByIndex(index, out var selection))
 					Remove(selection);
 			}
 
 			public void RemoveItem(TItem item)
 			{
-				if (FindByItem(item, false, out var selection))
+				if (FindByItem(item, out var selection))
 					Remove(selection);
 			}
 
 			public void RemoveSource(object source)
 			{
-				if (FindBySource(source, false, out var selection))
+				if (FindBySource(source, out var selection))
 					Remove(selection);
 			}
 
 			public void RemoveValue(object value)
 			{
-				if (FindByValue(value, false, out var selection))
+				if (FindByValue(value, out var selection))
 					Remove(selection);
 			}
 
 			public void Select(Selection<TItem> selection)
 			{
+				if (selection.IsEmpty)
+					return;
+
 				if (Controller.MultipleSelection == false)
 					return;
 
@@ -559,18 +568,29 @@ namespace Zaaml.UI.Controls.Core
 					Add(selection);
 			}
 
-			public bool TryRemoveSource(object source, out Selection<TItem> selection)
+			public void UnselectIndex(int index)
 			{
-				if (FindBySource(source, false, out selection))
-				{
-					Remove(selection);
-
-					return true;
-				}
-
-				return false;
+				if (FindByIndex(index, out var selection))
+					Unselect(selection);
 			}
 
+			public void UnselectItem(TItem item)
+			{
+				if (FindByItem(item, out var selection))
+					Unselect(selection);
+			}
+
+			public void UnselectSource(object source)
+			{
+				if (FindBySource(source, out var selection))
+					Unselect(selection);
+			}
+
+			public void UnselectValue(object value)
+			{
+				if (FindByValue(value, out var selection))
+					Unselect(selection);
+			}
 
 			public void Unselect(Selection<TItem> selection)
 			{
@@ -643,8 +663,8 @@ namespace Zaaml.UI.Controls.Core
 				public SelectionCollectionEnumerator(SelectionCollectionImpl collection)
 				{
 					_collection = collection;
-					_version = collection.Controller.Version;
-					_inverted = collection.Controller.IsInverted;
+					_version = collection.Version;
+					_inverted = collection.IsInverted;
 					_index = -1;
 
 					Current = Selection<TItem>.Empty;
@@ -655,7 +675,7 @@ namespace Zaaml.UI.Controls.Core
 					if (_collection == null)
 						throw new InvalidOperationException("Enumerator has been disposed.");
 
-					if (_version != _collection.Controller.Version)
+					if (_version != _collection.Version)
 						throw new InvalidOperationException("Collection has changed.");
 				}
 
@@ -736,7 +756,7 @@ namespace Zaaml.UI.Controls.Core
 					_collection = null;
 				}
 
-				public bool IsEnumeratorValid => _collection != null && _version == _collection.Controller.Version;
+				public bool IsEnumeratorValid => _collection != null && _version == _collection.Version;
 			}
 		}
 	}

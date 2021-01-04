@@ -64,7 +64,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			this.OverrideStyleKey<DropDownTreeViewControl>();
 
-			_itemFilterBinding = new Binding {Path = new PropertyPath(TextProperty), Source = this, Mode = BindingMode.TwoWay};
+			_itemFilterBinding = new Binding {Path = new PropertyPath(EditorTextProperty), Source = this, Mode = BindingMode.TwoWay};
 		}
 
 		public DropDownTreeViewSelectionPresenter ActualSelectionPresenter
@@ -73,7 +73,7 @@ namespace Zaaml.UI.Controls.DropDown
 			private set => this.SetReadOnlyValue(ActualSelectionPresenterPropertyKey, value);
 		}
 
-		protected override bool AutoPreserveText => TreeViewControl?.ItemsFilter == null;
+		protected override bool AutoPreserveEditorText => TreeViewControl?.ActualItemsFilter == null;
 
 		private DefaultTreeViewItemTextFilter DefaultFilter { get; set; }
 

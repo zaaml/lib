@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
 {
-	public abstract partial class SelectionCollectionBase<TItem> : IEnumerable<Selection<TItem>>, INotifyCollectionChanged, INotifyPropertyChanged where TItem : FrameworkElement
+	public abstract class SelectionCollectionBase<TItem> : IEnumerable<Selection<TItem>>, INotifyCollectionChanged, INotifyPropertyChanged where TItem : FrameworkElement
 	{
 		internal SelectionCollectionBase(SelectorController<TItem> selectorController)
 		{
@@ -19,11 +19,13 @@ namespace Zaaml.UI.Controls.Core
 			selectorController.SelectionCollectionPropertyChanged += SelectorControllerOnSelectionCollectionPropertyChanged;
 		}
 
+		public virtual int Count => SelectorController.SelectedCount;
+
 		internal SelectorController<TItem> SelectorController { get; }
 
-		public SelectionCollectionEnumerator GetEnumerator()
+		public virtual SelectionCollectionEnumerator GetEnumerator()
 		{
-			return new SelectionCollectionEnumerator(SelectorController);
+			return new SelectionCollectionEnumerator(this);
 		}
 
 		private void SelectorControllerOnSelectionCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -35,8 +37,6 @@ namespace Zaaml.UI.Controls.Core
 		{
 			PropertyChanged?.Invoke(this, e);
 		}
-
-		public int Count => SelectorController.SelectedCount;
 
 		IEnumerator<Selection<TItem>> IEnumerable<Selection<TItem>>.GetEnumerator()
 		{
@@ -55,29 +55,46 @@ namespace Zaaml.UI.Controls.Core
 		public struct SelectionCollectionEnumerator : IEnumerator<Selection<TItem>>
 		{
 			private SelectorController<TItem>.SelectionCollectionImpl.SelectionCollectionEnumerator _enumerator;
+			private readonly IEnumerator<Selection<TItem>> _alternativeEnumerator;
 
-			internal SelectionCollectionEnumerator(SelectorController<TItem> selectorController)
+			internal SelectionCollectionEnumerator(SelectionCollectionBase<TItem> selectionCollection)
 			{
-				_enumerator = selectorController.GetSelectionCollectionEnumerator();
+				_alternativeEnumerator = null;
+				_enumerator = selectionCollection.SelectorController.GetSelectionCollectionEnumerator();
+			}
+
+			internal SelectionCollectionEnumerator(IEnumerator<Selection<TItem>> enumerator)
+			{
+				_alternativeEnumerator = enumerator;
+				_enumerator = default;
 			}
 
 			public bool MoveNext()
 			{
+				if (_alternativeEnumerator != null)
+					return _alternativeEnumerator.MoveNext();
+
 				return _enumerator.MoveNext();
 			}
 
 			public void Reset()
 			{
-				_enumerator.Reset();
+				if (_alternativeEnumerator != null)
+					_alternativeEnumerator.Reset();
+				else
+					_enumerator.Reset();
 			}
 
-			object IEnumerator.Current => _enumerator.Current;
+			object IEnumerator.Current => _alternativeEnumerator?.Current ?? _enumerator.Current;
 
-			public Selection<TItem> Current => _enumerator.Current;
+			public Selection<TItem> Current => _alternativeEnumerator?.Current ?? _enumerator.Current;
 
 			public void Dispose()
 			{
-				_enumerator.Dispose();
+				if (_alternativeEnumerator != null)
+					_alternativeEnumerator.Dispose();
+				else
+					_enumerator.Dispose();
 			}
 		}
 	}

@@ -99,6 +99,8 @@ namespace Zaaml.UI.Controls.ListView
 
 		public ListViewControl()
 		{
+			ItemCommandController = new ItemCommandController<ListViewControl, ListViewItem>(this);
+
 			this.OverrideStyleKey<ListViewControl>();
 
 			ToggleSelectionCommand = new RelayCommand(OnToggleSelectionCommandExecuted, CanExecuteToggleSelectionCommand);
@@ -114,6 +116,8 @@ namespace Zaaml.UI.Controls.ListView
 		protected virtual bool ActualFocusItemOnSelect => FocusItemOnSelect;
 
 		private ListViewItemGeneratorBase ActualGenerator => ItemGenerator ?? DefaultGenerator;
+
+		internal IListViewItemFilter ActualItemsFilter => ItemsFilter ?? ItemsDefaultFilter;
 
 		private protected override bool ActualSelectItemOnFocus => SelectionMode != ListViewSelectionMode.Multiple && base.ActualSelectItemOnFocus;
 
@@ -142,6 +146,8 @@ namespace Zaaml.UI.Controls.ListView
 			get => (ICommand) GetValue(ItemCommandProperty);
 			set => SetValue(ItemCommandProperty, value);
 		}
+
+		internal IItemCommandController<ListViewItem> ItemCommandController { get; }
 
 		public DependencyObject ItemCommandTarget
 		{
@@ -252,7 +258,7 @@ namespace Zaaml.UI.Controls.ListView
 				Source = new MixedItemSourceCollection<ListViewItem>(ItemCollection, SourceCollection, int.MaxValue),
 				DataFilter =
 				{
-					Filter = ItemsFilter ?? ItemsDefaultFilter
+					Filter = ActualItemsFilter
 				}
 			};
 		}
@@ -359,8 +365,26 @@ namespace Zaaml.UI.Controls.ListView
 			UpdateData();
 		}
 
+		internal void OnItemKeyDown(ListViewItem listViewItem, KeyEventArgs keyEventArgs)
+		{
+			ItemCommandController.OnItemKeyDown(listViewItem, keyEventArgs);
+		}
+
+		internal void OnItemKeyUp(ListViewItem listViewItem, KeyEventArgs keyEventArgs)
+		{
+			ItemCommandController.OnItemKeyUp(listViewItem, keyEventArgs);
+		}
+
 		internal void OnItemMouseButton(ListViewItem listViewItem, MouseButtonEventArgs e)
 		{
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				if (e.ButtonState == MouseButtonState.Pressed)
+					ItemCommandController.OnItemMouseLeftButtonDown(listViewItem, e);
+				else
+					ItemCommandController.OnItemMouseLeftButtonUp(listViewItem, e);
+			}
+
 			if (e.ButtonState == MouseButtonState.Released)
 				ItemMouseButtonUp?.Invoke(this, new ListViewItemMouseButtonEventArgs(listViewItem, e));
 			else
@@ -369,16 +393,20 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal void OnItemMouseEnter(ListViewItem listViewItem, MouseEventArgs e)
 		{
+			ItemCommandController.OnItemMouseEnter(listViewItem, e);
+
 			if (ActualFocusItemOnMouseHover && IsFocusOnMouseEventLocked == false)
 				FocusItem(listViewItem);
 		}
 
 		internal void OnItemMouseLeave(ListViewItem listViewItem, MouseEventArgs e)
 		{
+			ItemCommandController.OnItemMouseLeave(listViewItem, e);
 		}
 
 		internal void OnItemMouseMove(ListViewItem listViewItem, MouseEventArgs mouseEventArgs)
 		{
+			ItemCommandController.OnItemMouseMove(listViewItem, mouseEventArgs);
 		}
 
 		internal void OnItemPostClick(ListViewItem listViewItem)
@@ -437,6 +465,20 @@ namespace Zaaml.UI.Controls.ListView
 			EnsureVirtualItemCollection();
 		}
 
+		protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
+		{
+			base.OnLostKeyboardFocus(e);
+
+			ItemCommandController.OnLostKeyboardFocus(e);
+		}
+
+		protected override void OnLostMouseCapture(MouseEventArgs e)
+		{
+			base.OnLostMouseCapture(e);
+
+			ItemCommandController.OnLostMouseCapture(e);
+		}
+
 		internal void OnNavigationKeyHandled()
 		{
 			IsFocusOnMouseEventLocked = true;
@@ -473,6 +515,11 @@ namespace Zaaml.UI.Controls.ListView
 			base.OnTemplateContractDetaching();
 		}
 
+		internal void RaiseClick(ListViewItem listViewItem)
+		{
+			ItemCommandController.RaiseOnClick(listViewItem);
+		}
+
 		private void UpdateData()
 		{
 			ListViewData = null;
@@ -487,7 +534,7 @@ namespace Zaaml.UI.Controls.ListView
 			if (ListViewData == null)
 				return;
 
-			var itemsFilter = ItemsFilter ?? ItemsDefaultFilter;
+			var itemsFilter = ActualItemsFilter;
 
 			if (ReferenceEquals(itemsFilter, ListViewData.DataFilter.Filter))
 				return;

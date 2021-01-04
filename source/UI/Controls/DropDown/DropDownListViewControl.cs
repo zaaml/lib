@@ -58,7 +58,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			this.OverrideStyleKey<DropDownListViewControl>();
 
-			_itemFilterBinding = new Binding {Path = new PropertyPath(TextProperty), Source = this, Mode = BindingMode.TwoWay};
+			_itemFilterBinding = new Binding {Path = new PropertyPath(EditorTextProperty), Source = this, Mode = BindingMode.TwoWay};
 		}
 
 		public DropDownListViewSelectionPresenter ActualSelectionPresenter
@@ -67,7 +67,7 @@ namespace Zaaml.UI.Controls.DropDown
 			private set => this.SetReadOnlyValue(ActualSelectionPresenterPropertyKey, value);
 		}
 
-		protected override bool AutoPreserveText => ListViewControl?.ItemsFilter == null;
+		protected override bool AutoPreserveEditorText => ListViewControl?.ActualItemsFilter == null;
 
 		private DefaultListViewItemTextFilter DefaultFilter { get; set; }
 

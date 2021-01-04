@@ -106,8 +106,8 @@
           <!--  Filter  -->
           <zm:FilterTextBox x:Name="FilterTextBox"
                             BorderThickness="0"
-                            Delay="{TemplateBinding PostTextDelay}"
-                            FilterText="{zm:TemplateBinding Path=Text,
+                            Delay="{TemplateBinding PostEditorTextDelay}"
+                            FilterText="{zm:TemplateBinding Path=EditorText,
                                                             Mode=TwoWay,
                                                             UpdateSourceTrigger=PropertyChanged}"
                             IsTabStop="False" />

@@ -27,17 +27,17 @@ namespace Zaaml.UI.Controls.DropDown
 
 		public static readonly DependencyProperty IsEditingProperty = IsEditingPropertyKey.DependencyProperty;
 
-		public static readonly DependencyProperty TextProperty = DPM.Register<string, DropDownEditableSelectorBase<TItemsControl, TItem>>
-			("Text", string.Empty, d => d.OnTextPropertyChangedPrivate, d => CoerceText);
+		public static readonly DependencyProperty EditorTextProperty = DPM.Register<string, DropDownEditableSelectorBase<TItemsControl, TItem>>
+			("EditorText", string.Empty, d => d.OnEditorTextPropertyChangedPrivate, d => CoerceEditorText);
 
-		public static readonly DependencyProperty PostTextDelayProperty = DPM.Register<TimeSpan, DropDownSelectorBase<TItemsControl, TItem>>
-			("PostTextDelay", TimeSpan.Zero);
+		public static readonly DependencyProperty PostEditorTextDelayProperty = DPM.Register<TimeSpan, DropDownSelectorBase<TItemsControl, TItem>>
+			("PostEditorTextDelay", TimeSpan.Zero);
 
 		public static readonly DependencyProperty OpenDropDownOnEditingProperty = DPM.Register<bool, DropDownEditableSelectorBase<TItemsControl, TItem>>
 			("OpenDropDownOnEditing", true);
 
-		public static readonly DependencyProperty PreserveTextProperty = DPM.Register<PreserveTextMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
-			("PreserveText", PreserveTextMode.Auto);
+		public static readonly DependencyProperty PreserveEditorTextProperty = DPM.Register<PreserveEditorTextMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
+			("PreserveEditorText", PreserveEditorTextMode.Auto);
 
 		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<DropDownEditableSelectorDisplayMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
 			("DisplayMode", default, d => d.OnDisplayModePropertyChangedPrivate);
@@ -48,7 +48,6 @@ namespace Zaaml.UI.Controls.DropDown
 		public static readonly DependencyProperty ActualDisplayModeProperty = ActualDisplayModePropertyKey.DependencyProperty;
 
 		private readonly DelayAction _delayOpenDropDown;
-
 		private byte _packedValue;
 
 		protected DropDownEditableSelectorBase()
@@ -66,6 +65,12 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			get => (DropDownEditableSelectorDisplayMode) GetValue(DisplayModeProperty);
 			set => SetValue(DisplayModeProperty, value);
+		}
+
+		public string EditorText
+		{
+			get => (string) GetValue(EditorTextProperty);
+			set => SetValue(EditorTextProperty, value);
 		}
 
 		public bool IsEditing
@@ -86,22 +91,16 @@ namespace Zaaml.UI.Controls.DropDown
 			set => SetValue(OpenDropDownOnEditingProperty, value);
 		}
 
-		public TimeSpan PostTextDelay
+		public TimeSpan PostEditorTextDelay
 		{
-			get => (TimeSpan) GetValue(PostTextDelayProperty);
-			set => SetValue(PostTextDelayProperty, value);
+			get => (TimeSpan) GetValue(PostEditorTextDelayProperty);
+			set => SetValue(PostEditorTextDelayProperty, value);
 		}
 
-		public PreserveTextMode PreserveText
+		public PreserveEditorTextMode PreserveEditorText
 		{
-			get => (PreserveTextMode) GetValue(PreserveTextProperty);
-			set => SetValue(PreserveTextProperty, value);
-		}
-
-		public string Text
-		{
-			get => (string) GetValue(TextProperty);
-			set => SetValue(TextProperty, value);
+			get => (PreserveEditorTextMode) GetValue(PreserveEditorTextProperty);
+			set => SetValue(PreserveEditorTextProperty, value);
 		}
 
 		private void DelayOpenDropDown()
@@ -181,12 +180,5 @@ namespace Zaaml.UI.Controls.DropDown
 				SuspendOpenDropDown = allocator.AllocateBoolItem();
 			}
 		}
-	}
-
-	public enum DropDownEditableSelectorDisplayMode
-	{
-		Auto,
-		TextEditor,
-		DropDownButton
 	}
 }

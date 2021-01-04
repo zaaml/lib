@@ -21,17 +21,7 @@ namespace Zaaml.UI.Controls.Primitives
 		}
 
 		// ReSharper disable once MemberCanBeMadeStatic.Local
-		private bool AllowEnter
-		{
-			get
-			{
-#if SILVERLIGHT
-				return true;
-#else
-				return (bool) Control.GetValue(KeyboardNavigation.AcceptsReturnProperty);
-#endif
-			}
-		}
+		private bool AllowEnter => (bool) Control.GetValue(KeyboardNavigation.AcceptsReturnProperty);
 
 		private static bool AllowSpace => (Keyboard.Modifiers & (ModifierKeys.Control | ModifierKeys.Alt)) != ModifierKeys.Alt;
 
@@ -39,17 +29,7 @@ namespace Zaaml.UI.Controls.Primitives
 
 		private ClickMode ClickMode => Control.ClickMode;
 
-		private bool IsLeftButtonPressed
-		{
-#if SILVERLIGHT
-			get { return PackedValue.IsLeftButtonPressed.GetValue(_packedValue); }
-			set { PackedValue.IsLeftButtonPressed.SetValue(ref _packedValue, value); }
-#else
-			get { return Mouse.LeftButton == MouseButtonState.Pressed; }
-			// ReSharper disable once ValueParameterNotUsed
-			set { }
-#endif
-		}
+		private bool IsLeftButtonPressed => Mouse.LeftButton == MouseButtonState.Pressed;
 
 		private bool IsMouseCaptured
 		{
@@ -108,7 +88,7 @@ namespace Zaaml.UI.Controls.Primitives
 			try
 			{
 				Control.OnPreClick();
-				
+
 				if (Control.InvokeCommandBeforeClick)
 				{
 					InvokeCommand();
@@ -138,27 +118,21 @@ namespace Zaaml.UI.Controls.Primitives
 			if (ClickMode == ClickMode.Hover || e.Handled)
 				return;
 
-#if SILVERLIGHT
-			if ((e.Key == Key.Space && AllowSpace) || (e.Key == Key.Enter && AllowEnter))
-#else
 			if (e.Key == Key.Space && AllowSpace)
-#endif
 			{
 				if (!IsMouseCaptured && ReferenceEquals(e.OriginalSource, Control))
 				{
 					IsSpaceOrEnterKeyDown = true;
 					IsPressed = true;
 
-#if !SILVERLIGHT
 					CaptureMouse();
-#endif
+
 					if (ClickMode == ClickMode.Press)
 						OnClick();
 
 					e.Handled = true;
 				}
 			}
-#if !SILVERLIGHT
 			else if (e.Key == Key.Enter && AllowEnter)
 			{
 				if (ReferenceEquals(e.OriginalSource, Control))
@@ -172,16 +146,13 @@ namespace Zaaml.UI.Controls.Primitives
 					e.Handled = true;
 				}
 			}
-#endif
 			else
 			{
 				if (IsSpaceOrEnterKeyDown)
 				{
 					IsPressed = false;
 					IsSpaceOrEnterKeyDown = false;
-#if !SILVERLIGHT
 					ReleaseMouseCapture();
-#endif
 				}
 			}
 		}
@@ -191,11 +162,7 @@ namespace Zaaml.UI.Controls.Primitives
 			if (ClickMode == ClickMode.Hover || e.Handled || IsSpaceOrEnterKeyDown == false)
 				return;
 
-#if SILVERLIGHT
-			if ((e.Key == Key.Space && AllowSpace) || (e.Key == Key.Enter && AllowEnter))
-#else
 			if (e.Key == Key.Space && AllowSpace)
-#endif
 			{
 				IsSpaceOrEnterKeyDown = false;
 
@@ -203,23 +170,17 @@ namespace Zaaml.UI.Controls.Primitives
 				{
 					var shouldClick = IsPressed && ClickMode == ClickMode.Release;
 
-#if !SILVERLIGHT
 					ReleaseMouseCapture();
-#endif
+
 					if (shouldClick)
 						OnClick();
-
-#if SILVERLIGHT
-						IsPressed = false;
-#endif
 				}
-#if !SILVERLIGHT
 				else
 				{
 					if (IsMouseCaptured)
 						UpdateIsPressed();
 				}
-#endif
+
 				e.Handled = true;
 			}
 		}
@@ -251,9 +212,7 @@ namespace Zaaml.UI.Controls.Primitives
 		{
 			if (HandleIsMouseOverChanged())
 			{
-#if !SILVERLIGHT
 				e.Handled = true;
-#endif
 			}
 		}
 
@@ -261,16 +220,12 @@ namespace Zaaml.UI.Controls.Primitives
 		{
 			if (HandleIsMouseOverChanged())
 			{
-#if !SILVERLIGHT
 				e.Handled = true;
-#endif
 			}
 		}
 
 		private void OnMouseLeftButtonDown(MouseButtonEventArgs e)
 		{
-			IsLeftButtonPressed = true;
-
 			MouseButtonDownEventCanClick = CanClick;
 
 			if (ClickMode == ClickMode.Hover)
@@ -324,8 +279,6 @@ namespace Zaaml.UI.Controls.Primitives
 
 		private void OnMouseLeftButtonUp(MouseButtonEventArgs e)
 		{
-			IsLeftButtonPressed = false;
-
 			if (ClickMode == ClickMode.Hover)
 				return;
 
@@ -334,15 +287,10 @@ namespace Zaaml.UI.Controls.Primitives
 				if (IsMouseCaptured == false)
 					return;
 
-#if SILVERLIGHT
-				if (MouseInt.IsMouseInsideEventHelper(Control, PresentationTreeUtils.GetUIElementEventSource(e.OriginalSource)) == false)
-					return;
-#else
 				var selfCapture = ReferenceEquals(Mouse.Captured, Control);
 
 				if (selfCapture == false && CheckMouseEventSource(e) == false)
 					return;
-#endif
 
 				e.Handled = true;
 
@@ -353,10 +301,6 @@ namespace Zaaml.UI.Controls.Primitives
 			}
 			finally
 			{
-				if (e.IsWithin(Control) == false)
-				{
-				}
-
 				if (IsSpaceOrEnterKeyDown == false)
 				{
 					ReleaseMouseCapture();
@@ -367,13 +311,12 @@ namespace Zaaml.UI.Controls.Primitives
 
 		private void OnMouseMove(MouseEventArgs e)
 		{
-			if (ClickMode == ClickMode.Hover || !IsMouseCaptured || !IsLeftButtonPressed || IsSpaceOrEnterKeyDown) return;
+			if (ClickMode == ClickMode.Hover || !IsMouseCaptured || !IsLeftButtonPressed || IsSpaceOrEnterKeyDown) 
+				return;
 
 			UpdateIsPressed();
 
-#if !SILVERLIGHT
 			e.Handled = true;
-#endif
 		}
 
 		private void RaiseOnClick()
@@ -386,12 +329,8 @@ namespace Zaaml.UI.Controls.Primitives
 			if (IsMouseCaptured == false)
 				return;
 
-#if SILVERLIGHT
-      Control.ReleaseMouseCapture();
-#else
 			if (ReferenceEquals(Mouse.Captured, Control))
 				Control.ReleaseMouseCapture();
-#endif
 		}
 
 		private void UpdateIsPressed()

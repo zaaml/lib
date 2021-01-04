@@ -33,13 +33,13 @@ namespace Zaaml.UI.Controls.ListView
 			("Value", default, d => d.OnValuePropertyChangedPrivate);
 
 		public static readonly DependencyProperty CommandProperty = DPM.Register<ICommand, ListViewItem>
-			("Command", d => d.ButtonController.OnCommandChanged);
+			("Command", d => d.OnCommandChanged);
 
 		public static readonly DependencyProperty CommandParameterProperty = DPM.Register<object, ListViewItem>
-			("CommandParameter", d => d.ButtonController.OnCommandParameterChanged);
+			("CommandParameter", d => d.OnCommandParameterChanged);
 
 		public static readonly DependencyProperty CommandTargetProperty = DPM.Register<DependencyObject, ListViewItem>
-			("CommandTarget", d => d.ButtonController.OnCommandTargetChanged);
+			("CommandTarget", d => d.OnCommandTargetChanged);
 
 		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
 
@@ -52,8 +52,6 @@ namespace Zaaml.UI.Controls.ListView
 
 		public ListViewItem()
 		{
-			ButtonController = new ButtonController<ListViewItem>(this);
-
 			this.OverrideStyleKey<ListViewItem>();
 		}
 
@@ -92,6 +90,8 @@ namespace Zaaml.UI.Controls.ListView
 		private bool IsFocusedVisualState { get; set; }
 
 		private bool IsMouseOverVisualState { get; set; }
+
+		private protected virtual bool IsSelectedState => IsSelected;
 
 		protected virtual bool IsValid => this.HasValidationError() == false;
 
@@ -164,6 +164,20 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewControl?.OnItemGotFocusInternal(this);
 		}
 
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			base.OnKeyDown(e);
+
+			ListViewControl?.OnItemKeyDown(this, e);
+		}
+
+		protected override void OnKeyUp(KeyEventArgs e)
+		{
+			base.OnKeyUp(e);
+
+			ListViewControl?.OnItemKeyUp(this, e);
+		}
+
 		protected virtual void OnListViewControlChanged(ListViewControl oldListView, ListViewControl newListView)
 		{
 		}
@@ -206,15 +220,11 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			base.OnMouseEnter(e);
 
-			ButtonController.OnMouseEnter(e);
-
 			ListViewControl?.OnItemMouseEnter(this, e);
 		}
 
 		protected override void OnMouseLeave(MouseEventArgs e)
 		{
-			ButtonController.OnMouseLeave(e);
-
 			ListViewControl?.OnItemMouseLeave(this, e);
 
 			base.OnMouseLeave(e);
@@ -225,8 +235,6 @@ namespace Zaaml.UI.Controls.ListView
 			if (e.Handled)
 				return;
 
-			ButtonController.OnMouseLeftButtonDown(e);
-
 			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
@@ -235,16 +243,12 @@ namespace Zaaml.UI.Controls.ListView
 			if (e.Handled)
 				return;
 
-			ButtonController.OnMouseLeftButtonUp(e);
-
 			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
-
-			ButtonController.OnMouseMove(e);
 
 			ListViewControl?.OnItemMouseMove(this, e);
 		}
@@ -327,6 +331,7 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			var isMouseOver = actualIsMouseOver ?? IsMouseOver;
 			var isFocused = actualIsFocused ?? IsActuallyFocused;
+			var isSelected = IsSelectedState;
 
 			IsFocusedVisualState = isFocused;
 			IsMouseOverVisualState = isMouseOver;
@@ -340,7 +345,7 @@ namespace Zaaml.UI.Controls.ListView
 				GotoVisualState(CommonVisualStates.Normal, useTransitions);
 
 			// Selection states
-			if (IsSelected)
+			if (isSelected)
 			{
 				if (isFocused)
 					GotoVisualState(CommonVisualStates.Selected, useTransitions);

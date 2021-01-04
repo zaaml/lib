@@ -20,9 +20,6 @@ namespace Zaaml.UI.Controls.Core
 		private Selection<TItem> _selection = Selection<TItem>.Empty;
 		private Selection<TItem> _selectionResume = Selection<TItem>.Empty;
 
-		public event EventHandler<NotifyCollectionChangedEventArgs> SelectionCollectionChanged;
-		public event PropertyChangedEventHandler SelectionCollectionPropertyChanged;
-
 		protected SelectorController(ISelector<TItem> selector, ISelectorAdvisor<TItem> advisor)
 		{
 			SelectionCollection = new SelectionCollectionImpl(this, false);
@@ -88,8 +85,6 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool IsInitializing { get; set; }
 
-		private bool IsInverted { get; set; }
-
 		public bool IsSelectionSuspended => SuspendSelectionCount > 0;
 
 		private bool IsVirtualizing => Advisor.IsVirtualizing;
@@ -122,7 +117,11 @@ namespace Zaaml.UI.Controls.Core
 
 				_multipleSelection = value;
 
-				ResetMultipleSelection();
+				CurrentSelectionCollection.IsInverted = false;
+				CurrentSelectionCollection.Clear();
+
+				if (_multipleSelection) 
+					CurrentSelectionCollection.Select(CurrentSelection);
 			}
 		}
 
@@ -273,14 +272,14 @@ namespace Zaaml.UI.Controls.Core
 
 			if (CanSelect(selectionResume) == false)
 			{
-				CurrentSelectionCollection.Unselect(selectionResume);
+				SelectionCollectionResume.Unselect(selectionResume);
 
 				if (MultipleSelection)
 				{
-					if (CurrentSelectionCollection.Count > 0)
-						selectionResume = CurrentSelectionCollection.First();
+					if (SelectionCollectionResume.Count > 0)
+						selectionResume = SelectionCollectionResume.First();
 					else if (PreselectNull(out selectionResume))
-						CurrentSelectionCollection.Select(selectionResume);
+						SelectionCollectionResume.Select(selectionResume);
 				}
 				else
 					PreselectNull(out selectionResume);
@@ -414,9 +413,7 @@ namespace Zaaml.UI.Controls.Core
 			foreach (var selection in CurrentSelectionCollection)
 				SetItemSelected(selection.Item, false);
 
-			IsInverted = !IsInverted;
-
-			var currentSelection = CurrentSelectionCollection.Count > 0 ? CurrentSelectionCollection.First() : Selection<TItem>.Empty;
+			CurrentSelectionCollection.IsInverted = !CurrentSelectionCollection.IsInverted;
 
 			foreach (var selection in CurrentSelectionCollection)
 			{
@@ -427,7 +424,8 @@ namespace Zaaml.UI.Controls.Core
 			}
 
 			CurrentSelectionCollection.CommitDeferUnselect();
-			ApplySelectionSafe(currentSelection);
+
+			SelectFirst();
 		}
 
 		private bool IsLocked(TItem item)
@@ -504,19 +502,6 @@ namespace Zaaml.UI.Controls.Core
 			SelectionCollectionResume.CopyFrom(SelectionCollection);
 		}
 
-		private void ResetMultipleSelection()
-		{
-			CurrentSelectionCollection.Clear();
-
-			if (MultipleSelection)
-			{
-				if (CurrentSelection.IsEmpty == false)
-					CurrentSelectionCollection.Add(CurrentSelection);
-			}
-			else
-				IsInverted = false;
-		}
-
 		public void RestoreSelection()
 		{
 			if (IsSelectionSuspended == false)
@@ -578,7 +563,7 @@ namespace Zaaml.UI.Controls.Core
 
 				CurrentSelectionCollection.Clear();
 
-				IsInverted = true;
+				CurrentSelectionCollection.IsInverted = true;
 
 				foreach (var selection in CurrentSelectionCollection)
 				{
@@ -603,7 +588,7 @@ namespace Zaaml.UI.Controls.Core
 					foreach (var selection in CurrentSelectionCollection)
 						SetItemSelected(selection.Item, false);
 
-					IsInverted = false;
+					CurrentSelectionCollection.IsInverted = false;
 				}
 
 				ApplySelectionSafe(CurrentSelectionCollection.Count > 0 ? CurrentSelectionCollection.First() : Selection<TItem>.Empty);

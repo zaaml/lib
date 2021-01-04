@@ -27,7 +27,7 @@ namespace Zaaml.UI.Controls.Core
 			CurrentSelectionCollection.Clear();
 			ApplySelectionSafe(Selection<TItem>.Empty);
 
-			IsInverted = false;
+			CurrentSelectionCollection.IsInverted = false;
 		}
 
 		public bool UnselectIndex(int index)
@@ -41,8 +41,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool UnselectIndexCore(int index, bool force)
 		{
-			if (CurrentSelectionCollection.FindByIndex(index, IsInverted, out var selection))
-				CurrentSelectionCollection.Unselect(selection);
+			CurrentSelectionCollection.UnselectIndex(index);
 
 			if (SelectedIndex == index)
 			{
@@ -79,8 +78,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool UnselectItemCore(TItem item, bool force)
 		{
-			if (CurrentSelectionCollection.FindByItem(item, IsInverted, out var selection))
-				CurrentSelectionCollection.Unselect(selection);
+			CurrentSelectionCollection.UnselectItem(item);
 
 			if (ReferenceEquals(CurrentSelectedItem, item))
 			{
@@ -119,27 +117,14 @@ namespace Zaaml.UI.Controls.Core
 		{
 			using (SelectionHandlingScope)
 			{
-				if (IsInverted)
+				foreach (var source in sourceCollection)
 				{
-					foreach (var source in sourceCollection)
+					if (CurrentSelectionCollection.FindBySource(source, out var selection))
 					{
-						if (CurrentSelectionCollection.FindBySource(source, false, out var selection) == false)
-						{
-							if (Advisor.TryCreateSelection(source, false, out var advisorSelection) && ReferenceEquals(source, advisorSelection.Source))
-							{
-								CurrentSelectionCollection.Add(advisorSelection);
+						CurrentSelectionCollection.Unselect(selection);
 
-								SetItemSelected(advisorSelection.Item, false);
-							}
-						}
-					}
-				}
-				else
-				{
-					foreach (var source in sourceCollection)
-					{
-						if (CurrentSelectionCollection.TryRemoveSource(source, out var selection))
-							SetItemSelected(selection.Item, false);
+						if (Advisor.TryGetItem(source, false, out var item)) 
+							SetItemSelected(item, false);
 					}
 				}
 
@@ -151,8 +136,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool UnselectSourceCore(object source, bool force)
 		{
-			if (CurrentSelectionCollection.FindBySource(source, IsInverted, out var selection))
-				CurrentSelectionCollection.Unselect(selection);
+			CurrentSelectionCollection.UnselectSource(source);
 
 			if (ReferenceEquals(SelectedSource, source))
 			{
@@ -189,8 +173,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool UnselectValueCore(object value, bool force)
 		{
-			if (CurrentSelectionCollection.FindByValue(value, IsInverted, out var selection))
-				CurrentSelectionCollection.Unselect(selection);
+			CurrentSelectionCollection.UnselectValue(value);
 
 			if (ReferenceEquals(SelectedValue, value))
 			{

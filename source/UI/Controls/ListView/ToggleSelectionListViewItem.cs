@@ -11,7 +11,7 @@ namespace Zaaml.UI.Controls.ListView
 	public class ToggleSelectionListViewItem : ListViewItem
 	{
 		internal static readonly DependencyProperty IsCheckedInternalProperty = DPM.Register<bool?, ToggleSelectionListViewItem>
-			("IsCheckedInternal");
+			("IsCheckedInternal", l => l.OnIsCheckedInternalPropertyChangedPrivate);
 
 		public ToggleSelectionListViewItem()
 		{
@@ -24,9 +24,16 @@ namespace Zaaml.UI.Controls.ListView
 			set => SetValue(IsCheckedInternalProperty, value);
 		}
 
+		private protected override bool IsSelectedState => IsCheckedInternal == true;
+
 		protected override void OnClick()
 		{
 			ListViewControl?.ToggleSelectionCommand.Execute(null);
+		}
+
+		private void OnIsCheckedInternalPropertyChangedPrivate()
+		{
+			UpdateVisualState(true);
 		}
 
 		internal override void OnListViewControlChangedInternal(ListViewControl oldListView, ListViewControl newListView)
@@ -49,6 +56,9 @@ namespace Zaaml.UI.Controls.ListView
 
 		private void UpdateIsChecked()
 		{
+			if (ListViewControl == null)
+				return;
+
 			var listViewSelectionCollection = ListViewControl.SelectionCollection;
 			var count = listViewSelectionCollection.Count;
 

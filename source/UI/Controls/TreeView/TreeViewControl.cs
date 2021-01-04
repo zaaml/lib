@@ -85,9 +85,7 @@ namespace Zaaml.UI.Controls.TreeView
 			("ItemGlyphKind");
 
 		private TreeViewItem _currentItem;
-
 		private DefaultItemTemplateTreeViewItemGenerator _defaultGeneratorImplementation;
-
 		private ITreeViewItemFilter _itemsDefaultFilter;
 		private TreeViewData _treeViewData;
 
@@ -114,6 +112,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public TreeViewControl()
 		{
+			ItemCommandController = new ItemCommandController<TreeViewControl, TreeViewItem>(this);
+
 			this.OverrideStyleKey<TreeViewControl>();
 
 			VirtualItemCollection = new VirtualTreeViewItemCollection(this);
@@ -128,6 +128,8 @@ namespace Zaaml.UI.Controls.TreeView
 		protected virtual bool ActualFocusItemOnSelect => FocusItemOnSelect;
 
 		internal TreeViewItemGeneratorBase ActualGenerator => ItemGenerator ?? DefaultGenerator;
+
+		internal ITreeViewItemFilter ActualItemsFilter => ItemsFilter ?? ItemsDefaultFilter;
 
 		private protected override bool ActualSelectItemOnFocus => SelectionMode != TreeViewSelectionMode.Multiple && base.ActualSelectItemOnFocus;
 
@@ -187,6 +189,8 @@ namespace Zaaml.UI.Controls.TreeView
 			get => (ICommand) GetValue(ItemCommandProperty);
 			set => SetValue(ItemCommandProperty, value);
 		}
+
+		internal IItemCommandController<TreeViewItem> ItemCommandController { get; }
 
 		public DependencyObject ItemCommandTarget
 		{
@@ -323,7 +327,7 @@ namespace Zaaml.UI.Controls.TreeView
 				Source = SourceCollection ?? ItemCollection,
 				DataFilter =
 				{
-					Filter = ItemsFilter ?? ItemsDefaultFilter
+					Filter = ActualItemsFilter
 				}
 			};
 		}
@@ -465,8 +469,26 @@ namespace Zaaml.UI.Controls.TreeView
 			ItemIsExpandedChanged?.Invoke(this, new TreeViewItemEventArgs(treeViewItem));
 		}
 
+		internal void OnItemKeyDown(TreeViewItem treeViewItem, KeyEventArgs keyEventArgs)
+		{
+			ItemCommandController.OnItemKeyDown(treeViewItem, keyEventArgs);
+		}
+
+		internal void OnItemKeyUp(TreeViewItem treeViewItem, KeyEventArgs keyEventArgs)
+		{
+			ItemCommandController.OnItemKeyUp(treeViewItem, keyEventArgs);
+		}
+
 		internal void OnItemMouseButton(TreeViewItem treeViewItem, MouseButtonEventArgs e)
 		{
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				if (e.ButtonState == MouseButtonState.Pressed)
+					ItemCommandController.OnItemMouseLeftButtonDown(treeViewItem, e);
+				else
+					ItemCommandController.OnItemMouseLeftButtonUp(treeViewItem, e);
+			}
+
 			if (e.ButtonState == MouseButtonState.Released)
 				ItemMouseButtonUp?.Invoke(this, new TreeViewItemMouseButtonEventArgs(treeViewItem, e));
 			else
@@ -475,16 +497,20 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal void OnItemMouseEnter(TreeViewItem treeViewItem, MouseEventArgs e)
 		{
+			ItemCommandController.OnItemMouseEnter(treeViewItem, e);
+
 			if (ActualFocusItemOnMouseHover && IsFocusOnMouseEventLocked == false)
 				FocusItem(treeViewItem);
 		}
 
 		internal void OnItemMouseLeave(TreeViewItem treeViewItem, MouseEventArgs e)
 		{
+			ItemCommandController.OnItemMouseLeave(treeViewItem, e);
 		}
 
 		internal void OnItemMouseMove(TreeViewItem treeViewItem, MouseEventArgs mouseEventArgs)
 		{
+			ItemCommandController.OnItemMouseMove(treeViewItem, mouseEventArgs);
 		}
 
 		internal void OnItemPostClick(TreeViewItem treeViewItem)
@@ -516,6 +542,20 @@ namespace Zaaml.UI.Controls.TreeView
 				return;
 
 			e.Handled = FocusNavigator.HandleNavigationKey(e.Key);
+		}
+
+		protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
+		{
+			base.OnLostKeyboardFocus(e);
+
+			ItemCommandController.OnLostKeyboardFocus(e);
+		}
+
+		protected override void OnLostMouseCapture(MouseEventArgs e)
+		{
+			base.OnLostMouseCapture(e);
+
+			ItemCommandController.OnLostMouseCapture(e);
 		}
 
 		internal void OnNavigationKeyHandled()
@@ -563,6 +603,11 @@ namespace Zaaml.UI.Controls.TreeView
 			ItemsPresenter.TreeViewControl = null;
 
 			base.OnTemplateContractDetaching();
+		}
+
+		internal void RaiseClick(TreeViewItem treeViewItem)
+		{
+			ItemCommandController.RaiseOnClick(treeViewItem);
 		}
 
 		public void RefreshFilter()
@@ -642,7 +687,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (TreeViewData == null)
 				return;
 
-			var itemsFilter = ItemsFilter ?? ItemsDefaultFilter;
+			var itemsFilter = ActualItemsFilter;
 
 			if (ReferenceEquals(itemsFilter, TreeViewData.DataFilter.Filter))
 				return;

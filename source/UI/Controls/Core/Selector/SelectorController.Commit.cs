@@ -3,11 +3,16 @@
 // </copyright>
 
 using System;
+using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace Zaaml.UI.Controls.Core
 {
 	internal abstract partial class SelectorController<TItem>
 	{
+		public event EventHandler<NotifyCollectionChangedEventArgs> SelectionCollectionChanged;
+		public event PropertyChangedEventHandler SelectionCollectionPropertyChanged;
+
 		private void ApplySelection(Selection<TItem> selection)
 		{
 			if (IsSelectionSuspended)

@@ -2,11 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-#if SILVERLIGHT
-using BaseIsEnabledElement = System.Windows.Controls.Control;
-#else
 using BaseIsEnabledElement = System.Windows.UIElement;
-#endif
 using System;
 using System.Windows;
 using System.Windows.Controls;

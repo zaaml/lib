@@ -85,7 +85,7 @@ namespace Zaaml.UI.Controls.Core
 				var source = GetSource(item);
 
 				if (MultipleSelection)
-					if (CurrentSelectionCollection.FindBySource(source, false, out var selection))
+					if (CurrentSelectionCollection.FindBySource(source, out var selection))
 						if (ReferenceEquals(item, selection.Item) == false)
 							CurrentSelectionCollection.UpdateSelection(selection.Index, selection.WithItem(item));
 
@@ -119,7 +119,7 @@ namespace Zaaml.UI.Controls.Core
 						var itemIndex = index == -1 ? GetIndexOfItem(item) : index;
 
 						if (MultipleSelection)
-							if (CurrentSelectionCollection.FindByIndex(index, false, out var selection))
+							if (CurrentSelectionCollection.FindByIndex(index, out var selection))
 								if (ReferenceEquals(item, selection.Item) == false)
 									CurrentSelectionCollection.UpdateSelection(selection.Index, selection);
 
@@ -188,14 +188,17 @@ namespace Zaaml.UI.Controls.Core
 			}
 			else if (e.Action == NotifyCollectionChangedAction.Reset)
 			{
-				if (MultipleSelection)
-					CurrentSelectionCollection.UpdateIndicesSources();
-
-				if (CurrentSelectedIndex != -1)
+				if (SupportsIndex)
 				{
-					var source = GetSource(CurrentSelectedIndex);
+					if (MultipleSelection)
+						CurrentSelectionCollection.UpdateIndicesSources();
 
-					Sync(source != null ? CurrentSelection.WithSource(source) : CurrentSelection.WithIndex(-1));
+					if (CurrentSelectedIndex != -1)
+					{
+						var source = GetSource(CurrentSelectedIndex);
+
+						Sync(source != null ? CurrentSelection.WithSource(source) : CurrentSelection.WithIndex(-1));
+					}
 				}
 			}
 			else
@@ -234,7 +237,7 @@ namespace Zaaml.UI.Controls.Core
 					var source = GetSource(item);
 
 					if (MultipleSelection)
-						if (CurrentSelectionCollection.FindBySource(source, false, out var selection))
+						if (CurrentSelectionCollection.FindBySource(source, out var selection))
 							if (ReferenceEquals(item, selection.Item))
 								CurrentSelectionCollection.UpdateSelection(selection.Index, selection.WithItem(null));
 
@@ -261,7 +264,7 @@ namespace Zaaml.UI.Controls.Core
 				return;
 
 			if (MultipleSelection)
-				if (CurrentSelectionCollection.FindByIndex(itemIndex, false, out var selection))
+				if (CurrentSelectionCollection.FindByIndex(itemIndex, out var selection))
 					if (itemIndex != selection.Index)
 						CurrentSelectionCollection.UpdateSelection(itemIndex, selection);
 

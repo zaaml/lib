@@ -4,7 +4,7 @@
 
 namespace Zaaml.UI.Controls.DropDown
 {
-	public enum PreserveTextMode
+	public enum PreserveEditorTextMode
 	{
 		Auto,
 		True,

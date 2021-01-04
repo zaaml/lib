@@ -24,17 +24,17 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			get
 			{
-				return PreserveText switch
+				return PreserveEditorText switch
 				{
-					PreserveTextMode.False => false,
-					PreserveTextMode.True => true,
-					PreserveTextMode.Auto => AutoPreserveText,
+					PreserveEditorTextMode.False => false,
+					PreserveEditorTextMode.True => true,
+					PreserveEditorTextMode.Auto => AutoPreserveEditorText,
 					_ => throw new ArgumentOutOfRangeException()
 				};
 			}
 		}
 
-		protected virtual bool AutoPreserveText => true;
+		protected virtual bool AutoPreserveEditorText => true;
 
 		protected abstract FrameworkElement EditorCore { get; }
 		
@@ -105,7 +105,7 @@ namespace Zaaml.UI.Controls.DropDown
 			return boolIsEditing;
 		}
 
-		private static string CoerceText(string text)
+		private static string CoerceEditorText(string text)
 		{
 			return text ?? string.Empty;
 		}
@@ -249,7 +249,7 @@ namespace Zaaml.UI.Controls.DropDown
 			base.OnPreviewTextInput(e);
 		}
 
-		private void OnTextPropertyChangedPrivate(string oldText, string newText)
+		private void OnEditorTextPropertyChangedPrivate(string oldText, string newText)
 		{
 			if (IsEditing == false || IsDropDownOpen)
 				return;
@@ -268,7 +268,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected virtual void ResetText()
 		{
-			this.SetCurrentValueInternal(TextProperty, string.Empty);
+			this.SetCurrentValueInternal(EditorTextProperty, string.Empty);
 		}
 
 		private bool SafeCompleteEditing(Func<bool> action)

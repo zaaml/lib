@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Zaaml.Core;
@@ -120,7 +121,7 @@ namespace Zaaml.UI.Controls.DropDown
 			if (ReferenceEquals(oldValue, newValue))
 				return;
 
-			SelectionCollection = newValue?.SelectionCollection;
+			SelectionCollection = newValue != null ? new DropDownListViewSelectionCollection(newValue.SelectionCollection) : null;
 		}
 
 		private void UpdateListViewControl()
@@ -148,5 +149,56 @@ namespace Zaaml.UI.Controls.DropDown
 
 	public class DropDownListViewSelectionItemsPanel : SelectionItemsPanel<DropDownListViewSelectionItem, ListViewItem>
 	{
+	}
+
+	public class DropDownListViewSelectionCollection : SelectionCollectionBase<ListViewItem>
+	{
+		private List<Selection<ListViewItem>> _allElementList;
+		private ToggleSelectionListViewItem _toggleSelectionListViewItem;
+
+		public DropDownListViewSelectionCollection(ListViewSelectionCollection selectionCollection) : base(selectionCollection.SelectorController)
+		{
+		}
+
+		public override int Count => IsAllElementSelected ? 1 : base.Count;
+
+		private bool IsAllElementSelected
+		{
+			get
+			{
+				if (ListViewControl.ItemCollection.Count > 0 && ListViewControl.ItemCollection[0] is ToggleSelectionListViewItem toggleSelectionListViewItem)
+					ToggleSelectionListViewItem = toggleSelectionListViewItem;
+				else
+					ToggleSelectionListViewItem = null;
+
+				return _allElementList != null && _toggleSelectionListViewItem.IsCheckedInternal == true;
+			}
+		}
+
+		private ListViewControl ListViewControl => (ListViewControl) SelectorController.Selector;
+
+		private ToggleSelectionListViewItem ToggleSelectionListViewItem
+		{
+			set
+			{
+				if (ReferenceEquals(_toggleSelectionListViewItem, value))
+					return;
+
+				_toggleSelectionListViewItem = value;
+
+				if (_toggleSelectionListViewItem != null)
+				{
+					_allElementList = new List<Selection<ListViewItem>>
+					{
+						new Selection<ListViewItem>(0, _toggleSelectionListViewItem, _toggleSelectionListViewItem, null)
+					};
+				}
+			}
+		}
+
+		public override SelectionCollectionEnumerator GetEnumerator()
+		{
+			return IsAllElementSelected ? new SelectionCollectionEnumerator(_allElementList.GetEnumerator()) : base.GetEnumerator();
+		}
 	}
 }

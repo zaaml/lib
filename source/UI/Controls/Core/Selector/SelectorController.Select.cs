@@ -131,26 +131,15 @@ namespace Zaaml.UI.Controls.Core
 			{
 				if (MultipleSelection)
 				{
-					if (IsInverted)
+					foreach (var source in sourceCollection)
 					{
-						foreach (var source in sourceCollection)
+						if (CurrentSelectionCollection.FindBySource(source, out _) == false)
 						{
-							if (CurrentSelectionCollection.TryRemoveSource(source, out var selection))
-								SetItemSelected(selection.Item, true);
-						}
-					}
-					else
-					{
-						foreach (var source in sourceCollection)
-						{
-							if (CurrentSelectionCollection.FindBySource(source, false, out _) == false)
+							if (Advisor.TryCreateSelection(source, false, out var selection) && selection.IsEmpty == false)
 							{
-								if (Advisor.TryCreateSelection(source, false, out var selection) && selection.IsEmpty == false)
-								{
-									CurrentSelectionCollection.Add(selection);
+								CurrentSelectionCollection.Select(selection);
 
-									SetItemSelected(selection.Item, true);
-								}
+								SetItemSelected(selection.Item, true);
 							}
 						}
 					}
