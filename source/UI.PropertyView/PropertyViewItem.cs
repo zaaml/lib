@@ -60,7 +60,6 @@ namespace Zaaml.UI.Controls.PropertyView
 
 		private bool HasValidationError
 		{
-			get => _hasValidationError;
 			set
 			{
 				if (_hasValidationError == value)
@@ -88,6 +87,8 @@ namespace Zaaml.UI.Controls.PropertyView
 				return Editor.IsFocused || Editor.IsKeyboardFocusWithin;
 			}
 		}
+
+		private protected override bool IsReadOnlyState => PropertyItem?.IsReadOnly == true || Editor == null || Editor is PropertyDisplayOnlyEditor;
 
 		public PropertyItem PropertyItem
 		{
@@ -121,6 +122,11 @@ namespace Zaaml.UI.Controls.PropertyView
 			UpdateVisualState(true);
 		}
 
+		private void OnEditorIsKeyboardFocusWithinChanged(object sender, DependencyPropertyChangedEventArgs e)
+		{
+			UpdateVisualState(true);
+		}
+
 		private void OnEditorLostFocus(object sender, RoutedEventArgs e)
 		{
 			UpdateVisualState(true);
@@ -133,6 +139,7 @@ namespace Zaaml.UI.Controls.PropertyView
 				oldEditor.IsEditingChanged -= OnIsEditingChanged;
 				oldEditor.GotFocus -= OnEditorGotFocus;
 				oldEditor.LostFocus -= OnEditorLostFocus;
+				oldEditor.IsKeyboardFocusWithinChanged -= OnEditorIsKeyboardFocusWithinChanged;
 				oldEditor.PropertyViewItem = null;
 			}
 
@@ -141,6 +148,7 @@ namespace Zaaml.UI.Controls.PropertyView
 				newEditor.IsEditingChanged += OnIsEditingChanged;
 				newEditor.GotFocus += OnEditorGotFocus;
 				newEditor.LostFocus += OnEditorLostFocus;
+				newEditor.IsKeyboardFocusWithinChanged += OnEditorIsKeyboardFocusWithinChanged;
 				newEditor.PropertyViewItem = this;
 			}
 
@@ -190,10 +198,6 @@ namespace Zaaml.UI.Controls.PropertyView
 			}
 		}
 
-		private void OnPropertyItemValueChanged(object sender, EventArgs e)
-		{
-		}
-
 		protected override void OnPreviewKeyDown(KeyEventArgs e)
 		{
 			Editor?.HandlePreviewKeyDownInternal(e);
@@ -221,6 +225,10 @@ namespace Zaaml.UI.Controls.PropertyView
 			base.OnPreviewTextInput(e);
 		}
 
+		private void OnPropertyItemValueChanged(object sender, EventArgs e)
+		{
+		}
+
 		internal void SetValidationErrorInternal(string validationError)
 		{
 			if (string.IsNullOrEmpty(validationError))
@@ -246,11 +254,5 @@ namespace Zaaml.UI.Controls.PropertyView
 
 			Panel.SetZIndex(this, zIndex);
 		}
-	}
-
-	public class PropertyViewItemTemplateContract : IconContentControlTemplateContract
-	{
-		[TemplateContractPart]
-		public ValidationErrorControl ValidationErrorControl { get; private set; }
 	}
 }

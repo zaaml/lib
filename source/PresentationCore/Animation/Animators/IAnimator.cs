@@ -37,6 +37,8 @@ namespace Zaaml.PresentationCore.Animation.Animators
 
     double RelativeTime { get; set; }
 
+		bool Invert { get; set; }
+
     #endregion
   }
 }

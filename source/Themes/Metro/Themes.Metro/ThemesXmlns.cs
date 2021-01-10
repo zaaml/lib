@@ -4,4 +4,5 @@
 
 using System.Windows.Markup;
 
-[assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.Theming")]
+[assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.Themes")]
+[assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.MetroThemeImplementation.DesignTime")]

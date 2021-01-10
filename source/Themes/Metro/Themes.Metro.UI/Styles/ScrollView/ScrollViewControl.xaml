@@ -13,15 +13,15 @@
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="{TemplateBinding BorderThickness}" />
 
-      <Grid Margin="{TemplateBinding BorderThickness}">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="*" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+      <zm:GridPanel Margin="{TemplateBinding BorderThickness}">
+        <zm:GridPanel.Columns>
+          <zm:GridColumn Width="*" />
+          <zm:GridColumn Width="Auto" />
+        </zm:GridPanel.Columns>
+        <zm:GridPanel.Rows>
+          <zm:GridRow Height="*" />
+          <zm:GridRow Height="Auto" />
+        </zm:GridPanel.Rows>
 
         <!--  Content  -->
         <zm:ScrollViewPresenter x:Name="ScrollViewPresenter"
@@ -30,11 +30,11 @@
 
         <!--  Vertical ScrollBar  -->
         <zm:ScrollBar x:Name="VerticalScrollBar"
-                      Grid.Row="0"
-                      Grid.Column="1"
                       Width="17"
                       Margin="0"
                       zm:DisableVeilControl.EnableVeil="False"
+                      zm:GridPanel.Column="1"
+                      zm:GridPanel.Row="0"
                       IsTabStop="False"
                       Maximum="{TemplateBinding ScrollableHeight}"
                       Minimum="0"
@@ -45,11 +45,11 @@
 
         <!--  Horizontal ScrollBar  -->
         <zm:ScrollBar x:Name="HorizontalScrollBar"
-                      Grid.Row="1"
-                      Grid.Column="0"
                       Height="17"
                       Margin="0"
                       zm:DisableVeilControl.EnableVeil="False"
+                      zm:GridPanel.Column="0"
+                      zm:GridPanel.Row="1"
                       IsTabStop="False"
                       Maximum="{TemplateBinding ScrollableWidth}"
                       Minimum="0"
@@ -57,7 +57,7 @@
                       ViewportSize="{TemplateBinding ViewportWidth}"
                       Visibility="{TemplateBinding ActualHorizontalScrollBarVisibility}"
                       Value="{Binding Path=HorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
-      </Grid>
+      </zm:GridPanel>
 
       <!--  Disabled Veil  -->
       <zm:DisableVeilControl />

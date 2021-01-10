@@ -6,21 +6,15 @@ using System.Collections.Specialized;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal abstract class ItemCollectionSelectorAdvisor<TControl, TItem> : CollectionSelectorAdvisorBase<TItem>, IItemCollectionObserver<TItem> 
+	internal abstract class ItemCollectionSelectorAdvisor<TControl, TItem> : CollectionSelectorAdvisorBase<TItem>, IItemCollectionObserver<TItem>
 		where TItem : System.Windows.Controls.Control
 		where TControl : System.Windows.Controls.Control
 	{
-		#region Ctors
-
 		// ReSharper disable once SuggestBaseTypeForParameter
 		protected ItemCollectionSelectorAdvisor(ISelector<TItem> selector, ItemCollectionBase<TControl, TItem> collection) : base(selector, collection)
 		{
 			collection.AttachObserver(this);
 		}
-
-		#endregion
-
-		#region Properties
 
 		public override int Count => ItemCollection.ActualCountInternal;
 
@@ -29,10 +23,6 @@ namespace Zaaml.UI.Controls.Core
 		public override bool IsVirtualizing => ItemCollection.VirtualCollection != null;
 
 		private ItemCollectionBase<TControl, TItem> ItemCollection => (ItemCollectionBase<TControl, TItem>) Collection;
-
-		#endregion
-
-		#region  Methods
 
 		public override int GetIndexOfItem(TItem item)
 		{
@@ -44,16 +34,6 @@ namespace Zaaml.UI.Controls.Core
 			return ItemCollection.GetIndexFromSourceInternal(source);
 		}
 
-		public override bool TryGetItem(int index, bool ensure, out TItem item)
-		{
-			return ensure ? ItemCollection.TryEnsureItemInternal(index, out item) : (item = ItemCollection.GetItemFromIndexInternal(index)) != null;
-		}
-
-		public override bool TryGetItem(object source, bool ensure, out TItem item)
-		{
-			return ensure ? ItemCollection.TryEnsureItemInternal(source, out item) : (item = ItemCollection.GetItemFromSourceInternal(source)) != null;
-		}
-
 		public override object GetSource(int index)
 		{
 			return ItemCollection.GetSourceFromIndexInternal(index);
@@ -62,6 +42,16 @@ namespace Zaaml.UI.Controls.Core
 		public override object GetSource(TItem item)
 		{
 			return ItemCollection.GetSourceInternal(item);
+		}
+
+		public override bool GetSourceSelected(object source)
+		{
+			return false;
+		}
+
+		public override void Lock(TItem item)
+		{
+			ItemCollection.LockItemInternal(item);
 		}
 
 		public override void SetSourceSelected(object source, bool value)
@@ -75,7 +65,7 @@ namespace Zaaml.UI.Controls.Core
 			if (TryGetItem(source, ensure, out var item) == false)
 				TryGetItem(index, ensure, out item);
 
-			var value = SelectorCore.GetValue(item, source);
+			var value = GetValue(item, source);
 
 			selection = new Selection<TItem>(index, item, source, value);
 
@@ -85,37 +75,31 @@ namespace Zaaml.UI.Controls.Core
 		public override bool TryCreateSelection(object source, bool ensure, out Selection<TItem> selection)
 		{
 			var index = GetIndexOfSource(source);
-			
+
 			if (TryGetItem(source, ensure, out var item) == false && index != -1)
 				TryGetItem(index, ensure, out item);
 
-			var value = SelectorCore.GetValue(item, source);
+			var value = GetValue(item, source);
 
 			selection = new Selection<TItem>(index, item, source, value);
-			
+
 			return true;
 		}
 
-		public override void Lock(TItem item)
+		public override bool TryGetItem(int index, bool ensure, out TItem item)
 		{
-			ItemCollection.LockItemInternal(item);
+			return ensure ? ItemCollection.TryEnsureItemInternal(index, out item) : (item = ItemCollection.GetItemFromIndexInternal(index)) != null;
+		}
+
+		public override bool TryGetItem(object source, bool ensure, out TItem item)
+		{
+			return ensure ? ItemCollection.TryEnsureItemInternal(source, out item) : (item = ItemCollection.GetItemFromSourceInternal(source)) != null;
 		}
 
 		public override void Unlock(TItem item)
 		{
 			ItemCollection.UnlockItemInternal(item);
 		}
-
-		public override bool GetSourceSelected(object source)
-		{
-			return false;
-		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IItemCollectionObserver<T>
 
 		void IItemCollectionObserver<TItem>.OnItemDetaching(int index, TItem item)
 		{
@@ -144,9 +128,5 @@ namespace Zaaml.UI.Controls.Core
 		void IItemCollectionObserver<TItem>.OnItemAttaching(int index, TItem item)
 		{
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

@@ -184,40 +184,35 @@ namespace Zaaml.UI.Controls.Ribbon
 			PagesSize = pagesSize;
 		}
 
-		public DependencyProperty SelectedIndexProperty => Selector.SelectedIndexProperty;
+		DependencyProperty ISelector<RibbonPage>.SelectedIndexProperty => Selector.SelectedIndexProperty;
 
-		public DependencyProperty SelectedItemProperty => Selector.SelectedItemProperty;
+		DependencyProperty ISelector<RibbonPage>.SelectedItemProperty => Selector.SelectedItemProperty;
 
-		public DependencyProperty SelectedSourceProperty => Selector.SelectedSourceProperty;
+		DependencyProperty ISelector<RibbonPage>.SelectedSourceProperty => Selector.SelectedSourceProperty;
 
-		public DependencyProperty SelectedValueProperty => Selector.SelectedValueProperty;
+		DependencyProperty ISelector<RibbonPage>.SelectedValueProperty => Selector.SelectedValueProperty;
 
-		public object GetValue(RibbonPage item, object source)
-		{
-			return Selector.GetValue(item, source);
-		}
-
-		public void OnSelectedIndexChanged(int oldIndex, int newIndex)
+		void ISelector<RibbonPage>.OnSelectedIndexChanged(int oldIndex, int newIndex)
 		{
 			Selector.OnSelectedIndexChanged(oldIndex, newIndex);
 		}
 
-		public void OnSelectedItemChanged(RibbonPage oldItem, RibbonPage newItem)
+		void ISelector<RibbonPage>.OnSelectedItemChanged(RibbonPage oldItem, RibbonPage newItem)
 		{
 			Selector.OnSelectedItemChanged(oldItem, newItem);
 		}
 
-		public void OnSelectedSourceChanged(object oldSource, object newSource)
+		void ISelector<RibbonPage>.OnSelectedSourceChanged(object oldSource, object newSource)
 		{
 			Selector.OnSelectedSourceChanged(oldSource, newSource);
 		}
 
-		public void OnSelectedValueChanged(object oldValue, object newValue)
+		void ISelector<RibbonPage>.OnSelectedValueChanged(object oldValue, object newValue)
 		{
 			Selector.OnSelectedValueChanged(oldValue, newValue);
 		}
 
-		public void OnSelectionChanged(Selection<RibbonPage> oldSelection, Selection<RibbonPage> newSelection)
+		void ISelector<RibbonPage>.OnSelectionChanged(Selection<RibbonPage> oldSelection, Selection<RibbonPage> newSelection)
 		{
 			Selector.OnSelectionChanged(oldSelection, newSelection);
 		}
@@ -270,6 +265,11 @@ namespace Zaaml.UI.Controls.Ribbon
 		public override bool GetItemSelected(RibbonPage item)
 		{
 			return item.IsSelected;
+		}
+
+		public override object GetValue(RibbonPage item, object source)
+		{
+			return null;
 		}
 
 		public override void SetItemSelected(RibbonPage item, bool value)

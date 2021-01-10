@@ -58,6 +58,16 @@ namespace Zaaml.PresentationCore.Animation
 			set => SetValue(AccelerationRatioProperty, value);
 		}
 
+		protected virtual double ActualAccelerationRatio => AccelerationRatio;
+
+		protected virtual TimeSpan? ActualBeginTime => BeginTime;
+
+		protected virtual double ActualDecelerationRatio => DecelerationRatio;
+
+		protected virtual Duration ActualDuration => Duration;
+
+		protected virtual double ActualSpeedRatio => SpeedRatio;
+
 		public bool AutoReverse
 		{
 			get => (bool) GetValue(AutoReverseProperty);
@@ -115,15 +125,9 @@ namespace Zaaml.PresentationCore.Animation
 			_clock.Begin();
 		}
 
-		protected virtual void OnAccelerationRatioChanged()
-		{
-		}
-
 		private void OnAccelerationRatioPropertyChangedPrivate()
 		{
-			_clock.AccelerationRatio = AccelerationRatio;
-
-			OnAccelerationRatioChanged();
+			UpdateAccelerationRatio();
 		}
 
 		protected virtual void OnAutoReverseChanged()
@@ -137,15 +141,9 @@ namespace Zaaml.PresentationCore.Animation
 			OnAutoReverseChanged();
 		}
 
-		protected virtual void OnBeginTimeChanged()
-		{
-		}
-
 		private void OnBeginTimePropertyChangedPrivate()
 		{
-			_clock.BeginTime = BeginTime;
-
-			OnBeginTimeChanged();
+			UpdateBeginTime();
 		}
 
 		protected virtual void OnCompleted()
@@ -153,26 +151,14 @@ namespace Zaaml.PresentationCore.Animation
 			Completed?.Invoke(this, EventArgs.Empty);
 		}
 
-		protected virtual void OnDecelerationRatioChanged()
-		{
-		}
-
 		private void OnDecelerationRatioPropertyChangedPrivate()
 		{
-			_clock.DecelerationRatio = DecelerationRatio;
-
-			OnDecelerationRatioChanged();
-		}
-
-		protected virtual void OnDurationChanged()
-		{
+			UpdateDecelerationRatio();
 		}
 
 		private void OnDurationPropertyChangedPrivate()
 		{
-			_clock.Duration = Duration;
-
-			OnDurationChanged();
+			UpdateDuration();
 		}
 
 		protected virtual void OnPaused()
@@ -189,15 +175,9 @@ namespace Zaaml.PresentationCore.Animation
 			Resumed?.Invoke(this, EventArgs.Empty);
 		}
 
-		protected virtual void OnSpeedRatioChanged()
-		{
-		}
-
 		private void OnSpeedRatioPropertyChangedPrivate()
 		{
-			_clock.SpeedRatio = SpeedRatio;
-
-			OnSpeedRatioChanged();
+			UpdateSpeedRatio();
 		}
 
 		protected virtual void OnStarted()
@@ -228,6 +208,31 @@ namespace Zaaml.PresentationCore.Animation
 		public void Stop()
 		{
 			_clock.Stop();
+		}
+
+		protected void UpdateAccelerationRatio()
+		{
+			_clock.AccelerationRatio = ActualAccelerationRatio;
+		}
+
+		protected void UpdateBeginTime()
+		{
+			_clock.BeginTime = ActualBeginTime ?? TimeSpan.Zero;
+		}
+
+		protected void UpdateDecelerationRatio()
+		{
+			_clock.DecelerationRatio = ActualDecelerationRatio;
+		}
+
+		protected void UpdateDuration()
+		{
+			_clock.Duration = ActualDuration;
+		}
+
+		protected void UpdateSpeedRatio()
+		{
+			_clock.SpeedRatio = ActualSpeedRatio;
 		}
 
 		public void OnRelativeTimeChanged(double time)
@@ -261,6 +266,7 @@ namespace Zaaml.PresentationCore.Animation
 		void OnCompleted();
 
 		void OnPaused();
+
 		void OnRelativeTimeChanged(double time);
 
 		void OnResumed();
@@ -351,6 +357,9 @@ namespace Zaaml.PresentationCore.Animation
 
 		private void OnCurrentTimeInvalidated(object sender, EventArgs e)
 		{
+			if (Duration.HasTimeSpan == false)
+				return;
+
 			RelativeTime = Duration.TimeSpan.TotalMilliseconds.IsZero() ? 1.0 : _storyboard.GetCurrentTime().TotalMilliseconds / Duration.TimeSpan.TotalMilliseconds;
 		}
 

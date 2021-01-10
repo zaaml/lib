@@ -31,8 +31,7 @@ namespace Zaaml.UI.Controls.Primitives
     #region Fields
 
     private Storyboard _currentStoryboard;
-
-    private ExpandPanel _expandPanel;
+		private ExpandPanel _expandPanel;
 
     #endregion
 
@@ -85,6 +84,7 @@ namespace Zaaml.UI.Controls.Primitives
     public override void OnApplyTemplate()
     {
       base.OnApplyTemplate();
+
       _expandPanel = (ExpandPanel) GetTemplateChild("ExpandPanel");
 
       UpdatePanel(false);
@@ -120,6 +120,7 @@ namespace Zaaml.UI.Controls.Primitives
 	      return;
 
       _currentStoryboard.Completed -= OnAnimationClockCompleted;
+
       _currentStoryboard.Stop();
 
       _expandPanel.ExpandRatio = ExpandRatio;

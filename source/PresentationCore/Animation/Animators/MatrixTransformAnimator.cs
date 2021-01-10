@@ -27,8 +27,8 @@ namespace Zaaml.PresentationCore.Animation.Animators
     {
       var interpolator = MatrixInterpolator.Instance;
 
-      var start = Start ?? NullTransform;
-      var end = End ?? NullTransform;
+      var start = ActualStart ?? NullTransform;
+      var end = ActualEnd ?? NullTransform;
 
       _transform.Matrix = interpolator.Evaluate(start.Matrix, end.Matrix, RelativeTime, EasingFunction);
 

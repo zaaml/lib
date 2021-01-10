@@ -225,7 +225,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			if (AutoCompleteTextBox == null)
 				return;
 
-			Text = AutoCompleteTextBox.TypedText;
+			SetCurrentValue(TextProperty, AutoCompleteTextBox.TypedText);
 		}
 	}
 

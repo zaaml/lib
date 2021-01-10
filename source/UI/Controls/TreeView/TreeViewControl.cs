@@ -11,6 +11,7 @@ using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.CommandCore;
+using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -67,7 +68,7 @@ namespace Zaaml.UI.Controls.TreeView
 			("ItemIconMember", d => d.DefaultGeneratorImplementation.OnItemIconMemberChanged);
 
 		public static readonly DependencyProperty ItemValueMemberProperty = DPM.Register<string, TreeViewControl>
-			("ItemValueMember", d => d.DefaultGeneratorImplementation.SelectableGeneratorImplementation.OnItemValueMemberChanged);
+			("ItemValueMember", d => d.OnItemValueMemberPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ItemSelectionMemberProperty = DPM.Register<string, TreeViewControl>
 			("ItemSelectionMember", d => d.DefaultGeneratorImplementation.SelectableGeneratorImplementation.OnItemSelectionMemberChanged);
@@ -532,6 +533,28 @@ namespace Zaaml.UI.Controls.TreeView
 				return;
 
 			UpdateFilter();
+		}
+
+		internal void OnItemValueChanged(TreeViewItem treeViewItem)
+		{
+			if (treeViewItem.IsSelected)
+				SelectorController.SyncValue();
+		}
+
+		private void OnItemValueMemberPropertyChangedPrivate(string oldValue, string newValue)
+		{
+			DefaultGeneratorImplementation.SelectableGeneratorImplementation.OnItemValueMemberChanged(oldValue, newValue);
+
+			try
+			{
+				SelectedValueEvaluator = new MemberEvaluator(newValue);
+			}
+			catch (Exception ex)
+			{
+				LogService.LogError(ex);
+			}
+
+			SelectorController.SyncValue();
 		}
 
 		protected override void OnKeyDown(KeyEventArgs e)

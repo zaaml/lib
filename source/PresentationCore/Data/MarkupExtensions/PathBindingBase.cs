@@ -33,6 +33,7 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
 #if SILVERLIGHT
 				var strPath = _path as string;
+
 				if (strPath == null)
 					return;
 				
@@ -63,14 +64,12 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
 		private PropertyPath EvaluatePropertyPath(IServiceProvider serviceProvider)
 		{
-			var propertyPath = Path as PropertyPath;
-			if (propertyPath != null)
+			if (Path is PropertyPath propertyPath)
 				return propertyPath;
 
-			var stringPath = Path as string;
 			var dpPath = Path as DependencyProperty;
 
-			if (stringPath != null)
+			if (Path is string stringPath)
 			{
 #if SILVERLIGHT
         return new PropertyPath(stringPath);
@@ -100,7 +99,7 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 #endif
 			var actualPath = EvaluatePropertyPath(serviceProvider);
 
-			var binding = actualPath != null ? new NativeBinding {Path = actualPath} : new NativeBinding {BindsDirectlyToSource = true};
+			var binding = actualPath != null ? new NativeBinding { Path = actualPath } : new NativeBinding { BindsDirectlyToSource = true };
 
 			InitSource(binding);
 

@@ -12,13 +12,14 @@
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="$(Publish) == 'true'">
-		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
 	
 	<ItemGroup>
 		<ProjectReference Include="..\Themes.Metro.UI.Artboard\Zaaml.Themes.Metro.UI.Artboard.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI.Navigation\Zaaml.Themes.Metro.UI.Navigation.csproj" />
 		<ProjectReference Include="..\Themes.Metro.UI.PropertyView\Zaaml.Themes.Metro.UI.PropertyView.csproj" />
 		<ProjectReference Include="..\Themes.Metro.UI\Zaaml.Themes.Metro.UI.csproj" />
 		<ProjectReference Include="..\Themes.Metro.Framework\Zaaml.Themes.Metro.Framework.csproj" />
@@ -28,7 +29,7 @@
 
 	<Target Name="CombineBuild" AfterTargets="Build">
 		<Message Text="Combine" Importance="High" />
-		<Exec Command="dotnet restore $(MSBuildThisFileDirectory)..\Themes.Metro\Zaaml.Themes.Metro.Combine.csproj -p:Publish=true"/>
+		<Exec Command="dotnet restore $(MSBuildThisFileDirectory)..\Themes.Metro\Zaaml.Themes.Metro.Combine.csproj -p:Publish=true" />
 		<MSBuild Projects="$(MSBuildThisFileDirectory)..\Themes.Metro\Zaaml.Themes.Metro.Combine.csproj" Properties="Configuration=$(Configuration)" />
 	</Target>
 

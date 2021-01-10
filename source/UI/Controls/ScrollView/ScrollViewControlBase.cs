@@ -9,7 +9,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
-using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.Core.Utils;
@@ -1009,22 +1008,5 @@ namespace Zaaml.UI.Controls.ScrollView
 					ScrollViewPresenterInternal.Child = Child;
 			}
 		}
-	}
-
-	public abstract class ScrollViewControlBaseTemplateContract : TemplateContract
-	{
-		[TemplateContractPart(Required = true)]
-		public ScrollBar HorizontalScrollBar { get; [UsedImplicitly] private set; }
-
-		[TemplateContractPart(Required = true)]
-		public ScrollBar VerticalScrollBar { get; [UsedImplicitly] private set; }
-	}
-
-	public abstract class ScrollViewControlBaseTemplateContract<TScrollViewPresenter, TScrollContentPanel> : ScrollViewControlBaseTemplateContract
-		where TScrollViewPresenter : ScrollViewPresenterBase<TScrollContentPanel> where TScrollContentPanel : ScrollViewPanelBase
-	{
-		protected abstract TScrollViewPresenter ScrollViewPresenterCore { get; }
-
-		internal TScrollViewPresenter ScrollViewPresenterInternal => ScrollViewPresenterCore;
 	}
 }

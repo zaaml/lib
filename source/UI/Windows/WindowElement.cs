@@ -7,43 +7,28 @@ using System.Collections.Generic;
 using System.Windows;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
-using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Windows
 {
 	public interface IWindow
 	{
-		#region Fields
-
 		event EventHandler StateChanged;
 		event EventHandler IsActiveChanged;
 
-		#endregion
-
-		#region Properties
+		bool IsActive { get; }
 
 		string Title { get; }
 
 		WindowState WindowState { get; }
-
-    bool IsActive { get; }
-
-		#endregion
 	}
 
-  public abstract class WindowElement : TemplateContractControl, IWindowElement
+	public abstract class WindowElement : TemplateContractControl, IWindowElement
 	{
-		#region Static Fields and Constants
-
 		private static readonly DependencyPropertyKey WindowPropertyKey = DPM.RegisterReadOnly<IWindow, WindowElement>
 			("Window");
 
 		public static readonly DependencyProperty WindowProperty = WindowPropertyKey.DependencyProperty;
-
-		#endregion
-
-		#region Properties
 
 		public IWindow Window
 		{
@@ -65,10 +50,6 @@ namespace Zaaml.UI.Windows
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		internal virtual IEnumerable<IWindowElement> EnumerateWindowElements()
 		{
 			yield break;
@@ -82,12 +63,6 @@ namespace Zaaml.UI.Windows
 		{
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IWindowElement
-
 		IEnumerable<IWindowElement> IWindowElement.EnumerateWindowElements()
 		{
 			return EnumerateWindowElements();
@@ -98,9 +73,5 @@ namespace Zaaml.UI.Windows
 			get => Window;
 			set => Window = value;
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

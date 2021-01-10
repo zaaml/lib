@@ -11,6 +11,8 @@
     <zm:ControlTemplateRoot>
 
       <zm:TextEditor x:Name="Editor"
+                     IsReadOnly="{zm:TemplateBinding Path=PropertyItem.IsReadOnly, FallbackValue=True, TargetNullValue=True}"
+                     Text="{zm:TemplateBinding Path=TextValue, Mode=TwoWay}"
                      UpdateMode="{TemplateBinding UpdateMode}" />
 
     </zm:ControlTemplateRoot>

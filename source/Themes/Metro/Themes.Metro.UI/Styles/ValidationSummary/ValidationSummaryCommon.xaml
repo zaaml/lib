@@ -8,8 +8,8 @@
 
   <DataTemplate x:Key="ValidationHeaderTemplate">
     <Border Background="#FFDC020D" x:Name="Header" Margin="-1,-1,-1,0">
-      <StackPanel Margin="6,2,6,4" Orientation="Horizontal" VerticalAlignment="Top">
-        <Grid Height="13" Width="13">
+      <zm:StackPanel Margin="6,2,6,4" Orientation="Horizontal" VerticalAlignment="Top">
+        <zm:Panel Height="13" Width="13">
           <Ellipse Margin="0" RenderTransformOrigin="0.5,0.5">
             <Ellipse.Stroke>
               <LinearGradientBrush StartPoint="0.505,0.65" EndPoint="0.5,0.058">
@@ -25,9 +25,9 @@
             </Ellipse.Fill>
           </Ellipse>
           <Path Fill="#DDD43940" Data="M5.5,2.5 L7.5,2.5 L7.5,8 L5.5,8 M5.5,9.5 L7.5,9.5 L7.5,10.5 L5.5,10.5" />
-        </Grid>
+        </zm:Panel>
         <TextBlock Padding="4,1,0,0" Text="{Binding}" Foreground="#FFFFFFFF" FontWeight="Bold" />
-      </StackPanel>
+      </zm:StackPanel>
     </Border>
   </DataTemplate>
 
@@ -42,7 +42,7 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ListBoxItem">
-          <Grid Background="{TemplateBinding Background}">
+          <zm:Panel Background="{TemplateBinding Background}">
             <VisualStateManager.VisualStateGroups>
               <VisualStateGroup x:Name="CommonStates">
                 <VisualState x:Name="Normal" />
@@ -87,7 +87,7 @@
                               Margin="{TemplateBinding Padding}" />
 
             <Rectangle x:Name="FocusVisualElement" Stroke="#FFF7D8DB" StrokeThickness="1" Visibility="Collapsed" />
-          </Grid>
+          </zm:Panel>
         </ControlTemplate>
       </Setter.Value>
     </Setter>

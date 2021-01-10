@@ -345,11 +345,6 @@ namespace Zaaml.UI.Controls.Ribbon
 
     DependencyProperty ISelector<RibbonPage>.SelectedValueProperty => null;
 
-    object ISelector<RibbonPage>.GetValue(RibbonPage item, object source)
-    {
-      return null;
-    }
-
     void ISelector<RibbonPage>.OnSelectedIndexChanged(int oldIndex, int newIndex)
     {
     }

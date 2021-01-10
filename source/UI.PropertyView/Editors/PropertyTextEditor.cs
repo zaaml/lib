@@ -4,9 +4,8 @@
 
 using System;
 using System.Windows;
-using System.Windows.Data;
 using System.Windows.Input;
-using Zaaml.PresentationCore.Data;
+using Zaaml.Core;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -131,6 +130,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 			StringConverter = newValue != null ? Controller.GetStringConverterInternal(newValue) : null;
 
 			UpdateTextValue();
+			UpdateEditor();
 		}
 
 		protected override void OnPropertyItemValueChanged()
@@ -147,20 +147,6 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 			UpdateTextValue();
 		}
 
-		protected override void OnTemplateContractAttached()
-		{
-			base.OnTemplateContractAttached();
-
-			Editor.BindProperties(TextEditor.TextProperty, this, TextValueProperty, BindingMode.TwoWay);
-		}
-
-		protected override void OnTemplateContractDetaching()
-		{
-			Editor.ClearValue(TextEditor.TextProperty);
-
-			base.OnTemplateContractDetaching();
-		}
-
 		private void OnTextValuePropertyChangedPrivate(string oldValue, string newValue)
 		{
 			if (_suspendTextValueChangedHandler)
@@ -173,6 +159,14 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 		{
 			if (PropertyViewItem != null && PropertyViewItem.HasValidationError() == false)
 				UpdateTextValue();
+		}
+
+		private void UpdateEditor()
+		{
+			if (Editor == null)
+				return;
+
+			Editor.IsReadOnly = PropertyItem?.IsReadOnly ?? true;
 		}
 
 		private void UpdateTextValue()
@@ -194,6 +188,6 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 	public class PropertyTextEditorTemplateContract : PropertyEditorTemplateContract
 	{
 		[TemplateContractPart(Required = true)]
-		public TextEditor Editor { get; private set; }
+		public TextEditor Editor { get; [UsedImplicitly] private set; }
 	}
 }

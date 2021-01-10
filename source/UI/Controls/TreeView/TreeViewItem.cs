@@ -531,6 +531,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private void OnValuePropertyChangedPrivate(object oldValue, object newValue)
 		{
+			TreeViewControl?.OnItemValueChanged(this);
 		}
 
 		private void PushIsExpanded(bool value)
@@ -661,10 +662,13 @@ namespace Zaaml.UI.Controls.TreeView
 			UpdateVisualStateImpl(useTransitions);
 		}
 
+		private protected virtual bool IsReadOnlyState => false;
+
 		private void UpdateVisualStateImpl(bool useTransitions, bool? actualIsMouseOver = null, bool? actualIsFocused = null)
 		{
 			var isMouseOver = actualIsMouseOver ?? IsMouseOver;
 			var isFocused = actualIsFocused ?? IsActuallyFocused;
+			var isReadOnly = IsReadOnlyState;
 
 			IsFocusedVisualState = isFocused;
 			IsMouseOverVisualState = isMouseOver;
@@ -674,6 +678,8 @@ namespace Zaaml.UI.Controls.TreeView
 				GotoVisualState(Content is Control ? CommonVisualStates.Normal : CommonVisualStates.Disabled, useTransitions);
 			else if (isMouseOver)
 				GotoVisualState(CommonVisualStates.MouseOver, useTransitions);
+			else if (isReadOnly)
+				GotoVisualState(CommonVisualStates.ReadOnly, useTransitions);
 			else
 				GotoVisualState(CommonVisualStates.Normal, useTransitions);
 

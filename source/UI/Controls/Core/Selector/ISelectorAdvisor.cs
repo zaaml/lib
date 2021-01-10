@@ -37,6 +37,8 @@ namespace Zaaml.UI.Controls.Core
 
 		object GetSource(int index);
 
+		object GetValue(T item, object source);
+
 		object GetSource(T item);
 
 		bool GetSourceSelected(object source);

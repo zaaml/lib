@@ -283,8 +283,15 @@ namespace Zaaml.UI.Controls.Core
 		{
 			using (SelectionHandlingScope)
 			{
-				if (SelectedItem != null || SelectedSource != null)
-					SelectValueSafe(GetValue(SelectedItem, SelectedSource));
+				var item = SelectionResume.Item;
+				var source = SelectionResume.Source;
+
+				if (item == null && source == null)
+					return;
+
+				var value = GetValue(item, source);
+
+				SelectionResume = SelectionResume.WithValue(value);
 			}
 		}
 	}

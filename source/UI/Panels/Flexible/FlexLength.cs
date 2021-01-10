@@ -4,9 +4,6 @@
 
 using System;
 using System.Globalization;
-#if !SILVERLIGHT
-
-#endif
 
 namespace Zaaml.UI.Panels.Flexible
 {

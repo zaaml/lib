@@ -27,8 +27,8 @@ namespace Zaaml.PresentationCore.Animation.Animators
     {
       var interpolator = DoubleInterpolator.Instance;
 
-      var start = Start ?? NullTransform;
-      var end = End ?? NullTransform;
+      var start = ActualStart ?? NullTransform;
+      var end = ActualEnd ?? NullTransform;
 
       _transform.Angle = interpolator.Evaluate(start.Angle, end.Angle, RelativeTime, EasingFunction);
       _transform.CenterX = interpolator.Evaluate(start.CenterX, end.CenterX, RelativeTime, EasingFunction);

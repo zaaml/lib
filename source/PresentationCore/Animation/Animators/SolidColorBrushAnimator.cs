@@ -25,8 +25,8 @@ namespace Zaaml.PresentationCore.Animation.Animators
 
     protected override SolidColorBrush EvaluateCurrent()
     {
-      var start = Start ?? NullBrush;
-      var end = End ?? NullBrush;
+      var start = ActualStart ?? NullBrush;
+      var end = ActualEnd ?? NullBrush;
 
       _brush.Color = ColorInterpolator.Instance.Evaluate(start.Color, end.Color, RelativeTime, EasingFunction);
       return _brush;

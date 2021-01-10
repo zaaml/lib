@@ -72,6 +72,11 @@
                                                                        Converter={zm:VisibilityConverter}}" />
                     </Border>
 
+                    <!--  Glyph presenter  -->
+                    <zm:TreeViewItemGlyphPresenter x:Name="GlyphPresenter"
+                                                   Margin="2,0"
+                                                   zm:DockPanel.Dock="Left" />
+
                     <!--  CommonStatesBorder  -->
                     <Border Padding="{TemplateBinding Padding}"
                             BorderThickness="0">

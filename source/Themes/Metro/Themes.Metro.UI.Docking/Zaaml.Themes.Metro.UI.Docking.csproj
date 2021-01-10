@@ -9,6 +9,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0-windows</TargetFramework>
+		<RootNamespace>Zaaml.Themes.UI.Docking</RootNamespace>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="$(Publish) == 'true'">
@@ -16,6 +17,16 @@
 		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
+	
+	<ItemGroup>
+	  <None Remove="Zaaml.Themes.Metro.UI.Docking.ThemePart.xml" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Content Include="Zaaml.Themes.Metro.UI.Docking.ThemePart.xml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
 	
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />

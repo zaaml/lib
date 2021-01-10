@@ -10,7 +10,6 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
-using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Reflection;
 using Zaaml.Core.Weak.Collections;
@@ -52,6 +51,10 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			get => IsDefaultThemeApplied ? null : ApplicationThemeCore;
 			set => ApplicationThemeCore = value;
+		}
+
+		public static void LoadThemePart<TThemePart>() where TThemePart : ThemePart
+		{
 		}
 
 		private static Theme ApplicationThemeCore
@@ -382,5 +385,9 @@ namespace Zaaml.PresentationCore.Theming
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
+	}
+
+	public abstract class ThemePart
+	{
 	}
 }

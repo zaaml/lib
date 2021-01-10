@@ -9,14 +9,10 @@
   <ControlTemplate x:Key="RibbonGroupsPresenterTemplate"
                    TargetType="zm:RibbonGroupsPresenter">
     <zm:ControlTemplateRoot>
-      <Border Padding="0"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}">
-        
-        <!-- ItemsHost -->
-        <zm:RibbonGroupsPanel x:Name="ItemsHost" />
-      </Border>
+
+      <!-- ItemsHost -->
+      <zm:RibbonGroupsPanel x:Name="ItemsHost" />
+
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 

@@ -6,6 +6,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core;
+using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.UI.Panels;
@@ -15,347 +16,341 @@ using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  public sealed class RibbonHeaderPanel : Panel
-  {
-    #region Fields
+	public sealed class RibbonHeaderPanel : Panel
+	{
+		private readonly CategoriesHost _categoriesHost;
+		private readonly PagesHost _pagesHost;
 
-    private readonly CategoriesHost _categoriesHost;
-    private readonly PagesHost _pagesHost;
+		private RibbonHeaderPresenter _presenter;
 
-    private RibbonHeaderPresenter _presenter;
+		public RibbonHeaderPanel()
+		{
+			_categoriesHost = new CategoriesHost(this);
+			_pagesHost = new PagesHost(this);
 
-    #endregion
+			Children.Add(_categoriesHost);
+			Children.Add(_pagesHost);
+		}
 
-    #region Ctors
+		internal RibbonHeaderPresenter Presenter
+		{
+			get => _presenter;
+			set
+			{
+				if (ReferenceEquals(_presenter, value))
+					return;
 
-    public RibbonHeaderPanel()
-    {
-      _categoriesHost = new CategoriesHost(this);
-      _pagesHost = new PagesHost(this);
+				_presenter = value;
 
-      Children.Add(_categoriesHost);
-      Children.Add(_pagesHost);
-    }
+				_categoriesHost.Children.Clear();
+				_pagesHost.Children.Clear();
 
-    #endregion
+				InvalidateMeasure();
+			}
+		}
 
-    #region Properties
+		protected override Size ArrangeOverrideCore(Size finalSize)
+		{
+			return this.ArrangeStackLine(Orientation.Vertical, new Range<int>(0, 2), 0, 0, null, null).Size;
+		}
 
-    internal RibbonHeaderPresenter Presenter
-    {
-      get => _presenter;
-      set
-      {
-        if (ReferenceEquals(_presenter, value))
-          return;
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			var size = new Size(availableSize.Width, double.PositiveInfinity);
 
-        _presenter = value;
+			_pagesHost.Measure(size);
 
-        _categoriesHost.Children.Clear();
-        _pagesHost.Children.Clear();
+			if (Presenter.PageCategoriesPresenter != null)
+				foreach (var category in Presenter.PageCategoriesPresenter.Items.ActualItemsInternal)
+					category.UpdatePagesSize();
 
-        InvalidateMeasure();
-      }
-    }
+			_categoriesHost.Measure(size);
 
-    #endregion
+			return new OrientedSize(Orientation.Vertical).StackSize(_categoriesHost.DesiredSize).StackSize(_pagesHost.DesiredSize).Size;
+		}
 
-    #region  Methods
+		private sealed class PagesHost : Panel, IFlexPanel
+		{
+			public PagesHost(RibbonHeaderPanel headerPanel)
+			{
+				HeaderPanel = headerPanel;
+				Layout = new FlexPanelLayout(this);
+			}
 
-    protected override Size ArrangeOverrideCore(Size finalSize)
-    {
-      return this.ArrangeStackLine(Orientation.Vertical, new Range<int>(0, 2), 0, 0, null, null).Size;
-    }
+			private RibbonHeaderPanel HeaderPanel { get; }
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      var size = new Size(availableSize.Width, double.PositiveInfinity);
+			private FlexPanelLayout Layout { get; }
 
-      _pagesHost.Measure(size);
+			private FrameworkElement Menu => Presenter?.Menu;
 
-      if (Presenter.PageCategoriesPresenter != null)
-        foreach (var category in Presenter.PageCategoriesPresenter.Items.ActualItemsInternal)
-          category.UpdatePagesSize();
+			private RibbonPagesPresenter PagesPresenter => Presenter?.PagesPresenter;
 
-      _categoriesHost.Measure(size);
+			private RibbonHeaderPresenter Presenter => HeaderPanel.Presenter;
 
-      return new OrientedSize(Orientation.Vertical).StackSize(_categoriesHost.DesiredSize).StackSize(_pagesHost.DesiredSize).Size;
-    }
+			protected override Size ArrangeOverrideCore(Size finalSize)
+			{
+				return Layout.Arrange(finalSize);
+			}
 
-    #endregion
+			protected override Size MeasureOverrideCore(Size availableSize)
+			{
+				Children.Clear();
 
-    #region  Nested Types
+				if (Menu != null)
+					Children.Add(Menu);
 
-    private sealed class PagesHost : Panel, IFlexPanel
-    {
-      #region Ctors
+				if (PagesPresenter != null)
+					Children.Add(PagesPresenter);
 
-      public PagesHost(RibbonHeaderPanel headerPanel)
-      {
-        HeaderPanel = headerPanel;
-        Layout = new FlexPanelLayout(this);
-      }
+				return Layout.Measure(availableSize);
+			}
 
-      #endregion
+			IFlexDistributor IFlexPanel.Distributor => FlexDistributor.LastToFirst;
 
-      #region Properties
+			bool IFlexPanel.HasHiddenChildren { get; set; }
 
-      private RibbonHeaderPanel HeaderPanel { get; }
+			double IFlexPanel.Spacing => 0.0;
 
-      private FlexPanelLayout Layout { get; }
+			FlexStretch IFlexPanel.Stretch => FlexStretch.Fill;
 
-      private FrameworkElement Menu => Presenter?.Menu;
+			FlexElement IFlexPanel.GetFlexElement(UIElement child)
+			{
+				// Menu
+				if (ReferenceEquals(Menu, child))
+					return new FlexElement { StretchDirection = FlexStretchDirection.None };
 
-      private RibbonPagesPresenter PagesPresenter => Presenter?.PagesPresenter;
+				// PagesPresenter
+				if (ReferenceEquals(PagesPresenter, child))
+					return new FlexElement { StretchDirection = FlexStretchDirection.Shrink };
 
-      private RibbonHeaderPresenter Presenter => HeaderPanel.Presenter;
+				return child.GetFlexElement(this);
+			}
 
-      #endregion
+			bool IFlexPanel.GetIsHidden(UIElement child)
+			{
+				return FlexPanel.GetIsHidden(child);
+			}
 
-      #region  Methods
+			void IFlexPanel.SetIsHidden(UIElement child, bool value)
+			{
+				FlexPanel.SetIsHidden(child, value);
+			}
 
-      protected override Size ArrangeOverrideCore(Size finalSize)
-      {
-        return Layout.Arrange(finalSize);
-      }
+			Orientation IOrientedPanel.Orientation => Orientation.Horizontal;
+		}
 
-      protected override Size MeasureOverrideCore(Size availableSize)
-      {
-        Children.Clear();
+		private sealed class CategoriesHost : Panel, IFlexPanel
+		{
+			private FlexLength _leftTitleLength;
 
-        if (Menu != null)
-          Children.Add(Menu);
+			private FlexLength _qatLength;
 
-        if (PagesPresenter != null)
-          Children.Add(PagesPresenter);
+			public CategoriesHost(RibbonHeaderPanel headerPanel)
+			{
+				Layout = new FlexPanelLayout(this);
+				HeaderPanel = headerPanel;
 
-        return Layout.Measure(availableSize);
-      }
+				LayoutUpdated += OnLayoutUpdated;
+			}
 
-      #endregion
+			private FrameworkElement FooterElement => Presenter?.FooterElement;
 
-      #region Interface Implementations
+			private FrameworkElement HeaderElement => Presenter?.HeaderElement;
 
-      #region IFlexPanel
+			private RibbonHeaderPanel HeaderPanel { get; }
 
-      IFlexDistributor IFlexPanel.Distributor => FlexDistributor.LastToFirst;
+			private FlexPanelLayout Layout { get; }
 
-      bool IFlexPanel.HasHiddenChildren { get; set; }
+			private ContentPresenter LeftTitlePresenter { get; } = new ContentPresenter();
 
-      double IFlexPanel.Spacing => 0.0;
+			private RibbonPageCategoriesPresenter PageCategoriesPresenter => Presenter?.PageCategoriesPresenter;
 
-      FlexStretch IFlexPanel.Stretch => FlexStretch.Fill;
+			private double PagesOffset { get; set; }
 
-      FlexElement IFlexPanel.GetFlexElement(UIElement child)
-      {
-        // Menu
-        if (ReferenceEquals(Menu, child))
-          return new FlexElement {StretchDirection = FlexStretchDirection.None};
+			private RibbonHeaderPresenter Presenter => HeaderPanel.Presenter;
 
-        // PagesPresenter
-        if (ReferenceEquals(PagesPresenter, child))
-          return new FlexElement {StretchDirection = FlexStretchDirection.Shrink};
+			private RibbonToolBar QuickAccessToolBar => Presenter?.QuickAccessToolBar;
 
-        return child.GetFlexElement(this);
-      }
+			private ContentPresenter RightTitlePresenter { get; } = new ContentPresenter();
 
-      bool IFlexPanel.GetIsHidden(UIElement child)
-      {
-        return FlexPanel.GetIsHidden(child);
-      }
+			private double SelfOffset { get; set; }
 
-      void IFlexPanel.SetIsHidden(UIElement child, bool value)
-      {
-        FlexPanel.SetIsHidden(child, value);
-      }
+			private FrameworkElement TitleElement => Presenter?.TitleElement;
 
-      #endregion
+			protected override Size ArrangeOverrideCore(Size finalSize)
+			{
+				return Layout.Arrange(finalSize);
+			}
 
-      #region IOrientedPanel
+			private void InvalidatePagesCategoriesPanels()
+			{
+				var pagesPanel = Presenter?.Ribbon?.PagesPresenter?.ItemsHostInternal;
+				var categoriesPanel = PageCategoriesPresenter?.ItemsHostInternal;
 
-      Orientation IOrientedPanel.Orientation => Orientation.Horizontal;
+				pagesPanel?.InvalidateAncestorsMeasure(this);
+				categoriesPanel?.InvalidateAncestorsMeasure(this);
 
-      #endregion
+				InvalidateMeasure();
+			}
 
-      #endregion
-    }
+			protected override Size MeasureOverrideCore(Size availableSize)
+			{
+				Children.Clear();
 
-    private sealed class CategoriesHost : Panel, IFlexPanel
-    {
-      #region Fields
+				if (HeaderElement != null)
+					Children.Add(HeaderElement);
 
-      private FlexLength _leftTitleLength;
+				if (QuickAccessToolBar != null)
+				{
+					Children.Add(QuickAccessToolBar);
+					QuickAccessToolBar.Measure(new Size(double.PositiveInfinity, availableSize.Height));
+				}
 
-      private FlexLength _qatLength;
+				Children.Add(LeftTitlePresenter);
 
-      #endregion
+				if (PageCategoriesPresenter != null)
+					Children.Add(PageCategoriesPresenter);
 
-      #region Ctors
+				Children.Add(RightTitlePresenter);
 
-      public CategoriesHost(RibbonHeaderPanel headerPanel)
-      {
-        Layout = new FlexPanelLayout(this);
-        HeaderPanel = headerPanel;
-      }
+				if (FooterElement != null)
+					Children.Add(FooterElement);
 
-      #endregion
+				LeftTitlePresenter.Content = null;
+				RightTitlePresenter.Content = TitleElement;
 
-      #region Properties
+				var measure = Size.Empty;
 
-      private FrameworkElement FooterElement => Presenter?.FooterElement;
+				for (var i = 0; i < 3; i++)
+				{
+					var categoriesOffset = PageCategoriesPresenter?.ItemsHostInternal?.Offset ?? 0.0;
 
-      private FrameworkElement HeaderElement => Presenter?.HeaderElement;
+					UpdateQatTitleLength();
 
-      private RibbonHeaderPanel HeaderPanel { get; }
+					measure = Layout.Measure(availableSize);
 
-      private FlexPanelLayout Layout { get; }
+					var newCategoriesOffset = PageCategoriesPresenter?.ItemsHostInternal?.Offset ?? 0.0;
 
-      private ContentPresenter LeftTitlePresenter { get; } = new ContentPresenter();
+					if (categoriesOffset.IsCloseTo(newCategoriesOffset))
+						break;
 
-      private RibbonPageCategoriesPresenter PageCategoriesPresenter => Presenter?.PageCategoriesPresenter;
+					InvalidatePagesCategoriesPanels();
+				}
 
-      private RibbonHeaderPresenter Presenter => HeaderPanel.Presenter;
+				var leftTitleElement = Layout.GetActualElement(this, LeftTitlePresenter);
+				var rightTitleElement = Layout.GetActualElement(this, RightTitlePresenter);
 
-      private RibbonToolBar QuickAccessToolBar => Presenter?.QuickAccessToolBar;
+				if (leftTitleElement.ActualLength > rightTitleElement.ActualLength == false)
+					return measure;
 
-      private ContentPresenter RightTitlePresenter { get; } = new ContentPresenter();
+				RightTitlePresenter.Content = null;
+				LeftTitlePresenter.Content = TitleElement;
+				LeftTitlePresenter.Measure(new Size(leftTitleElement.ActualLength, LeftTitlePresenter.DesiredSize.Height));
 
-      private FrameworkElement TitleElement => Presenter?.TitleElement;
+				return measure;
+			}
 
-      #endregion
+			private void OnLayoutUpdated(object sender, EventArgs e)
+			{
+				if (UpdateOffsets())
+					return;
 
-      #region  Methods
+				InvalidatePagesCategoriesPanels();
+			}
 
-      protected override Size ArrangeOverrideCore(Size finalSize)
-      {
-        return Layout.Arrange(finalSize);
-      }
+			private bool UpdateOffsets()
+			{
+				var pagesOffset = PagesOffset;
+				var selfOffset = SelfOffset;
 
-      protected override Size MeasureOverrideCore(Size availableSize)
-      {
-        Children.Clear();
+				var pagesPanel = Presenter?.Ribbon?.PagesPresenter?.ItemsHostInternal;
+				var categoriesPanel = PageCategoriesPresenter?.ItemsHostInternal;
 
-        if (HeaderElement != null)
-          Children.Add(HeaderElement);
+				if (pagesPanel != null && categoriesPanel != null)
+				{
+					PagesOffset = pagesPanel.TransformToAncestor(Presenter.Ribbon).Transform(new Point(0, 0)).X;
+					SelfOffset = TransformToAncestor(Presenter.Ribbon).Transform(new Point(0, 0)).X;
+				}
 
-        var qatDesiredSize = 0.0;
-        if (QuickAccessToolBar != null)
-        {
-          Children.Add(QuickAccessToolBar);
-          QuickAccessToolBar.Measure(new Size(double.PositiveInfinity, availableSize.Height));
-          qatDesiredSize = QuickAccessToolBar.DesiredSize.Width;
-        }
+				return pagesOffset.IsCloseTo(PagesOffset) && selfOffset.IsCloseTo(SelfOffset);
+			}
 
-        Children.Add(LeftTitlePresenter);
+			private bool UpdateQatTitleLength()
+			{
+				var qatLength = _qatLength;
+				var leftTitleLength = _leftTitleLength;
 
-        if (PageCategoriesPresenter != null)
-          Children.Add(PageCategoriesPresenter);
+				var qatDesiredSize = QuickAccessToolBar?.DesiredSize.Width ?? 0.0;
 
-        Children.Add(RightTitlePresenter);
+				var pagesPanel = Presenter?.Ribbon?.PagesPresenter?.ItemsHostInternal;
+				var categoriesPanel = PageCategoriesPresenter?.ItemsHostInternal;
 
-        if (FooterElement != null)
-          Children.Add(FooterElement);
+				var updateOffsets = UpdateOffsets();
 
-        LeftTitlePresenter.Content = null;
-        RightTitlePresenter.Content = TitleElement;
+				if (pagesPanel != null && categoriesPanel != null)
+				{
+					var offset = PagesOffset - SelfOffset + categoriesPanel.Offset;
 
-        var pagesPanel = Presenter?.Ribbon?.PagesPresenter?.ItemsHostInternal;
-        var categoriesPanel = PageCategoriesPresenter?.ItemsHostInternal;
+					_qatLength = new FlexLength(Math.Min(qatDesiredSize, offset), FlexLengthUnitType.Pixel);
+					_leftTitleLength = new FlexLength(Math.Max(0, offset - _qatLength.Value), FlexLengthUnitType.Pixel);
+				}
+				else
+				{
+					_qatLength = FlexLength.Auto;
+					_leftTitleLength = FlexLength.Auto;
+				}
 
-        if (pagesPanel != null && categoriesPanel != null)
-        {
-          var pagesOffset = pagesPanel.GetScreenLocation().X;
-          var selfOffset = this.GetScreenLocation().X;
-          var offset = pagesOffset - selfOffset + categoriesPanel.Offset;
+				return updateOffsets && qatLength.Equals(_qatLength) && leftTitleLength.Equals(_leftTitleLength);
+			}
 
-          _qatLength = new FlexLength(Math.Min(qatDesiredSize, offset), FlexLengthUnitType.Pixel);
-          _leftTitleLength = new FlexLength(Math.Max(0, offset - _qatLength.Value), FlexLengthUnitType.Pixel);
-        }
-        else
-        {
-          _qatLength = FlexLength.Auto;
-          _leftTitleLength = FlexLength.Auto;
-        }
+			FlexStretch IFlexPanel.Stretch => FlexStretch.Fill;
 
-        var measure = Layout.Measure(availableSize);
+			public IFlexDistributor Distributor => FlexDistributor.LastToFirst;
 
-        var leftTitleElement = Layout.GetActualElement(this, LeftTitlePresenter);
-        var rightTitleElement = Layout.GetActualElement(this, RightTitlePresenter);
+			bool IFlexPanel.HasHiddenChildren { get; set; }
 
-        if (leftTitleElement.ActualLength > rightTitleElement.ActualLength == false)
-          return measure;
+			double IFlexPanel.Spacing => 0;
 
-        RightTitlePresenter.Content = null;
-        LeftTitlePresenter.Content = TitleElement;
-        LeftTitlePresenter.Measure(new Size(leftTitleElement.ActualLength, LeftTitlePresenter.DesiredSize.Height));
+			FlexElement IFlexPanel.GetFlexElement(UIElement child)
+			{
+				// Header
+				if (ReferenceEquals(HeaderElement, child))
+					return new FlexElement { StretchDirection = FlexStretchDirection.None };
 
-        return measure;
-      }
+				// Qat
+				if (ReferenceEquals(QuickAccessToolBar, child))
+					return new FlexElement { Length = _qatLength, StretchDirection = FlexStretchDirection.Shrink };
 
-      #endregion
+				// Left title
+				if (ReferenceEquals(LeftTitlePresenter, child))
+					return new FlexElement { Length = _leftTitleLength, StretchDirection = FlexStretchDirection.Both };
 
-      #region Interface Implementations
+				// Categories
+				if (ReferenceEquals(PageCategoriesPresenter, child))
+					return new FlexElement { StretchDirection = FlexStretchDirection.Shrink };
 
-      #region IFlexPanel
+				// Right title
+				if (ReferenceEquals(RightTitlePresenter, child))
+					return new FlexElement { Length = FlexLength.Star, StretchDirection = FlexStretchDirection.Shrink };
 
-      FlexStretch IFlexPanel.Stretch => FlexStretch.Fill;
+				// Footer
+				if (ReferenceEquals(FooterElement, child))
+					return new FlexElement { StretchDirection = FlexStretchDirection.None };
 
-      public IFlexDistributor Distributor => FlexDistributor.LastToFirst;
+				return child.GetFlexElement(this);
+			}
 
-      bool IFlexPanel.HasHiddenChildren { get; set; }
+			bool IFlexPanel.GetIsHidden(UIElement child)
+			{
+				return FlexPanel.GetIsHidden(child);
+			}
 
-      double IFlexPanel.Spacing => 0;
+			void IFlexPanel.SetIsHidden(UIElement child, bool value)
+			{
+				FlexPanel.SetIsHidden(child, value);
+			}
 
-      FlexElement IFlexPanel.GetFlexElement(UIElement child)
-      {
-        // Header
-        if (ReferenceEquals(HeaderElement, child))
-          return new FlexElement {StretchDirection = FlexStretchDirection.None};
-
-        // Qat
-        if (ReferenceEquals(QuickAccessToolBar, child))
-          return new FlexElement {Length = _qatLength, StretchDirection = FlexStretchDirection.Shrink};
-
-        // Left title
-        if (ReferenceEquals(LeftTitlePresenter, child))
-          return new FlexElement {Length = _leftTitleLength, StretchDirection = FlexStretchDirection.Both};
-
-        // Categories
-        if (ReferenceEquals(PageCategoriesPresenter, child))
-          return new FlexElement {StretchDirection = FlexStretchDirection.Shrink};
-
-        // Right title
-        if (ReferenceEquals(RightTitlePresenter, child))
-          return new FlexElement {Length = FlexLength.Star, StretchDirection = FlexStretchDirection.Shrink};
-
-        // Footer
-        if (ReferenceEquals(FooterElement, child))
-          return new FlexElement {StretchDirection = FlexStretchDirection.None};
-
-        return child.GetFlexElement(this);
-      }
-
-      bool IFlexPanel.GetIsHidden(UIElement child)
-      {
-        return FlexPanel.GetIsHidden(child);
-      }
-
-      void IFlexPanel.SetIsHidden(UIElement child, bool value)
-      {
-        FlexPanel.SetIsHidden(child, value);
-      }
-
-      #endregion
-
-      #region IOrientedPanel
-
-      Orientation IOrientedPanel.Orientation => Orientation.Horizontal;
-
-      #endregion
-
-      #endregion
-    }
-
-    #endregion
-  }
+			Orientation IOrientedPanel.Orientation => Orientation.Horizontal;
+		}
+	}
 }

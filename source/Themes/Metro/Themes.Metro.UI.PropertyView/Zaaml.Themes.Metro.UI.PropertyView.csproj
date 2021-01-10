@@ -9,10 +9,11 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0-windows</TargetFramework>
+		<RootNamespace>Zaaml.Themes.UI.PropertyView</RootNamespace>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="$(Publish) == 'true'">
-		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>

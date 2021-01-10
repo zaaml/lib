@@ -47,20 +47,14 @@
                             VisualStateGroups="{StaticResource VisualStates}">
       <Border BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="{TemplateBinding BorderThickness}">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
+        <zm:DockPanel>
 
-          <ContentPresenter Grid.Column="0"
-                            VerticalAlignment="Stretch"
+          <ContentPresenter VerticalAlignment="Stretch"
+                            zm:DockPanel.Dock="Left"
                             Content="{TemplateBinding HeadContent}"
                             ContentTemplate="{TemplateBinding HeadContentTemplate}" />
 
           <zm:AutoCompleteTextBox x:Name="AutoCompleteTextBox"
-                                  Grid.Column="1"
                                   Padding="{TemplateBinding Padding}"
                                   zm:DisableVeilControl.EnableVeil="False"
                                   BorderThickness="0"
@@ -68,11 +62,11 @@
                                   WatermarkIcon="{TemplateBinding WatermarkIcon}"
                                   WatermarkText="{TemplateBinding WatermarkText}" />
 
-          <ContentPresenter Grid.Column="2"
-                            VerticalAlignment="Stretch"
+          <ContentPresenter VerticalAlignment="Stretch"
+                            zm:DockPanel.Dock="Right"
                             Content="{TemplateBinding TailContent}"
                             ContentTemplate="{TemplateBinding TailContentTemplate}" />
-        </Grid>
+        </zm:DockPanel>
       </Border>
 
       <!--  Validation Error Element  -->

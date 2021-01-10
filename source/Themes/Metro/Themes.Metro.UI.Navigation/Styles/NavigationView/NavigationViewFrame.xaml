@@ -1,0 +1,29 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="NavigationViewFrameTemplate"
+                   TargetType="zm:NavigationViewFrame">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
+      <!--  ContentPresenter  -->
+      <zm:ContentPresenter x:Name="ContentPresenter" />
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="NavigationViewFrameBaseStyle" TargetType="zm:NavigationViewFrame">
+    <zm:Setter Property="Template" Value="{StaticResource NavigationViewFrameTemplate}" />
+    <zm:Setter Property="Background" Value="#00FFFFFF" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="NavigationViewFrameStyle" BasedOn="{StaticResource NavigationViewFrameBaseStyle}" Skin="Metro.NavigationView.NavigationViewFrame" TargetType="zm:NavigationViewFrame" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="NavigationViewFrameThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource NavigationViewFrameStyle}" TargetType="zm:NavigationViewFrame" />
+
+</zm:ThemeResourceDictionary>

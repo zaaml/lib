@@ -33,14 +33,14 @@
         <TranslateTransform x:Key="Transform" X="-25" />
       </zm:ControlTemplateRoot.Resources>
 
-      <Grid Width="{TemplateBinding PopupWidth}"
-            Height="{TemplateBinding PopupHeight}"
-            MinWidth="{TemplateBinding PopupMinWidth}"
-            MinHeight="{TemplateBinding PopupMinHeight}"
-            MaxWidth="{TemplateBinding PopupMaxWidth}"
-            Margin="0"
-            Opacity="0"
-            RenderTransform="{StaticResource Transform}">
+      <zm:Panel Width="{TemplateBinding PopupWidth}"
+                Height="{TemplateBinding PopupHeight}"
+                MinWidth="{TemplateBinding PopupMinWidth}"
+                MinHeight="{TemplateBinding PopupMinHeight}"
+                MaxWidth="{TemplateBinding PopupMaxWidth}"
+                Margin="0"
+                Opacity="0"
+                RenderTransform="{StaticResource Transform}">
 
         <zm:Extension.Setters>
 
@@ -50,12 +50,12 @@
           </zm:SetterGroup>
         </zm:Extension.Setters>
 
-        <Border  x:Name="ContentHost"
-                 Background="{TemplateBinding Background}"
-                 CornerRadius="2">
+        <Border x:Name="ContentHost"
+                Background="{TemplateBinding Background}"
+                CornerRadius="2">
           <zm:ContentPresenter x:Name="ContentPresenter" />
         </Border>
-      </Grid>
+      </zm:Panel>
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

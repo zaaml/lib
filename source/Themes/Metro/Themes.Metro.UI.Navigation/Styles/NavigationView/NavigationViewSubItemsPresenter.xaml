@@ -1,0 +1,40 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="NavigationViewSubItemsPresenterTemplate"
+                   TargetType="zm:NavigationViewSubItemsPresenter">
+    <zm:ItemsPresenterTemplateRoot Background="{TemplateBinding Background}">
+      <zm:SharedSizeGroupControl>
+        <zm:NavigationViewPanel x:Name="ItemsHost"
+                                Margin="{TemplateBinding Padding}"/>
+      </zm:SharedSizeGroupControl>
+    </zm:ItemsPresenterTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="NavigationViewSubItemsPresenterBaseStyle" TargetType="zm:NavigationViewSubItemsPresenter">
+    <zm:Setter Property="Template" Value="{StaticResource NavigationViewSubItemsPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="NavigationViewSubItemsPresenterStyle" BasedOn="{StaticResource NavigationViewSubItemsPresenterBaseStyle}" Skin="Metro.NavigationView.NavigationViewSubItemsPresenter" TargetType="zm:NavigationViewSubItemsPresenter">
+
+    <!--  Skin Setters  -->
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <zm:Setter ValuePath="Foreground" Property="Foreground" />
+      <zm:Setter ValuePath="Background" Property="Background" />
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="NavigationViewSubItemsPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource NavigationViewSubItemsPresenterStyle}" TargetType="zm:NavigationViewSubItemsPresenter" />
+
+</zm:ThemeResourceDictionary>

@@ -28,7 +28,24 @@ namespace Zaaml.PresentationCore.Data
 
     #region  Methods
 
-    internal static BindingExpression BuildExpression(this Binding binding)
+    internal static void RestoreBindingExpressionValue(DependencyObject target, DependencyProperty dependencyProperty, object bindingExpressionValue)
+    {
+	    if (ReferenceEquals(target.ReadLocalValue(dependencyProperty), bindingExpressionValue))
+		    return;
+
+	    target.RestoreLocalValue(dependencyProperty, bindingExpressionValue as BindingExpression ?? ConvertTemplateBindingExpression(bindingExpressionValue as TemplateBindingExpression) ?? bindingExpressionValue);
+		}
+
+    private static object ConvertTemplateBindingExpression(TemplateBindingExpression templateBindingExpression)
+    {
+#if SILVERLIGHT
+      return templateBindingExpression == null ? null : DependencyProperty.UnsetValue;
+#else
+	    return templateBindingExpression;
+#endif
+    }
+
+		internal static BindingExpression BuildExpression(this Binding binding)
     {
       return BuildExpression(binding, TargetObject, TargetPropertyProperty);
     }

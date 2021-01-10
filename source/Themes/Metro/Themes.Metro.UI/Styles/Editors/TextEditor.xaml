@@ -12,7 +12,9 @@
 
       <zm:AutoCompleteTextBox x:Name="AutoCompleteTextBox"
                               zm:DisableVeilControl.EnableVeil="False"
-                              BorderThickness="{TemplateBinding BorderThickness}" />
+                              BorderThickness="{TemplateBinding BorderThickness}"
+                              Foreground="{TemplateBinding Foreground}"
+                              IsReadOnly="{TemplateBinding IsReadOnly}" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

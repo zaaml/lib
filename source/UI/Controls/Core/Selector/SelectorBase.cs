@@ -273,13 +273,18 @@ namespace Zaaml.UI.Controls.Core
 			SelectionChanged?.Invoke(this, new SelectionChangedEventArgs<TItem>(oldSelection, newSelection));
 		}
 
-		object ISelector<TItem>.GetValue(TItem item, object source)
+		internal object GetValueInternal(TItem item, object source)
+		{
+			return GetValue(item, source);
+		}
+
+		protected virtual object GetValue(TItem item, object source)
 		{
 			switch (SelectedValueSource)
 			{
 				case SelectedValueSource.Auto:
 
-					return GetItemValue(ItemCollection.SourceCollectionInternal == null ? item : source);
+					return GetItemValue(HasSource ? source : item);
 
 				case SelectedValueSource.Item:
 
@@ -330,6 +335,11 @@ namespace Zaaml.UI.Controls.Core
 		public override bool GetItemSelected(TItem item)
 		{
 			return Selector.GetIsSelectedInternal(item);
+		}
+
+		public override object GetValue(TItem item, object source)
+		{
+			return Selector.GetValueInternal(item, source);
 		}
 
 		public override void SetItemSelected(TItem item, bool value)

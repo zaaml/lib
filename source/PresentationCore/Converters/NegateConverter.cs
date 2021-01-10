@@ -26,34 +26,19 @@ namespace Zaaml.PresentationCore.Converters
 
     protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
     {
-      if (value == null)
-        return null;
-
-      if (value is double)
-        return Negate((double) value);
-
-      if (value is int)
-        return Negate((int) value);
-
-      if (value is bool)
-        return Negate((bool) value);
-
-      if (value is long)
-        return Negate((long) value);
-
-      if (value is IConvertible)
-        return Negate((IConvertible) value, culture);
-
-      if (value is TimeSpan)
-        return Negate((TimeSpan) value);
-
-      if (value is Point)
-        return Negate((Point) value);
-
-      if (value is Thickness)
-        return Negate((Thickness) value);
-
-      throw new ArgumentException("Cannot negate " + value.GetType() + ".", nameof(value));
+	    return value switch
+	    {
+		    null => null,
+		    double d => Negate(d),
+		    int i => Negate(i),
+		    bool b => Negate(b),
+		    long l => Negate(l),
+		    IConvertible convertible => Negate(convertible, culture),
+		    TimeSpan span => Negate(span),
+		    Point point => Negate(point),
+		    Thickness thickness => Negate(thickness),
+		    _ => throw new ArgumentException("Cannot negate " + value.GetType() + ".", nameof(value))
+	    };
     }
 
     private static TimeSpan Negate(TimeSpan value)

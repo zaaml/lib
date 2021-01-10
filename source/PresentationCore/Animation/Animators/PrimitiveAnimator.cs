@@ -34,7 +34,7 @@ namespace Zaaml.PresentationCore.Animation.Animators
 
 		protected override T EvaluateCurrent()
 		{
-			return _interpolator.Evaluate(Start, End, RelativeTime, EasingFunction);
+			return _interpolator.Evaluate(ActualStart, ActualEnd, RelativeTime, EasingFunction);
 		}
 
 		#endregion

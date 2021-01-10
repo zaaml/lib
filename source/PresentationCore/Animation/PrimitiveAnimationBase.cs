@@ -21,8 +21,8 @@ namespace Zaaml.PresentationCore.Animation
     {
 			return new PrimitiveAnimator<T>(Interpolator, From, To)
       {
-        EasingFunction = EasingFunction
-      };
+        EasingFunction = ActualEasingFunction
+			};
     }
 
     #endregion

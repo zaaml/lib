@@ -64,7 +64,7 @@
                    TargetType="zm:TabViewItem">
     <zm:ControlTemplateRoot Margin="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement, Converter={StaticResource UnselectedMarginConverter}}">
       <zm:LayoutTransformer LayoutTransform="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement, Converter={StaticResource LayoutTransformConverter}}">
-        <Grid UseLayoutRounding="True">
+        <zm:Panel UseLayoutRounding="True">
           <Border x:Name="border"
                   Background="{zm:TemplateExpandoBinding Path=Background_Normal}"
                   BorderBrush="{zm:TemplateExpandoBinding Path=BorderBrush_Normal}"
@@ -160,7 +160,7 @@
                   BorderThickness="0"
                   Opacity="0" />
 
-        </Grid>
+        </zm:Panel>
       </zm:LayoutTransformer>
 
 

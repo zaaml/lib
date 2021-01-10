@@ -8,101 +8,96 @@ using Zaaml.Core.Extensions;
 namespace Zaaml.PresentationCore.Animation.Animators
 {
 	public abstract class AnimatorBase<T> : IAnimator<T>
-  {
-    #region Fields
+	{
+		private T _current;
+		private IEasingFunction _easingFunction;
+		private T _end;
+		private bool _invert;
+		private bool _isCurrentDirty = true;
+		private T _start;
+		private double _time;
 
-    private T _current;
-    private IEasingFunction _easingFunction;
-    private T _end;
-    private bool _isCurrentDirty = true;
-    private T _start;
-    private double _time;
+		public bool Invert
+		{
+			get => _invert;
+			set
+			{
+				_invert = value;
+				_isCurrentDirty = true;
+			}
+		}
 
-    #endregion
+		protected abstract T EvaluateCurrent();
 
-    #region  Methods
+		public T Current
+		{
+			get
+			{
+				if (_isCurrentDirty == false)
+					return _current;
 
-    protected abstract T EvaluateCurrent();
+				_current = RelativeTime.IsCloseTo(1.0) ? ActualEnd : EvaluateCurrent();
+				_isCurrentDirty = false;
 
-    #endregion
+				return _current;
+			}
+		}
 
-    #region Interface Implementations
+		protected T ActualEnd => Invert ? Start : End;
 
-    #region IAnimator<T>
+		protected T ActualStart => Invert ? End : Start;
 
-    public T Current
-    {
-      get
-      {
-        if (_isCurrentDirty == false)
-          return _current;
+		public IEasingFunction EasingFunction
+		{
+			get => _easingFunction;
+			set
+			{
+				_easingFunction = value;
+				_isCurrentDirty = true;
+			}
+		}
 
-        _current = RelativeTime.IsCloseTo(1.0) ? End : EvaluateCurrent();
-        _isCurrentDirty = false;
+		public T End
+		{
+			get => _end;
+			set
+			{
+				_end = value;
+				_isCurrentDirty = true;
+			}
+		}
 
-        return _current;
-      }
-    }
+		public T Start
+		{
+			get => _start;
+			set
+			{
+				_start = value;
+				_isCurrentDirty = true;
+			}
+		}
 
-    public IEasingFunction EasingFunction
-    {
-      get => _easingFunction;
-      set
-      {
-        _easingFunction = value;
-        _isCurrentDirty = true;
-      }
-    }
-
-    public T End
-    {
-      get => _end;
-      set
-      {
-        _end = value;
-        _isCurrentDirty = true;
-      }
-    }
-
-    public T Start
-    {
-      get => _start;
-      set
-      {
-        _start = value;
-        _isCurrentDirty = true;
-      }
-    }
-
-    public double RelativeTime
-    {
-      get => _time;
-      set
-      {
-        _time = value;
-        _isCurrentDirty = true;
-      }
-    }
-
-    #endregion
-
-    #endregion
-  }
+		public double RelativeTime
+		{
+			get => _time;
+			set
+			{
+				_time = value;
+				_isCurrentDirty = true;
+			}
+		}
+	}
 
 	public class Animation<TValue, TAnimator> : AnimationBase<TValue> where TAnimator : IAnimator<TValue>, new()
 	{
-		#region  Methods
-
 		internal override IAnimator<TValue> CreateAnimator()
 		{
 			return new TAnimator
 			{
 				Start = From,
 				End = To,
-				EasingFunction = EasingFunction
+				EasingFunction = ActualEasingFunction
 			};
 		}
-
-		#endregion
 	}
 }

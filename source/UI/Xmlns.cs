@@ -20,6 +20,7 @@ using System.Windows.Markup;
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Core.Compatibility")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Menu")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.ScrollView")]
+[assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.SplitView")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Primitives")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Primitives.ContentPrimitives")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Primitives.PopupPrimitives")]

@@ -59,16 +59,29 @@ namespace Zaaml.UI.Windows
 			("ShowMinimizeButton", true, w => w.OnHeaderButtonVisibilityRelatedPropertyChanged);
 
 		public static readonly DependencyProperty ShowTitleProperty = DPM.Register<bool, WindowBase>
-			("ShowTitle", true);
+			("ShowTitle", true, w => w.UpdateActualShowTitle);
 
 		public static readonly DependencyProperty ShowIconProperty = DPM.Register<bool, WindowBase>
-			("ShowIcon", true);
+			("ShowIcon", true, w => w.UpdateActualShowIcon);
 
 		public static readonly DependencyProperty TitleBarHeadContentProperty = DPM.Register<object, WindowBase>
 			("TitleBarHeadContent");
 
 		public static readonly DependencyProperty TitleBarTailContentProperty = DPM.Register<object, WindowBase>
 			("TitleBarTailContent");
+
+		public static readonly DependencyProperty TitleBarContentProperty = DPM.Register<object, WindowBase>
+			("TitleBarContent");
+
+		private static readonly DependencyPropertyKey ActualShowIconPropertyKey = DPM.RegisterReadOnly<bool, WindowBase>
+			("ActualShowIcon", false);
+
+		private static readonly DependencyPropertyKey ActualShowTitlePropertyKey = DPM.RegisterReadOnly<bool, WindowBase>
+			("ActualShowTitle", false);
+
+		public static readonly DependencyProperty ActualShowTitleProperty = ActualShowTitlePropertyKey.DependencyProperty;
+
+		public static readonly DependencyProperty ActualShowIconProperty = ActualShowIconPropertyKey.DependencyProperty;
 
 		private WindowFooterPresenter _footerPresenter;
 		private WindowHeaderPresenter _headerPresenter;
@@ -96,6 +109,12 @@ namespace Zaaml.UI.Windows
 
 		internal bool ActualShowCloseButtonInt => ActualShowCloseButton;
 
+		public bool ActualShowIcon
+		{
+			get => (bool) GetValue(ActualShowIconProperty);
+			private set => this.SetReadOnlyValue(ActualShowIconPropertyKey, value);
+		}
+
 		protected virtual bool ActualShowMaximizeButton => IsResizable && ShowMaximizeButton && WindowState != WindowState.Maximized;
 
 		internal bool ActualShowMaximizeButtonInt => ActualShowMaximizeButton;
@@ -107,6 +126,12 @@ namespace Zaaml.UI.Windows
 		protected bool ActualShowRestoreButton => IsResizable && ShowMaximizeButton && WindowState == WindowState.Maximized;
 
 		internal bool ActualShowRestoreButtonInt => ActualShowRestoreButton;
+
+		public bool ActualShowTitle
+		{
+			get => (bool) GetValue(ActualShowTitleProperty);
+			private set => this.SetReadOnlyValue(ActualShowTitlePropertyKey, value);
+		}
 
 		public NativeStyle ContentPresenterStyle
 		{
@@ -238,9 +263,14 @@ namespace Zaaml.UI.Windows
 
 				PackedDefinition.Status.SetValue(ref _packedValue, value);
 
-				Status = value;
 				OnPropertyChanged(nameof(Status));
 			}
+		}
+
+		public object TitleBarContent
+		{
+			get => GetValue(TitleBarContentProperty);
+			set => SetValue(TitleBarContentProperty, value);
 		}
 
 		public object TitleBarHeadContent
@@ -593,6 +623,16 @@ namespace Zaaml.UI.Windows
 		{
 		}
 
+		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			base.OnPropertyChanged(e);
+
+			if (e.Property == IconProperty)
+				UpdateActualShowIcon();
+			else if (e.Property == TitleProperty)
+				UpdateActualShowTitle();
+		}
+
 		protected virtual void OnPropertyChanged(string propertyName)
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -648,6 +688,16 @@ namespace Zaaml.UI.Windows
 		internal virtual void ToggleMaximizeNormalState()
 		{
 			WindowState = WindowState == WindowState.Normal && IsResizable ? WindowState.Maximized : WindowState.Normal;
+		}
+
+		private void UpdateActualShowIcon()
+		{
+			ActualShowIcon = ShowIcon && Icon != null;
+		}
+
+		private void UpdateActualShowTitle()
+		{
+			ActualShowTitle = ShowTitle && string.IsNullOrEmpty(Title) == false;
 		}
 
 		partial void UpdateDraggableBehavior();

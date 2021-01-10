@@ -22,8 +22,6 @@ namespace Zaaml.UI.Controls.Core
 
     #region  Methods
 
-    object GetValue(T item, object source);
-
     void OnSelectedIndexChanged(int oldIndex, int newIndex);
 
     void OnSelectedItemChanged(T oldItem, T newItem);

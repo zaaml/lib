@@ -3,8 +3,6 @@
 // </copyright>
 
 using System;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using Zaaml.Core.Extensions;
@@ -120,7 +118,7 @@ namespace Zaaml.UI.Controls.Core
 				CurrentSelectionCollection.IsInverted = false;
 				CurrentSelectionCollection.Clear();
 
-				if (_multipleSelection) 
+				if (_multipleSelection)
 					CurrentSelectionCollection.Select(CurrentSelection);
 			}
 		}
@@ -334,8 +332,11 @@ namespace Zaaml.UI.Controls.Core
 
 			if (SelectionHandlingCount == 0)
 			{
-				SelectionResume = Selection;
-				SelectionCollectionResume.CopyFrom(SelectionCollection);
+				if (IsSelectionSuspended == false)
+				{
+					SelectionResume = Selection;
+					SelectionCollectionResume.CopyFrom(SelectionCollection);
+				}
 			}
 
 			SelectionHandlingCount++;
@@ -392,7 +393,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private object GetValue(TItem item, object source)
 		{
-			return SupportsValue ? Selector.GetValue(item, source) : null;
+			return SupportsValue && (item != null || source != null) ? Advisor.GetValue(item, source) : null;
 		}
 
 		public void InvertSelection()
@@ -445,7 +446,10 @@ namespace Zaaml.UI.Controls.Core
 			SelectionHandlingCount--;
 
 			if (SelectionHandlingCount == 0)
-				CommitSelection();
+			{
+				if (IsSelectionSuspended == false)
+					CommitSelection();
+			}
 		}
 
 		public void OnSelectedIndexPropertyChanged(int oldIndex, int newIndex)

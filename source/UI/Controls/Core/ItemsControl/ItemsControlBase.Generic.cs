@@ -41,6 +41,8 @@ namespace Zaaml.UI.Controls.Core
 
 		internal virtual IItemCollection<TItem> ItemCollectionOverride => ItemCollection;
 
+		internal virtual bool HasSource => ItemCollectionOverride.SourceCollection != null;
+
 		internal int ItemsCount => ItemCollectionOverride.ActualCount;
 
 		protected TPresenter ItemsPresenter => TemplateContract.ItemsPresenter;

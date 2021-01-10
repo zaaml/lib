@@ -37,8 +37,7 @@ namespace Zaaml.UI.Controls.PropertyView
 				//return propertyType.IsValueType &&
 				//       propertyType.IsPrimitive == false &&
 				//       propertyType.IsEnum == false;
-
-
+				
 				if (propertyType == typeof(string))
 					return false;
 

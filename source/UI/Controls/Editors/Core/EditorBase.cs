@@ -36,6 +36,9 @@ namespace Zaaml.UI.Controls.Editors.Core
 		private static readonly DependencyPropertyKey IsEditingPropertyKey = DPM.RegisterReadOnly<bool, EditorBase>
 			("IsEditing", s => s.OnIsEditingPropertyChangedPrivate);
 
+		public static readonly DependencyProperty IsReadOnlyProperty = DPM.Register<bool, EditorBase>
+			("IsReadOnly");
+
 		public static readonly DependencyProperty IsEditingProperty = IsEditingPropertyKey.DependencyProperty;
 
 		public event EventHandler EditingStarted;
@@ -45,6 +48,12 @@ namespace Zaaml.UI.Controls.Editors.Core
 		{
 			get => (bool) GetValue(IsEditingProperty);
 			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value);
+		}
+
+		public bool IsReadOnly
+		{
+			get => (bool) GetValue(IsReadOnlyProperty);
+			set => SetValue(IsReadOnlyProperty, value);
 		}
 
 		public bool BeginEdit()

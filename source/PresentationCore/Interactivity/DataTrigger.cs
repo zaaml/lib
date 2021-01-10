@@ -45,6 +45,12 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
+		public ComparerOperator ComparerOperator
+		{
+			get => (Comparer as TriggerComparer)?.Operator ?? ComparerOperator.Equal;
+			set => Comparer = TriggerComparer.GetComparer(value);
+		}
+
 		public object Value
 		{
 			get => GetOriginalValue(TargetValueProperty, _targetValue);

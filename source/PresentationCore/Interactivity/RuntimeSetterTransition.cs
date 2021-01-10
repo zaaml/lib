@@ -5,217 +5,255 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using Zaaml.Core.Pools;
 using Zaaml.PresentationCore.Animation;
 using Zaaml.PresentationCore.Animation.Animators;
+using Zaaml.PresentationCore.Data;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using DoubleAnimation = System.Windows.Media.Animation.DoubleAnimation;
 
-#if SILVERLIGHT
-#elif NETCOREAPP
-using System.Windows.Threading;
+#if NETCOREAPP
 #else
 using Zaaml.Core.Extensions;
-using System.Windows.Threading;
 #endif
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  internal class RuntimeSetterTransition : DependencyObject
-  {
-    #region Static Fields and Constants
+	internal class RuntimeSetterTransition : DependencyObject
+	{
+		public static readonly DependencyProperty ProgressProperty = DPM.Register<double, RuntimeSetterTransition>
+			("Progress", e => e.OnProgressChanged);
 
-    public static readonly DependencyProperty ProgressProperty = DPM.Register<double, RuntimeSetterTransition>
-      ("Progress", e => e.OnProgressChanged);
+		private static readonly Dictionary<Type, RuntimeTransitionPool> TransitionPools = new Dictionary<Type, RuntimeTransitionPool>();
 
-    private static readonly Dictionary<Type, RuntimeTransitionPool> TransitionPools = new Dictionary<Type, RuntimeTransitionPool>();
+		private readonly IAnimator _animator;
+		private readonly RuntimeTransitionPool _pool;
+		private readonly Action _releaseAction;
+		private readonly Storyboard _storyboard;
+		private object _fromValue;
+		private RuntimeSetter _setter;
+		private object _toValue;
 
-    #endregion
-
-    #region Fields
-
-    private readonly IAnimator _animator;
-    private readonly RuntimeTransitionPool _pool;
-    private readonly Action _releaseAction;
-    private readonly Storyboard _storyboard;
-    private RuntimeSetter _setter;
-
-    #endregion
-
-    #region Ctors
-
-    private RuntimeSetterTransition(IAnimator animator, RuntimeTransitionPool pool)
-    {
-      _releaseAction = Release;
+		private RuntimeSetterTransition(IAnimator animator, RuntimeTransitionPool pool)
+		{
+			_releaseAction = Release;
 			_animator = animator;
-      _pool = pool;
-      
-      var doubleAnimation = new DoubleAnimation
-      {
-        From = 0.0,
-        To = 1.0
-      };
+			_pool = pool;
 
-      Storyboard.SetTarget(doubleAnimation, this);
-      Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(ProgressProperty));
-
-      _storyboard = new Storyboard
-      {
-				Children = { doubleAnimation }
+			var doubleAnimation = new DoubleAnimation
+			{
+				From = 0.0,
+				To = 1.0
 			};
 
-      _storyboard.Begin();
-      _storyboard.Stop();
+			Storyboard.SetTarget(doubleAnimation, this);
+			Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(ProgressProperty));
 
-      _storyboard.Completed += (sender, args) => OnCompleted(true);
-    }
+			_storyboard = new Storyboard
+			{
+				Children = {doubleAnimation}
+			};
 
-    #endregion
+			_storyboard.Begin();
+			_storyboard.Stop();
 
-    #region Properties
+			_storyboard.Completed += (sender, args) => OnCompleted(true);
+		}
 
-    public object CurrentValue => _animator.Current;
+		public object CurrentValue => _animator.Current;
 
-    public bool IsAnimating => _storyboard.GetCurrentState() != ClockState.Stopped && _setter != null;
+		public bool IsAnimating => _storyboard.GetCurrentState() != ClockState.Stopped && _setter != null;
 
-    public object ValueStore { get; private set; }
+		public object ValueStore { get; private set; }
 
-    #endregion
+		private static object GetActualValue(RuntimeSetter setter, object value, ref object valueStore)
+		{
+			if (value is Binding binding)
+			{
+				var target = setter.EffectiveValue.Target;
+				var dependencyPropertyService = target.GetDependencyPropertyService();
+				var dependencyProperty = dependencyPropertyService.CaptureServiceProperty(setter.TargetPropertyType, null);
 
-    #region  Methods
+				target.SetBinding(dependencyProperty, binding);
 
-    private void OnCompleted(bool timeLineFinished)
-    {
-      if (_setter == null)
-        return;
+				valueStore = target.ReadLocalBindingExpression(dependencyProperty);
 
-      if (timeLineFinished)
-        _animator.RelativeTime = 1.0;
+				if (valueStore == null)
+				{
+					target.ClearValue(dependencyProperty);
 
-      var setter = _setter;
-      
-      _setter = null;
+					dependencyPropertyService.ReleaseServiceProperty(dependencyProperty);
 
-      setter.OnTransitionCompleted();
+					return null;
+				}
+
+				return target.GetValue(dependencyProperty);
+			}
+
+			if (value is BindingExpression)
+			{
+				var target = setter.EffectiveValue.Target;
+				var dependencyPropertyService = target.GetDependencyPropertyService();
+				var dependencyProperty = dependencyPropertyService.CaptureServiceProperty(setter.TargetPropertyType, null);
+
+				BindingUtil.RestoreBindingExpressionValue(target, dependencyProperty, value);
+
+				valueStore = target.ReadLocalBindingExpression(dependencyProperty);
+
+				if (valueStore == null)
+				{
+					target.ClearValue(dependencyProperty);
+
+					dependencyPropertyService.ReleaseServiceProperty(dependencyProperty);
+
+					return null;
+				}
+
+				return target.GetValue(dependencyProperty);
+			}
+
+			if (value is TemplateBindingExpression)
+				throw new InvalidOperationException("Transition can not operate on TemplateBindingExpression. Use Binding with TemplatedParent value as RelativeSource instead of TemplateBinding.");
+
+			return value;
+		}
+
+		private void OnCompleted(bool timeLineFinished)
+		{
+			if (_setter == null)
+				return;
+
+			if (timeLineFinished)
+				_animator.RelativeTime = 1.0;
+
+			var setter = _setter;
+
+			ReleaseValue(ref _fromValue);
+			ReleaseValue(ref _toValue);
+
+			_setter = null;
+
+			setter.OnTransitionCompleted();
 
 #if SILVERLIGHT
       setter.EffectiveValue.Target.Dispatcher.BeginInvoke(_releaseAction);
 #else
-      setter.EffectiveValue.Target.Dispatcher.BeginInvoke(_releaseAction, DispatcherPriority.Background);
+			setter.EffectiveValue.Target.Dispatcher.BeginInvoke(_releaseAction, DispatcherPriority.Background);
 #endif
-    }
+		}
 
-    private void OnProgressChanged(double oldValue, double newValue)
-    {
-      if (IsAnimating == false)
-        return;
+		private void OnProgressChanged(double oldValue, double newValue)
+		{
+			if (IsAnimating == false)
+				return;
 
-      _animator.RelativeTime = newValue;
+			_animator.RelativeTime = newValue;
 
-      if (_setter.SetAnimatedValue(_animator.Current) == false)
-        StopImpl();
-    }
+			if (_setter.SetAnimatedValue(_animator.Current) == false)
+				StopImpl();
+		}
 
-    private void Release()
-    {
-      _pool.Release(this);
-    }
+		private void Release()
+		{
+			_pool.Release(this);
+		}
 
-    public static RuntimeSetterTransition RunTransition(RuntimeSetter setter, object from, object to)
-    {
-      var type = from?.GetType() ?? to?.GetType();
+		private static void ReleaseValue(ref object valueStore)
+		{
+			if (valueStore is BindingExpression bindingExpression)
+			{
+				var target = bindingExpression.Target;
+				var dependencyPropertyService = target.GetDependencyPropertyService();
+				var dependencyProperty = bindingExpression.TargetProperty;
 
-      if (type == null)
-        return null;
+				target.ClearValue(dependencyProperty);
 
-      var pool = TransitionPools.GetValueOrDefault(type);
+				dependencyPropertyService.ReleaseServiceProperty(dependencyProperty);
+			}
 
-      if (pool == null)
-      {
-        var animatorFactory = AnimatorFactoryProvider.GetAnimatorFactory(type);
+			valueStore = null;
+		}
 
-        if (animatorFactory == null)
-          return null;
+		public static RuntimeSetterTransition RunTransition(RuntimeSetter setter, object from, object to)
+		{
+			var type = setter.TargetPropertyType;
 
-        TransitionPools[type] = pool = new RuntimeTransitionPool(animatorFactory);
-      }
+			if (type == null)
+				return null;
 
-      var runtimeTransition = pool.GeTransition();
+			var pool = TransitionPools.GetValueOrDefault(type);
 
-      runtimeTransition.ValueStore = setter.ActualValueStore;
-      runtimeTransition.Start(setter, from, to);
+			if (pool == null)
+			{
+				var animatorFactory = AnimatorFactoryProvider.GetAnimatorFactory(type);
 
-      return runtimeTransition;
-    }
+				if (animatorFactory == null)
+					return null;
 
-    public void Start(RuntimeSetter setter, object from, object to)
-    {
-      var transition = setter.Transition;
+				TransitionPools[type] = pool = new RuntimeTransitionPool(animatorFactory);
+			}
 
-      _animator.Start = from;
-      _animator.End = to;
-      _animator.EasingFunction = transition.EasingFunction;
-      _animator.RelativeTime = 0;
+			var runtimeTransition = pool.GeTransition();
 
-      var doubleAnimation = (DoubleAnimation) _storyboard.Children[0];
+			runtimeTransition.ValueStore = setter.ActualValueStore;
+			runtimeTransition.Start(setter, from, to);
 
-      doubleAnimation.BeginTime = transition.BeginTime;
-      doubleAnimation.Duration = transition.Duration;
+			return runtimeTransition;
+		}
 
-      _storyboard.Begin();
+		public void Start(RuntimeSetter setter, object from, object to)
+		{
+			var transition = setter.Transition;
 
-      _setter = setter;
-    }
+			_animator.Start = GetActualValue(setter, from, ref _fromValue);
+			_animator.End = GetActualValue(setter, to, ref _toValue);
+			_animator.EasingFunction = transition.EasingFunction;
+			_animator.RelativeTime = 0;
 
-    public void Stop()
-    {
-      StopImpl();
-    }
+			var doubleAnimation = (DoubleAnimation) _storyboard.Children[0];
 
-    private void StopImpl()
-    {
-      OnCompleted(false);
+			doubleAnimation.BeginTime = transition.BeginTime;
+			doubleAnimation.Duration = transition.Duration;
 
-      _storyboard.Stop();
-    }
+			_storyboard.Begin();
 
-    #endregion
+			_setter = setter;
+		}
 
-    #region  Nested Types
+		public void Stop()
+		{
+			StopImpl();
+		}
 
-    private class RuntimeTransitionPool
-    {
-      #region Fields
+		private void StopImpl()
+		{
+			OnCompleted(false);
 
-      private readonly LightObjectPool<RuntimeSetterTransition> _transitionsPool;
+			_storyboard.Stop();
+		}
 
-      #endregion
+		private class RuntimeTransitionPool
+		{
+			private readonly LightObjectPool<RuntimeSetterTransition> _transitionsPool;
 
-      #region Ctors
+			public RuntimeTransitionPool(Func<IAnimator> animatorFactory)
+			{
+				_transitionsPool = new LightObjectPool<RuntimeSetterTransition>(() => new RuntimeSetterTransition(animatorFactory(), this));
+			}
 
-      public RuntimeTransitionPool(Func<IAnimator> animatorFactory)
-      {
-        _transitionsPool = new LightObjectPool<RuntimeSetterTransition>(() => new RuntimeSetterTransition(animatorFactory(), this));
-      }
+			public RuntimeSetterTransition GeTransition()
+			{
+				return _transitionsPool.GetObject();
+			}
 
-      #endregion
-
-      #region  Methods
-
-      public RuntimeSetterTransition GeTransition()
-      {
-        return _transitionsPool.GetObject();
-      }
-
-      public void Release(RuntimeSetterTransition runtimeTransition)
-      {
-        _transitionsPool.Release(runtimeTransition);
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+			public void Release(RuntimeSetterTransition runtimeTransition)
+			{
+				_transitionsPool.Release(runtimeTransition);
+			}
+		}
+	}
 }

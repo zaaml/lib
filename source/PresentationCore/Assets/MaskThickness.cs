@@ -4,16 +4,12 @@
 
 using System;
 using System.Windows;
-using Zaaml.PresentationCore.Data;
-using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Assets
 {
-	public sealed class MaskThickness : AssetBase
+	public sealed class MaskThickness : ThicknessAssetBase
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty LeftProperty = DPM.Register<bool, MaskThickness>
 			("Left", true, b => b.OnLeftChanged);
 
@@ -27,37 +23,19 @@ namespace Zaaml.PresentationCore.Assets
 			("Bottom", true, b => b.OnBottomChanged);
 
 		public static readonly DependencyProperty EnabledThicknessProperty = DPM.Register<Thickness, MaskThickness>
-			("EnabledThickness", b => b.RaiseActualThicknessChanged);
+			("EnabledThickness", b => b.UpdateActualThickness);
 
 		public static readonly DependencyProperty DisabledThicknessProperty = DPM.Register<Thickness, MaskThickness>
-			("DisabledThickness", b => b.RaiseActualThicknessChanged);
-
-		private static readonly DependencyPropertyKey ActualThicknessPropertyKey = DPM.RegisterReadOnly<Thickness, MaskThickness>
-			("ActualThickness");
+			("DisabledThickness", b => b.UpdateActualThickness);
 
 		public static readonly DependencyProperty InvertProperty = DPM.Register<bool, MaskThickness>
-			("Invert", false, b => b.RaiseActualThicknessChanged);
+			("Invert", false, b => b.UpdateActualThickness);
 
 		public static readonly DependencyProperty FlagsProperty = DPM.Register<MaskThicknessFlags, MaskThickness>
 			("Flags", MaskThicknessFlags.All, b => b.OnFlagsChanged);
 
-		public static readonly DependencyProperty ActualThicknessProperty = ActualThicknessPropertyKey.DependencyProperty;
-
-		#endregion
-
-		#region Fields
-
 		private bool _suspend;
 
-		#endregion
-
-		#region Properties
-
-		public Thickness ActualThickness
-		{
-			get => (Thickness) GetValue(ActualThicknessProperty);
-			private set => this.SetReadOnlyValue(ActualThicknessPropertyKey, value);
-		}
 
 		public bool Bottom
 		{
@@ -107,10 +85,6 @@ namespace Zaaml.PresentationCore.Assets
 			set => SetValue(TopProperty, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
 		private void DisableFlag(MaskThicknessFlags flag)
 		{
 			Flags &= ~flag;
@@ -145,7 +119,7 @@ namespace Zaaml.PresentationCore.Assets
 			{
 				_suspend = false;
 
-				RaiseActualThicknessChanged();
+				UpdateActualThickness();
 			}
 		}
 
@@ -167,7 +141,7 @@ namespace Zaaml.PresentationCore.Assets
 				SetFlag(newTop, MaskThicknessFlags.Top);
 		}
 
-		private void RaiseActualThicknessChanged()
+		private void UpdateActualThickness()
 		{
 			var disabledThickness = DisabledThickness;
 			var enabledThickness = EnabledThickness;
@@ -198,8 +172,6 @@ namespace Zaaml.PresentationCore.Assets
 			else
 				DisableFlag(flag);
 		}
-
-		#endregion
 	}
 
 	[Flags]

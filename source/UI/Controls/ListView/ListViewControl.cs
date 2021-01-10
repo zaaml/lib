@@ -57,7 +57,7 @@ namespace Zaaml.UI.Controls.ListView
 			("ItemContentMember", l => l.DefaultGeneratorImplementation.OnItemContentMemberChanged);
 
 		public static readonly DependencyProperty ItemValueMemberProperty = DPM.Register<string, ListViewControl>
-			("ItemValueMember", l => l.DefaultGeneratorImplementation.SelectableGeneratorImplementation.OnItemValueMemberChanged);
+			("ItemValueMember", l => l.OnItemValueMemberPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ItemIconMemberProperty = DPM.Register<string, ListViewControl>
 			("ItemIconMember", l => l.DefaultGeneratorImplementation.OnItemIconMemberChanged);
@@ -432,10 +432,14 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal void OnItemValueChanged(ListViewItem listViewItem)
 		{
+			if (listViewItem.IsSelected)
+				SelectorController.SyncValue();
 		}
 
 		private void OnItemValueMemberPropertyChangedPrivate(string oldValue, string newValue)
 		{
+			DefaultGeneratorImplementation.SelectableGeneratorImplementation.OnItemValueMemberChanged(oldValue, newValue);
+
 			try
 			{
 				SelectedValueEvaluator = new MemberEvaluator(newValue);

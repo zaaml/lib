@@ -13,177 +13,129 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore.TemplateCore
 {
-  internal class TemplateContractBinder
-  {
-    #region Static Fields and Constants
+	internal class TemplateContractBinder
+	{
+		private static readonly Dictionary<Type, TemplateContractInfo> TemplateContractInfos = new Dictionary<Type, TemplateContractInfo>();
 
-    private static readonly Dictionary<Type, TemplateContractInfo> TemplateContractInfos = new Dictionary<Type, TemplateContractInfo>();
+		private readonly GetTemplateChild _templateChildProvider;
 
-    #endregion
+		public TemplateContractBinder(FrameworkElement frameworkElement)
+		{
+			_templateChildProvider = new TemplateDiscovery(frameworkElement).GetChild;
+		}
 
-    #region Fields
+		public TemplateContractBinder(GetTemplateChild templateChildProvider)
+		{
+			_templateChildProvider = templateChildProvider;
+		}
 
-    private readonly GetTemplateChild _templateChildProvider;
+		public void Attach(TemplateContract templateContract)
+		{
+			if (templateContract == null)
+				throw new ArgumentNullException(nameof(templateContract));
 
-    #endregion
+			var type = templateContract.GetType();
+			TemplateContractInfos.GetValueOrCreate(type, () => new TemplateContractInfo(type)).Bind(templateContract, _templateChildProvider);
+		}
 
-    #region Ctors
+		public void Detach(TemplateContract templateContract)
+		{
+			TemplateContractInfos.GetValueOrDefault(templateContract.GetType())?.Unbind(templateContract);
+		}
 
-    public TemplateContractBinder(FrameworkElement frameworkElement)
-    {
-      _templateChildProvider = new TemplateDiscovery(frameworkElement).GetChild;
-    }
+		private class TemplateContractInfo
+		{
+			private readonly List<TemplatePartDescriptionInfo> _partDescriptions = new List<TemplatePartDescriptionInfo>();
 
-    public TemplateContractBinder(GetTemplateChild templateChildProvider)
-    {
-      _templateChildProvider = templateChildProvider;
-    }
+			public TemplateContractInfo(Type type)
+			{
+				foreach (var propertyInfo in type.GetProperties().Where(p => p.HasAttribute<TemplateContractPartAttribute>(false)))
+					_partDescriptions.Add(new TemplatePartDescriptionInfo(propertyInfo));
 
-    #endregion
+				foreach (var fieldInfo in type.GetFields().Where(p => p.HasAttribute<TemplateContractPartAttribute>(false)))
+					_partDescriptions.Add(new TemplatePartDescriptionInfo(fieldInfo));
+			}
 
-    #region  Methods
+			public void Bind(TemplateContract templateContract, GetTemplateChild templateChildProvider)
+			{
+				foreach (var partDescription in _partDescriptions)
+				{
+					var templatePart = templateChildProvider(partDescription.Name);
 
-    public void Attach(TemplateContract templateContract)
-    {
-      if (templateContract == null)
-        throw new ArgumentNullException(nameof(templateContract));
+					if (templatePart == null)
+					{
+						if (partDescription.Required)
+							throw new TemplateValidationException(partDescription.Name);
 
-      var type = templateContract.GetType();
-      TemplateContractInfos.GetValueOrCreate(type, () => new TemplateContractInfo(type)).Bind(templateContract, _templateChildProvider);
-    }
+						continue;
+					}
 
-    public void Detach(TemplateContract templateContract)
-    {
-      TemplateContractInfos.GetValueOrDefault(templateContract.GetType())?.Unbind(templateContract);
-    }
+					if (partDescription.PartType.IsInstanceOfType(templatePart))
+						partDescription.Setter(templateContract, templatePart);
+				}
+			}
 
-    #endregion
+			public void Unbind(TemplateContract templateContract)
+			{
+				foreach (var partDescription in _partDescriptions)
+					partDescription.Setter(templateContract, null);
+			}
+		}
 
-    #region  Nested Types
+		private class TemplateDiscovery
+		{
+			private readonly Dictionary<string, FrameworkElement> _childrenMap;
 
-    private class TemplateContractInfo
-    {
-      #region Fields
+			public TemplateDiscovery(FrameworkElement frameworkElement)
+			{
+				_childrenMap = new Dictionary<string, FrameworkElement>();
 
-      private readonly List<TemplatePartDescriptionInfo> _partDescriptions = new List<TemplatePartDescriptionInfo>();
+				foreach (var fre in frameworkElement.GetVisualDescendants().OfType<FrameworkElement>().Where(d => !string.IsNullOrEmpty(d.Name)))
+				{
+					if (_childrenMap.ContainsKey(fre.Name) == false)
+						_childrenMap.Add(fre.Name, fre);
+				}
 
-      #endregion
+				//_childrenMap = frameworkElement.VisualDescendants()
+				//  .OfType<FrameworkElement>()
+				//  .Where(d => !string.IsNullOrEmpty(d.Name))
+				//  .ToDictionary(d => d.Name, d => d);
+			}
 
-      #region Ctors
+			public DependencyObject GetChild(string name)
+			{
+				return _childrenMap.GetValueOrDefault(name);
+			}
+		}
 
-      public TemplateContractInfo(Type type)
-      {
-        foreach (var propertyInfo in type.GetProperties().Where(p => p.HasAttribute<TemplateContractPartAttribute>(false)))
-          _partDescriptions.Add(new TemplatePartDescriptionInfo(propertyInfo));
+		private class TemplatePartDescriptionInfo
+		{
+			public TemplatePartDescriptionInfo(PropertyInfo propertyInfo)
+			{
+				var declaringPI = propertyInfo.TransformToDeclaringType();
+				var partAttribute = declaringPI.GetAttribute<TemplateContractPartAttribute>();
 
-        foreach (var fieldInfo in type.GetFields().Where(p => p.HasAttribute<TemplateContractPartAttribute>(false)))
-          _partDescriptions.Add(new TemplatePartDescriptionInfo(fieldInfo));
-      }
+				Name = partAttribute.Name ?? propertyInfo.Name;
+				Required = partAttribute.Required;
+				PartType = propertyInfo.PropertyType;
+				Setter = AccessorFactory.CreatePropertySetter<object, object>(declaringPI);
+			}
 
-      #endregion
+			public TemplatePartDescriptionInfo(FieldInfo fieldInfo)
+			{
+				var declaringFI = fieldInfo.TransformToDeclaringType();
+				var partAttribute = declaringFI.GetAttribute<TemplateContractPartAttribute>();
 
-      #region  Methods
+				Name = partAttribute.Name ?? fieldInfo.Name;
+				Required = partAttribute.Required;
+				PartType = fieldInfo.FieldType;
+				Setter = AccessorFactory.CreateFieldSetter<object, object>(declaringFI);
+			}
 
-      public void Bind(TemplateContract templateContract, GetTemplateChild templateChildProvider)
-      {
-        foreach (var partDescription in _partDescriptions)
-        {
-          var templatePart = templateChildProvider(partDescription.Name);
-          if (templatePart == null)
-          {
-            if (partDescription.Required)
-              throw new TemplateValidationException(partDescription.Name);
-
-            continue;
-          }
-
-          if (partDescription.PartType.IsInstanceOfType(templatePart))
-            partDescription.Setter(templateContract, templatePart);
-        }
-      }
-
-      public void Unbind(TemplateContract templateContract)
-      {
-        foreach (var partDescription in _partDescriptions)
-          partDescription.Setter(templateContract, null);
-      }
-
-      #endregion
-    }
-
-    private class TemplateDiscovery
-    {
-      #region Fields
-
-      private readonly Dictionary<string, FrameworkElement> _childrenMap;
-
-      #endregion
-
-      #region Ctors
-
-      public TemplateDiscovery(FrameworkElement frameworkElement)
-      {
-        _childrenMap = new Dictionary<string, FrameworkElement>();
-        foreach (var fre in frameworkElement.GetVisualDescendants().OfType<FrameworkElement>().Where(d => !string.IsNullOrEmpty(d.Name)))
-        {
-          if (_childrenMap.ContainsKey(fre.Name) == false)
-            _childrenMap.Add(fre.Name, fre);
-        }
-
-        //_childrenMap = frameworkElement.VisualDescendants()
-        //  .OfType<FrameworkElement>()
-        //  .Where(d => !string.IsNullOrEmpty(d.Name))
-        //  .ToDictionary(d => d.Name, d => d);
-      }
-
-      #endregion
-
-      #region  Methods
-
-      public DependencyObject GetChild(string name)
-      {
-        return _childrenMap.GetValueOrDefault(name);
-      }
-
-      #endregion
-    }
-
-    private class TemplatePartDescriptionInfo
-    {
-      #region Ctors
-
-      public TemplatePartDescriptionInfo(PropertyInfo propertyInfo)
-      {
-        var declaringPI = propertyInfo.TransformToDeclaringType();
-        var partAttribute = declaringPI.GetAttribute<TemplateContractPartAttribute>();
-        Name = partAttribute.Name ?? propertyInfo.Name;
-        Required = partAttribute.Required;
-        PartType = propertyInfo.PropertyType;
-        Setter = AccessorFactory.CreatePropertySetter<object, object>(declaringPI);
-      }
-
-      public TemplatePartDescriptionInfo(FieldInfo fieldInfo)
-      {
-        var declaringFI = fieldInfo.TransformToDeclaringType();
-        var partAttribute = declaringFI.GetAttribute<TemplateContractPartAttribute>();
-        Name = partAttribute.Name ?? fieldInfo.Name;
-        Required = partAttribute.Required;
-        PartType = fieldInfo.FieldType;
-        Setter = AccessorFactory.CreateFieldSetter<object, object>(declaringFI);
-      }
-
-      #endregion
-
-      #region Properties
-
-      public string Name { get; }
-      public Type PartType { get; }
-      public bool Required { get; }
-      public ValueSetter<object, object> Setter { get; }
-
-      #endregion
-    }
-
-    #endregion
-  }
+			public string Name { get; }
+			public Type PartType { get; }
+			public bool Required { get; }
+			public ValueSetter<object, object> Setter { get; }
+		}
+	}
 }
