@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -102,13 +103,18 @@ namespace Zaaml.UI.Controls.Core
 		}
 	}
 
-	public abstract class ItemTextFilter<TItem> : ItemTextFilter, IItemFilter
+	internal interface IItemsControlProvider
 	{
-		protected abstract bool Pass(TItem item);
+		ItemsControlBase ItemsControl { get;}
+	}
 
-		bool IItemFilter.Pass(object item)
+	public abstract class ItemTextFilter<TItemsControl, TItem> : ItemTextFilter, IItemFilter where TItemsControl : ItemsControlBase
+	{
+		protected abstract bool Pass(TItemsControl itemsControl, TItem item);
+
+		bool IItemFilter.Pass(object item, IServiceProvider serviceProvider)
 		{
-			return Pass((TItem) item);
+			return Pass((TItemsControl)(serviceProvider.GetService<IItemsControlProvider>()?.ItemsControl), (TItem) item);
 		}
 
 		bool IItemFilter.IsEnabled => IsEnabledCache && string.IsNullOrEmpty(FilterTextCache) == false;

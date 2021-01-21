@@ -6,31 +6,22 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	internal class DefaultTreeViewItemTextFilter : TreeViewItemTextFilter<object>
+	public sealed class TreeViewItemTextFilter : TreeViewItemTextFilterBase<object>
 	{
-		public DefaultTreeViewItemTextFilter(TreeViewControl listViewControl)
+		public TreeViewItemTextFilter()
 		{
-			Filter = new DefaultItemTextFilter(listViewControl);
+			Filter = new DefaultItemTextFilter();
 		}
 
 		private DefaultItemTextFilter Filter { get; }
 
-		protected override bool Pass(object item)
+		protected override bool Pass(TreeViewControl treeViewControl, object item)
 		{
-			return Filter.Pass(item, FilterTextCache);
+			return Filter.Pass(item, FilterTextCache, treeViewControl.ItemContentMember);
 		}
 
 		private sealed class DefaultItemTextFilter : DefaultItemTextFilter<TreeViewItem>
 		{
-			public DefaultItemTextFilter(TreeViewControl listViewControl)
-			{
-				TreeViewControl = listViewControl;
-			}
-
-			protected override string ContentMember => TreeViewControl.ItemContentMember;
-
-			public TreeViewControl TreeViewControl { get; }
-
 			protected override object GetItemContent(TreeViewItem item)
 			{
 				return item.Content;

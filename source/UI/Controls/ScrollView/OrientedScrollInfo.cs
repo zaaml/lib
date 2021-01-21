@@ -11,7 +11,7 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.ScrollView
 {
-	internal struct OrientedScrollView
+	internal struct OrientedScrollInfo
 	{
 		#region Fields
 
@@ -23,7 +23,7 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		#region Ctors
 
-		public OrientedScrollView(Orientation orientation)
+		public OrientedScrollInfo(Orientation orientation)
 		{
 			Orientation = orientation;
 
@@ -32,7 +32,7 @@ namespace Zaaml.UI.Controls.ScrollView
 			_viewport = 0.0;
 		}
 
-		public OrientedScrollView(Orientation orientation, double viewport, double extent, double offset)
+		public OrientedScrollInfo(Orientation orientation, double offset, double viewport, double extent)
 		{
 			Orientation = orientation;
 

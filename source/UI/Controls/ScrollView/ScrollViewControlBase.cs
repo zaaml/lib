@@ -231,7 +231,6 @@ namespace Zaaml.UI.Controls.ScrollView
 				if (_scrollViewPanel != null)
 				{
 					_scrollViewPanel.ScrollInfoChanged -= OnScrollInfoChanged;
-					_scrollViewPanel.OffsetChanged -= OnOffsetChanged;
 				}
 
 				_scrollViewPanel = value;
@@ -243,7 +242,6 @@ namespace Zaaml.UI.Controls.ScrollView
 					UpdateOffset();
 
 					_scrollViewPanel.ScrollInfoChanged += OnScrollInfoChanged;
-					_scrollViewPanel.OffsetChanged += OnOffsetChanged;
 				}
 
 				UpdateScroll();
@@ -388,17 +386,20 @@ namespace Zaaml.UI.Controls.ScrollView
 			ExecuteScrollCommandCore(scrollCommandKind);
 		}
 
+		private ScrollCommandKind? LastScrollCommandKind;
+
 		protected virtual void ExecuteScrollCommandCore(ScrollCommandKind scrollCommandKind)
 		{
 			try
 			{
 				EnterScrollCommand();
-
 				SyncScrollOffset();
+
+				LastScrollCommandKind = scrollCommandKind;
 
 				ScrollViewPanel?.ExecuteScrollCommand(scrollCommandKind);
 
-				UpdateScrollOffsetCache(ScrollViewUtils.GetCommandOrientation(scrollCommandKind));
+				//UpdateScrollOffsetCache(ScrollViewUtils.GetCommandOrientation(scrollCommandKind));
 			}
 			finally
 			{
@@ -425,8 +426,6 @@ namespace Zaaml.UI.Controls.ScrollView
 		{
 			return false;
 		}
-
-		//private protected abstract void InvalidatePanelMeasure();
 
 		protected void InvalidateScroll()
 		{
@@ -616,6 +615,13 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		private void OnLayoutUpdate(object sender, EventArgs e)
 		{
+			if (LastScrollCommandKind.HasValue)
+			{
+				UpdateScrollOffsetCache(ScrollViewUtils.GetCommandOrientation(LastScrollCommandKind.Value));
+
+				LastScrollCommandKind = null;
+			}
+
 			//UpdateVerticalScrollBarVisibility();
 			//UpdateHorizontalScrollBarVisibility();
 		}
@@ -631,24 +637,6 @@ namespace Zaaml.UI.Controls.ScrollView
 				ExecuteScrollCommand(e.Delta < 0 ? ScrollCommandKind.MouseWheelLeft : ScrollCommandKind.MouseWheelRight);
 			else
 				ExecuteScrollCommand(e.Delta < 0 ? ScrollCommandKind.MouseWheelDown : ScrollCommandKind.MouseWheelUp);
-		}
-
-		private void OnOffsetChanged(object sender, OffsetChangedEventArgs e)
-		{
-			if (SuspendOffsetHandler)
-				return;
-
-			try
-			{
-				SuspendOffsetHandler = true;
-
-				this.SetCurrentValueInternal(HorizontalOffsetProperty, e.NewOffset.X);
-				this.SetCurrentValueInternal(VerticalOffsetProperty, e.NewOffset.Y);
-			}
-			finally
-			{
-				SuspendOffsetHandler = false;
-			}
 		}
 
 		private void OnScrollableSizeChanged()
@@ -669,6 +657,24 @@ namespace Zaaml.UI.Controls.ScrollView
 		private void OnScrollInfoChanged(object sender, ScrollInfoChangedEventArgs e)
 		{
 			InvalidateScroll();
+
+			if (e.OffsetChanged == false)
+				return;
+
+			if (SuspendOffsetHandler)
+				return;
+
+			try
+			{
+				SuspendOffsetHandler = true;
+
+				this.SetCurrentValueInternal(HorizontalOffsetProperty, e.NewInfo.Offset.X);
+				this.SetCurrentValueInternal(VerticalOffsetProperty, e.NewInfo.Offset.Y);
+			}
+			finally
+			{
+				SuspendOffsetHandler = false;
+			}
 		}
 
 		protected override void OnTemplateContractAttached()
@@ -837,15 +843,9 @@ namespace Zaaml.UI.Controls.ScrollView
 			{
 				SuspendOffsetHandler = true;
 
-				var scrollViewerPanel = ActualScrollViewPanel;
+				var scrollViewPanel = ActualScrollViewPanel;
 				var oldScrollInfo = ScrollInfo;
-				var newScrollInfo = new ScrollInfo
-				{
-					Extent = scrollViewerPanel.Extent,
-					Viewport = scrollViewerPanel.Viewport
-				};
-
-				var newOffset = scrollViewerPanel.Offset;
+				var newScrollInfo = new ScrollInfo(scrollViewPanel.Offset, scrollViewPanel.Viewport, scrollViewPanel.Extent);
 
 				if (oldScrollInfo.Extent.Height.Equals(newScrollInfo.Extent.Height) == false)
 					ExtentHeight = newScrollInfo.Extent.Height;
@@ -859,8 +859,8 @@ namespace Zaaml.UI.Controls.ScrollView
 				if (oldScrollInfo.Viewport.Width.Equals(newScrollInfo.Viewport.Width) == false)
 					ViewportWidth = newScrollInfo.Viewport.Width;
 
-				HorizontalOffset = newOffset.X;
-				VerticalOffset = newOffset.Y;
+				HorizontalOffset = newScrollInfo.Offset.X;
+				VerticalOffset = newScrollInfo.Offset.Y;
 
 				var scrollableSize = newScrollInfo.ScrollableSize;
 				var currentScrollableSize = oldScrollInfo.ScrollableSize;
@@ -936,12 +936,6 @@ namespace Zaaml.UI.Controls.ScrollView
 			}
 
 			public event EventHandler<ScrollInfoChangedEventArgs> ScrollInfoChanged
-			{
-				add { }
-				remove { }
-			}
-
-			public event EventHandler<OffsetChangedEventArgs> OffsetChanged
 			{
 				add { }
 				remove { }

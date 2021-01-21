@@ -6,16 +6,16 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.PropertyView
 {
-	public sealed class PropertyViewItemCellPresenter
-		: GridCellPresenter<PropertyViewItemCellPresenter,
-			PropertyViewItemCellPanel,
+	public sealed class PropertyViewItemCellsPresenter
+		: GridCellsPresenter<PropertyViewItemCellsPresenter,
+			PropertyViewItemCellsPanel,
 			PropertyViewItemCellCollection,
 			PropertyViewItemCell,
 			PropertyViewItemCellSplitter,
 			PropertyViewItemCellColumnController,
 			PropertyViewItemColumn>
 	{
-		public PropertyViewItemCellPresenter()
+		public PropertyViewItemCellsPresenter()
 		{
 			AllowCellSplitter = true;
 		}

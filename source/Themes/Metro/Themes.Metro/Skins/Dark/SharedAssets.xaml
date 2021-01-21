@@ -469,6 +469,20 @@
       <SolidColorBrush x:Key="Unselected" Color="#FF333333" />
       <SolidColorBrush x:Key="SelectedUnfocused" Color="#FF666666" />
     </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      <SolidColorBrush x:Key="Disabled" Color="#FF515151" />
+
+      <SolidColorBrush x:Key="Focused" Color="#FF515151" />
+      <SolidColorBrush x:Key="Unfocused" Color="#FF515151" />
+
+      <SolidColorBrush x:Key="Selected" Color="#FF515151" />
+      <SolidColorBrush x:Key="Unselected" Color="#FF515151" />
+      <SolidColorBrush x:Key="SelectedUnfocused" Color="#FF515151" />
+    </zm:SkinDictionary>
   </zm:SkinDictionary>
 
   <!-- DropDownItemsControl -->

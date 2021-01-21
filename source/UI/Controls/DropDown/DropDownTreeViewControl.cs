@@ -75,7 +75,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override bool AutoPreserveEditorText => TreeViewControl?.ActualItemsFilter == null;
 
-		private DefaultTreeViewItemTextFilter DefaultFilter { get; set; }
+		private TreeViewItemTextFilter DefaultFilter { get; set; }
 
 		private DropDownTreeViewSelectionPresenter DefaultSelectionPresenter => _defaultSelectionPresenter ??= CreteDefaultSelectionPresenter();
 
@@ -247,7 +247,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 			if (newTreeViewControl != null)
 			{
-				newTreeViewControl.ItemsDefaultFilter = DefaultFilter = new DefaultTreeViewItemTextFilter(newTreeViewControl);
+				newTreeViewControl.ItemsDefaultFilter = DefaultFilter = new TreeViewItemTextFilter();
 				newTreeViewControl.ItemMouseButtonUp += OnTreeViewItemMouseButtonUp;
 				newTreeViewControl.ItemIsExpandedChanged += OnItemIsExpandedChanged;
 				newTreeViewControl.ItemClickMode = ClickMode.Release;

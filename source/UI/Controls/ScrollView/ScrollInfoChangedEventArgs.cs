@@ -6,50 +6,43 @@ using System;
 
 namespace Zaaml.UI.Controls.ScrollView
 {
-  public sealed class ScrollInfoChangedEventArgs : EventArgs
-  {
-    #region Ctors
+	public sealed class ScrollInfoChangedEventArgs : EventArgs
+	{
+		public ScrollInfoChangedEventArgs(ScrollInfo oldInfo, ScrollInfo newInfo)
+		{
+			OldInfo = oldInfo;
+			NewInfo = newInfo;
+		}
 
-    public ScrollInfoChangedEventArgs(ScrollInfo oldInfo, ScrollInfo newInfo)
-    {
-      OldInfo = oldInfo;
-      NewInfo = newInfo;
-    }
+		public bool ExtentChanged => OldInfo.Extent.Equals(NewInfo.Extent) == false;
 
-    #endregion
+		public ScrollInfo NewInfo { get; }
 
-    #region Properties
+		public bool OffsetChanged => OldInfo.Offset.Equals(NewInfo.Offset) == false;
 
-    public ScrollInfo NewInfo { get; }
+		public ScrollInfo OldInfo { get; }
 
-    public ScrollInfo OldInfo { get; }
+		public bool ViewportChanged => OldInfo.Viewport.Equals(NewInfo.Viewport) == false;
 
-    #endregion
+		private bool Equals(ScrollInfoChangedEventArgs other)
+		{
+			return NewInfo.Equals(other.NewInfo) && OldInfo.Equals(other.OldInfo);
+		}
 
-    #region  Methods
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
 
-    private bool Equals(ScrollInfoChangedEventArgs other)
-    {
-      return NewInfo.Equals(other.NewInfo) && OldInfo.Equals(other.OldInfo);
-    }
+			return obj is ScrollInfoChangedEventArgs a && Equals(a);
+		}
 
-    public override bool Equals(object obj)
-    {
-      if (ReferenceEquals(null, obj)) return false;
-      if (ReferenceEquals(this, obj)) return true;
-
-      var a = obj as ScrollInfoChangedEventArgs;
-      return a != null && Equals(a);
-    }
-
-    public override int GetHashCode()
-    {
-      unchecked
-      {
-        return (NewInfo.GetHashCode() * 397) ^ OldInfo.GetHashCode();
-      }
-    }
-
-    #endregion
-  }
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return (NewInfo.GetHashCode() * 397) ^ OldInfo.GetHashCode();
+			}
+		}
+	}
 }

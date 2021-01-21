@@ -6,7 +6,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	public abstract class ListViewItemTextFilter<TItem> : ItemTextFilter<TItem>, IListViewItemFilter
+	public abstract class ListViewItemTextFilterBase<TItem> : ItemTextFilter<ListViewControl, TItem>, IListViewItemFilter
 	{
 	}
 }

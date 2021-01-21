@@ -469,6 +469,20 @@
       <SolidColorBrush x:Key="Unselected" Color="#FFFFFFFF" zmb:Skin="Office" />
       <SolidColorBrush x:Key="SelectedUnfocused" Color="#FFD4D4D4" zmb:Skin="Office" />
     </zm:SkinDictionary>
+
+    <!-- BorderBrush -->
+    <zm:SkinDictionary x:Key="BorderBrush">
+      <SolidColorBrush x:Key="Normal" Color="#FFADADAD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FFADADAD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Disabled" Color="#FFADADAD" zmb:Skin="Office" />
+
+      <SolidColorBrush x:Key="Focused" Color="#FFADADAD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Unfocused" Color="#FFADADAD" zmb:Skin="Office" />
+
+      <SolidColorBrush x:Key="Selected" Color="#FFADADAD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Unselected" Color="#FFADADAD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="SelectedUnfocused" Color="#FFADADAD" zmb:Skin="Office" />
+    </zm:SkinDictionary>
   </zm:SkinDictionary>
 
   <!-- DropDownItemsControl -->

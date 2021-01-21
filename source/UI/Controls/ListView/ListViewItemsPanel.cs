@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Utils;
+using ScrollUnit = Zaaml.UI.Controls.ScrollView.ScrollUnit;
 
 namespace Zaaml.UI.Controls.ListView
 {
@@ -23,6 +24,8 @@ namespace Zaaml.UI.Controls.ListView
 		internal ListViewControl ListViewControl => ItemsPresenter?.ListViewControl;
 
 		protected override Orientation Orientation => Orientation.Vertical;
+
+		protected override ScrollUnit ScrollUnit => ListViewControl?.ScrollUnit ?? base.ScrollUnit;
 
 		private protected override IVirtualItemCollection VirtualItemCollection => ListViewControl?.VirtualItemCollection;
 

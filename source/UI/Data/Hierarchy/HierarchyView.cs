@@ -516,8 +516,7 @@ namespace Zaaml.UI.Data.Hierarchy
 				return;
 
 			// TODO SelectionController exception
-			//DataPlainListView.RaiseChange(index, count);
-			DataPlainListView.RaiseReset();
+			DataPlainListView.RaiseChange(index, count);
 		}
 
 		internal void RaiseReset()

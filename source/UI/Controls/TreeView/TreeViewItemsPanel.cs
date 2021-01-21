@@ -1,4 +1,4 @@
-﻿// <copyright file="TreeViewPanel.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="TreeViewItemsPanel.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Utils;
+using ScrollUnit = Zaaml.UI.Controls.ScrollView.ScrollUnit;
 
 namespace Zaaml.UI.Controls.TreeView
 {
@@ -21,6 +22,8 @@ namespace Zaaml.UI.Controls.TreeView
 		internal TreeViewItemsPresenter ItemsPresenter { get; set; }
 
 		protected override Orientation Orientation => Orientation.Vertical;
+
+		protected override ScrollUnit ScrollUnit => TreeViewControl?.ScrollUnit ?? base.ScrollUnit;
 
 		internal TreeViewControl TreeViewControl => ItemsPresenter?.TreeViewControl;
 

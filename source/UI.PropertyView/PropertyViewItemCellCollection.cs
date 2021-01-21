@@ -7,15 +7,15 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.PropertyView
 {
 	public sealed class PropertyViewItemCellCollection
-		: GridCellCollection<PropertyViewItemCellPresenter,
-			PropertyViewItemCellPanel,
+		: GridCellCollection<PropertyViewItemCellsPresenter,
+			PropertyViewItemCellsPanel,
 			PropertyViewItemCellCollection,
 			PropertyViewItemCell,
 			PropertyViewItemCellSplitter,
 			PropertyViewItemCellColumnController,
 			PropertyViewItemColumn>
 	{
-		public PropertyViewItemCellCollection(PropertyViewItemCellPresenter cellPresenter) : base(cellPresenter)
+		public PropertyViewItemCellCollection(PropertyViewItemCellsPresenter cellsPresenter) : base(cellsPresenter)
 		{
 		}
 	}

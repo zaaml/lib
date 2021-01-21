@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Specialized;
+using Zaaml.Core.Collections;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
@@ -20,7 +21,12 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		internal void RaiseChange(int index, int count)
 		{
-			CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(count > 0 ? NotifyCollectionChangedAction.Add : NotifyCollectionChangedAction.Remove, new ChangeCollection(Math.Abs(count)), index));
+			var changeCollection = new ChangeCollection(Math.Abs(count));
+
+			CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgsEx(count > 0 ? NotifyCollectionChangedAction.Add : NotifyCollectionChangedAction.Remove, changeCollection, index)
+			{
+				OriginalChangedItems = changeCollection
+			});
 		}
 
 		internal void RaiseReset()
@@ -46,7 +52,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		#region  Nested Types
 
-		private class ChangeCollection : IList
+		private class ChangeCollection : IList, ICountOnlyCollection
 		{
 			#region Ctors
 

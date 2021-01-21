@@ -7,8 +7,8 @@ using Zaaml.UI.Controls.Core;
 namespace Zaaml.UI.Controls.PropertyView
 {
 	public sealed class PropertyViewItemColumn
-		: GridCellColumn<PropertyViewItemCellPresenter,
-			PropertyViewItemCellPanel,
+		: GridCellColumn<PropertyViewItemCellsPresenter,
+			PropertyViewItemCellsPanel,
 			PropertyViewItemCellCollection,
 			PropertyViewItemCell,
 			PropertyViewItemCellSplitter,

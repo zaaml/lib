@@ -8,7 +8,7 @@ using Zaaml.UI.Controls.TreeView.Data;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	internal sealed class VirtualTreeViewItemCollection : VirtualItemCollection<TreeViewControl, TreeViewItem>, IItemCollection<TreeViewItem>
+	internal sealed class VirtualTreeViewItemCollection : VirtualItemCollection<TreeViewItem>, IItemCollection<TreeViewItem>
 	{
 		private TreeViewData _treeViewData;
 
@@ -35,9 +35,9 @@ namespace Zaaml.UI.Controls.TreeView
 			}
 		}
 
-		protected override void ObservableSourceOnCollectionChanged(NotifyCollectionChangedEventArgs e)
+		protected override void OnSourceCollectionChanged(NotifyCollectionChangedEventArgs e)
 		{
-			base.ObservableSourceOnCollectionChanged(e);
+			base.OnSourceCollectionChanged(e);
 
 			TreeViewControl.InvalidatePanelInternal();
 		}

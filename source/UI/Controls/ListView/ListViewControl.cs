@@ -20,6 +20,7 @@ using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.ListView.Data;
 using Zaaml.UI.Controls.ScrollView;
+using ScrollUnit = Zaaml.UI.Controls.ScrollView.ScrollUnit;
 
 namespace Zaaml.UI.Controls.ListView
 {
@@ -73,6 +74,12 @@ namespace Zaaml.UI.Controls.ListView
 
 		public static readonly DependencyProperty ItemGlyphKindProperty = DPM.Register<ListViewGlyphKind, ListViewControl>
 			("ItemGlyphKind", ListViewGlyphKind.None);
+
+		public static readonly DependencyProperty ScrollUnitProperty = DPM.Register<ScrollUnit, ListViewControl>
+			("ScrollUnit", ScrollUnit.Item, d => d.OnScrollUnitPropertyChangedPrivate);
+
+		public static readonly DependencyProperty ViewProperty = DPM.Register<ListViewBase, ListViewControl>
+			("View", default, d => d.OnViewPropertyChangedPrivate);
 
 		private DefaultItemTemplateListViewItemGenerator _defaultGeneratorImpl;
 		private IListViewItemFilter _itemsDefaultFilter;
@@ -213,6 +220,12 @@ namespace Zaaml.UI.Controls.ListView
 
 		private ListViewFocusNavigator ListViewFocusNavigator => (ListViewFocusNavigator) FocusNavigator;
 
+		public ScrollUnit ScrollUnit
+		{
+			get => (ScrollUnit) GetValue(ScrollUnitProperty);
+			set => SetValue(ScrollUnitProperty, value);
+		}
+
 		internal ScrollViewControl ScrollViewInternal => ScrollView;
 
 		public ListViewSelectionCollection SelectionCollection => this.GetValueOrCreate(SelectionCollectionPropertyKey, () => new ListViewSelectionCollection((ListViewSelectorController) SelectorController));
@@ -229,6 +242,12 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			get => (IEnumerable) GetValue(SourceCollectionProperty);
 			set => SetValue(SourceCollectionProperty, value);
+		}
+
+		public ListViewBase View
+		{
+			get => (ListViewBase) GetValue(ViewProperty);
+			set => SetValue(ViewProperty, value);
 		}
 
 		internal VirtualListViewItemCollection VirtualItemCollection { get; }
@@ -495,6 +514,11 @@ namespace Zaaml.UI.Controls.ListView
 			base.OnPreviewMouseMove(e);
 		}
 
+		private void OnScrollUnitPropertyChangedPrivate(ScrollUnit oldValue, ScrollUnit newValue)
+		{
+			InvalidatePanelCore();
+		}
+
 		private void OnSelectionModePropertyChangedPrivate()
 		{
 			SelectorController.MultipleSelection = SelectionMode == ListViewSelectionMode.Multiple;
@@ -517,6 +541,10 @@ namespace Zaaml.UI.Controls.ListView
 			ItemsPresenter.ListViewControl = null;
 
 			base.OnTemplateContractDetaching();
+		}
+
+		private void OnViewPropertyChangedPrivate(ListViewBase oldValue, ListViewBase newValue)
+		{
 		}
 
 		internal void RaiseClick(ListViewItem listViewItem)

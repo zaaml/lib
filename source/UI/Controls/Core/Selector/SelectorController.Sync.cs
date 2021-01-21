@@ -4,6 +4,7 @@
 
 using System.Collections.Specialized;
 using Zaaml.Core;
+using Zaaml.Core.Collections;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -183,10 +184,12 @@ namespace Zaaml.UI.Controls.Core
 		{
 			VerifySafe();
 
+			var forceReset = e is NotifyCollectionChangedEventArgsEx argsEx && argsEx.OriginalChangedItems is ICountOnlyCollection;
+
 			if (e.Action == NotifyCollectionChangedAction.Move)
 			{
 			}
-			else if (e.Action == NotifyCollectionChangedAction.Reset)
+			else if (e.Action == NotifyCollectionChangedAction.Reset || forceReset)
 			{
 				if (SupportsIndex)
 				{

@@ -7,45 +7,39 @@ using System.Windows.Markup;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
-using Zaaml.UI.Utils;
 
 namespace Zaaml.UI.Controls.Core
 {
 	[ContentProperty(nameof(Cells))]
-	public abstract class GridCellPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn> : FixedTemplateControl<TGridCellPanel>
-		where TGridCellPresenter : GridCellPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellPanel : GridCellPanel<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
+	public abstract class GridCellsPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn> : FixedTemplateControl<TGridCellPanel>
+		where TGridCellPresenter : GridCellsPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
+		where TGridCellPanel : GridCellsPanel<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
 		where TGridCellCollection : GridCellCollection<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
 		where TGridCell : GridCell<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
 		where TGridCellSplitter : GridCellSplitter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
 		where TGridCellColumnController : GridCellColumnController<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
 		where TGridCellColumn : GridCellColumn<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
 	{
-		static GridCellPresenter()
-		{
-			UIElementUtils.OverrideFocusable<GridCellPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(false);
-			ControlUtils.OverrideIsTabStop<GridCellPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(false);
-			FrameworkElementUtils.OverrideVisualStyle<GridCellPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(null);
-		}
-
 		private static readonly DependencyPropertyKey CellsPropertyKey = DPM.RegisterReadOnly<TGridCellCollection, TGridCellPresenter>
 			("CellsInternal");
 
 		public static readonly DependencyProperty AllowCellSplitterProperty = DPM.Register<bool, TGridCellPresenter>
 			("AllowCellSplitter", default, d => d.OnAllowCellSplitterPropertyChangedPrivate);
 
+		public static readonly DependencyProperty CellsProperty = CellsPropertyKey.DependencyProperty;
+
+		static GridCellsPresenter()
+		{
+			UIElementUtils.OverrideFocusable<GridCellsPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(false);
+			ControlUtils.OverrideIsTabStop<GridCellsPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(false);
+			FrameworkElementUtils.OverrideVisualStyle<GridCellsPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(null);
+		}
+
 		public bool AllowCellSplitter
 		{
 			get => (bool) GetValue(AllowCellSplitterProperty);
 			set => SetValue(AllowCellSplitterProperty, value);
 		}
-
-		private void OnAllowCellSplitterPropertyChangedPrivate(bool oldValue, bool newValue)
-		{
-			TemplateRoot?.InvalidateStructure();
-		}
-
-		public static readonly DependencyProperty CellsProperty = CellsPropertyKey.DependencyProperty;
 
 		public TGridCellCollection Cells => this.GetValueOrCreate(CellsPropertyKey, CreateCellCollection);
 
@@ -61,6 +55,11 @@ namespace Zaaml.UI.Controls.Core
 		}
 
 		protected abstract TGridCellCollection CreateCellCollection();
+
+		private void OnAllowCellSplitterPropertyChangedPrivate(bool oldValue, bool newValue)
+		{
+			TemplateRoot?.InvalidateStructure();
+		}
 
 		protected override void UndoTemplateOverride()
 		{

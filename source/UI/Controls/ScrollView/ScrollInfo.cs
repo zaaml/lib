@@ -9,35 +9,61 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.UI.Controls.ScrollView
 {
-	public struct ScrollInfo
+	public readonly struct ScrollInfo
 	{
-		//private Vector _offset;
-		private Size _extent;
-		private Size _viewport;
-
-		public Size Extent
+		public ScrollInfo(Vector offset, Size viewport, Size extent)
 		{
-			get => _extent;
-			set => _extent = value;
+			Offset = offset;
+			Extent = extent;
+			Viewport = viewport;
+
+			Offset = ClampOffset(offset);
 		}
 
-		//public Vector Offset
-		//{
-		//  get { return _offset; }
-		//  set { _offset = value; }
-		//}
+		public Size Extent { get; }
 
-		public Size Viewport
-		{
-			get => _viewport;
-			set => _viewport = value;
-		}
+		public Vector Offset { get; }
+
+		public Size Viewport { get; }
 
 		public Size ScrollableSize => new Size
 		{
-			Height = Math.Max(_extent.Height - _viewport.Height, 0),
-			Width = Math.Max(_extent.Width - _viewport.Width, 0),
+			Height = Math.Max(Extent.Height - Viewport.Height, 0),
+			Width = Math.Max(Extent.Width - Viewport.Width, 0),
 		};
+
+		public ScrollInfo WithOffset(Vector offset)
+		{
+			offset = ClampOffset(offset);
+
+			return new ScrollInfo(offset, Viewport, Extent);
+		}
+
+		internal ScrollInfo WithExtent(Size extent)
+		{
+			return new ScrollInfo(Offset, Viewport, extent);
+		}
+
+		internal ScrollInfo WithViewport(Size viewport)
+		{
+			return new ScrollInfo(Offset, viewport, Extent);
+		}
+
+		internal ScrollInfo WithOffset(Vector offset, bool expandExtent)
+		{
+			if (expandExtent == false)
+				return WithOffset(offset);
+
+			var extent = Extent;
+
+			if (extent.Width < Viewport.Width + offset.X)
+				extent.Width = Viewport.Width + offset.X;
+
+			if (extent.Height < Viewport.Height + offset.Y)
+				extent.Height = Viewport.Height + offset.Y;
+
+			return new ScrollInfo(offset, Viewport, extent);
+		}
 
 		internal Vector ClampOffset(Vector offset)
 		{
@@ -51,7 +77,7 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		public bool Equals(ScrollInfo other)
 		{
-			return _extent.Equals(other._extent) && _viewport.Equals(other._viewport);
+			return Extent.Equals(other.Extent) && Viewport.Equals(other.Viewport) && Offset.Equals(other.Offset);
 		}
 
 		public override bool Equals(object obj)
@@ -63,9 +89,10 @@ namespace Zaaml.UI.Controls.ScrollView
 		{
 			unchecked
 			{
-				var hashCode = EqualityComparer<Size>.Default.GetHashCode(_extent);
+				var hashCode = EqualityComparer<Size>.Default.GetHashCode(Extent);
 
-				hashCode = (hashCode * 397) ^ EqualityComparer<Size>.Default.GetHashCode(_viewport);
+				hashCode = (hashCode * 397) ^ EqualityComparer<Size>.Default.GetHashCode(Viewport);
+				hashCode = (hashCode * 397) ^ EqualityComparer<Vector>.Default.GetHashCode(Offset);
 
 				return hashCode;
 			}

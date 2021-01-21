@@ -104,7 +104,7 @@ namespace Zaaml.UI.Controls.Core
 							ScrollIntoView(new BringIntoViewRequest<TItem>(FocusedIndex));
 
 						if (_suspendFocus == false)
-							FocusItem(newFocusedItem);
+							FocusItem(newFocusedItem, false);
 					}
 				}
 				finally
@@ -172,9 +172,7 @@ namespace Zaaml.UI.Controls.Core
 			if (FocusedIndex == -1)
 				FocusedIndex = 0;
 			else
-			{
-				FocusItem(FocusedItem);
-			}
+				FocusItem(FocusedItem, true);
 		}
 
 		protected int GetFirstItemOnCurrentPage(int startIndex, Direction direction)
@@ -358,7 +356,7 @@ namespace Zaaml.UI.Controls.Core
 				return;
 
 			if (FocusHelper.HasKeyboardFocus(Control) && GetIndexFromItem(item) == FocusedIndex)
-				FocusItem(item);
+				FocusItem(item, false);
 		}
 
 		protected override void OnItemDetached(TItem item)

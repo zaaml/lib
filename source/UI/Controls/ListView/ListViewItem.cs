@@ -2,9 +2,14 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
+using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using Zaaml.Core;
+using Zaaml.PresentationCore.Converters;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -17,6 +22,7 @@ using Zaaml.UI.Controls.Primitives;
 using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Utils;
+using Control = Zaaml.UI.Controls.Core.Control;
 
 namespace Zaaml.UI.Controls.ListView
 {
@@ -62,6 +68,8 @@ namespace Zaaml.UI.Controls.ListView
 		}
 
 		internal Rect ArrangeRect { get; private set; }
+
+		private ListViewItemCellsPresenter CellsPresenter => TemplateContract.CellsPresenter;
 
 		public object CommandParameter
 		{
@@ -274,10 +282,16 @@ namespace Zaaml.UI.Controls.ListView
 			base.OnTemplateContractAttached();
 
 			UpdateGlyphPresenter();
+			
+			if (CellsPresenter != null)
+				CellsPresenter.ListViewItem = this;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
+			if (CellsPresenter != null)
+				CellsPresenter.ListViewItem = null;
+
 			CleanGlyphPresenter();
 
 			base.OnTemplateContractDetaching();
@@ -410,7 +424,34 @@ namespace Zaaml.UI.Controls.ListView
 
 	public class ListViewItemTemplateContract : IconContentControlTemplateContract
 	{
-		[TemplateContractPart(Required = true)]
+		[TemplateContractPart(Required = false)]
+		public ListViewItemCellsPresenter CellsPresenter { get; [UsedImplicitly] private set; }
+
+		[TemplateContractPart(Required = false)]
 		public ListViewItemGlyphPresenter GlyphPresenter { get; [UsedImplicitly] private set; }
+	}
+
+	public class ListViewItemTemplateConverter : BaseValueConverter
+	{
+		public ControlTemplate DefaultViewTemplate { get; set; }
+
+		public ControlTemplate GridViewTemplate { get; set; }
+
+		protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotSupportedException();
+		}
+
+		protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			switch (value)
+			{
+				case ListGridView:
+					return GridViewTemplate;
+
+				default:
+					return DefaultViewTemplate;
+			}
+		}
 	}
 }

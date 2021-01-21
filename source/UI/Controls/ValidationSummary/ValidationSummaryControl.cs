@@ -15,6 +15,8 @@ using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
+using Zaaml.UI.Controls.Core;
+using ContentControl = System.Windows.Controls.ContentControl;
 using Control = Zaaml.UI.Controls.Core.Control;
 using Style = System.Windows.Style;
 using ZaamlLocalization = Zaaml.UI.Localization;

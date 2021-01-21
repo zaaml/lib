@@ -190,7 +190,7 @@ namespace Zaaml.Core.Collections
 			return -1;
 		}
 
-		public SparseLinkedListNode<T> FindNode(int index, out long offset)
+		public SparseLinkedListNode<T> FindNode(long index, out long offset)
 		{
 			var node = FindNodeImpl(index, out offset);
 

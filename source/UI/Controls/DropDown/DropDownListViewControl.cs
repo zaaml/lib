@@ -69,7 +69,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override bool AutoPreserveEditorText => ListViewControl?.ActualItemsFilter == null;
 
-		private DefaultListViewItemTextFilter DefaultFilter { get; set; }
+		private ListViewItemTextFilter DefaultFilter { get; set; }
 
 		private DropDownListViewSelectionPresenter DefaultSelectionPresenter => _defaultSelectionPresenter ??= CreteDefaultSelectionPresenter();
 
@@ -185,7 +185,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 			if (newListViewControl != null)
 			{
-				newListViewControl.ItemsDefaultFilter = DefaultFilter = new DefaultListViewItemTextFilter(newListViewControl);
+				newListViewControl.ItemsDefaultFilter = DefaultFilter = new ListViewItemTextFilter();
 				newListViewControl.ItemMouseButtonUp += OnListViewItemMouseButtonUp;
 				newListViewControl.ItemClickMode = ClickMode.Release;
 				newListViewControl.FocusItemOnMouseHover = true;

@@ -15,14 +15,7 @@ namespace Zaaml.UI.Panels
 {
 	internal interface IScrollViewPanelLayout
 	{
-		#region Fields
-
 		event EventHandler<ScrollInfoChangedEventArgs> ScrollInfoChanged;
-		event EventHandler<OffsetChangedEventArgs> OffsetChanged;
-
-		#endregion
-
-		#region Properties
 
 		bool CanHorizontallyScroll { get; set; }
 
@@ -34,21 +27,13 @@ namespace Zaaml.UI.Panels
 
 		Size Viewport { get; }
 
-		#endregion
-
-		#region  Methods
-
 		void ExecuteScrollCommand(ScrollCommandKind command);
-
-		#endregion
 	}
 
 	internal abstract class ScrollPanelLayoutBase<TPanel> : PanelLayoutBase<TPanel>, IScrollViewPanelLayout where TPanel : IPanel, IScrollViewPanel
 	{
-		private Vector _offset;
 		private byte _packedValue;
 		private ScrollInfo _scrollInfo;
-		private event EventHandler<OffsetChangedEventArgs> OffsetChanged;
 		private event EventHandler<ScrollInfoChangedEventArgs> ScrollInfoChanged;
 
 		protected ScrollPanelLayoutBase(TPanel panel) : base(panel)
@@ -81,24 +66,14 @@ namespace Zaaml.UI.Panels
 
 				OnCanScrollChanged();
 			}
-		}		
-	
-		protected virtual Size Extent => ScrollInfo.Extent;
+		}
+
+		protected Size Extent => ScrollInfo.Extent;
 
 		protected Vector Offset
 		{
-			get => _offset;
-			set
-			{
-				if (_offset.Equals(value))
-					return;
-
-				var offsetChangedEventArgs = new OffsetChangedEventArgs(_offset, value);
-
-				_offset = value;
-
-				OnOffsetChanged(offsetChangedEventArgs);
-			}
+			get => ScrollInfo.Offset;
+			set => ScrollInfo = ScrollInfo.WithOffset(value);
 		}
 
 		protected ScrollInfo ScrollInfo
@@ -106,7 +81,7 @@ namespace Zaaml.UI.Panels
 			get => _scrollInfo;
 			set
 			{
-				var oldScrollInfo = ScrollInfo;
+				var oldScrollInfo = _scrollInfo;
 
 				if (oldScrollInfo.Equals(value))
 					return;
@@ -117,7 +92,7 @@ namespace Zaaml.UI.Panels
 			}
 		}
 
-		protected virtual Size Viewport => ScrollInfo.Viewport;
+		protected Size Viewport => ScrollInfo.Viewport;
 
 		protected virtual void ExecuteScrollCommand(ScrollCommandKind command)
 		{
@@ -127,12 +102,11 @@ namespace Zaaml.UI.Panels
 		{
 		}
 
-		protected virtual void OnOffsetChanged(OffsetChangedEventArgs eventArgs)
+		private protected virtual void OnOffsetChanged()
 		{
-			OffsetChanged?.Invoke(this, eventArgs);
 		}
 
-		protected void OnScrollInfoChanged(ScrollInfoChangedEventArgs eventArgs)
+		protected virtual void OnScrollInfoChanged(ScrollInfoChangedEventArgs eventArgs)
 		{
 			ScrollInfoChanged?.Invoke(this, eventArgs);
 		}
@@ -141,12 +115,6 @@ namespace Zaaml.UI.Panels
 		{
 			add => ScrollInfoChanged += value;
 			remove => ScrollInfoChanged -= value;
-		}
-
-		event EventHandler<OffsetChangedEventArgs> IScrollViewPanelLayout.OffsetChanged
-		{
-			add => OffsetChanged += value;
-			remove => OffsetChanged -= value;
 		}
 
 		bool IScrollViewPanelLayout.CanHorizontallyScroll
@@ -166,7 +134,15 @@ namespace Zaaml.UI.Panels
 		Vector IScrollViewPanelLayout.Offset
 		{
 			get => Offset;
-			set => Offset = value;
+			set
+			{
+				if (Offset.Equals(value))
+					return;
+
+				Offset = value;
+
+				OnOffsetChanged();
+			}
 		}
 
 		Size IScrollViewPanelLayout.Viewport => Viewport;

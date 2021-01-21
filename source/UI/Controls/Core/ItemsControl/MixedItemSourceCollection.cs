@@ -46,12 +46,18 @@ namespace Zaaml.UI.Controls.Core
 
 		private void OnItemCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
-			CollectionChanged?.Invoke(this, ResetArgs);
+			if (IndexedSourceCollection.IsEmpty || IndexedSourceCollection.Count == 0)
+				CollectionChanged?.Invoke(this, e);
+			else
+				CollectionChanged?.Invoke(this, ResetArgs);
 		}
 
 		private void OnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
-			CollectionChanged?.Invoke(this, ResetArgs);
+			if (ItemCollection.Count == 0)
+				CollectionChanged?.Invoke(this, e);
+			else
+				CollectionChanged?.Invoke(this, ResetArgs);
 		}
 
 		public void Dispose()

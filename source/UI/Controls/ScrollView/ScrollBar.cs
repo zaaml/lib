@@ -224,6 +224,8 @@ namespace Zaaml.UI.Controls.ScrollView
 			UpdateCanScroll();
 
 			UpdateThumbSize();
+
+			SyncThumb();
 		}
 
 		protected override void OnMinimumChanged(double oldValue, double newValue)
@@ -233,6 +235,8 @@ namespace Zaaml.UI.Controls.ScrollView
 			UpdateCanScroll();
 
 			UpdateThumbSize();
+
+			SyncThumb();
 		}
 
 		protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -288,9 +292,21 @@ namespace Zaaml.UI.Controls.ScrollView
 			base.OnTemplateContractDetaching();
 		}
 
+		protected override void OnValueChanged(double oldValue, double newValue)
+		{
+			base.OnValueChanged(oldValue, newValue);
+
+			SyncThumb();
+		}
+
 		private void OnViewportSizeChanged()
 		{
 			UpdateThumbSize();
+		}
+
+		private void SyncThumb()
+		{
+			TrackBar?.SyncDragItem();
 		}
 
 		private void TrackBarOnDragEnded(object sender, TrackBarControlDragEventArgs e)

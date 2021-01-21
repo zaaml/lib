@@ -10,7 +10,6 @@ namespace Zaaml.UI.Controls.Core
 {
 	internal abstract class DefaultItemTextFilter<TItem>
 	{
-		protected abstract string ContentMember { get; }
 		private Dictionary<Tuple<Type, string>, MemberEvaluator> ContentMemberEvaluators { get; } = new Dictionary<Tuple<Type, string>, MemberEvaluator>();
 
 		private static bool FilterContent(object content, string filterText)
@@ -22,7 +21,7 @@ namespace Zaaml.UI.Controls.Core
 
 		protected abstract object GetItemContent(TItem item);
 
-		public bool Pass(object itemSource, string filterText)
+		public bool Pass(object itemSource, string filterText, string itemContentMember)
 		{
 			if (string.IsNullOrEmpty(filterText))
 				return true;
@@ -32,8 +31,6 @@ namespace Zaaml.UI.Controls.Core
 
 			if (itemSource is TItem item)
 				return FilterContent(GetItemContent(item), filterText);
-
-			var itemContentMember = ContentMember;
 
 			if (itemContentMember != null)
 			{

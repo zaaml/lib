@@ -21,6 +21,7 @@ using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.ScrollView;
 using Zaaml.UI.Controls.TreeView.Data;
 using Zaaml.UI.Data.Hierarchy;
+using ScrollUnit = Zaaml.UI.Controls.ScrollView.ScrollUnit;
 
 namespace Zaaml.UI.Controls.TreeView
 {
@@ -84,6 +85,9 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public static readonly DependencyProperty ItemGlyphKindProperty = DPM.Register<TreeViewGlyphKind, TreeViewControl>
 			("ItemGlyphKind");
+
+		public static readonly DependencyProperty ScrollUnitProperty = DPM.Register<ScrollUnit, TreeViewControl>
+			("ScrollUnit", ScrollUnit.Item, d => d.OnScrollUnitPropertyChangedPrivate);
 
 		private TreeViewItem _currentItem;
 		private DefaultItemTemplateTreeViewItemGenerator _defaultGeneratorImplementation;
@@ -241,6 +245,12 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			get => (string) GetValue(ItemSourceCollectionMemberProperty);
 			set => SetValue(ItemSourceCollectionMemberProperty, value);
+		}
+
+		public ScrollUnit ScrollUnit
+		{
+			get => (ScrollUnit) GetValue(ScrollUnitProperty);
+			set => SetValue(ScrollUnitProperty, value);
 		}
 
 		internal ScrollViewControl ScrollViewInternal => ScrollView;
@@ -591,6 +601,11 @@ namespace Zaaml.UI.Controls.TreeView
 			IsFocusOnMouseEventLocked = false;
 
 			base.OnPreviewMouseMove(e);
+		}
+
+		private void OnScrollUnitPropertyChangedPrivate(ScrollUnit oldValue, ScrollUnit newValue)
+		{
+			InvalidatePanelCore();
 		}
 
 		protected override void OnSelectionChanged(Selection<TreeViewItem> oldSelection, Selection<TreeViewItem> newSelection)

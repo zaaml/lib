@@ -20,7 +20,7 @@
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="1">
 
-        <zm:PropertyViewItemCellPresenter>
+        <zm:PropertyViewItemCellsPresenter>
           <zm:PropertyViewItemCell>
             <zm:DockPanel Margin="{TemplateBinding ActualLevelPadding}">
 
@@ -65,7 +65,7 @@
 
           <zm:PropertyViewItemCell />
 
-        </zm:PropertyViewItemCellPresenter>
+        </zm:PropertyViewItemCellsPresenter>
       </Border>
 
     </zm:ControlTemplateRoot>

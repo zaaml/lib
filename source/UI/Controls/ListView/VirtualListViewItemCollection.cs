@@ -8,7 +8,7 @@ using Zaaml.UI.Controls.ListView.Data;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	internal sealed class VirtualListViewItemCollection : VirtualItemCollection<ListViewControl, ListViewItem>, IItemCollection<ListViewItem>
+	internal sealed class VirtualListViewItemCollection : VirtualItemCollection<ListViewItem>, IItemCollection<ListViewItem>
 	{
 		private ListViewData _listViewData;
 
@@ -35,9 +35,9 @@ namespace Zaaml.UI.Controls.ListView
 			}
 		}
 
-		protected override void ObservableSourceOnCollectionChanged(NotifyCollectionChangedEventArgs e)
+		protected override void OnSourceCollectionChanged(NotifyCollectionChangedEventArgs e)
 		{
-			base.ObservableSourceOnCollectionChanged(e);
+			base.OnSourceCollectionChanged(e);
 
 			ListViewControl.InvalidatePanelInternal();
 		}

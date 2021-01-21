@@ -6,7 +6,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	public abstract class TreeViewItemTextFilter<TItem> : ItemTextFilter<TItem>, ITreeViewItemFilter
+	public abstract class TreeViewItemTextFilterBase<TItem> : ItemTextFilter<TreeViewControl, TItem>, ITreeViewItemFilter
 	{
 	}
 }

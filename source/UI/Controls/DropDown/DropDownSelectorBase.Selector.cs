@@ -99,9 +99,10 @@ namespace Zaaml.UI.Controls.DropDown
 
 				if (selectedItem != null)
 				{
-					ItemCollection.BringIntoViewInternal(new BringIntoViewRequest<TItem>(selectedItem, BringIntoViewMode.Top));
+					//ItemCollection.BringIntoViewInternal(new BringIntoViewRequest<TItem>(selectedItem, BringIntoViewMode.Top));
 
 					FocusNavigator.FocusedItem = selectedItem;
+
 					FocusHelper.QueryFocus(selectedItem);
 				}
 				else

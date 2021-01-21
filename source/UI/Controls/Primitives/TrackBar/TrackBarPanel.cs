@@ -40,6 +40,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			set
 			{
 				_trackBar = value;
+
 				InvalidateMeasure();
 			}
 		}

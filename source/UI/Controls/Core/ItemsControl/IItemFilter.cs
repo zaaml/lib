@@ -2,10 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-// <copyright file="IItemFilter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-//   Copyright (c) Zaaml. All rights reserved.
-// </copyright>
-
 using System;
 
 namespace Zaaml.UI.Controls.Core
@@ -16,6 +12,6 @@ namespace Zaaml.UI.Controls.Core
 
 		bool IsEnabled { get; }
 
-		bool Pass(object item);
+		bool Pass(object item, IServiceProvider serviceProvider);
 	}
 }

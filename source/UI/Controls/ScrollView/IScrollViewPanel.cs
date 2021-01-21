@@ -12,7 +12,6 @@ namespace Zaaml.UI.Controls.ScrollView
     #region Fields
 
     event EventHandler<ScrollInfoChangedEventArgs> ScrollInfoChanged;
-    event EventHandler<OffsetChangedEventArgs> OffsetChanged;
 
     #endregion
 

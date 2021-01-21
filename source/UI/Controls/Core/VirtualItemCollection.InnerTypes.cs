@@ -28,6 +28,8 @@ namespace Zaaml.UI.Controls.Core
 
 			public bool IsInTemp;
 
+			public bool IsInPool;
+
 			public T Item;
 
 			private int LockCount;
@@ -114,9 +116,9 @@ namespace Zaaml.UI.Controls.Core
 			Virtual
 		}
 		
-		private readonly struct GeneratedItemIndexPair
+		private readonly struct GeneratedIndexItemPair
 		{
-			public GeneratedItemIndexPair(GeneratedItem item, int index)
+			public GeneratedIndexItemPair(int index, GeneratedItem item)
 			{
 				Item = item;
 				Index = index;
@@ -126,9 +128,14 @@ namespace Zaaml.UI.Controls.Core
 
 			public readonly int Index;
 
-			public static readonly GeneratedItemIndexPair Empty = new GeneratedItemIndexPair(null, -1);
+			public static readonly GeneratedIndexItemPair Empty = new GeneratedIndexItemPair(-1, null);
 
 			public bool IsEmpty => Index == -1;
+
+			public static implicit operator GeneratedIndexItemPair(SparseLinkedList<GeneratedItem>.IndexValuePair indexValuePair)
+			{
+				return new((int) indexValuePair.Index, indexValuePair.Value);
+			}
 		}
 
 		private static class PackedDefinition

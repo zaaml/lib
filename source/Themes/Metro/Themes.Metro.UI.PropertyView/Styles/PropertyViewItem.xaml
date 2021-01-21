@@ -42,7 +42,7 @@
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="1">
 
-        <zm:PropertyViewItemCellPresenter>
+        <zm:PropertyViewItemCellsPresenter>
 
           <!--  Header Cell  -->
           <zm:PropertyViewItemCell>
@@ -112,7 +112,7 @@
             </Border>
           </zm:PropertyViewItemCell>
 
-        </zm:PropertyViewItemCellPresenter>
+        </zm:PropertyViewItemCellsPresenter>
       </Border>
 
       <zm:ValidationErrorControl x:Name="ValidationErrorControl"
