@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Specialized;
 using System.Windows;
+using Zaaml.Core.Collections.Specialized;
 using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;

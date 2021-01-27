@@ -41,7 +41,7 @@ namespace Zaaml.UI.Controls.PropertyView
 
 			_generator = new PropertyViewItemGenerator(this);
 
-			ItemCellColumnController = new PropertyViewItemCellColumnController(this);
+			ItemGridController = new PropertyViewItemGridController(this);
 		}
 
 		protected PropertyViewController Controller => _controller ??= CreateController();
@@ -54,7 +54,7 @@ namespace Zaaml.UI.Controls.PropertyView
 			set => SetValue(FilterProperty, value);
 		}
 
-		internal PropertyViewItemCellColumnController ItemCellColumnController { get; }
+		internal PropertyViewItemGridController ItemGridController { get; }
 
 		public object SelectedObject
 		{

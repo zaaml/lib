@@ -1,4 +1,4 @@
-// <copyright file="GridDefinition.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="GridPanelDefinition.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -17,15 +17,15 @@ using Zaaml.UI.Panels.Flexible;
 
 namespace Zaaml.UI.Panels.Primitives
 {
-	public abstract class GridDefinition : InheritanceContextObject
+	public abstract class GridPanelDefinition : InheritanceContextObject
 	{
 		internal const bool ThisIsColumnDefinition = true;
 		internal const bool ThisIsRowDefinition = false;
 
-		internal static readonly DependencyProperty PrivateSharedSizeScopeProperty = DPM.RegisterAttached<SharedSizeScope, GridDefinition>
+		internal static readonly DependencyProperty PrivateSharedSizeScopeProperty = DPM.RegisterAttached<SharedSizeScope, GridPanelDefinition>
 			("PrivateSharedSizeScope", new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits));
 
-		public static readonly DependencyProperty SharedSizeGroupProperty = DPM.Register<string, GridDefinition>
+		public static readonly DependencyProperty SharedSizeGroupProperty = DPM.Register<string, GridPanelDefinition>
 			("SharedSizeGroup", OnSharedSizeGroupPropertyChanged, SharedSizeGroupPropertyValueValid);
 
 		private readonly bool _isColumnDefinition;
@@ -35,12 +35,12 @@ namespace Zaaml.UI.Panels.Primitives
 
 		private GridPanel.LayoutTimeSizeType _sizeType;
 
-		static GridDefinition()
+		static GridPanelDefinition()
 		{
-			PrivateSharedSizeScopeProperty.OverrideMetadata(typeof(GridDefinition), new FrameworkPropertyMetadata(OnPrivateSharedSizeScopePropertyChanged));
+			PrivateSharedSizeScopeProperty.OverrideMetadata(typeof(GridPanelDefinition), new FrameworkPropertyMetadata(OnPrivateSharedSizeScopePropertyChanged));
 		}
 
-		internal GridDefinition(bool isColumnDefinition)
+		internal GridPanelDefinition(bool isColumnDefinition)
 		{
 			_isColumnDefinition = isColumnDefinition;
 			Index = -1;
@@ -124,15 +124,15 @@ namespace Zaaml.UI.Panels.Primitives
 
 		internal double UserMaxSize => UserMaxSizeValueCache;
 
-		internal double UserMaxSizeValueCache => (double) GetValue(_isColumnDefinition ? GridColumn.MaxWidthProperty : GridRow.MaxHeightProperty);
+		internal double UserMaxSizeValueCache => (double) GetValue(_isColumnDefinition ? GridPanelColumn.MaxWidthProperty : GridPanelRow.MaxHeightProperty);
 
 		internal double UserMinSize => UserMinSizeValueCache;
 
-		internal double UserMinSizeValueCache => (double) GetValue(_isColumnDefinition ? GridColumn.MinWidthProperty : GridRow.MinHeightProperty);
+		internal double UserMinSizeValueCache => (double) GetValue(_isColumnDefinition ? GridPanelColumn.MinWidthProperty : GridPanelRow.MinHeightProperty);
 
 		internal FlexLength UserSize => _sharedState?.UserSize ?? UserSizeValueCache;
 
-		internal FlexLength UserSizeValueCache => (FlexLength) GetValue(_isColumnDefinition ? GridColumn.WidthProperty : GridRow.HeightProperty);
+		internal FlexLength UserSizeValueCache => (FlexLength) GetValue(_isColumnDefinition ? GridPanelColumn.WidthProperty : GridPanelRow.HeightProperty);
 
 		private bool UseSharedMinimum
 		{
@@ -152,7 +152,7 @@ namespace Zaaml.UI.Panels.Primitives
 
 		private static void InvalidateGridPanelMeasure(DependencyObject d)
 		{
-			var definition = (GridDefinition) d;
+			var definition = (GridPanelDefinition) d;
 
 			if (definition.InParentLogicalTree == false)
 				return;
@@ -231,7 +231,7 @@ namespace Zaaml.UI.Panels.Primitives
 
 		private static void OnPrivateSharedSizeScopePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			var definition = (GridDefinition) d;
+			var definition = (GridPanelDefinition) d;
 
 			if (definition.InParentLogicalTree == false)
 				return;
@@ -262,7 +262,7 @@ namespace Zaaml.UI.Panels.Primitives
 
 		private static void OnSharedSizeGroupPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			var definition = (GridDefinition) d;
+			var definition = (GridPanelDefinition) d;
 
 			if (definition.InParentLogicalTree == false)
 				return;
@@ -303,7 +303,7 @@ namespace Zaaml.UI.Panels.Primitives
 
 		internal static void OnUserSizePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			var definition = (GridDefinition) d;
+			var definition = (GridPanelDefinition) d;
 
 			if (definition.InParentLogicalTree == false)
 				return;
@@ -397,7 +397,7 @@ namespace Zaaml.UI.Panels.Primitives
 		private class SharedSizeState
 		{
 			private readonly EventHandler _layoutUpdated; //  instance event handler for layout updated event
-			private readonly List<GridDefinition> _registry; //  registry of participating definitions
+			private readonly List<GridPanelDefinition> _registry; //  registry of participating definitions
 			private readonly string _sharedSizeGroupId; //  Id of the shared size group this object is servicing
 
 			private readonly SharedSizeScope _sharedSizeScope; //  the scope this state belongs to
@@ -412,7 +412,7 @@ namespace Zaaml.UI.Panels.Primitives
 				Debug.Assert(sharedSizeScope != null && sharedSizeGroupId != null);
 				_sharedSizeScope = sharedSizeScope;
 				_sharedSizeGroupId = sharedSizeGroupId;
-				_registry = new List<GridDefinition>();
+				_registry = new List<GridPanelDefinition>();
 				_layoutUpdated = OnLayoutUpdated;
 				_broadcastInvalidation = true;
 			}
@@ -439,7 +439,7 @@ namespace Zaaml.UI.Panels.Primitives
 				}
 			}
 
-			internal void AddMember(GridDefinition member)
+			internal void AddMember(GridPanelDefinition member)
 			{
 				Debug.Assert(!_registry.Contains(member));
 
@@ -591,7 +591,7 @@ namespace Zaaml.UI.Panels.Primitives
 				_broadcastInvalidation = true;
 			}
 
-			internal void RemoveMember(GridDefinition member)
+			internal void RemoveMember(GridPanelDefinition member)
 			{
 				Invalidate();
 				_registry.Remove(member);

@@ -81,6 +81,11 @@ namespace Zaaml.UI.Controls.ListView
 		public static readonly DependencyProperty ViewProperty = DPM.Register<ListViewBase, ListViewControl>
 			("View", default, d => d.OnViewPropertyChangedPrivate);
 
+		private static readonly DependencyPropertyKey ActualViewTemplatePropertyKey = DPM.RegisterReadOnly<ControlTemplate, ListViewControl>
+			("ActualViewTemplate");
+
+		public static readonly DependencyProperty ActualViewTemplateProperty = ActualViewTemplatePropertyKey.DependencyProperty;
+
 		private DefaultItemTemplateListViewItemGenerator _defaultGeneratorImpl;
 		private IListViewItemFilter _itemsDefaultFilter;
 		private ListViewData _listViewData;
@@ -127,6 +132,16 @@ namespace Zaaml.UI.Controls.ListView
 		internal IListViewItemFilter ActualItemsFilter => ItemsFilter ?? ItemsDefaultFilter;
 
 		private protected override bool ActualSelectItemOnFocus => SelectionMode != ListViewSelectionMode.Multiple && base.ActualSelectItemOnFocus;
+
+		public ControlTemplate ActualViewTemplate
+		{
+			get => (ControlTemplate) GetValue(ActualViewTemplateProperty);
+			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
+		}
+
+		private ListViewItemGridColumnHeadersPresenter ColumnHeadersPresenter => TemplateContract.ColumnHeadersPresenter;
+
+		internal ListViewItemGridColumnHeadersPresenter ColumnHeadersPresenterInternal => ColumnHeadersPresenter;
 
 		private ListViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImplementation.Generator;
 
@@ -243,6 +258,8 @@ namespace Zaaml.UI.Controls.ListView
 			get => (IEnumerable) GetValue(SourceCollectionProperty);
 			set => SetValue(SourceCollectionProperty, value);
 		}
+
+		private ListViewControlTemplateContract TemplateContract => (ListViewControlTemplateContract) TemplateContractInternal;
 
 		public ListViewBase View
 		{
@@ -394,6 +411,14 @@ namespace Zaaml.UI.Controls.ListView
 			ItemCommandController.OnItemKeyUp(listViewItem, keyEventArgs);
 		}
 
+		internal void UpdateViewTemplate()
+		{
+			var actualViewTemplate = View?.GetTemplateInternal(this);
+
+			if (ReferenceEquals(ActualViewTemplate, actualViewTemplate) == false)
+				ActualViewTemplate = actualViewTemplate;
+		}
+
 		internal void OnItemMouseButton(ListViewItem listViewItem, MouseButtonEventArgs e)
 		{
 			if (e.ChangedButton == MouseButton.Left)
@@ -534,10 +559,16 @@ namespace Zaaml.UI.Controls.ListView
 			base.OnTemplateContractAttached();
 
 			ItemsPresenter.ListViewControl = this;
+
+			if (ColumnHeadersPresenter != null)
+				ColumnHeadersPresenter.ListViewControl = this;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
+			if (ColumnHeadersPresenter != null)
+				ColumnHeadersPresenter.ListViewControl = null;
+
 			ItemsPresenter.ListViewControl = null;
 
 			base.OnTemplateContractDetaching();
@@ -545,6 +576,24 @@ namespace Zaaml.UI.Controls.ListView
 
 		private void OnViewPropertyChangedPrivate(ListViewBase oldValue, ListViewBase newValue)
 		{
+			if (ReferenceEquals(oldValue, newValue))
+				return;
+
+			if (oldValue != null)
+			{
+				if (ReferenceEquals(oldValue.ListViewControl, this) == false)
+					throw new InvalidOperationException();
+
+				oldValue.ListViewControl = null;
+			}
+
+			if (newValue != null)
+			{
+				if (newValue.ListViewControl != null)
+					throw new InvalidOperationException();
+
+				newValue.ListViewControl = this;
+			}
 		}
 
 		internal void RaiseClick(ListViewItem listViewItem)

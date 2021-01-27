@@ -11,22 +11,22 @@ namespace Zaaml.UI.Controls.Core
   {
     #region Fields
 
-    private ControlTemplate _templateInt;
+    private ControlTemplate _templateInternal;
     private bool _isTemplateApplied;
 
     #endregion
 
     #region Properties
 
-    protected ControlTemplate TemplateInt
+    protected ControlTemplate TemplateInternal
     {
-      get => _templateInt;
+      get => _templateInternal;
       set
       {
-        if (ReferenceEquals(_templateInt, value))
+        if (ReferenceEquals(_templateInternal, value))
           return;
 
-        _templateInt = value;
+        _templateInternal = value;
         Template = value;
       }
     }
@@ -37,7 +37,7 @@ namespace Zaaml.UI.Controls.Core
 
     public sealed override void OnApplyTemplate()
     {
-      if (ReferenceEquals(Template, TemplateInt) == false)
+      if (ReferenceEquals(Template, TemplateInternal) == false)
         throw new Exception("Template property can not be set on FixedTemplateControl.");
 
       if (_isTemplateApplied)

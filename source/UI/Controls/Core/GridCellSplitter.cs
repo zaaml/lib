@@ -9,18 +9,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Panels.Core;
-using Zaaml.UI.Utils;
+using Zaaml.UI.Panels.Flexible;
 
 namespace Zaaml.UI.Controls.Core
 {
-	public abstract class GridCellSplitter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn> : FixedTemplateControl<Panel>
-		where TGridCellPresenter : GridCellsPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellPanel : GridCellsPanel<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellCollection : GridCellCollection<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCell : GridCell<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellSplitter : GridCellSplitter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellColumnController : GridCellColumnController<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellColumn : GridCellColumn<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
+	public class GridCellSplitter : FixedTemplateControl<Panel>
 	{
 		private static readonly Brush Brush = new SolidColorBrush(Colors.Transparent);
 		private bool _dragging;
@@ -28,7 +21,7 @@ namespace Zaaml.UI.Controls.Core
 		private Point _origin;
 		private double _rightWidth;
 
-		protected GridCellSplitter()
+		public GridCellSplitter()
 		{
 			Cursor = Cursors.SizeWE;
 
@@ -39,13 +32,12 @@ namespace Zaaml.UI.Controls.Core
 		{
 			Brush.Freeze();
 
-			UIElementUtils.OverrideFocusable<GridCellSplitter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(false);
-			ControlUtils.OverrideIsTabStop<GridCellSplitter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(false);
-			FrameworkElementUtils.OverrideVisualStyle<GridCellSplitter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(null);
+			UIElementUtils.OverrideFocusable<GridCellSplitter>(false);
+			ControlUtils.OverrideIsTabStop<GridCellSplitter>(false);
+			FrameworkElementUtils.OverrideVisualStyle<GridCellSplitter>(null);
 		}
 
-		private GridCellsPanel<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn> Panel =>
-			VisualParent as GridCellsPanel<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>;
+		private GridCellsPanel Panel => VisualParent as GridCellsPanel;
 
 		protected override void ApplyTemplateOverride()
 		{
@@ -85,11 +77,11 @@ namespace Zaaml.UI.Controls.Core
 			var width = 0.0;
 			var totalWidth = panel.ActualWidth;
 
-			foreach (var cell in panel.Children.OfType<TGridCell>())
-				width += cell.Column.Width;
+			foreach (var cell in panel.Children.OfType<GridCell>())
+				width += cell.ColumnInternal.ActualWidth;
 
-			foreach (var cell in panel.Children.OfType<TGridCell>())
-				cell.Column.Width = totalWidth * cell.Column.Width / width;
+			foreach (var cell in panel.Children.OfType<GridCell>())
+				cell.ColumnInternal.Width = new FlexLength(totalWidth * cell.ColumnInternal.ActualWidth / width, FlexLengthUnitType.Star);
 		}
 
 		protected override void OnLostMouseCapture(MouseEventArgs e)
@@ -110,8 +102,8 @@ namespace Zaaml.UI.Controls.Core
 
 			var childIndex = panel.Children.IndexOf(this);
 
-			_leftWidth = ((TGridCell) panel.Children[childIndex - 1]).Column.Width;
-			_rightWidth = ((TGridCell) panel.Children[childIndex + 1]).Column.Width;
+			_leftWidth = ((GridCell) panel.Children[childIndex - 1]).ColumnInternal.ActualWidth;
+			_rightWidth = ((GridCell) panel.Children[childIndex + 1]).ColumnInternal.ActualWidth;
 
 			_dragging = CaptureMouse();
 
@@ -144,21 +136,21 @@ namespace Zaaml.UI.Controls.Core
 			var location = e.GetPosition(panel);
 			var delta = location - _origin;
 			var childIndex = panel.Children.IndexOf(this);
-			var leftColumn = ((TGridCell) panel.Children[childIndex - 1]).Column;
-			var rightColumn = ((TGridCell) panel.Children[childIndex + 1]).Column;
+			var leftColumn = ((GridCell) panel.Children[childIndex - 1]).ColumnInternal;
+			var rightColumn = ((GridCell) panel.Children[childIndex + 1]).ColumnInternal;
 
 			var left = Math.Max(40, _leftWidth + delta.X);
 			var right = Math.Max(40, _rightWidth - delta.X);
 
 			if (left < right)
 			{
-				leftColumn.Width = left;
-				rightColumn.Width = (_leftWidth + _rightWidth) - left;
+				leftColumn.ActualWidth = left;
+				rightColumn.ActualWidth = (_leftWidth + _rightWidth) - left;
 			}
 			else
 			{
-				rightColumn.Width = right;
-				leftColumn.Width = (_leftWidth + _rightWidth) - right;
+				rightColumn.ActualWidth = right;
+				leftColumn.ActualWidth = (_leftWidth + _rightWidth) - right;
 			}
 		}
 	}

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Markup;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -15,26 +16,43 @@ namespace Zaaml.UI.Controls.ListView
 		private static readonly DependencyPropertyKey ColumnsPropertyKey = DPM.RegisterReadOnly<ListGridViewColumnCollection, ListGridView>
 			("ColumnsPrivate");
 
-		private static readonly DependencyPropertyKey ListViewControlPropertyKey = DPM.RegisterReadOnly<ListViewControl, ListGridView>
-			("ListViewControl", d => d.OnListViewControlPropertyChangedPrivate);
-
-		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty TemplateProperty = DPM.RegisterAttached<ControlTemplate, ListGridView>
+			("Template", OnTemplatePropertyChanged);
 
 		public static readonly DependencyProperty ColumnsProperty = ColumnsPropertyKey.DependencyProperty;
 
 		public ListGridViewColumnCollection Columns => this.GetValueOrCreate(ColumnsPropertyKey, () => new ListGridViewColumnCollection(this));
 
-		internal ListViewItemCellColumnController ItemCellColumnController { get; private set; }
+		internal ListViewItemGridController ItemController { get; private set; }
 
-		public ListViewControl ListViewControl
+		public static ControlTemplate GetTemplate(DependencyObject element)
 		{
-			get => (ListViewControl) GetValue(ListViewControlProperty);
-			internal set => this.SetReadOnlyValue(ListViewControlPropertyKey, value);
+			return (ControlTemplate) element.GetValue(TemplateProperty);
 		}
 
-		private void OnListViewControlPropertyChangedPrivate(ListViewControl oldValue, ListViewControl newValue)
+		protected override ControlTemplate GetTemplateCore(FrameworkElement frameworkElement)
 		{
-			ItemCellColumnController = newValue != null ? new ListViewItemCellColumnController(newValue) : null;
+			return GetTemplate(frameworkElement);
+		}
+
+		protected override void OnListViewControlChanged(ListViewControl oldValue, ListViewControl newValue)
+		{
+			base.OnListViewControlChanged(oldValue, newValue);
+
+			ItemController = newValue != null ? new ListViewItemGridController(newValue) : null;
+		}
+
+		private static void OnTemplatePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			if (d is ListViewItem listViewItem)
+				listViewItem.UpdateViewTemplate();
+			else if (d is ListViewControl listViewControl)
+				listViewControl.UpdateViewTemplate();
+		}
+
+		public static void SetTemplate(DependencyObject element, ControlTemplate value)
+		{
+			element.SetValue(TemplateProperty, value);
 		}
 	}
 }

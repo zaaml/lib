@@ -34,9 +34,7 @@ namespace Zaaml.UI.Controls.TableView
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
-			var tableViewPanel = Item?.GetVisualParent() as TableViewPanel;
-
-			if (tableViewPanel == null)
+			if (Item?.GetVisualParent() is not TableViewPanel tableViewPanel)
 				return StackPanelLayout.Arrange(this, finalSize);
 
 			var orientation = tableViewPanel.ItemsPresenter?.TableViewControl?.Orientation.Rotate() ?? Orientation.Horizontal;

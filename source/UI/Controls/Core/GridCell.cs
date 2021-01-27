@@ -2,66 +2,123 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
-using Zaaml.Core.Extensions;
-using Zaaml.Core.Weak;
+using System.Windows.Controls;
+using Zaaml.Core;
+using Zaaml.PresentationCore.Interactivity;
+using Zaaml.PresentationCore.TemplateCore;
+using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
-using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Core
 {
-	public abstract class GridCell<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn> : FixedTemplateContentControl<Panel, FrameworkElement>
-		where TGridCellPresenter : GridCellsPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellPanel : GridCellsPanel<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellCollection : GridCellCollection<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCell : GridCell<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellSplitter : GridCellSplitter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellColumnController : GridCellColumnController<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellColumn : GridCellColumn<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
+	public abstract class GridCell : TemplateContractControl
 	{
-		private System.WeakReference<TGridCellColumn> _weakColumn;
-		private IDisposable _weakEventDisposer;
+		private UIElement _childCore;
 
 		static GridCell()
 		{
-			UIElementUtils.OverrideFocusable<GridCell<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(false);
-			ControlUtils.OverrideIsTabStop<GridCell<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(false);
-			FrameworkElementUtils.OverrideVisualStyle<GridCell<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>>(null);
+			DefaultStyleKeyHelper.OverrideStyleKey<GridCell>();
 		}
 
-		internal TGridCellColumn Column
+		protected GridCell()
 		{
-			get
-			{
-				if (_weakColumn == null)
-					return null;
+			this.OverrideStyleKey<GridCell>();
+		}
 
-				return _weakColumn.TryGetTarget(out var column) ? column : null;
-			}
+		protected Border Border => TemplateContract.Border;
+
+		internal GridCellsPanel CellsPanelInternal => CellsPresenterInternal?.CellsPanelInternal;
+
+		internal GridCellsPresenter CellsPresenterInternal { get; set; }
+
+		protected UIElement ChildCore
+		{
+			get => _childCore;
 			set
 			{
-				if (ReferenceEquals(Column, value))
+				if (ReferenceEquals(_childCore, value))
 					return;
 
-				if (value != null)
-				{
-					_weakColumn = new System.WeakReference<TGridCellColumn>(value);
-					_weakEventDisposer = _weakEventDisposer.DisposeExchange(this.CreateWeakEventListener((t, o, e) => t.OnColumnWidthChanged(o, e), h => value.WidthChanged += h, h => value.WidthChanged -= h));
-				}
-				else
-				{
-					_weakColumn = null;
-					_weakEventDisposer = _weakEventDisposer.DisposeExchange();
-				}
+				_childCore = value;
+
+				var border = Border;
+
+				if (border != null)
+					border.Child = _childCore;
+
+				OnChildCoreChanged();
 			}
 		}
 
-		private void OnColumnWidthChanged(object sender, EventArgs e)
+		protected virtual void OnChildCoreChanged()
 		{
-			InvalidateMeasure();
-
-			(VisualParent as TGridCellPanel)?.InvalidateMeasure();
 		}
+
+		internal GridColumn ColumnInternal => ControllerInternal?.GetColumn(this);
+
+		internal GridController ControllerInternal => CellsPresenterInternal?.ControllerInternal;
+
+		internal int Index { get; set; }
+
+		private GridCellTemplateContract TemplateContract => (GridCellTemplateContract) TemplateContractInternal;
+
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
+
+			if (Border != null && ChildCore != null)
+				Border.Child = ChildCore;
+		}
+
+		protected override void OnTemplateContractDetaching()
+		{
+			if (Border != null)
+				Border.Child = null;
+
+			base.OnTemplateContractDetaching();
+		}
+
+		internal void UpdateStructureInternal(bool force)
+		{
+			UpdateStructure();
+		}
+
+		protected virtual void UpdateStructure()
+		{
+		}
+
+		protected override void UpdateVisualState(bool useTransitions)
+		{
+			var isMouseOver = IsMouseOver;
+
+			// Common states
+			if (!IsEnabled)
+				GotoVisualState(CommonVisualStates.Disabled, useTransitions);
+			else if (isMouseOver)
+				GotoVisualState(CommonVisualStates.MouseOver, useTransitions);
+			else
+				GotoVisualState(CommonVisualStates.Normal, useTransitions);
+		}
+	}
+
+	public abstract class GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell> : GridCell
+		where TGridCellsPresenter : GridCellsPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+		where TGridCellsPanel : GridCellsPanel<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+		where TGridCellCollection : GridCellCollection<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+		where TGridCell : GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+	{
+		static GridCell()
+		{
+			UIElementUtils.OverrideFocusable<GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>(false);
+			ControlUtils.OverrideIsTabStop<GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>(false);
+			FrameworkElementUtils.OverrideVisualStyle<GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>(null);
+		}
+	}
+
+	public abstract class GridCellTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = false)]
+		public Border Border { get; [UsedImplicitly] private set; }
 	}
 }

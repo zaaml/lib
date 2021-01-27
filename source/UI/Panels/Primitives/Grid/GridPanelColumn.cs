@@ -1,4 +1,4 @@
-// <copyright file="GridColumn.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="GridPanelColumn.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -9,18 +9,18 @@ using Zaaml.UI.Panels.Flexible;
 
 namespace Zaaml.UI.Panels.Primitives
 {
-	public class GridColumn : GridDefinition
+	public class GridPanelColumn : GridPanelDefinition
 	{
-		public static readonly DependencyProperty MaxWidthProperty = DPM.Register<double, GridColumn>
+		public static readonly DependencyProperty MaxWidthProperty = DPM.Register<double, GridPanelColumn>
 			("MaxWidth", double.PositiveInfinity, d => d.OnMaxWidthPropertyChangedPrivate);
 
-		public static readonly DependencyProperty MinWidthProperty = DPM.Register<double, GridColumn>
+		public static readonly DependencyProperty MinWidthProperty = DPM.Register<double, GridPanelColumn>
 			("MinWidth", 0.0, d => d.OnMinWidthPropertyChangedPrivate);
 
-		public static readonly DependencyProperty WidthProperty = DPM.Register<FlexLength, GridColumn>
+		public static readonly DependencyProperty WidthProperty = DPM.Register<FlexLength, GridPanelColumn>
 			("Width", FlexLength.Star, d => d.OnWidthPropertyChangedPrivate);
 
-		public GridColumn() : base(true)
+		public GridPanelColumn() : base(true)
 		{
 		}
 

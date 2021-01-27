@@ -10,10 +10,7 @@ namespace Zaaml.UI.Controls.PropertyView
 		: GridCellCollection<PropertyViewItemCellsPresenter,
 			PropertyViewItemCellsPanel,
 			PropertyViewItemCellCollection,
-			PropertyViewItemCell,
-			PropertyViewItemCellSplitter,
-			PropertyViewItemCellColumnController,
-			PropertyViewItemColumn>
+			PropertyViewItemCell>
 	{
 		public PropertyViewItemCellCollection(PropertyViewItemCellsPresenter cellsPresenter) : base(cellsPresenter)
 		{

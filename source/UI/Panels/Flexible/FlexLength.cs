@@ -42,6 +42,7 @@ namespace Zaaml.UI.Panels.Flexible
       //  throw new ArgumentException(System.Windows.SR.Get("InvalidCtorParameterUnknownFlexLengthUnitType", (object) "type"));
 
       _unitValue = type == FlexLengthUnitType.Auto ? 0.0 : value;
+
       UnitType = type;
     }
 

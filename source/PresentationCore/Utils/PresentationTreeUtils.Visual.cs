@@ -91,6 +91,7 @@ namespace Zaaml.PresentationCore.Utils
       else
       {
         var childrenCount = VisualTreeHelper.GetChildrenCount(parent);
+
         for (var iChild = 0; iChild < childrenCount; iChild++)
           yield return VisualTreeHelper.GetChild(parent, iChild);
       }

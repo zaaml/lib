@@ -12,22 +12,22 @@
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="$(Publish) == 'true'">
-		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="GitVersionTask" Version="5.5.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
 	
 	<ItemGroup>
 		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
 		<ProjectReference Include="..\PresentationCore\Zaaml.PresentationCore.csproj" />
 		<ProjectReference Include="..\UI\Zaaml.UI.csproj" />
 		<ProjectReference Include="..\UI.PropertyView\Zaaml.UI.PropertyView.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.5.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 </Project>

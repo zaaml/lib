@@ -15,12 +15,12 @@
 
       <zm:GridPanel Margin="{TemplateBinding BorderThickness}">
         <zm:GridPanel.Columns>
-          <zm:GridColumn Width="*" />
-          <zm:GridColumn Width="Auto" />
+          <zm:GridPanelColumn Width="*" />
+          <zm:GridPanelColumn Width="Auto" />
         </zm:GridPanel.Columns>
         <zm:GridPanel.Rows>
-          <zm:GridRow Height="*" />
-          <zm:GridRow Height="Auto" />
+          <zm:GridPanelRow Height="*" />
+          <zm:GridPanelRow Height="Auto" />
         </zm:GridPanel.Rows>
 
         <!--  Content  -->

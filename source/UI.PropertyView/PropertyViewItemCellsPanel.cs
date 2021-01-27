@@ -10,14 +10,7 @@ namespace Zaaml.UI.Controls.PropertyView
 		: GridCellsPanel<PropertyViewItemCellsPresenter,
 			PropertyViewItemCellsPanel,
 			PropertyViewItemCellCollection,
-			PropertyViewItemCell,
-			PropertyViewItemCellSplitter,
-			PropertyViewItemCellColumnController,
-			PropertyViewItemColumn>
+			PropertyViewItemCell>
 	{
-		protected override PropertyViewItemCellSplitter CreateCellSplitter()
-		{
-			return new PropertyViewItemCellSplitter();
-		}
 	}
 }

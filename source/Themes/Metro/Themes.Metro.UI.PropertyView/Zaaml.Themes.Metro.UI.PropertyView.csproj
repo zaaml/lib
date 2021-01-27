@@ -28,13 +28,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.5.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Remove="Zaaml.Themes.Metro.UI.PropertyView.ThemePart.xml" />
 	</ItemGroup>
 	<ItemGroup>
@@ -43,6 +36,16 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
+	  <PackageReference Include="GitVersionTask" Version="5.5.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<Page Update="Styles\PropertyViewItemCell.xaml">
+		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		  <SubType>Designer</SubType>
+		</Page>
 		<Page Update="Styles\PropertyDropDownListViewEditor.xaml">
 			<SubType>Designer</SubType>
 		</Page>

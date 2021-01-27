@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.ListView
@@ -14,5 +15,25 @@ namespace Zaaml.UI.Controls.ListView
 		}
 
 		public ListGridView ListGridView { get; }
+
+		protected override void OnItemAdded(ListGridViewColumn column)
+		{
+			base.OnItemAdded(column);
+
+			if (column.ListGridView != null)
+				throw new InvalidOperationException();
+
+			column.ListGridView = ListGridView;
+		}
+
+		protected override void OnItemRemoved(ListGridViewColumn column)
+		{
+			if (ReferenceEquals(column.ListGridView, ListGridView) == false)
+				throw new InvalidOperationException();
+
+			column.ListGridView = null;
+
+			base.OnItemRemoved(column);
+		}
 	}
 }

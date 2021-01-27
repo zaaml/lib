@@ -5,7 +5,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Zaaml.UI.Panels
+namespace Zaaml.Core.Collections.Specialized
 {
 	internal partial class SizeLinkedList
 	{
@@ -50,8 +50,15 @@ namespace Zaaml.UI.Panels
 			}
 			else if (Tail.Count == 0 || Tail.EqualSize(size))
 			{
-				Tail.Size = size;
-				Tail.Count += count;
+				var prev = Tail.Prev;
+
+				if (prev.EqualSize(size)) 
+					prev.Count += count;
+				else
+				{
+					Tail.Size = size;
+					Tail.Count += count;
+				}
 			}
 			else
 			{
@@ -81,6 +88,10 @@ namespace Zaaml.UI.Panels
 		private Node GetNode()
 		{
 			return new Node();
+		}
+
+		private void ReleaseNode(Node node)
+		{
 		}
 
 		private double GetSizeImpl(long index)
@@ -311,6 +322,11 @@ namespace Zaaml.UI.Panels
 				head.Next = Tail;
 				Tail.Prev = head;
 			}
+			else
+				RemoveIfEmpty(node);
+
+			RemoveIfEmpty(head);
+			TryMergeWithNext(head);
 
 			StructureVersion++;
 		}
@@ -336,13 +352,24 @@ namespace Zaaml.UI.Panels
 			var next = node.Next;
 			var prevCursor = cursor.Prev;
 			var localIndex = cursor.LocalIndex;
+			var nodeSize = node.Size;
 
 			if (localIndex == 0)
 			{
 				node.Count--;
 
 				if (prev?.EqualSize(size) == true)
-					node.Prev.Count++;
+					prev.Count++;
+				else if (node.Count == 0)
+				{
+					if (next?.EqualSize(size) == true)
+						next.Count++;
+					else
+					{
+						node.Count = 1;
+						node.Size = size;
+					}
+				}
 				else
 					InsertLeft(node, 1, size);
 			}
@@ -351,7 +378,17 @@ namespace Zaaml.UI.Panels
 				node.Count--;
 
 				if (next?.EqualSize(size) == true)
-					node.Next.Count++;
+					next.Count++;
+				else if (node.Count == 0)
+				{
+					if (prev?.EqualSize(size) == true)
+						prev.Count++;
+					else
+					{
+						node.Count = 1;
+						node.Size = size;
+					}
+				}
 				else
 					InsertRight(node, 1, size);
 			}
@@ -362,12 +399,63 @@ namespace Zaaml.UI.Panels
 				InsertMid(ref cursor, 1, size);
 			}
 
-			Size -= node.Size;
+			Size -= nodeSize;
 			Size += size;
+
+			RemoveIfEmpty(node);
 
 			StructureVersion++;
 
 			Cursor = prevCursor.UpdateStructureVersion();
+		}
+
+		private void RemoveIfEmpty(Node node)
+		{
+			if (node.Count != 0) 
+				return;
+
+			if (ReferenceEquals(node, Tail))
+				node.Size = 0;
+			else
+				RemoveNode(node);
+		}
+
+		private void TryMergeWithNext(Node node)
+		{
+			if (node.Next != null && EqualSize(node.Size, node.Next.Size))
+				MergeNodes(node, node.Next);
+		}
+
+		private void RemoveNode(Node node)
+		{
+			var prev = node.Prev;
+			var next = node.Next;
+
+			if (prev != null)
+				prev.Next = next;
+			else
+			{
+				Debug.Assert(ReferenceEquals(node, Head));
+
+				Head = next;
+			}
+
+			next.Prev = prev;
+
+			ReleaseNode(node);
+
+			if (prev != null)
+				TryMergeWithNext(prev);
+		}
+
+		private void MergeNodes(Node prev, Node next)
+		{
+			prev.Count += next.Count;
+			next.Count = 0;
+			next.Size = 0;
+
+			if (ReferenceEquals(next, Tail) == false)
+				RemoveNode(next);
 		}
 
 		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
@@ -404,20 +492,46 @@ namespace Zaaml.UI.Panels
 			if (Head == null || Tail == null)
 				throw new InvalidOperationException();
 
+			if (Tail.Count == 0 && Tail.Size.Equals(0) == false)
+				throw new InvalidOperationException();
+
 			if (ReferenceEquals(Head, Tail))
 				throw new InvalidOperationException();
 
 			if (Head.Prev != null || Tail.Next != null)
 				throw new InvalidOperationException();
 
+			if (ReferenceEquals(Head.Next, Tail))
+			{
+				if (ReferenceEquals(Tail.Prev, Head) == false)
+					throw new InvalidOperationException();
+
+				if (EqualSize(Head.Size, Tail.Size) && Tail.Count > 0 && Head.Count > 0)
+					throw new InvalidOperationException();
+
+				return;
+			}
+
 			var current = Head;
+			var currentSize = current.Size;
 
 			while (current != null)
 			{
+				if (current.Count == 0 && ReferenceEquals(current, Tail) == false)
+					throw new InvalidOperationException();
+
 				var next = current.Next;
 
 				if (next != null)
 				{
+					if (EqualSize(currentSize, next.Size))
+					{
+						if (!ReferenceEquals(next, Tail) || next.Count != 0)
+							throw new InvalidOperationException();
+					}
+
+					currentSize = next.Size;
+
 					if (ReferenceEquals(next.Prev, current) == false)
 						throw new InvalidOperationException();
 				}

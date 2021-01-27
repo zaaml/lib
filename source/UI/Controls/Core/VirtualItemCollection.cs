@@ -123,7 +123,7 @@ namespace Zaaml.UI.Controls.Core
 			if (generatedItem.GeneratorVersion == NonGeneratedVersion)
 				return true;
 
-			return generatedItem.Item != null && (ReferenceEquals(generatedItem.Generator, generator) && generatedItem.GeneratorVersion == GeneratorVersion);
+			return generatedItem.Item != null && ReferenceEquals(generatedItem.Generator, generator) && generatedItem.GeneratorVersion == GeneratorVersion;
 		}
 
 		private void ClearRecyclePool()

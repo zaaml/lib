@@ -4,10 +4,15 @@
 
 using System;
 
-namespace Zaaml.UI.Panels
+namespace Zaaml.Core.Collections.Specialized
 {
 	internal partial class SizeLinkedList
 	{
+		private static bool EqualSize(double size1, double size2)
+		{
+			return size1.Equals(size2);
+		}
+
 		private readonly struct NodeCursor
 		{
 			public static NodeCursor Empty => new NodeCursor(-1, 0, null, 0, 0, null);
@@ -288,7 +293,7 @@ namespace Zaaml.UI.Panels
 
 			public bool EqualSize(double size)
 			{
-				return Size.Equals(size);
+				return SizeLinkedList.EqualSize(Size, size);
 			}
 		}
 	}

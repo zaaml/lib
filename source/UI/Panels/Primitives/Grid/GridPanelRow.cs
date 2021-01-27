@@ -1,4 +1,4 @@
-// <copyright file="GridRow.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="GridPanelRow.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -9,18 +9,18 @@ using Zaaml.UI.Panels.Flexible;
 
 namespace Zaaml.UI.Panels.Primitives
 {
-	public class GridRow : GridDefinition
+	public class GridPanelRow : GridPanelDefinition
 	{
-		public static readonly DependencyProperty MaxHeightProperty = DPM.Register<double, GridRow>
+		public static readonly DependencyProperty MaxHeightProperty = DPM.Register<double, GridPanelRow>
 			("MaxHeight", double.PositiveInfinity, d => d.OnMaxHeightPropertyChangedPrivate);
 
-		public static readonly DependencyProperty MinHeightProperty = DPM.Register<double, GridRow>
+		public static readonly DependencyProperty MinHeightProperty = DPM.Register<double, GridPanelRow>
 			("MinHeight", 0.0, d => d.OnMinHeightPropertyChangedPrivate);
 
-		public static readonly DependencyProperty HeightProperty = DPM.Register<FlexLength, GridRow>
+		public static readonly DependencyProperty HeightProperty = DPM.Register<FlexLength, GridPanelRow>
 			("Height", FlexLength.Star, d => d.OnHeightPropertyChangedPrivate);
 
-		public GridRow() : base(false)
+		public GridPanelRow() : base(false)
 		{
 		}
 

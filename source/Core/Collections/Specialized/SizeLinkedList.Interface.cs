@@ -2,7 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-namespace Zaaml.UI.Panels
+namespace Zaaml.Core.Collections.Specialized
 {
 	internal partial class SizeLinkedList
 	{

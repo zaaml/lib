@@ -6,7 +6,6 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.PresentationCore.Converters;
@@ -47,6 +46,11 @@ namespace Zaaml.UI.Controls.ListView
 		public static readonly DependencyProperty CommandTargetProperty = DPM.Register<DependencyObject, ListViewItem>
 			("CommandTarget", d => d.OnCommandTargetChanged);
 
+		private static readonly DependencyPropertyKey ActualViewTemplatePropertyKey = DPM.RegisterReadOnly<ControlTemplate, ListViewItem>
+			("ActualViewTemplate");
+
+		public static readonly DependencyProperty ActualViewTemplateProperty = ActualViewTemplatePropertyKey.DependencyProperty;
+
 		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
 
 		private ListViewItemData _listViewItemData;
@@ -67,9 +71,17 @@ namespace Zaaml.UI.Controls.ListView
 			set => SetValue(CommandProperty, value);
 		}
 
+		public ControlTemplate ActualViewTemplate
+		{
+			get => (ControlTemplate) GetValue(ActualViewTemplateProperty);
+			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
+		}
+
 		internal Rect ArrangeRect { get; private set; }
 
-		private ListViewItemCellsPresenter CellsPresenter => TemplateContract.CellsPresenter;
+		private ListViewItemGridCellsPresenter CellsPresenter => TemplateContract.CellsPresenter;
+
+		internal ListViewItemGridCellsPresenter CellsPresenterInternal => CellsPresenter;
 
 		public object CommandParameter
 		{
@@ -201,6 +213,8 @@ namespace Zaaml.UI.Controls.ListView
 				UpdateGlyphPresenter();
 			else if (e.Property == ListViewControl.ItemGlyphTemplateProperty)
 				UpdateGlyphPresenter();
+			else if (e.Property == ListViewControl.ViewProperty)
+				UpdateViewTemplate();
 		}
 
 		private void OnListViewControlPropertyChangedPrivate(ListViewControl oldListView, ListViewControl newListView)
@@ -213,6 +227,8 @@ namespace Zaaml.UI.Controls.ListView
 
 			if (newListView != null)
 				newListView.DependencyPropertyChangedInternal += OnListViewControlPropertyChanged;
+
+			UpdateViewTemplate();
 
 			OnListViewControlChangedInternal(oldListView, newListView);
 		}
@@ -282,7 +298,7 @@ namespace Zaaml.UI.Controls.ListView
 			base.OnTemplateContractAttached();
 
 			UpdateGlyphPresenter();
-			
+
 			if (CellsPresenter != null)
 				CellsPresenter.ListViewItem = this;
 		}
@@ -334,6 +350,19 @@ namespace Zaaml.UI.Controls.ListView
 				GlyphPresenter.ContentTemplate = null;
 				GlyphPresenter.Content = null;
 			}
+		}
+
+		internal void UpdateViewTemplate()
+		{
+			var listViewControl = ListViewControl;
+
+			if (listViewControl == null)
+				return;
+
+			var actualViewTemplate = listViewControl.View?.GetTemplateInternal(this);
+
+			if (ReferenceEquals(ActualViewTemplate, actualViewTemplate) == false)
+				ActualViewTemplate = actualViewTemplate;
 		}
 
 		protected override void UpdateVisualState(bool useTransitions)
@@ -425,33 +454,9 @@ namespace Zaaml.UI.Controls.ListView
 	public class ListViewItemTemplateContract : IconContentControlTemplateContract
 	{
 		[TemplateContractPart(Required = false)]
-		public ListViewItemCellsPresenter CellsPresenter { get; [UsedImplicitly] private set; }
+		public ListViewItemGridCellsPresenter CellsPresenter { get; [UsedImplicitly] private set; }
 
 		[TemplateContractPart(Required = false)]
 		public ListViewItemGlyphPresenter GlyphPresenter { get; [UsedImplicitly] private set; }
-	}
-
-	public class ListViewItemTemplateConverter : BaseValueConverter
-	{
-		public ControlTemplate DefaultViewTemplate { get; set; }
-
-		public ControlTemplate GridViewTemplate { get; set; }
-
-		protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
-		{
-			throw new NotSupportedException();
-		}
-
-		protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
-		{
-			switch (value)
-			{
-				case ListGridView:
-					return GridViewTemplate;
-
-				default:
-					return DefaultViewTemplate;
-			}
-		}
 	}
 }

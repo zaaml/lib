@@ -36,13 +36,6 @@
 		</CreateDeferredResourceDictionariesTask>
   </Target>-->
   
-  	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.5.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>		
-	</ItemGroup>
-  
 	<PropertyGroup>
 		<BuildDependsOn>$(BuildDependsOn);PackThemeProject</BuildDependsOn>
 	</PropertyGroup>

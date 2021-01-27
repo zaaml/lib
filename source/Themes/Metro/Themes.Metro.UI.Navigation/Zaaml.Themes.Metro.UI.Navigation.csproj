@@ -28,13 +28,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.5.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Remove="Zaaml.Themes.Metro.UI.Navigation.ThemePart.xml" />
 		<None Remove="Zaaml.Themes.Metro.UI.Ribbon.ThemePart.xml" />
 	</ItemGroup>
@@ -43,6 +36,13 @@
 	  <Content Include="Zaaml.Themes.Metro.UI.Navigation.ThemePart.xml">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="GitVersionTask" Version="5.5.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	</ItemGroup>
 
 </Project>

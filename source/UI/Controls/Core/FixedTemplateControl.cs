@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.PresentationCore.Data;
@@ -11,126 +12,118 @@ using NativeContentPresenter = System.Windows.Controls.ContentPresenter;
 
 namespace Zaaml.UI.Controls.Core
 {
-  public class FixedTemplateControl : FixedTemplateControlBase
-  {
-    #region Fields
+	public class FixedTemplateControl : FixedTemplateControlBase
+	{
+		private UIElement _childInternal;
 
-    private UIElement _childInternal;
+		protected NativeContentPresenter ContentPresenter;
 
-    protected NativeContentPresenter ContentPresenter;
+		public FixedTemplateControl() : this(TemplateKind.ContentPresenter)
+		{
+		}
 
-    #endregion
+		private protected FixedTemplateControl(TemplateKind templateKind)
+		{
+			TemplateInternal = GetTemplate(templateKind);
+		}
 
-    #region Ctors
+		protected UIElement ChildInternal
+		{
+			get => _childInternal;
+			set
+			{
+				if (ReferenceEquals(_childInternal, value))
+					return;
 
-    public FixedTemplateControl() : this(false)
-    {
-    }
+				_childInternal = value;
 
-    internal FixedTemplateControl(bool raw)
-    {
-      TemplateInt = raw ? GenericControlTemplate.ContentPresenterTemplateInstance : GenericControlTemplate.BorderTemplateInstance;
-    }
+				if (ContentPresenter != null)
+					ContentPresenter.Content = value;
+			}
+		}
 
-    #endregion
+		protected override void ApplyTemplateOverride()
+		{
+			base.ApplyTemplateOverride();
 
-    #region Properties
+			var templateRoot = this.GetImplementationRoot();
 
-    protected UIElement ChildInternal
-    {
-      get => _childInternal;
-      set
-      {
-        if (ReferenceEquals(_childInternal, value))
-          return;
+			if (templateRoot is Border border)
+			{
+				border.BindStyleProperties(this, BorderStyleProperties.All);
+				ContentPresenter = new NativeContentPresenter();
+				border.Child = ContentPresenter;
+			}
+			else if (templateRoot is NativeContentPresenter contentPresenter)
+			{
+				ContentPresenter = contentPresenter;
+				ContentPresenter.BindProperties(MarginProperty, this, PaddingProperty);
+			}
 
-        _childInternal = value;
+			if (ContentPresenter != null)
+				ContentPresenter.Content = _childInternal;
 
-        if (ContentPresenter != null)
-          ContentPresenter.Content = value;
-      }
-    }
+			BindPropertiesCore();
+		}
 
-    #endregion
+		protected virtual void BindPropertiesCore()
+		{
+		}
 
-    #region  Methods
+		private ControlTemplate GetTemplate(TemplateKind templateKind)
+		{
+			switch (templateKind)
+			{
+				case TemplateKind.None:
+					return null;
 
-    protected override void ApplyTemplateOverride()
-    {
-      base.ApplyTemplateOverride();
+				case TemplateKind.Border:
+					return GenericControlTemplate.BorderTemplateInstance;
 
-      var templateRoot = this.GetImplementationRoot();
+				case TemplateKind.ContentPresenter:
+					return GenericControlTemplate.ContentPresenterTemplateInstance;
 
-      if (templateRoot is Border border)
-      {
-        border.BindStyleProperties(this, BorderStyleProperties.All);
-        ContentPresenter = new NativeContentPresenter();
-        border.Child = ContentPresenter;
-      }
-      else
-      {
-        ContentPresenter = (NativeContentPresenter) templateRoot;
-        ContentPresenter.BindProperties(MarginProperty, this, PaddingProperty);
-      }
+				default:
+					throw new ArgumentOutOfRangeException(nameof(templateKind), templateKind, null);
+			}
+		}
 
-      ContentPresenter.Content = _childInternal;
+		protected virtual void UnbindPropertiesCore()
+		{
+		}
 
-      BindPropertiesCore();
-    }
+		protected override void UndoTemplateOverride()
+		{
+			base.UndoTemplateOverride();
 
-    protected virtual void BindPropertiesCore()
-    {
-    }
+			UnbindPropertiesCore();
+		}
 
-    protected virtual void UnbindPropertiesCore()
-    {
-    }
-		
-    protected override void UndoTemplateOverride()
-    {
-      base.UndoTemplateOverride();
+		protected enum TemplateKind
+		{
+			None,
+			Border,
+			ContentPresenter
+		}
+	}
 
-      UnbindPropertiesCore();
-    }
+	public class FixedTemplateControl<T> : FixedTemplateControlBase where T : FrameworkElement
+	{
+		public FixedTemplateControl()
+		{
+			TemplateInternal = ControlTemplateBuilder<T>.Template;
+		}
 
-    #endregion
-  }
+		protected T TemplateRoot { get; private set; }
 
-  public class FixedTemplateControl<T> : FixedTemplateControlBase where T : FrameworkElement
-  {
-    #region Static Fields and Constants
+		protected override void ApplyTemplateOverride()
+		{
+			TemplateRoot = ControlTemplateBuilder<T>.GetImplementationRoot(this);
+		}
 
-    private static readonly ControlTemplateBuilder<T> TemplateBuilder = new ControlTemplateBuilder<T>();
-
-    #endregion
-
-    #region Ctors
-
-    public FixedTemplateControl()
-    {
-      TemplateInt = TemplateBuilder.ControlTemplate;
-    }
-
-    #endregion
-
-    #region Properties
-
-    protected T TemplateRoot { get; private set; }
-
-    #endregion
-
-    #region  Methods
-
-    protected override void ApplyTemplateOverride()
-    {
-      TemplateRoot = TemplateBuilder.GetTemplateRoot(this);
-    }
-
-    protected override void UndoTemplateOverride()
-    {
-      TemplateRoot = null;
-    }
-
-    #endregion
-  }
+		protected override void UndoTemplateOverride()
+		{
+			TemplateRoot = null;
+		}
+	}
 }

@@ -16,6 +16,8 @@ namespace Zaaml.PresentationCore.Interfaces
 
     bool IsMouseOver { get; }
 
+		bool IsLoaded { get; }
+
     #endregion
   }
 }

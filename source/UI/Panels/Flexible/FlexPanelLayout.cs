@@ -202,10 +202,19 @@ namespace Zaaml.UI.Panels.Flexible
 
     private static OrientedSize GetChildConstraint(FlexElement flexElement, OrientedSize autoConstraint, OrientedSize starConstraint)
     {
-      var flexLength = flexElement.Length;
+	    if (starConstraint.Direct.IsNaN()) 
+		    starConstraint.Direct = double.PositiveInfinity;
+
+	    if (autoConstraint.Direct.IsNaN())
+		    autoConstraint.Direct = double.PositiveInfinity;
+
+	    var flexLength = flexElement.Length;
 
       if (flexLength.IsStar)
       {
+	      if (starConstraint.Direct.IsPositiveInfinity())
+		      return starConstraint;
+
         starConstraint.Direct *= flexLength.Value;
 
         return starConstraint;

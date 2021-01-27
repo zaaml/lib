@@ -29,19 +29,19 @@
 	</ItemGroup>
 	
 	<ItemGroup>
+	  <PackageReference Include="GitVersionTask" Version="5.5.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+	
+	<ItemGroup>
 		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
 		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
 		<ProjectReference Include="..\Themes.Metro\Zaaml.Themes.Metro.csproj" />
 		<ProjectReference Include="..\..\..\UI.Docking\Zaaml.UI.Docking.csproj" />
 		<ProjectReference Include="..\..\..\UI\Zaaml.UI.csproj" />
 		<ProjectReference Include="..\Themes.Metro.UI\Zaaml.Themes.Metro.UI.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.5.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 
 </Project>

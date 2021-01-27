@@ -6,7 +6,7 @@ using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Panels.Primitives
 {
-	public abstract class GridDefinitionCollection<TDefinition> : InheritanceContextDependencyObjectCollection<TDefinition> where TDefinition : GridDefinition
+	public abstract class GridDefinitionCollection<TDefinition> : InheritanceContextDependencyObjectCollection<TDefinition> where TDefinition : GridPanelDefinition
 	{
 		protected GridDefinitionCollection(GridPanel gridPanel)
 		{

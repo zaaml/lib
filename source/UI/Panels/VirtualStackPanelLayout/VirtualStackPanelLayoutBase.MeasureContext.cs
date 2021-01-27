@@ -332,11 +332,19 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			private void InsertItem(int index, UIElement item)
 			{
 				Layout.UIElementInserter.Insert(index, item);
+
+				OnItemAttached(item);
 			}
 
 			private void AddItem(UIElement item)
 			{
 				Layout.UIElementInserter.Add(item);
+
+				OnItemAttached(item);
+			}
+
+			private void OnItemAttached(UIElement item)
+			{
 			}
 
 			private UIElement EnsureElement(UIElement element)

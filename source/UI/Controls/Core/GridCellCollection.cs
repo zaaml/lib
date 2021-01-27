@@ -2,24 +2,61 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Collections.Generic;
 using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Core
 {
-	public abstract class GridCellCollection<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn> : DependencyObjectCollectionBase<TGridCell>
-		where TGridCellPresenter : GridCellsPresenter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellPanel : GridCellsPanel<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellCollection : GridCellCollection<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCell : GridCell<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellSplitter : GridCellSplitter<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellColumnController : GridCellColumnController<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
-		where TGridCellColumn : GridCellColumn<TGridCellPresenter, TGridCellPanel, TGridCellCollection, TGridCell, TGridCellSplitter, TGridCellColumnController, TGridCellColumn>
+	public abstract class GridCellCollection<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell> : DependencyObjectCollectionBase<TGridCell>, IReadOnlyList<GridCell>
+		where TGridCellsPresenter : GridCellsPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+		where TGridCellsPanel : GridCellsPanel<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+		where TGridCellCollection : GridCellCollection<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+		where TGridCell : GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 	{
-		protected GridCellCollection(TGridCellPresenter cellsPresenter)
+		protected GridCellCollection(TGridCellsPresenter cellsPresenter)
 		{
 			CellsPresenter = cellsPresenter;
 		}
 
-		public TGridCellPresenter CellsPresenter { get; }
+		public TGridCellsPresenter CellsPresenter { get; }
+
+		private void InvalidateStructure()
+		{
+			CellsPresenter.CellsPanelInternal?.InvalidateStructure();
+		}
+
+		protected override void OnItemAdded(TGridCell cell)
+		{
+			base.OnItemAdded(cell);
+
+			cell.CellsPresenterInternal = CellsPresenter;
+
+			UpdateIndices();
+			InvalidateStructure();
+		}
+
+		protected override void OnItemRemoved(TGridCell cell)
+		{
+			cell.Index = -1;
+			cell.CellsPresenterInternal = null;
+
+			base.OnItemRemoved(cell);
+
+			UpdateIndices();
+			InvalidateStructure();
+		}
+
+		private void UpdateIndices()
+		{
+			for (var i = 0; i < Count; i++)
+				this[i].Index = i;
+		}
+
+		IEnumerator<GridCell> IEnumerable<GridCell>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		GridCell IReadOnlyList<GridCell>.this[int index] => this[index];
 	}
 }

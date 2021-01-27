@@ -46,7 +46,7 @@ namespace Zaaml.UI.Panels.Primitives
 			("RowSpan", 1, OnCellAttachedPropertyChanged, IsIntValueGreaterThanZero);
 
 		public static readonly DependencyProperty IsSharedSizeScopeProperty = DPM.RegisterAttached<bool, GridPanel>
-			("IsSharedSizeScope", false, GridDefinition.OnIsSharedSizeScopePropertyChanged);
+			("IsSharedSizeScope", false, GridPanelDefinition.OnIsSharedSizeScopePropertyChanged);
 
 		private GridColumnCollection _defaultColumns;
 		private GridRowCollection _defaultRows;
@@ -83,9 +83,9 @@ namespace Zaaml.UI.Panels.Primitives
 			}
 		}
 
-		private GridColumnCollection DefaultColumns => _defaultColumns ??= new GridColumnCollection(this) {new GridColumn()};
+		private GridColumnCollection DefaultColumns => _defaultColumns ??= new GridColumnCollection(this) {new GridPanelColumn()};
 
-		private GridRowCollection DefaultRows => _defaultRows ??= new GridRowCollection(this) {new GridRow()};
+		private GridRowCollection DefaultRows => _defaultRows ??= new GridRowCollection(this) {new GridPanelRow()};
 
 		private int[] DefinitionIndices
 		{
@@ -181,7 +181,7 @@ namespace Zaaml.UI.Panels.Primitives
 			set => SetFlags(value, Flags.SizeToContentV);
 		}
 
-		private GridDefinition[] TempDefinitions
+		private GridPanelDefinition[] TempDefinitions
 		{
 			get
 			{
@@ -195,18 +195,18 @@ namespace Zaaml.UI.Panels.Primitives
 
 				if (tempDefinitionsWeakRef == null)
 				{
-					extData.TempDefinitions = new GridDefinition[requiredLength];
+					extData.TempDefinitions = new GridPanelDefinition[requiredLength];
 
 					Thread.SetData(TempDefinitionsDataSlot, new WeakReference(extData.TempDefinitions));
 				}
 				else
 				{
-					extData.TempDefinitions = (GridDefinition[]) tempDefinitionsWeakRef.Target;
+					extData.TempDefinitions = (GridPanelDefinition[]) tempDefinitionsWeakRef.Target;
 
 					if (extData.TempDefinitions != null && extData.TempDefinitions.Length >= requiredLength)
 						return extData.TempDefinitions;
 
-					extData.TempDefinitions = new GridDefinition[requiredLength];
+					extData.TempDefinitions = new GridPanelDefinition[requiredLength];
 					tempDefinitionsWeakRef.Target = extData.TempDefinitions;
 				}
 
@@ -316,7 +316,7 @@ namespace Zaaml.UI.Panels.Primitives
 			return minSizes;
 		}
 
-		private static double CalculateDesiredSize<TDefinition>(GridDefinitionCollection<TDefinition> definitions) where TDefinition : GridDefinition
+		private static double CalculateDesiredSize<TDefinition>(GridDefinitionCollection<TDefinition> definitions) where TDefinition : GridPanelDefinition
 		{
 			double desiredSize = 0;
 
@@ -393,7 +393,7 @@ namespace Zaaml.UI.Panels.Primitives
 			return result != 2;
 		}
 
-		private void EnsureMinSizeInDefinitionRange<TDefinition>(GridDefinitionCollection<TDefinition> definitions, int start, int count, double requestedSize, double percentReferenceSize) where TDefinition : GridDefinition
+		private void EnsureMinSizeInDefinitionRange<TDefinition>(GridDefinitionCollection<TDefinition> definitions, int start, int count, double requestedSize, double percentReferenceSize) where TDefinition : GridPanelDefinition
 		{
 			Debug.Assert(1 < count && 0 <= start && start + count <= definitions.Count);
 
@@ -630,7 +630,7 @@ namespace Zaaml.UI.Panels.Primitives
 			return value;
 		}
 
-		private static double GetFinalSizeForRange<TDefinition>(GridDefinitionCollection<TDefinition> definitions, int start, int count) where TDefinition : GridDefinition
+		private static double GetFinalSizeForRange<TDefinition>(GridDefinitionCollection<TDefinition> definitions, int start, int count) where TDefinition : GridPanelDefinition
 		{
 			double size = 0;
 			var i = start + count - 1;
@@ -651,7 +651,7 @@ namespace Zaaml.UI.Panels.Primitives
 			return (bool) element.GetValue(IsSharedSizeScopeProperty);
 		}
 
-		private LayoutTimeSizeType GetLengthTypeForRange<TDefinition>(GridDefinitionCollection<TDefinition> definitions, int start, int count) where TDefinition : GridDefinition
+		private LayoutTimeSizeType GetLengthTypeForRange<TDefinition>(GridDefinitionCollection<TDefinition> definitions, int start, int count) where TDefinition : GridPanelDefinition
 		{
 			Debug.Assert(0 < count && 0 <= start && start + count <= definitions.Count);
 
@@ -666,7 +666,7 @@ namespace Zaaml.UI.Panels.Primitives
 			return lengthType;
 		}
 
-		private static double GetMeasureSizeForRange<TDefinition>(GridDefinitionCollection<TDefinition> definitions, int start, int count) where TDefinition : GridDefinition
+		private static double GetMeasureSizeForRange<TDefinition>(GridDefinitionCollection<TDefinition> definitions, int start, int count) where TDefinition : GridPanelDefinition
 		{
 			Debug.Assert(0 < count && 0 <= start && start + count <= definitions.Count);
 
@@ -1213,7 +1213,7 @@ namespace Zaaml.UI.Panels.Primitives
 				store[key] = value;
 		}
 
-		private void ResolveStar<TDefinition>(GridDefinitionCollection<TDefinition> definitions, double availableSize) where TDefinition : GridDefinition
+		private void ResolveStar<TDefinition>(GridDefinitionCollection<TDefinition> definitions, double availableSize) where TDefinition : GridPanelDefinition
 		{
 			ResolveStarMaxDiscrepancy(definitions, availableSize);
 		}
@@ -1231,7 +1231,7 @@ namespace Zaaml.UI.Panels.Primitives
 		//      discrepancy (defined below).   This avoids discontinuities - small
 		//      change in available space resulting in large change to one def's allocation.
 		// 3. Correct handling of large *-values, including Infinity.
-		private void ResolveStarMaxDiscrepancy<TDefinition>(GridDefinitionCollection<TDefinition> definitions, double availableSize) where TDefinition : GridDefinition
+		private void ResolveStarMaxDiscrepancy<TDefinition>(GridDefinitionCollection<TDefinition> definitions, double availableSize) where TDefinition : GridPanelDefinition
 		{
 			var defCount = definitions.Count;
 			var tempDefinitions = TempDefinitions;
@@ -1382,7 +1382,7 @@ namespace Zaaml.UI.Panels.Primitives
 					}
 
 					// get the chosen definition and its resolved size
-					GridDefinition resolvedDef;
+					GridPanelDefinition resolvedDef;
 					double resolvedSize;
 
 					if (chooseMin == true)
@@ -1566,7 +1566,7 @@ namespace Zaaml.UI.Panels.Primitives
 			element.SetValue(ColumnSpanProperty, value);
 		}
 
-		private void SetFinalSize<TDefinition>(GridDefinitionCollection<TDefinition> definitions, double finalSize, bool columns) where TDefinition : GridDefinition
+		private void SetFinalSize<TDefinition>(GridDefinitionCollection<TDefinition> definitions, double finalSize, bool columns) where TDefinition : GridPanelDefinition
 		{
 			SetFinalSizeMaxDiscrepancy(definitions, finalSize, columns);
 		}
@@ -1583,7 +1583,7 @@ namespace Zaaml.UI.Panels.Primitives
 		// 2. Use correct "nudge" amount when distributing roundoff space.   This
 		//      comes into play at high DPI - greater than 134.
 		// 3. Applies rounding only to real pixel values (not to ratios)
-		private void SetFinalSizeMaxDiscrepancy<TDefinition>(GridDefinitionCollection<TDefinition> definitions, double finalSize, bool columns) where TDefinition : GridDefinition
+		private void SetFinalSizeMaxDiscrepancy<TDefinition>(GridDefinitionCollection<TDefinition> definitions, double finalSize, bool columns) where TDefinition : GridPanelDefinition
 		{
 			var defCount = definitions.Count;
 			var definitionIndices = DefinitionIndices;
@@ -1767,7 +1767,7 @@ namespace Zaaml.UI.Panels.Primitives
 
 					// get the chosen definition and its resolved size
 					int resolvedIndex;
-					GridDefinition resolvedDef;
+					GridPanelDefinition resolvedDef;
 					double resolvedSize;
 
 					if (chooseMin == true)
@@ -2098,7 +2098,7 @@ namespace Zaaml.UI.Panels.Primitives
 			return extData?.RowDefinitions != null && extData.RowDefinitions.Count > 0;
 		}
 
-		private static double StarWeight(GridDefinition def, double scale)
+		private static double StarWeight(GridPanelDefinition def, double scale)
 		{
 			if (scale < 0.0)
 			{
@@ -2223,7 +2223,7 @@ namespace Zaaml.UI.Panels.Primitives
 			HasGroup3CellsInAutoRows = hasGroup3CellsInAutoRows;
 		}
 
-		private void ValidateDefinitionsLayout<TDefinition>(GridDefinitionCollection<TDefinition> definitions, bool treatStarAsAuto) where TDefinition : GridDefinition
+		private void ValidateDefinitionsLayout<TDefinition>(GridDefinitionCollection<TDefinition> definitions, bool treatStarAsAuto) where TDefinition : GridPanelDefinition
 		{
 			for (var i = 0; i < definitions.Count; ++i)
 			{
@@ -2330,7 +2330,7 @@ namespace Zaaml.UI.Panels.Primitives
 			internal GridRowCollection DefinitionsV; //  collection of row definitions used during calc
 			internal GridRowCollection RowDefinitions; //  collection of row definitions (logical tree support)
 
-			internal GridDefinition[] TempDefinitions; //  temporary array used during layout for various purposes
+			internal GridPanelDefinition[] TempDefinitions; //  temporary array used during layout for various purposes
 			//  TempDefinitions.Length == Max(definitionsU.Length, definitionsV.Length)
 		}
 
@@ -2424,8 +2424,8 @@ namespace Zaaml.UI.Panels.Primitives
 		{
 			public int Compare(object x, object y)
 			{
-				var definitionX = x as GridDefinition;
-				var definitionY = y as GridDefinition;
+				var definitionX = x as GridPanelDefinition;
+				var definitionY = y as GridPanelDefinition;
 
 				if (CompareNullRefs(definitionX, definitionY, out var result))
 					return result;
@@ -2453,8 +2453,8 @@ namespace Zaaml.UI.Panels.Primitives
 		{
 			public int Compare(object x, object y)
 			{
-				var definitionX = x as GridDefinition;
-				var definitionY = y as GridDefinition;
+				var definitionX = x as GridPanelDefinition;
+				var definitionY = y as GridPanelDefinition;
 
 				if (CompareNullRefs(definitionX, definitionY, out var result))
 					return result;
@@ -2510,8 +2510,8 @@ namespace Zaaml.UI.Panels.Primitives
 		{
 			public int Compare(object x, object y)
 			{
-				var definitionX = x as GridDefinition;
-				var definitionY = y as GridDefinition;
+				var definitionX = x as GridPanelDefinition;
+				var definitionY = y as GridPanelDefinition;
 
 				if (CompareNullRefs(definitionY, definitionX, out var result))
 					return result;
@@ -2526,8 +2526,8 @@ namespace Zaaml.UI.Panels.Primitives
 		{
 			public int Compare(object x, object y)
 			{
-				var definitionX = x as GridDefinition;
-				var definitionY = y as GridDefinition;
+				var definitionX = x as GridPanelDefinition;
+				var definitionY = y as GridPanelDefinition;
 
 				if (CompareNullRefs(definitionX, definitionY, out var result))
 					return result;
@@ -2542,8 +2542,8 @@ namespace Zaaml.UI.Panels.Primitives
 		{
 			public int Compare(object x, object y)
 			{
-				var definitionX = x as GridDefinition;
-				var definitionY = y as GridDefinition;
+				var definitionX = x as GridPanelDefinition;
+				var definitionY = y as GridPanelDefinition;
 
 				if (CompareNullRefs(definitionX, definitionY, out var result))
 					return result;
@@ -2554,7 +2554,7 @@ namespace Zaaml.UI.Panels.Primitives
 			}
 		}
 
-		private sealed class MinRatioIndexComparer<TDefinition> : IComparer where TDefinition : GridDefinition
+		private sealed class MinRatioIndexComparer<TDefinition> : IComparer where TDefinition : GridPanelDefinition
 		{
 			private readonly GridDefinitionCollection<TDefinition> _definitions;
 
@@ -2570,8 +2570,8 @@ namespace Zaaml.UI.Panels.Primitives
 				var indexX = x as int?;
 				var indexY = y as int?;
 
-				GridDefinition definitionX = null;
-				GridDefinition definitionY = null;
+				GridPanelDefinition definitionX = null;
+				GridPanelDefinition definitionY = null;
 
 				if (indexX != null)
 					definitionX = _definitions[indexX.Value];
@@ -2588,7 +2588,7 @@ namespace Zaaml.UI.Panels.Primitives
 			}
 		}
 
-		private sealed class MaxRatioIndexComparer<TDefinition> : IComparer where TDefinition : GridDefinition
+		private sealed class MaxRatioIndexComparer<TDefinition> : IComparer where TDefinition : GridPanelDefinition
 		{
 			private readonly GridDefinitionCollection<TDefinition> _definitions;
 
@@ -2604,8 +2604,8 @@ namespace Zaaml.UI.Panels.Primitives
 				var indexX = x as int?;
 				var indexY = y as int?;
 
-				GridDefinition definitionX = null;
-				GridDefinition definitionY = null;
+				GridPanelDefinition definitionX = null;
+				GridPanelDefinition definitionY = null;
 
 				if (indexX != null)
 					definitionX = _definitions[indexX.Value];
@@ -2622,7 +2622,7 @@ namespace Zaaml.UI.Panels.Primitives
 			}
 		}
 
-		private sealed class StarWeightIndexComparer<TDefinition> : IComparer where TDefinition : GridDefinition
+		private sealed class StarWeightIndexComparer<TDefinition> : IComparer where TDefinition : GridPanelDefinition
 		{
 			private readonly GridDefinitionCollection<TDefinition> _definitions;
 
@@ -2638,8 +2638,8 @@ namespace Zaaml.UI.Panels.Primitives
 				var indexX = x as int?;
 				var indexY = y as int?;
 
-				GridDefinition definitionX = null;
-				GridDefinition definitionY = null;
+				GridPanelDefinition definitionX = null;
+				GridPanelDefinition definitionY = null;
 
 				if (indexX != null)
 					definitionX = _definitions[indexX.Value];

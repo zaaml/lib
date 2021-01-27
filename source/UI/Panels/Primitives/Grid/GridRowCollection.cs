@@ -4,7 +4,7 @@
 
 namespace Zaaml.UI.Panels.Primitives
 {
-	public sealed class GridRowCollection : GridDefinitionCollection<GridRow>
+	public sealed class GridRowCollection : GridDefinitionCollection<GridPanelRow>
 	{
 		internal GridRowCollection(GridPanel gridPanel) : base(gridPanel)
 		{
