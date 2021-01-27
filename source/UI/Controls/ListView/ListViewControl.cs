@@ -79,7 +79,7 @@ namespace Zaaml.UI.Controls.ListView
 			("ScrollUnit", ScrollUnit.Item, d => d.OnScrollUnitPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ViewProperty = DPM.Register<ListViewBase, ListViewControl>
-			("View", default, d => d.OnViewPropertyChangedPrivate);
+			("View", d => d.OnViewPropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey ActualViewTemplatePropertyKey = DPM.RegisterReadOnly<ControlTemplate, ListViewControl>
 			("ActualViewTemplate");
@@ -560,6 +560,9 @@ namespace Zaaml.UI.Controls.ListView
 
 			ItemsPresenter.ListViewControl = this;
 
+			if (ScrollView != null)
+				ScrollView.PreserveScrollBarVisibility = true;
+
 			if (ColumnHeadersPresenter != null)
 				ColumnHeadersPresenter.ListViewControl = this;
 		}
@@ -594,6 +597,8 @@ namespace Zaaml.UI.Controls.ListView
 
 				newValue.ListViewControl = this;
 			}
+
+			UpdateViewTemplate();
 		}
 
 		internal void RaiseClick(ListViewItem listViewItem)

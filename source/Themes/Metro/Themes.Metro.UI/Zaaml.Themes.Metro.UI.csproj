@@ -82,6 +82,21 @@
 		<Page Update="Styles\TableView\TableViewItemsPresenter.xaml">
 		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
 		</Page>
+		<Page Update="Styles\TreeView\TreeViewItemGridCell.xaml">
+		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		  <SubType>Designer</SubType>
+		</Page>
+		<Page Update="Styles\TreeView\TreeViewItemGridColumnHeader.xaml">
+		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		  <SubType>Designer</SubType>
+		</Page>
+		<Page Update="Styles\TreeView\TreeViewItemGridHeaderElement.xaml">
+		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		  <SubType>Designer</SubType>
+		</Page>
+		<Page Update="Styles\TreeView\TreeViewItemExpander.xaml">
+		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		</Page>
 	</ItemGroup>
 
 </Project>

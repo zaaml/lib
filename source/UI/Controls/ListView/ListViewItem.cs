@@ -2,13 +2,9 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Zaaml.Core;
-using Zaaml.PresentationCore.Converters;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -449,14 +445,5 @@ namespace Zaaml.UI.Controls.ListView
 
 			UpdateVisualStateImpl(true, newMouse, newFocus);
 		}
-	}
-
-	public class ListViewItemTemplateContract : IconContentControlTemplateContract
-	{
-		[TemplateContractPart(Required = false)]
-		public ListViewItemGridCellsPresenter CellsPresenter { get; [UsedImplicitly] private set; }
-
-		[TemplateContractPart(Required = false)]
-		public ListViewItemGlyphPresenter GlyphPresenter { get; [UsedImplicitly] private set; }
 	}
 }

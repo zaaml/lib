@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Collections.Generic;
 using System.Windows;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -24,9 +23,7 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			AllowCellSplitter = false;
 		}
-
-		private Stack<ListViewItemGridCell> CellsPool { get; } = new();
-
+		
 		public ListViewItem ListViewItem
 		{
 			get => (ListViewItem) GetValue(ListViewItemProperty);
@@ -38,28 +35,9 @@ namespace Zaaml.UI.Controls.ListView
 			return new(this);
 		}
 
-		protected override void CreateCells(ListGridViewColumnCollection columns)
+		protected override ListViewItemGridCell CreateCell()
 		{
-			DestroyCells();
-
-			for (var index = 0; index < columns.Count; index++)
-				Cells.Add(GetCell());
-		}
-
-		protected override void DestroyCells()
-		{
-			for (var index = Cells.Count - 1; index >= 0; index--)
-				CellsPool.Push(Cells[index]);
-
-			Cells.Clear();
-		}
-
-		private ListViewItemGridCell GetCell()
-		{
-			if (CellsPool.Count > 0)
-				return CellsPool.Pop();
-
-			return new ListViewItemGridCell();
+			return new ListViewItemGridCell { ListViewItem = ListViewItem };
 		}
 
 		private void OnListViewItemPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)

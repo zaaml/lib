@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using Zaaml.Core.Extensions;
 using Zaaml.UI.Panels.Flexible;
@@ -177,24 +176,24 @@ namespace Zaaml.UI.Controls.Core
 				cellsPresenter.CellsPanelInternal?.InvalidateMeasure();
 		}
 
-		internal void OnCellStructurePropertyChanged(GridColumn gridColumn)
-		{
-			foreach (var cellsPresenter in CellsPresenters)
-				cellsPresenter.CellsPanelInternal?.OnCellStructurePropertyChanged(gridColumn);
-		}
-
 		internal void OnCellsPanelArrange(GridCellsPanel panel, Size finalSize)
 		{
 			if (panel.ArrangeLayoutVersion < LayoutVersion)
 			{
 				if (FinalWidthLayoutVersion < LayoutVersion)
 				{
-					FinalWidth = finalSize.Width.RoundToZero();
+					FinalWidth = finalSize.Width.RoundMidPointFromZero();
 					FinalWidthLayoutVersion = LayoutVersion;
 				}
 				else
-					FinalWidth = Math.Min(FinalWidth, finalSize.Width).RoundToZero();
+					FinalWidth = Math.Min(FinalWidth, finalSize.Width).RoundMidPointFromZero();
 			}
+		}
+
+		internal void OnCellStructurePropertyChanged(GridColumn gridColumn)
+		{
+			foreach (var cellsPresenter in CellsPresenters)
+				cellsPresenter.CellsPanelInternal?.OnCellStructurePropertyChanged(gridColumn);
 		}
 
 		internal void OnColumnWidthChanged(GridColumn gridColumn)

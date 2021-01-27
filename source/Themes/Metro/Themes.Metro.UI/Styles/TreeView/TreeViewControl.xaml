@@ -17,15 +17,46 @@
                               Padding="{TemplateBinding Padding}"
                               HorizontalContentAlignment="Stretch"
                               VerticalContentAlignment="Stretch"
+                              zm:DisableVeilControl.EnableVeil="False"
                               Background="#00FFFFFF"
                               BorderThickness="0"
-                              PreserveScrollBarVisibility="True"
                               HorizontalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.HorizontalScrollBarVisibility)}"
-                              VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}"
-                              zm:DisableVeilControl.EnableVeil="False">
+                              PreserveScrollBarVisibility="True"
+                              VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}">
 
           <zm:TreeViewItemsPresenter x:Name="ItemsPresenter" />
         </zm:ScrollViewControl>
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="TreeViewControlGridTemplate"
+                   TargetType="zm:TreeViewControl">
+    <zm:ControlTemplateRoot Background="Transparent">
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+
+        <zm:DockPanel>
+
+          <zm:TreeViewItemGridColumnHeadersPresenter x:Name="ColumnHeadersPresenter"
+                                                     zm:DockPanel.Dock="Top" />
+
+          <zm:ScrollViewControl x:Name="ScrollView"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
+                                zm:DisableVeilControl.EnableVeil="False"
+                                Background="#00FFFFFF"
+                                BorderThickness="0"
+                                HorizontalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.HorizontalScrollBarVisibility)}"
+                                PreserveScrollBarVisibility="True"
+                                VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}">
+
+            <zm:TreeViewItemsPresenter x:Name="ItemsPresenter" />
+          </zm:ScrollViewControl>
+
+        </zm:DockPanel>
       </Border>
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -36,11 +67,12 @@
     <zm:Setter Property="zm:ScrollViewControl.HorizontalScrollBarVisibility" Value="Auto" />
     <zm:Setter Property="zm:ScrollViewControl.VerticalScrollBarVisibility" Value="Auto" />
     <zm:Setter Property="Padding" Value="{zm:SelfSkinBinding SkinPath=ScrollViewerPadding}" />
-    <zm:Setter Property="Template" Value="{StaticResource TreeViewControlTemplate}" />
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualViewTemplate, TargetNullValue={StaticResource TreeViewControlTemplate}}" />
+    <zm:Setter Property="zm:TreeGridView.Template" Value="{StaticResource TreeViewControlGridTemplate}" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="TreeViewControlStyle" BasedOn="{StaticResource TreeViewControlBaseStyle}" TargetType="zm:TreeViewControl"  Skin="Metro.TreeView">
+  <zm:Style x:Key="TreeViewControlStyle" BasedOn="{StaticResource TreeViewControlBaseStyle}" Skin="Metro.TreeView" TargetType="zm:TreeViewControl">
     <zm:SetterGroup ValuePathSource="Skin">
       <zm:Setter ValuePath="Foreground" Property="Foreground" />
       <zm:Setter ValuePath="Background" Property="Background" />

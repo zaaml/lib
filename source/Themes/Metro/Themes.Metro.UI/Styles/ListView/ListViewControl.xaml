@@ -17,12 +17,12 @@
                               Padding="{TemplateBinding Padding}"
                               HorizontalContentAlignment="Stretch"
                               VerticalContentAlignment="Stretch"
+                              zm:DisableVeilControl.EnableVeil="False"
                               Background="#00FFFFFF"
                               BorderThickness="0"
-                              PreserveScrollBarVisibility="True"
                               HorizontalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.HorizontalScrollBarVisibility)}"
-                              VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}"
-                              zm:DisableVeilControl.EnableVeil="False">
+                              PreserveScrollBarVisibility="True"
+                              VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}">
           <zm:ListViewItemsPresenter x:Name="ItemsPresenter" />
         </zm:ScrollViewControl>
       </Border>
@@ -39,20 +39,18 @@
 
         <zm:DockPanel>
 
-          <zm:ListViewItemGridColumnHeadersPresenter x:Name="ColumnHeadersPresenter" 
+          <zm:ListViewItemGridColumnHeadersPresenter x:Name="ColumnHeadersPresenter"
                                                      zm:DockPanel.Dock="Top" />
 
           <zm:ScrollViewControl x:Name="ScrollView"
-                                Margin="{zm:TemplateSkinBinding SkinPath=ScrollViewerMargin}"
-                                Padding="{TemplateBinding Padding}"
                                 HorizontalContentAlignment="Stretch"
                                 VerticalContentAlignment="Stretch"
+                                zm:DisableVeilControl.EnableVeil="False"
                                 Background="#00FFFFFF"
                                 BorderThickness="0"
-                                PreserveScrollBarVisibility="True"
                                 HorizontalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.HorizontalScrollBarVisibility)}"
-                                VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}"
-                                zm:DisableVeilControl.EnableVeil="False">
+                                PreserveScrollBarVisibility="True"
+                                VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}">
             <zm:ListViewItemsPresenter x:Name="ItemsPresenter" />
           </zm:ScrollViewControl>
         </zm:DockPanel>

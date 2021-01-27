@@ -870,6 +870,73 @@
     <!-- TreeViewItem -->
     <zm:SkinDictionary x:Key="TreeViewItem" BasedOn="Metro.Shared.ListViewItem"/>
 
+    <!-- TreeViewItemGridCell -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridCell">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FFCDD5CD" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
+    <!-- TreeViewItemGridColumnHeader -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridColumnHeader">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#FFF0F0F0" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFC5C5C5" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FFADADAD" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFADADAD" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Focused" Color="#FF0072C6" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
+    <!-- TreeViewItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridHeaderElement">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#FFF0F0F0" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFC5C5C5" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FFADADAD" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFADADAD" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
     <!-- DropDownListView -->
     <zm:SkinDictionary x:Key="DropDownListViewControl" BasedOn="Metro.Shared.DropDownItemsControl" />
 

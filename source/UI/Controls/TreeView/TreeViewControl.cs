@@ -89,6 +89,14 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty ScrollUnitProperty = DPM.Register<ScrollUnit, TreeViewControl>
 			("ScrollUnit", ScrollUnit.Item, d => d.OnScrollUnitPropertyChangedPrivate);
 
+		public static readonly DependencyProperty ViewProperty = DPM.Register<TreeViewBase, TreeViewControl>
+			("View", d => d.OnViewPropertyChangedPrivate);
+
+		private static readonly DependencyPropertyKey ActualViewTemplatePropertyKey = DPM.RegisterReadOnly<ControlTemplate, TreeViewControl>
+			("ActualViewTemplate");
+
+		public static readonly DependencyProperty ActualViewTemplateProperty = ActualViewTemplatePropertyKey.DependencyProperty;
+
 		private TreeViewItem _currentItem;
 		private DefaultItemTemplateTreeViewItemGenerator _defaultGeneratorImplementation;
 		private ITreeViewItemFilter _itemsDefaultFilter;
@@ -137,6 +145,16 @@ namespace Zaaml.UI.Controls.TreeView
 		internal ITreeViewItemFilter ActualItemsFilter => ItemsFilter ?? ItemsDefaultFilter;
 
 		private protected override bool ActualSelectItemOnFocus => SelectionMode != TreeViewSelectionMode.Multiple && base.ActualSelectItemOnFocus;
+
+		public ControlTemplate ActualViewTemplate
+		{
+			get => (ControlTemplate) GetValue(ActualViewTemplateProperty);
+			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
+		}
+
+		private TreeViewItemGridColumnHeadersPresenter ColumnHeadersPresenter => TemplateContract.ColumnHeadersPresenter;
+
+		internal TreeViewItemGridColumnHeadersPresenter ColumnHeadersPresenterInternal => ColumnHeadersPresenter;
 
 		private TreeViewItem CurrentItem
 		{
@@ -271,6 +289,8 @@ namespace Zaaml.UI.Controls.TreeView
 			set => SetValue(SourceCollectionProperty, value);
 		}
 
+		private TreeViewControlTemplateContract TemplateContract => (TreeViewControlTemplateContract) TemplateContractInternal;
+
 		internal TreeViewData TreeViewData
 		{
 			get => _treeViewData;
@@ -290,6 +310,12 @@ namespace Zaaml.UI.Controls.TreeView
 		}
 
 		private TreeViewFocusNavigator TreeViewFocusNavigator => (TreeViewFocusNavigator) FocusNavigator;
+
+		public TreeViewBase View
+		{
+			get => (TreeViewBase) GetValue(ViewProperty);
+			set => SetValue(ViewProperty, value);
+		}
 
 		internal VirtualTreeViewItemCollection VirtualItemCollection { get; }
 
@@ -634,13 +660,43 @@ namespace Zaaml.UI.Controls.TreeView
 
 			if (ScrollView != null)
 				ScrollView.PreserveScrollBarVisibility = true;
+
+			if (ColumnHeadersPresenter != null)
+				ColumnHeadersPresenter.TreeViewControl = this;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
+			if (ColumnHeadersPresenter != null)
+				ColumnHeadersPresenter.TreeViewControl = this;
+
 			ItemsPresenter.TreeViewControl = null;
 
 			base.OnTemplateContractDetaching();
+		}
+
+		private void OnViewPropertyChangedPrivate(TreeViewBase oldValue, TreeViewBase newValue)
+		{
+			if (ReferenceEquals(oldValue, newValue))
+				return;
+
+			if (oldValue != null)
+			{
+				if (ReferenceEquals(oldValue.TreeViewControl, this) == false)
+					throw new InvalidOperationException();
+
+				oldValue.TreeViewControl = null;
+			}
+
+			if (newValue != null)
+			{
+				if (newValue.TreeViewControl != null)
+					throw new InvalidOperationException();
+
+				newValue.TreeViewControl = this;
+			}
+
+			UpdateViewTemplate();
 		}
 
 		internal void RaiseClick(TreeViewItem treeViewItem)
@@ -733,6 +789,14 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewData.DataFilter.Filter = itemsFilter;
 
 			InvalidateMeasure();
+		}
+
+		internal void UpdateViewTemplate()
+		{
+			var actualViewTemplate = View?.GetTemplateInternal(this);
+
+			if (ReferenceEquals(ActualViewTemplate, actualViewTemplate) == false)
+				ActualViewTemplate = actualViewTemplate;
 		}
 
 		public string ItemSelectionMember

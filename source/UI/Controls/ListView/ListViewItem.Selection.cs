@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -76,7 +77,7 @@ namespace Zaaml.UI.Controls.ListView
 				ListViewControl?.Unselect(this);
 
 			OnIsSelectedChanged();
-
+			UpdateZIndex();
 			UpdateVisualState(true);
 		}
 
@@ -93,6 +94,11 @@ namespace Zaaml.UI.Controls.ListView
 		internal void UnselectInternal()
 		{
 			SetIsSelectedInternal(false);
+		}
+
+		private void UpdateZIndex()
+		{
+			Panel.SetZIndex(this, IsSelected ? 20000 : 10000);
 		}
 
 		DependencyProperty ISelectableItem.SelectionProperty => IsSelectedProperty;

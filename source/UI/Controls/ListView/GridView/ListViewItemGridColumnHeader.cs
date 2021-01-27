@@ -26,6 +26,8 @@ namespace Zaaml.UI.Controls.ListView
 		internal ListViewItemGridColumnHeader()
 		{
 			this.OverrideStyleKey<ListViewItemGridColumnHeader>();
+
+			BorderThickness = new Thickness(1, 0, 1, 1);
 		}
 
 		protected override DataTemplate CellContentTemplateCore => Column?.HeaderContentTemplate;

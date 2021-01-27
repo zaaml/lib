@@ -9,20 +9,6 @@
     <zm:ThemeResourceDictionary Source="TreeViewItemShared.xaml" />
   </zm:ThemeResourceDictionary.MergedDictionaries>
 
-  <!--  ToggleButton Template  -->
-  <ControlTemplate x:Key="ToggleButtonTemplate"
-                   TargetType="zm:ToggleButton">
-    <zm:ControlTemplateRoot Background="Transparent"
-                            VisualStateGroups="{StaticResource ToggleButtonVisualStates}">
-      <!--  Glyph  -->
-      <zm:PathIcon HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   zm:Extension.SettersSource="{StaticResource GlyphSetter}"
-                   Style="{zm:ThemeResource Key=Metro.StandardControls.TreeViewItem.Glyph.Style}" />
-
-    </zm:ControlTemplateRoot>
-  </ControlTemplate>
-
   <ControlTemplate x:Key="TreeViewItemTemplate"
                    TargetType="zm:TreeViewItem">
     <zm:ControlTemplateRoot Background="Transparent"
@@ -31,17 +17,8 @@
       <zm:DockPanel Margin="{TemplateBinding ActualLevelPadding}">
 
         <!--  Expander  -->
-        <Border Width="16"
-                zm:DockPanel.Dock="Left">
-          <zm:ToggleButton x:Name="ExpanderButton"
-                           Focusable="False"
-                           IsChecked="{zm:TemplateBinding Path=IsExpanded,
-                                                          Mode=TwoWay}"
-                           IsTabStop="False"
-                           Template="{StaticResource ToggleButtonTemplate}"
-                           Visibility="{zm:TemplateBinding Path=HasItems,
-                                                           Converter={zm:VisibilityConverter}}" />
-        </Border>
+        <zm:TreeViewItemExpander x:Name="Expander"
+                                 zm:DockPanel.Dock="Left" />
 
         <!--  Glyph presenter  -->
         <zm:TreeViewItemGlyphPresenter x:Name="GlyphPresenter"
@@ -69,13 +46,31 @@
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
+  <ControlTemplate x:Key="TreeViewGridItemTemplate"
+                   TargetType="zm:TreeViewItem">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <!--  CommonStatesBorder  -->
+      <Border Margin="0,-1,0,0"
+              Background="{TemplateBinding Background}">
+
+        <zm:TreeViewItemGridCellsPresenter x:Name="CellsPresenter"
+                                           BorderBrush="{TemplateBinding BorderBrush}" />
+
+      </Border>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
   <!--  Base Style  -->
   <zm:Style x:Key="TreeViewItemBaseStyle" TargetType="zm:TreeViewItem">
     <zm:Setter Property="Padding" Value="3,2" />
     <zm:Setter Property="HorizontalAlignment" Value="Stretch" />
     <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
     <zm:Setter Property="VerticalContentAlignment" Value="Top" />
-    <zm:Setter Property="Template" Value="{StaticResource TreeViewItemTemplate}" />
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualViewTemplate, TargetNullValue={StaticResource TreeViewItemTemplate}}" />
+    <zm:Setter Property="zm:TreeGridView.Template" Value="{StaticResource TreeViewGridItemTemplate}" />
     <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
   </zm:Style>
 

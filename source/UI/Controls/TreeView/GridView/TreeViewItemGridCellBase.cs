@@ -1,4 +1,4 @@
-// <copyright file="ListViewItemGridCellBase.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="TreeViewItemGridCellBase.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -10,21 +10,21 @@ using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
-namespace Zaaml.UI.Controls.ListView
+namespace Zaaml.UI.Controls.TreeView
 {
-	public abstract class ListViewItemGridCellBase<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+	public abstract class TreeViewItemGridCellBase<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		: GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		where TGridCellsPresenter : GridCellsPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		where TGridCellsPanel : GridCellsPanel<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		where TGridCellCollection : GridCellCollection<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		where TGridCell : GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 	{
-		protected static readonly DependencyProperty ContentProperty = DPM.Register<object, ListViewItemGridCellBase<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>
+		protected static readonly DependencyProperty ContentProperty = DPM.Register<object, TreeViewItemGridCellBase<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>
 			("Content", c => c.OnContentPropertyChangedPrivate);
 
 		private DataTemplate _cellContentTemplate;
 
-		internal ListViewItemGridCellBase()
+		internal TreeViewItemGridCellBase()
 		{
 			BorderThickness = new Thickness(1);
 			Margin = new Thickness(-1, 0, 0, 0);
@@ -46,7 +46,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		protected abstract DataTemplate CellContentTemplateCore { get; }
 
-		protected ListGridViewColumn Column => (ListGridViewColumn) ColumnInternal;
+		protected TreeGridViewColumn Column => (TreeGridViewColumn) ColumnInternal;
 
 		protected object Content
 		{
@@ -76,10 +76,10 @@ namespace Zaaml.UI.Controls.ListView
 
 		private void InvalidateCellMeasure()
 		{
-			var listViewItem = (CellsPresenterInternal as ListViewItemGridCellsPresenter)?.ListViewItem;
+			var treeViewItem = (CellsPresenterInternal as TreeViewItemGridCellsPresenter)?.TreeViewItem;
 
-			if (listViewItem != null)
-				this.InvalidateAncestorsMeasure(listViewItem, true);
+			if (treeViewItem != null)
+				this.InvalidateAncestorsMeasure(treeViewItem, true);
 			else
 				InvalidateMeasure();
 		}

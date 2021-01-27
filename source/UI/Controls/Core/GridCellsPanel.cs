@@ -10,6 +10,7 @@ using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore;
 using Zaaml.UI.Panels;
+using Zaaml.UI.Panels.Flexible;
 using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Controls.Core
@@ -67,8 +68,12 @@ namespace Zaaml.UI.Controls.Core
 						break;
 
 					var column = gridCell.ColumnInternal;
-					var cellSize = new Size(column.FinalWidth, finalSize.Height);
+					var columnFinalWidth = column?.FinalWidth ?? gridCell.DesiredSize.Width;
+					var cellSize = new Size(columnFinalWidth, finalSize.Height);
 					var cellRect = new Rect(new Point(offset, 0), cellSize);
+
+					if (gridCell.DesiredSize.Width.IsGreaterThan(cellSize.Width)) 
+						gridCell.Measure(cellSize);
 
 					gridCell.Arrange(cellRect);
 
@@ -233,20 +238,24 @@ namespace Zaaml.UI.Controls.Core
 					break;
 
 				var column = gridCell.ColumnInternal;
+				var columnWidth = column?.Width ?? FlexLength.Star;
 
-				if (column.Width.IsStar)
+				if (columnWidth.IsStar)
 				{
-					starLengthValue += column.Width.Value;
+					starLengthValue += columnWidth.Value;
 
 					continue;
 				}
 
-				var constraint = new Size(column.Width.IsAuto ? double.PositiveInfinity : column.Width.Value, availableSize.Height);
+				var constraint = new Size(columnWidth.IsAuto ? double.PositiveInfinity : columnWidth.Value, availableSize.Height);
 
 				gridCell.Measure(constraint);
 
-				if (column.Width.IsAuto)
-					column.AutoDesiredWidth = Math.Max(column.AutoDesiredWidth, gridCell.DesiredSize.Width);
+				if (columnWidth.IsAuto)
+				{
+					if (column != null)
+						column.AutoDesiredWidth = Math.Max(column.AutoDesiredWidth, gridCell.DesiredSize.Width);
+				}
 
 				fixedResult = fixedResult.StackSize(gridCell.DesiredSize);
 			}
@@ -264,11 +273,12 @@ namespace Zaaml.UI.Controls.Core
 					break;
 
 				var column = gridCell.ColumnInternal;
+				var columnWidth = column?.Width ?? FlexLength.Star;
 
-				if (column.Width.IsStar == false)
+				if (columnWidth.IsStar == false)
 					continue;
 
-				var constraint = new Size(column.Width.Value * starLength, availableSize.Height);
+				var constraint = new Size(columnWidth.Value * starLength, availableSize.Height);
 
 				gridCell.Measure(constraint);
 

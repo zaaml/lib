@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
 using Zaaml.Core.Packed;
@@ -21,6 +22,8 @@ using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 using Zaaml.UI.Controls.TreeView.Data;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Utils;
+using Control = Zaaml.UI.Controls.Core.Control;
+using Panel = System.Windows.Controls.Panel;
 
 namespace Zaaml.UI.Controls.TreeView
 {
@@ -55,7 +58,7 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty ActualLevelPaddingProperty = ActualLevelPaddingPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey ActualLevelPropertyKey = DPM.RegisterReadOnly<int, TreeViewItem>
-			("ActualLevel", 0);
+			("ActualLevel", 0, t => t.OnActualLevelPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ActualLevelProperty = ActualLevelPropertyKey.DependencyProperty;
 
@@ -82,6 +85,11 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty CommandTargetProperty = DPM.Register<DependencyObject, TreeViewItem>
 			("CommandTarget", d => d.OnCommandTargetChanged);
 
+		private static readonly DependencyPropertyKey ActualViewTemplatePropertyKey = DPM.RegisterReadOnly<ControlTemplate, TreeViewItem>
+			("ActualViewTemplate");
+
+		public static readonly DependencyProperty ActualViewTemplateProperty = ActualViewTemplatePropertyKey.DependencyProperty;
+
 		public static readonly DependencyProperty TreeViewControlProperty = TreeViewControlPropertyKey.DependencyProperty;
 
 		private uint _packedValue;
@@ -98,6 +106,8 @@ namespace Zaaml.UI.Controls.TreeView
 		public TreeViewItem()
 		{
 			this.OverrideStyleKey<TreeViewItem>();
+
+			UpdateZIndex();
 		}
 
 		public ICommand Command
@@ -124,6 +134,12 @@ namespace Zaaml.UI.Controls.TreeView
 			private set => this.SetReadOnlyValue(ActualLevelPaddingPropertyKey, value);
 		}
 
+		public ControlTemplate ActualViewTemplate
+		{
+			get => (ControlTemplate) GetValue(ActualViewTemplateProperty);
+			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
+		}
+
 		internal Rect ArrangeRect { get; private set; }
 
 		protected virtual bool CanCollapse => true;
@@ -131,6 +147,10 @@ namespace Zaaml.UI.Controls.TreeView
 		protected virtual bool CanExpand => true;
 
 		protected virtual bool CanSelect => IsSelectable;
+
+		private TreeViewItemGridCellsPresenter CellsPresenter => TemplateContract.CellsPresenter;
+
+		internal TreeViewItemGridCellsPresenter CellsPresenterInternal => CellsPresenter;
 
 		private bool CoerceIsExpanded
 		{
@@ -150,6 +170,8 @@ namespace Zaaml.UI.Controls.TreeView
 			set => SetValue(CommandTargetProperty, value);
 		}
 
+		private TreeViewItemExpander Expander => TemplateContract.Expander;
+
 		private bool FocusOnMouseHover => TreeViewControl?.FocusItemOnMouseHover ?? false;
 
 		public GlyphBase Glyph
@@ -157,7 +179,6 @@ namespace Zaaml.UI.Controls.TreeView
 			get => (GlyphBase) GetValue(GlyphProperty);
 			set => SetValue(GlyphProperty, value);
 		}
-
 
 		private TreeViewItemGlyphPresenter GlyphPresenter => TemplateContract.GlyphPresenter;
 
@@ -178,6 +199,8 @@ namespace Zaaml.UI.Controls.TreeView
 		private bool IsFocusedVisualState { get; set; }
 
 		private bool IsMouseOverVisualState { get; set; }
+
+		private protected virtual bool IsReadOnlyState => false;
 
 		public bool IsSelectable
 		{
@@ -308,6 +331,11 @@ namespace Zaaml.UI.Controls.TreeView
 			return base.MeasureOverride(availableSize);
 		}
 
+		private void OnActualLevelPropertyChangedPrivate()
+		{
+			UpdateZIndex();
+		}
+
 		protected virtual void OnClick()
 		{
 			RaiseClickEvent();
@@ -396,7 +424,7 @@ namespace Zaaml.UI.Controls.TreeView
 				TreeViewControl?.Unselect(this);
 
 			OnIsSelectedChanged();
-
+			UpdateZIndex();
 			UpdateVisualState(true);
 		}
 
@@ -489,10 +517,22 @@ namespace Zaaml.UI.Controls.TreeView
 			base.OnTemplateContractAttached();
 
 			UpdateGlyphPresenter();
+
+			if (Expander != null)
+				Expander.TreeViewItem = this;
+
+			if (CellsPresenter != null)
+				CellsPresenter.TreeViewItem = this;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
+			if (Expander != null)
+				Expander.TreeViewItem = null;
+
+			if (CellsPresenter != null)
+				CellsPresenter.TreeViewItem = null;
+
 			CleanGlyphPresenter();
 
 			base.OnTemplateContractDetaching();
@@ -513,6 +553,8 @@ namespace Zaaml.UI.Controls.TreeView
 				UpdateGlyphPresenter();
 			else if (e.Property == TreeViewControl.ItemGlyphTemplateProperty)
 				UpdateGlyphPresenter();
+			else if (e.Property == TreeViewControl.ViewProperty)
+				UpdateViewTemplate();
 		}
 
 		private void OnTreeViewControlPropertyChangedPrivate(TreeViewControl oldTreeView, TreeViewControl newTreeView)
@@ -525,6 +567,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 			if (newTreeView != null)
 				newTreeView.DependencyPropertyChangedInternal += OnTreeViewControlPropertyChanged;
+
+			UpdateViewTemplate();
 
 			OnTreeViewControlChangedInternal(oldTreeView, newTreeView);
 		}
@@ -657,12 +701,23 @@ namespace Zaaml.UI.Controls.TreeView
 			UpdateIsExpanded();
 		}
 
+		internal void UpdateViewTemplate()
+		{
+			var treeViewControl = TreeViewControl;
+
+			if (treeViewControl == null)
+				return;
+
+			var actualViewTemplate = treeViewControl.View?.GetTemplateInternal(this);
+
+			if (ReferenceEquals(ActualViewTemplate, actualViewTemplate) == false)
+				ActualViewTemplate = actualViewTemplate;
+		}
+
 		protected override void UpdateVisualState(bool useTransitions)
 		{
 			UpdateVisualStateImpl(useTransitions);
 		}
-
-		private protected virtual bool IsReadOnlyState => false;
 
 		private void UpdateVisualStateImpl(bool useTransitions, bool? actualIsMouseOver = null, bool? actualIsFocused = null)
 		{
@@ -719,6 +774,11 @@ namespace Zaaml.UI.Controls.TreeView
 				else
 					GotoVisualState(CommonVisualStates.InvalidUnfocused, useTransitions);
 			}
+		}
+
+		private void UpdateZIndex()
+		{
+			Panel.SetZIndex(this, IsSelected ? 20000 : 10000 - ActualLevel);
 		}
 
 		void IContextPopupTarget.OnContextPopupControlOpened(IContextPopupControl popupControl)

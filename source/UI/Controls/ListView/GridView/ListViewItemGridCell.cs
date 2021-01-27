@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Data;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.PropertyCore.Extensions;
 using Zaaml.PresentationCore.TemplateCore;
@@ -18,6 +19,11 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewItemGridCellCollection,
 			ListViewItemGridCell>
 	{
+		private static readonly DependencyPropertyKey ListViewItemPropertyKey = DPM.RegisterReadOnly<ListViewItem, ListViewItemGridCell>
+			("ListViewItem", default, d => d.OnListViewItemPropertyChangedPrivate);
+
+		public static readonly DependencyProperty ListViewItemProperty = ListViewItemPropertyKey.DependencyProperty;
+
 		static ListViewItemGridCell()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<ListViewItemGridCell>();
@@ -32,6 +38,12 @@ namespace Zaaml.UI.Controls.ListView
 
 		protected override Binding ContentBindingCore => Column?.ActualMemberBinding;
 
+		public ListViewItem ListViewItem
+		{
+			get => (ListViewItem) GetValue(ListViewItemProperty);
+			internal set => this.SetReadOnlyValue(ListViewItemPropertyKey, value);
+		}
+
 		protected override Thickness PaddingCore
 		{
 			get
@@ -43,6 +55,10 @@ namespace Zaaml.UI.Controls.ListView
 
 				return column.GetValueSource(ListGridViewColumn.CellPaddingProperty) == PropertyValueSource.Default ? base.PaddingCore : column.CellPadding;
 			}
+		}
+
+		private void OnListViewItemPropertyChangedPrivate(ListViewItem oldValue, ListViewItem newValue)
+		{
 		}
 	}
 }

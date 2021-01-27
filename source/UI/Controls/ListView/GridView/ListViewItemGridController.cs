@@ -46,7 +46,12 @@ namespace Zaaml.UI.Controls.ListView
 
 		public override GridColumn GetColumn(int index)
 		{
-			return ListGridView?.Columns[index];
+			var columns = ListGridView?.Columns;
+
+			if (columns == null)
+				return null;
+
+			return index >= 0 && index < columns.Count && columns.Count > 0 ? columns[index] : null;
 		}
 	}
 }

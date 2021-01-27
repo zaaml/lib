@@ -31,8 +31,6 @@ namespace Zaaml.UI.Controls.Core
 
 		internal GridCellsPanel CellsPanelInternal => CellsPanelCore;
 
-		protected GridCellsPresenter CellsPresenter => (GridCellsPresenter) VisualParent;
-
 		protected abstract GridController Controller { get; }
 
 		internal GridController ControllerInternal => Controller;

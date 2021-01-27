@@ -1,4 +1,4 @@
-﻿// <copyright file="ListViewItemGridElementPresenter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="TreeViewItemGridElementPresenter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -9,51 +9,37 @@ using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
 
-namespace Zaaml.UI.Controls.ListView
+namespace Zaaml.UI.Controls.TreeView
 {
-	public abstract class ListViewItemGridElementPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
+	public abstract class TreeViewItemGridElementPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		: GridCellsPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		where TGridCellsPresenter : GridCellsPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		where TGridCellsPanel : GridCellsPanel<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		where TGridCellCollection : GridCellCollection<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 		where TGridCell : GridCell<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>
 	{
-		private static readonly DependencyPropertyKey ListViewControlPropertyKey = DPM.RegisterReadOnly<ListViewControl, ListViewItemGridElementPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>
-			("ListViewControl", d => d.OnListViewControlPropertyChangedPrivate);
+		private static readonly DependencyPropertyKey TreeViewControlPropertyKey = DPM.RegisterReadOnly<TreeViewControl, TreeViewItemGridElementPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>
+			("TreeViewControl", d => d.OnTreeViewControlPropertyChangedPrivate);
 
-		private static readonly DependencyPropertyKey ViewPropertyKey = DPM.RegisterReadOnly<ListGridView, ListViewItemGridElementPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>
+		private static readonly DependencyPropertyKey ViewPropertyKey = DPM.RegisterReadOnly<TreeGridView, TreeViewItemGridElementPresenter<TGridCellsPresenter, TGridCellsPanel, TGridCellCollection, TGridCell>>
 			("View", d => d.OnViewPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ViewProperty = ViewPropertyKey.DependencyProperty;
 
-		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty TreeViewControlProperty = TreeViewControlPropertyKey.DependencyProperty;
 
 		private bool CellsDirty { get; set; }
 
 		private Stack<TGridCell> CellsPool { get; } = new();
 
-		protected override GridController Controller => View?.ItemController;
-
-		public ListViewControl ListViewControl
-		{
-			get => (ListViewControl) GetValue(ListViewControlProperty);
-			internal set => this.SetReadOnlyValue(ListViewControlPropertyKey, value);
-		}
-
-		public ListGridView View
-		{
-			get => (ListGridView) GetValue(ViewProperty);
-			private set => this.SetReadOnlyValue(ViewPropertyKey, value);
-		}
-
-		private void AttachView(ListGridView view)
-		{
-			view.Columns.Changed += OnViewColumnsChanged;
-		}
-
 		protected abstract TGridCell CreateCell();
 
-		private void CreateCells(ListGridViewColumnCollection columns)
+		private TGridCell GetCell()
+		{
+			return CellsPool.Count > 0 ? CellsPool.Pop() : CreateCell();
+		}
+
+		private void CreateCells(TreeGridViewColumnCollection columns)
 		{
 			DestroyCells();
 
@@ -69,7 +55,26 @@ namespace Zaaml.UI.Controls.ListView
 			Cells.Clear();
 		}
 
-		private void DetachView(ListGridView view)
+		protected override GridController Controller => View?.ItemController;
+
+		public TreeViewControl TreeViewControl
+		{
+			get => (TreeViewControl) GetValue(TreeViewControlProperty);
+			internal set => this.SetReadOnlyValue(TreeViewControlPropertyKey, value);
+		}
+
+		public TreeGridView View
+		{
+			get => (TreeGridView) GetValue(ViewProperty);
+			private set => this.SetReadOnlyValue(ViewPropertyKey, value);
+		}
+
+		private void AttachView(TreeGridView view)
+		{
+			view.Columns.Changed += OnViewColumnsChanged;
+		}
+
+		private void DetachView(TreeGridView view)
 		{
 			view.Columns.Changed -= OnViewColumnsChanged;
 		}
@@ -89,11 +94,6 @@ namespace Zaaml.UI.Controls.ListView
 			CellsDirty = false;
 		}
 
-		private TGridCell GetCell()
-		{
-			return CellsPool.Count > 0 ? CellsPool.Pop() : CreateCell();
-		}
-
 		private void InvalidateCells()
 		{
 			CellsDirty = true;
@@ -108,19 +108,19 @@ namespace Zaaml.UI.Controls.ListView
 			return base.MeasureOverride(availableSize);
 		}
 
-		private void OnListViewControlDependencyPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
+		private void OnTreeViewControlDependencyPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
 		{
-			if (e.Property == ListViewControl.ViewProperty)
+			if (e.Property == TreeViewControl.ViewProperty)
 				UpdateView();
 		}
 
-		private void OnListViewControlPropertyChangedPrivate(ListViewControl oldValue, ListViewControl newValue)
+		private void OnTreeViewControlPropertyChangedPrivate(TreeViewControl oldValue, TreeViewControl newValue)
 		{
 			if (oldValue != null)
-				oldValue.DependencyPropertyChangedInternal -= OnListViewControlDependencyPropertyChanged;
+				oldValue.DependencyPropertyChangedInternal -= OnTreeViewControlDependencyPropertyChanged;
 
 			if (newValue != null)
-				newValue.DependencyPropertyChangedInternal += OnListViewControlDependencyPropertyChanged;
+				newValue.DependencyPropertyChangedInternal += OnTreeViewControlDependencyPropertyChanged;
 
 			UpdateView();
 		}
@@ -132,7 +132,7 @@ namespace Zaaml.UI.Controls.ListView
 			InvalidateMeasure();
 		}
 
-		private void OnViewPropertyChangedPrivate(ListGridView oldValue, ListGridView newValue)
+		private void OnViewPropertyChangedPrivate(TreeGridView oldValue, TreeGridView newValue)
 		{
 			if (oldValue != null)
 				DetachView(oldValue);
@@ -151,7 +151,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		private void UpdateView()
 		{
-			View = ListViewControl?.View as ListGridView;
+			View = TreeViewControl?.View as TreeGridView;
 		}
 	}
 }

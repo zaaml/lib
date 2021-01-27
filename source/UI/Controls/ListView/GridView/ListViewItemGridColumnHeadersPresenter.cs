@@ -15,20 +15,14 @@ namespace Zaaml.UI.Controls.ListView
 			AllowCellSplitter = true;
 		}
 
+		protected override ListViewItemGridColumnHeader CreateCell()
+		{
+			return new();
+		}
+
 		protected override ListViewItemGridColumnHeaderCollection CreateCellCollection()
 		{
 			return new(this);
-		}
-
-		protected override void CreateCells(ListGridViewColumnCollection columns)
-		{
-			for (var index = 0; index < columns.Count; index++)
-				Cells.Add(new ListViewItemGridColumnHeader());
-		}
-
-		protected override void DestroyCells()
-		{
-			Cells.Clear();
 		}
 	}
 }
