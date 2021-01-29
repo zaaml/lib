@@ -10,9 +10,9 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 {
 	internal abstract partial class VirtualStackPanelLayoutBase
 	{
-		private BringIntoViewRequest _enqueueBringIntoViewRequest;
+		private protected BringIntoViewRequest BringIntoViewRequest { get; private set; }
 
-		public override void BringIntoView(BringIntoViewRequest request)
+		public override bool BringIntoView(BringIntoViewRequest request)
 		{
 			var index = request.Index;
 
@@ -22,45 +22,58 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			if (index == -1)
 				index = request.FallbackIndex;
 
-			BringIntoView(index, request.Mode);
+			return BringIntoView(index, request.Mode);
 		}
 
-		private void BringIntoView(int index, BringIntoViewMode mode)
+		private bool BringIntoView(int index, BringIntoViewMode mode)
 		{
 			if (index < 0 || index >= ItemsCount)
-				return;
+				return false;
 
-			Offset = CalcBringIntoViewOffset(index, mode, ScrollInfo);
+			if (TryCalcBringIntoViewOffset(index, mode, ScrollInfo, out var offset))
+			{
+				Offset = offset;
 
-			_enqueueBringIntoViewRequest = null;
+				BringIntoViewRequest = null;
+
+				return true;
+			}
+
+			BringIntoViewRequest = new BringIntoViewRequest<FrameworkElement>(index, mode);
+
+			Panel.InvalidateMeasure();
+
+			return false;
 		}
 
-		private protected abstract Vector CalcBringIntoViewOffset(int index, BringIntoViewMode mode, ScrollInfo scrollInfo);
-
-		private protected ScrollInfo HandleBringIntoView(ScrollInfo scrollInfo, bool resetRequest)
+		private protected bool TryHandleBringIntoView(BringIntoViewRequest bringIntoViewRequest, ref ScrollInfo scrollInfo)
 		{
-			try
+			if (bringIntoViewRequest == null)
+				return false;
+
+			var bringIntoViewMode = BringIntoViewRequest.Mode;
+			var frameworkElement = BringIntoViewRequest.ElementInternal;
+
+			var bringIntoViewIndex = frameworkElement != null
+				? Source.GetIndexFromItem(frameworkElement)
+				: BringIntoViewRequest.Index;
+
+			if (bringIntoViewIndex == -1)
+				bringIntoViewIndex = BringIntoViewRequest.FallbackIndex;
+
+			if (bringIntoViewIndex == -1)
+				return false;
+
+			if (TryCalcBringIntoViewOffset(bringIntoViewIndex, bringIntoViewMode, scrollInfo, out var offset))
 			{
-				if (_enqueueBringIntoViewRequest == null)
-					return scrollInfo;
+				scrollInfo = scrollInfo.WithOffset(offset, true);
 
-				var bringIntoViewMode = _enqueueBringIntoViewRequest.Mode;
-				var frameworkElement = _enqueueBringIntoViewRequest.ElementInternal;
-
-				var bringIntoViewIndex = frameworkElement != null
-					? Source.GetIndexFromItem(frameworkElement)
-					: _enqueueBringIntoViewRequest.Index;
-
-				if (bringIntoViewIndex == -1)
-					bringIntoViewIndex = _enqueueBringIntoViewRequest.FallbackIndex;
-
-				return bringIntoViewIndex == -1 ? scrollInfo : scrollInfo.WithOffset(CalcBringIntoViewOffset(bringIntoViewIndex, bringIntoViewMode, scrollInfo), true);
+				return true;
 			}
-			finally
-			{
-				if (resetRequest)
-					_enqueueBringIntoViewRequest = null;
-			}
+
+			return false;
 		}
+
+		private protected abstract bool TryCalcBringIntoViewOffset(int index, BringIntoViewMode mode, ScrollInfo scrollInfo, out Vector offset);
 	}
 }

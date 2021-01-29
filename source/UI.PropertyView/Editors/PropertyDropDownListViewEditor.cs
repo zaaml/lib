@@ -51,6 +51,8 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 			UpdateValue();
 		}
 
+		protected virtual bool DefaultIsTextEditable => false;
+
 		protected void OnItemsChanged()
 		{
 			if (ListView == null)
@@ -79,6 +81,8 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
+
+			Editor.IsTextEditable = DefaultIsTextEditable;
 
 			ListView.SourceCollection = Items;
 			ListView.ItemsFilter = new PropertyListViewItemTextFilter();

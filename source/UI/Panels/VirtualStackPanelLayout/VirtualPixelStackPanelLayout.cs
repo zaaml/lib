@@ -29,8 +29,15 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		private SizeLinkedList SizeList { get; } = new SizeLinkedList();
 
-		private protected override Vector CalcBringIntoViewOffset(int index, BringIntoViewMode mode, ScrollInfo scrollInfo)
+		private protected override bool TryCalcBringIntoViewOffset(int index, BringIntoViewMode mode, ScrollInfo scrollInfo, out Vector offset)
 		{
+			if (SizeList.Count == 0)
+			{
+				offset = scrollInfo.Offset;
+
+				return false;
+			}
+
 			var indexOffset = CalcOffset(index, 0);
 
 			var orientedExtent = scrollInfo.Extent.AsOriented(Orientation);
@@ -39,8 +46,12 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 			scrollInfo = scrollInfo.WithExtent(orientedExtent.Size);
 
-			if (mode == BringIntoViewMode.Top)
-				return scrollInfo.ClampOffset(indexOffset);
+			if (mode == BringIntoViewMode.Begin)
+			{
+				offset = scrollInfo.ClampOffset(indexOffset);
+				
+				return true;
+			}
 
 			var itemSize = GetSize(index);
 			var orientation = Orientation;
@@ -49,12 +60,23 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			var viewportDirect = scrollInfo.Viewport.AsOriented(orientation).Direct;
 
 			if (orientedIndexOffset.Direct < orientedOffset.Direct)
-				return scrollInfo.ClampOffset(orientedIndexOffset.Vector);
+			{
+				offset = scrollInfo.ClampOffset(orientedIndexOffset.Vector);
 
-			orientedIndexOffset.Direct += itemSize;
-			orientedIndexOffset.Direct -= viewportDirect;
+				return true;
+			}
 
-			return scrollInfo.ClampOffset(orientedIndexOffset.Vector);
+			if (mode == BringIntoViewMode.Center)
+				orientedIndexOffset.Direct -= viewportDirect / 2 - itemSize / 2;
+			else if (mode == BringIntoViewMode.End)
+			{
+				orientedIndexOffset.Direct += itemSize;
+				orientedIndexOffset.Direct -= viewportDirect;
+			}
+
+			offset = scrollInfo.ClampOffset(orientedIndexOffset.Vector);
+
+			return true;
 		}
 
 		private protected override int CalcFirstVisibleIndex(Vector offset, out double localFirstVisibleOffset)

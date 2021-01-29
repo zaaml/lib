@@ -31,7 +31,6 @@ namespace Zaaml.UI.Panels.Core
 
 		protected VirtualStackItemsPanel()
 		{
-			_layout = new VirtualPixelStackPanelLayout(this);
 			RenderTransform = Transform.Transform;
 		}
 
@@ -57,6 +56,16 @@ namespace Zaaml.UI.Panels.Core
 
 		protected override bool HasLogicalOrientation => true;
 
+		private protected virtual VirtualPixelStackPanelLayout CreateVirtualPixelStackPanelLayout()
+		{
+			return new VirtualPixelStackPanelLayout(this);
+		}
+
+		private protected virtual VirtualUnitStackPanelLayout CreateVirtualUnitStackPanelLayout()
+		{
+			return new VirtualUnitStackPanelLayout(this);
+		}
+
 		private VirtualStackPanelLayoutBase Layout
 		{
 			get
@@ -66,7 +75,7 @@ namespace Zaaml.UI.Panels.Core
 				if (_layout != null && _layout.ScrollUnit == scrollUnit)
 					return _layout;
 
-				_layout = scrollUnit == ScrollUnit.Pixel ? new VirtualPixelStackPanelLayout(this) : new VirtualUnitStackPanelLayout(this);
+				_layout = scrollUnit == ScrollUnit.Pixel ? CreateVirtualPixelStackPanelLayout() : CreateVirtualUnitStackPanelLayout();
 
 				return _layout;
 			}
@@ -137,9 +146,8 @@ namespace Zaaml.UI.Panels.Core
 
 		private protected override void BringIntoView(BringIntoViewRequest<TItem> request)
 		{
-			Layout.BringIntoView(request);
-
-			ScrollView?.UpdateScrollOffsetCacheInternal();
+			if (Layout.BringIntoView(request))
+				ScrollView?.UpdateScrollOffsetCacheInternal();
 		}
 
 		private protected abstract FlickeringReducer<TItem> CreateFlickeringReducer();
@@ -155,6 +163,8 @@ namespace Zaaml.UI.Panels.Core
 		private protected override void EnqueueBringIntoView(BringIntoViewRequest<TItem> request)
 		{
 			Layout.EnqueueBringIntoView(request);
+
+			InvalidateMeasure();
 		}
 
 		protected override Geometry GetLayoutClip(Size layoutSlotSize)
@@ -181,6 +191,7 @@ namespace Zaaml.UI.Panels.Core
 			if (layoutContext != null)
 			{
 				availableSize = availableSize.Clamp(new Size(0, 0), layoutContext.MaxAvailableSize);
+
 				Layout.PreserveScrollInfo = layoutContext.MeasureContextPass == MeasureContextPass.MeasureToContent;
 			}
 			else
@@ -188,10 +199,14 @@ namespace Zaaml.UI.Panels.Core
 				Layout.PreserveScrollInfo = false;
 			}
 
+			var bringIntoViewRequested = Layout.IsBringIntoViewRequested;
 			var measureOverrideCore = Layout.Measure(availableSize);
 
 			if (layoutContext != null && Layout.ScrollInfoDirty)
 				layoutContext.OnDescendantMeasureDirty(this);
+
+			if (bringIntoViewRequested && Layout.IsBringIntoViewRequested == false) 
+				ScrollView?.UpdateScrollOffsetCacheInternal();
 
 			return measureOverrideCore;
 		}

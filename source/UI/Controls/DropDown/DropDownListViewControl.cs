@@ -178,7 +178,7 @@ namespace Zaaml.UI.Controls.DropDown
 				oldListViewControl.FocusItemOnMouseHover = false;
 				oldListViewControl.SelectItemOnFocus = true;
 				oldListViewControl.PreserveMinSize = false;
-				oldListViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Default;
+				oldListViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Auto;
 
 				ClearValue(ItemFilterProperty);
 			}
@@ -191,7 +191,7 @@ namespace Zaaml.UI.Controls.DropDown
 				newListViewControl.FocusItemOnMouseHover = true;
 				newListViewControl.SelectItemOnFocus = false;
 				newListViewControl.PreserveMinSize = true;
-				newListViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Top;
+				newListViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Begin;
 
 				this.BindProperties(ItemFilterProperty, newListViewControl, ListViewControl.ItemsFilterProperty, targetNullValue: DefaultFilter);
 			}

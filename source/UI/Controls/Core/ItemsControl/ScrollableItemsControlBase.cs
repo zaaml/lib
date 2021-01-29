@@ -33,7 +33,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private ScrollableItemsControlBaseTemplateContract<TPresenter> TemplateContract => (ScrollableItemsControlBaseTemplateContract<TPresenter>)TemplateContractInternal;
 
-		private protected void BringItemIntoView(TItem item, bool updateLayout)
+		private protected virtual void BringItemIntoView(TItem item, bool updateLayout)
 		{
 			if (item == null)
 			{

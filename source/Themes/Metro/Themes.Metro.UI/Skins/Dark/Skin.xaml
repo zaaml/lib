@@ -791,17 +791,101 @@
 
     </zm:SkinDictionary>
 
+    <!-- ItemGridCell -->
+    <zm:SkinDictionary x:Key="ItemGridCell">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#00000000" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FF454545" />
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
+    <!-- ItemGridColumnHeader -->
+    <zm:SkinDictionary x:Key="ItemGridColumnHeader">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+        <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+        <SolidColorBrush x:Key="Focused" Color="#FFF78A09" />
+      </zm:SkinDictionary>
+    </zm:SkinDictionary>
+
+    <!-- ItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="ItemGridHeaderElement">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#BFFFFFFF" />
+        <SolidColorBrush x:Key="MouseOver" Color="#BFFFFFFF" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#FF333333" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FF515151" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FF515151" />
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
     <!-- ListView -->
     <zm:SkinDictionary x:Key="ListView" BasedOn="Metro.Shared.ListView"/>
 
     <!-- ListViewItem -->
     <zm:SkinDictionary x:Key="ListViewItem" BasedOn="Metro.Shared.ListViewItem"/>
 
+    <!-- ListViewItemGridCell -->
+    <zm:SkinDictionary x:Key="ListViewItemGridCell" BasedOn="Metro.ItemGridCell"/>
+
+    <!-- ListViewItemGridColumnHeader -->
+    <zm:SkinDictionary x:Key="ListViewItemGridColumnHeader" BasedOn="Metro.ItemGridColumnHeader" />
+
+    <!-- ListViewItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="ListViewItemGridHeaderElement" BasedOn="Metro.ItemGridHeaderElement" />
+
     <!-- TreeView -->
     <zm:SkinDictionary x:Key="TreeView" BasedOn="Metro.Shared.ListView"/>
 
     <!-- TreeViewItem -->
     <zm:SkinDictionary x:Key="TreeViewItem" BasedOn="Metro.Shared.ListViewItem"/>
+
+    <!-- TreeViewItemGridCell -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridCell" BasedOn="Metro.ItemGridCell"/>
+
+    <!-- TreeViewItemGridColumnHeader -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridColumnHeader" BasedOn="Metro.ItemGridColumnHeader" />
+
+    <!-- TreeViewItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridHeaderElement" BasedOn="Metro.ItemGridHeaderElement" />
 
     <!-- DropDownListView -->
     <zm:SkinDictionary x:Key="DropDownListViewControl" BasedOn="Metro.Shared.DropDownItemsControl" />

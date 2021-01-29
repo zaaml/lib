@@ -21,10 +21,10 @@ namespace Zaaml.UI.Controls.PropertyView
 	public class PropertyViewItem : PropertyTreeViewItem
 	{
 		private static readonly DependencyPropertyKey DescriptionPropertyKey = DPM.RegisterReadOnly<string, PropertyViewItem>
-			("Description", default);
+			("Description");
 
 		private static readonly DependencyPropertyKey ItemPropertyKey = DPM.RegisterReadOnly<PropertyItem, PropertyViewItem>
-			("PropertyItem", default, d => d.OnItemPropertyChangedPrivate);
+			("PropertyItem", d => d.OnItemPropertyChangedPrivate);
 
 		public static readonly DependencyProperty PropertyItemProperty = ItemPropertyKey.DependencyProperty;
 

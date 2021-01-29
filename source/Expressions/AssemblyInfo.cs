@@ -23,6 +23,9 @@ using Zaaml.Core;
 [assembly: InternalsVisibleTo("Zaaml.UI.PropertyView,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
+[assembly: InternalsVisibleTo("Zaaml.UI.Spy,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
 [assembly: InternalsVisibleTo("Zaaml.Themes.Metro,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 

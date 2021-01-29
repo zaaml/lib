@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<UseWPF>true</UseWPF>
+		<ThemePart>true</ThemePart>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net5.0-windows</TargetFramework>
+		<RootNamespace>Zaaml.Themes.UI.Spy</RootNamespace>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
+		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
+		<ProjectReference Include="..\..\..\UI.Spy\Zaaml.UI.Spy.csproj" />
+		<ProjectReference Include="..\Themes.Metro\Zaaml.Themes.Metro.csproj" />
+		<ProjectReference Include="..\..\..\UI\Zaaml.UI.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI\Zaaml.Themes.Metro.UI.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Zaaml.Themes.Metro.UI.Navigation.ThemePart.xml" />
+		<None Remove="Zaaml.Themes.Metro.UI.Ribbon.ThemePart.xml" />
+		<None Remove="Zaaml.Themes.Metro.UI.Spy.ThemePart.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Zaaml.Themes.Metro.UI.Spy.ThemePart.xml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="GitVersionTask" Version="5.5.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+
+</Project>

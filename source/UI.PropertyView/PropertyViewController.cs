@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
+using System.Windows;
 using Zaaml.Core.Converters;
 using Zaaml.UI.Controls.PropertyView.Editors;
 
@@ -17,6 +18,16 @@ namespace Zaaml.UI.Controls.PropertyView
 		private static readonly MethodInfo GetStringConverterMethodInfo = typeof(PropertyViewController).GetMethod(nameof(GetStringConverter), BindingFlags.Instance | BindingFlags.NonPublic);
 		private static readonly Dictionary<Type, PropertyStringConverter> ReadonlyConvertersDictionary = new Dictionary<Type, PropertyStringConverter>();
 		private static readonly Dictionary<Type, PropertyStringConverter> ConvertersDictionary = new Dictionary<Type, PropertyStringConverter>();
+
+		private static readonly Dictionary<Type, Type> ValueEditorDictionary = new Dictionary<Type, Type>
+		{
+			{typeof(bool), typeof(PropertyBooleanEditor)},
+			{typeof(string), typeof(PropertyTextEditor)},
+			{typeof(FontWeight), typeof(PropertyFontWeightEditor)},
+			{typeof(FontStretch), typeof(PropertyFontStretchEditor)},
+			{typeof(FontStyle), typeof(PropertyFontStyleEditor)}
+		};
+
 		private PropertyDescriptorProvider _propertyDescriptorProvider;
 		private PropertyViewSorting _propertyViewSorting;
 		private object _selectedObject;
@@ -128,14 +139,11 @@ namespace Zaaml.UI.Controls.PropertyView
 
 			var propertyType = propertyItem.ValueTypeInternal;
 
-			if (propertyType == typeof(bool))
-				return typeof(PropertyBooleanEditor);
+			if (ValueEditorDictionary.TryGetValue(propertyType, out var editorType))
+				return editorType;
 
 			if (propertyType.IsEnum)
 				return typeof(PropertyEnumEditor<>).MakeGenericType(propertyType);
-
-			if (propertyType == typeof(string))
-				return typeof(PropertyTextEditor);
 
 			if (GetStringConverterInternal(propertyItem) != null)
 				return typeof(PropertyTextEditor);
@@ -168,7 +176,7 @@ namespace Zaaml.UI.Controls.PropertyView
 
 			var genericMethod = GetStringConverterMethodInfo.MakeGenericMethod(propertyItem.ValueTypeInternal);
 
-			return (PropertyStringConverter) genericMethod.Invoke(this, new object[] { propertyItem });
+			return (PropertyStringConverter) genericMethod.Invoke(this, new object[] {propertyItem});
 		}
 
 		protected virtual PropertyEditor RentEditor(PropertyItem propertyItem)

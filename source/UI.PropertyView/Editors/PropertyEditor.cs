@@ -17,15 +17,15 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 	public abstract class PropertyEditor : TemplateContractControl
 	{
 		private static readonly DependencyPropertyKey PropertyItemPropertyKey = DPM.RegisterReadOnly<PropertyItem, PropertyEditor>
-			("PropertyItem", default, d => d.OnPropertyItemPropertyChangedPrivate);
+			("PropertyItem", d => d.OnPropertyItemPropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey PropertyViewItemPropertyKey = DPM.RegisterReadOnly<PropertyViewItem, PropertyEditor>
-			("PropertyViewItem", default, d => d.OnPropertyViewItemPropertyChangedPrivate);
+			("PropertyViewItem", d => d.OnPropertyViewItemPropertyChangedPrivate);
 
 		public static readonly DependencyProperty PropertyViewItemProperty = PropertyViewItemPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey IsEditingPropertyKey = DPM.RegisterReadOnly<bool, PropertyEditor>
-			("IsEditing", default, d => d.OnIsEditingPropertyChangedPrivate);
+			("IsEditing", d => d.OnIsEditingPropertyChangedPrivate);
 
 		public static readonly DependencyProperty IsEditingProperty = IsEditingPropertyKey.DependencyProperty;
 

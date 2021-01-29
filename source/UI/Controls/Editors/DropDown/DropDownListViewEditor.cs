@@ -19,6 +19,9 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 		public static readonly DependencyProperty IsTextEditableProperty = DPM.Register<bool, DropDownListViewEditor>
 			("IsTextEditable", false);
 
+		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<DropDownEditableSelectorDisplayMode, DropDownListViewEditor>
+			("DisplayMode", DropDownEditableSelectorDisplayMode.TextEditor);
+
 		public static readonly DependencyProperty ListViewControlProperty = DPM.Register<ListViewControl, DropDownListViewEditor>
 			("ListViewControl");
 
@@ -32,6 +35,12 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 		public DropDownListViewEditor()
 		{
 			this.OverrideStyleKey<DropDownListViewEditor>();
+		}
+
+		public DropDownEditableSelectorDisplayMode DisplayMode
+		{
+			get => (DropDownEditableSelectorDisplayMode) GetValue(DisplayModeProperty);
+			set => SetValue(DisplayModeProperty, value);
 		}
 
 		private DropDownListViewControl DropDownListViewControl => TemplateContract.DropDownListViewControl;

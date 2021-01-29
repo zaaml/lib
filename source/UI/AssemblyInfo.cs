@@ -10,7 +10,6 @@ using DefaultMasterTheme = Zaaml.PresentationCore.Theming.DefaultMasterTheme;
 
 
 [assembly: ThemeManagerBehavior]
-[assembly: XmlnsPrefix("http://schemas.zaaml.com/xaml", "zm")]
 
 [assembly: ThemeAssembly(typeof(DefaultMasterTheme), "Themes/Default")]
 
@@ -31,4 +30,7 @@ using DefaultMasterTheme = Zaaml.PresentationCore.Theming.DefaultMasterTheme;
                               ZaamlInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Zaaml.UI.PropertyView,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Zaaml.UI.Spy,PublicKey=" +
                               ZaamlInfo.PublicKey)]

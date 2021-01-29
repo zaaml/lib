@@ -11,7 +11,7 @@ using Zaaml.UI.Panels.Interfaces;
 
 namespace Zaaml.UI.Panels
 {
-	internal abstract class VirtualPanelLayoutBase<TPanel> : ScrollPanelLayoutBase<TPanel> 
+	internal abstract class VirtualPanelLayoutBase<TPanel> : ScrollPanelLayoutBase<TPanel>
 		where TPanel : IPanel, IScrollViewPanel, IVirtualPanel
 	{
 		protected VirtualPanelLayoutBase(TPanel panel) : base(panel)
@@ -22,8 +22,9 @@ namespace Zaaml.UI.Panels
 
 		protected IVirtualItemCollection Source => Panel.VirtualSource;
 
-		public virtual void BringIntoView(BringIntoViewRequest request)
+		public virtual bool BringIntoView(BringIntoViewRequest request)
 		{
+			return false;
 		}
 	}
 

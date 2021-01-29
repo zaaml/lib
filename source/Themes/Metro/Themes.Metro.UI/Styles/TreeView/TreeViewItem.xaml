@@ -14,7 +14,7 @@
     <zm:ControlTemplateRoot Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
 
-      <zm:DockPanel Margin="{TemplateBinding ActualLevelPadding}">
+      <zm:DockPanel Margin="{zm:TemplateBinding Path=ActualLevelIndent, Converter={StaticResource LevelIndentConverter}}">
 
         <!--  Expander  -->
         <zm:TreeViewItemExpander x:Name="Expander"
@@ -49,16 +49,15 @@
   <ControlTemplate x:Key="TreeViewGridItemTemplate"
                    TargetType="zm:TreeViewItem">
     <zm:ControlTemplateRoot Background="Transparent"
+                            Margin="0,-1,0,0"
                             VisualStateGroups="{StaticResource VisualStates}">
 
       <!--  CommonStatesBorder  -->
-      <Border Margin="0,-1,0,0"
-              Background="{TemplateBinding Background}">
+      <Border Background="{TemplateBinding Background}" />
 
-        <zm:TreeViewItemGridCellsPresenter x:Name="CellsPresenter"
-                                           BorderBrush="{TemplateBinding BorderBrush}" />
-
-      </Border>
+      <zm:TreeViewItemGridCellsPresenter x:Name="CellsPresenter"
+                                         Margin="0,-1,-1,0"
+                                         BorderBrush="{TemplateBinding BorderBrush}" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

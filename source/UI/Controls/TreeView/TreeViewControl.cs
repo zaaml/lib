@@ -95,6 +95,9 @@ namespace Zaaml.UI.Controls.TreeView
 		private static readonly DependencyPropertyKey ActualViewTemplatePropertyKey = DPM.RegisterReadOnly<ControlTemplate, TreeViewControl>
 			("ActualViewTemplate");
 
+		public static readonly DependencyProperty LevelIndentProperty = DPM.Register<double, TreeViewControl>
+			("LevelIndent", 20);
+
 		public static readonly DependencyProperty ActualViewTemplateProperty = ActualViewTemplatePropertyKey.DependencyProperty;
 
 		private TreeViewItem _currentItem;
@@ -265,6 +268,12 @@ namespace Zaaml.UI.Controls.TreeView
 			set => SetValue(ItemSourceCollectionMemberProperty, value);
 		}
 
+		public double LevelIndent
+		{
+			get => (double) GetValue(LevelIndentProperty);
+			set => SetValue(LevelIndentProperty, value);
+		}
+
 		public ScrollUnit ScrollUnit
 		{
 			get => (ScrollUnit) GetValue(ScrollUnitProperty);
@@ -319,6 +328,13 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal VirtualTreeViewItemCollection VirtualItemCollection { get; }
 
+		private protected override void BringItemIntoView(TreeViewItem item, bool updateLayout)
+		{
+			ExpandBranchInternal(item);
+
+			base.BringItemIntoView(item, updateLayout);
+		}
+
 		protected virtual bool CanSelectItem(TreeViewItem treeViewItem)
 		{
 			return true;
@@ -369,6 +385,13 @@ namespace Zaaml.UI.Controls.TreeView
 			};
 		}
 
+		private protected override void EnqueueBringItemIntoView(TreeViewItem item)
+		{
+			ExpandBranchInternal(item);
+
+			base.EnqueueBringItemIntoView(item);
+		}
+
 		internal TreeViewData EnsureTreeViewData()
 		{
 			return TreeViewData ??= CreateTreeViewData();
@@ -392,9 +415,17 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewData?.ExpandAll(mode);
 		}
 
-		public void ExpandSelectedBranch()
+		public void ExpandBranch(TreeViewItem treeViewItem)
 		{
-			var current = SelectedItem?.TreeViewItemData?.Parent;
+			if (ReferenceEquals(treeViewItem.TreeViewControl, this) == false)
+				throw new InvalidOperationException("Item belongs to another TreeViewControl.");
+
+			ExpandBranchInternal(treeViewItem);
+		}
+
+		private protected static void ExpandBranchInternal(TreeViewItem treeViewItem)
+		{
+			var current = treeViewItem?.TreeViewItemData?.Parent;
 
 			while (current != null)
 			{
@@ -402,6 +433,11 @@ namespace Zaaml.UI.Controls.TreeView
 
 				current = current.Parent;
 			}
+		}
+
+		public void ExpandSelectedBranch()
+		{
+			ExpandBranchInternal(SelectedItem);
 		}
 
 		protected override bool GetIsSelected(TreeViewItem item)

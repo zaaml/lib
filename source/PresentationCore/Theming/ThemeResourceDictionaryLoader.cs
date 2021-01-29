@@ -16,14 +16,7 @@ using Zaaml.Core.Collections;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Reflection;
 using Zaaml.PresentationCore.Utils;
-#if !SILVERLIGHT
 using System.IO.Compression;
-
-#endif
-
-#if SILVERLIGHT
-using System.Xml.Linq;
-#endif
 
 namespace Zaaml.PresentationCore.Theming
 {
@@ -40,7 +33,8 @@ namespace Zaaml.PresentationCore.Theming
 		private ThemeResourceDictionaryLoader()
 		{
 			_appDomainObserver = new AppDomainObserver(LoadThemeAssemblies);
-			CompositionTarget.Rendering += (sender, args) => _appDomainObserver.Update();
+
+			CompositionTarget.Rendering += OnCompositionTargetOnRendering;
 		}
 
 		public static ThemeResourceDictionaryLoader Instance
@@ -99,6 +93,34 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			_dictionaryCache[uri.OriginalString] = resourceDictionary;
 			_dictionaryUriCache[resourceDictionary] = uri;
+		}
+
+		public void EnsureThemePartLoaded(Assembly assembly)
+		{
+			var name = ThemePart.GetName(assembly);
+
+			if (ThemeParts.TryGetValue(name, out var themeParts) == false)
+				return;
+
+			var newXamlResources = new List<XamlResourceInfo>();
+
+			foreach (var themePart in themeParts.ToList())
+			{
+				themePart.ResolveDependency(assembly);
+
+				if (themePart.HasDependencies == false)
+				{
+					var themePartAssembly = themePart.EnsureThemePartAssembly();
+
+					if (themePartAssembly != null)
+						LoadThemeAssembly(themePartAssembly, newXamlResources);
+
+					ThemeParts.RemoveValue(name, themePart);
+				}
+			}
+
+			if (newXamlResources.Count > 0)
+				OnXamlResourceLoading(new XamlResourceLoadingEventArgs(newXamlResources));
 		}
 
 		private static bool ExcludeResource(Uri uri)
@@ -227,7 +249,7 @@ namespace Zaaml.PresentationCore.Theming
 
 						var themeAssembly = Assembly.Load(ms.ToArray());
 
-						LoadThemeAssemblies(new[] { themeAssembly });
+						LoadThemeAssemblies(new[] {themeAssembly});
 					}
 #endif
 				}
@@ -313,6 +335,11 @@ namespace Zaaml.PresentationCore.Theming
 			}
 		}
 
+		private void OnCompositionTargetOnRendering(object o, EventArgs eventArgs)
+		{
+			_appDomainObserver.Update();
+		}
+
 		private void OnXamlResourceLoading(XamlResourceLoadingEventArgs e)
 		{
 			XamlResourceLoading?.Invoke(this, e);
@@ -361,11 +388,6 @@ namespace Zaaml.PresentationCore.Theming
 				}
 			}
 
-			public static string GetName(Assembly assembly)
-			{
-				return assembly.GetName().Name;
-			}
-
 			public HashSet<string> Dependencies { get; }
 
 			public bool HasDependencies => Dependencies.Count > 0;
@@ -387,6 +409,11 @@ namespace Zaaml.PresentationCore.Theming
 				}
 
 				return _themePartAssembly;
+			}
+
+			public static string GetName(Assembly assembly)
+			{
+				return assembly.GetName().Name;
 			}
 
 			private Assembly LoadThemePartAssembly()
@@ -437,34 +464,6 @@ namespace Zaaml.PresentationCore.Theming
 			public Uri BaseUri { get; }
 			public Type ThemeType { get; }
 			public List<Uri> Resources { get; }
-		}
-
-		public void EnsureThemePartLoaded(Assembly assembly)
-		{
-			var name = ThemePart.GetName(assembly);
-
-			if (ThemeParts.TryGetValue(name, out var themeParts) == false) 
-				return;
-
-			var newXamlResources = new List<XamlResourceInfo>();
-
-			foreach (var themePart in themeParts.ToList())
-			{
-				themePart.ResolveDependency(assembly);
-
-				if (themePart.HasDependencies == false)
-				{
-					var themePartAssembly = themePart.EnsureThemePartAssembly();
-
-					if (themePartAssembly != null)
-						LoadThemeAssembly(themePartAssembly, newXamlResources);
-
-					ThemeParts.RemoveValue(name, themePart);
-				}
-			}
-
-			if (newXamlResources.Count > 0)
-				OnXamlResourceLoading(new XamlResourceLoadingEventArgs(newXamlResources));
 		}
 	}
 }

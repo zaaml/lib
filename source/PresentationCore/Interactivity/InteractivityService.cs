@@ -204,9 +204,9 @@ namespace Zaaml.PresentationCore.Interactivity
 
     #region IInteractivityService
 
-    public ElementRoot ActualElementRoot => ElementRoot ?? (ElementRoot = new ElementRoot(this));
+    public ElementRoot ActualElementRoot => ElementRoot ??= new ElementRoot(this);
 
-    public StyleRoot ActualStyleRoot => StyleRoot ?? (StyleRoot = new StyleRoot(this));
+    public StyleRoot ActualStyleRoot => StyleRoot ??= new StyleRoot(this);
 
     public bool UseTransitions
     {

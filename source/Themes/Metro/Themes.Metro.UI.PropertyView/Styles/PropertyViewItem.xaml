@@ -56,7 +56,7 @@
 
               <Border Background="{TemplateBinding Background}">
                 <zm:ContentControl Foreground="{zm:TemplateExpandoBinding Path=HeaderForeground}">
-                  <zm:DockPanel Margin="{TemplateBinding ActualLevelPadding}">
+                  <zm:DockPanel Margin="{zm:TemplateBinding Path=ActualLevelIndent, Converter={StaticResource LevelIndentConverter}}">
 
                     <!--  Expander  -->
                     <Border Width="16"

@@ -176,6 +176,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 				_suspendTextValueChangedHandler = true;
 
 				TextValue = GetTextValue();
+
 				SetValidationError(null);
 			}
 			finally

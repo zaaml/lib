@@ -8,10 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Utils;
-#if !SILVERLIGHT
 using System.Linq;
-
-#endif
 
 namespace Zaaml.PresentationCore.Input
 {
@@ -29,14 +26,7 @@ namespace Zaaml.PresentationCore.Input
 
     public static MouseButtonState LeftButtonState => MouseServiceInstance.LeftButtonState;
 
-    private static IMouseService MouseServiceInstance
-    {
-#if SILVERLIGHT
-      get { return MouseService.Instance; }
-#else
-      get { return MouseService.Instance; }
-#endif
-    }
+    private static IMouseService MouseServiceInstance => MouseService.Instance;
 
     public static MouseButtonState RightButtonState => MouseServiceInstance.RightButtonState;
 
@@ -162,10 +152,7 @@ namespace Zaaml.PresentationCore.Input
 #if !SILVERLIGHT
 	  private static bool IsUnderCursor(UIElement element)
 	  {
-		  var directlyOver = Mouse.DirectlyOver as UIElement;
-		  var isUnderCursor = directlyOver != null && directlyOver.IsSelfOrDescendantOf(element, VisualTreeEnumerationStrategy.Instance);
-
-		  return isUnderCursor;
+		  return Mouse.DirectlyOver is UIElement directlyOver && directlyOver.IsSelfOrDescendantOf(element, VisualTreeEnumerationStrategy.Instance);
 	  }
 #endif
 

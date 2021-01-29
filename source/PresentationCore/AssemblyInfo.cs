@@ -4,16 +4,11 @@
 
 
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Windows.Markup;
 using Zaaml.Core;
 using Zaaml.Core.Converters;
 
 [assembly: System.Windows.ThemeInfo(System.Windows.ResourceDictionaryLocation.None, System.Windows.ResourceDictionaryLocation.SourceAssembly)]
-
-
-
-
 
 
 [assembly: XmlnsPrefix("http://schemas.zaaml.com/xaml", "zm")]
@@ -37,6 +32,9 @@ using Zaaml.Core.Converters;
                               ZaamlInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Zaaml.UI.PropertyView,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Zaaml.UI.Spy,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Zaaml.Themes.Metro,PublicKey=" +

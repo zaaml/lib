@@ -5,6 +5,10 @@
                             xmlns:zmb="http://schemas.zaaml.com/build"
                             mc:Ignorable="zmb">
 
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="TreeViewItemShared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
   <!--  Visual States  -->
   <zm:VisualStateGroupCollection x:Key="VisualStates">
 
@@ -33,7 +37,7 @@
                    TargetType="zm:TreeViewItemGridCell">
 
     <zm:GridCellRoot VisualStateGroups="{StaticResource VisualStates}">
-      <zm:DockPanel Margin="{zm:TemplateBinding Path=TreeViewItem.ActualLevelPadding, FallbackValue=0, TargetNullValue=0}">
+      <zm:DockPanel  Margin="{zm:TemplateBinding Path=TreeViewItem.ActualLevelIndent, Converter={StaticResource LevelIndentConverter}, FallbackValue=0}">
 
         <!--  Expander  -->
         <zm:TreeViewItemExpander x:Name="Expander"

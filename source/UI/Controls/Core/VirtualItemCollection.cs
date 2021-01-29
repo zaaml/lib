@@ -394,6 +394,9 @@ namespace Zaaml.UI.Controls.Core
 			Debug.Assert(generatedItem != null);
 			Debug.Assert(generatedItem.IsInTemp == false);
 
+			if (generatedItem.IsInTemp)
+				return;
+
 			generatedItem.IsInTemp = true;
 
 			TempGeneratedItems.Add(generatedItem);

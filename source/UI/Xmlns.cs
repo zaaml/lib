@@ -4,6 +4,8 @@
 
 using System.Windows.Markup;
 
+[assembly: XmlnsPrefix("http://schemas.zaaml.com/xaml", "zm")]
+
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Data")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Windows")]

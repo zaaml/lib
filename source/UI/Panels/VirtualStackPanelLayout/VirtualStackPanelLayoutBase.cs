@@ -9,6 +9,7 @@ using System.Windows.Controls.Primitives;
 using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.ScrollView;
 using Zaaml.UI.Panels.Core;
@@ -36,15 +37,19 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		protected virtual double IndirectWheelChange => ScrollViewUtils.DefaultPixelWheelChange;
 
+		public bool IsBringIntoViewRequested => BringIntoViewRequest != null;
+
+		private long LastArrangeFrame { get; set; } = -1;
+
 		public Orientation Orientation => Panel.Orientation;
 
 		internal bool PreserveScrollInfo { get; set; }
 
 		public bool ScrollInfoDirty { get; protected set; }
 
-		protected VirtualUIElementCollectionInserter UIElementInserter { get; } = new VirtualUIElementCollectionInserter();
-
 		public abstract ScrollUnit ScrollUnit { get; }
+
+		protected VirtualUIElementCollectionInserter UIElementInserter { get; } = new VirtualUIElementCollectionInserter();
 
 		protected override Size ArrangeCore(Size finalSize)
 		{
@@ -67,6 +72,8 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 				offset.Direct += size.Direct;
 			}
 
+			LastArrangeFrame = FrameCounter.Frame;
+
 			return finalSize;
 		}
 
@@ -76,7 +83,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		public void EnqueueBringIntoView(BringIntoViewRequest request)
 		{
-			_enqueueBringIntoViewRequest = request;
+			BringIntoViewRequest = request;
 		}
 
 		protected override void ExecuteScrollCommand(ScrollCommandKind command)
@@ -113,12 +120,15 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		internal ItemLayoutInformation GetLayoutInformation(int index)
 		{
+			if (LastArrangeFrame == -1)
+				return ItemLayoutInformation.Empty;
+
 			if (index < 0 || index >= ItemsCount)
 				return ItemLayoutInformation.Empty;
 
 			var item = Source.GetCurrent(index) as FrameworkElement;
 
-			if (item == null)
+			if (item == null || Children.Contains(item) == false)
 				return ItemLayoutInformation.Empty;
 
 			return new ItemLayoutInformation(item, GetLayoutSlot(item), new Rect(_pixelViewport));
@@ -153,8 +163,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		private Size MeasureImpl(Size availableSize)
 		{
-			var scrollInfo = HandleBringIntoView(ScrollInfo, PreserveScrollInfo == false);
-			var context = new VirtualMeasureContext(this, scrollInfo, availableSize);
+			var context = new VirtualMeasureContext(this, availableSize);
 
 			try
 			{
@@ -167,12 +176,15 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 				UIElementInserter.Leave();
 			}
 
-			scrollInfo = CalcScrollInfo(ref context);
+			var scrollInfo = CalcScrollInfo(ref context);
 
 			if (PreserveScrollInfo == false)
 			{
 				ScrollInfo = scrollInfo;
 				ScrollInfoDirty = false;
+
+				if (context.BringIntoViewResult)
+					BringIntoViewRequest = null;
 			}
 			else
 				ScrollInfoDirty = scrollInfo.Equals(ScrollInfo) == false;
@@ -207,9 +219,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 					Children.RemoveAt(index);
 			}
 			else
-			{
 				UIElementInserter.Remove(element);
-			}
 		}
 
 		protected override void OnScrollInfoChanged(ScrollInfoChangedEventArgs e)

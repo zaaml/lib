@@ -1,4 +1,4 @@
-// <copyright file="VirtualUnitStackPanelLayout.VirtualUIElementCollectionInserter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="VirtualStackPanelLayoutBase.VirtualUIElementCollectionInserter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 

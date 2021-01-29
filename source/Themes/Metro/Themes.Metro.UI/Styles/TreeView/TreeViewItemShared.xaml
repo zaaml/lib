@@ -5,6 +5,7 @@
                             xmlns:zmb="http://schemas.zaaml.com/build"
                             mc:Ignorable="zmb">
 
+  <zm:MaskThicknessConverter x:Key="LevelIndentConverter" Left="True" />
 
   <!--  Visual States  -->
   <zm:VisualStateGroupCollection x:Key="VisualStates">

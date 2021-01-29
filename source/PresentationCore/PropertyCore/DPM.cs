@@ -13,203 +13,203 @@ namespace Zaaml.PresentationCore.PropertyCore
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty)));
 		}
 
 	  public static DependencyProperty Register<TProperty, TOwner>(string name, PropertyChangedCallback handler) where TOwner : DependencyObject
 	  {
-	    return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), handler));
+	    return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), handler));
 	  }
 
     public static DependencyProperty Register<TProperty, TOwner>(string name, Action<TOwner> handler, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handler, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handler, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty>> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue));
 		}
 
 	  public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, PropertyChangedCallback handler) where TOwner : DependencyObject
 	  {
-	    return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, handler));
+	    return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, handler));
 	  }
 
     public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Action<TOwner> handler, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handler, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handler, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<TProperty>> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 	  public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 	  {
-	    return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+	    return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 	  }
 
     public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyPropertyChangedEventArgs>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty, TProperty, TProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty, TProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyPropertyChangedEventArgs>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action<DependencyPropertyChangedEventArgs>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty, TProperty, TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty, TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.Register(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, PropertyChangedCallback handler, CoerceValueCallback coerce)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, handler, coerce));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, handler, coerce));
 		}
 
 		public static DependencyProperty Register<TProperty, TOwner>(string name, PropertyChangedCallback handler, CoerceValueCallback coerce)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), handler, coerce));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), handler, coerce));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty)));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, TProperty defaultValue)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, TProperty defaultValue, Action<DependencyObject> handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, StaticCallback(handler)));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, TProperty defaultValue, Action<DependencyObject, TProperty, TProperty> handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, StaticCallback(handler)));
 		}
 
 	  public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, TProperty defaultValue, PropertyChangedCallback handler, CoerceValueCallback coerce)
 	  {
-	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, handler, coerce));
+	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, handler, coerce));
 	  }
 
 	  public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, TProperty defaultValue, Action<DependencyObject, TProperty, TProperty> handler, Func<DependencyObject, TProperty, TProperty> coerce)
 	  {
-	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, StaticCallback(handler), Coerce(coerce)));
+	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, StaticCallback(handler), Coerce(coerce)));
 	  }
 
     public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, Action<DependencyObject, TProperty, TProperty> handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), StaticCallback(handler)));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, Action<DependencyObject> handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), StaticCallback(handler)));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, PropertyChangedCallback handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), handler));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), handler));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, TProperty defaultValue, PropertyChangedCallback handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, handler));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, handler));
 		}
 
 	  public static DependencyProperty RegisterAttached<TProperty, TOwner>(string name, PropertyMetadata propertyMetadata)
@@ -220,57 +220,57 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(default(TProperty)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty)));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, TProperty defaultValue)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(defaultValue));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, TProperty defaultValue, Action<DependencyObject> handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(defaultValue, StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue, StaticCallback(handler)));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, TProperty defaultValue, Action<DependencyObject, TProperty, TProperty> handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(defaultValue, StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue, StaticCallback(handler)));
 		}
 
 	  public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, TProperty defaultValue, Action<DependencyObject, TProperty, TProperty> handler, Func<DependencyObject, TProperty, TProperty> coerce)
 	  {
-	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(defaultValue, StaticCallback(handler), Coerce(coerce)));
+	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue, StaticCallback(handler), Coerce(coerce)));
 	  }
 
     public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, Action<DependencyObject, TProperty, TProperty> handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(default(TProperty), StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty), StaticCallback(handler)));
 		}
 
 	  public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, Action<DependencyObject, TProperty, TProperty> handler, Func<DependencyObject, TProperty, TProperty> coerce)
 	  {
-	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(default(TProperty), StaticCallback(handler), Coerce(coerce)));
+	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty), StaticCallback(handler), Coerce(coerce)));
 	  }
 
     public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, Action<DependencyObject> handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(default(TProperty), StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty), StaticCallback(handler)));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, PropertyChangedCallback handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(default(TProperty), handler));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty), handler));
 		}
 
 		public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, TProperty defaultValue, PropertyChangedCallback handler)
 		{
-			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(defaultValue, handler));
+			return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue, handler));
 		}
 
 	  public static DependencyProperty RegisterAttached<TProperty>(string name, Type ownerType, TProperty defaultValue, PropertyChangedCallback handler, CoerceValueCallback coerce)
 	  {
-	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new PropertyMetadataXm(defaultValue, handler, coerce));
+	    return DependencyPropertyManager.RegisterAttached(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue, handler, coerce));
 	  }
 
 
@@ -409,7 +409,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 
@@ -418,49 +418,49 @@ namespace Zaaml.PresentationCore.PropertyCore
 		
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty>> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 	  public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 	  {
-	    return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+	    return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 	  }
 
     public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyPropertyChangedEventArgs>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty, TProperty, TProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyPropertyKey RegRegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty, TProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<DependencyProperty>> handlerFactory, Func<TOwner, Func<TProperty, TProperty>> coerceFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new PropertyMetadataXm(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable), Coerce(coerceFactory)));
 		}
 
 		#endregion

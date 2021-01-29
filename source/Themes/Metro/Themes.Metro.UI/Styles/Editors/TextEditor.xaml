@@ -10,7 +10,10 @@
                    TargetType="zm:TextEditor">
     <zm:ControlTemplateRoot>
 
+      <TextBlock x:Name="DisplayTextBlock" Margin="5,1" VerticalAlignment="Center" />
+
       <zm:AutoCompleteTextBox x:Name="AutoCompleteTextBox"
+                              Visibility="Collapsed"
                               zm:DisableVeilControl.EnableVeil="False"
                               BorderThickness="{TemplateBinding BorderThickness}"
                               Foreground="{TemplateBinding Foreground}"

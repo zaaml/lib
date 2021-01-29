@@ -97,6 +97,9 @@ namespace Zaaml.Core.Collections
 			if (HeadNode.Prev != null || TailNode.Next != null)
 				throw new InvalidOperationException();
 
+			if (HeadNode.Next is GapNode && ReferenceEquals(HeadNode.Next, TailNode) == false)
+				throw new InvalidOperationException();
+
 			if (ReferenceEquals(HeadNode.Next, TailNode))
 			{
 				if (TailNode.Size > 0)
@@ -268,7 +271,7 @@ namespace Zaaml.Core.Collections
 
 		private void RemoveEmptyGapNode(GapNode gapNode)
 		{
-			if (gapNode.Size == 0 && ReferenceEquals(gapNode, HeadNode) == false &&  ReferenceEquals(gapNode, TailNode) == false)
+			if (gapNode.Size == 0 && ReferenceEquals(gapNode, HeadNode) == false && ReferenceEquals(gapNode, TailNode) == false)
 				RemoveNode(gapNode);
 		}
 

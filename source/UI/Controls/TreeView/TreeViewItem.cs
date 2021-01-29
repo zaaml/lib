@@ -49,13 +49,10 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty IsExpandedProperty = DPM.Register<bool, TreeViewItem>
 			("IsExpanded", false, t => t.OnIsExpandedPropertyChangedPrivate, t => t.CoerceIsExpandedProperty);
 
-		public static readonly DependencyProperty LevelDistanceProperty = DPM.Register<double, TreeViewItem>
-			("LevelDistance", 20, t => t.OnLevelDistanceChanged);
+		private static readonly DependencyPropertyKey ActualLevelIndentPropertyKey = DPM.RegisterReadOnly<double, TreeViewItem>
+			("ActualLevelIndent");
 
-		private static readonly DependencyPropertyKey ActualLevelPaddingPropertyKey = DPM.RegisterReadOnly<Thickness, TreeViewItem>
-			("ActualLevelPadding");
-
-		public static readonly DependencyProperty ActualLevelPaddingProperty = ActualLevelPaddingPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ActualLevelIndentProperty = ActualLevelIndentPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey ActualLevelPropertyKey = DPM.RegisterReadOnly<int, TreeViewItem>
 			("ActualLevel", 0, t => t.OnActualLevelPropertyChangedPrivate);
@@ -128,10 +125,10 @@ namespace Zaaml.UI.Controls.TreeView
 			private set => this.SetReadOnlyValue(ActualLevelPropertyKey, value);
 		}
 
-		public Thickness ActualLevelPadding
+		public double ActualLevelIndent
 		{
-			get => (Thickness) GetValue(ActualLevelPaddingProperty);
-			private set => this.SetReadOnlyValue(ActualLevelPaddingPropertyKey, value);
+			get => (double) GetValue(ActualLevelIndentProperty);
+			private set => this.SetReadOnlyValue(ActualLevelIndentPropertyKey, value);
 		}
 
 		public ControlTemplate ActualViewTemplate
@@ -219,12 +216,6 @@ namespace Zaaml.UI.Controls.TreeView
 		public TreeViewItemCollection ItemCollection => this.GetValueOrCreate(ItemCollectionPropertyKey, CreateItemCollectionPrivate);
 
 		private int Level => TreeViewItemData?.ActualLevel ?? 0;
-
-		public double LevelDistance
-		{
-			get => (double) GetValue(LevelDistanceProperty);
-			set => SetValue(LevelDistanceProperty, value);
-		}
 
 		public TreeViewItem ParentItem => TreeViewItemData?.ActualParent?.TreeViewItem;
 
@@ -444,7 +435,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private void OnLevelDistanceChanged()
 		{
-			UpdateActualLevelPadding();
+			UpdateActualLevelIndent();
 		}
 
 		protected override void OnLostFocus(RoutedEventArgs e)
@@ -555,6 +546,8 @@ namespace Zaaml.UI.Controls.TreeView
 				UpdateGlyphPresenter();
 			else if (e.Property == TreeViewControl.ViewProperty)
 				UpdateViewTemplate();
+			else if (e.Property == TreeViewControl.LevelIndentProperty)
+				UpdateActualLevelIndent();
 		}
 
 		private void OnTreeViewControlPropertyChangedPrivate(TreeViewControl oldTreeView, TreeViewControl newTreeView)
@@ -568,6 +561,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (newTreeView != null)
 				newTreeView.DependencyPropertyChangedInternal += OnTreeViewControlPropertyChanged;
 
+			UpdateActualLevelIndent();
 			UpdateViewTemplate();
 
 			OnTreeViewControlChangedInternal(oldTreeView, newTreeView);
@@ -600,7 +594,7 @@ namespace Zaaml.UI.Controls.TreeView
 		private void SyncTreeNodeState()
 		{
 			UpdateIsExpanded();
-			UpdateActualLevelPadding();
+			UpdateActualLevelIndent();
 			UpdateHasItemsInternal();
 		}
 
@@ -623,12 +617,13 @@ namespace Zaaml.UI.Controls.TreeView
 			SetIsSelectedInternal(false);
 		}
 
-		private void UpdateActualLevelPadding()
+		private void UpdateActualLevelIndent()
 		{
 			var level = Level;
+			var levelIndent = TreeViewControl?.LevelIndent ?? 0.0;
 
 			ActualLevel = level;
-			ActualLevelPadding = new Thickness(LevelDistance * level, 0, 0, 0);
+			ActualLevelIndent = levelIndent * level;
 		}
 
 		private void UpdateGlyphPresenter()

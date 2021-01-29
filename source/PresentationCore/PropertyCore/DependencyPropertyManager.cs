@@ -166,7 +166,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     internal static DependencyProperty Register<TProperty, TOwner>(string name) where TOwner : DependencyObject
     {
-      return RegisterImpl(name, typeof(TProperty), typeof(TOwner), new PropertyMetadata(default(TProperty), DPM.CreateDefaultCallback()));
+      return RegisterImpl(name, typeof(TProperty), typeof(TOwner), new PropertyMetadata(default(TProperty), DPM.DefaultCallback));
     }
 
     internal static DependencyProperty Register<TProperty, TOwner>(string name, Func<TOwner, Action> handlerFactory) where TOwner : DependencyObject
@@ -187,7 +187,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     internal static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue) where TOwner : DependencyObject
     {
-      return RegisterImpl(name, typeof(TProperty), typeof(TOwner), new PropertyMetadata(defaultValue, DPM.CreateDefaultCallback()));
+      return RegisterImpl(name, typeof(TProperty), typeof(TOwner), new PropertyMetadata(defaultValue, DPM.DefaultCallback));
     }
 
     internal static DependencyProperty Register<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action> handlerFactory) where TOwner : DependencyObject
@@ -334,7 +334,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     internal static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name) where TOwner : DependencyObject
     {
-      return RegisterReadOnlyImpl(name, typeof(TProperty), typeof(TOwner), new PropertyMetadata(default(TProperty), DPM.CreateDefaultCallback()));
+      return RegisterReadOnlyImpl(name, typeof(TProperty), typeof(TOwner), new PropertyMetadata(default(TProperty), DPM.DefaultCallback));
     }
 
     internal static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action> handlerFactory) where TOwner : DependencyObject
@@ -355,7 +355,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     internal static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue) where TOwner : DependencyObject
     {
-      return RegisterReadOnlyImpl(name, typeof(TProperty), typeof(TOwner), new PropertyMetadata(defaultValue, DPM.CreateDefaultCallback()));
+      return RegisterReadOnlyImpl(name, typeof(TProperty), typeof(TOwner), new PropertyMetadata(defaultValue, DPM.DefaultCallback));
     }
 
     internal static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action> handlerFactory) where TOwner : DependencyObject

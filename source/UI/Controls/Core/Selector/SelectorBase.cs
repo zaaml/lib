@@ -9,6 +9,7 @@ using Zaaml.Core;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.UI.Panels;
 using Zaaml.UI.Panels.Core;
 using NativeControl = System.Windows.Controls.Control;
 
@@ -200,10 +201,28 @@ namespace Zaaml.UI.Controls.Core
 		{
 			base.OnLoaded();
 
-			var selectedItem = SelectedItem;
+			EnqueueBringSelectedItemIntoView();
+		}
 
-			if (selectedItem != null)
-				ItemCollection.BringIntoViewInternal(new BringIntoViewRequest<TItem>(selectedItem, DefaultBringIntoViewMode, 0));
+		private protected virtual void EnqueueBringItemIntoView(TItem item)
+		{
+			if (item == null)
+				throw new ArgumentNullException(nameof(item));
+
+			var layoutInformation = ItemCollection.GetItemLayoutInformation(item);
+
+			if (layoutInformation.IsEmpty == false && layoutInformation.Visibility == ItemLayoutInformationVisibility.Visible)
+				return;
+
+			ItemCollection.EnqueueBringIntoViewInternal(new BringIntoViewRequest<TItem>(item, DefaultBringIntoViewMode, 0));
+		}
+
+		private protected void EnqueueBringSelectedItemIntoView()
+		{
+			if (SelectedItem == null)
+				return;
+
+			EnqueueBringItemIntoView(SelectedItem);
 		}
 
 		protected virtual void OnSelectedIndexChanged(int oldIndex, int newIndex)

@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -43,6 +44,10 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private AutoCompleteTextBox AutoCompleteTextBox => TemplateContract.AutoCompleteTextBox;
 
+		private TextBlock DisplayTextBlock => TemplateContract.DisplayTextBlock;
+
+		private bool IsTextBoxVisible => AutoCompleteTextBox != null && AutoCompleteTextBox.Visibility == Visibility.Visible;
+
 		public string OriginalText
 		{
 			get => (string) GetValue(OriginalTextProperty);
@@ -81,9 +86,35 @@ namespace Zaaml.UI.Controls.Editors.Text
 				CommitEdit();
 		}
 
+		private bool EnsureTemplate()
+		{
+			if (TemplateContract.IsAttached)
+				return true;
+
+			ApplyTemplate();
+
+			return TemplateContract.IsAttached;
+		}
+
 		private protected override void EnterEditState()
 		{
+			ShowTextBox();
+
 			AutoCompleteTextBox?.Focus();
+		}
+
+		private void HideTextBox()
+		{
+			if (TemplateContract.IsAttached == false)
+				return;
+
+			if (IsTextBoxVisible == false)
+				return;
+
+			DisplayTextBlock.Visibility = Visibility.Visible;
+			AutoCompleteTextBox.Visibility = Visibility.Collapsed;
+
+			SyncDisplayText();
 		}
 
 		private protected override void LeaveEditState()
@@ -97,6 +128,8 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 				_suspendKeyboardFocusWithinChanged = false;
 			}
+
+			HideTextBox();
 		}
 
 		protected override void OnBeginEdit()
@@ -128,6 +161,22 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 			if (UpdateMode == TextEditorUpdateMode.PropertyChanged)
 				SyncText();
+		}
+
+		protected override void OnMouseEnter(MouseEventArgs e)
+		{
+			base.OnMouseEnter(e);
+
+			if (IsEditing == false)
+				ShowTextBox();
+		}
+
+		protected override void OnMouseLeave(MouseEventArgs e)
+		{
+			if (IsEditing == false)
+				HideTextBox();
+
+			base.OnMouseLeave(e);
 		}
 
 		protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -190,6 +239,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			if (IsEditing == false)
 				SyncOriginalText();
 
+			SyncDisplayText();
 			SyncAutocompleteText();
 		}
 
@@ -198,8 +248,29 @@ namespace Zaaml.UI.Controls.Editors.Text
 			SyncText();
 		}
 
+		private void ShowTextBox()
+		{
+			if (EnsureTemplate() == false)
+				return;
+
+			if (IsTextBoxVisible)
+				return;
+
+			DisplayTextBlock.Visibility = Visibility.Collapsed;
+			AutoCompleteTextBox.Visibility = Visibility.Visible;
+
+			SyncAutocompleteText();
+		}
+
 		private void SyncAutocompleteText(string text = null)
 		{
+			if (IsTextBoxVisible == false)
+			{
+				SyncDisplayText();
+
+				return;
+			}
+
 			if (AutoCompleteTextBox == null)
 				return;
 
@@ -213,6 +284,14 @@ namespace Zaaml.UI.Controls.Editors.Text
 			{
 				_suspendSyncText = false;
 			}
+		}
+
+		private void SyncDisplayText(string text = null)
+		{
+			if (DisplayTextBlock == null)
+				return;
+
+			DisplayTextBlock.Text = text ?? Text;
 		}
 
 		private void SyncOriginalText()
@@ -233,5 +312,8 @@ namespace Zaaml.UI.Controls.Editors.Text
 	{
 		[TemplateContractPart(Required = true)]
 		public AutoCompleteTextBox AutoCompleteTextBox { get; private set; }
+
+		[TemplateContractPart(Required = true)]
+		public TextBlock DisplayTextBlock { get; private set; }
 	}
 }

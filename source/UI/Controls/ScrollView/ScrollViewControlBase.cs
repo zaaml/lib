@@ -386,8 +386,6 @@ namespace Zaaml.UI.Controls.ScrollView
 			ExecuteScrollCommandCore(scrollCommandKind);
 		}
 
-		private ScrollCommandKind? LastScrollCommandKind;
-
 		protected virtual void ExecuteScrollCommandCore(ScrollCommandKind scrollCommandKind)
 		{
 			try
@@ -395,11 +393,9 @@ namespace Zaaml.UI.Controls.ScrollView
 				EnterScrollCommand();
 				SyncScrollOffset();
 
-				LastScrollCommandKind = scrollCommandKind;
-
 				ScrollViewPanel?.ExecuteScrollCommand(scrollCommandKind);
 
-				//UpdateScrollOffsetCache(ScrollViewUtils.GetCommandOrientation(scrollCommandKind));
+				UpdateScrollOffsetCache(ScrollViewUtils.GetCommandOrientation(scrollCommandKind));
 			}
 			finally
 			{
@@ -615,13 +611,6 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		private void OnLayoutUpdate(object sender, EventArgs e)
 		{
-			if (LastScrollCommandKind.HasValue)
-			{
-				UpdateScrollOffsetCache(ScrollViewUtils.GetCommandOrientation(LastScrollCommandKind.Value));
-
-				LastScrollCommandKind = null;
-			}
-
 			//UpdateVerticalScrollBarVisibility();
 			//UpdateHorizontalScrollBarVisibility();
 		}

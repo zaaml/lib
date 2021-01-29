@@ -27,26 +27,31 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		public override ScrollUnit ScrollUnit => ScrollUnit.Item;
 
-		private protected override Vector CalcBringIntoViewOffset(int index, BringIntoViewMode mode, ScrollInfo scrollInfo)
+		private protected override bool TryCalcBringIntoViewOffset(int index, BringIntoViewMode mode, ScrollInfo scrollInfo, out Vector offset)
 		{
 			var viewport = scrollInfo.Viewport;
-			var offset = scrollInfo.Offset;
-
+			
 			if (index < 0 || index >= ItemsCount)
-				return offset;
+			{
+				offset = scrollInfo.Offset;
+
+				return true;
+			}
 
 			var orientation = Orientation;
 			var orientedViewPort = viewport.AsOriented(orientation);
-			var orientedOffset = offset.AsOriented(orientation);
+			var orientedOffset = scrollInfo.Offset.AsOriented(orientation);
 			var orientedScrollInfo = new OrientedScrollInfo(orientation, orientedOffset.Direct, orientedViewPort.Direct, Source.Count);
 
-			orientedScrollInfo.Offset = orientedScrollInfo.Offset - index > 0.0 || mode == BringIntoViewMode.Top
+			orientedScrollInfo.Offset = orientedScrollInfo.Offset - index > 0.0 || mode == BringIntoViewMode.Begin
 				? index
 				: index - orientedScrollInfo.Viewport + 1.0;
 
 			orientedOffset.Direct = orientedScrollInfo.Offset;
 
-			return orientedOffset.Vector;
+			offset = orientedOffset.Vector;
+
+			return true;
 		}
 
 		private protected override int CalcFirstVisibleIndex(Vector offset, out double localFirstVisibleOffset)

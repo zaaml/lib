@@ -240,7 +240,7 @@ namespace Zaaml.UI.Controls.DropDown
 				oldTreeViewControl.FocusItemOnMouseHover = false;
 				oldTreeViewControl.SelectItemOnFocus = true;
 				oldTreeViewControl.PreserveMinSize = false;
-				oldTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Default;
+				oldTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Auto;
 
 				ClearValue(ItemFilterProperty);
 			}
@@ -254,7 +254,7 @@ namespace Zaaml.UI.Controls.DropDown
 				newTreeViewControl.FocusItemOnMouseHover = true;
 				newTreeViewControl.SelectItemOnFocus = false;
 				newTreeViewControl.PreserveMinSize = true;
-				newTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Top;
+				newTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Begin;
 
 				this.BindProperties(ItemFilterProperty, newTreeViewControl, TreeViewControl.ItemsFilterProperty, targetNullValue: DefaultFilter);
 			}

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Windows;
 using Zaaml.Core;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.UI.Panels;
 using NativeControl = System.Windows.Controls.Control;
 
 namespace Zaaml.UI.Controls.Core
@@ -290,6 +291,21 @@ namespace Zaaml.UI.Controls.Core
 		internal void BringIntoViewInternal(BringIntoViewRequest<TItem> request)
 		{
 			ItemsHost?.BringIntoView(request);
+		}
+
+		internal void EnqueueBringIntoViewInternal(BringIntoViewRequest<TItem> request)
+		{
+			ItemsHost?.EnqueueBringIntoView(request);
+		}
+
+		internal ItemLayoutInformation GetItemLayoutInformation(TItem item)
+		{
+			return ItemsHost?.GetLayoutInformation(item) ?? ItemLayoutInformation.Empty;
+		}
+
+		internal ItemLayoutInformation GetItemLayoutInformation(int index)
+		{
+			return ItemsHost?.GetLayoutInformation(index) ?? ItemLayoutInformation.Empty;
 		}
 
 		internal void DetachGeneratedItem(int index, TItem item)

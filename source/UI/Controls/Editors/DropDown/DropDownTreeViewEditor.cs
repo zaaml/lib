@@ -19,6 +19,9 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 		public static readonly DependencyProperty IsTextEditableProperty = DPM.Register<bool, DropDownTreeViewEditor>
 			("IsTextEditable", false);
 
+		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<DropDownEditableSelectorDisplayMode, DropDownTreeViewEditor>
+			("DisplayMode", DropDownEditableSelectorDisplayMode.TextEditor);
+
 		public static readonly DependencyProperty TreeViewControlProperty = DPM.Register<TreeViewControl, DropDownTreeViewEditor>
 			("TreeViewControl");
 
@@ -30,6 +33,12 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 		public DropDownTreeViewEditor()
 		{
 			this.OverrideStyleKey<DropDownTreeViewEditor>();
+		}
+
+		public DropDownEditableSelectorDisplayMode DisplayMode
+		{
+			get => (DropDownEditableSelectorDisplayMode) GetValue(DisplayModeProperty);
+			set => SetValue(DisplayModeProperty, value);
 		}
 
 		private DropDownTreeViewControl DropDownTreeViewControl => TemplateContract.DropDownTreeViewControl;

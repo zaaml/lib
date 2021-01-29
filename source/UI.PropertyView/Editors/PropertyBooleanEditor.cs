@@ -9,22 +9,19 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 {
 	public class PropertyBooleanEditor : PropertyDropDownListViewEditor<bool>
 	{
-		private readonly PropertyListViewItemSource<bool> _falseValueItem = new PropertyListViewItemSource<bool>(false, "False");
-		private readonly PropertyListViewItemSource<bool> _trueValueItem = new PropertyListViewItemSource<bool>(true, "True");
+		private static readonly PropertyListViewItemSource<bool> FalseValueItem = new(false, "False");
+		private static readonly PropertyListViewItemSource<bool> TrueValueItem = new(true, "True");
 
-		public PropertyBooleanEditor()
+		private static readonly ReadOnlyCollection<PropertyListViewItemSource<bool>> StaticItems = new(new List<PropertyListViewItemSource<bool>>
 		{
-			Items = new ReadOnlyCollection<PropertyListViewItemSource<bool>>(new List<PropertyListViewItemSource<bool>>
-			{
-				_trueValueItem, _falseValueItem
-			});
-		}
+			TrueValueItem, FalseValueItem
+		});
 
-		protected override IReadOnlyCollection<PropertyListViewItemSource<bool>> Items { get; }
+		protected override IReadOnlyCollection<PropertyListViewItemSource<bool>> Items => StaticItems;
 
 		protected override PropertyListViewItemSource<bool> GetItemByValue(bool value)
 		{
-			return value ? _trueValueItem : _falseValueItem;
+			return value ? TrueValueItem : FalseValueItem;
 		}
 	}
 }

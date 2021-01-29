@@ -40,7 +40,7 @@ namespace Zaaml.UI.Controls.DropDown
 			("PreserveEditorText", PreserveEditorTextMode.Auto);
 
 		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<DropDownEditableSelectorDisplayMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
-			("DisplayMode", default, d => d.OnDisplayModePropertyChangedPrivate);
+			("DisplayMode", DropDownEditableSelectorDisplayMode.Auto, d => d.OnDisplayModePropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey ActualDisplayModePropertyKey = DPM.RegisterReadOnly<DropDownEditableSelectorDisplayMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
 			("ActualDisplayMode", DropDownEditableSelectorDisplayMode.DropDownButton);

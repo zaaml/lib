@@ -27,7 +27,7 @@ namespace Zaaml.UI.Data.Hierarchy
 					yield return node;
 				else if (node.Nodes != null)
 				{
-					foreach (var child in node.Nodes.FilteredCollection)
+					foreach (var child in node.Nodes.FilteredCollectionInternal)
 					{
 						yield return child;
 					}

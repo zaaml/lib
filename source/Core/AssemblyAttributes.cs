@@ -32,6 +32,9 @@ using Zaaml.Core.Converters;
 [assembly: InternalsVisibleTo("Zaaml.UI.Navigation,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
+[assembly: InternalsVisibleTo("Zaaml.UI.Spy,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
 [assembly: InternalsVisibleTo("Zaaml.UI.Ribbon,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 

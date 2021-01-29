@@ -25,6 +25,7 @@
 		<ProjectReference Include="..\Themes.Metro.Framework\Zaaml.Themes.Metro.Framework.csproj" />
 		<ProjectReference Include="..\Themes.Metro.UI.Ribbon\Zaaml.Themes.Metro.UI.Ribbon.csproj" />
 		<ProjectReference Include="..\Themes.Metro.UI.Docking\Zaaml.Themes.Metro.UI.Docking.csproj" />
+		<ProjectReference Include="..\Themes.Metro.UI.Spy\Zaaml.Themes.Metro.UI.Spy.csproj" />
 	</ItemGroup>
 
 	<Target Name="CombineBuild" AfterTargets="Build">

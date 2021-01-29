@@ -11,7 +11,7 @@ using System.Windows.Controls;
 using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
-using Zaaml.UI.Controls.ScrollView;
+using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 {
@@ -21,9 +21,9 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 		{
 			public VirtualStackPanelLayoutBase Layout { get; }
 
-			public int PreviewFirstVisibleIndex { get; }
+			public int PreviewFirstVisibleIndex { get; private set; }
 
-			public double PreviewFirstVisibleOffset { get; }
+			public double PreviewFirstVisibleOffset { get; private set; }
 
 			public OrientedSize OrientedResult { get; private set; }
 
@@ -43,6 +43,8 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 			public int TrailingCacheCount { get; private set; }
 
+			public bool BringIntoViewResult { get; private set; }
+
 			public int SourceCount { get; }
 
 			public int VisibleCount => FirstVisibleIndex == -1 ? 0 : LastVisibleIndex - FirstVisibleIndex + 1;
@@ -59,11 +61,14 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 			public double PreCacheDelta => OrientedLeadingSize.Direct;
 
-			public VirtualMeasureContext(VirtualStackPanelLayoutBase layout, ScrollInfo scrollInfo, Size availableSize)
+			public BringIntoViewRequest BringIntoViewRequest { get; }
+
+			public VirtualMeasureContext(VirtualStackPanelLayoutBase layout, Size availableSize)
 			{
 				Layout = layout;
 
 				Orientation = layout.Orientation;
+				BringIntoViewRequest = layout.BringIntoViewRequest;
 
 				var canScrollDirect = Orientation == Orientation.Vertical ? layout.CanVerticallyScroll : layout.CanHorizontallyScroll;
 				var canScrollIndirect = Orientation == Orientation.Vertical ? layout.CanHorizontallyScroll : layout.CanVerticallyScroll;
@@ -77,14 +82,14 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 				OrientedLeadingSize = new OrientedSize(Orientation);
 				OrientedTrailingSize = new OrientedSize(Orientation);
 				OrientedAvailable = availableSize.AsOriented(Orientation);
-				PreviewFirstVisibleIndex = layout.CalcFirstVisibleIndex(scrollInfo.Offset, out var localFirstVisibleOffset);
-
-				PreviewFirstVisibleOffset = localFirstVisibleOffset;
 
 				OrientedConstraint = new OrientedSize(Orientation)
 					.ChangeDirect(canScrollDirect ? double.PositiveInfinity : OrientedAvailable.Direct)
 					.ChangeIndirect(canScrollIndirect ? double.PositiveInfinity : OrientedAvailable.Indirect);
 
+				BringIntoViewResult = false;
+				PreviewFirstVisibleIndex = -1;
+				PreviewFirstVisibleOffset = 0;
 				LastIndex = -1;
 				FirstIndex = -1;
 				FirstVisibleIndex = -1;
@@ -97,6 +102,12 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			{
 				if (SourceCount == 0)
 					return;
+
+				var scrollInfo = Layout.ScrollInfo;
+				
+				BringIntoViewResult = Layout.TryHandleBringIntoView(BringIntoViewRequest, ref scrollInfo);
+				PreviewFirstVisibleIndex = Layout.CalcFirstVisibleIndex(scrollInfo.Offset, out var localFirstVisibleOffset);
+				PreviewFirstVisibleOffset = localFirstVisibleOffset;
 
 				MeasureLeading();
 				MeasureVisible();
@@ -351,7 +362,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			{
 				return element;
 			}
-			
+
 			public Size ViewportSize
 			{
 				get

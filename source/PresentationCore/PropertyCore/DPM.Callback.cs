@@ -18,18 +18,13 @@ namespace Zaaml.PresentationCore.PropertyCore
 				invocator.InvokeDependencyPropertyChangedEvent(dependencyPropertyChangedEventArgs);
 		}
 
-		internal static PropertyChangedCallback CreateDefaultCallback()
-		{
-			PropertyChangedCallback callback = InvokeDependencyPropertyChangedEvent;
-
-			return callback;
-		}
+		internal static PropertyChangedCallback DefaultCallback => InvokeDependencyPropertyChangedEvent;
 
 		public static PropertyChangedCallback Callback<TTarget, TProperty>(Func<TTarget, Action<TProperty, TProperty>> handlerFactory, bool suspendable = false)
 			where TTarget : DependencyObject
 		{
 			if (handlerFactory == null) 
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			PropertyChangedCallback callback = (d, e) =>
 			{
@@ -48,7 +43,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 			where TTarget : DependencyObject
 		{
 			if (handlerFactory == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			PropertyChangedCallback callback = (d, e) =>
 			{
@@ -66,7 +61,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 		public static PropertyChangedCallback Callback<TTarget>(Func<TTarget, Action> handlerFactory, bool suspendable = false) where TTarget : DependencyObject
 		{
 			if (handlerFactory == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			PropertyChangedCallback callback = (d, e) =>
 			{
@@ -84,7 +79,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 		public static PropertyChangedCallback Callback<TTarget>(Func<TTarget, Action<DependencyPropertyChangedEventArgs>> handlerFactory, bool suspendable = false) where TTarget : DependencyObject
 		{
 			if (handlerFactory == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			PropertyChangedCallback callback = (d, e) =>
 			{
@@ -103,7 +98,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 			where TTarget : DependencyObject
 		{
 			if (handlerFactory == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			PropertyChangedCallback callback = (d, e) =>
 			{
@@ -122,7 +117,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 			where TTarget : DependencyObject
 		{
 			if (handlerFactory == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			PropertyChangedCallback callback = (d, e) =>
 			{
@@ -141,7 +136,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 			where TTarget : DependencyObject
 		{
 			if (handlerFactory == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			PropertyChangedCallback callback = (d, e) =>
 			{
@@ -159,7 +154,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 		public static PropertyChangedCallback Callback<TTarget>(Action<TTarget> action, bool suspendable = false) where TTarget : DependencyObject
 		{
 			if (action == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			PropertyChangedCallback callback = (d, e) =>
 			{
@@ -251,7 +246,7 @@ namespace Zaaml.PresentationCore.PropertyCore
     public static PropertyChangedCallback StaticCallback<TTarget, TProperty>(Action<TTarget, TProperty, TProperty> handler) where TTarget : DependencyObject
 		{
 			if (handler == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			return (d, e) =>
 			{
@@ -266,7 +261,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 		public static PropertyChangedCallback StaticCallback<TTarget, TProperty>(Action<TTarget, TProperty> handler) where TTarget : DependencyObject
 		{
 			if (handler == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			return (d, e) =>
 			{
@@ -279,7 +274,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 		public static PropertyChangedCallback StaticCallback<TProperty>(Action<DependencyObject, TProperty> handler)
 		{
 			if (handler == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			return (d, e) =>
 			{
@@ -292,7 +287,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 		public static PropertyChangedCallback StaticCallback<TTarget>(Action<TTarget> handler) where TTarget : DependencyObject
 		{
 			if (handler == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			return (d, e) =>
 			{
@@ -305,7 +300,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 		public static PropertyChangedCallback StaticCallback<TProperty>(Action<DependencyObject, TProperty, TProperty> handler)
 		{
 			if (handler == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			return (d, e) => handler(d, e.OldValue.CastProperty<TProperty>(), e.NewValue.CastProperty<TProperty>());
 		}
@@ -313,7 +308,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 		public static PropertyChangedCallback StaticCallback(Action<DependencyObject> handler)
 		{
 			if (handler == null)
-				return CreateDefaultCallback();
+				return DefaultCallback;
 
 			return (d, e) =>
 			{
