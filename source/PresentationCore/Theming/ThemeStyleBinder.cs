@@ -12,6 +12,10 @@ using Zaaml.Core;
 using Zaaml.Core.Reflection;
 using Zaaml.Core.Weak.Collections;
 
+#if !NETCOREAPP
+using Zaaml.Core.Extensions;
+#endif
+
 namespace Zaaml.PresentationCore.Theming
 {
 	internal class ThemeStyleBinder
