@@ -5,7 +5,6 @@
 using System.Windows;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.ScrollView;
-using NativeControl = System.Windows.Controls.Control;
 
 namespace Zaaml.UI.Panels.Core
 {
@@ -40,8 +39,7 @@ namespace Zaaml.UI.Panels.Core
 		{
 			return ItemLayoutInformation.Empty;
 		}
-
-
+		
 		void IItemsHost<TItem>.BringIntoView(BringIntoViewRequest<TItem> request)
 		{
 			BringIntoView(request);

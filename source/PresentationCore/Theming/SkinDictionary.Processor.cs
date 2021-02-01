@@ -2,53 +2,59 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
-using System.Windows.Media;
-using Zaaml.PresentationCore.Converters;
 
 namespace Zaaml.PresentationCore.Theming
 {
 	public partial class SkinDictionary
 	{
-		#region Properties
+		private SkinDictionaryProcessorCollection _postProcessors;
+		private SkinDictionaryProcessorCollection _preProcessors;
 
-		private SkinDictionaryProcessorCollection Processors { get; }
+		public SkinDictionaryProcessorCollection PostProcessors => _postProcessors ??= new SkinDictionaryProcessorCollection(this);
 
-		#endregion
+		public SkinDictionaryProcessorCollection PreProcessors => _preProcessors ??= new SkinDictionaryProcessorCollection(this);
 
-		#region  Methods
-
-		private void ApplyProcessors()
+		private void ApplyPreProcessors()
 		{
-			foreach (var processor in Processors)
+			if (_preProcessors == null)
+				return;
+
+			foreach (var processor in _preProcessors)
 				processor.ProcessInternal();
 		}
 
-		private void FreezeProcessors()
+		private void ApplyPostProcessors()
 		{
-			ApplyProcessors();
+			if (_postProcessors == null)
+				return;
 
-			foreach (var skinDictionary in Flatten().Select(kv => kv.Value).OfType<SkinDictionary>())
-				skinDictionary.ApplyProcessors();
+			foreach (var processor in _postProcessors)
+				processor.ProcessInternal();
 		}
 
-		#endregion
+		private void FreezePreProcessors()
+		{
+			ApplyPreProcessors();
+
+			foreach (var skinDictionary in Flatten().Select(kv => kv.Value).OfType<SkinDictionary>())
+				skinDictionary.ApplyPreProcessors();
+		}
+
+		private void FreezePostProcessors()
+		{
+			ApplyPostProcessors();
+
+			foreach (var skinDictionary in Flatten().Select(kv => kv.Value).OfType<SkinDictionary>())
+				skinDictionary.ApplyPostProcessors();
+		}
 	}
 
 	public abstract class SkinDictionaryProcessor : DependencyObject
 	{
-		#region Fields
-
 		private SkinDictionary _skinDictionary;
-
-		#endregion
-
-		#region Properties
 
 		public SkinDictionary SkinDictionary
 		{
@@ -67,10 +73,6 @@ namespace Zaaml.PresentationCore.Theming
 					AttachSkinPrivate(_skinDictionary);
 			}
 		}
-
-		#endregion
-
-		#region  Methods
 
 		private void AttachSkinPrivate(SkinDictionary skinDictionary)
 		{
@@ -101,28 +103,29 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			ProcessCore();
 		}
-
-		#endregion
 	}
 
-	internal sealed class SkinDictionaryProcessorCollection : Collection<SkinDictionaryProcessor>
+	public sealed class SkinDictionaryClear : SkinDictionaryProcessor
 	{
-		#region Ctors
+		protected override SkinDictionaryProcessor CreateInstance()
+		{
+			return new SkinDictionaryClear();
+		}
 
+		protected override void ProcessCore()
+		{
+			SkinDictionary.Clear();
+		}
+	}
+
+	public sealed class SkinDictionaryProcessorCollection : Collection<SkinDictionaryProcessor>
+	{
 		internal SkinDictionaryProcessorCollection(SkinDictionary skinDictionary)
 		{
 			SkinDictionary = skinDictionary;
 		}
 
-		#endregion
-
-		#region Properties
-
 		public SkinDictionary SkinDictionary { get; }
-
-		#endregion
-
-		#region  Methods
 
 		protected override void ClearItems()
 		{
@@ -158,123 +161,5 @@ namespace Zaaml.PresentationCore.Theming
 
 			processor.SkinDictionary = SkinDictionary;
 		}
-
-		#endregion
-	}
-
-	public sealed class SolidColorBrushProcessor : SkinDictionaryProcessor
-	{
-		#region Static Fields and Constants
-
-		private static readonly ExpressionScope Empty = new ExpressionScope();
-
-		#endregion
-
-		#region Fields
-
-		private Func<ExpressionScope, object> _expressionFunc;
-
-		#endregion
-
-		#region Properties
-
-		public string ColorExpression { get; set; }
-
-		#endregion
-
-		#region  Methods
-
-		protected override void CopyFrom(SkinDictionaryProcessor processorSource)
-		{
-			base.CopyFrom(processorSource);
-
-			var brushProcessor = (SolidColorBrushProcessor) processorSource;
-
-			ColorExpression = brushProcessor.ColorExpression;
-
-			var scope = Expression.GetScope(processorSource);
-
-			Expression.SetScope(this, scope.CloneInternal());
-		}
-
-		protected override SkinDictionaryProcessor CreateInstance()
-		{
-			return new SolidColorBrushProcessor();
-		}
-
-		private object GetActualScopeParameterValue(ExpressionParameter parameter)
-		{
-			var value = parameter.Value;
-			var stringValue = value as string;
-
-			if (stringValue == null)
-				return value;
-
-			var trimmedValue = stringValue.Trim();
-
-			if (trimmedValue.StartsWith("$(") && trimmedValue.EndsWith(")"))
-			{
-				var resourceKey = trimmedValue.Substring(2, trimmedValue.Length - 3);
-				object actualValue;
-
-				if (SkinDictionary.TryGetValue(resourceKey, out actualValue))
-					return actualValue;
-			}
-
-			return value;
-		}
-
-		protected override void ProcessCore()
-		{
-			var processorScope = ProcessScope(Expression.GetScope(this));
-
-			try
-			{
-				_expressionFunc = string.IsNullOrEmpty(ColorExpression) ? ExpressionEngine.FallbackExpressionFunc : ExpressionEngine.Instance.Compile(ColorExpression);
-			}
-			catch (Exception e)
-			{
-				Debug.WriteLine(e);
-
-				_expressionFunc = ExpressionEngine.FallbackExpressionFunc;
-			}
-
-			var processedBrushes = new List<KeyValuePair<string, object>>();
-
-			foreach (var keyValue in SkinDictionary)
-			{
-				var brush = keyValue.Value as SolidColorBrush;
-
-				if (brush == null)
-					continue;
-
-				var brushScope = ProcessScope(Expression.GetScope(brush));
-
-				brushScope.ParentScope = processorScope;
-
-				var evalValue = _expressionFunc(brushScope);
-
-				if (evalValue != null)
-					processedBrushes.Add(new KeyValuePair<string, object>(keyValue.Key, new SolidColorBrush(XamlConverter.Convert<Color>(evalValue))));
-			}
-
-			foreach (var keyValuePair in processedBrushes)
-				SkinDictionary[keyValuePair.Key] = keyValuePair.Value;
-		}
-
-		private ExpressionScope ProcessScope(ExpressionScope scope)
-		{
-			var actualScope = new ExpressionScope();
-
-			if (scope == null)
-				return actualScope;
-
-			foreach (var parameter in scope.Parameters)
-				actualScope.Parameters.Add(new ExpressionParameter(parameter.Name, GetActualScopeParameterValue(parameter)));
-
-			return actualScope;
-		}
-
-		#endregion
 	}
 }

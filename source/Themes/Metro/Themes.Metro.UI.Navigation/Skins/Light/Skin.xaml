@@ -44,16 +44,15 @@
 
         <!-- Background -->
         <zm:SkinDictionary x:Key="Background">
-
-          <!-- BrushProcessor-->
-          <zm:SolidColorBrushProcessor x:Key="BrushProcessor"
-                                       ColorExpression="Shade(BaseColor, Shade)" 
-                                       zm:Expression.Scope="BaseColor:$(~/Input.BackgroundBase)"/>
-
-          <SolidColorBrush x:Key="Normal" zm:Expression.Scope="Shade:0" />
-          <SolidColorBrush x:Key="MouseOver" zm:Expression.Scope="Shade:0.2" />
-          <SolidColorBrush x:Key="Pressed" zm:Expression.Scope="Shade:0.3"/>
-          <SolidColorBrush x:Key="Selected" zm:Expression.Scope="Shade:0"/>
+          <zm:SkinDictionary.Generators>
+            <zm:SolidColorBrushGenerator ColorExpression="Shade(BaseColor, Shade)" 
+                                         ExpressionScope="BaseColor:$(~/Input.BackgroundBase)">
+              <zm:SkinResourceTemplate x:Key="Normal" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0" />
+              <zm:SkinResourceTemplate x:Key="MouseOver" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.2" />
+              <zm:SkinResourceTemplate x:Key="Pressed" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.3" />
+              <zm:SkinResourceTemplate x:Key="Checked" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.25" />
+            </zm:SolidColorBrushGenerator>
+          </zm:SkinDictionary.Generators>
         </zm:SkinDictionary>
 
         <!-- Glyph -->

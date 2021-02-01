@@ -14,5 +14,8 @@ namespace Zaaml.UI.Controls.Spy
 
 		[TemplateContractPart(Required = true)]
 		public SpyVisualTreeViewControl VisualTree { get; [UsedImplicitly] private set; }
+
+		[TemplateContractPart(Required = true)]
+		public SpyZoomControl ZoomControl { get; [UsedImplicitly] private set; }
 	}
 }

@@ -56,7 +56,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		private static void BindThemeResource(ThemeResource themeResource)
 		{
-			BindThemeResource(ThemeManager.GetThemeReference(themeResource.ActualKey, false), themeResource);
+			BindThemeResource(ThemeManager.GetThemeResourceReference(themeResource.ActualKey, false), themeResource);
 		}
 
 		protected internal override void BindThemeResource(ThemeResourceReference thereResourceReference)

@@ -73,7 +73,7 @@ namespace Zaaml.UI.Panels
 		protected Vector Offset
 		{
 			get => ScrollInfo.Offset;
-			set => ScrollInfo = ScrollInfo.WithOffset(value);
+			set => ScrollInfo = ScrollInfo.WithOffset(value, true);
 		}
 
 		protected ScrollInfo ScrollInfo

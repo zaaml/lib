@@ -4,14 +4,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Zaaml.PresentationCore.Theming
 {
-	internal struct ThemeResourceKey
+	internal readonly struct ThemeResourceKey
 	{
-		private static readonly Dictionary<ThemeResourceKey, ThemeResourceKey> KeyInternDict = new Dictionary<ThemeResourceKey, ThemeResourceKey>();
-		private static readonly Dictionary<string, ThemeResourceKey> KeyDict = new Dictionary<string, ThemeResourceKey>();
-		public static readonly List<string> Builder = new List<string>();
+		private static readonly string[] EmptyKeyParts = new string[0];
+		private static readonly Dictionary<ThemeResourceKey, ThemeResourceKey> KeyInternDict = new();
+		private static readonly Dictionary<string, ThemeResourceKey> KeyDict = new();
+		public static readonly List<string> Builder = new();
 
 		#region Static Fields and Constants
 
@@ -21,64 +23,46 @@ namespace Zaaml.PresentationCore.Theming
 
 		#region Fields
 
-		private string _key;
-		private List<string> _keyParts;
+		private readonly string _key;
+		private readonly IReadOnlyList<string> _keyParts;
 		private readonly int _hashCode;
 
 		#endregion
 
-		public static readonly ThemeResourceKey Empty = new ThemeResourceKey { _key = null, _keyParts = null };
+		public static ThemeResourceKey Empty => new(null, null);
 
 		#region Ctors
 
-		public ThemeResourceKey(List<string> keyParts) : this()
+		public ThemeResourceKey(IReadOnlyList<string> keyParts) : this()
 		{
-			_keyParts = keyParts;
-			_hashCode = CalcHashCode(_keyParts);
-
-			this = Intern();
+			this = Intern(null, keyParts);
 		}
 
-		private ThemeResourceKey(string key, List<string> keyParts) : this()
+		private ThemeResourceKey(string key, IReadOnlyList<string> keyParts) : this()
 		{
 			_key = key;
-			_keyParts = keyParts;
+			_keyParts = keyParts ?? EmptyKeyParts;
 			_hashCode = CalcHashCode(_keyParts);
 		}
 
 		public ThemeResourceKey(string key) : this()
 		{
-			if (KeyDict.TryGetValue(key, out this))
-				return;
-
-			this = new ThemeResourceKey(key, ParseKey(key));
-
-			this = Intern();
-
-			KeyDict[key] = this;
+			this = Intern(key, null);
 		}
 
 		#endregion
 
 		#region Properties
 
-		public bool IsEmpty => _key == null && _keyParts == null;
+		public bool IsEmpty => string.IsNullOrEmpty(_key) && ReferenceEquals(_keyParts, EmptyKeyParts);
 
-		public string Key => IsEmpty ? null : EnsureKey();
+		public string Key => IsEmpty ? string.Empty : _key;
 
-		public List<string> KeyParts => IsEmpty ? null : EnsureKeyParts();
-
-		private List<string> EnsureKeyParts()
-		{
-			if (ReferenceEquals(Builder, _keyParts))
-				return _keyParts = ParseKey(Key);
-
-			return _keyParts ?? (_keyParts = ParseKey(_key));
-		}
+		public IReadOnlyList<string> KeyParts => _keyParts ?? EmptyKeyParts;
 
 		#endregion
 
-		#region  Methods
+		#region Methods
 
 		internal ThemeResourceKey WithParent(string parentKey)
 		{
@@ -91,17 +75,12 @@ namespace Zaaml.PresentationCore.Theming
 
 		public static explicit operator ThemeResourceKey(string key)
 		{
-			return new ThemeResourceKey(key);
+			return new(key);
 		}
 
 		public static explicit operator string(ThemeResourceKey key)
 		{
 			return key.Key;
-		}
-
-		private string EnsureKey()
-		{
-			return _key ?? (_key = BuildKey());
 		}
 
 		private static List<string> ParseKey(string key)
@@ -128,9 +107,9 @@ namespace Zaaml.PresentationCore.Theming
 			return keyParts;
 		}
 
-		private string BuildKey()
+		private static string BuildKey(IReadOnlyList<string> keyParts)
 		{
-			return string.Join(Separator, _keyParts);
+			return string.Join(Separator, keyParts);
 		}
 
 		public bool Equals(ThemeResourceKey other)
@@ -153,22 +132,16 @@ namespace Zaaml.PresentationCore.Theming
 			return true;
 		}
 
-		private static readonly CharEnumerator Enumerator1 = new CharEnumerator();
-		private static readonly CharEnumerator Enumerator2 = new CharEnumerator();
+		private static readonly CharEnumerator Enumerator1 = new();
+		private static readonly CharEnumerator Enumerator2 = new();
 
-		private class CharEnumerator
+		private sealed class CharEnumerator
 		{
-			#region Type: Fields
-
 			private int _charIndex;
 			private string _keyPart;
 
-			private List<string> _keyParts;
+			private IReadOnlyList<string> _keyParts;
 			private int _partIndex;
-
-			#endregion
-
-			#region  Methods
 
 			public char MoveNext()
 			{
@@ -199,13 +172,12 @@ namespace Zaaml.PresentationCore.Theming
 				}
 			}
 
-			public void Reset(List<string> keyParts)
+			public void Reset(IReadOnlyList<string> keyParts)
 			{
 				_keyParts = keyParts;
+
 				MoveNextKeyPart(0);
 			}
-
-			#endregion
 		}
 
 		public override bool Equals(object obj)
@@ -213,10 +185,10 @@ namespace Zaaml.PresentationCore.Theming
 			if (ReferenceEquals(null, obj))
 				return false;
 
-			return obj is ThemeResourceKey && Equals((ThemeResourceKey) obj);
+			return obj is ThemeResourceKey key && Equals(key);
 		}
 
-		private static int CalcHashCode(List<string> keyParts)
+		private static int CalcHashCode(IReadOnlyList<string> keyParts)
 		{
 			unchecked
 			{
@@ -246,21 +218,22 @@ namespace Zaaml.PresentationCore.Theming
 			return _hashCode;
 		}
 
-		private ThemeResourceKey Intern()
+		private static ThemeResourceKey Intern(string keyString, IReadOnlyList<string> keyParts)
 		{
-			if (IsEmpty)
-				return this;
+			var key = new ThemeResourceKey(keyString, keyParts);
 
-			ThemeResourceKey internedKey;
+			if (key.IsEmpty)
+				return Empty;
 
-			if (KeyInternDict.TryGetValue(this, out internedKey))
+			if (string.IsNullOrEmpty(keyString) == false && KeyDict.TryGetValue(keyString, out var internedKey))
 				return internedKey;
 
-			internedKey = this;
+			if (KeyInternDict.TryGetValue(key, out internedKey))
+				return internedKey;
 
-			internedKey.EnsureKey();
-			internedKey.EnsureKeyParts();
+			internedKey = keyString != null ? new ThemeResourceKey(keyString, ParseKey(keyString)) : new ThemeResourceKey(BuildKey(keyParts), ReferenceEquals(keyParts, Builder) ? keyParts.ToList() : keyParts);
 
+			KeyDict[internedKey.Key] = internedKey;
 			KeyInternDict[internedKey] = internedKey;
 
 			return internedKey;

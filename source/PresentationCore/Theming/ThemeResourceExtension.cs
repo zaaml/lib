@@ -37,12 +37,12 @@ namespace Zaaml.PresentationCore.Theming
 
     #region Properties
 
-    private StrongReferenceBinding ActualBinding => _binding ?? (_binding = new StrongReferenceBinding("Value")
+    private StrongReferenceBinding ActualBinding => _binding ??= new StrongReferenceBinding("Value")
     {
-      Converter = this,
-      Reference = this,
-      Mode = BindingMode.OneWay
-    });
+	    Converter = this,
+	    Reference = this,
+	    Mode = BindingMode.OneWay
+    };
 
     internal string ActualKey => ThemeManager.GetKeyFromKeyword(Keyword) ?? Key;
 
@@ -76,7 +76,7 @@ namespace Zaaml.PresentationCore.Theming
       set => ActualBinding.TargetNullValue = value;
     }
 
-    private ThemeResourceReference ThemeResourceReference => ThemeManager.GetThemeReference(ActualKey, true);
+    private ThemeResourceReference ThemeResourceReference => ThemeManager.GetThemeResourceReference(ActualKey, true);
 
     public object Value => ThemeResourceReference.Value;
 
@@ -100,7 +100,7 @@ namespace Zaaml.PresentationCore.Theming
       //_targetObject = targetObject;
       //_targetProperty = GetDependencyProperty(targetProperty);
 
-      var themeResourceReference = ThemeManager.GetThemeReference(ActualKey, true);
+      var themeResourceReference = ThemeManager.GetThemeResourceReference(ActualKey, true);
 
       if (ThemeManager.IsStatic == false)
         themeResourceReference.AddListener(this);
@@ -112,7 +112,7 @@ namespace Zaaml.PresentationCore.Theming
 
     private void LogError(object target, object targetProperty, Type targetPropertyType, Exception exception)
     {
-      LogService.LogWarning($"Error occcurred while setting '{targetProperty}' property of type '{targetPropertyType}' to theme resource value with key '{Key}' on target '{target}'.\n\t{exception}");
+      LogService.LogWarning($"Error occurred while setting '{targetProperty}' property of type '{targetPropertyType}' to theme resource value with key '{Key}' on target '{target}'.\n\t{exception}");
     }
 
     protected override object ProvideValueCore(object target, object targetProperty, IServiceProvider serviceProvider)
@@ -121,7 +121,8 @@ namespace Zaaml.PresentationCore.Theming
       //  return this;
 
       var actualKey = ActualKey;
-      var themeResourceReference = ThemeManager.GetThemeReference(actualKey, true);
+      var themeResourceReference = ThemeManager.GetThemeResourceReference(actualKey, true);
+
       if (themeResourceReference.IsBound == false || ThemeManager.IsStatic == false)
       {
         if (ThemeManager.IsStatic)
@@ -139,6 +140,7 @@ namespace Zaaml.PresentationCore.Theming
         if (convertResult.IsFailed)
         {
           LogError(target, targetProperty, targetPropertyType, convertResult.Exception);
+
           return targetPropertyType.CreateDefaultValue();
         }
 
@@ -155,6 +157,7 @@ namespace Zaaml.PresentationCore.Theming
         if (convertResult.IsFailed)
         {
           LogError(target, targetProperty, targetPropertyType, convertResult.Exception);
+
           return targetPropertyType.CreateDefaultValue();
         }
 

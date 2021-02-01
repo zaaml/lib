@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<UseWPF>true</UseWPF>
+		<ExposeExternalInternals>True</ExposeExternalInternals>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net5.0-windows</TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
+		<ProjectReference Include="..\Expressions\Zaaml.Expressions.csproj" />
+		<ProjectReference Include="..\Platform\Zaaml.Platform.csproj" />
+		<ProjectReference Include="..\Text\Zaaml.Text.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.5.1">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Behaviors\Orderable\DefinitionSite.cs" />
+		<Compile Remove="Behaviors\Orderable\GridDefinitionOrderAdvisor.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="DelayActionTemplate.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>DelayActionTemplate.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="DelayActionTemplate.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>DelayActionTemplate.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+</Project>

@@ -89,12 +89,10 @@ namespace Zaaml.UI.Controls.ScrollView
 		public static readonly DependencyProperty PreserveScrollBarVisibilityProperty = DPM.Register<bool, ScrollViewControlBase>
 			(nameof(PreserveScrollBarVisibility), false);
 
-		private double _horizontalOffsetCache;
 		private EventHandler _layoutUpdateHandler;
 		private object _logicalChild;
 		private byte _packedValue;
 		private ScrollViewPanelBase _scrollViewPanel;
-		private double _verticalOffsetCache;
 
 		internal ScrollViewControlBase()
 		{
@@ -196,15 +194,11 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		protected override IEnumerator LogicalChildren => LogicalChild != null ? EnumeratorUtils.Concat(LogicalChild, base.LogicalChildren) : base.LogicalChildren;
 
-		private protected virtual bool PreserveHorizontalOffset => true;
-
 		public bool PreserveScrollBarVisibility
 		{
 			get => (bool) GetValue(PreserveScrollBarVisibilityProperty);
 			set => SetValue(PreserveScrollBarVisibilityProperty, value);
 		}
-
-		private protected virtual bool PreserveVerticalOffset => true;
 
 		public double ScrollableHeight
 		{
@@ -394,8 +388,6 @@ namespace Zaaml.UI.Controls.ScrollView
 				SyncScrollOffset();
 
 				ScrollViewPanel?.ExecuteScrollCommand(scrollCommandKind);
-
-				UpdateScrollOffsetCache(ScrollViewUtils.GetCommandOrientation(scrollCommandKind));
 			}
 			finally
 			{
@@ -594,8 +586,6 @@ namespace Zaaml.UI.Controls.ScrollView
 				return;
 			}
 
-			_horizontalOffsetCache = newOffset;
-
 			SyncScrollOffset();
 			OnHorizontalOffsetChangedInternal();
 		}
@@ -638,7 +628,8 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		internal void OnScrollBarDragCompletedInternal(ScrollBar scrollBar)
 		{
-			UpdateScrollOffsetCache(scrollBar.Orientation);
+			SyncScrollOffset();
+			ScrollViewPanel?.UpdateScrollInfoInternal();
 
 			OnScrollBarDragCompleted(scrollBar);
 		}
@@ -694,8 +685,6 @@ namespace Zaaml.UI.Controls.ScrollView
 
 				return;
 			}
-
-			_verticalOffsetCache = newOffset;
 
 			SyncScrollOffset();
 			OnVerticalOffsetChangedInternal();
@@ -789,7 +778,7 @@ namespace Zaaml.UI.Controls.ScrollView
 
 			try
 			{
-				ActualScrollViewPanel.Offset = new Vector(PreserveHorizontalOffset ? _horizontalOffsetCache : HorizontalOffset, PreserveVerticalOffset ? _verticalOffsetCache : VerticalOffset);
+				ActualScrollViewPanel.Offset = new Vector(HorizontalOffset, VerticalOffset);
 			}
 			finally
 			{
@@ -868,30 +857,6 @@ namespace Zaaml.UI.Controls.ScrollView
 			}
 		}
 
-		private void UpdateScrollOffsetCache(Orientation? orientation)
-		{
-			if (orientation == Orientation.Horizontal)
-				_horizontalOffsetCache = HorizontalOffset;
-			else
-				_verticalOffsetCache = VerticalOffset;
-		}
-
-		private void UpdateScrollOffsetCache()
-		{
-			_horizontalOffsetCache = HorizontalOffset;
-			_verticalOffsetCache = VerticalOffset;
-		}
-
-		internal void UpdateScrollOffsetCacheInternal(Orientation orientation)
-		{
-			UpdateScrollOffsetCache(orientation);
-		}
-
-		internal void UpdateScrollOffsetCacheInternal()
-		{
-			UpdateScrollOffsetCache();
-		}
-
 		private void UpdateScrollViewPanel()
 		{
 			ScrollViewPanel = ScrollViewPanelCore;
@@ -939,6 +904,10 @@ namespace Zaaml.UI.Controls.ScrollView
 			public Vector Offset { get; set; } = new Vector();
 
 			public Size Viewport { get; } = new Size();
+
+			public void UpdateScrollInfo()
+			{
+			}
 
 			public void ExecuteScrollCommand(ScrollCommandKind command)
 			{

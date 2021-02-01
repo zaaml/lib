@@ -385,7 +385,7 @@ namespace Zaaml.PresentationCore.Interactivity
       switch (actualValuePathSource)
       {
         case ValuePathSource.ThemeResource:
-          return ThemeManager.GetThemeReference(context.ValuePath);
+          return ThemeManager.GetThemeResourceReference(context.ValuePath);
         case ValuePathSource.Skin:
           return null;
         case ValuePathSource.TemplateSkin:

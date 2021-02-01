@@ -12,6 +12,7 @@ using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.ScrollView;
 
 namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 {

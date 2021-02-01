@@ -10,7 +10,26 @@
 
   <zm:SkinDictionary x:Key="Metro">
 
-    <zm:SkinDictionary x:Key="Spy" />
+    <zm:SkinDictionary x:Key="Spy">
+
+      <!-- WindowDisplayModeToggleButton -->
+      <!-- BasedOn="Metro.ToolBarButton" -->
+      <zm:SkinDictionary x:Key="WindowDisplayModeToggleButton">
+
+        <!-- Foreground -->
+        <zm:SkinDictionary x:Key="Foreground">
+          <SolidColorBrush x:Key="Normal" Color="#83000000" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="MouseOver" Color="#FF0072C6" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Pressed" Color="#FF0072C6" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Checked" Color="#FF0072C6" zmb:Skin="Office" />
+        </zm:SkinDictionary>
+
+        <!-- Background -->
+        <!--<zm:SkinDictionary x:Key="Background">
+          <SolidColorBrush x:Key="Normal" zm:SkinDictionary.PriorityIndex="10000"/>
+        </zm:SkinDictionary>-->
+      </zm:SkinDictionary>
+    </zm:SkinDictionary>
 
   </zm:SkinDictionary>
 

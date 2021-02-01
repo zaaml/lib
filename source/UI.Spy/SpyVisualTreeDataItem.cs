@@ -1,4 +1,4 @@
-﻿// <copyright file="SpyVisualTreeItem.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SpyVisualTreeDataItem.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -8,23 +8,27 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using Zaaml.Core;
+using Zaaml.Core.Trees;
 using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.Spy
 {
-	internal sealed class SpyVisualTreeItem : INotifyPropertyChanged
+	internal sealed class SpyVisualTreeDataItem : INotifyPropertyChanged
 	{
-		private readonly ObservableCollection<SpyVisualTreeItem> _children = new();
-		private readonly SpyVisualTreeItemPool _pool;
+		internal static readonly DelegateTreeEnumeratorAdvisor<SpyVisualTreeDataItem> EagerTreeAdvisor = new(d => d.EagerChildren.GetEnumerator());
+		internal static readonly DelegateTreeEnumeratorAdvisor<SpyVisualTreeDataItem> LazyTreeAdvisor = new(d => d.LazyChildren.GetEnumerator());
+
+		private readonly ObservableCollection<SpyVisualTreeDataItem> _children = new();
+		private readonly SpyVisualTreeDataItemPool _pool;
 		private bool _childrenDirty;
 		private UIElement _element;
 
-		public SpyVisualTreeItem(SpyVisualTreeItemPool pool)
+		public SpyVisualTreeDataItem(SpyVisualTreeDataItemPool pool)
 		{
 			_pool = pool;
 		}
 
-		public ObservableCollection<SpyVisualTreeItem> Children
+		public ObservableCollection<SpyVisualTreeDataItem> Children
 		{
 			get
 			{
@@ -33,6 +37,8 @@ namespace Zaaml.UI.Controls.Spy
 				return _children;
 			}
 		}
+
+		private ObservableCollection<SpyVisualTreeDataItem> EagerChildren => Children;
 
 		public UIElement Element
 		{
@@ -50,6 +56,8 @@ namespace Zaaml.UI.Controls.Spy
 				OnPropertyChanged(nameof(Children));
 			}
 		}
+
+		private ObservableCollection<SpyVisualTreeDataItem> LazyChildren => _children;
 
 		public string Name => Element is FrameworkElement fre ? fre.Name : string.Empty;
 
@@ -82,30 +90,13 @@ namespace Zaaml.UI.Controls.Spy
 			_children.Clear();
 		}
 
-		public bool TryFind(UIElement element, bool loadChildren, out SpyVisualTreeItem item)
+		public bool TryFind(UIElement element, bool loadChildren, out SpyVisualTreeDataItem dataItem)
 		{
-			item = null;
+			var advisor = loadChildren ? EagerTreeAdvisor : LazyTreeAdvisor;
 
-			if (element == null)
-				return false;
+			dataItem = TreeEnumerator.Find(this, advisor, t => ReferenceEquals(t.Element, element));
 
-			if (ReferenceEquals(_element, element))
-			{
-				item = this;
-
-				return true;
-			}
-
-			if (loadChildren)
-				UpdateChildren();
-
-			foreach (var childItem in _children)
-			{
-				if (childItem.TryFind(element, loadChildren, out item))
-					return true;
-			}
-
-			return false;
+			return dataItem != null;
 		}
 
 		private void UpdateChildren()

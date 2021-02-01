@@ -146,8 +146,7 @@ namespace Zaaml.UI.Panels.Core
 
 		private protected override void BringIntoView(BringIntoViewRequest<TItem> request)
 		{
-			if (Layout.BringIntoView(request))
-				ScrollView?.UpdateScrollOffsetCacheInternal();
+			Layout.BringIntoView(request);
 		}
 
 		private protected abstract FlickeringReducer<TItem> CreateFlickeringReducer();
@@ -198,16 +197,12 @@ namespace Zaaml.UI.Panels.Core
 			{
 				Layout.PreserveScrollInfo = false;
 			}
-
-			var bringIntoViewRequested = Layout.IsBringIntoViewRequested;
+			
 			var measureOverrideCore = Layout.Measure(availableSize);
 
 			if (layoutContext != null && Layout.ScrollInfoDirty)
 				layoutContext.OnDescendantMeasureDirty(this);
-
-			if (bringIntoViewRequested && Layout.IsBringIntoViewRequested == false) 
-				ScrollView?.UpdateScrollOffsetCacheInternal();
-
+			
 			return measureOverrideCore;
 		}
 
@@ -299,6 +294,11 @@ namespace Zaaml.UI.Panels.Core
 		}
 
 		Size IScrollViewPanel.Viewport => ScrollViewLayout.Viewport;
+
+		void IScrollViewPanel.UpdateScrollInfo()
+		{
+			Layout.UpdateScrollInfo();
+		}
 
 		void IScrollViewPanel.ExecuteScrollCommand(ScrollCommandKind command)
 		{

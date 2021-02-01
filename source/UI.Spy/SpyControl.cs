@@ -21,6 +21,9 @@ namespace Zaaml.UI.Controls.Spy
 		public static readonly DependencyProperty ElementProperty = DPM.Register<UIElement, SpyControl>
 			("Element");
 
+		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<SpyControlDisplayMode, SpyControl>
+			("DisplayMode", SpyControlDisplayMode.PropertyView);
+
 		static SpyControl()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<SpyControl>();
@@ -29,6 +32,12 @@ namespace Zaaml.UI.Controls.Spy
 		public SpyControl()
 		{
 			this.OverrideStyleKey<SpyControl>();
+		}
+
+		public SpyControlDisplayMode DisplayMode
+		{
+			get => (SpyControlDisplayMode) GetValue(DisplayModeProperty);
+			set => SetValue(DisplayModeProperty, value);
 		}
 
 		public UIElement Element
@@ -49,6 +58,8 @@ namespace Zaaml.UI.Controls.Spy
 
 		private SpyVisualTreeViewControl VisualTree => TemplateContract.VisualTree;
 
+		private SpyZoomControl ZoomControl => TemplateContract.ZoomControl;
+
 		private void OnTrackerPropertyChangedPrivate(SpyElementTracker oldValue, SpyElementTracker newValue)
 		{
 			if (ReferenceEquals(oldValue, newValue))
@@ -60,5 +71,11 @@ namespace Zaaml.UI.Controls.Spy
 			if (newValue != null)
 				SetBinding(ElementProperty, new Binding {Path = new PropertyPath(SpyElementTracker.ElementProperty), Source = newValue, Mode = BindingMode.TwoWay});
 		}
+	}
+
+	public enum SpyControlDisplayMode
+	{
+		PropertyView,
+		ZoomView
 	}
 }

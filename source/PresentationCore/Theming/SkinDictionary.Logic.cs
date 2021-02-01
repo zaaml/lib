@@ -14,8 +14,8 @@ namespace Zaaml.PresentationCore.Theming
 	{
 		#region Static Fields and Constants
 
-		internal static readonly DelegateTreeEnumeratorAdvisor<KeyValuePair<string, object>> ResourceTreeAdvisor = new DelegateTreeEnumeratorAdvisor<KeyValuePair<string, object>>(GetChildResourceEnumerator);
-		internal static readonly DelegateTreeEnumeratorAdvisor<SkinDictionary> SkinDictionaryTreeAdvisor = new DelegateTreeEnumeratorAdvisor<SkinDictionary>(GetChildSkinDictionaryEnumerator);
+		internal static readonly DelegateTreeEnumeratorAdvisor<KeyValuePair<string, object>> ResourceTreeAdvisor = new(GetChildResourceEnumerator);
+		internal static readonly DelegateTreeEnumeratorAdvisor<SkinDictionary> SkinDictionaryTreeAdvisor = new(GetChildSkinDictionaryEnumerator);
 
 		#endregion
 
@@ -23,7 +23,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		public string DeferredKey { get; set; }
 
-		internal bool IsAbsoluteKey => DeferredKey.StartsWith("~/") == false;
+		internal bool IsAbsoluteKey => DeferredKey?.StartsWith("~/") != true;
 
 		public bool IsDeferred => DeferredKey != null;
 
@@ -146,9 +146,7 @@ namespace Zaaml.PresentationCore.Theming
 
 			if (skinValue == null)
 			{
-				object currentValue;
-
-				if (TryGetValueCore(key, out currentValue) && AllowOverride(mergeFlags) == false)
+				if (TryGetValueCore(key, out _) && AllowOverride(mergeFlags) == false)
 					throw new InvalidOperationException("Duplicate key");
 
 				SetCore(key, value);
@@ -174,8 +172,6 @@ namespace Zaaml.PresentationCore.Theming
 						return;
 					}
 
-					currentSkinValue.BasedOnFlags = skinValue.BasedOnFlags;
-
 					foreach (var basedOn in skinValue.BasedOn)
 					{
 						if (basedOn.IsDeferred && currentSkinValue.BasedOn.Any(b => string.Equals(b.DeferredKey, basedOn.DeferredKey)) == false)
@@ -200,8 +196,10 @@ namespace Zaaml.PresentationCore.Theming
 				skinValue.Key = key;
 			}
 
-			if (value is SkinDictionaryProcessor skinProcessor)
-				Processors.Add(skinProcessor);
+			//if (value is SkinDictionaryProcessor skinProcessor)
+			//	Processors.Add(skinProcessor);
+			//else if (value is SkinResourceGenerator skinResourceGenerator)
+			//	Generators.Add(skinResourceGenerator);
 		}
 
 		private void OnValueRemoved(string key, object value)
@@ -212,8 +210,10 @@ namespace Zaaml.PresentationCore.Theming
 				skinValue.Key = null;
 			}
 
-			if (value is SkinDictionaryProcessor skinProcessor)
-				Processors.Remove(skinProcessor);
+			//if (value is SkinDictionaryProcessor skinProcessor)
+			//	Processors.Remove(skinProcessor);
+			//else if (value is SkinResourceGenerator skinResourceGenerator)
+			//	Generators.Remove(skinResourceGenerator);
 		}
 
 		private bool RemoveCore(KeyValuePair<string, object> item)
@@ -223,7 +223,7 @@ namespace Zaaml.PresentationCore.Theming
 
 			return Equals(item.Value, value) && RemoveCore(item.Key);
 		}
-
+		
 		private bool RemoveCore(string key)
 		{
 			var themeKey = new ThemeResourceKey(key);
@@ -243,11 +243,9 @@ namespace Zaaml.PresentationCore.Theming
 					return false;
 			}
 
-			object value;
-
 			key = keyParts[keyParts.Count - 1];
 
-			if (current.Dictionary.TryGetValue(key, out value) == false)
+			if (current.Dictionary.ContainsKey(key) == false)
 				return false;
 
 			current.RemoveDictionaryValue(key);

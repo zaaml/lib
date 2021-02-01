@@ -10,7 +10,7 @@
                    TargetType="zm:SpyControl">
     <zm:ControlTemplateRoot Background="Transparent">
 
-      <zm:GridPanel>
+      <zm:GridPanel x:Name="PropertyViewHost">
 
         <zm:GridPanel.Columns>
           <zm:GridPanelColumn />
@@ -27,6 +27,19 @@
                                    zm:GridPanel.Column="2" />
 
       </zm:GridPanel>
+
+      <zm:SpyZoomControl x:Name="ZoomControl" Element="{TemplateBinding Element}" Visibility="Collapsed" />
+
+      <zm:Extension.Triggers>
+
+        <zm:DataTrigger Binding="{zm:TemplateBinding Path=DisplayMode}" Value="ZoomView">
+
+          <zm:Setter TargetName="ZoomControl" Property="Visibility" Value="Visible" />
+          <zm:Setter TargetName="PropertyViewHost" Property="Visibility" Value="Collapsed" />
+
+        </zm:DataTrigger>
+
+      </zm:Extension.Triggers>
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

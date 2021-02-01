@@ -83,10 +83,6 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private Point LocalOffset { get; set; }
 
-		private protected override bool PreserveHorizontalOffset => false;
-
-		private protected override bool PreserveVerticalOffset => false;
-
 		protected override ScrollViewPanelBase ScrollViewPanelCore => ScrollViewPresenterInternal?.ScrollViewPanel;
 
 		private ArtboardScrollViewPresenter ScrollViewPresenter => TemplateContract.ScrollViewPresenter;

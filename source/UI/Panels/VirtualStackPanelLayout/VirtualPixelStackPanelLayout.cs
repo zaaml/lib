@@ -170,6 +170,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 		{
 			var orientedAvailable = context.OrientedAvailable;
 			var orientation = Orientation;
+			var originalOrientedOffset = ScrollInfo.Offset.AsOriented(orientation);
 			var orientedExtent = new OrientedSize(orientation)
 			{
 				Direct = CalcDirectExtent(),
@@ -177,9 +178,12 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			};
 
 			var offset = CalcOffset(context.PreviewFirstVisibleIndex, context.PreviewFirstVisibleOffset);
+			var orientedOffset = offset.AsOriented(orientation);
 			var orientedViewport = new OrientedSize(orientation).ChangeDirect(orientedAvailable.Direct).ChangeIndirect(orientedAvailable.Indirect);
-			
-			return new ScrollInfo(offset, orientedViewport.Size, orientedExtent.Size);
+
+			orientedOffset.Indirect = Math.Max(orientedViewport.Indirect, originalOrientedOffset.Indirect);
+
+			return new ScrollInfo(offset, orientedViewport.Size, orientedExtent.Size, true);
 		}
 
 		private double GetSize(int index)

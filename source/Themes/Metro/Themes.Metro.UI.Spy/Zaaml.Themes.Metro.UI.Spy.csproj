@@ -46,4 +46,10 @@
 	  </PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Page Update="Styles\Spy\SpyZoomControl.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	</ItemGroup>
+
 </Project>

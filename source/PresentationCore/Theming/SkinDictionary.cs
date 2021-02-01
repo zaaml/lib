@@ -6,34 +6,19 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using Zaaml.Core.Extensions;
 
+#if INTERACTIVITY_DEBUG
+using System.Diagnostics;
+#endif
+
 namespace Zaaml.PresentationCore.Theming
 {
 	[TypeConverter(typeof(SkinDictionaryTypeConverter))]
 	public sealed partial class SkinDictionary : SkinBase
 	{
-		#region Static Fields and Constants
-
 		// Thread unsafe builder
 		private static readonly List<string> Builder = new List<string>();
 
-		#endregion
-
-		#region Fields
-
 		private SkinDictionaryCollection _basedOn;
-
-		#endregion
-
-		#region Ctors
-
-		public SkinDictionary()
-		{
-			Processors = new SkinDictionaryProcessorCollection(this);
-		}
-
-		#endregion
-
-		#region Properties
 
 		internal string ActualKey
 		{
@@ -66,7 +51,7 @@ namespace Zaaml.PresentationCore.Theming
 		[TypeConverter(typeof(SkinDictionaryCollectionTypeConverter))]
 		public SkinDictionaryCollection BasedOn
 		{
-			get => _basedOn ?? (_basedOn = new SkinDictionaryCollection { Owner = this });
+			get => _basedOn ??= new SkinDictionaryCollection {Owner = this};
 			set
 			{
 				if (ReferenceEquals(_basedOn, value))
@@ -82,15 +67,9 @@ namespace Zaaml.PresentationCore.Theming
 			}
 		}
 
-		public BasedOnFlags BasedOnFlags { get; set; } = BasedOnFlags.Inherit;
-
 		internal SkinDictionaryCollection BasedOnInternal => _basedOn;
 
-#if INTERACTIVITY_DEBUG
-		public bool Debug { get; set; }
-#endif
-
-		private Dictionary<string, object> Dictionary { get; } = new Dictionary<string, object>();
+		private Dictionary<string, object> Dictionary { get; } = new();
 
 		private string Key { get; set; }
 
@@ -111,10 +90,6 @@ namespace Zaaml.PresentationCore.Theming
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected override object GetValue(string key)
 		{
 			return this.GetValueOrDefault(key);
@@ -125,12 +100,28 @@ namespace Zaaml.PresentationCore.Theming
 			return ActualKey ?? "$";
 		}
 
-		#endregion
+		public static void SetPriorityIndex(object resource, int mergeIndex)
+		{
+		}
+
+		public static int GetPriorityIndex(object resource)
+		{
+			return 0;
+		}
+
+#if INTERACTIVITY_DEBUG
+		public bool Debug { get; set; }
+
+		internal void Break()
+		{
+			if (Debug && Debugger.IsAttached)
+				Debugger.Break();
+		}
+#endif
 	}
 
 	public enum BasedOnFlags
 	{
-		Inherit,
-		Override
+		Inherit
 	}
 }

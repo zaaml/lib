@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -35,7 +36,7 @@ namespace Zaaml.Expressions
 
 		private ExpressionEngine Engine { get; }
 
-		private Dictionary<string, Expression> ParameterDictionary { get; } = new Dictionary<string, Expression>();
+		private Dictionary<string, Expression> ParameterDictionary { get; } = new();
 
 		private ParameterExpression ScopeParameter { get; } = Expression.Parameter(typeof(IExpressionScope));
 
@@ -56,12 +57,26 @@ namespace Zaaml.Expressions
 
 		public override Expression CompileBinaryExpression(ExpressionType operation, Expression left, Expression right)
 		{
-			return Expression.MakeBinary(operation, ConvertExpression(left, typeof(T)), ConvertExpression(right, typeof(T)));
+			return Expression.MakeBinary(operation, left, right);
 		}
 
 		public override Expression CompileConstant(string value)
 		{
-			return Expression.Constant(value);
+			var doubleValue = double.Parse(value, CultureInfo.InvariantCulture);
+
+			if (doubleValue % 1 == 0)
+			{
+				try
+				{
+					return Expression.Constant((int) doubleValue);
+				}
+				catch
+				{
+					return Expression.Constant(doubleValue);
+				}
+			}
+
+			return Expression.Constant(doubleValue);
 		}
 
 		public override Expression CompileInvokeMethod(string methodName, IEnumerable<Expression> args)

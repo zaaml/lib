@@ -10,7 +10,7 @@
                    TargetType="zm:RibbonGroupsPresenter">
     <zm:ControlTemplateRoot>
 
-      <!-- ItemsHost -->
+      <!--  ItemsHost  -->
       <zm:RibbonGroupsPanel x:Name="ItemsHost" />
 
     </zm:ControlTemplateRoot>

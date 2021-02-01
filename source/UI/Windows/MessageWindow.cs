@@ -94,7 +94,7 @@ namespace Zaaml.UI.Windows
         ActualMessageIcon = windowOptions.ImageSource;
       else
       {
-        _messageIconResourceReference = ThemeManager.GetThemeReference(ThemeKeyword.ApplicationBackgroundBrush);
+        _messageIconResourceReference = ThemeManager.GetThemeResourceReference(ThemeKeyword.ApplicationBackgroundBrush);
         ((INotifyPropertyChanged) _messageIconResourceReference).PropertyChanged += OnThemeResourceIconChanged;
       }
 

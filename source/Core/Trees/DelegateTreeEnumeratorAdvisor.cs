@@ -18,4 +18,29 @@ namespace Zaaml.Core.Trees
 
 		public IEnumerator<T> GetChildren(T node) => _childrenFactory(node);
 	}
+
+	internal class DelegateTreeEnumerableAdvisor<T> : ITreeEnumeratorAdvisor<T>
+	{
+		private readonly Func<T, IEnumerable<T>> _childrenFactory;
+
+		public DelegateTreeEnumerableAdvisor(Func<T, IEnumerable<T>> childrenFactory)
+		{
+			_childrenFactory = childrenFactory;
+		}
+
+		public IEnumerator<T> GetChildren(T node) => _childrenFactory(node).GetEnumerator();
+	}
+
+	internal static class TreeAdvisorExtensions
+	{
+		public static DelegateTreeEnumerableAdvisor<T> AsAdvisor<T>(this Func<T, IEnumerable<T>> childrenFactory)
+		{
+			return new(childrenFactory);
+		}
+
+		public static DelegateTreeEnumeratorAdvisor<T> AsAdvisor<T>(this Func<T, IEnumerator<T>> childrenFactory)
+		{
+			return new(childrenFactory);
+		}
+	}
 }

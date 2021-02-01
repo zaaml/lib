@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -22,7 +23,7 @@ using NativeStyle = System.Windows.Style;
 
 namespace Zaaml.UI.Windows
 {
-	public partial class WindowBase : IWindow, INotifyPropertyChanging, INotifyPropertyChanged, IImplementationRootProvider
+	public partial class WindowBase : IWindow, ILogicalOwner, ILogicalMentorOwner, INotifyPropertyChanging, INotifyPropertyChanged, IImplementationRootProvider
 	{
 		internal static readonly RoutedCommand CloseCommand = new RoutedCommand();
 		internal static readonly RoutedCommand MinimizeCommand = new RoutedCommand();
@@ -65,13 +66,13 @@ namespace Zaaml.UI.Windows
 			("ShowIcon", true, w => w.UpdateActualShowIcon);
 
 		public static readonly DependencyProperty TitleBarHeadContentProperty = DPM.Register<object, WindowBase>
-			("TitleBarHeadContent");
+			("TitleBarHeadContent", w => w.LogicalChildMentor.OnLogicalChildPropertyChanged);
 
 		public static readonly DependencyProperty TitleBarTailContentProperty = DPM.Register<object, WindowBase>
-			("TitleBarTailContent");
+			("TitleBarTailContent", w => w.LogicalChildMentor.OnLogicalChildPropertyChanged);
 
 		public static readonly DependencyProperty TitleBarContentProperty = DPM.Register<object, WindowBase>
-			("TitleBarContent");
+			("TitleBarContent", w => w.LogicalChildMentor.OnLogicalChildPropertyChanged);
 
 		private static readonly DependencyPropertyKey ActualShowIconPropertyKey = DPM.RegisterReadOnly<bool, WindowBase>
 			("ActualShowIcon", false);
@@ -85,6 +86,7 @@ namespace Zaaml.UI.Windows
 
 		private WindowFooterPresenter _footerPresenter;
 		private WindowHeaderPresenter _headerPresenter;
+		private LogicalChildMentor<WindowBase> _logicalChildMentor;
 		private byte _packedValue;
 		public event EventHandler IsResizableChanged;
 		public event EventHandler IsDraggableChanged;
@@ -216,6 +218,10 @@ namespace Zaaml.UI.Windows
 			get => (bool) GetValue(IsResizableProperty);
 			set => SetValue(IsResizableProperty, value);
 		}
+
+		private protected LogicalChildMentor LogicalChildMentor => _logicalChildMentor ??= LogicalChildMentor.Create(this);
+
+		protected override IEnumerator LogicalChildren => _logicalChildMentor == null ? base.LogicalChildren : _logicalChildMentor.GetLogicalChildren();
 
 		private bool QueryWindowToCenter
 		{
@@ -705,6 +711,31 @@ namespace Zaaml.UI.Windows
 		partial void UpdateResizableBehavior();
 
 		FrameworkElement IImplementationRootProvider.ImplementationRoot => Content as FrameworkElement;
+
+		void ILogicalMentorOwner.RemoveLogicalChild(object child)
+		{
+			RemoveLogicalChild(child);
+		}
+
+		IEnumerator ILogicalMentorOwner.BaseLogicalChildren => base.LogicalChildren;
+
+		void ILogicalMentorOwner.AddLogicalChild(object child)
+		{
+			AddLogicalChild(child);
+		}
+
+		IEnumerator ILogicalOwner.BaseLogicalChildren => base.LogicalChildren;
+
+		void ILogicalOwner.AddLogicalChild(object child)
+		{
+			LogicalChildMentor.AddLogicalChild(child);
+		}
+
+		void ILogicalOwner.RemoveLogicalChild(object child)
+		{
+			LogicalChildMentor.RemoveLogicalChild(child);
+		}
+
 		public event PropertyChangedEventHandler PropertyChanged;
 		public event PropertyChangingEventHandler PropertyChanging;
 

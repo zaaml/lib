@@ -1,5 +1,5 @@
-// <copyright file="EnumConverter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-//   Copyright (c) zaaml. All rights reserved.
+// <copyright file="EnumTypeConverter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+//   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System;
@@ -8,50 +8,37 @@ using System.Globalization;
 
 namespace Zaaml.Core.Converters
 {
-  internal class EnumTypeConverter : TypeConverter
-  {
-    #region Fields
+	internal class EnumTypeConverter : TypeConverter
+	{
+		private readonly Type _enumType;
 
-    private readonly Type _enumType;
+		public EnumTypeConverter(Type enumType)
+		{
+			_enumType = enumType;
+		}
 
-    #endregion
+		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		{
+			return sourceType == typeof(string);
+		}
 
-    #region Ctors
+		public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+		{
+			return destinationType == typeof(string);
+		}
 
-    public EnumTypeConverter(Type enumType)
-    {
-      _enumType = enumType;
-    }
+		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		{
+			return value is string stringValue ? Enum.Parse(_enumType, stringValue, true) : base.ConvertFrom(context, culture, value);
+		}
 
-    #endregion
+		public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value,
+			Type destinationType)
+		{
+			if (destinationType == typeof(string) && value.GetType() == destinationType)
+				return value.ToString();
 
-    #region Methods
-
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-    {
-      return sourceType == typeof (string);
-    }
-
-    public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-    {
-      return destinationType == typeof (string);
-    }
-
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-      var stringValue = value as string;
-      return stringValue != null ? Enum.Parse(_enumType, stringValue, true) : base.ConvertFrom(context, culture, value);
-    }
-
-    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value,
-      Type destinationType)
-    {
-      if (destinationType == typeof (string) && value.GetType() == destinationType)
-        return value.ToString();
-
-      return base.ConvertTo(context, culture, value, destinationType);
-    }
-
-    #endregion
-  }
+			return base.ConvertTo(context, culture, value, destinationType);
+		}
+	}
 }

@@ -34,20 +34,14 @@ namespace Zaaml.PresentationCore.MarkupExtensions
 
 	  protected object DefaultPropertyValue(IServiceProvider serviceProvider)
 	  {
-	    object target;
-	    object targetProperty;
-	    bool reflected;
-
-	    GetTarget(serviceProvider, out target, out targetProperty, out reflected);
+		  GetTarget(serviceProvider, out _, out var targetProperty, out _);
 
 	    var propertyInfo = targetProperty as PropertyInfo;
 
 	    if (propertyInfo != null)
 	      return RuntimeUtils.CreateDefaultValue(propertyInfo.PropertyType);
 
-	    var dependencyProperty = targetProperty as DependencyProperty;
-
-	    if (dependencyProperty != null)
+	    if (targetProperty is DependencyProperty dependencyProperty)
 	      return RuntimeUtils.CreateDefaultValue(dependencyProperty.GetPropertyType());
 
 	    return null;
@@ -63,26 +57,31 @@ namespace Zaaml.PresentationCore.MarkupExtensions
 			try
 			{
 				var propertyInfo = targetProperty as PropertyInfo;
+
 				if (propertyInfo != null && propertyInfo.CanRead)
 				{
 					result = propertyInfo.GetValue(targetObject, null);
+
 					return true;
 				}
 
 				var methodInfo = targetProperty as MethodInfo;
+
 				if (methodInfo != null)
 				{
 					result = methodInfo.Invoke(null, new[] { targetObject });
+
 					return true;
 				}
 
 				var dependencyProperty = GetDependencyProperty(targetProperty);
+
 				if (dependencyProperty != null)
 				{
-					var dependencyTarget = targetObject as DependencyObject;
-					if (dependencyTarget != null)
+					if (targetObject is DependencyObject dependencyTarget)
 					{
 						result = dependencyTarget.GetValue(dependencyProperty);
+
 						return true;
 					}
 				}
@@ -100,13 +99,16 @@ namespace Zaaml.PresentationCore.MarkupExtensions
       try
       {
         var propertyInfo = targetProperty as PropertyInfo;
+
         if (propertyInfo != null)
           return propertyInfo.PropertyType;
 
         var methodInfo = targetProperty as MethodInfo;
+
         if (methodInfo != null)
         {
           var parameters = methodInfo.GetParameters();
+
           if (methodInfo.IsStatic)
           {
             if (methodInfo.ReturnType == typeof(void))
@@ -122,6 +124,7 @@ namespace Zaaml.PresentationCore.MarkupExtensions
         }
 
         var dependencyProperty = GetDependencyProperty(targetProperty);
+
         if (dependencyProperty != null)
           return dependencyProperty.GetPropertyType();
       }
@@ -135,19 +138,17 @@ namespace Zaaml.PresentationCore.MarkupExtensions
 
 		protected static DependencyProperty GetDependencyProperty(object property)
 		{
-			var dependencyProperty = property as DependencyProperty;
-
-			if (dependencyProperty != null)
+			if (property is DependencyProperty dependencyProperty)
 				return dependencyProperty;
 
 			var propertyInfo = property as PropertyInfo;
+
 			return propertyInfo == null ? null : DependencyPropertyManager.GetDependencyProperty(propertyInfo);
 		}
 
 		private static object GetFieldData(object target, string fieldName)
 		{
-			return target.GetType()
-				.GetField(fieldName, BindingFlags.GetField | BindingFlagsExt)?.GetValue(target);
+			return target.GetType().GetField(fieldName, BindingFlags.GetField | BindingFlagsExt)?.GetValue(target);
 		}
 
 		private static object GetPropertyData(object target, string fieldName)
@@ -172,9 +173,12 @@ namespace Zaaml.PresentationCore.MarkupExtensions
 					var key = GetFieldData(kv, "key");
 					var value = GetFieldData(kv, "value");
 					var instance = GetFieldData(value, "instance");
-					if (!ReferenceEquals(this, instance)) continue;
+
+					if (!ReferenceEquals(this, instance)) 
+						continue;
 
 					targetProperty = GetPropertyData(key, "DependencyProperty") as DependencyProperty;
+
 					return targetProperty != null;
 				}
 			}
@@ -193,6 +197,7 @@ namespace Zaaml.PresentationCore.MarkupExtensions
 			reflected = false;
 
 			var targetProvider = (IProvideValueTarget) serviceProvider?.GetService(typeof(IProvideValueTarget));
+
 			if (targetProvider == null)
 				return false;
 
@@ -211,6 +216,7 @@ namespace Zaaml.PresentationCore.MarkupExtensions
 			reflected = true;
 
 			var serviceProviderTypeName = serviceProvider.GetType().Name;
+
 			if (serviceProviderTypeName == "SilverlightInstanceBuilderServiceProvider")
 				return GetSilverlightInstanceBuilderServiceProviderTarget(serviceProvider, out targetProperty);
 

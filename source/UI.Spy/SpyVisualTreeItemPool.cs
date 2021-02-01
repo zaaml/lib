@@ -7,22 +7,22 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Spy
 {
-	internal sealed class SpyVisualTreeItemPool
+	internal sealed class SpyVisualTreeDataItemPool
 	{
-		private readonly Stack<SpyVisualTreeItem> _stackPool = new();
+		private readonly Stack<SpyVisualTreeDataItem> _stackPool = new();
 
-		public SpyVisualTreeItem GetItem(UIElement element)
+		public SpyVisualTreeDataItem GetItem(UIElement element)
 		{
-			var spyVisualTreeItem = _stackPool.Count > 0 ? _stackPool.Pop() : new SpyVisualTreeItem(this);
+			var spyVisualTreeItem = _stackPool.Count > 0 ? _stackPool.Pop() : new SpyVisualTreeDataItem(this);
 
 			spyVisualTreeItem.Element = element;
 
 			return spyVisualTreeItem;
 		}
 
-		public void ReleaseItem(SpyVisualTreeItem item)
+		public void ReleaseItem(SpyVisualTreeDataItem dataItem)
 		{
-			_stackPool.Push(item);
+			_stackPool.Push(dataItem);
 		}
 	}
 }

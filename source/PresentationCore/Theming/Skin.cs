@@ -4,69 +4,56 @@
 
 using System.Collections.Generic;
 using System.Linq;
+
+#if !NETCOREAPP
 using Zaaml.Core.Extensions;
+#endif
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public sealed class Skin : SkinBase
-  {
-    #region Fields
+	public sealed class Skin : SkinBase
+	{
+		private readonly Dictionary<string, object> _dictionary = new();
 
-    private readonly Dictionary<string, object> _dictionary = new Dictionary<string, object>();
+		internal Skin()
+		{
+		}
 
-    #endregion
+		internal string ActualKey { get; set; }
 
-    #region Ctors
+		internal override IEnumerable<KeyValuePair<string, object>> Resources => _dictionary;
 
-    internal Skin()
-    {
-    }
+		internal void AddValueInternal(string key, object value)
+		{
+			_dictionary[key] = value;
+		}
 
-    #endregion
+		internal void Flatten()
+		{
+			foreach (var kv in Resources.Where(r => r.Value is Skin).ToList())
+			{
+				var key = kv.Key;
+				var childSkin = (Skin) kv.Value;
 
-    #region Properties
+				childSkin.Flatten();
 
-    internal override IEnumerable<KeyValuePair<string, object>> Resources => _dictionary;
+				foreach (var keyValuePair in childSkin.Resources)
+				{
+					var actual = keyValuePair.WithParentKey(key).Key;
 
-    internal string ActualKey { get; set; }
+					_dictionary[actual] = keyValuePair.Value;
+				}
+			}
+		}
 
-    #endregion
+		protected override object GetValue(string key)
+		{
+			return _dictionary.GetValueOrDefault(key);
+		}
 
-    #region  Methods
-
-    protected override object GetValue(string key)
-    {
-      return _dictionary.GetValueOrDefault(key);
-    }
-
-    internal void AddValueInternal(string key, object value)
-    {
-      _dictionary[key] = value;
-    }
-
-    internal void Flatten()
-    {
-      foreach (var kv in Resources.Where(r => r.Value is Skin).ToList())
-      {
-        var key = kv.Key;
-        var childSkin = (Skin) kv.Value;
-
-        childSkin.Flatten();
-
-        foreach (var keyValuePair in childSkin.Resources)
-        {
-          var actual = keyValuePair.WithParentKey(key).Key;
-
-          _dictionary[actual] = keyValuePair.Value;
-        }
-      }
-    }
-
-    public override string ToString()
-    {
-      return ActualKey;
-    }
-
-    #endregion
-  }
+		public override string ToString()
+		{
+			return ActualKey;
+		}
+	}
 }

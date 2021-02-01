@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.ComponentModel;
 using System.Windows;
 using Zaaml.PresentationCore.Converters;
 using Zaaml.PresentationCore.PropertyCore;
@@ -11,30 +12,20 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
 	public sealed class ExpressionBindingExtension : BindingBaseExtension
 	{
-		#region Static Fields and Constants
-
 		private static readonly PropertyPath PropertyPath = new PropertyPath(ExpressionValue.ValueProperty);
 		private static readonly ExpressionScope FallbackScope = new ExpressionScope();
+		private Expression _expression = Expression.Empty;
 
-		#endregion
-
-		#region Type: Fields
-
-		private readonly ExpressionValue _expressionValue = new ExpressionValue();
-		private string _expression;
-		private Func<ExpressionScope, object> _expressionFunc = ExpressionEngine.FallbackExpressionFunc;
+		private ExpressionValue _expressionValue;
 		private ExpressionScope _scope;
 
-		#endregion
-
-		#region Properties
-
-		public string Expression
+		[TypeConverter(typeof(ExpressionTypeConverter))]
+		public Expression Expression
 		{
 			get => _expression;
 			set
 			{
-				if (string.Equals(_expression, value))
+				if (ReferenceEquals(_expression, value))
 					return;
 
 				_expression = value;
@@ -43,6 +34,7 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 			}
 		}
 
+		[TypeConverter(typeof(ExpressionScopeTypeConverter))]
 		public ExpressionScope Scope
 		{
 			get => _scope;
@@ -63,32 +55,27 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected override System.Windows.Data.Binding GetBindingCore(IServiceProvider serviceProvider)
 		{
-			return new System.Windows.Data.Binding { Path = PropertyPath, Source = _expressionValue, Converter = XamlConverter.Instance };
+			_expressionValue = new ExpressionValue();
+
+			if (_expression is DeferredExpression deferredExpression)
+			{
+				GetTarget(serviceProvider, out _, out var targetProperty, out _);
+
+				var propertyType = GetPropertyType(targetProperty) ?? typeof(object);
+
+				deferredExpression.EnsureExpression(propertyType);
+			}
+
+			UpdateValue();
+
+			return new System.Windows.Data.Binding {Path = PropertyPath, Source = _expressionValue, Converter = XamlConverter.Instance};
 		}
 
 		private void OnExpressionChanged()
 		{
-			try
-			{
-				var expression = (Expression ?? string.Empty).Trim();
-
-				if (expression.StartsWith("'") && expression.EndsWith("'"))
-					expression = expression.Substring(1, expression.Length - 2);
-
-				_expressionFunc = string.IsNullOrEmpty(expression) ? ExpressionEngine.FallbackExpressionFunc : ExpressionEngine.Instance.Compile(expression);
-			}
-			catch (Exception e)
-			{
-				System.Diagnostics.Debug.WriteLine(e);
-
-				_expressionFunc = ExpressionEngine.FallbackExpressionFunc;
-			}
+			UpdateValue();
 		}
 
 		private void OnScopeChanged()
@@ -103,33 +90,22 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
 		private void UpdateValue()
 		{
-			_expressionValue.Value = _expressionFunc(Scope ?? FallbackScope);
+			if (_expressionValue == null)
+				return;
+
+			_expressionValue.Value = _expression.EvalInternal(Scope ?? FallbackScope);
 		}
-
-		#endregion
-
-		#region  Nested Types
 
 		private sealed class ExpressionValue : DependencyObject
 		{
-			#region Static Fields and Constants
-
 			public static readonly DependencyProperty ValueProperty = DPM.Register<object, ExpressionValue>
 				("Value");
-
-			#endregion
-
-			#region Properties
 
 			public object Value
 			{
 				get => GetValue(ValueProperty);
 				set => SetValue(ValueProperty, value);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

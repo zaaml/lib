@@ -34,8 +34,7 @@
                              zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=AppButton}"
                              BorderThickness="0"
                              Content="Menu"
-                             IsChecked="{zm:TemplateBinding Path=IsApplicationMenuOpen,
-                                                              Mode=TwoWay}" />
+                             IsChecked="{zm:TemplateBinding Path=IsApplicationMenuOpen, Mode=TwoWay}" />
           </zm:RibbonHeaderPresenter.Menu>
 
           <!--  PagesPresenter  -->
@@ -48,9 +47,9 @@
         </zm:RibbonHeaderPresenter>
 
         <!--  GroupsPresenterHost  -->
-        <Border Grid.Row="1" 
-                BorderThickness="0,1,0,1" 
-                BorderBrush="{TemplateBinding BorderBrush}">
+        <Border Grid.Row="1"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="0,1,0,1">
           <zm:RibbonGroupsPresenterHost x:Name="GroupsPresenterHost" />
 
         </Border>

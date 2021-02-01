@@ -19,9 +19,9 @@ namespace Zaaml.UI.Controls.Spy
 		public static readonly DependencyProperty ElementProperty = DPM.Register<UIElement, SpyVisualTreeViewControl>
 			("Element", d => d.OnElementPropertyChangedPrivate);
 
-		private readonly ObservableCollection<SpyVisualTreeItem> _sourceCollection = new();
-		private readonly SpyVisualTreeItemPool _spyVisualTreeItemPool = new();
-		private SpyVisualTreeItem _rootItem;
+		private readonly ObservableCollection<SpyVisualTreeDataItem> _sourceCollection = new();
+		private readonly SpyVisualTreeDataItemPool _spyVisualTreeDataItemPool = new();
+		private SpyVisualTreeDataItem _rootDataItem;
 
 		private bool _suspendSelection;
 
@@ -44,25 +44,25 @@ namespace Zaaml.UI.Controls.Spy
 			set => SetValue(ElementProperty, value);
 		}
 
-		private SpyVisualTreeItem RootItem
+		private SpyVisualTreeDataItem RootDataItem
 		{
-			get => _rootItem;
+			get => _rootDataItem;
 			set
 			{
-				if (ReferenceEquals(_rootItem, value))
+				if (ReferenceEquals(_rootDataItem, value))
 					return;
 
-				if (_rootItem != null)
+				if (_rootDataItem != null)
 				{
-					_rootItem.Release();
+					_rootDataItem.Release();
 
 					_sourceCollection.Clear();
 				}
 
-				_rootItem = value;
+				_rootDataItem = value;
 
-				if (_rootItem != null)
-					_sourceCollection.Add(_rootItem);
+				if (_rootDataItem != null)
+					_sourceCollection.Add(_rootDataItem);
 			}
 		}
 
@@ -82,10 +82,10 @@ namespace Zaaml.UI.Controls.Spy
 				{
 					var root = newValue.GetAncestorsAndSelf(VisualTreeEnumerationStrategy.Instance).OfType<UIElement>().LastOrDefault();
 
-					RootItem = root != null ? _spyVisualTreeItemPool.GetItem(root) : null;
+					RootDataItem = root != null ? _spyVisualTreeDataItemPool.GetItem(root) : null;
 				}
 				else
-					RootItem = null;
+					RootDataItem = null;
 
 				TrySelectElement(newValue, true);
 			}
@@ -114,7 +114,7 @@ namespace Zaaml.UI.Controls.Spy
 			{
 				_suspendSelection = true;
 
-				if (newSelection.Source is SpyVisualTreeItem item)
+				if (newSelection.Source is SpyVisualTreeDataItem item)
 					Element = item.Element;
 			}
 			finally
@@ -125,10 +125,10 @@ namespace Zaaml.UI.Controls.Spy
 
 		private bool TrySelectElement(UIElement element, bool load)
 		{
-			if (RootItem == null || element == null)
+			if (RootDataItem == null || element == null)
 				return false;
 
-			if (RootItem.TryFind(element, load, out var item))
+			if (RootDataItem.TryFind(element, load, out var item))
 			{
 				CollapseAll();
 

@@ -9,5 +9,32 @@
               Width="1000"
               Height="800"
               mc:Ignorable="d">
+
+  <zm:AppWindow.Resources />
+
+  <zm:AppWindow.TitleBarTailContent>
+
+    <zm:StackPanel Orientation="Horizontal">
+
+      <zm:ToolBarToggleButton zm:Extension.Skin="Metro.Spy.WindowDisplayModeToggleButton"
+                              Content="Zoom"
+                              FontWeight="Bold"
+                              IsChecked="{Binding ElementName=SpyControl, Path=DisplayMode, Converter={zm:EnumBoolConverter TrueEnumValue=ZoomView, FalseEnumValue=PropertyView}, Mode=TwoWay}" />
+
+      <Border Height="8"
+              Margin="4,0"
+              BorderBrush="DarkGray"
+              BorderThickness="2,0,0,0" />
+
+      <zm:ToolBarToggleButton zm:Extension.Skin="Metro.Spy.WindowDisplayModeToggleButton"
+                              Content="Property"
+                              FontWeight="Bold"
+                              IsChecked="{Binding ElementName=SpyControl, Path=DisplayMode, Converter={zm:EnumBoolConverter TrueEnumValue=PropertyView, FalseEnumValue=ZoomView}, Mode=TwoWay}" />
+
+    </zm:StackPanel>
+
+  </zm:AppWindow.TitleBarTailContent>
+
   <zmls:SpyControl x:Name="SpyControl" />
+
 </zm:AppWindow>

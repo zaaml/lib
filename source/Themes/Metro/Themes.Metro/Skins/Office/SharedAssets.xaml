@@ -161,48 +161,44 @@
 
     <!-- Foreground -->
     <zm:SkinDictionary x:Key="Foreground">
+      <zm:SkinDictionary.Generators>
+        <zm:SolidColorBrushGenerator ColorExpression="BaseColor" 
+                                     ExpressionScope="BaseColor:$(~/Input.ForegroundBase)">
 
-      <!-- BrushProcessor-->
-      <zm:SolidColorBrushProcessor x:Key="BrushProcessor"
-                                   ColorExpression="BaseColor" 
-                                   zm:Expression.Scope="BaseColor:$(~/Input.ForegroundBase)"/>
-
-      <SolidColorBrush x:Key="Normal" />
-      <SolidColorBrush x:Key="MouseOver" />
-      <SolidColorBrush x:Key="Pressed" />
-      <SolidColorBrush x:Key="Checked" />
-
+          <zm:SkinResourceTemplate x:Key="Normal" />
+          <zm:SkinResourceTemplate x:Key="MouseOver" />
+          <zm:SkinResourceTemplate x:Key="Pressed" />
+          <zm:SkinResourceTemplate x:Key="Checked" />
+        </zm:SolidColorBrushGenerator>
+      </zm:SkinDictionary.Generators>
     </zm:SkinDictionary>
 
     <!-- Background -->
     <zm:SkinDictionary x:Key="Background">
+      <zm:SkinDictionary.Generators>
+        <zm:SolidColorBrushGenerator ColorExpression="Shade(BaseColor, Shade)"
+                                     ExpressionScope="BaseColor:$(~/Input.BackgroundBase)">
 
-      <!-- BrushProcessor-->
-      <zm:SolidColorBrushProcessor x:Key="BrushProcessor" 
-                                   ColorExpression="Shade(BaseColor, Shade)" 
-                                   zm:Expression.Scope="BaseColor:$(~/Input.BackgroundBase)"/>
-
-      <SolidColorBrush x:Key="Normal" zm:Expression.Scope="Shade:0"/>
-      <SolidColorBrush x:Key="MouseOver" zm:Expression.Scope="Shade:0.2" />
-      <SolidColorBrush x:Key="Pressed" zm:Expression.Scope="Shade:0.3"/>
-      <SolidColorBrush x:Key="Checked" zm:Expression.Scope="Shade:0.25"/>
-
+          <zm:SkinResourceTemplate x:Key="Normal" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0"/>
+          <zm:SkinResourceTemplate x:Key="MouseOver" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.2" />
+          <zm:SkinResourceTemplate x:Key="Pressed" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.3"/>
+          <zm:SkinResourceTemplate x:Key="Checked" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.25"/>
+        </zm:SolidColorBrushGenerator>
+      </zm:SkinDictionary.Generators>
     </zm:SkinDictionary>
 
     <!-- BorderBrush -->
     <zm:SkinDictionary x:Key="BorderBrush">
+      <zm:SkinDictionary.Generators>
+        <zm:SolidColorBrushGenerator ColorExpression="Shade(BaseColor, Shade)" 
+                                     ExpressionScope="BaseColor:$(~/Input.BorderBrushBase)">
 
-      <!-- BrushProcessor-->
-      <zm:SolidColorBrushProcessor x:Key="BrushProcessor" 
-                                   ColorExpression="Shade(BaseColor, Shade)" 
-                                   zm:Expression.Scope="BaseColor:$(~/Input.BorderBrushBase)"/>
-
-      <SolidColorBrush x:Key="Normal" zm:Expression.Scope="Shade:0"/>
-      <SolidColorBrush x:Key="MouseOver" zm:Expression.Scope="Shade:0.2" />
-      <SolidColorBrush x:Key="Pressed" zm:Expression.Scope="Shade:0.3"/>
-      <SolidColorBrush x:Key="Checked" zm:Expression.Scope="Shade:0.25"/>
-      <!--<zm:SolidColorBrushSkin x:Key="Focused" Color="{zm:SkinResource Key=~/Input/AccentBase}"/>-->
-
+          <zm:SkinResourceTemplate x:Key="Normal" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0"/>
+          <zm:SkinResourceTemplate x:Key="MouseOver" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.2" />
+          <zm:SkinResourceTemplate x:Key="Pressed" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.3"/>
+          <zm:SkinResourceTemplate x:Key="Checked" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.25"/>
+        </zm:SolidColorBrushGenerator>
+      </zm:SkinDictionary.Generators>
     </zm:SkinDictionary>
 
   </zm:SkinDictionary>
@@ -228,7 +224,7 @@
     <zm:SkinDictionary x:Key="DropDownButton" BasedOn="Metro.Shared.ToolBarDropDownButton">
 
       <!-- Reference Input -->
-      <zm:SkinDictionary x:Key="Input" BasedOn="~/../Input" BasedOnFlags="Override" />
+      <zm:SkinDictionary x:Key="Input" BasedOn="~/../Input" />
 
     </zm:SkinDictionary>
 

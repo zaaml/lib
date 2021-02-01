@@ -7,41 +7,27 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.ScrollView
 {
-  public interface IScrollViewPanel
-  {
-    #region Fields
+	public interface IScrollViewPanel
+	{
+		event EventHandler<ScrollInfoChangedEventArgs> ScrollInfoChanged;
 
-    event EventHandler<ScrollInfoChangedEventArgs> ScrollInfoChanged;
+		bool CanHorizontallyScroll { get; set; }
 
-    #endregion
+		bool CanVerticallyScroll { get; set; }
 
-    #region Properties
+		Size Extent { get; }
 
-    bool CanHorizontallyScroll { get; set; }
+		Vector Offset { get; set; }
 
-    bool CanVerticallyScroll { get; set; }
+		Size Viewport { get; }
 
-    Size Extent { get; }
+		void UpdateScrollInfo();
 
-    Vector Offset { get; set; }
+		void ExecuteScrollCommand(ScrollCommandKind command);
+	}
 
-    Size Viewport { get; }
-
-    #endregion
-
-    #region  Methods
-
-    void ExecuteScrollCommand(ScrollCommandKind command);
-
-    #endregion
-  }
-
-  public interface IDelegateScrollViewPanel
-  {
-    #region Properties
-
-    IScrollViewPanel ScrollViewPanel { get; }
-
-    #endregion
-  }
+	public interface IDelegateScrollViewPanel
+	{
+		IScrollViewPanel ScrollViewPanel { get; }
+	}
 }

@@ -20,8 +20,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 {
 	internal abstract partial class VirtualStackPanelLayoutBase : VirtualPanelLayoutBase<IVirtualStackPanel>
 	{
-		private Size _pixelViewport;
-		private double _preCacheDelta;
+		private VirtualMeasureContext _context;
 
 		protected VirtualStackPanelLayoutBase(IVirtualStackPanel panel) : base(panel)
 		{
@@ -57,7 +56,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			var offset = new OrientedPoint(orientation);
 			var finalOriented = finalSize.AsOriented(orientation);
 
-			offset.Direct -= _preCacheDelta;
+			offset.Direct -= _context.PreCacheDelta - _context.PreviewFirstVisibleOffset;
 
 			foreach (UIElement child in Children)
 			{
@@ -131,7 +130,7 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			if (item == null || Children.Contains(item) == false)
 				return ItemLayoutInformation.Empty;
 
-			return new ItemLayoutInformation(item, GetLayoutSlot(item), new Rect(_pixelViewport));
+			return new ItemLayoutInformation(item, GetLayoutSlot(item), new Rect(_context.ViewportSize));
 		}
 
 		private Rect GetLayoutSlot(FrameworkElement item)
@@ -163,38 +162,35 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		private Size MeasureImpl(Size availableSize)
 		{
-			var context = new VirtualMeasureContext(this, availableSize);
+			_context = new VirtualMeasureContext(this, availableSize);
 
 			try
 			{
 				UIElementInserter.Enter(Children);
 
-				context.Measure(Panel.FocusedIndex);
+				_context.Measure(Panel.FocusedIndex);
 			}
 			finally
 			{
 				UIElementInserter.Leave();
 			}
 
-			var scrollInfo = CalcScrollInfo(ref context);
+			var scrollInfo = CalcScrollInfo(ref _context);
 
 			if (PreserveScrollInfo == false)
 			{
 				ScrollInfo = scrollInfo;
 				ScrollInfoDirty = false;
 
-				if (context.BringIntoViewResult)
+				if (_context.BringIntoViewResult)
 					BringIntoViewRequest = null;
 			}
 			else
 				ScrollInfoDirty = scrollInfo.Equals(ScrollInfo) == false;
 
-			_pixelViewport = context.ViewportSize;
-			_preCacheDelta = context.PreCacheDelta - context.PreviewFirstVisibleOffset;
-
 			UpdateTransform();
 
-			return _pixelViewport;
+			return _context.ViewportSize;
 		}
 
 		internal void OnItemAttachedInternal(UIElement element)
@@ -244,6 +240,11 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 		private UIElement Realize(int index)
 		{
 			return Source.Realize(index);
+		}
+
+		public void UpdateScrollInfo()
+		{
+			ScrollInfo = CalcScrollInfo(ref _context);
 		}
 
 		private protected void UpdateTransform()

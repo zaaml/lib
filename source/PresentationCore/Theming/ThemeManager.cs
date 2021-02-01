@@ -298,17 +298,17 @@ namespace Zaaml.PresentationCore.Theming
 			return keyword == ThemeKeyword.Undefined ? null : string.Concat("Zaaml.ThemeManager.Keywords.", keyword.ToString());
 		}
 
-		internal static ThemeResourceReference GetThemeReference(string key, bool create)
+		internal static ThemeResourceReference GetThemeResourceReference(string key, bool create)
 		{
 			return GetThemeReferenceImpl(key, create);
 		}
 
-		internal static ThemeResourceReference GetThemeReference(string key)
+		internal static ThemeResourceReference GetThemeResourceReference(string key)
 		{
 			return GetThemeReferenceImpl(key, true);
 		}
 
-		internal static ThemeResourceReference GetThemeReference(ThemeKeyword keyword)
+		internal static ThemeResourceReference GetThemeResourceReference(ThemeKeyword keyword)
 		{
 			return GetThemeReferenceImpl(GetKeyFromKeyword(keyword), true);
 		}

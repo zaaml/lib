@@ -5,7 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.Core.Extensions;
+using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.ScrollView
 {
@@ -15,6 +17,15 @@ namespace Zaaml.UI.Controls.ScrollView
 		{
 			Offset = offset;
 			Extent = extent;
+			Viewport = viewport;
+
+			Offset = ClampOffset(offset);
+		}
+
+		internal ScrollInfo(Vector offset, Size viewport, Size extent, bool expandExtent)
+		{
+			Offset = offset;
+			Extent = expandExtent ? ExpandExtent(offset, viewport, extent) : extent;
 			Viewport = viewport;
 
 			Offset = ClampOffset(offset);
@@ -51,18 +62,18 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		internal ScrollInfo WithOffset(Vector offset, bool expandExtent)
 		{
-			if (expandExtent == false)
-				return WithOffset(offset);
+			return new ScrollInfo(offset, Viewport, Extent, expandExtent);
+		}
 
-			var extent = Extent;
+		private static Size ExpandExtent(Vector offset, Size viewport, Size extent)
+		{
+			if (extent.Width < viewport.Width + offset.X)
+				extent.Width = viewport.Width + offset.X;
 
-			if (extent.Width < Viewport.Width + offset.X)
-				extent.Width = Viewport.Width + offset.X;
+			if (extent.Height < viewport.Height + offset.Y)
+				extent.Height = viewport.Height + offset.Y;
 
-			if (extent.Height < Viewport.Height + offset.Y)
-				extent.Height = Viewport.Height + offset.Y;
-
-			return new ScrollInfo(offset, Viewport, extent);
+			return extent;
 		}
 
 		internal Vector ClampOffset(Vector offset)
@@ -96,6 +107,15 @@ namespace Zaaml.UI.Controls.ScrollView
 
 				return hashCode;
 			}
+		}
+
+		internal OrientedScrollInfo AsOriented(Orientation orientation)
+		{
+			var directOffset = Offset.AsOriented(orientation).Direct;
+			var directViewport = Viewport.AsOriented(orientation).Direct;
+			var directExtent = Extent.AsOriented(orientation).Direct;
+
+			return new OrientedScrollInfo(orientation, directOffset, directViewport, directExtent);
 		}
 	}
 }

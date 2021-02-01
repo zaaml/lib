@@ -10,7 +10,7 @@ namespace Zaaml.Expressions
 {
 	internal partial class ExpressionEngine
 	{
-		private Dictionary<string, ExpressionMethodInfo> Methods { get; } = new Dictionary<string, ExpressionMethodInfo>();
+		private Dictionary<string, ExpressionMethodInfo> Methods { get; } = new();
 
 		public Func<IExpressionScope, T> Compile<T>(string expressionString)
 		{

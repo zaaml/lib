@@ -23,21 +23,6 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
   {
     #region  Methods
 
-    public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-    {
-	    return base.CanConvertTo(context, destinationType);
-    }
-
-    public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-    {
-	    return base.ConvertTo(context, culture, value, destinationType);
-    }
-
-    public override bool IsValid(ITypeDescriptorContext context, object value)
-    {
-	    return base.IsValid(context, value);
-    }
-
     public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
     {
       return IconConverterImpl.CanConvertFrom(context, sourceType);

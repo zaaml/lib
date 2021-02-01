@@ -208,7 +208,7 @@ namespace Zaaml.UI.Controls.ScrollView
 				if (ReferenceEquals(_scrollClient, value))
 					return;
 
-				if (_scrollClient != null) 
+				if (_scrollClient != null)
 					_scrollClient.ScrollInfoChanged -= OnScrollClientScrollInfoChanged;
 
 				_scrollClient = value;
@@ -436,6 +436,14 @@ namespace Zaaml.UI.Controls.ScrollView
 			return new Point(offset.X + bounds.TranslateX - roundBounds.TranslateX, offset.Y + bounds.TranslateY - roundBounds.TranslateY);
 		}
 
+		internal void UpdateScrollInfoInternal()
+		{
+			if (IsScrollClient)
+				UpdateScrollInfo();
+			else
+				ScrollClient.UpdateScrollInfo();
+		}
+
 		public virtual void ExecuteScrollCommand(ScrollCommandKind command)
 		{
 			if (IsScrollClient == false)
@@ -481,6 +489,11 @@ namespace Zaaml.UI.Controls.ScrollView
 			var offset = CoerceRoundOffset(ScrollInfo.ClampOffset(Offset));
 
 			return GetChildBounds(offset.X, offset.Y, ScaleX, ScaleY);
+		}
+
+		internal Point GetViewportPoint(Point localPoint)
+		{
+			return Transform.Transform.Transform(localPoint);
 		}
 
 		private void InvalidatePresenterArrange()
@@ -550,11 +563,6 @@ namespace Zaaml.UI.Controls.ScrollView
 		internal void OnMouseZoom(Point viewportPoint, double newZoom)
 		{
 			Zoom(viewportPoint, newZoom);
-		}
-
-		internal Point GetViewportPoint(Point localPoint)
-		{
-			return Transform.Transform.Transform(localPoint);
 		}
 
 		internal void OnMouseZoom(MouseEventArgs mouseEventArgs, double newZoom)
@@ -696,6 +704,11 @@ namespace Zaaml.UI.Controls.ScrollView
 		{
 			get => CanVerticallyScroll;
 			set => CanVerticallyScroll = value;
+		}
+
+		void IScrollViewPanel.UpdateScrollInfo()
+		{
+			UpdateScrollInfo();
 		}
 
 		Size IScrollViewPanel.Extent => Extent;

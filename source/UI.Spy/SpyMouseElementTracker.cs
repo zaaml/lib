@@ -25,6 +25,25 @@ namespace Zaaml.UI.Controls.Spy
 			MouseInternal.MouseMove -= MouseInternalOnMouseMove;
 		}
 
+		private UIElement GetUIElement(DependencyObject visualHit)
+		{
+			return visualHit?.GetVisualAncestorsAndSelf().OfType<UIElement>().FirstOrDefault();
+		}
+
+		private static DependencyObject HitTest(Window window, Point position)
+		{
+			DependencyObject visualHit = null;
+
+			VisualTreeHelper.HitTest(window, result => result.GetVisualAncestorsAndSelf().OfType<SpyElementAdorner>().Any() ? HitTestFilterBehavior.ContinueSkipSelfAndChildren : HitTestFilterBehavior.Continue, result =>
+			{
+				visualHit = result.VisualHit;
+
+				return HitTestResultBehavior.Stop;
+			}, new PointHitTestParameters(position));
+
+			return visualHit;
+		}
+
 		private void MouseInternalOnMouseMove(object sender, MouseEventArgsInt e)
 		{
 			UpdateElement();
@@ -38,17 +57,32 @@ namespace Zaaml.UI.Controls.Spy
 				return;
 
 			var position = Mouse.GetPosition(window);
+			var visualHit = HitTest(window, position);
+			var elementRenderer = visualHit?.GetVisualAncestorsAndSelf().OfType<SpyZoomControl.ElementRenderer>().FirstOrDefault();
 
-			DependencyObject visualHit = null;
-
-			VisualTreeHelper.HitTest(window, result => result.GetVisualAncestorsAndSelf().OfType<SpyElementAdorner>().Any() ? HitTestFilterBehavior.ContinueSkipSelfAndChildren : HitTestFilterBehavior.Continue, result =>
+			if (elementRenderer != null)
 			{
-				visualHit = result.VisualHit;
+				var rendererTransform = elementRenderer.TransformToAncestor(window).Inverse;
 
-				return HitTestResultBehavior.Stop;
-			}, new PointHitTestParameters(position));
+				if (rendererTransform == null)
+					return;
 
-			ElementCore = visualHit as UIElement;
+				var rendererPosition = rendererTransform.Transform(position);
+				var spyZoomControl = elementRenderer.SpyZoomControl;
+				var rendererElementWindow = Window.GetWindow(spyZoomControl.Element);
+
+				if (rendererElementWindow == null)
+					return;
+
+				ElementCore = GetUIElement(HitTest(rendererElementWindow, rendererPosition)) ?? ElementCore;
+
+				return;
+			}
+
+			if (window is SpyWindow)
+				return;
+
+			ElementCore = GetUIElement(visualHit) ?? ElementCore;
 		}
 	}
 }

@@ -122,7 +122,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 					if (string.IsNullOrEmpty(actualValuePath) == false)
 					{
-						valueProvider = ThemeManager.GetThemeReference(actualValuePath);
+						valueProvider = ThemeManager.GetThemeResourceReference(actualValuePath);
 						setter.ValueStore = valueProvider;
 
 						return valueProvider;
