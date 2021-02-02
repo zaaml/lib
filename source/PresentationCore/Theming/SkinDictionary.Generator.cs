@@ -12,6 +12,8 @@ namespace Zaaml.PresentationCore.Theming
 
 		public SkinResourceGeneratorCollection Generators => _generators ??= new SkinResourceGeneratorCollection(this);
 
+		private bool HasGenerators => _generators != null;
+
 		private void ApplyGenerators()
 		{
 			if (HasGenerators == false)
@@ -25,8 +27,6 @@ namespace Zaaml.PresentationCore.Theming
 				}
 			}
 		}
-
-		private bool HasGenerators => _generators != null;
 
 		private void FreezeGenerators()
 		{

@@ -13,13 +13,7 @@ namespace Zaaml.PresentationCore.Theming
 {
 	public sealed class SkinResourceExtension : MarkupExtensionBase
 	{
-		#region Properties
-
 		public string Key { get; set; }
-
-		#endregion
-
-		#region  Methods
 
 		public override object ProvideValue(IServiceProvider serviceProvider)
 		{
@@ -53,16 +47,10 @@ namespace Zaaml.PresentationCore.Theming
 
 			return null;
 		}
-
-		#endregion
 	}
 
 	public interface ISkinResourceKey
 	{
-		#region  Methods
-
 		void SetResourceKey(string propertyName, string key);
-
-		#endregion
 	}
 }

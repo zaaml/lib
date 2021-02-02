@@ -14,14 +14,8 @@ namespace Zaaml.PresentationCore.Theming
 {
 	internal sealed class SkinResourceManager
 	{
-		#region Fields
-
 		private readonly SkinnedTheme _theme;
 		private readonly Dictionary<string, ThemeResource> _themeResources = new(StringComparer.OrdinalIgnoreCase);
-
-		#endregion
-
-		#region Ctors
 
 		public SkinResourceManager()
 		{
@@ -31,10 +25,6 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			_theme = theme;
 		}
-
-		#endregion
-
-		#region Properties
 
 		private SkinDictionary Root { get; } = new();
 
@@ -49,10 +39,6 @@ namespace Zaaml.PresentationCore.Theming
 				return dependencies;
 			}
 		}
-
-		#endregion
-
-		#region  Methods
 
 		public void AddThemeResource(ThemeResource themeResource)
 		{
@@ -82,7 +68,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		private ThemeResource EnsureThemeResource(string key)
 		{
-			return new(this) { Key = key };
+			return new(this) {Key = key};
 		}
 
 		public IEnumerable<ThemeResource> EnumerateResources()
@@ -178,7 +164,5 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			return keyValuePair.Value is ThemeResource themeResourceValue ? keyValuePair.WithValue(themeResourceValue.Value) : keyValuePair;
 		}
-
-		#endregion
 	}
 }

@@ -6,92 +6,72 @@ using System.Collections.Generic;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public partial class SkinDictionary : IDictionary<string, object>
-  {
-    #region Properties
+	public partial class SkinDictionary : IDictionary<string, object>
+	{
+		private IDictionary<string, object> DictionaryGeneric => Dictionary;
 
-    private IDictionary<string, object> DictionaryGeneric => Dictionary;
+		public void Add(KeyValuePair<string, object> item)
+		{
+			AddCore(item);
+		}
 
-    #endregion
+		public void Clear()
+		{
+			ClearCore();
+		}
 
-    #region Interface Implementations
+		public bool Contains(KeyValuePair<string, object> item)
+		{
+			return ContainsCore(item);
+		}
 
-    #region ICollection<KeyValuePair<string,object>>
+		public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
+		{
+			DictionaryGeneric.CopyTo(array, arrayIndex);
+		}
 
-    public void Add(KeyValuePair<string, object> item)
-    {
-      AddCore(item);
-    }
+		public bool Remove(KeyValuePair<string, object> item)
+		{
+			return RemoveCore(item);
+		}
 
-    public void Clear()
-    {
-      ClearCore();
-    }
+		public int Count => DictionaryGeneric.Count;
 
-    public bool Contains(KeyValuePair<string, object> item)
-    {
-      return ContainsCore(item);
-    }
+		public bool IsReadOnly => DictionaryGeneric.IsReadOnly;
 
-    public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
-    {
-      DictionaryGeneric.CopyTo(array, arrayIndex);
-    }
+		public bool ContainsKey(string key)
+		{
+			return ContainsKeyCore(key);
+		}
 
-    public bool Remove(KeyValuePair<string, object> item)
-    {
-      return RemoveCore(item);
-    }
+		public void Add(string key, object value)
+		{
+			AddCore(key, value);
+		}
 
-    public int Count => DictionaryGeneric.Count;
+		public bool Remove(string key)
+		{
+			return RemoveCore(key);
+		}
 
-    public bool IsReadOnly => DictionaryGeneric.IsReadOnly;
+		public bool TryGetValue(string key, out object value)
+		{
+			return TryGetValueCore(key, out value);
+		}
 
-    #endregion
+		public object this[string key]
+		{
+			get => GetCore(key);
+			set => SetCore(key, value);
+		}
 
-    #region IDictionary<string,object>
+		public ICollection<string> Keys => DictionaryGeneric.Keys;
 
-    public bool ContainsKey(string key)
-    {
-      return ContainsKeyCore(key);
-    }
+		public ICollection<object> Values => DictionaryGeneric.Values;
 
-    public void Add(string key, object value)
-    {
-      AddCore(key, value);
-    }
-
-    public bool Remove(string key)
-    {
-      return RemoveCore(key);
-    }
-
-    public bool TryGetValue(string key, out object value)
-    {
-      return TryGetValueCore(key, out value);
-    }
-
-    public object this[string key]
-    {
-      get => GetCore(key);
-      set => SetCore(key, value);
-    }
-
-    public ICollection<string> Keys => DictionaryGeneric.Keys;
-
-    public ICollection<object> Values => DictionaryGeneric.Values;
-
-    #endregion
-
-    #region IEnumerable<KeyValuePair<string,object>>
-
-    public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
-    {
-      return DictionaryGeneric.GetEnumerator();
-    }
-
-    #endregion
-
-    #endregion
-  }
+		public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+		{
+			return DictionaryGeneric.GetEnumerator();
+		}
+	}
 }

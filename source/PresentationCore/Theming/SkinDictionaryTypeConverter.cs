@@ -8,22 +8,18 @@ using System.Globalization;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public sealed class SkinDictionaryTypeConverter : TypeConverter
-  {
-    #region  Methods
+	public sealed class SkinDictionaryTypeConverter : TypeConverter
+	{
+		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		{
+			return sourceType == typeof(string);
+		}
 
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-    {
-      return sourceType == typeof(string);
-    }
+		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		{
+			var strValue = value as string;
 
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-      var strValue = value as string;
-
-      return strValue == null ? null : new SkinDictionary { DeferredKey = strValue };
-    }
-
-    #endregion
-  }
+			return strValue == null ? null : new SkinDictionary {DeferredKey = strValue};
+		}
+	}
 }

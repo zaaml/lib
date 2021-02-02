@@ -11,45 +11,33 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  [TypeConverter(typeof(SkinDictionaryCollectionTypeConverter))]
-  public sealed class SkinDictionaryCollection : Collection<SkinDictionary>
-  {
-    #region Properties
+	[TypeConverter(typeof(SkinDictionaryCollectionTypeConverter))]
+	public sealed class SkinDictionaryCollection : Collection<SkinDictionary>
+	{
+		internal SkinDictionary Owner { get; set; }
+	}
 
-    internal SkinDictionary Owner { get; set; }
+	public sealed class SkinDictionaryCollectionTypeConverter : TypeConverter
+	{
+		private static readonly char[] Delimiters = {',', ' ', '|'};
 
-    #endregion
-  }
+		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		{
+			return sourceType == typeof(string);
+		}
 
-  public sealed class SkinDictionaryCollectionTypeConverter : TypeConverter
-  {
-    #region Static Fields and Constants
+		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		{
+			var strValue = value as string;
 
-    private static readonly char[] Delimiters = { ',', ' ', '|' };
+			if (strValue == null)
+				throw new InvalidOperationException("Expected string value");
 
-    #endregion
+			var result = new SkinDictionaryCollection();
 
-    #region  Methods
+			result.AddRange(strValue.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries).Select(key => new SkinDictionary {DeferredKey = key}));
 
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-    {
-      return sourceType == typeof(string);
-    }
-
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-      var strValue = value as string;
-
-      if (strValue == null)
-        throw new InvalidOperationException("Expected string value");
-
-      var result = new SkinDictionaryCollection();
-
-      result.AddRange(strValue.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries).Select(key => new SkinDictionary { DeferredKey = key }));
-
-      return result;
-    }
-
-    #endregion
-  }
+			return result;
+		}
+	}
 }

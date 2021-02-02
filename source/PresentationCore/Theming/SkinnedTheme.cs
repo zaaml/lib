@@ -9,17 +9,11 @@ namespace Zaaml.PresentationCore.Theming
 {
 	public abstract class SkinnedTheme : Theme
 	{
-		#region Ctors
-
 		protected SkinnedTheme()
 		{
 			LazyStaticTheme = new Lazy<StaticTheme>(() => new StaticTheme(this));
 			SkinResourceManager = new SkinResourceManager(this);
 		}
-
-		#endregion
-
-		#region Properties
 
 		internal Theme BaseTheme => BaseThemeCore;
 
@@ -38,10 +32,6 @@ namespace Zaaml.PresentationCore.Theming
 		public StaticTheme Static => LazyStaticTheme.Value;
 
 		protected internal sealed override ThemeResourceDictionary ThemeResourceDictionary => BaseThemeCore.ThemeResourceDictionary;
-
-		#endregion
-
-		#region  Methods
 
 		internal void AddThemeResourceInternal(ThemeResource themeResource)
 		{
@@ -143,7 +133,5 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			return base.ShouldProcessXamlResource(resource) || MasterTheme.ShouldProcessXamlResource(resource);
 		}
-
-		#endregion
 	}
 }

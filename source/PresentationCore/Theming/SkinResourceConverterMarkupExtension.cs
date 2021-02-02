@@ -7,15 +7,11 @@ using Zaaml.PresentationCore.MarkupExtensions;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public sealed class SkinResourceConverterMarkupExtension : MarkupExtensionBase
-  {
-    #region  Methods
-
-    public override object ProvideValue(IServiceProvider serviceProvider)
-    {
-      return SkinResourceConverter.Instance;
-    }
-
-    #endregion
-  }
+	public sealed class SkinResourceConverterMarkupExtension : MarkupExtensionBase
+	{
+		public override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			return SkinResourceConverter.Instance;
+		}
+	}
 }

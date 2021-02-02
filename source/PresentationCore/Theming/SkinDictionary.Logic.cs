@@ -12,31 +12,14 @@ namespace Zaaml.PresentationCore.Theming
 {
 	public partial class SkinDictionary
 	{
-		#region Static Fields and Constants
-
 		internal static readonly DelegateTreeEnumeratorAdvisor<KeyValuePair<string, object>> ResourceTreeAdvisor = new(GetChildResourceEnumerator);
 		internal static readonly DelegateTreeEnumeratorAdvisor<SkinDictionary> SkinDictionaryTreeAdvisor = new(GetChildSkinDictionaryEnumerator);
-
-		#endregion
-
-		#region Properties
 
 		public string DeferredKey { get; set; }
 
 		internal bool IsAbsoluteKey => DeferredKey != null && IsPathAbsolute(DeferredKey);
 
 		public bool IsDeferred => DeferredKey != null;
-
-		private static bool IsPathAbsolute(string path)
-		{
-			var trimmedPath = path.TrimStart();
-
-			return (trimmedPath.StartsWith("/") || trimmedPath.StartsWith("../")) == false;
-		}
-
-		#endregion
-
-		#region  Methods
 
 		private void AddCore(KeyValuePair<string, object> item)
 		{
@@ -142,6 +125,13 @@ namespace Zaaml.PresentationCore.Theming
 			return value;
 		}
 
+		private static bool IsPathAbsolute(string path)
+		{
+			var trimmedPath = path.TrimStart();
+
+			return (trimmedPath.StartsWith("/") || trimmedPath.StartsWith("../")) == false;
+		}
+
 		internal void Merge(KeyValuePair<string, object> keyValuePair, SkinDictionaryMergeFlags mergeFlags)
 		{
 			Merge(keyValuePair.Key, keyValuePair.Value, mergeFlags);
@@ -175,7 +165,7 @@ namespace Zaaml.PresentationCore.Theming
 							throw new InvalidOperationException("Duplicate key");
 
 						current.SetDictionaryValue(key, value);
-						
+
 						return;
 					}
 
@@ -230,7 +220,7 @@ namespace Zaaml.PresentationCore.Theming
 
 			return Equals(item.Value, value) && RemoveCore(item.Key);
 		}
-		
+
 		private bool RemoveCore(string key)
 		{
 			var themeKey = new ThemeResourceKey(key);
@@ -376,8 +366,6 @@ namespace Zaaml.PresentationCore.Theming
 
 			return current.TryGetValueCore(currentKey, out value);
 		}
-
-		#endregion
 	}
 
 	internal enum SkinDictionaryMergeFlags

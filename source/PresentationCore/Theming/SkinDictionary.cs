@@ -5,9 +5,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using Zaaml.Core.Extensions;
-
 #if INTERACTIVITY_DEBUG
-using System.Diagnostics;
+
 #endif
 
 namespace Zaaml.PresentationCore.Theming
@@ -110,7 +109,7 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			if (Debug == false)
 				return;
-			
+
 			//System.Diagnostics.Debug.WriteLine("Debug");
 		}
 #endif
