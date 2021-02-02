@@ -13,11 +13,11 @@ namespace Zaaml.UI.Controls.Artboard
 	[ContentProperty("Model")]
 	public sealed class ArtboardGridLineControl : FixedTemplateControl<ArtboardGridLineRendererPanel>, IArtboardComponentControl
 	{
-		public static readonly DependencyProperty OffsetXProperty = DPM.Register<double, ArtboardGridLineControl>
-			("OffsetX", 0.0, g => g.OnOffsetXChanged);
+		public static readonly DependencyProperty ScrollOffsetXProperty = DPM.Register<double, ArtboardGridLineControl>
+			("ScrollOffsetX", 0.0, g => g.OnOffsetXChanged);
 
-		public static readonly DependencyProperty OffsetYProperty = DPM.Register<double, ArtboardGridLineControl>
-			("OffsetY", 0.0, g => g.OnOffsetYChanged);
+		public static readonly DependencyProperty ScrollOffsetYProperty = DPM.Register<double, ArtboardGridLineControl>
+			("ScrollOffsetY", 0.0, g => g.OnOffsetYChanged);
 
 		public static readonly DependencyProperty ModelProperty = DPM.Register<ArtboardGridLineModel, ArtboardGridLineControl>
 			("Model", null, c => c.OnModelChanged);
@@ -54,14 +54,14 @@ namespace Zaaml.UI.Controls.Artboard
 
 		public double OffsetX
 		{
-			get => (double) GetValue(OffsetXProperty);
-			set => SetValue(OffsetXProperty, value);
+			get => (double) GetValue(ScrollOffsetXProperty);
+			set => SetValue(ScrollOffsetXProperty, value);
 		}
 
 		public double OffsetY
 		{
-			get => (double) GetValue(OffsetYProperty);
-			set => SetValue(OffsetYProperty, value);
+			get => (double) GetValue(ScrollOffsetYProperty);
+			set => SetValue(ScrollOffsetYProperty, value);
 		}
 
 		public bool ShowHorizontalLines
@@ -164,31 +164,19 @@ namespace Zaaml.UI.Controls.Artboard
 			base.UndoTemplateOverride();
 		}
 
-		double IArtboardComponentControl.DesignHeight
-		{
-			get => 0.0;
-			set { }
-		}
-
-		double IArtboardComponentControl.DesignWidth
-		{
-			get => 0.0;
-			set { }
-		}
-
 		double IArtboardComponentControl.Zoom
 		{
 			get => Zoom;
 			set => Zoom = value;
 		}
 
-		double IArtboardComponentControl.OffsetX
+		double IArtboardComponentControl.ScrollOffsetX
 		{
 			get => OffsetX;
 			set => OffsetX = value;
 		}
 
-		double IArtboardComponentControl.OffsetY
+		double IArtboardComponentControl.ScrollOffsetY
 		{
 			get => OffsetY;
 			set => OffsetY = value;

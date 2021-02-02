@@ -150,25 +150,13 @@ namespace Zaaml.UI.Controls.Artboard
 			TemplateRoot.OnOrientationChanged();
 		}
 
-		double IArtboardComponentControl.DesignHeight
-		{
-			get => 0.0;
-			set { }
-		}
-
-		double IArtboardComponentControl.DesignWidth
-		{
-			get => 0.0;
-			set { }
-		}
-
 		double IArtboardComponentControl.Zoom
 		{
 			get => Zoom;
 			set => Zoom = value;
 		}
 
-		double IArtboardComponentControl.OffsetX
+		double IArtboardComponentControl.ScrollOffsetX
 		{
 			get => Orientation == Orientation.Horizontal ? Offset : 0.0;
 			set
@@ -178,7 +166,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		double IArtboardComponentControl.OffsetY
+		double IArtboardComponentControl.ScrollOffsetY
 		{
 			get => Orientation == Orientation.Vertical ? Offset : 0.0;
 			set

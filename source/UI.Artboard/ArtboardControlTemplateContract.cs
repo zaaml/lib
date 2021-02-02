@@ -4,10 +4,11 @@
 
 using Zaaml.Core;
 using Zaaml.PresentationCore.TemplateCore;
+using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Artboard
 {
-	public class ArtboardControlTemplateContract : TemplateContract
+	public class ArtboardControlTemplateContract : ItemsControlBaseTemplateContract<ArtboardItemsPresenter>
 	{
 		[TemplateContractPart(Required = true)]
 		public ArtboardAdornerPresenter AdornerPresenter { get; [UsedImplicitly] private set; }
@@ -19,19 +20,10 @@ namespace Zaaml.UI.Controls.Artboard
 		public ArtboardSnapGuidePresenter HorizontalSnapGuidePresenter { get; [UsedImplicitly] private set; }
 
 		[TemplateContractPart(Required = true)]
-		public ArtboardDesignContentControl DesignBottomContentControl { get; [UsedImplicitly] private set; }
-
-		[TemplateContractPart(Required = true)]
-		public ArtboardDesignContentControl DesignTopContentControl { get; [UsedImplicitly] private set; }
-
-		[TemplateContractPart(Required = true)]
 		public ArtboardGridLineControl GridLineControl { get; [UsedImplicitly] private set; }
 
 		[TemplateContractPart(Required = true)]
 		public ArtboardRuler HorizontalRuler { get; [UsedImplicitly] private set; }
-
-		[TemplateContractPart(Required = true)]
-		public ArtboardPresenter Presenter { get; [UsedImplicitly] private set; }
 
 		[TemplateContractPart(Required = true)]
 		public ArtboardScrollViewControl ScrollView { get; [UsedImplicitly] private set; }

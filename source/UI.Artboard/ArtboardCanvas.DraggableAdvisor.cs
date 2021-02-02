@@ -38,7 +38,7 @@ namespace Zaaml.UI.Controls.Artboard
 			{
 				base.OnDragStart(element, draggableBehavior);
 
-				_snapEngineContext = Canvas.Artboard?.SnapEngine?.CreateContext(new ArtboardSnapEngineContextParameters(element, ArtboardSnapRectSide.All));
+				_snapEngineContext = Canvas.ArtboardControl?.SnapEngine?.CreateContext(new ArtboardSnapEngineContextParameters(element, ArtboardSnapRectSide.All));
 			}
 
 			public override void SetPosition(UIElement element, Point value)

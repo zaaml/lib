@@ -30,5 +30,9 @@
 		<ProjectReference Include="..\PresentationCore\Zaaml.PresentationCore.csproj" />
 		<ProjectReference Include="..\UI\Zaaml.UI.csproj" />
 	</ItemGroup>
+	
+	<ItemGroup>
+	  <Folder Include="Lib\UI\Zaaml.UI.Artboard\" />
+	</ItemGroup>
 
 </Project>

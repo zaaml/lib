@@ -1,0 +1,59 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+  <!--  Template  -->
+  <ControlTemplate x:Key="ArtboardItemTemplate"
+                   TargetType="zm:ArtboardItem">
+
+    <zm:ControlTemplateRoot x:Name="TemplateRoot"
+                            Background="Transparent">
+
+      <!--  DesignBottomContent  -->
+      <zm:ArtboardDesignContentControl x:Name="DesignBottomContentControl">
+        <zm:Panel>
+
+          <Border Margin="{zm:TemplateBinding Path=DesignBorderThickness,
+                                                        Converter={zm:NegateConverter}}"
+                  Background="{zm:TemplateBinding Path=DesignBackground}"
+                  BorderBrush="{zm:TemplateBinding Path=DesignBorderBrush}"
+                  BorderThickness="{zm:TemplateBinding Path=DesignBorderThickness}" />
+
+          <zm:ContentControl HorizontalContentAlignment="Stretch"
+                             VerticalContentAlignment="Stretch"
+                             Content="{zm:TemplateBinding Path=DesignBottomContent}"
+                             ContentTemplate="{zm:TemplateBinding Path=DesignBottomContentTemplate}" />
+        </zm:Panel>
+      </zm:ArtboardDesignContentControl>
+
+      <zm:ArtboardCanvasPresenter x:Name="CanvasPresenter" />
+
+      <!--  DesignTopContent  -->
+      <zm:ArtboardDesignContentControl x:Name="DesignTopContentControl">
+        <zm:Panel>
+          <zm:ContentControl HorizontalContentAlignment="Stretch"
+                             VerticalContentAlignment="Stretch"
+                             Content="{zm:TemplateBinding Path=DesignTopContent}"
+                             ContentTemplate="{zm:TemplateBinding Path=DesignTopContentTemplate}" />
+        </zm:Panel>
+      </zm:ArtboardDesignContentControl>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ArtboardItemStyleBase" TargetType="zm:ArtboardItem">
+    <zm:Setter Property="Template" Value="{StaticResource ArtboardItemTemplate}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="ArtboardItemStyle" BasedOn="{StaticResource ArtboardItemStyleBase}"
+            TargetType="zm:ArtboardItem" Skin="Metro.ArtboardItem" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ArtboardItemThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource ArtboardItemStyle}" TargetType="zm:ArtboardItem" />
+
+</zm:ThemeResourceDictionary>

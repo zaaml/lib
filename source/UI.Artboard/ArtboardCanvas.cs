@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 			child.Arrange(rect);
 
-			Artboard?.ArrangeAdorners(child, rect);
+			ArtboardControl?.ArrangeAdorners(child, rect);
 		}
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
@@ -76,10 +76,10 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private void AttachFactoryAdorners(UIElement element)
 		{
-			if (Artboard == null)
+			if (ArtboardControl == null)
 				return;
 
-			foreach (var adornerFactory in Artboard.AdornerFactories)
+			foreach (var adornerFactory in ArtboardControl.AdornerFactories)
 				AttachFactoryAdorners(element, adornerFactory);
 		}
 
@@ -118,10 +118,10 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private void DetachFactoryAdorners(UIElement element)
 		{
-			if (Artboard == null)
+			if (ArtboardControl == null)
 				return;
 
-			foreach (var adornerFactory in Artboard.AdornerFactories)
+			foreach (var adornerFactory in ArtboardControl.AdornerFactories)
 				DetachFactoryAdorners(element, adornerFactory);
 		}
 

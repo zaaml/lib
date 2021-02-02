@@ -74,7 +74,7 @@ namespace Zaaml.UI.Controls.Artboard
 		private ArtboardAdornerPanel EnsurePanel()
 		{
 			var artboardCanvas = AdornedElement?.GetVisualParent() as ArtboardCanvas;
-			var artboardAdornerPresenter = artboardCanvas?.Artboard?.AdornerPresenterInternal;
+			var artboardAdornerPresenter = artboardCanvas?.ArtboardControl?.AdornerPresenterInternal;
 
 			if (artboardAdornerPresenter == null)
 				return null;

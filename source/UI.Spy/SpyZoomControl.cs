@@ -3,7 +3,6 @@
 // </copyright>
 
 using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Zaaml.PresentationCore.PropertyCore;
@@ -33,9 +32,22 @@ namespace Zaaml.UI.Controls.Spy
 			this.OverrideStyleKey<SpyZoomControl>();
 
 			Renderer = new ElementRenderer(this);
+
+			ArtboardItem = new ArtboardItem
+			{
+				Canvas = new ArtboardCanvas
+				{
+					Children =
+					{
+						Renderer
+					}
+				}
+			};
 		}
 
 		private SpyArtboardControl ArtboardControl => TemplateContract.ArtboardControl;
+
+		private ArtboardItem ArtboardItem { get; }
 
 		public UIElement Element
 		{
@@ -100,13 +112,7 @@ namespace Zaaml.UI.Controls.Spy
 		{
 			base.OnTemplateContractAttached();
 
-			ArtboardControl.CanvasCollection.Add(new ArtboardCanvas
-			{
-				Children =
-				{
-					Renderer
-				}
-			});
+			ArtboardControl.ItemCollection.Add(ArtboardItem);
 
 			ArtboardControl.ShowGrid = false;
 
@@ -115,9 +121,9 @@ namespace Zaaml.UI.Controls.Spy
 
 		protected override void OnTemplateContractDetaching()
 		{
-			base.OnTemplateContractDetaching();
+			ArtboardControl.ItemCollection.Remove(ArtboardItem);
 
-			ArtboardControl.CanvasCollection.First().Children.Clear();
+			base.OnTemplateContractDetaching();
 		}
 
 		private void UpdateArtboardSize()
@@ -127,8 +133,8 @@ namespace Zaaml.UI.Controls.Spy
 
 			var size = ElementWindow?.RenderSize ?? new Size(600, 400);
 
-			ArtboardControl.DesignWidth = size.Width;
-			ArtboardControl.DesignHeight = size.Height;
+			ArtboardItem.DesignWidth = size.Width;
+			ArtboardItem.DesignHeight = size.Height;
 
 			Renderer.Width = size.Width;
 			Renderer.Height = size.Height;

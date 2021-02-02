@@ -51,7 +51,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 				var snapSide = ArtboardSnapEngineUtils.GetResizeSide(resizableBehavior.ResizeInfo.HandleKind);
 
-				_snapEngineContext = Canvas.Artboard?.SnapEngine?.CreateContext(new ArtboardSnapEngineContextParameters(element, snapSide));
+				_snapEngineContext = Canvas.ArtboardControl?.SnapEngine?.CreateContext(new ArtboardSnapEngineContextParameters(element, snapSide));
 			}
 
 			public override void SetBoundingBox(UIElement element, Rect rect)

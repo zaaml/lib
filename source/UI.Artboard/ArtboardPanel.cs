@@ -20,12 +20,10 @@ namespace Zaaml.UI.Controls.Artboard
 		};
 
 		private ArtboardControl _artboard;
-		private double _designHeight;
-		private double _designWidth;
 
 		internal event EventHandler DesignMatrixChanged;
 
-		public ArtboardControl Artboard
+		public ArtboardControl ArtboardControl
 		{
 			get => _artboard;
 			internal set
@@ -43,37 +41,9 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		internal double DesignHeight
-		{
-			get => _designHeight;
-			set
-			{
-				if (_designHeight.IsCloseTo(value))
-					return;
-
-				_designHeight = value;
-
-				OnDesignHeightChanged();
-			}
-		}
-
-		internal double DesignWidth
-		{
-			get => _designWidth;
-			set
-			{
-				if (_designWidth.IsCloseTo(value))
-					return;
-
-				_designWidth = value;
-
-				OnDesignWidthChanged();
-			}
-		}
-
 		protected Matrix FromDesignMatrix => ScrollViewTransform.Transform.Value;
 
-		internal double OffsetX
+		internal double ScrollOffsetX
 		{
 			get => -ScrollViewTransform.TranslateX;
 			set
@@ -88,7 +58,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		internal double OffsetY
+		internal double ScrollOffsetY
 		{
 			get => -ScrollViewTransform.TranslateY;
 			set
@@ -138,17 +108,9 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 		}
 
-		protected virtual void OnDesignHeightChanged()
-		{
-		}
-
 		private void OnDesignMatrixChanged()
 		{
 			DesignMatrixChanged?.Invoke(this, EventArgs.Empty);
-		}
-
-		protected virtual void OnDesignWidthChanged()
-		{
 		}
 
 		protected virtual void OnOffsetXChanged()

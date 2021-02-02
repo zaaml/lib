@@ -76,40 +76,14 @@
                 <zm:PatternBrushControl IsHitTestVisible="False">
                   <zm:DataTemplatePattern Template="{zm:ThemeResource Key=Metro.Artboard.Background.Pattern}" />
                 </zm:PatternBrushControl>
-
-                <!--  DesignBottomContent  -->
-                <zm:ArtboardDesignContentControl x:Name="DesignBottomContentControl">
-                  <zm:Panel>
-
-                    <Border Margin="{zm:TemplateBinding Path=DesignBorderThickness,
-                                                        Converter={zm:NegateConverter}}"
-                            Background="{zm:TemplateBinding Path=DesignBackground}"
-                            BorderBrush="{zm:TemplateBinding Path=DesignBorderBrush}"
-                            BorderThickness="{zm:TemplateBinding Path=DesignBorderThickness}" />
-
-                    <zm:ContentControl HorizontalContentAlignment="Stretch"
-                                       VerticalContentAlignment="Stretch"
-                                       Content="{zm:TemplateBinding Path=DesignBottomContent}"
-                                       ContentTemplate="{zm:TemplateBinding Path=DesignBottomContentTemplate}" />
-                  </zm:Panel>
-                </zm:ArtboardDesignContentControl>
               </zm:Panel>
             </zm:ArtboardScrollViewControl.BottomContent>
 
-            <zm:ArtboardPresenter x:Name="Presenter" />
+            <zm:ArtboardItemsPresenter x:Name="ItemsPresenter" />
 
             <zm:ArtboardScrollViewControl.TopContent>
               <zm:Panel ClipToBounds="True"
                         UseLayoutRounding="False">
-                <!--  DesignTopContent  -->
-                <zm:ArtboardDesignContentControl x:Name="DesignTopContentControl">
-                  <zm:Panel>
-                    <zm:ContentControl HorizontalContentAlignment="Stretch"
-                                       VerticalContentAlignment="Stretch"
-                                       Content="{zm:TemplateBinding Path=DesignTopContent}"
-                                       ContentTemplate="{zm:TemplateBinding Path=DesignTopContentTemplate}" />
-                  </zm:Panel>
-                </zm:ArtboardDesignContentControl>
 
                 <!--  GridLineControl  -->
                 <zm:ArtboardGridLineControl x:Name="GridLineControl"

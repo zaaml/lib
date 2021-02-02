@@ -100,23 +100,20 @@ namespace Zaaml.UI.Controls.Core
 		TPanel Panel { get; }
 	}
 
-	[ContentProperty(nameof(Child))]
-	public abstract class FixedTemplateContentControl<TPanel, TChild> : FixedTemplateControl<TPanel>, IFixedTemplateContentControl<TPanel>
+
+	public abstract class FixedTemplateContentControlBase<TPanel, TChild> : FixedTemplateControl<TPanel>, IFixedTemplateContentControl<TPanel>
 		where TPanel : Panel
 		where TChild : FrameworkElement
 	{
-		public static readonly DependencyProperty ChildProperty = DPM.Register<TChild, FixedTemplateContentControl<TPanel, TChild>>
-			("Child", default, d => d.OnChildPropertyChangedPrivate);
-
-		protected FixedTemplateContentControl()
+		protected FixedTemplateContentControlBase()
 		{
 			Controller = new FixedTemplateContentControlController<TPanel, TChild>(this);
 		}
 
-		public TChild Child
+		protected TChild ChildCore
 		{
-			get => (TChild) GetValue(ChildProperty);
-			set => SetValue(ChildProperty, value);
+			get => Controller.Child;
+			set => Controller.Child = value;
 		}
 
 		private FixedTemplateContentControlController<TPanel, TChild> Controller { get; }
@@ -132,11 +129,6 @@ namespace Zaaml.UI.Controls.Core
 			Controller.AttachChild();
 		}
 
-		private void OnChildPropertyChangedPrivate()
-		{
-			Controller.Child = Child;
-		}
-
 		protected override void UndoTemplateOverride()
 		{
 			Controller.DetachChild();
@@ -147,5 +139,25 @@ namespace Zaaml.UI.Controls.Core
 		TPanel IFixedTemplateContentControl<TPanel>.Panel => TemplateRoot;
 
 		bool IFixedTemplateContentControl<TPanel>.IsLogicalParent => IsLogicalParent;
+	}
+
+	[ContentProperty(nameof(Child))]
+	public abstract class FixedTemplateContentControl<TPanel, TChild> : FixedTemplateContentControlBase<TPanel, TChild>
+		where TPanel : Panel
+		where TChild : FrameworkElement
+	{
+		public static readonly DependencyProperty ChildProperty = DPM.Register<TChild, FixedTemplateContentControl<TPanel, TChild>>
+			("Child", d => d.OnChildPropertyChangedPrivate);
+
+		public TChild Child
+		{
+			get => (TChild) GetValue(ChildProperty);
+			set => SetValue(ChildProperty, value);
+		}
+
+		private void OnChildPropertyChangedPrivate()
+		{
+			ChildCore = Child;
+		}
 	}
 }
