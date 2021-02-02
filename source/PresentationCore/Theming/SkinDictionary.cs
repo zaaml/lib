@@ -97,16 +97,10 @@ namespace Zaaml.PresentationCore.Theming
 
 		public override string ToString()
 		{
+			if (IsDeferred)
+				return $"Deferred: {DeferredKey}";
+
 			return ActualKey ?? "$";
-		}
-
-		public static void SetPriorityIndex(object resource, int mergeIndex)
-		{
-		}
-
-		public static int GetPriorityIndex(object resource)
-		{
-			return 0;
 		}
 
 #if INTERACTIVITY_DEBUG
@@ -114,8 +108,10 @@ namespace Zaaml.PresentationCore.Theming
 
 		internal void Break()
 		{
-			if (Debug && Debugger.IsAttached)
-				Debugger.Break();
+			if (Debug == false)
+				return;
+			
+			//System.Diagnostics.Debug.WriteLine("Debug");
 		}
 #endif
 	}

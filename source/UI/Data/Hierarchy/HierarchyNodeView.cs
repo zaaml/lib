@@ -11,7 +11,8 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
-	internal abstract class HierarchyNodeView<THierarchy, TNodeCollection, TNode> : IDisposable
+	// ReSharper disable once PartialTypeWithSinglePart
+	internal abstract partial class HierarchyNodeView<THierarchy, TNodeCollection, TNode> : IDisposable
 		where THierarchy : HierarchyView<THierarchy, TNodeCollection, TNode>
 		where TNodeCollection : HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode>
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
@@ -129,7 +130,11 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		public bool IsLoaded => Nodes != null;
 
+#if TEST
+		internal int Level { get; }
+#else
 		private int Level { get; }
+#endif
 
 		public TNodeCollection Nodes { get; private set; }
 

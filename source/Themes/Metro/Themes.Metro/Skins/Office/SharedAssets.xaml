@@ -161,9 +161,11 @@
 
     <!-- Foreground -->
     <zm:SkinDictionary x:Key="Foreground">
+
+
       <zm:SkinDictionary.Generators>
         <zm:SolidColorBrushGenerator ColorExpression="BaseColor" 
-                                     ExpressionScope="BaseColor:$(~/Input.ForegroundBase)">
+                                     ExpressionScope="BaseColor:$(../Input.ForegroundBase)">
 
           <zm:SkinResourceTemplate x:Key="Normal" />
           <zm:SkinResourceTemplate x:Key="MouseOver" />
@@ -177,7 +179,7 @@
     <zm:SkinDictionary x:Key="Background">
       <zm:SkinDictionary.Generators>
         <zm:SolidColorBrushGenerator ColorExpression="Shade(BaseColor, Shade)"
-                                     ExpressionScope="BaseColor:$(~/Input.BackgroundBase)">
+                                     ExpressionScope="BaseColor:$(../Input.BackgroundBase)">
 
           <zm:SkinResourceTemplate x:Key="Normal" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0"/>
           <zm:SkinResourceTemplate x:Key="MouseOver" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.2" />
@@ -189,9 +191,11 @@
 
     <!-- BorderBrush -->
     <zm:SkinDictionary x:Key="BorderBrush">
+
+
       <zm:SkinDictionary.Generators>
         <zm:SolidColorBrushGenerator ColorExpression="Shade(BaseColor, Shade)" 
-                                     ExpressionScope="BaseColor:$(~/Input.BorderBrushBase)">
+                                     ExpressionScope="BaseColor:$(../Input.BorderBrushBase)">
 
           <zm:SkinResourceTemplate x:Key="Normal" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0"/>
           <zm:SkinResourceTemplate x:Key="MouseOver" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.2" />
@@ -224,7 +228,7 @@
     <zm:SkinDictionary x:Key="DropDownButton" BasedOn="Metro.Shared.ToolBarDropDownButton">
 
       <!-- Reference Input -->
-      <zm:SkinDictionary x:Key="Input" BasedOn="~/../Input" />
+      <zm:SkinDictionary x:Key="Input" BasedOn="../Input" />
 
     </zm:SkinDictionary>
 

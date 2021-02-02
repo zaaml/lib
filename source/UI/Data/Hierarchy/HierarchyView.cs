@@ -14,7 +14,8 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
-	internal abstract class HierarchyView
+	// ReSharper disable once PartialTypeWithSinglePart
+	internal abstract partial class HierarchyView
 	{
 		public virtual int FlatCount { get; protected set; }
 
@@ -69,6 +70,8 @@ namespace Zaaml.UI.Data.Hierarchy
 			}
 		}
 
+		internal IndexedEnumerable IndexedSource { get; private set; } = IndexedEnumerable.Empty;
+
 		private bool IsFilteredCache
 		{
 			get => PackedDefinition.IsFilteredCache.GetValue(_packedValue);
@@ -99,8 +102,6 @@ namespace Zaaml.UI.Data.Hierarchy
 				RaiseReset();
 			}
 		}
-
-		internal IndexedEnumerable IndexedSource { get; private set; } = IndexedEnumerable.Empty;
 
 		private bool SuspendCollectionChange
 		{

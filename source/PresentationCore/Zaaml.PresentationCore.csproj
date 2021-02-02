@@ -4,6 +4,7 @@
 		<OutputType>library</OutputType>
 		<UseWPF>true</UseWPF>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
+		<Configurations>Debug;Release;Test</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup>

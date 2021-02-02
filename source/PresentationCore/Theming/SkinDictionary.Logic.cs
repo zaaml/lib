@@ -23,9 +23,16 @@ namespace Zaaml.PresentationCore.Theming
 
 		public string DeferredKey { get; set; }
 
-		internal bool IsAbsoluteKey => DeferredKey?.StartsWith("~/") != true;
+		internal bool IsAbsoluteKey => DeferredKey != null && IsPathAbsolute(DeferredKey);
 
 		public bool IsDeferred => DeferredKey != null;
+
+		private static bool IsPathAbsolute(string path)
+		{
+			var trimmedPath = path.TrimStart();
+
+			return (trimmedPath.StartsWith("/") || trimmedPath.StartsWith("../")) == false;
+		}
 
 		#endregion
 
@@ -292,7 +299,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		private bool TryGetValueCore(string key, out object value)
 		{
-			if (key.StartsWith("~/"))
+			if (IsPathAbsolute(key) == false)
 				return TryGetValueRelative(key, out value);
 
 			var themeKey = new ThemeResourceKey(key);
@@ -327,13 +334,15 @@ namespace Zaaml.PresentationCore.Theming
 
 		private bool TryGetValueRelative(string key, out object value)
 		{
-			var current = Parent;
+			var current = this;
+			var currentKey = key;
 
-			key = key.Substring(2);
+			if (currentKey.StartsWith("/"))
+				currentKey = currentKey.Substring(1);
 
-			while (key.StartsWith("../") && current != null)
+			while (currentKey.StartsWith("../") && current != null)
 			{
-				key = key.Substring(2);
+				currentKey = currentKey.Substring(3);
 				current = current.Parent;
 			}
 
@@ -344,9 +353,9 @@ namespace Zaaml.PresentationCore.Theming
 				return false;
 			}
 
-			key = key.Trim('/');
+			currentKey = currentKey.TrimEnd('/');
 
-			var themeKey = new ThemeResourceKey(key);
+			var themeKey = new ThemeResourceKey(currentKey);
 			var keyParts = themeKey.KeyParts;
 
 			for (var iKeyPart = 0; iKeyPart < keyParts.Count - 1; iKeyPart++)
@@ -363,9 +372,9 @@ namespace Zaaml.PresentationCore.Theming
 				return false;
 			}
 
-			key = keyParts[keyParts.Count - 1];
+			currentKey = keyParts[keyParts.Count - 1];
 
-			return current.TryGetValueCore(key, out value);
+			return current.TryGetValueCore(currentKey, out value);
 		}
 
 		#endregion

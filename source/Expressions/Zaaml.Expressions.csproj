@@ -4,6 +4,7 @@
 	<PropertyGroup>
 		<OutputType>library</OutputType>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
+		<Configurations>Debug;Release;Test</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup>

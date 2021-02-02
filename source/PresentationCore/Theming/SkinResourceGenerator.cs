@@ -12,8 +12,6 @@ namespace Zaaml.PresentationCore.Theming
 	{
 		private SkinDictionary _skinDictionary;
 
-		public bool AllowOverwrite { get; set; }
-
 		private Dictionary<string, SkinResourceTemplate> Dictionary { get; } = new();
 
 		public SkinDictionary SkinDictionary
@@ -49,8 +47,6 @@ namespace Zaaml.PresentationCore.Theming
 
 		protected virtual void CopyFrom(SkinResourceGenerator generatorSource)
 		{
-			AllowOverwrite = generatorSource.AllowOverwrite;
-
 			foreach (var kv in generatorSource)
 				Add(kv);
 		}

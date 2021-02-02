@@ -124,7 +124,7 @@
 
       <Border Margin="{TemplateBinding Padding}"
               zm:Extension.SettersSource="{StaticResource ThumbBorderSetter}"
-              BorderThickness="1" />
+              BorderThickness="0" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -136,8 +136,7 @@
     <zm:ControlTemplateRoot Background="{TemplateBinding Background}"
                             VisualStateGroups="{StaticResource CommonVisualStates}">
 
-      <Border BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="0,1,0,0">
+      <Border BorderBrush="{TemplateBinding BorderBrush}">
         <Grid x:Name="HorizontalRoot">
           <Grid.ColumnDefinitions>
             <ColumnDefinition MaxWidth="17" />
@@ -195,8 +194,7 @@
     <zm:ControlTemplateRoot Background="{TemplateBinding Background}"
                             VisualStateGroups="{StaticResource CommonVisualStates}">
 
-      <Border BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="1,0,0,0">
+      <Border BorderBrush="{TemplateBinding BorderBrush}">
         <Grid x:Name="HorizontalRoot">
           <Grid.RowDefinitions>
             <RowDefinition MaxHeight="17" />

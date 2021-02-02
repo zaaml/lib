@@ -14,20 +14,19 @@ namespace Zaaml.PresentationCore.Theming
 
 		private void ApplyGenerators()
 		{
-			if (_generators == null)
+			if (HasGenerators == false)
 				return;
 
-			foreach (var generator in _generators)
+			foreach (var generator in Generators)
 			{
 				foreach (var keyValuePair in generator.GenerateInternal())
 				{
-					if (ContainsKey(keyValuePair.Key) && generator.AllowOverwrite == false)
-						continue;
-
 					this[keyValuePair.Key] = keyValuePair.Value;
 				}
 			}
 		}
+
+		private bool HasGenerators => _generators != null;
 
 		private void FreezeGenerators()
 		{
