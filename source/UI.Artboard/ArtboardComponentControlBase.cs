@@ -28,6 +28,8 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
+		internal TPanel Panel => TemplateRoot;
+
 		private double ScrollOffsetX
 		{
 			get => _scrollOffsetX;
@@ -51,8 +53,6 @@ namespace Zaaml.UI.Controls.Artboard
 					Panel.ScrollOffsetY = value;
 			}
 		}
-
-		internal TPanel Panel => TemplateRoot;
 
 		private double Zoom
 		{

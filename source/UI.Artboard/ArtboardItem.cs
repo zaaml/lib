@@ -52,19 +52,16 @@ namespace Zaaml.UI.Controls.Artboard
 			set => SetValue(CanvasProperty, value);
 		}
 
+		private ArtboardCanvasPresenter CanvasPresenter => TemplateContract.CanvasPresenter;
+
 		private IEnumerable<IArtboardComponentControl> Components
 		{
 			get
 			{
 				if (IsTemplateAttached == false)
 					yield break;
-
-				yield return DesignTopContentControl;
-				yield return DesignBottomContentControl;
 			}
 		}
-
-		private ArtboardCanvasPresenter CanvasPresenter => TemplateContract.CanvasPresenter;
 
 		private double ScrollOffsetX
 		{
@@ -146,7 +143,6 @@ namespace Zaaml.UI.Controls.Artboard
 
 			UpdateZoom();
 			UpdateOffset();
-			UpdateDesignSize();
 		}
 
 		protected override void OnTemplateContractDetaching()

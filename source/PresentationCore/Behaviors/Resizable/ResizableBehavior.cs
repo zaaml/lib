@@ -256,7 +256,7 @@ namespace Zaaml.PresentationCore.Behaviors.Resizable
 
 		private protected void UpdatePosition()
 		{
-			if (CurrentAdvisor == null)
+			if (IsResizing == false || CurrentAdvisor == null)
 				return;
 
 			var resizeInfo = ResizeInfo;

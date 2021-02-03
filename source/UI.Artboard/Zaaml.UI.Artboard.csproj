@@ -11,28 +11,31 @@
 	<PropertyGroup>
 		<TargetFramework>net5.0-windows</TargetFramework>
 	</PropertyGroup>
-	
+
 	<PropertyGroup Condition="$(Publish) == 'true'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
-	  <PackageReference Include="GitVersionTask" Version="5.5.1">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
+	  <Compile Remove="Lib\**" />
+	  <EmbeddedResource Remove="Lib\**" />
+	  <None Remove="Lib\**" />
+	  <Page Remove="Lib\**" />
 	</ItemGroup>
 	
+	<ItemGroup>
+		<PackageReference Include="GitVersionTask" Version="5.5.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
 		<ProjectReference Include="..\PresentationCore\Zaaml.PresentationCore.csproj" />
 		<ProjectReference Include="..\UI\Zaaml.UI.csproj" />
-	</ItemGroup>
-	
-	<ItemGroup>
-	  <Folder Include="Lib\UI\Zaaml.UI.Artboard\" />
 	</ItemGroup>
 
 </Project>

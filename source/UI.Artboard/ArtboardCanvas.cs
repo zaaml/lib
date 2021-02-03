@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using Zaaml.Core.Weak.Collections;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Behaviors.Draggable;
@@ -35,6 +36,8 @@ namespace Zaaml.UI.Controls.Artboard
 
 			DraggableBehavior.SetAdvisor(this, new ArtboardCanvasDraggableAdvisor(this));
 			ResizableBehavior.SetAdvisor(this, new ArtboardCanvasResizableAdvisor(this));
+
+			Background = Brushes.LightGreen;
 		}
 
 		private IEnumerable<UIElement> Elements => Children.OfType<UIElement>();

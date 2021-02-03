@@ -29,7 +29,6 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			this.OverrideStyleKey<ArtboardSnapGuide>();
 
-			
 
 			UpdateCursor();
 		}
@@ -53,6 +52,13 @@ namespace Zaaml.UI.Controls.Artboard
 			(this.GetVisualParent() as ArtboardSnapGuidePanel)?.InvalidateArrange();
 		}
 
+		protected override void OnMouseDown(MouseButtonEventArgs e)
+		{
+			base.OnMouseDown(e);
+
+			Artboard?.OnSnapGuideMouseDown(this, e);
+		}
+
 		protected override void OnMouseEnter(MouseEventArgs e)
 		{
 			base.OnMouseEnter(e);
@@ -65,13 +71,6 @@ namespace Zaaml.UI.Controls.Artboard
 			base.OnMouseLeave(e);
 
 			Artboard?.OnSnapGuideMouseLeave(this, e);
-		}
-
-		protected override void OnMouseDown(MouseButtonEventArgs e)
-		{
-			base.OnMouseDown(e);
-
-			Artboard?.OnSnapGuideMouseDown(this, e);
 		}
 
 		protected override void OnMouseUp(MouseButtonEventArgs e)

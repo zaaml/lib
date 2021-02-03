@@ -12,7 +12,7 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal sealed class FixedTemplateContentControlController<TPanel, TChild>
+	internal class FixedTemplateContentControlController<TPanel, TChild>
 		where TPanel : Panel
 		where TChild : UIElement
 	{
@@ -38,7 +38,7 @@ namespace Zaaml.UI.Controls.Core
 					if (templateRoot != null)
 						templateRoot.Children.Remove(_child);
 					else
-						RemoveLogicalChild(_child);
+						DetachLogicalChild(_child);
 				}
 
 				_child = value;
@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.Core
 					if (templateRoot != null)
 						templateRoot.Children.Add(_child);
 					else
-						AddLogicalChild(_child);
+						AttachLogicalChild(_child);
 				}
 			}
 		}
@@ -59,7 +59,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private Panel TemplateRoot => Control.Panel;
 
-		private void AddLogicalChild(TChild child)
+		private protected virtual void AttachLogicalChild(TChild child)
 		{
 			if (Control.IsLogicalParent)
 				Control.AddLogicalChild(child);
@@ -70,7 +70,7 @@ namespace Zaaml.UI.Controls.Core
 			if (Child == null)
 				return;
 
-			RemoveLogicalChild(Child);
+			DetachLogicalChild(Child);
 
 			TemplateRoot.Children.Add(Child);
 		}
@@ -82,10 +82,10 @@ namespace Zaaml.UI.Controls.Core
 
 			Control.Panel.Children.Remove(Child);
 
-			AddLogicalChild(Child);
+			AttachLogicalChild(Child);
 		}
 
-		private void RemoveLogicalChild(TChild child)
+		private protected virtual void DetachLogicalChild(TChild child)
 		{
 			if (Control.IsLogicalParent)
 				Control.RemoveLogicalChild(child);
@@ -105,10 +105,7 @@ namespace Zaaml.UI.Controls.Core
 		where TPanel : Panel
 		where TChild : FrameworkElement
 	{
-		protected FixedTemplateContentControlBase()
-		{
-			Controller = new FixedTemplateContentControlController<TPanel, TChild>(this);
-		}
+		private FixedTemplateContentControlController<TPanel, TChild> _controller;
 
 		protected TChild ChildCore
 		{
@@ -116,7 +113,12 @@ namespace Zaaml.UI.Controls.Core
 			set => Controller.Child = value;
 		}
 
-		private FixedTemplateContentControlController<TPanel, TChild> Controller { get; }
+		private protected virtual FixedTemplateContentControlController<TPanel, TChild> CreateController()
+		{
+			return new FixedTemplateContentControlController<TPanel, TChild>(this);
+		}
+
+		private FixedTemplateContentControlController<TPanel, TChild> Controller => _controller ??= CreateController();
 
 		protected virtual bool IsLogicalParent => true;
 

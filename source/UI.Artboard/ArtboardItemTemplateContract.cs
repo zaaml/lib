@@ -10,12 +10,6 @@ namespace Zaaml.UI.Controls.Artboard
 	public class ArtboardItemTemplateContract : TemplateContract
 	{
 		[TemplateContractPart(Required = true)]
-		public ArtboardDesignContentControl DesignBottomContentControl { get; [UsedImplicitly] private set; }
-
-		[TemplateContractPart(Required = true)]
-		public ArtboardDesignContentControl DesignTopContentControl { get; [UsedImplicitly] private set; }
-
-		[TemplateContractPart(Required = true)]
 		public ArtboardCanvasPresenter CanvasPresenter { get; [UsedImplicitly] private set; }
 	}
 }

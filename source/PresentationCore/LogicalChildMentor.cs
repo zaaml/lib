@@ -52,7 +52,7 @@ namespace Zaaml.PresentationCore
 
 		public static LogicalChildMentor<TControl> Create<TControl>(TControl control) where TControl : System.Windows.Controls.Control, ILogicalMentorOwner
 		{
-			return new LogicalChildMentor<TControl>(control);
+			return new(control);
 		}
 
 		public static void DetachLogical(object logicalChild)

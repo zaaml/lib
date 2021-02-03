@@ -94,7 +94,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		protected Matrix FromDesignMatrix => ScrollViewTransform.Transform.Value;
+		protected Matrix FromCanvasMatrix => ScrollViewTransform.Transform.Value;
 
 		private ArtboardGridLineControl GridLineControl => TemplateContract.GridLineControl;
 
@@ -172,12 +172,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private ArtboardControlTemplateContract TemplateContract => (ArtboardControlTemplateContract) TemplateContractInternal;
 
-		protected override ArtboardItemCollection CreateItemCollection()
-		{
-			return new ArtboardItemCollection(this);
-		}
-
-		protected Matrix ToDesignMatrix
+		protected Matrix ToCanvasMatrix
 		{
 			get
 			{
@@ -221,6 +216,11 @@ namespace Zaaml.UI.Controls.Artboard
 		private ArtboardAdornerFactoryCollection CreateArtboardAdornerFactoryCollection()
 		{
 			return new ArtboardAdornerFactoryCollection(this);
+		}
+
+		protected override ArtboardItemCollection CreateItemCollection()
+		{
+			return new ArtboardItemCollection(this);
 		}
 
 		private ArtboardSnapGuideCollection CreateSnapGuidesCollection()
@@ -327,7 +327,7 @@ namespace Zaaml.UI.Controls.Artboard
 		private void OnRulerMouseMove(object sender, MouseEventArgs e)
 		{
 			var ruler = (ArtboardRuler) sender;
-			var designMatrix = ToDesignMatrix;
+			var designMatrix = ToCanvasMatrix;
 			var rulerPosition = e.GetPosition(ruler);
 			var designPosition = designMatrix.Transform(rulerPosition);
 
@@ -453,7 +453,7 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			base.OnTemplateContractAttached();
 
-			ScrollView.Artboard = this;
+			ScrollView.ArtboardControl = this;
 
 			foreach (var component in Components)
 				component.Artboard = this;
@@ -508,7 +508,7 @@ namespace Zaaml.UI.Controls.Artboard
 			HorizontalSnapGuidePresenter.SnapGuides.Clear();
 			VerticalSnapGuidePresenter.SnapGuides.Clear();
 
-			ScrollView.Artboard = null;
+			ScrollView.ArtboardControl = null;
 
 			foreach (var component in Components)
 				component.Artboard = this;

@@ -73,6 +73,12 @@
       </zm:SkinDictionary>
 
     </zm:SkinDictionary>
-    
-  </zm:SkinDictionary>
+
+    <!-- ArtboardItem -->
+    <zm:SkinDictionary x:Key="ArtboardItem">
+      <SolidColorBrush x:Key="Background" Color="#FFFFFFFF"/>
+      <SolidColorBrush x:Key="BorderBrush" Color="#FF000000"/>
+    </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
 </zm:ThemeSkinResourceDictionary>

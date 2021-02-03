@@ -21,7 +21,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private ArtboardControl _artboard;
 
-		internal event EventHandler DesignMatrixChanged;
+		internal event EventHandler MatrixChanged;
 
 		public ArtboardControl ArtboardControl
 		{
@@ -41,7 +41,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		protected Matrix FromDesignMatrix => ScrollViewTransform.Transform.Value;
+		protected Matrix FromMatrix => ScrollViewTransform.Transform.Value;
 
 		internal double ScrollOffsetX
 		{
@@ -54,7 +54,7 @@ namespace Zaaml.UI.Controls.Artboard
 				ScrollViewTransform.TranslateX = -value;
 
 				OnOffsetXChanged();
-				OnDesignMatrixChanged();
+				OnMatrixChanged();
 			}
 		}
 
@@ -69,11 +69,11 @@ namespace Zaaml.UI.Controls.Artboard
 				ScrollViewTransform.TranslateY = -value;
 
 				OnOffsetYChanged();
-				OnDesignMatrixChanged();
+				OnMatrixChanged();
 			}
 		}
 
-		protected Matrix ToDesignMatrix
+		protected Matrix ToMatrix
 		{
 			get
 			{
@@ -96,7 +96,7 @@ namespace Zaaml.UI.Controls.Artboard
 				ScrollViewTransform.ScaleX = ScrollViewTransform.ScaleY = value;
 
 				OnZoomChanged();
-				OnDesignMatrixChanged();
+				OnMatrixChanged();
 			}
 		}
 
@@ -108,9 +108,9 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 		}
 
-		private void OnDesignMatrixChanged()
+		private void OnMatrixChanged()
 		{
-			DesignMatrixChanged?.Invoke(this, EventArgs.Empty);
+			MatrixChanged?.Invoke(this, EventArgs.Empty);
 		}
 
 		protected virtual void OnOffsetXChanged()
@@ -130,24 +130,24 @@ namespace Zaaml.UI.Controls.Artboard
 
 		internal Point TransformFromDesignCoordinates(Point point)
 		{
-			return FromDesignMatrix.Transform(point);
+			return FromMatrix.Transform(point);
 		}
 
 		internal Rect TransformFromDesignCoordinates(Rect rect)
 		{
-			var matrix = FromDesignMatrix;
+			var matrix = FromMatrix;
 
 			return new Rect(matrix.Transform(rect.TopLeft), matrix.Transform(rect.BottomRight));
 		}
 
 		internal Point TransformToDesignCoordinates(Point point)
 		{
-			return ToDesignMatrix.Transform(point);
+			return ToMatrix.Transform(point);
 		}
 
 		internal Rect TransformToDesignCoordinates(Rect rect)
 		{
-			var matrix = ToDesignMatrix;
+			var matrix = ToMatrix;
 
 			return new Rect(matrix.Transform(rect.TopLeft), matrix.Transform(rect.BottomRight));
 		}

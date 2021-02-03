@@ -57,7 +57,7 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			adornerPanel.Children.Add(this);
 
-			adornerPanel.DesignMatrixChanged += OnDesignMatrixChanged;
+			adornerPanel.MatrixChanged += OnMatrixChanged;
 		}
 
 		protected virtual void DetachElement(UIElement adornedElement)
@@ -66,7 +66,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		protected virtual void DetachPanel(ArtboardAdornerPanel adornerPanel)
 		{
-			adornerPanel.DesignMatrixChanged -= OnDesignMatrixChanged;
+			adornerPanel.MatrixChanged -= OnMatrixChanged;
 
 			adornerPanel.Children.Remove(this);
 		}
@@ -131,7 +131,7 @@ namespace Zaaml.UI.Controls.Artboard
 			OnAdornerPanelChanged(oldValue, newValue);
 		}
 
-		protected virtual void OnDesignMatrixChanged(object sender, EventArgs e)
+		protected virtual void OnMatrixChanged(object sender, EventArgs e)
 		{
 		}
 

@@ -134,12 +134,12 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 		}
 
-		protected override void OnDesignMatrixChanged(object sender, EventArgs e)
+		protected override void OnMatrixChanged(object sender, EventArgs e)
 		{
-			base.OnDesignMatrixChanged(sender, e);
+			base.OnMatrixChanged(sender, e);
 
-			_draggableBehavior.OnDesignMatrixChanged();
-			_resizableBehavior.OnDesignMatrixChanged();
+			_draggableBehavior.OnMatrixChanged();
+			_resizableBehavior.OnMatrixChanged();
 		}
 
 		private void OnDraggableBehaviorDragEnded(object sender, EventArgs e)
@@ -198,6 +198,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 	public class ArtboardSelectionAdornerTemplateContract : ArtboardAdornerTemplateContract
 	{
-		[TemplateContractPart] public ResizableBorderControl ResizableBorderHandle { get; [UsedImplicitly] private set; }
+		[TemplateContractPart]
+		public ResizableBorderControl ResizableBorderHandle { get; [UsedImplicitly] private set; }
 	}
 }

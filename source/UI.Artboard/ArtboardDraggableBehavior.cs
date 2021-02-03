@@ -40,7 +40,7 @@ namespace Zaaml.UI.Controls.Artboard
 			return Adorner.AdornerPanel.TransformToDesignCoordinates(location);
 		}
 
-		internal void OnDesignMatrixChanged()
+		internal void OnMatrixChanged()
 		{
 			if (ActualHandle is ArtboardDraggableElementHandle artboardDraggableElementHandle)
 				artboardDraggableElementHandle.UpdateOriginLocation(Adorner.AdornerPanel.TransformFromDesignCoordinates(ScrollPanelOrigin));

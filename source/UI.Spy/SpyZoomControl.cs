@@ -133,8 +133,8 @@ namespace Zaaml.UI.Controls.Spy
 
 			var size = ElementWindow?.RenderSize ?? new Size(600, 400);
 
-			ArtboardItem.DesignWidth = size.Width;
-			ArtboardItem.DesignHeight = size.Height;
+			ArtboardItem.Width = size.Width;
+			ArtboardItem.Height = size.Height;
 
 			Renderer.Width = size.Width;
 			Renderer.Height = size.Height;

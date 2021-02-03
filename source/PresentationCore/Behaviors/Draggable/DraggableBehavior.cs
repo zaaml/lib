@@ -155,6 +155,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 			RaiseDragEnding();
 
 			CurrentAdvisor.OnDragEnd(ActualElement, this);
+
 			OnDragEnded();
 
 			IsDragging = false;
@@ -167,6 +168,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 				return;
 
 			UpdatePosition();
+
 			CurrentAdvisor.OnDragMove(ActualElement, this);
 
 			OnDragMove();
@@ -242,11 +244,14 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 
 		protected void UpdatePosition()
 		{
+			if (IsDragging == false || CurrentAdvisor == null)
+				return;
+
 			var dragInfo = DragInfo;
 
 			DragDelta = PointUtils.SubtractPoints(dragInfo.CurrentLocation, dragInfo.OriginLocation);
 
-			CurrentAdvisor?.SetPosition(ActualElement, PointUtils.AddVector(ElementOrigin, DragDelta));
+			CurrentAdvisor.SetPosition(ActualElement, PointUtils.AddVector(ElementOrigin, DragDelta));
 		}
 
 		internal static event EventHandler GlobalDragEnded;

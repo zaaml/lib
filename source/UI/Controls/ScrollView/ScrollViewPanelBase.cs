@@ -239,7 +239,7 @@ namespace Zaaml.UI.Controls.ScrollView
 
 				_scrollInfo = value;
 
-				OnScrollInfoChanged(new ScrollInfoChangedEventArgs(oldScrollInfo, _scrollInfo));
+				OnScrollInfoChangedPrivate(new ScrollInfoChangedEventArgs(oldScrollInfo, _scrollInfo));
 			}
 		}
 
@@ -582,8 +582,12 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		private void OnScrollClientScrollInfoChanged(object sender, ScrollInfoChangedEventArgs e)
 		{
-			UpdateTransform();
+			OnScrollInfoChangedPrivate(e);
+		}
 
+		protected void OnScrollInfoChangedPrivate(ScrollInfoChangedEventArgs e)
+		{
+			UpdateTransform();
 			OnScrollInfoChanged(e);
 		}
 

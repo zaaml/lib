@@ -124,7 +124,9 @@ namespace Zaaml.UI.Controls.Artboard
 			orientation = targetLine.Axis == ArtboardAxis.X ? Orientation.Vertical : Orientation.Horizontal;
 
 			var sourceLocation = sourcePoint.GetLocation(snapParameters);
-			var targetLocation = targetLine.Axis == ArtboardAxis.X ? new Point(sourceLocation.X, targetLine.GetAxisValue(sourceLocation.Y, snapParameters.Context)) : new Point(targetLine.GetAxisValue(sourceLocation.X, snapParameters.Context), sourceLocation.Y);
+			var targetLocation = targetLine.Axis == ArtboardAxis.X
+				? new Point(sourceLocation.X, targetLine.GetAxisValue(sourceLocation.Y, snapParameters.Context))
+				: new Point(targetLine.GetAxisValue(sourceLocation.X, snapParameters.Context), sourceLocation.Y);
 
 			return targetLocation - sourceLocation;
 		}

@@ -1,4 +1,4 @@
-// <copyright file="ArtboardSnapTargetElementCollection.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="ArtboardSnapTargetCollection.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 

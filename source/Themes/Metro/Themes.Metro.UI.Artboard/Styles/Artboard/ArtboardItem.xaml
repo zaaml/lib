@@ -9,36 +9,10 @@
                    TargetType="zm:ArtboardItem">
 
     <zm:ControlTemplateRoot x:Name="TemplateRoot"
-                            Background="Transparent">
+                            Background="{TemplateBinding Background}">
 
-      <!--  DesignBottomContent  -->
-      <zm:ArtboardDesignContentControl x:Name="DesignBottomContentControl">
-        <zm:Panel>
-
-          <Border Margin="{zm:TemplateBinding Path=DesignBorderThickness,
-                                                        Converter={zm:NegateConverter}}"
-                  Background="{zm:TemplateBinding Path=DesignBackground}"
-                  BorderBrush="{zm:TemplateBinding Path=DesignBorderBrush}"
-                  BorderThickness="{zm:TemplateBinding Path=DesignBorderThickness}" />
-
-          <zm:ContentControl HorizontalContentAlignment="Stretch"
-                             VerticalContentAlignment="Stretch"
-                             Content="{zm:TemplateBinding Path=DesignBottomContent}"
-                             ContentTemplate="{zm:TemplateBinding Path=DesignBottomContentTemplate}" />
-        </zm:Panel>
-      </zm:ArtboardDesignContentControl>
-
+      <!-- CanvasPresenter -->
       <zm:ArtboardCanvasPresenter x:Name="CanvasPresenter" />
-
-      <!--  DesignTopContent  -->
-      <zm:ArtboardDesignContentControl x:Name="DesignTopContentControl">
-        <zm:Panel>
-          <zm:ContentControl HorizontalContentAlignment="Stretch"
-                             VerticalContentAlignment="Stretch"
-                             Content="{zm:TemplateBinding Path=DesignTopContent}"
-                             ContentTemplate="{zm:TemplateBinding Path=DesignTopContentTemplate}" />
-        </zm:Panel>
-      </zm:ArtboardDesignContentControl>
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -50,7 +24,13 @@
 
   <!--  Skinned Style  -->
   <zm:Style x:Key="ArtboardItemStyle" BasedOn="{StaticResource ArtboardItemStyleBase}"
-            TargetType="zm:ArtboardItem" Skin="Metro.ArtboardItem" />
+            TargetType="zm:ArtboardItem" Skin="Metro.ArtboardItem">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Background" ValuePath="Background"/>
+    </zm:SetterGroup>
+
+  </zm:Style>
 
   <!--  Theme Style  -->
   <zm:ThemeStyle x:Key="ArtboardItemThemeStyle" zmb:Deferred="True"
