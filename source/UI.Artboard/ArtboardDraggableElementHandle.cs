@@ -13,7 +13,7 @@ namespace Zaaml.UI.Controls.Artboard
 	internal sealed class ArtboardDraggableElementHandle : DraggableHandle
 	{
 		public static readonly DependencyProperty ElementProperty = DPM.Register<FrameworkElement, ArtboardDraggableElementHandle>
-			("Element", default, d => d.OnElementPropertyChangedPrivate);
+			("Element", d => d.OnElementPropertyChangedPrivate);
 
 		private Point _currentLocation;
 		private ElementDragHandle _dragHandle;

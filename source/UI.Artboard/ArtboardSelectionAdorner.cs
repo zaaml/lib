@@ -25,9 +25,6 @@ namespace Zaaml.UI.Controls.Artboard
 		private static readonly DependencyPropertyKey IsResizingPropertyKey = DPM.RegisterReadOnly<bool, ArtboardSelectionAdorner>
 			("IsResizing");
 
-		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, ArtboardSelectionAdorner>
-			("IsSelected", true, d => d.OnIsSelectedPropertyChangedPrivate);
-
 		public static readonly DependencyProperty IsResizingProperty = IsResizingPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty IsDraggingProperty = IsDraggingPropertyKey.DependencyProperty;
@@ -61,9 +58,9 @@ namespace Zaaml.UI.Controls.Artboard
 			_resizableBehavior.ResizeEnded += OnResizableBehaviorResizeEnded;
 		}
 
-		protected virtual bool CanDragStart => IsSelected;
+		protected virtual bool CanDragStart => true;
 
-		protected virtual bool CanResizeStart => IsSelected;
+		protected virtual bool CanResizeStart => true;
 
 		public bool IsDragging
 		{
@@ -77,17 +74,11 @@ namespace Zaaml.UI.Controls.Artboard
 			private set => this.SetReadOnlyValue(IsResizingPropertyKey, value);
 		}
 
-		public bool IsSelected
-		{
-			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
-		}
-
 		private ResizableBorderControl ResizableBorderHandle => TemplateContract.ResizableBorderHandle;
 
 		private ArtboardSelectionAdornerTemplateContract TemplateContract => (ArtboardSelectionAdornerTemplateContract) TemplateContractInternal;
 
-		protected override void AttachElement(UIElement adornedElement)
+		protected override void AttachElement(FrameworkElement adornedElement)
 		{
 			base.AttachElement(adornedElement);
 
@@ -96,16 +87,13 @@ namespace Zaaml.UI.Controls.Artboard
 			adornedElement.PreviewMouseDown += OnAdornedElementPreviewMouseDown;
 			adornedElement.PreviewMouseUp += OnAdornedElementPreviewMouseUp;
 
-			if (adornedElement is FrameworkElement frameworkElement)
+			_draggableBehavior.Handle = new ArtboardDraggableElementHandle(this)
 			{
-				_draggableBehavior.Handle = new ArtboardDraggableElementHandle(this)
-				{
-					Element = frameworkElement
-				};
-			}
+				Element = adornedElement
+			};
 		}
 
-		protected override void DetachElement(UIElement adornedElement)
+		protected override void DetachElement(FrameworkElement adornedElement)
 		{
 			_draggableBehavior.Handle = null;
 			_resizableBehavior.Handle = null;
@@ -134,9 +122,9 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 		}
 
-		protected override void OnMatrixChanged(object sender, EventArgs e)
+		protected override void OnMatrixChanged()
 		{
-			base.OnMatrixChanged(sender, e);
+			base.OnMatrixChanged();
 
 			_draggableBehavior.OnMatrixChanged();
 			_resizableBehavior.OnMatrixChanged();
@@ -156,10 +144,6 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			if (CanDragStart == false)
 				e.Cancel = true;
-		}
-
-		private void OnIsSelectedPropertyChangedPrivate(bool oldValue, bool newValue)
-		{
 		}
 
 		private void OnResizableBehaviorResizeEnded(object sender, EventArgs e)

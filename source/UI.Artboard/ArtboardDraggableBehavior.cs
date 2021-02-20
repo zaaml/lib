@@ -5,7 +5,9 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.PresentationCore.Behaviors.Draggable;
+using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.Artboard
 {
@@ -13,9 +15,9 @@ namespace Zaaml.UI.Controls.Artboard
 	{
 		internal event EventHandler<CancelEventArgs> DragStarting;
 
-		protected override FrameworkElement ActualElement => Adorner?.AdornedElement as FrameworkElement ?? FrameworkElement;
+		protected override FrameworkElement ActualElement => Adorner?.AdornedElement ?? FrameworkElement;
 
-		private ArtboardAdorner Adorner => (ArtboardAdorner) FrameworkElement;
+		public ArtboardAdorner Adorner => (ArtboardAdorner) FrameworkElement;
 
 		public override DragInfo DragInfo => new DragInfo(ConvertLocation(ActualHandle.OriginLocation), ConvertLocation(ActualHandle.CurrentLocation));
 
@@ -40,12 +42,18 @@ namespace Zaaml.UI.Controls.Artboard
 			return Adorner.AdornerPanel.TransformToDesignCoordinates(location);
 		}
 
-		internal void OnMatrixChanged()
+		protected override IDraggableAdvisor GetActualAdvisor()
 		{
-			if (ActualHandle is ArtboardDraggableElementHandle artboardDraggableElementHandle)
-				artboardDraggableElementHandle.UpdateOriginLocation(Adorner.AdornerPanel.TransformFromDesignCoordinates(ScrollPanelOrigin));
+			var element = ActualElement;
+			var visualParent = element?.GetVisualParent();
 
-			UpdatePosition();
+			if (visualParent is ArtboardCanvas canvas)
+				return GetAdvisor(canvas);
+
+			if (visualParent is Border)
+				return ArtboardMarginDraggableAdvisor.Instance;
+
+			return null;
 		}
 
 		protected override void OnDragStarted()
@@ -53,6 +61,37 @@ namespace Zaaml.UI.Controls.Artboard
 			base.OnDragStarted();
 
 			ScrollPanelOrigin = Adorner.AdornerPanel.TransformToDesignCoordinates(ActualHandle.OriginLocation);
+		}
+
+		internal void OnMatrixChanged()
+		{
+			if (ActualHandle is ArtboardDraggableElementHandle artboardDraggableElementHandle)
+				artboardDraggableElementHandle.UpdateOriginLocation(Adorner.AdornerPanel.TransformFromDesignCoordinates(ScrollPanelOrigin));
+
+			UpdatePosition();
+		}
+	}
+
+	internal sealed class ArtboardMarginDraggableAdvisor : ArtboardDraggableAdvisorBase
+	{
+		private ArtboardMarginDraggableAdvisor()
+		{
+		}
+
+		public static ArtboardMarginDraggableAdvisor Instance { get; } = new ArtboardMarginDraggableAdvisor();
+
+		protected override Point GetPositionCore(UIElement element)
+		{
+			if (element is FrameworkElement fre)
+				return new Point(fre.Margin.Left, fre.Margin.Top);
+
+			return new Point();
+		}
+
+		protected override void SetPositionCore(UIElement element, Point value)
+		{
+			if (element is FrameworkElement fre)
+				fre.Margin = new Thickness(value.X, value.Y, fre.Margin.Right, fre.Margin.Bottom);
 		}
 	}
 }

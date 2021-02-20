@@ -9,7 +9,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 {
 	internal interface IDraggableAdvisor
 	{
-		Point GetPosition(UIElement element);
+		Point GetPosition(UIElement element, DraggableBehavior draggableBehavior);
 
 		void OnDragEnd(UIElement element, DraggableBehavior draggableBehavior);
 
@@ -17,7 +17,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 
 		void OnDragStart(UIElement element, DraggableBehavior draggableBehavior);
 
-		void SetPosition(UIElement element, Point value);
+		void SetPosition(UIElement element, Point value, DraggableBehavior draggableBehavior);
 	}
 
 	internal sealed class DummyDraggableAdvisor : IDraggableAdvisor
@@ -28,12 +28,12 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 		{
 		}
 
-		public Point GetPosition(UIElement element)
+		public Point GetPosition(UIElement element, DraggableBehavior draggableBehavior)
 		{
 			return XamlConstants.ZeroPoint;
 		}
 
-		public void SetPosition(UIElement element, Point value)
+		public void SetPosition(UIElement element, Point value, DraggableBehavior draggableBehavior)
 		{
 		}
 
@@ -69,9 +69,9 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 		{
 		}
 
-		public abstract Point GetPosition(UIElement element);
+		public abstract Point GetPosition(UIElement element, DraggableBehavior draggableBehavior);
 
-		public abstract void SetPosition(UIElement element, Point value);
+		public abstract void SetPosition(UIElement element, Point value, DraggableBehavior draggableBehavior);
 
 		void IDraggableAdvisor.OnDragEnd(UIElement element, DraggableBehavior draggableBehavior)
 		{
@@ -100,12 +100,12 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 			_setPosition = setPosition ?? ((u, p) => { });
 		}
 
-		public override Point GetPosition(UIElement element)
+		public override Point GetPosition(UIElement element, DraggableBehavior draggableBehavior)
 		{
 			return _getPosition((T) element);
 		}
 
-		public override void SetPosition(UIElement element, Point value)
+		public override void SetPosition(UIElement element, Point value, DraggableBehavior draggableBehavior)
 		{
 			_setPosition((T) element, value);
 		}

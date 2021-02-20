@@ -25,14 +25,15 @@ namespace Zaaml.UI.Windows
 
     #region  Methods
 
-    public override Point GetPosition(UIElement element)
+    public override Point GetPosition(UIElement element, DraggableBehavior draggableBehavior)
     {
       return ((WindowBase) element).GetLocation();
     }
 
-    public override void SetPosition(UIElement element, Point value)
+    public override void SetPosition(UIElement element, Point value, DraggableBehavior draggableBehavior)
     {
       var window = (WindowBase) element;
+
       window.SetLocation(value);
       window.IsManualLocation = true;
     }

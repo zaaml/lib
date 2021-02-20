@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -14,87 +13,79 @@ namespace Zaaml.UI.Controls.Artboard
 	[TemplateContractType(typeof(ArtboardAdornerTemplateContract))]
 	public abstract class ArtboardAdorner : TemplateContractControl
 	{
-		private static readonly DependencyPropertyKey AdornedElementPropertyKey = DPM.RegisterReadOnly<UIElement, ArtboardAdorner>
+		private static readonly DependencyPropertyKey AdornedElementPropertyKey = DPM.RegisterReadOnly<FrameworkElement, ArtboardAdorner>
 			("AdornedElement", null, d => d.OnAdornedElementPropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey AdornerPanelPropertyKey = DPM.RegisterReadOnly<ArtboardAdornerPanel, ArtboardAdorner>
-			("AdornerPanel", null, d => d.OnAdornerPanelPropertyChangedPrivate);
+			("AdornerPanel", a => a.OnAdornerPanelPropertyChangedPrivate);
+
+		private static readonly DependencyPropertyKey ArtboardCanvasPropertyKey = DPM.RegisterReadOnly<ArtboardCanvas, ArtboardAdorner>
+			("ArtboardCanvas", d => d.OnArtboardCanvasPropertyChangedPrivate);
+
+		public static readonly DependencyProperty ArtboardCanvasProperty = ArtboardCanvasPropertyKey.DependencyProperty;
+
+		public ArtboardCanvas ArtboardCanvas
+		{
+			get => (ArtboardCanvas) GetValue(ArtboardCanvasProperty);
+			internal set => this.SetReadOnlyValue(ArtboardCanvasPropertyKey, value);
+		}
+
+		private void OnArtboardCanvasPropertyChangedPrivate(ArtboardCanvas oldValue, ArtboardCanvas newValue)
+		{
+		}
 
 		public static readonly DependencyProperty AdornerPanelProperty = AdornerPanelPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty AdornedElementProperty = AdornedElementPropertyKey.DependencyProperty;
 
-		public UIElement AdornedElement
+		public FrameworkElement AdornedElement
 		{
-			get => (UIElement) GetValue(AdornedElementProperty);
+			get => (FrameworkElement) GetValue(AdornedElementProperty);
 			internal set => this.SetReadOnlyValue(AdornedElementPropertyKey, value);
 		}
 
 		public ArtboardAdornerPanel AdornerPanel
 		{
 			get => (ArtboardAdornerPanel) GetValue(AdornerPanelProperty);
-			private set => this.SetReadOnlyValue(AdornerPanelPropertyKey, value);
+			internal set => this.SetReadOnlyValue(AdornerPanelPropertyKey, value);
 		}
 
 		internal Rect AdornerRect { get; private set; }
 
-		internal ArtboardAdornerFactory Factory { get; set; }
 
 		internal void ArrangeAdorner(Rect rect)
 		{
-			UpdatePanel();
-
 			AdornerRect = rect;
 
 			AdornerPanel?.ArrangeAdorner(this);
 		}
 
-		protected virtual void AttachElement(UIElement adornedElement)
-		{
-		}
-
-		protected virtual void AttachPanel(ArtboardAdornerPanel adornerPanel)
+		private void AttachAdornerPanel(ArtboardAdornerPanel adornerPanel)
 		{
 			adornerPanel.Children.Add(this);
-
-			adornerPanel.MatrixChanged += OnMatrixChanged;
 		}
 
-		protected virtual void DetachElement(UIElement adornedElement)
+		protected virtual void AttachElement(FrameworkElement adornedElement)
 		{
 		}
 
-		protected virtual void DetachPanel(ArtboardAdornerPanel adornerPanel)
+		private void DetachAdornerPanel(ArtboardAdornerPanel adornerPanel)
 		{
-			adornerPanel.MatrixChanged -= OnMatrixChanged;
-
 			adornerPanel.Children.Remove(this);
 		}
 
-		private ArtboardAdornerPanel EnsurePanel()
-		{
-			var artboardCanvas = AdornedElement?.GetVisualParent() as ArtboardCanvas;
-			var artboardAdornerPresenter = artboardCanvas?.ArtboardControl?.AdornerPresenterInternal;
-
-			if (artboardAdornerPresenter == null)
-				return null;
-
-			if (artboardAdornerPresenter.AdornerPanel == null)
-				artboardAdornerPresenter.ApplyTemplate();
-
-			return artboardAdornerPresenter.AdornerPanel;
-		}
-
-		protected virtual void OnAdornedElementChanged(UIElement oldValue, UIElement newValue)
+		protected virtual void DetachElement(FrameworkElement adornedElement)
 		{
 		}
 
-		private void OnAdornedElementPropertyChangedPrivate(UIElement oldValue, UIElement newValue)
+		protected virtual void OnAdornedElementChanged(FrameworkElement oldValue, FrameworkElement newValue)
+		{
+		}
+
+		private void OnAdornedElementPropertyChangedPrivate(FrameworkElement oldValue, FrameworkElement newValue)
 		{
 			if (ReferenceEquals(oldValue, newValue))
 				return;
-
-			UpdatePanel();
 
 			if (oldValue != null)
 			{
@@ -113,31 +104,25 @@ namespace Zaaml.UI.Controls.Artboard
 			OnAdornedElementChanged(oldValue, newValue);
 		}
 
-		protected virtual void OnAdornerPanelChanged(ArtboardAdornerPanel oldValue, ArtboardAdornerPanel newValue)
+		private void OnAdornerPanelPropertyChangedPrivate(ArtboardAdornerPanel oldPanel, ArtboardAdornerPanel newPanel)
 		{
-		}
-
-		private void OnAdornerPanelPropertyChangedPrivate(ArtboardAdornerPanel oldValue, ArtboardAdornerPanel newValue)
-		{
-			if (ReferenceEquals(oldValue, newValue))
+			if (ReferenceEquals(oldPanel, newPanel))
 				return;
 
-			if (oldValue != null)
-				DetachPanel(oldValue);
+			if (oldPanel != null)
+				DetachAdornerPanel(oldPanel);
 
-			if (newValue != null)
-				AttachPanel(newValue);
-
-			OnAdornerPanelChanged(oldValue, newValue);
+			if (newPanel != null)
+				AttachAdornerPanel(newPanel);
 		}
 
-		protected virtual void OnMatrixChanged(object sender, EventArgs e)
+		protected virtual void OnMatrixChanged()
 		{
 		}
 
-		internal void UpdatePanel()
+		internal void OnMatrixChangedInternal()
 		{
-			AdornerPanel = EnsurePanel();
+			OnMatrixChanged();
 		}
 	}
 

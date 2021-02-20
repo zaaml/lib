@@ -16,7 +16,7 @@ namespace Zaaml.UI.Controls.Artboard
 {
 	[TemplateContractType(typeof(ArtboardItemTemplateContract))]
 	[ContentProperty(nameof(Canvas))]
-	public partial class ArtboardItem : TemplateContractControl, IArtboardComponentControl
+	public class ArtboardItem : TemplateContractControl, IArtboardComponentControl
 	{
 		private static readonly DependencyPropertyKey ArtboardControlPropertyKey = DPM.RegisterReadOnly<ArtboardControl, ArtboardItem>
 			("ArtboardControl", d => d.OnArtboardControlPropertyChangedPrivate);
@@ -105,16 +105,6 @@ namespace Zaaml.UI.Controls.Artboard
 
 				OnZoomChanged();
 			}
-		}
-
-		public void OnAdornerFactoryAdded(ArtboardAdornerFactory adornerFactory)
-		{
-			Canvas?.OnAdornerFactoryAdded(adornerFactory);
-		}
-
-		public void OnAdornerFactoryRemoved(ArtboardAdornerFactory adornerFactory)
-		{
-			Canvas?.OnAdornerFactoryRemoved(adornerFactory);
 		}
 
 		private void OnArtboardControlPropertyChangedPrivate(ArtboardControl oldValue, ArtboardControl newValue)

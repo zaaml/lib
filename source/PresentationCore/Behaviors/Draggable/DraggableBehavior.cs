@@ -110,7 +110,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 			return element.GetAncestorsAndSelf(MixedTreeEnumerationStrategy.VisualThenLogicalInstance).Select(GetElementAdvisor).FirstOrDefault(a => a != null);
 		}
 
-		private IDraggableAdvisor GetElementAdvisor(DependencyObject dependencyObject)
+		protected IDraggableAdvisor GetElementAdvisor(DependencyObject dependencyObject)
 		{
 			if (dependencyObject is IDraggableAdvisorProvider advisorProvider)
 				return advisorProvider.GetAdvisor(ActualElement);
@@ -185,7 +185,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 
 			CurrentAdvisor.OnDragStart(ActualElement, this);
 
-			ElementOrigin = CurrentAdvisor.GetPosition(ActualElement);
+			ElementOrigin = CurrentAdvisor.GetPosition(ActualElement, this);
 
 			OnDragStarted();
 		}
@@ -251,7 +251,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 
 			DragDelta = PointUtils.SubtractPoints(dragInfo.CurrentLocation, dragInfo.OriginLocation);
 
-			CurrentAdvisor.SetPosition(ActualElement, PointUtils.AddVector(ElementOrigin, DragDelta));
+			CurrentAdvisor.SetPosition(ActualElement, PointUtils.AddVector(ElementOrigin, DragDelta), this);
 		}
 
 		internal static event EventHandler GlobalDragEnded;

@@ -31,9 +31,6 @@ namespace Zaaml.UI.Controls.Artboard
 		private static readonly DependencyPropertyKey AdornersPropertyKey = DPM.RegisterAttachedReadOnly<ArtboardAdornerCollection, ArtboardControl>
 			("AdornersPrivate");
 
-		private static readonly DependencyPropertyKey AdornerFactoriesPropertyKey = DPM.RegisterReadOnly<ArtboardAdornerFactoryCollection, ArtboardControl>
-			("AdornerFactoriesPrivate");
-
 		public static readonly DependencyProperty SnapEngineProperty = DPM.Register<ArtboardSnapEngine, ArtboardControl>
 			("SnapEngine", d => d.OnSnapEnginePropertyChangedPrivate);
 
@@ -41,8 +38,6 @@ namespace Zaaml.UI.Controls.Artboard
 			("SnapGuidesPrivate");
 
 		public static readonly DependencyProperty SnapGuidesProperty = SnapGuidesPropertyKey.DependencyProperty;
-
-		public static readonly DependencyProperty AdornerFactoriesProperty = AdornerFactoriesPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty AdornersProperty = AdornersPropertyKey.DependencyProperty;
 
@@ -70,8 +65,6 @@ namespace Zaaml.UI.Controls.Artboard
 
 			MouseSnapGuide = PreviewSnapGuide;
 		}
-
-		public ArtboardAdornerFactoryCollection AdornerFactories => this.GetValueOrCreate(AdornerFactoriesPropertyKey, CreateArtboardAdornerFactoryCollection);
 
 		private ArtboardAdornerPresenter AdornerPresenter => TemplateContract.AdornerPresenter;
 
@@ -194,17 +187,6 @@ namespace Zaaml.UI.Controls.Artboard
 			set => SetValue(ZoomProperty, value);
 		}
 
-		internal void ArrangeAdorners(UIElement child, Rect rect)
-		{
-			var adorners = GetAdornersInternal(child);
-
-			if (adorners == null)
-				return;
-
-			foreach (var adorner in adorners)
-				adorner.ArrangeAdorner(rect);
-		}
-
 		private void AttachSnapEngine(ArtboardSnapEngine snapEngine)
 		{
 			if (snapEngine.Artboard != null)
@@ -212,12 +194,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 			snapEngine.Artboard = this;
 		}
-
-		private ArtboardAdornerFactoryCollection CreateArtboardAdornerFactoryCollection()
-		{
-			return new ArtboardAdornerFactoryCollection(this);
-		}
-
+		
 		protected override ArtboardItemCollection CreateItemCollection()
 		{
 			return new ArtboardItemCollection(this);
@@ -236,7 +213,7 @@ namespace Zaaml.UI.Controls.Artboard
 			snapEngine.Artboard = null;
 		}
 
-		public static ArtboardAdornerCollection GetAdorners(UIElement element)
+		public static ArtboardAdornerCollection GetAdorners(FrameworkElement element)
 		{
 			return element.GetValueOrCreate(AdornersPropertyKey, () => new ArtboardAdornerCollection(element));
 		}
@@ -271,18 +248,6 @@ namespace Zaaml.UI.Controls.Artboard
 				return;
 
 			_movingSnapGuide = true;
-		}
-
-		internal void OnAdornerFactoryAdded(ArtboardAdornerFactory adornerFactory)
-		{
-			foreach (var artboardItem in ItemCollection)
-				artboardItem.OnAdornerFactoryAdded(adornerFactory);
-		}
-
-		internal void OnAdornerFactoryRemoved(ArtboardAdornerFactory adornerFactory)
-		{
-			foreach (var artboardItem in ItemCollection)
-				artboardItem.OnAdornerFactoryRemoved(adornerFactory);
 		}
 
 		private void OnRulerGotMouseCapture(object sender, MouseEventArgs e)
