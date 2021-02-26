@@ -3,12 +3,13 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.PresentationCore.Behaviors.Resizable;
 
 namespace Zaaml.UI.Controls.Artboard
 {
 	public partial class ArtboardCanvas
 	{
-		private sealed class ArtboardCanvasResizableAdvisor : ArtboardResizableAdvisorBase
+		private sealed class ArtboardCanvasResizableAdvisor : ResizableAdvisorBase
 		{
 			public ArtboardCanvasResizableAdvisor(ArtboardCanvas canvas)
 			{
@@ -17,7 +18,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 			private ArtboardCanvas Canvas { get; }
 
-			protected override Rect GetBoundingBoxCore(UIElement element)
+			public override Rect GetBoundingBox(UIElement element)
 			{
 				var position = GetPosition(element);
 				var size = element.RenderSize;
@@ -34,7 +35,7 @@ namespace Zaaml.UI.Controls.Artboard
 				return new Rect(position, size);
 			}
 
-			protected override void SetBoundingBoxCore(UIElement element, Rect rect)
+			public override void SetBoundingBox(UIElement element, Rect rect)
 			{
 				SetPosition(element, rect.TopLeft);
 

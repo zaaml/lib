@@ -3,12 +3,13 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.PresentationCore.Behaviors.Draggable;
 
 namespace Zaaml.UI.Controls.Artboard
 {
 	public partial class ArtboardCanvas
 	{
-		private sealed class ArtboardCanvasDraggableAdvisor : ArtboardDraggableAdvisorBase
+		private sealed class ArtboardCanvasDraggableAdvisor : DraggableAdvisorBase
 		{
 			public ArtboardCanvasDraggableAdvisor(ArtboardCanvas canvas)
 			{
@@ -17,12 +18,12 @@ namespace Zaaml.UI.Controls.Artboard
 
 			private ArtboardCanvas Canvas { get; }
 
-			protected override Point GetPositionCore(UIElement element)
+			public override Point GetPosition(UIElement element)
 			{
 				return ArtboardCanvas.GetPosition(element);
 			}
 
-			protected override void SetPositionCore(UIElement element, Point value)
+			public override void SetPosition(UIElement element, Point value)
 			{
 				ArtboardCanvas.SetPosition(element, value);
 

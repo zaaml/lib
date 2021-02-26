@@ -11,12 +11,6 @@ namespace Zaaml.PresentationCore.Behaviors.Resizable
 		Rect GetBoundingBox(UIElement element);
 
 		void SetBoundingBox(UIElement element, Rect rect);
-
-		void OnResize(UIElement element, ResizableBehavior resizableBehavior);
-
-		void OnResizeEnd(UIElement element, ResizableBehavior resizableBehavior);
-
-		void OnResizeStart(UIElement element, ResizableBehavior resizableBehavior);
 	}
 
 	internal interface IResizableAdvisorProvider

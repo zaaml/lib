@@ -6,6 +6,8 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.Behaviors.Draggable;
 using Zaaml.PresentationCore.Extensions;
 
@@ -13,13 +15,18 @@ namespace Zaaml.UI.Controls.Artboard
 {
 	internal sealed class ArtboardDraggableBehavior : DraggableBehavior
 	{
+		private ArtboardSnapEngineContext _snapEngineContext;
 		internal event EventHandler<CancelEventArgs> DragStarting;
 
 		protected override FrameworkElement ActualElement => Adorner?.AdornedElement ?? FrameworkElement;
 
-		public ArtboardAdorner Adorner => (ArtboardAdorner) FrameworkElement;
+		private ArtboardAdorner Adorner => (ArtboardAdorner) FrameworkElement;
+
+		private GeneralTransform CanvasTransform { get; set; }
 
 		public override DragInfo DragInfo => new DragInfo(ConvertLocation(ActualHandle.OriginLocation), ConvertLocation(ActualHandle.CurrentLocation));
+
+		private GeneralTransform InversedCanvasTransform { get; set; }
 
 		private Point ScrollPanelOrigin { get; set; }
 
@@ -51,14 +58,29 @@ namespace Zaaml.UI.Controls.Artboard
 				return GetAdvisor(canvas);
 
 			if (visualParent is Border)
-				return ArtboardMarginDraggableAdvisor.Instance;
+				return ArtboardBorderDraggableAdvisor.Instance;
 
 			return null;
+		}
+
+		protected override void OnDragEnded()
+		{
+			base.OnDragEnded();
+
+			_snapEngineContext = _snapEngineContext.DisposeExchange();
 		}
 
 		protected override void OnDragStarted()
 		{
 			base.OnDragStarted();
+
+			var canvas = Adorner.ArtboardCanvas;
+			var element = ActualElement;
+
+			CanvasTransform = ((UIElement) element.GetVisualParent()).TransformToAncestor(canvas);
+			InversedCanvasTransform = CanvasTransform.Inverse;
+
+			_snapEngineContext = canvas.ArtboardControl?.SnapEngine?.CreateContext(new ArtboardSnapEngineContextParameters(element, ArtboardSnapRectSide.All));
 
 			ScrollPanelOrigin = Adorner.AdornerPanel.TransformToDesignCoordinates(ActualHandle.OriginLocation);
 		}
@@ -70,28 +92,20 @@ namespace Zaaml.UI.Controls.Artboard
 
 			UpdatePosition();
 		}
-	}
 
-	internal sealed class ArtboardMarginDraggableAdvisor : ArtboardDraggableAdvisorBase
-	{
-		private ArtboardMarginDraggableAdvisor()
+		protected override void SetPosition(Point position)
 		{
-		}
+			if (_snapEngineContext != null)
+			{
+				var elementRect = new Rect(position, ActualElement.RenderSize);
+				var canvasRect = CanvasTransform.TransformBounds(elementRect);
+				var snapCanvasRect = _snapEngineContext.Engine.Snap(new ArtboardSnapParameters(canvasRect, _snapEngineContext)).SnapRect;
+				var snapElementRect = InversedCanvasTransform.TransformBounds(snapCanvasRect);
 
-		public static ArtboardMarginDraggableAdvisor Instance { get; } = new ArtboardMarginDraggableAdvisor();
+				position = snapElementRect.GetTopLeft();
+			}
 
-		protected override Point GetPositionCore(UIElement element)
-		{
-			if (element is FrameworkElement fre)
-				return new Point(fre.Margin.Left, fre.Margin.Top);
-
-			return new Point();
-		}
-
-		protected override void SetPositionCore(UIElement element, Point value)
-		{
-			if (element is FrameworkElement fre)
-				fre.Margin = new Thickness(value.X, value.Y, fre.Margin.Right, fre.Margin.Bottom);
+			base.SetPosition(position);
 		}
 	}
 }
