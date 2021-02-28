@@ -758,7 +758,7 @@
     </zm:SkinDictionary>
 
     <!-- ScrollViewer -->
-    <zm:SkinDictionary x:Key="ScrollViewer"  BasedOn="Metro.Shared.ScrollViewer" />
+    <zm:SkinDictionary x:Key="ScrollViewControl"  BasedOn="Metro.Shared.ScrollViewer" />
 
     <!-- ScrollBar -->
     <zm:SkinDictionary x:Key="ScrollBar" BasedOn="Metro.Shared.ScrollBar">
@@ -867,6 +867,9 @@
     <!-- ListViewItemGridCell -->
     <zm:SkinDictionary x:Key="ListViewItemGridCell" BasedOn="Metro.ItemGridCell"/>
 
+    <!-- ListViewItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="ListViewItemGridCellElement" BasedOn="Metro.ItemGridCell" />
+
     <!-- ListViewItemGridColumnHeader -->
     <zm:SkinDictionary x:Key="ListViewItemGridColumnHeader" BasedOn="Metro.ItemGridColumnHeader" />
 
@@ -877,10 +880,13 @@
     <zm:SkinDictionary x:Key="TreeView" BasedOn="Metro.Shared.ListView"/>
 
     <!-- TreeViewItem -->
-    <zm:SkinDictionary x:Key="TreeViewItem" BasedOn="Metro.Shared.ListViewItem"/>
+    <zm:SkinDictionary x:Key="TreeViewItem" BasedOn="Metro.Shared.ListViewItem" />
 
     <!-- TreeViewItemGridCell -->
     <zm:SkinDictionary x:Key="TreeViewItemGridCell" BasedOn="Metro.ItemGridCell"/>
+
+    <!-- TreeViewItemGridCellElement -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridCellElement" BasedOn="Metro.ItemGridCell" />
 
     <!-- TreeViewItemGridColumnHeader -->
     <zm:SkinDictionary x:Key="TreeViewItemGridColumnHeader" BasedOn="Metro.ItemGridColumnHeader" />

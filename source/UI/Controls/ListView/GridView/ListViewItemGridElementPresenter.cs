@@ -8,6 +8,7 @@ using System.Windows;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.ScrollView;
 
 namespace Zaaml.UI.Controls.ListView
 {
@@ -32,7 +33,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		private Stack<TGridCell> CellsPool { get; } = new();
 
-		protected override GridController Controller => View?.ItemController;
+		protected override GridController Controller => View?.GridController;
 
 		public ListViewControl ListViewControl
 		{
@@ -116,10 +117,10 @@ namespace Zaaml.UI.Controls.ListView
 
 		private void OnListViewControlPropertyChangedPrivate(ListViewControl oldValue, ListViewControl newValue)
 		{
-			if (oldValue != null)
+			if (oldValue != null) 
 				oldValue.DependencyPropertyChangedInternal -= OnListViewControlDependencyPropertyChanged;
 
-			if (newValue != null)
+			if (newValue != null) 
 				newValue.DependencyPropertyChangedInternal += OnListViewControlDependencyPropertyChanged;
 
 			UpdateView();

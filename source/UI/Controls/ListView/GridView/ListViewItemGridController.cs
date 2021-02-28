@@ -8,8 +8,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	public sealed class ListViewItemGridController
-		: GridController
+	public sealed class ListViewItemGridController : GridController
 	{
 		public ListViewItemGridController(ListViewControl listViewControl) : base(listViewControl)
 		{
@@ -39,6 +38,8 @@ namespace Zaaml.UI.Controls.ListView
 		}
 
 		protected override int ColumnCount => ListGridView?.Columns.Count ?? 0;
+
+		protected override GridColumnWidthConstraints DefaultColumnWidthConstraints => ListGridView?.DefaultColumnWidthConstraints ?? base.DefaultColumnWidthConstraints;
 
 		private ListGridView ListGridView => ListViewControl?.View as ListGridView;
 

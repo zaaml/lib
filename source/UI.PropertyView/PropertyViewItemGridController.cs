@@ -1,4 +1,4 @@
-// <copyright file="PropertyViewItemColumnController.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="PropertyViewItemGridController.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -15,14 +15,11 @@ namespace Zaaml.UI.Controls.PropertyView
 			PropertyView = propertyView;
 		}
 
-		public PropertyViewControl PropertyView { get; }
-
 		protected override IEnumerable<GridCellsPresenter> CellsPresenters
 		{
-			get
-			{
-				yield break;
-			}
+			get { yield break; }
 		}
+
+		public PropertyViewControl PropertyView { get; }
 	}
 }

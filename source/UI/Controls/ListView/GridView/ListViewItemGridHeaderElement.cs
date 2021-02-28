@@ -7,7 +7,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	public class ListViewItemGridHeaderElement : GridHeaderElement
+	public class ListViewItemGridHeaderElement : GridElement
 	{
 		static ListViewItemGridHeaderElement()
 		{

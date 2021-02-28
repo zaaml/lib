@@ -98,7 +98,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		private void UpdateZIndex()
 		{
-			Panel.SetZIndex(this, IsSelected ? 20000 : 10000);
+			Panel.SetZIndex(this, IsMouseOver ? 30000 : IsSelected ? 20000 : 10000);
 		}
 
 		DependencyProperty ISelectableItem.SelectionProperty => IsSelectedProperty;

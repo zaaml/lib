@@ -49,6 +49,8 @@ namespace Zaaml.UI.Controls.ListView
 
 		private ListViewItemGridColumnHeadersPresenter ColumnHeadersPresenter => ListGridView?.ListViewControl?.ColumnHeadersPresenterInternal;
 
+		public override GridController Controller => ListGridView?.GridController;
+
 		public object Header
 		{
 			get => GetValue(HeaderProperty);

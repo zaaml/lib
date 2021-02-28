@@ -48,15 +48,18 @@
 
   <ControlTemplate x:Key="TreeViewGridItemTemplate"
                    TargetType="zm:TreeViewItem">
-    <zm:ControlTemplateRoot Background="Transparent"
-                            Margin="0,-1,0,0"
+    <zm:ControlTemplateRoot Margin="0,-1,0,0"
+                            Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
 
       <!--  CommonStatesBorder  -->
-      <Border Background="{TemplateBinding Background}" />
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="0,1" />
 
+      <!--  CellsPresenter  -->
       <zm:TreeViewItemGridCellsPresenter x:Name="CellsPresenter"
-                                         Margin="0,-1,-1,0"
+                                         Margin="0,0,-1,0"
                                          BorderBrush="{TemplateBinding BorderBrush}" />
 
     </zm:ControlTemplateRoot>
@@ -83,6 +86,9 @@
 
       <!--  Background  -->
       <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePath="Background" Property="Background" />
+
+      <!--  BorderBrush  -->
+      <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePath="BorderBrush" Property="BorderBrush" />
 
     </zm:SetterGroup>
   </zm:Style>

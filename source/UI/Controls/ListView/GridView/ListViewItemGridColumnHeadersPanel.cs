@@ -12,6 +12,6 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewItemGridColumnHeaderCollection,
 			ListViewItemGridColumnHeader>
 	{
-		protected override GridHeaderElement FillElement { get; } = new ListViewItemGridHeaderElement();
+		protected override GridElement FillElement { get; } = new ListViewItemGridHeaderElement();
 	}
 }

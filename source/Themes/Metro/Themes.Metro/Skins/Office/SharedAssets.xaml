@@ -359,12 +359,13 @@
   <zm:SkinDictionary  x:Key="Metro.Shared.ScrollViewer">
     <SolidColorBrush x:Key="Background" Color="#FFFFFFFF" zmb:Skin="Office" />
     <SolidColorBrush x:Key="BorderBrush" Color="#FFADADAD" zmb:Skin="Office" />
+    <SolidColorBrush x:Key="ScrollBarBackground" Color="#FFF0F0F0" zmb:Skin="Office" />
   </zm:SkinDictionary>
 
   <!-- ScrollBar -->
   <zm:SkinDictionary  x:Key="Metro.Shared.ScrollBar">
     <SolidColorBrush x:Key="Background" Color="#FFF0F0F0"  zmb:Skin="Office" />
-    <SolidColorBrush x:Key="BorderBrush" Color="#00FFFFFF"   zmb:Skin="Office"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#FFADADAD"   zmb:Skin="Office"/>
   </zm:SkinDictionary>
 
   <!-- ScrollBar RepeatButton -->
@@ -472,16 +473,16 @@
 
     <!-- BorderBrush -->
     <zm:SkinDictionary x:Key="BorderBrush">
-      <SolidColorBrush x:Key="Normal" Color="#FFADADAD" zmb:Skin="Office" />
-      <SolidColorBrush x:Key="MouseOver" Color="#FFADADAD" zmb:Skin="Office" />
-      <SolidColorBrush x:Key="Disabled" Color="#FFADADAD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="MouseOver" Color="#FFCDD5CD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Disabled" Color="#FFFFFFFF" zmb:Skin="Office" />
 
-      <SolidColorBrush x:Key="Focused" Color="#FFADADAD" zmb:Skin="Office" />
-      <SolidColorBrush x:Key="Unfocused" Color="#FFADADAD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Focused" Color="#FFCDD5CD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Unfocused" Color="#FFCDD5CD" zmb:Skin="Office" />
 
-      <SolidColorBrush x:Key="Selected" Color="#FFADADAD" zmb:Skin="Office" />
-      <SolidColorBrush x:Key="Unselected" Color="#FFADADAD" zmb:Skin="Office" />
-      <SolidColorBrush x:Key="SelectedUnfocused" Color="#FFADADAD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Selected" Color="#FFCDD5CD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Unselected" Color="#FFCDD5CD" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="SelectedUnfocused" Color="#FFCDD5CD" zmb:Skin="Office" />
     </zm:SkinDictionary>
   </zm:SkinDictionary>
 

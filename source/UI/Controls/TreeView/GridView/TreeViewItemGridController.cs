@@ -8,8 +8,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	public sealed class TreeViewItemGridController
-		: GridController
+	public sealed class TreeViewItemGridController : GridController
 	{
 		public TreeViewItemGridController(TreeViewControl treeViewControl) : base(treeViewControl)
 		{
@@ -39,6 +38,8 @@ namespace Zaaml.UI.Controls.TreeView
 		}
 
 		protected override int ColumnCount => TreeGridView?.Columns.Count ?? 0;
+
+		protected override GridColumnWidthConstraints DefaultColumnWidthConstraints => TreeGridView?.DefaultColumnWidthConstraints ?? base.DefaultColumnWidthConstraints;
 
 		private TreeGridView TreeGridView => TreeViewControl?.View as TreeGridView;
 

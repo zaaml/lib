@@ -50,6 +50,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private TreeViewItemGridColumnHeadersPresenter ColumnHeadersPresenter => TreeGridView?.TreeViewControl?.ColumnHeadersPresenterInternal;
 
+		public override GridController Controller => TreeGridView?.GridController;
+
 		public object Header
 		{
 			get => GetValue(HeaderProperty);
@@ -85,7 +87,7 @@ namespace Zaaml.UI.Controls.TreeView
 					return;
 
 				_treeGridView = value;
-				
+
 				_treeGridView?.UpdateActualExpanderColumn();
 			}
 		}

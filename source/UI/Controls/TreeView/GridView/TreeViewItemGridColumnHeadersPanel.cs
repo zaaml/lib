@@ -12,6 +12,6 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewItemGridColumnHeaderCollection,
 			TreeViewItemGridColumnHeader>
 	{
-		protected override GridHeaderElement FillElement { get; } = new TreeViewItemGridHeaderElement();
+		protected override GridElement FillElement { get; } = new TreeViewItemGridHeaderElement();
 	}
 }

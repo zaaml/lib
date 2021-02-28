@@ -117,10 +117,7 @@ namespace Zaaml.UI.Controls.ToolBar
 
             toolBarControl.ItemsPresenterInternal?.ItemsHostInternal?.SuspendOverflow();
 
-            double minLength;
-            double maxLength;
-
-            toolBarControl.MeasureMinMaxLength(childConstraint, out minLength, out maxLength);
+            toolBarControl.MeasureMinMaxLength(childConstraint, out var minLength, out var maxLength);
 
             var flexItem = new FlexElement { StretchDirection = FlexStretchDirection.Both }.WithMinMaxLength(minLength, maxLength).WithUIElement(toolBarControl, orientation).WithRounding(useLayoutRounding);
 
@@ -137,6 +134,7 @@ namespace Zaaml.UI.Controls.ToolBar
           if (needSecondPass || bandOrientedSize.Direct.IsGreaterThan(orientedConstraint.Direct))
           {
             bandDesiredSize = new OrientedSize(orientation);
+
             FlexDistributor.LastToFirst.Distribute(_flexElements, orientedConstraint.Direct);
 
             for (var index = 0; index < band.ToolBars.Count; index++)
@@ -158,8 +156,7 @@ namespace Zaaml.UI.Controls.ToolBar
               toolBarControl.ItemsPresenterInternal?.ItemsHostInternal?.ResumeOverflow();
           }
 
-
-          band.DesiredSize = bandDesiredSize.Size;
+					band.DesiredSize = bandDesiredSize.Size;
         }
 
         return _bands.Aggregate(new OrientedSize(orientation.Rotate()), (current, band) => current.StackSize(band.DesiredSize)).Size;
@@ -175,6 +172,7 @@ namespace Zaaml.UI.Controls.ToolBar
       for (var iBand = 0; iBand < Bands.Count; iBand++)
       {
         var band = Bands[iBand];
+
         for (var bandIndex = 0; bandIndex < band.ToolBars.Count; bandIndex++)
         {
           var toolBarControl = band.ToolBars[bandIndex];

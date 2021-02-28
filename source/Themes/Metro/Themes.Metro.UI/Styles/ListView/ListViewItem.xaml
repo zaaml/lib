@@ -84,17 +84,18 @@
 
   <ControlTemplate x:Key="ListViewGridItemTemplate"
                    TargetType="zm:ListViewItem">
-    <zm:ControlTemplateRoot Background="Transparent"
+    <zm:ControlTemplateRoot Margin="0,-1,-1,0"
+                            Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
 
       <!--  CommonStatesBorder  -->
-      <Border Margin="0,-1,0,0"
-              Background="{TemplateBinding Background}">
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="0,1" />
 
-        <zm:ListViewItemGridCellsPresenter x:Name="CellsPresenter"
-                                           BorderBrush="{TemplateBinding BorderBrush}" />
-
-      </Border>
+      <!--  CellsPresenter  -->
+      <zm:ListViewItemGridCellsPresenter x:Name="CellsPresenter"
+                                         BorderBrush="{TemplateBinding BorderBrush}" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

@@ -498,6 +498,14 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
+		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			base.OnPropertyChanged(e);
+
+			if (e.Property == IsMouseOverProperty)
+				UpdateZIndex();
+		}
+
 		private void OnSourceChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
 		{
 			SourceCore = newSource;
@@ -773,7 +781,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private void UpdateZIndex()
 		{
-			Panel.SetZIndex(this, IsSelected ? 20000 : 10000 - ActualLevel);
+			Panel.SetZIndex(this, IsMouseOver ? 30000 : IsSelected ? 20000 : 10000 - ActualLevel);
 		}
 
 		void IContextPopupTarget.OnContextPopupControlOpened(IContextPopupControl popupControl)

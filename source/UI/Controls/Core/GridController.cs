@@ -6,6 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Utils;
+using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.PropertyCore.Extensions;
 using Zaaml.UI.Panels.Flexible;
 
 namespace Zaaml.UI.Controls.Core
@@ -20,11 +24,15 @@ namespace Zaaml.UI.Controls.Core
 			Owner.LayoutUpdated += OnLayoutUpdated;
 		}
 
+		internal double ActualColumnsWidth { get; private set; }
+
 		protected abstract IEnumerable<GridCellsPresenter> CellsPresenters { get; }
 
 		protected virtual int ColumnCount => Columns.Count;
 
 		private List<GridColumn> Columns { get; } = new();
+
+		protected virtual GridColumnWidthConstraints DefaultColumnWidthConstraints => new GridColumnWidthConstraints(GridColumn.DefaultWidth, GridColumn.DefaultMinWidth, GridColumn.DefaultMaxWidth);
 
 		internal double FinalWidth
 		{
@@ -43,6 +51,10 @@ namespace Zaaml.UI.Controls.Core
 
 		private long FinalWidthLayoutVersion { get; set; } = -1;
 
+		private FlexElementCollection FlexColumns { get; } = new FlexElementCollection();
+
+		private GridCellsPanel LastMeasurePanel { get; set; }
+
 		internal long LayoutVersion { get; private set; }
 
 		private FrameworkElement Owner { get; }
@@ -51,6 +63,10 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var starLengthValue = 0.0;
 			var fixedValue = 0.0;
+			var minResultConstraint = 0.0;
+			var useLayoutRounding = Owner.UseLayoutRounding;
+
+			FlexColumns.EnsureCount(ColumnCount);
 
 			for (var i = 0; i < ColumnCount; i++)
 			{
@@ -59,17 +75,22 @@ namespace Zaaml.UI.Controls.Core
 				if (column == null)
 					break;
 
-				var columnWidth = column.Width;
+				var columnWidth = column.ActualColumnWidthConstraints;
+				var value = columnWidth.Value;
+				var minimum = columnWidth.Minimum;
+				var maximum = columnWidth.Maximum;
 
-				if (columnWidth.IsStar)
-					starLengthValue += columnWidth.Value;
-				else if (columnWidth.IsAuto)
-					fixedValue += column.AutoDesiredWidth;
+				GridColumnWidthConstraints.CalcConstraints(value, minimum, maximum, column.AutoDesiredWidth, double.NaN, out var valueConstraint, out var minimumConstraint, out _);
+
+				minResultConstraint += minimumConstraint;
+
+				if (value.IsStar)
+					starLengthValue += value.Value;
 				else
-					fixedValue += columnWidth.Value;
+					fixedValue += valueConstraint;
 			}
 
-			var starValue = Math.Max(0, FinalWidth - fixedValue) / starLengthValue;
+			var starValue = Math.Max(0, FinalWidth - fixedValue - minResultConstraint) / starLengthValue;
 			var columnsWidth = 0.0;
 			var distributeDeltaCount = 0;
 
@@ -82,33 +103,44 @@ namespace Zaaml.UI.Controls.Core
 
 				double finalWidth;
 
-				if (column.Width.IsAbsolute)
-					finalWidth = column.Width.Value;
-				else if (column.Width.IsAuto)
+				var columnWidth = column.ActualColumnWidthConstraints;
+				var value = columnWidth.Value;
+				var minimum = columnWidth.Minimum;
+				var maximum = columnWidth.Maximum;
+
+				GridColumnWidthConstraints.CalcConstraints(value, minimum, maximum, column.AutoDesiredWidth, starValue, out var valueConstraint, out var minimumConstraint, out var maximumConstraint);
+
+				if (value.IsAbsolute)
+					finalWidth = valueConstraint;
+				else if (value.IsAuto)
 				{
-					finalWidth = column.AutoDesiredWidth;
+					finalWidth = valueConstraint;
 					distributeDeltaCount++;
 				}
 				else
 				{
-					finalWidth = column.Width.Value * starValue;
+					finalWidth = valueConstraint;
 					distributeDeltaCount++;
 				}
 
-				finalWidth = finalWidth.RoundToZero();
+				if (useLayoutRounding)
+					finalWidth = finalWidth.LayoutRoundX(RoundingMode.MidPointFromZero);
 
 				column.FinalWidth = finalWidth;
 				columnsWidth += finalWidth;
+
+				var columnFlexElement = new FlexElement(minimumConstraint, maximumConstraint) {Length = value, StretchDirection = FlexStretchDirection.Both, ActualLength = finalWidth}.WithRounding(useLayoutRounding);
+
+				FlexColumns[i] = columnFlexElement;
 			}
+
+			FlexColumns.UseLayoutRounding = useLayoutRounding;
 
 			var deltaWidth = FinalWidth - columnsWidth;
 
 			if (deltaWidth > 0 && distributeDeltaCount > 0)
 			{
-				var distributeValue = (deltaWidth / distributeDeltaCount).RoundToZero();
-				var distributeWidth = 0.0;
-
-				GridColumn lastColumn = null;
+				FlexDistributor.Equalizer.Distribute(FlexColumns, FinalWidth);
 
 				for (var i = 0; i < ColumnCount; i++)
 				{
@@ -117,20 +149,23 @@ namespace Zaaml.UI.Controls.Core
 					if (column == null)
 						break;
 
-					if (column.Width.IsAbsolute)
-						continue;
-
-					column.FinalWidth += distributeValue;
-					distributeWidth += distributeValue;
-
-					lastColumn = column;
+					column.FinalWidth = FlexColumns[i].ActualLength;
 				}
-
-				deltaWidth = (deltaWidth - distributeWidth).RoundToZero();
-
-				if (lastColumn != null && deltaWidth.IsGreaterThan(0))
-					lastColumn.FinalWidth += deltaWidth;
 			}
+
+			ActualColumnsWidth = 0;
+
+			for (var i = 0; i < ColumnCount; i++)
+			{
+				var column = GetColumn(i);
+
+				if (column == null)
+					break;
+
+				ActualColumnsWidth += column.FinalWidth;
+			}
+
+			InvalidateMeasuredPanels();
 		}
 
 		protected virtual GridColumn CreateColumn()
@@ -141,13 +176,7 @@ namespace Zaaml.UI.Controls.Core
 		public virtual GridColumn GetColumn(int index)
 		{
 			while (Columns.Count <= index)
-			{
-				var column = CreateColumn();
-
-				column.Width = new FlexLength(1.0, FlexLengthUnitType.Star);
-
-				Columns.Add(column);
-			}
+				Columns.Add(CreateColumn());
 
 			return Columns[index];
 		}
@@ -159,9 +188,19 @@ namespace Zaaml.UI.Controls.Core
 			return index == -1 ? null : GetColumn(index);
 		}
 
-		public FlexLength GetFlexWidth(int index)
+		protected virtual GridColumnWidthConstraints GetColumnWidthConstraints(GridColumn gridColumn)
 		{
-			return GetColumn(index)?.Width ?? FlexLength.Auto;
+			var defaultConstraints = DefaultColumnWidthConstraints;
+			var width = gridColumn.GetValueSource(GridColumn.WidthProperty) == PropertyValueSource.Default ? defaultConstraints.Value : gridColumn.Width;
+			var minWidth = gridColumn.GetValueSource(GridColumn.MinWidthProperty) == PropertyValueSource.Default ? defaultConstraints.Minimum : gridColumn.MinWidth;
+			var maxWidth = gridColumn.GetValueSource(GridColumn.MaxWidthProperty) == PropertyValueSource.Default ? defaultConstraints.Maximum : gridColumn.MaxWidth;
+
+			return new GridColumnWidthConstraints(width, minWidth, maxWidth);
+		}
+
+		internal GridColumnWidthConstraints GetColumnWidthConstraintsInternal(GridColumn gridColumn)
+		{
+			return GetColumnWidthConstraints(gridColumn);
 		}
 
 		private void InvalidateCellsPresentersArrange()
@@ -174,6 +213,23 @@ namespace Zaaml.UI.Controls.Core
 		{
 			foreach (var cellsPresenter in CellsPresenters)
 				cellsPresenter.CellsPanelInternal?.InvalidateMeasure();
+		}
+
+		private void InvalidateMeasuredPanels()
+		{
+			var panel = LastMeasurePanel;
+
+			while (panel != null)
+			{
+				panel.InvalidatePanelMeasureInternal();
+				
+				panel = panel.PrevCellsPanel;
+			}
+		}
+
+		internal void OnAutoDesiredWidthChanged(GridColumn gridColumn)
+		{
+			CalculateFinalColumnWidth();
 		}
 
 		internal void OnCellsPanelArrange(GridCellsPanel panel, Size finalSize)
@@ -196,7 +252,7 @@ namespace Zaaml.UI.Controls.Core
 				cellsPresenter.CellsPanelInternal?.OnCellStructurePropertyChanged(gridColumn);
 		}
 
-		internal void OnColumnWidthChanged(GridColumn gridColumn)
+		internal void OnColumnWidthConstraintsChanged()
 		{
 			InvalidateCellsPresentersMeasure();
 		}
@@ -204,6 +260,30 @@ namespace Zaaml.UI.Controls.Core
 		private void OnLayoutUpdated(object sender, EventArgs e)
 		{
 			LayoutVersion++;
+
+			var panel = LastMeasurePanel;
+
+			while (panel != null)
+			{
+				var nextPanel = panel.PrevCellsPanel;
+
+				panel.PrevCellsPanel = null;
+
+				panel = nextPanel;
+			}
+
+			LastMeasurePanel = null;
+		}
+
+		internal void OnPanelMeasured(GridCellsPanel gridCellsPanel)
+		{
+			if (gridCellsPanel.MeasureLayoutVersion == LayoutVersion)
+				return;
+
+			gridCellsPanel.PrevCellsPanel = LastMeasurePanel;
+			gridCellsPanel.MeasureLayoutVersion = LayoutVersion;
+
+			LastMeasurePanel = gridCellsPanel;
 		}
 	}
 }

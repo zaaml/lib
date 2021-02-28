@@ -564,13 +564,19 @@ namespace Zaaml.UI.Controls.ListView
 				ScrollView.PreserveScrollBarVisibility = true;
 
 			if (ColumnHeadersPresenter != null)
+			{
 				ColumnHeadersPresenter.ListViewControl = this;
+				ColumnHeadersPresenter.ScrollViewControl = ScrollView;
+			}
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
 			if (ColumnHeadersPresenter != null)
+			{
 				ColumnHeadersPresenter.ListViewControl = null;
+				ColumnHeadersPresenter.ScrollViewControl = null;
+			}
 
 			ItemsPresenter.ListViewControl = null;
 

@@ -7,7 +7,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	public class TreeViewItemGridHeaderElement : GridHeaderElement
+	public class TreeViewItemGridHeaderElement : GridElement
 	{
 		static TreeViewItemGridHeaderElement()
 		{

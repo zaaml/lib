@@ -12,5 +12,6 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewItemGridCellCollection,
 			ListViewItemGridCell>
 	{
+		protected override GridElement FillElement { get; } = new ListViewItemGridCellElement();
 	}
 }

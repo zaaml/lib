@@ -142,7 +142,17 @@ namespace Zaaml.UI.Controls.Spy
 
 		private void UpdateElementWindow()
 		{
-			ElementWindow = Element != null ? Window.GetWindow(Element) : null;
+			if (Element == null)
+			{
+				ElementWindow = null;
+
+				return;
+			}
+
+			var elementWindow = Window.GetWindow(Element);
+
+			if (elementWindow != null)
+				ElementWindow = elementWindow;
 		}
 
 		internal class ElementRenderer : Panel

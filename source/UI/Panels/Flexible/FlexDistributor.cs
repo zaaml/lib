@@ -146,22 +146,22 @@ namespace Zaaml.UI.Panels.Flexible
 
 							for (var jItem = iItem; jItem >= 0; jItem--)
               {
-                var titem = _sortedElements[jItem];
+                var tItem = _sortedElements[jItem];
 
-                if (avg < titem.MaxLength)
-                  titem.ActualLength = avg;
+                if (avg < tItem.MaxLength)
+                  tItem.ActualLength = avg;
                 else
                 {
-                  titem.ActualLength = titem.MaxLength;
+                  tItem.ActualLength = tItem.MaxLength;
                   success = false;
                 }
 
-                _sortedElements[jItem] = titem;
+                _sortedElements[jItem] = tItem;
                 
                 if (success)
                   continue;
 
-                target -= titem.ActualLength;
+                target -= tItem.ActualLength;
 
                 RemoveAt(elements, jItem);
               }
@@ -421,6 +421,7 @@ namespace Zaaml.UI.Panels.Flexible
       {
         var item = elements[index];
         var compensation = Math.Min(current - target, item.ActualLength - item.ActualMinLength);
+
         item.ActualLength -= compensation;
 
         elements[index] = item;
@@ -451,6 +452,7 @@ namespace Zaaml.UI.Panels.Flexible
       {
         var item = elements[index];
         var compensation = Math.Min(current - target, item.ActualLength - item.ActualMinLength);
+
         item.ActualLength -= compensation;
 
         elements[index] = item;
@@ -512,13 +514,19 @@ namespace Zaaml.UI.Panels.Flexible
         switch (_mode)
         {
           case Mode.Equal:
+
             ShrinkAll(elements, target);
+
             break;
           case Mode.First:
+
             ShrinkFromStart(elements, target);
+
             break;
           case Mode.Last:
+
             ShrinkFromEnd(elements, target);
+
             break;
           default:
             throw new ArgumentOutOfRangeException();
@@ -529,13 +537,19 @@ namespace Zaaml.UI.Panels.Flexible
         switch (_mode)
         {
           case Mode.Equal:
+
             ExpandAll(elements, target);
+
             break;
           case Mode.First:
+
             ExpandFromStart(elements, target);
+
             break;
           case Mode.Last:
+
             ExpandFromEnd(elements, target);
+
             break;
           default:
             throw new ArgumentOutOfRangeException();

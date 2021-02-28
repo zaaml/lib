@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Utils;
@@ -60,15 +61,25 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 			foreach (UIElement child in Children)
 			{
-				var size = child.DesiredSize.AsOriented(orientation);
+				var desiredSize = child.DesiredSize;
+				var desiredOrientedSize = child.DesiredSize.AsOriented(orientation);
 
-				size.Indirect = finalOriented.Indirect;
+				desiredOrientedSize.Indirect = finalOriented.Indirect;
 
-				var rect = new Rect(offset.Point, size.Size);
-
+				var rect = new Rect(offset.Point, desiredOrientedSize.Size);
+				
 				ArrangeChild(child, rect);
 
-				offset.Direct += size.Direct;
+				if (child.DesiredSize.IsCloseTo(desiredSize) == false)
+				{
+					var orientedOriginal = desiredSize.AsOriented(orientation);
+					var orientedCurrent = child.DesiredSize.AsOriented(orientation);
+
+					if (orientedCurrent.Indirect.IsGreaterThan(orientedOriginal.Indirect) && orientedCurrent.Indirect.IsGreaterThan(finalOriented.Indirect))
+						Panel.InvalidateMeasure();
+				}
+
+				offset.Direct += desiredOrientedSize.Direct;
 			}
 
 			LastArrangeFrame = FrameCounter.Frame;
@@ -253,9 +264,9 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			var offset = ScrollInfo.ClampOffset(Offset);
 
 			if (Orientation == Orientation.Vertical)
-				transform.TranslateX = -offset.X;
+				transform.TranslateX = -offset.X.LayoutRoundX(RoundingMode.MidPointFromZero);
 			else
-				transform.TranslateY = -offset.Y;
+				transform.TranslateY = -offset.Y.LayoutRoundY(RoundingMode.MidPointFromZero);
 		}
 	}
 }

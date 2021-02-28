@@ -698,13 +698,19 @@ namespace Zaaml.UI.Controls.TreeView
 				ScrollView.PreserveScrollBarVisibility = true;
 
 			if (ColumnHeadersPresenter != null)
+			{
 				ColumnHeadersPresenter.TreeViewControl = this;
+				ColumnHeadersPresenter.ScrollViewControl = ScrollView;
+			}
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
 			if (ColumnHeadersPresenter != null)
+			{
 				ColumnHeadersPresenter.TreeViewControl = this;
+				ColumnHeadersPresenter.ScrollViewControl = null;
+			}
 
 			ItemsPresenter.TreeViewControl = null;
 

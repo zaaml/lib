@@ -55,7 +55,7 @@ namespace Zaaml.UI.Controls.TreeView
 			Cells.Clear();
 		}
 
-		protected override GridController Controller => View?.ItemController;
+		protected override GridController Controller => View?.GridController;
 
 		public TreeViewControl TreeViewControl
 		{

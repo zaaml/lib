@@ -9,6 +9,7 @@ using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Utils;
+using Zaaml.UI.Controls.ScrollView;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -17,8 +18,11 @@ namespace Zaaml.UI.Controls.Core
 		public static readonly DependencyProperty AllowCellSplitterProperty = DPM.Register<bool, GridCellsPresenter>
 			("AllowCellSplitter", default, d => d.OnAllowCellSplitterPropertyChangedPrivate);
 
+		private ScrollViewControl _scrollViewControl;
+
 		protected GridCellsPresenter() : base(TemplateKind.None)
 		{
+			ClipToBounds = true;
 		}
 
 		public bool AllowCellSplitter
@@ -26,6 +30,8 @@ namespace Zaaml.UI.Controls.Core
 			get => (bool) GetValue(AllowCellSplitterProperty);
 			set => SetValue(AllowCellSplitterProperty, value);
 		}
+
+		internal Size ArrangeBounds { get; set; }
 
 		protected GridCellsPanel CellsPanelCore => TemplateRoot;
 
@@ -36,6 +42,24 @@ namespace Zaaml.UI.Controls.Core
 		internal GridController ControllerInternal => Controller;
 
 		protected abstract Type GridCellsPanelType { get; }
+
+		internal ScrollViewControl ScrollViewControl
+		{
+			get => _scrollViewControl;
+			set
+			{
+				if (ReferenceEquals(_scrollViewControl, value))
+					return;
+
+				if (_scrollViewControl != null)
+					_scrollViewControl.DependencyPropertyChangedInternal -= OnScrollViewDependencyPropertyChanged;
+
+				_scrollViewControl = value;
+
+				if (_scrollViewControl != null)
+					_scrollViewControl.DependencyPropertyChangedInternal += OnScrollViewDependencyPropertyChanged;
+			}
+		}
 
 		protected GridCellsPanel TemplateRoot
 		{
@@ -59,6 +83,24 @@ namespace Zaaml.UI.Controls.Core
 			ApplyTemplate();
 		}
 
+		protected override Size ArrangeOverride(Size arrangeBounds)
+		{
+			ArrangeBounds = arrangeBounds;
+
+			var arrangeResult = base.ArrangeOverride(arrangeBounds);
+
+			return arrangeResult;
+		}
+
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			ApplyTemplatePrivate();
+
+			var measureResult = base.MeasureOverride(availableSize);
+
+			return measureResult;
+		}
+
 		private void OnAllowCellSplitterPropertyChangedPrivate(bool oldValue, bool newValue)
 		{
 			CellsPanelCore?.InvalidateStructure();
@@ -71,11 +113,24 @@ namespace Zaaml.UI.Controls.Core
 			ApplyTemplatePrivate();
 		}
 
-		protected override Size MeasureOverride(Size availableSize)
+		protected override void OnChildDesiredSizeChanged(UIElement child)
 		{
-			ApplyTemplatePrivate();
+			base.OnChildDesiredSizeChanged(child);
+		}
 
-			return base.MeasureOverride(availableSize);
+		private void OnScrollViewDependencyPropertyChanged(object sender, DependencyPropertyChangedEventArgs e)
+		{
+			if (e.Property == ScrollViewControlBase.HorizontalOffsetProperty)
+				UpdateHorizontalOffset();
+		}
+
+		private void UpdateHorizontalOffset()
+		{
+			var horizontalOffset = ScrollViewControl?.HorizontalOffset ?? 0.0;
+			var cellsPanel = CellsPanelCore;
+
+			if (cellsPanel != null)
+				cellsPanel.HorizontalOffset = horizontalOffset;
 		}
 	}
 

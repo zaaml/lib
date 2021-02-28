@@ -6,17 +6,21 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
+using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Panels;
-using Zaaml.UI.Panels.Flexible;
 using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Controls.Core
 {
 	public abstract class GridCellsPanel : Panel
 	{
+		private double _horizontalOffset;
 		private byte _packedValue;
 
 		protected GridCellsPanel()
@@ -32,7 +36,21 @@ namespace Zaaml.UI.Controls.Core
 
 		internal GridCellsPresenter CellsPresenterInternal => (GridCellsPresenter) VisualParent;
 
-		protected virtual GridHeaderElement FillElement => null;
+		protected virtual GridElement FillElement => null;
+
+		internal double HorizontalOffset
+		{
+			get => _horizontalOffset;
+			set
+			{
+				if (_horizontalOffset.IsCloseTo(value))
+					return;
+
+				_horizontalOffset = value;
+
+				InvalidateArrange();
+			}
+		}
 
 		private bool IsInArrange
 		{
@@ -46,7 +64,9 @@ namespace Zaaml.UI.Controls.Core
 			set => PackedDefinition.IsStructureDirty.SetValue(ref _packedValue, value);
 		}
 
-		internal long MeasureLayoutVersion { get; private set; } = -1;
+		internal long MeasureLayoutVersion { get; set; } = -1;
+
+		internal GridCellsPanel PrevCellsPanel { get; set; }
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
@@ -58,7 +78,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				IsInArrange = true;
 
-				var offset = 0.0;
+				var offset = -_horizontalOffset.LayoutRoundX(RoundingMode.MidPointFromZero);
 
 				for (var i = 0; i < Children.Count; i++)
 				{
@@ -72,7 +92,7 @@ namespace Zaaml.UI.Controls.Core
 					var cellSize = new Size(columnFinalWidth, finalSize.Height);
 					var cellRect = new Rect(new Point(offset, 0), cellSize);
 
-					if (gridCell.DesiredSize.Width.IsGreaterThan(cellSize.Width)) 
+					if (gridCell.DesiredSize.Width.IsGreaterThan(cellSize.Width))
 						gridCell.Measure(cellSize);
 
 					gridCell.Arrange(cellRect);
@@ -80,7 +100,10 @@ namespace Zaaml.UI.Controls.Core
 					offset += cellSize.Width;
 				}
 
-				var fillWidth = finalSize.Width - controller.FinalWidth;
+				var fillWidth = finalSize.Width - controller.ActualColumnsWidth;
+
+				if (this.GetVisualParent() is GridCellsPresenter presenter)
+					fillWidth = presenter.ArrangeBounds.Width - (controller.ActualColumnsWidth - _horizontalOffset);
 
 				if (fillWidth.IsGreaterThan(0))
 					FillElement?.Arrange(new Rect(new Point(offset, 0), new Size(fillWidth, finalSize.Height)));
@@ -92,16 +115,6 @@ namespace Zaaml.UI.Controls.Core
 				IsInArrange = false;
 				ArrangeLayoutVersion = controller.LayoutVersion;
 			}
-		}
-
-		protected virtual GridCellSplitter CreateCellSplitter()
-		{
-			return new GridCellSplitter();
-		}
-
-		protected virtual bool IsValidSplitter(GridCellSplitter cellSplitter)
-		{
-			return cellSplitter != null;
 		}
 
 		protected virtual bool CheckStructure()
@@ -170,11 +183,16 @@ namespace Zaaml.UI.Controls.Core
 			return true;
 		}
 
+		protected virtual GridCellSplitter CreateCellSplitter()
+		{
+			return new GridCellSplitter();
+		}
+
 		private void EnsureStructure()
 		{
 			if (IsStructureDirty == false)
 				return;
-			
+
 			try
 			{
 				if (CheckStructure())
@@ -211,6 +229,16 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
+		private static GridColumnWidthConstraints GetColumnWidth(GridColumn column)
+		{
+			return column?.ActualColumnWidthConstraints ?? GridColumnWidthConstraints.Default;
+		}
+
+		protected override Geometry GetLayoutClip(Size layoutSlotSize)
+		{
+			return null;
+		}
+
 		internal void InvalidateStructure()
 		{
 			if (IsStructureDirty)
@@ -221,46 +249,94 @@ namespace Zaaml.UI.Controls.Core
 			InvalidateMeasure();
 		}
 
+		internal void InvalidatePanelMeasureInternal()
+		{
+			var presenter = CellsPresenterInternal;
+			var templatedParent = presenter.GetTemplatedParent();
+
+			this.InvalidateAncestorsMeasure(templatedParent, true);
+		}
+
+		protected virtual bool IsValidSplitter(GridCellSplitter cellSplitter)
+		{
+			return cellSplitter != null;
+		}
+
 		protected override Size MeasureOverrideCore(Size availableSize)
 		{
 			EnsureStructure();
 
 			var controller = CellsPresenterInternal.ControllerInternal;
 			var fixedResult = new OrientedSize(Orientation.Horizontal);
+			var minResultConstraint = 0.0;
 			var starLengthValue = 0.0;
+
+			// Auto
+			for (var i = 0; i < Children.Count; i++)
+			{
+				var child = Children[i];
+
+				if (child is not GridCell gridCell)
+					break;
+
+				var column = gridCell.ColumnInternal;
+				var columnWidth = GetColumnWidth(column);
+				var value = columnWidth.Value;
+				var minimum = columnWidth.Minimum;
+				var maximum = columnWidth.Maximum;
+
+				if (!minimum.IsAuto && !value.IsAuto && !maximum.IsAuto)
+					continue;
+
+				var constraint = new Size(double.PositiveInfinity, availableSize.Height);
+
+				gridCell.Measure(constraint);
+
+				if (column != null)
+				{
+					column.AutoDesiredWidth = Math.Max(column.AutoDesiredWidth, gridCell.DesiredSize.Width);
+					gridCell.AutoDesiredSize = new Size(column.AutoDesiredWidth, gridCell.DesiredSize.Height);
+				}
+				else
+					gridCell.AutoDesiredSize = gridCell.DesiredSize;
+			}
 
 			// Fixed
 			for (var i = 0; i < Children.Count; i++)
 			{
 				var child = Children[i];
 
-				if (child is not GridCell gridCell || gridCell.ControllerInternal == null)
+				if (child is not GridCell gridCell)
 					break;
 
 				var column = gridCell.ColumnInternal;
-				var columnWidth = column?.Width ?? FlexLength.Star;
+				var columnWidth = GetColumnWidth(column);
+				var value = columnWidth.Value;
+				var minimum = columnWidth.Minimum;
+				var maximum = columnWidth.Maximum;
 
-				if (columnWidth.IsStar)
+				GridColumnWidthConstraints.CalcConstraints(value, minimum, maximum, gridCell.AutoDesiredSize.Width, double.NaN, out var valueConstraint, out var minimumConstraint, out var maximumConstraint);
+
+				var constraint = new Size(valueConstraint, availableSize.Height);
+
+				if (value.IsStar)
 				{
-					starLengthValue += columnWidth.Value;
+					starLengthValue += columnWidth.Value.Value;
+					minResultConstraint += minimumConstraint;
 
 					continue;
 				}
 
-				var constraint = new Size(columnWidth.IsAuto ? double.PositiveInfinity : columnWidth.Value, availableSize.Height);
-
 				gridCell.Measure(constraint);
 
-				if (columnWidth.IsAuto)
-				{
-					if (column != null)
-						column.AutoDesiredWidth = Math.Max(column.AutoDesiredWidth, gridCell.DesiredSize.Width);
-				}
+				var cellSize = gridCell.DesiredSize;
 
-				fixedResult = fixedResult.StackSize(gridCell.DesiredSize);
+				cellSize.Width = value.IsAbsolute ? valueConstraint : cellSize.Width.Clamp(minimumConstraint, maximumConstraint);
+
+				fixedResult = fixedResult.StackSize(cellSize);
 			}
 
-			var starAvailable = Math.Max(0, availableSize.Width - fixedResult.Width);
+			var starAvailable = Math.Max(0, availableSize.Width - fixedResult.Width - minResultConstraint);
 			var starLength = starAvailable / starLengthValue;
 			var starResult = new OrientedSize(Orientation.Horizontal);
 
@@ -269,27 +345,32 @@ namespace Zaaml.UI.Controls.Core
 			{
 				var child = Children[i];
 
-				if (child is not GridCell gridCell || gridCell.ControllerInternal == null)
+				if (child is not GridCell gridCell)
 					break;
 
 				var column = gridCell.ColumnInternal;
-				var columnWidth = column?.Width ?? FlexLength.Star;
+				var columnWidth = GetColumnWidth(column);
+				var value = columnWidth.Value;
+				var minimum = columnWidth.Minimum;
+				var maximum = columnWidth.Maximum;
 
-				if (columnWidth.IsStar == false)
+				if (value.IsStar == false)
 					continue;
 
-				var constraint = new Size(columnWidth.Value * starLength, availableSize.Height);
+				GridColumnWidthConstraints.CalcConstraints(value, minimum, maximum, gridCell.AutoDesiredSize.Width, starLength, out var valueConstraint, out _, out _);
+
+				var constraint = new Size(valueConstraint, availableSize.Height);
 
 				gridCell.Measure(constraint);
 
 				starResult = starResult.StackSize(gridCell.DesiredSize);
 			}
 
-			var result = new Size(fixedResult.Direct, Math.Max(fixedResult.Indirect, starResult.Indirect));
+			var result = new Size(controller.ActualColumnsWidth, Math.Max(fixedResult.Indirect, starResult.Indirect));
 
 			FillElement?.Measure(new Size(0, result.Height));
 
-			MeasureLayoutVersion = controller.LayoutVersion;
+			controller.OnPanelMeasured(this);
 
 			return result;
 		}

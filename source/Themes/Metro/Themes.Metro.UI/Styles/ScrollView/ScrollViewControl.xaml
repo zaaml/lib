@@ -23,11 +23,6 @@
           <zm:GridPanelRow Height="Auto" />
         </zm:GridPanel.Rows>
 
-        <!--  Content  -->
-        <zm:ScrollViewPresenter x:Name="ScrollViewPresenter"
-                                Margin="{TemplateBinding Padding}"
-                                Cursor="{TemplateBinding Cursor}" />
-
         <!--  Vertical ScrollBar  -->
         <zm:ScrollBar x:Name="VerticalScrollBar"
                       Width="17"
@@ -57,6 +52,17 @@
                       ViewportSize="{TemplateBinding ViewportWidth}"
                       Visibility="{TemplateBinding ActualHorizontalScrollBarVisibility}"
                       Value="{Binding Path=HorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+
+        <!--  Content  -->
+        <zm:ScrollViewPresenter x:Name="ScrollViewPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                Cursor="{TemplateBinding Cursor}" />
+
+        <!--  BottomRight Border  -->
+        <Border zm:GridPanel.Column="1"
+                zm:GridPanel.Row="1"
+                Background="{zm:TemplateSkinBinding SkinPath=ScrollBarBackground}" />
+
       </zm:GridPanel>
 
       <!--  Disabled Veil  -->

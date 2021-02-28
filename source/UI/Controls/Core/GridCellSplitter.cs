@@ -21,13 +21,6 @@ namespace Zaaml.UI.Controls.Core
 		private Point _origin;
 		private double _rightWidth;
 
-		public GridCellSplitter()
-		{
-			Cursor = Cursors.SizeWE;
-
-			System.Windows.Controls.Panel.SetZIndex(this, 1);
-		}
-
 		static GridCellSplitter()
 		{
 			Brush.Freeze();
@@ -35,6 +28,13 @@ namespace Zaaml.UI.Controls.Core
 			UIElementUtils.OverrideFocusable<GridCellSplitter>(false);
 			ControlUtils.OverrideIsTabStop<GridCellSplitter>(false);
 			FrameworkElementUtils.OverrideVisualStyle<GridCellSplitter>(null);
+		}
+
+		public GridCellSplitter()
+		{
+			Cursor = Cursors.SizeWE;
+
+			System.Windows.Controls.Panel.SetZIndex(this, 1);
 		}
 
 		private GridCellsPanel Panel => VisualParent as GridCellsPanel;

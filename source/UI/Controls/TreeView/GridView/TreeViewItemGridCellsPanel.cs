@@ -12,5 +12,6 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewItemGridCellCollection,
 			TreeViewItemGridCell>
 	{
+		protected override GridElement FillElement { get; } = new TreeViewItemGridCellElement();
 	}
 }

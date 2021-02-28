@@ -222,10 +222,13 @@ namespace Zaaml.UI.Panels.Flexible
     public double ResizeToMinimum()
     {
       var result = 0.0;
+
       for (var index = 0; index < Count; index++)
       {
         var item = this[index];
+
         result += item.ActualLength = item.ActualMinLength;
+
         this[index] = item;
       }
 

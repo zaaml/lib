@@ -75,6 +75,7 @@ namespace Zaaml.UI.Panels.Flexible
 					return true;
 
 				var stretchDirection = StretchDirection;
+
 				return stretchDirection == FlexStretchDirection.Both || stretchDirection == FlexStretchDirection.Expand;
 			}
 		}
@@ -87,6 +88,7 @@ namespace Zaaml.UI.Panels.Flexible
 					return true;
 
 				var stretchDirection = StretchDirection;
+
 				return stretchDirection == FlexStretchDirection.Both || stretchDirection == FlexStretchDirection.Shrink;
 			}
 		}
@@ -111,6 +113,7 @@ namespace Zaaml.UI.Panels.Flexible
 			EnsureInitialized();
 
 			var length = Length;
+
 			actualLength = actualLength.Clamp(_minLength, _maxLength);
 
 			if (length.IsStar)
@@ -139,6 +142,7 @@ namespace Zaaml.UI.Panels.Flexible
 			get
 			{
 				var length = Length;
+
 				if (length.IsStar)
 					return ActualLength;
 
@@ -179,18 +183,17 @@ namespace Zaaml.UI.Panels.Flexible
 			set => PackedDefinition.IsInitialized.SetValue(ref _packedValue, value);
 		}
 
-
 		private void EnsureInitialized()
 		{
 			if (IsInitialized)
 				return;
 
-			Initilize();
+			Initialize();
 
 			IsInitialized = true;
 		}
 
-		private void Initilize()
+		private void Initialize()
 		{
 			_maxLength = DefaultMaxLength;
 			_lengthValue = DefaultLength.Value;
@@ -206,6 +209,7 @@ namespace Zaaml.UI.Panels.Flexible
 			get
 			{
 				EnsureInitialized();
+
 				return _maxLength;
 			}
 			set
@@ -279,12 +283,13 @@ namespace Zaaml.UI.Panels.Flexible
 			return this;
 		}
 
-		public FlexElement WithRounding(bool useLayoutRaounding)
+		public FlexElement WithRounding(bool useLayoutRounding)
 		{
 			var clone = this;
 
-			clone.IsRound = useLayoutRaounding;
-			if (useLayoutRaounding)
+			clone.IsRound = useLayoutRounding;
+
+			if (useLayoutRounding)
 				clone.RoundImpl();
 
 			return clone;

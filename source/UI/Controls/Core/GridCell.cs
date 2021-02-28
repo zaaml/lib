@@ -51,10 +51,6 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		protected virtual void OnChildCoreChanged()
-		{
-		}
-
 		internal GridColumn ColumnInternal => ControllerInternal?.GetColumn(this);
 
 		internal GridController ControllerInternal => CellsPresenterInternal?.ControllerInternal;
@@ -62,6 +58,12 @@ namespace Zaaml.UI.Controls.Core
 		internal int Index { get; set; }
 
 		private GridCellTemplateContract TemplateContract => (GridCellTemplateContract) TemplateContractInternal;
+
+		protected virtual void OnChildCoreChanged()
+		{
+		}
+
+		internal Size AutoDesiredSize { get; set; }
 
 		protected override void OnTemplateContractAttached()
 		{
@@ -79,13 +81,13 @@ namespace Zaaml.UI.Controls.Core
 			base.OnTemplateContractDetaching();
 		}
 
+		protected virtual void UpdateStructure()
+		{
+		}
+
 		internal void UpdateStructureInternal(bool force)
 		{
 			UpdateStructure();
-		}
-
-		protected virtual void UpdateStructure()
-		{
 		}
 
 		protected override void UpdateVisualState(bool useTransitions)
