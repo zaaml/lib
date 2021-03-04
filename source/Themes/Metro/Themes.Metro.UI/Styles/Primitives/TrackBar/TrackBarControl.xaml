@@ -9,7 +9,7 @@
   <!--  Template  -->
   <ControlTemplate x:Key="Template"
                    TargetType="zm:TrackBarControl">
-    <zm:ControlTemplateRoot>
+    <zm:ControlTemplateRoot Background="Transparent">
       <zm:TrackBarPanel x:Name="TrackBarPanel" />
     </zm:ControlTemplateRoot>
   </ControlTemplate>

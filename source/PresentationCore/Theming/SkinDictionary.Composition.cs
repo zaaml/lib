@@ -185,7 +185,7 @@ namespace Zaaml.PresentationCore.Theming
 			if (_priorityDictionary == null)
 				return Priority;
 
-			ushort keyPriority = _priorityDictionary.TryGetValue(key, out var priority) ? priority : 0;
+			var keyPriority = _priorityDictionary.TryGetValue(key, out var priority) ? priority : (ushort)0;
 
 			return Math.Max(Priority, keyPriority);
 		}

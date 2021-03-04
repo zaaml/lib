@@ -9,7 +9,6 @@ using Zaaml.Core.Utils;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
-using Zaaml.UI.Utils;
 
 namespace Zaaml.UI.Controls.Primitives.TrackBar
 {

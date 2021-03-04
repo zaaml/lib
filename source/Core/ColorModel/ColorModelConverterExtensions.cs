@@ -38,9 +38,9 @@ namespace Zaaml.Core.ColorModel
       return ColorModelConverter.HslColorToRgbColor(hslColor);
     }
 
-    public static RgbColor ToRgbColor(this sRgbColor srgbColor)
+    public static RgbColor ToRgbColor(this sRgbColor sRgbColor)
     {
-      return ColorModelConverter.sRgbToRgb(srgbColor);
+      return ColorModelConverter.sRgbToRgb(sRgbColor);
     }
 
     public static sRgbColor TosRgbColor(this RgbColor rgbColor)

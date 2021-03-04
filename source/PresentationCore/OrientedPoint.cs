@@ -2,109 +2,110 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Windows;
 using System.Windows.Controls;
 using Zaaml.PresentationCore.Extensions;
+using Point = System.Windows.Point;
+using Size = System.Windows.Size;
 
 namespace Zaaml.PresentationCore
 {
-  public struct OrientedPoint
-  {
-    private Orientation _orientation;
+	public struct OrientedPoint
+	{
+		private Orientation _orientation;
 
-    #region Ctors
+		#region Ctors
 
-    public OrientedPoint(Orientation orientation)
-      : this()
-    {
-      _orientation = orientation;
-    }
+		public OrientedPoint(Orientation orientation)
+			: this()
+		{
+			_orientation = orientation;
+		}
 
-    public OrientedPoint(Orientation orientation, double x, double y)
-      : this()
-    {
-      _orientation = orientation;
-      X = x;
-      Y = y;
-    }
+		public OrientedPoint(Orientation orientation, double x, double y)
+			: this()
+		{
+			_orientation = orientation;
+			X = x;
+			Y = y;
+		}
 
-    public OrientedPoint(Orientation orientation, Point point)
-      : this()
-    {
-      _orientation = orientation;
-      X = point.X;
-      Y = point.Y;
-    }
+		public OrientedPoint(Orientation orientation, Point point)
+			: this()
+		{
+			_orientation = orientation;
+			X = point.X;
+			Y = point.Y;
+		}
 
-    #endregion
+		#endregion
 
-    #region Properties
+		#region Properties
 
-    public double Direct { get; set; }
+		public double Direct { get; set; }
 
-    public double Indirect { get; set; }
+		public double Indirect { get; set; }
 
-    public Orientation Orientation
-    {
-      get => _orientation;
-      set
-      {
-        if (_orientation == value)
-          return;
+		public Orientation Orientation
+		{
+			get => _orientation;
+			set
+			{
+				if (_orientation == value)
+					return;
 
-        Rotate();
-      }
-    }
+				Rotate();
+			}
+		}
 
-    public Point Point => new Point(X, Y);
+		public Point Point => new Point(X, Y);
 
-    public double X
-    {
-      get => _orientation.IsHorizontal() ? Direct : Indirect;
-      set
-      {
-        if (_orientation.IsHorizontal())
-          Direct = value;
-        else
-          Indirect = value;
-      }
-    }
+		public double X
+		{
+			get => _orientation.IsHorizontal() ? Direct : Indirect;
+			set
+			{
+				if (_orientation.IsHorizontal())
+					Direct = value;
+				else
+					Indirect = value;
+			}
+		}
 
-    public double Y
-    {
-      get => _orientation.IsVertical() ? Direct : Indirect;
-      set
-      {
-        if (_orientation.IsVertical())
-          Direct = value;
-        else
-          Indirect = value;
-      }
-    }
+		public double Y
+		{
+			get => _orientation.IsVertical() ? Direct : Indirect;
+			set
+			{
+				if (_orientation.IsVertical())
+					Direct = value;
+				else
+					Indirect = value;
+			}
+		}
 
-    #endregion
+		#endregion
 
-    #region Methods
+		#region Methods
 
-    public double GetDirect(Size size)
-    {
-      return _orientation.IsHorizontal() ? size.Width : size.Height;
-    }
+		public double GetDirect(Size size)
+		{
+			return _orientation.IsHorizontal() ? size.Width : size.Height;
+		}
 
-    public double GetIndirect(Size size)
-    {
-      return _orientation.IsVertical() ? size.Width : size.Height;
-    }
+		public double GetIndirect(Size size)
+		{
+			return _orientation.IsVertical() ? size.Width : size.Height;
+		}
 
-    public void Rotate()
-    {
-      var t = Direct;
+		public void Rotate()
+		{
+			var t = Direct;
 
-      Direct = Indirect;
-      Indirect = t;
-      _orientation = _orientation.Rotate();
-    }
+			Direct = Indirect;
+			Indirect = t;
+			_orientation = _orientation.Rotate();
+		}
 
-    #endregion
-  }
+		#endregion
+	}
 }

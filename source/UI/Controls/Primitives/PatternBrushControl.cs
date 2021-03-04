@@ -1,6 +1,6 @@
-//  <copyright file="PatternBrushControl.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-//    Copyright (c) zaaml. All rights reserved.
-//  </copyright>
+// <copyright file="PatternBrushControl.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+//   Copyright (c) Zaaml. All rights reserved.
+// </copyright>
 
 using System;
 using System.Linq;
@@ -15,168 +15,115 @@ using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Behaviors;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Primitives
 {
-  public interface IPattern
-  {
-    #region Fields
+	public interface IPattern
+	{
+		event EventHandler TemplateChanged;
 
-    event EventHandler Changed;
+		UIElement CreateElement();
+	}
 
-    #endregion
+	internal class TileBlockPanel : PanelBase
+	{
+		private readonly Size _actualSize;
+		private readonly bool _measureToActualSize;
+		private readonly Size _size;
 
-    #region  Methods
+		public TileBlockPanel(Size size, IPattern pattern, bool measureToActualSize)
+		{
+			_size = size;
+			_measureToActualSize = measureToActualSize;
 
-    UIElement CreateElement();
-
-    #endregion
-  }
-
-  internal class TileBlockPanel : PanelBase
-  {
-    #region Fields
-
-    private readonly Size _actualSize;
-    private readonly bool _measureToActualSize;
-    private readonly Size _size;
-
-    #endregion
-
-    #region Ctors
-
-    public TileBlockPanel(Size size, IPattern pattern, bool measureToActualSize)
-    {
-      _size = size;
-      _measureToActualSize = measureToActualSize;
-
-      var patternElement = pattern.CreateElement();
+			var patternElement = pattern.CreateElement();
 
 			if (patternElement == null)
 				return;
 
-      patternElement.Measure(XamlConstants.InfiniteSize);
+			patternElement.Measure(XamlConstants.InfiniteSize);
 
-      var imagePattern = patternElement as Image;
-      var bmp = imagePattern.Return(i => i.Source).As<WriteableBitmap>();
+			var imagePattern = patternElement as Image;
+			var bmp = imagePattern.Return(i => i.Source).As<WriteableBitmap>();
 
-      var patternSize = bmp.Return(b => new Size(b.PixelWidth, b.PixelHeight), patternElement.DesiredSize);
+			var patternSize = bmp.Return(b => new Size(b.PixelWidth, b.PixelHeight), patternElement.DesiredSize);
 
-      var w = patternSize.Width;
-      var h = patternSize.Height;
+			var w = patternSize.Width;
+			var h = patternSize.Height;
 
-      if (DoubleUtils.IsZero(w) || DoubleUtils.IsZero(h))
-        return;
+			if (DoubleUtils.IsZero(w) || DoubleUtils.IsZero(h))
+				return;
 
-      var xCount = 1 + ((int) size.Width)/(int) w;
-      var yCount = 1 + ((int) size.Height)/(int) h;
+			var xCount = 1 + ((int) size.Width) / (int) w;
+			var yCount = 1 + ((int) size.Height) / (int) h;
 
-      for (var x = 0; x < xCount; x++)
-      {
-        for (var y = 0; y < yCount; y++)
-        {
-          var element = pattern.CreateElement();
+			for (var x = 0; x < xCount; x++)
+			{
+				for (var y = 0; y < yCount; y++)
+				{
+					var element = pattern.CreateElement();
 
-          element.Measure(patternSize);
-          Children.Add(element);
-          SetArrangeRect(element, new Rect(new Point(x*w, y*h), patternSize));
-        }
-      }
+					element.Measure(patternSize);
+					Children.Add(element);
+					SetArrangeRect(element, new Rect(new Point(x * w, y * h), patternSize));
+				}
+			}
 
-      _actualSize = new Size(xCount*w, yCount*h);
-    }
+			_actualSize = new Size(xCount * w, yCount * h);
+		}
 
-    #endregion
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			foreach (var child in Children.Cast<UIElement>())
+				child.Measure(GetArrangeSize(child));
 
-    #region  Methods
+			return _measureToActualSize ? _actualSize : _size;
+		}
+	}
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      foreach (var child in Children.Cast<UIElement>())
-        child.Measure(GetArrangeSize(child));
+	public class PatternPanel : PanelBase
+	{
+		private IPattern _pattern;
+		private ImageSource _patternImage;
 
-      return _measureToActualSize ? _actualSize : _size;
-    }
+		public PatternPanel()
+		{
+			this.AddBehavior(new ClipToBoundsBehavior());
+		}
 
-    #endregion
-  }
+		public IPattern Pattern
+		{
+			get => _pattern;
+			set
+			{
+				if (ReferenceEquals(_pattern, value))
+					return;
 
-  public class PatternPanel : PanelBase
-  {
-    #region Fields
+				if (_pattern != null)
+					_pattern.TemplateChanged -= PatternOnChanged;
 
-    private IPattern _pattern;
-    private ImageSource _patternImage;
+				_pattern = value;
 
-    #endregion
+				if (_pattern != null)
+					_pattern.TemplateChanged += PatternOnChanged;
 
-    #region Ctors
+				InvalidatePattern();
+			}
+		}
 
-    public PatternPanel()
-    {
-      this.AddBehavior(new ClipToBoundsBehavior());
-    }
+		internal void InvalidatePattern()
+		{
+			_patternImage = null;
+			InvalidateMeasure();
 
-    #endregion
+			if (_pattern == null)
+				return;
 
-    #region Properties
-
-    public IPattern Pattern
-    {
-      get => _pattern;
-      set
-      {
-        if (ReferenceEquals(_pattern, value))
-          return;
-
-        if (_pattern != null)
-          _pattern.Changed -= PatternOnChanged;
-
-        _pattern = value;
-
-        if (_pattern != null)
-          _pattern.Changed += PatternOnChanged;
-
-        InvalidatePattern();
-      }
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private void PatternOnChanged(object sender, EventArgs eventArgs)
-    {
-      InvalidatePattern();
-    }
-
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      Children.Clear();
-
-      if (double.IsInfinity(availableSize.Width) || double.IsInfinity(availableSize.Height) || _patternImage == null)
-        return XamlConstants.ZeroSize;
-
-      var tilePanel = new TileBlockPanel(availableSize, new ImageTemplatePattern {Image = _patternImage}, false);
-
-      SetArrangeRect(tilePanel, new Rect(new Point(), availableSize));
-      Children.Add(tilePanel);
-
-      return availableSize;
-    }
-
-    internal void InvalidatePattern()
-    {
-      _patternImage = null;
-      InvalidateMeasure();
-
-      if (_pattern == null)
-        return;
-
-      var size = new Size(256, 256);
-      var tilePanel = new TileBlockPanel(size, _pattern, true);
+			var size = new Size(256, 256);
+			var tilePanel = new TileBlockPanel(size, _pattern, true);
 
 #if SILVERLIGHT
       tilePanel.RenderOnLoad
@@ -186,114 +133,97 @@ namespace Zaaml.UI.Controls.Primitives
           InvalidateMeasure();
         });
 #else
-	    _patternImage = Extension.CreateBitmap(tilePanel, size);
+			_patternImage = Extension.CreateBitmap(tilePanel, size);
 			InvalidateMeasure();
 #endif
-    }
+		}
 
-    #endregion
-  }
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			Children.Clear();
 
-  [ContentProperty("Pattern")]
-  public class PatternBrushControl : FixedTemplateControl
-  {
-    #region Static Fields and Constants
+			if (double.IsInfinity(availableSize.Width) || double.IsInfinity(availableSize.Height) || _patternImage == null)
+				return XamlConstants.ZeroSize;
 
-    public static readonly DependencyProperty PatternProperty = DPM.Register<IPattern, PatternBrushControl>
-      ("Pattern", p => p.OnPatternChanged);
+			var tilePanel = new TileBlockPanel(availableSize, new ImageTemplatePattern {Image = _patternImage}, false);
 
-    #endregion
+			SetArrangeRect(tilePanel, new Rect(new Point(), availableSize));
+			Children.Add(tilePanel);
 
-    #region Fields
+			return availableSize;
+		}
 
-    private readonly PatternPanel _patternPanel;
+		private void PatternOnChanged(object sender, EventArgs eventArgs)
+		{
+			InvalidatePattern();
+		}
+	}
 
-    #endregion
+	[ContentProperty("Pattern")]
+	public class PatternBrushControl : FixedTemplateControl
+	{
+		public static readonly DependencyProperty PatternProperty = DPM.Register<IPattern, PatternBrushControl>
+			("Pattern", p => p.OnPatternChanged);
 
-    #region Ctors
+		private readonly PatternPanel _patternPanel;
 
-    public PatternBrushControl()
-    {
-      _patternPanel = new PatternPanel();
-      ChildInternal = _patternPanel;
-    }
+		static PatternBrushControl()
+		{
+			ControlUtils.OverrideIsTabStop<PatternBrushControl>(false);
+		}
 
-    #endregion
+		public PatternBrushControl()
+		{
+			_patternPanel = new PatternPanel();
+			ChildInternal = _patternPanel;
+		}
 
-    #region Properties
+		public IPattern Pattern
+		{
+			get => (IPattern) GetValue(PatternProperty);
+			set => SetValue(PatternProperty, value);
+		}
 
-    public IPattern Pattern
-    {
-      get => (IPattern) GetValue(PatternProperty);
-      set => SetValue(PatternProperty, value);
-    }
+		protected override void ApplyTemplateOverride()
+		{
+			base.ApplyTemplateOverride();
 
-    #endregion
+			UpdatePattern();
+		}
 
-    #region  Methods
+		private void OnPatternChanged()
+		{
+			UpdatePattern();
+		}
 
-    protected override void ApplyTemplateOverride()
-    {
-      base.ApplyTemplateOverride();
+		private void UpdatePattern()
+		{
+			_patternPanel.Pattern = Pattern;
+		}
+	}
 
-      UpdatePattern();
-    }
+	[ContentProperty("Template")]
+	public sealed class DataTemplatePattern : InheritanceContextObject, IPattern
+	{
+		public static readonly DependencyProperty TemplateProperty = DPM.Register<DataTemplate, DataTemplatePattern>
+			("Template", d => d.OnTemplateChanged);
 
-    private void OnPatternChanged()
-    {
-      UpdatePattern();
-    }
+		public DataTemplate Template
+		{
+			get => (DataTemplate) GetValue(TemplateProperty);
+			set => SetValue(TemplateProperty, value);
+		}
 
-    private void UpdatePattern()
-    {
-      _patternPanel.Pattern = Pattern;
-    }
+		private void OnTemplateChanged()
+		{
+			TemplateChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    #endregion
-  }
+		public event EventHandler TemplateChanged;
 
-  [ContentProperty("Template")]
-  public sealed class DataTemplatePattern : DependencyObject, IPattern
-  {
-    #region Static Fields and Constants
-
-    public static readonly DependencyProperty TemplateProperty = DPM.Register<DataTemplate, DataTemplatePattern>
-      ("Template", d => d.OnChanged);
-
-    #endregion
-
-    #region Fields
-
-    public event EventHandler Changed;
-
-    #endregion
-
-    #region Properties
-
-    public DataTemplate Template
-    {
-      get => (DataTemplate) GetValue(TemplateProperty);
-      set => SetValue(TemplateProperty, value);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    public UIElement CreateElement()
-    {
-      //var conentPresenter = new ContentPresenter {ContentTemplate = Template};
-      ////Extension.GetExpando(conentPresenter).AddRange(Expando);
-      //return conentPresenter;
-
-      return (UIElement) Template.Return(t => t.LoadContent());
-    }
-
-    private void OnChanged()
-    {
-      Changed?.Invoke(this, EventArgs.Empty);
-    }
-
-    #endregion
-  }
+		public UIElement CreateElement()
+		{
+			return (UIElement) Template?.LoadContent();
+		}
+	}
 }

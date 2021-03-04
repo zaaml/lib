@@ -173,5 +173,25 @@ namespace Zaaml.Core.ColorModel
     }
 
     #endregion
+
+    public RgbColor WithAlpha(double value)
+    {
+	    return new RgbColor(value, R, G, B);
+    }
+
+    public RgbColor WithRed(double value)
+    {
+	    return new RgbColor(A, value, G, B);
+    }
+    
+    public RgbColor WithGreen(double value)
+    {
+	    return new RgbColor(A, R, value, B);
+    }
+
+    public RgbColor WithBlue(double value)
+    {
+	    return new RgbColor(A, R, G, value);
+    }
   }
 }

@@ -21,7 +21,7 @@ namespace Zaaml.UI.Controls.Primitives
 
 		#region Fields
 
-		public event EventHandler Changed;
+		public event EventHandler TemplateChanged;
 
 		#endregion
 
@@ -44,7 +44,7 @@ namespace Zaaml.UI.Controls.Primitives
 
 		private void OnChanged()
 		{
-			Changed?.Invoke(this, EventArgs.Empty);
+			TemplateChanged?.Invoke(this, EventArgs.Empty);
 		}
 
 		#endregion

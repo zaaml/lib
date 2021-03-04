@@ -46,7 +46,7 @@ namespace Zaaml.UI.Controls.Core
       return GetType().GetAttribute<TemplateContractTypeAttribute>().CreateTemplateContractInternal();
     }
 
-    public sealed override void OnApplyTemplate()
+    public override void OnApplyTemplate()
     {
       if (TemplateContractInternal.IsAttached)
       {

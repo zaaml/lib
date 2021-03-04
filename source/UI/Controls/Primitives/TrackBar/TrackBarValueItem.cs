@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore.Extensions;
@@ -29,6 +30,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			this.OverrideStyleKey<TrackBarValueItem>();
 
+			Panel.SetZIndex(this, 10000);
 			PreserveValue = true;
 		}
 

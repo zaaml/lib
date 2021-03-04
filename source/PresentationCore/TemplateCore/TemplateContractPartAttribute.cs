@@ -12,6 +12,7 @@ namespace Zaaml.PresentationCore.TemplateCore
     #region Properties
 
     public string Name { get; set; }
+
     public bool Required { get; set; }
 
     #endregion

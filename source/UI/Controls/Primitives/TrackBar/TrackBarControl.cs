@@ -310,6 +310,15 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			UpdateValueOnMouseEvent(e);
 		}
 
+
+		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			if (Focusable)
+				Focus();
+
+			base.OnPreviewMouseLeftButtonDown(e);
+		}
+
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
