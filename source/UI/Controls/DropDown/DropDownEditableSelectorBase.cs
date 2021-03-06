@@ -142,7 +142,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			base.OnTemplateContractAttached();
 
-			Popup.Closing += PopupCloseControllerOnClosing;
+			PopupBar.Closing += PopupCloseControllerOnClosing;
 
 			if (IsEditing)
 				ShowEditor();
@@ -152,7 +152,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override void OnTemplateContractDetaching()
 		{
-			Popup.Closing -= PopupCloseControllerOnClosing;
+			PopupBar.Closing -= PopupCloseControllerOnClosing;
 
 			base.OnTemplateContractDetaching();
 		}

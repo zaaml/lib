@@ -1,0 +1,41 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="ColorPresenterTemplate"
+                   TargetType="zm:ColorPresenter">
+    <zm:ControlTemplateRoot>
+
+      <!--  Alpha pattern  -->
+      <zm:PatternBrushControl IsHitTestVisible="False"
+                              Visibility="{zm:TemplateBinding Path=ShowTransparentPattern,
+                                                              Converter={zm:VisibilityConverter}}">
+        <zm:DataTemplateBackgroundPattern Template="{zm:TemplateSkinBinding SkinPath=TransparentPattern}" />
+      </zm:PatternBrushControl>
+
+      <!--  Color border  -->
+      <Border>
+        <Border.Background>
+          <SolidColorBrush Color="{zm:TemplateBinding Path=Color}" />
+        </Border.Background>
+      </Border>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ColorPresenterBaseStyle" TargetType="zm:ColorPresenter">
+    <zm:Setter Property="Template" Value="{StaticResource ColorPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ColorPresenterStyle" BasedOn="{StaticResource ColorPresenterBaseStyle}" Skin="Metro.ColorPresenter" TargetType="zm:ColorPresenter" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ColorPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ColorPresenterStyle}" TargetType="zm:ColorPresenter" />
+
+</zm:ThemeResourceDictionary>

@@ -120,7 +120,7 @@ namespace Zaaml.Core
 
 		private void Verify()
 		{
-			if (IsEmpty == false)
+			if (IsEmpty)
 				throw new InvalidOperationException("Empty range");
 		}
 

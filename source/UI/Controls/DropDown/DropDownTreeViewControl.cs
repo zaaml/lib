@@ -162,7 +162,7 @@ namespace Zaaml.UI.Controls.DropDown
 			return base.MeasureOverride(availableSize);
 		}
 
-		internal override void OnIsDropDownOpenChangedInternal()
+		private protected override void OnIsDropDownOpenChangedInternal()
 		{
 			try
 			{

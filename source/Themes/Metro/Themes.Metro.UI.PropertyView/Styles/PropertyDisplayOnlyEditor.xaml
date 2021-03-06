@@ -11,6 +11,7 @@
     <zm:ControlTemplateRoot>
 
       <zm:TextEditor zm:DisableVeilControl.EnableVeil="False"
+                     BorderThickness="0"
                      Foreground="{TemplateBinding Foreground}"
                      IsReadOnly="True"
                      Text="{zm:TemplateBinding Path=TextValue, Mode=OneWay}" />

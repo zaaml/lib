@@ -350,6 +350,9 @@ namespace Zaaml.UI.Panels.Flexible
 			var minLength = MinLength;
 			var maxLength = Math.Max(minLength, MaxLength);
 
+			if (element.Visibility == Visibility.Collapsed)
+				clone.StretchDirection = FlexStretchDirection.None;
+
 			if (element is FrameworkElement freChild)
 			{
 				if (freChild.TryGetNonDefaultValue(orientation == Orientation.Horizontal ? FrameworkElement.MinWidthProperty : FrameworkElement.MinHeightProperty, out double freMinSize))

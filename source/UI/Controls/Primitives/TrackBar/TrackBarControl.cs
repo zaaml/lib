@@ -16,6 +16,7 @@ using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
+using Range = Zaaml.Core.Range;
 
 namespace Zaaml.UI.Controls.Primitives.TrackBar
 {

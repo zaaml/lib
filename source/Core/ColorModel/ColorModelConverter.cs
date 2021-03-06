@@ -90,26 +90,19 @@ namespace Zaaml.Core.ColorModel
       var f = (h / 60.0) - hn;
 
       var p = v * (1.0 - s);
-      var q = v * (1.0 - (f * s));
-      var t = v * (1.0 - ((1.0 - f) * s));
+      var q = v * (1.0 - f * s);
+      var t = v * (1.0 - (1.0 - f) * s);
 
-      switch (hi)
+      return hi switch
       {
-        case 0:
-          return RgbColor.FromRgb(a, v, t, p);
-        case 1:
-          return RgbColor.FromRgb(a, q, v, p);
-        case 2:
-          return RgbColor.FromRgb(a, p, v, t);
-        case 3:
-          return RgbColor.FromRgb(a, p, q, v);
-        case 4:
-          return RgbColor.FromRgb(a, t, p, v);
-        case 5:
-          return RgbColor.FromRgb(a, v, p, q);
-        default:
-          return RgbColor.FromRgb(a, 0.0, 0.0, 0.0);
-      }
+	      0 => RgbColor.FromRgb(a, v, t, p),
+	      1 => RgbColor.FromRgb(a, q, v, p),
+	      2 => RgbColor.FromRgb(a, p, v, t),
+	      3 => RgbColor.FromRgb(a, p, q, v),
+	      4 => RgbColor.FromRgb(a, t, p, v),
+	      5 => RgbColor.FromRgb(a, v, p, q),
+	      _ => RgbColor.FromRgb(a, 0.0, 0.0, 0.0)
+      };
     }
 
     private static double MaxRgb(RgbColor rgbColor)

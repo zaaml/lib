@@ -61,7 +61,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		protected PopupControlController()
 		{
-			_controllerSelectorBinding = new Binding { Source = this, BindsDirectlyToSource = true, Mode = BindingMode.OneTime };
+			_controllerSelectorBinding = new Binding {Source = this, BindsDirectlyToSource = true, Mode = BindingMode.OneTime};
 		}
 
 		private bool ActualAttachToGlobalPopup
@@ -374,18 +374,21 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			if (target != null && target.GetAncestors(MixedTreeEnumerationStrategy.DisconnectedThenVisualThenLogicalInstance).Any(a => ReferenceEquals(a, FrameworkElement)))
 				return;
 
-			if (ControllablePopup is IContextPopupControlInternal ctxControl)
-			{
-				ctxControl.Owner = owner;
-				ctxControl.Target = target;
+			if (ControllablePopup is not IContextPopupControlInternal ctxControl)
+				return;
 
-				if (owner is IContextPopupTarget contextPopupTarget)
-					contextPopupTarget.OnContextPopupControlOpened(ctxControl);
-			}
+			ctxControl.Owner = owner;
+			ctxControl.Target = target;
 
 			var version = Version;
 
-			Dispatcher.BeginInvoke(() => EnsureContextOpen(version));
+			Dispatcher.BeginInvoke(() =>
+			{
+				EnsureContextOpen(version);
+
+				if (owner is IContextPopupTarget contextPopupTarget)
+					contextPopupTarget.OnContextPopupControlOpened(ctxControl);
+			});
 		}
 
 		protected void OpenPopup()

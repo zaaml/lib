@@ -857,6 +857,87 @@
 
     </zm:SkinDictionary>
 
+    <!-- ColorEditorControl -->
+    <zm:SkinDictionary x:Key="ColorEditorControl">
+
+      <SolidColorBrush x:Key="Foreground" Color="#BFFFFFFF" />
+      <SolidColorBrush x:Key="Background" Color="#FF333333" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#FF515151" />
+
+    </zm:SkinDictionary>
+
+    <!-- DropDownColorEditorControl -->
+    <zm:SkinDictionary x:Key="DropDownColorEditorControl">
+
+      <SolidColorBrush x:Key="Background" Color="#FF333333" zmb:Skin="Office" />
+
+    </zm:SkinDictionary>
+
+    <!-- ColorRectangleEditorControl -->
+    <zm:SkinDictionary x:Key="ColorRectangleEditorControl">
+
+      <SolidColorBrush x:Key="XYControllerItemStroke" Color="#FFBBBBBB" />
+
+    </zm:SkinDictionary>
+
+    <!-- ColorChannelSlider -->
+    <zm:SkinDictionary x:Key="ColorChannelSlider">
+
+      <SolidColorBrush x:Key="ThumbStroke" Color="#FFBBBBBB" />
+
+      <DataTemplate x:Key="TransparentPattern" zmb:Skin="Office">
+        <Grid Width="8" Height="8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="4"/>
+          </Grid.ColumnDefinitions>
+
+          <Grid.RowDefinitions>
+            <RowDefinition Height="4"/>
+            <RowDefinition Height="4"/>
+          </Grid.RowDefinitions>
+
+          <!-- Even -->
+          <Rectangle Grid.Column="0" Grid.Row="0" Fill="#FF555555" />
+          <!-- Odd -->
+          <Rectangle Grid.Column="1" Grid.Row="0" Fill="#FFAAAAAA" />
+          <!-- Even -->
+          <Rectangle Grid.Column="1" Grid.Row="1" Fill="#FF555555" />
+          <!-- Odd -->
+          <Rectangle Grid.Column="0" Grid.Row="1" Fill="#FFAAAAAA" />
+        </Grid>
+      </DataTemplate>
+
+    </zm:SkinDictionary>
+
+    <!-- ColorPresenter -->
+    <zm:SkinDictionary x:Key="ColorPresenter">
+
+      <DataTemplate x:Key="TransparentPattern" zmb:Skin="Office">
+        <Grid Width="8" Height="8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="4"/>
+          </Grid.ColumnDefinitions>
+
+          <Grid.RowDefinitions>
+            <RowDefinition Height="4"/>
+            <RowDefinition Height="4"/>
+          </Grid.RowDefinitions>
+
+          <!-- Even -->
+          <Rectangle Grid.Column="0" Grid.Row="0" Fill="#FF555555" />
+          <!-- Odd -->
+          <Rectangle Grid.Column="1" Grid.Row="0" Fill="#FFAAAAAA" />
+          <!-- Even -->
+          <Rectangle Grid.Column="1" Grid.Row="1" Fill="#FF555555" />
+          <!-- Odd -->
+          <Rectangle Grid.Column="0" Grid.Row="1" Fill="#FFAAAAAA" />
+        </Grid>
+      </DataTemplate>
+
+    </zm:SkinDictionary>
+
     <!-- ListView -->
     <zm:SkinDictionary x:Key="ListView" BasedOn="Metro.Shared.ListView"/>
 

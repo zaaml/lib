@@ -1,0 +1,101 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="ColorEditorControlTemplate"
+                   TargetType="zm:ColorEditorControl">
+    <zm:ControlTemplateRoot>
+      <Border Padding="6"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+        <zm:GridPanel>
+          <zm:GridPanel.Columns>
+            <zm:GridPanelColumn Width="Auto" />
+            <zm:GridPanelColumn Width="Auto" />
+          </zm:GridPanel.Columns>
+
+          <zm:GridPanel.Rows>
+            <zm:GridPanelRow Height="Auto" />
+            <zm:GridPanelRow Height="Auto" />
+            <zm:GridPanelRow Height="Auto" />
+          </zm:GridPanel.Rows>
+
+          <zm:ColorRectangleEditorControl x:Name="RectangleEditor"
+                                          zm:GridPanel.Column="0"
+                                          zm:GridPanel.Row="1" />
+
+          <zm:ColorSliderEditorControl x:Name="SliderEditor"
+                                       Margin="4,6,0,0"
+                                       zm:GridPanel.Column="1"
+                                       zm:GridPanel.Row="1" />
+
+          <zm:FlexPanel Width="196"
+                        Margin="4,6,0,0"
+                        HorizontalAlignment="Left"
+                        zm:GridPanel.Column="0"
+                        zm:GridPanel.Row="2"
+                        Orientation="Horizontal"
+                        Stretch="Fill">
+
+            <!--  Original color presenter  -->
+            <zm:ColorPresenter Height="22"
+                               Color="{zm:TemplateBinding Path=OriginalColor}" />
+
+            <!--  Current color presenter  -->
+            <zm:ColorPresenter Height="22"
+                               Color="{zm:TemplateBinding Path=Color}" />
+          </zm:FlexPanel>
+
+          <zm:FlexPanel Margin="4,6,0,0"
+                        VerticalAlignment="Center"
+                        zm:GridPanel.Column="1"
+                        zm:GridPanel.Row="2"
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        Stretch="Fill">
+
+            <zm:HeaderedContentControl zm:FlexDefinition.StretchDirection="None"
+                                       HeaderDistance="4"
+                                       HeaderDock="Left"
+                                       VerticalHeaderAlignment="Center">
+              <zm:HeaderedContentControl.Header>
+                <zm:Label Content="Hex" />
+              </zm:HeaderedContentControl.Header>
+
+              <zm:ColorTextEditor Width="80"
+                                  Value="{zm:TemplateBinding Path=Color,
+                                                             Mode=TwoWay}" />
+            </zm:HeaderedContentControl>
+
+          </zm:FlexPanel>
+
+        </zm:GridPanel>
+      </Border>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ColorEditorControlBaseStyle" TargetType="zm:ColorEditorControl">
+    <zm:Setter Property="Template" Value="{StaticResource ColorEditorControlTemplate}" />
+    <zm:Setter Property="BorderThickness" Value="1" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ColorEditorControlStyle" BasedOn="{StaticResource ColorEditorControlBaseStyle}" Skin="Metro.ColorEditorControl" TargetType="zm:ColorEditorControl">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="Foreground" Property="Foreground" />
+      <zm:Setter ValuePath="Background" Property="Background" />
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ColorEditorControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ColorEditorControlStyle}" TargetType="zm:ColorEditorControl" />
+
+</zm:ThemeResourceDictionary>

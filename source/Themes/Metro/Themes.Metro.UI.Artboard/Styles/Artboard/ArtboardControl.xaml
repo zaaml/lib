@@ -74,7 +74,7 @@
 
                 <!--  PatternBrushControl  -->
                 <zm:PatternBrushControl IsHitTestVisible="False">
-                  <zm:DataTemplatePattern Template="{zm:ThemeResource Key=Metro.Artboard.Background.Pattern}" />
+                  <zm:DataTemplateBackgroundPattern Template="{zm:ThemeResource Key=Metro.Artboard.Background.Pattern}" />
                 </zm:PatternBrushControl>
               </zm:Panel>
             </zm:ArtboardScrollViewControl.BottomContent>

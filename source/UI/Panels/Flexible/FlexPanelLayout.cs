@@ -39,7 +39,9 @@ namespace Zaaml.UI.Panels.Flexible
 
     protected override Size ArrangeCore(Size finalSize)
     {
-      return ArrangeCoreImpl(finalSize);
+	    var arrangeResult = ArrangeCoreImpl(finalSize);
+
+	    return arrangeResult;
     }
 
     private Size ArrangeCoreImpl(Size finalSize)
@@ -319,7 +321,9 @@ namespace Zaaml.UI.Panels.Flexible
         if (isOverflowedChanged || childVisibilityChanged)
           result = MeasureImpl(availableOriented.Size, out isOverflowedChanged);
 
-        return result.AsOriented(orientation).Size;
+        var measureCoreImpl = result.AsOriented(orientation).Size;
+
+        return measureCoreImpl;
       }
       finally
       {
@@ -362,6 +366,14 @@ namespace Zaaml.UI.Panels.Flexible
 
       // Return
       return GetFinalMeasureSize(availableOriented.Clamp(desiredFixed, XamlConstants.InfiniteSize.AsOriented(orientation)), desiredOriented, visibleSize).Size;
+
+			// TODO We do not need to require all available space (do not require star sizing). Just need to return the minimum required space for fixed elements.
+			// TODO Code below is right, however there are cases which do not work correctly (see RibbonWindow header).
+      //var result = desiredFixed;
+
+      //result.Indirect = Math.Max(desiredFixed.Indirect, desiredOriented.Indirect);
+
+      //return result.Size;
     }
 
     private OrientedSize FinalMeasureItems(OrientedSize availableOriented, double spacing, bool skipHiddenSpacing)
@@ -414,7 +426,11 @@ namespace Zaaml.UI.Panels.Flexible
 
       for (var index = 0; index < childrenCount; index++)
       {
-        var flexElement = Panel.GetFlexElement(children[index]).WithOrientation(orientation);
+	      var uiElement = children[index];
+	      var flexElement = Panel.GetFlexElement(uiElement).WithOrientation(orientation);
+
+	      if (uiElement.Visibility == Visibility.Collapsed)
+		      flexElement.StretchDirection = FlexStretchDirection.None;
 
         if (flexElement.IsStar)
           starValue += flexElement.Length.Value;

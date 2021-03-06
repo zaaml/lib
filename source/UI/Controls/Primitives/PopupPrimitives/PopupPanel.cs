@@ -261,7 +261,9 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private Size MeasurePass(ref MeasureContext measureContext)
 		{
-			for (var i = 0; i < 3; i++)
+			const int maxPassCount = 3;
+
+			for (var i = 0; i < maxPassCount; i++)
 			{
 				var child = Child;
 				var childDesiredSize = measureContext.DesiredContentSize;
@@ -283,7 +285,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 				MeasureChild(child, finalMeasureSize, false);
 
-				if (child.DesiredSize.IsCloseTo(measureContext.DesiredContentSize) == false)
+				if (i + 1 < maxPassCount && child.DesiredSize.IsCloseTo(measureContext.DesiredContentSize) == false)
 				{
 					measureContext = new MeasureContext(this, child.DesiredSize);
 

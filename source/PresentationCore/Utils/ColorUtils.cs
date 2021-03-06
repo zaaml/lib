@@ -18,31 +18,7 @@ namespace Zaaml.PresentationCore.Utils
 
 		public static Color ConvertFromString(string colorString, IFormatProvider formatProvider)
 		{
-			var normalized = colorString.Trim();
-
-			if (normalized.StartsWith("#") && normalized.Length == 9)
-			{
-				if (normalized.Length == 9)
-				{
-					var a = byte.Parse(colorString.Substring(1, 2), NumberStyles.HexNumber, formatProvider);
-					var r = byte.Parse(colorString.Substring(3, 2), NumberStyles.HexNumber, formatProvider);
-					var g = byte.Parse(colorString.Substring(5, 2), NumberStyles.HexNumber, formatProvider);
-					var b = byte.Parse(colorString.Substring(7, 2), NumberStyles.HexNumber, formatProvider);
-
-					return Color.FromArgb(a, r, g, b);
-				}
-
-				if (normalized.Length == 7)
-				{
-					var r = byte.Parse(colorString.Substring(1, 2), NumberStyles.HexNumber, formatProvider);
-					var g = byte.Parse(colorString.Substring(3, 2), NumberStyles.HexNumber, formatProvider);
-					var b = byte.Parse(colorString.Substring(5, 2), NumberStyles.HexNumber, formatProvider);
-
-					return Color.FromArgb(0xFF, r, g, b);
-				}
-			}
-
-			return KnownColors.TryGetColor(normalized, out var color) ? color : Colors.Transparent;
+			return TryConvertFromString(colorString, formatProvider, out var color) ? color : throw new InvalidOperationException();
 		}
 
 		public static string ConvertToString(Color color)
@@ -58,6 +34,41 @@ namespace Zaaml.PresentationCore.Utils
 		public static SolidColorBrush CreateBrush(Color color)
 		{
 			return new SolidColorBrush(color);
+		}
+
+		public static double GetChannelMaximumValue(ColorChannel channel)
+		{
+			return channel switch
+			{
+				ColorChannel.Alpha => 1.0,
+				ColorChannel.Red => 1.0,
+				ColorChannel.Green => 1.0,
+				ColorChannel.Blue => 1.0,
+				ColorChannel.Hue => 360.0,
+				ColorChannel.Saturation => 1.0,
+				ColorChannel.Value => 1.0,
+				_ => throw new ArgumentOutOfRangeException(nameof(channel), channel, null)
+			};
+		}
+
+		public static double GetChannelMinimumValue(ColorChannel channel)
+		{
+			return 0;
+		}
+
+		internal static ColorSpace GetChannelSpace(ColorChannel channel, ColorSpace alphaSpace)
+		{
+			return channel switch
+			{
+				ColorChannel.Alpha => alphaSpace,
+				ColorChannel.Red => ColorSpace.Rgb,
+				ColorChannel.Green => ColorSpace.Rgb,
+				ColorChannel.Blue => ColorSpace.Rgb,
+				ColorChannel.Hue => ColorSpace.Hsv,
+				ColorChannel.Saturation => ColorSpace.Hsv,
+				ColorChannel.Value => ColorSpace.Hsv,
+				_ => throw new ArgumentOutOfRangeException(nameof(channel), channel, null)
+			};
 		}
 
 		public static double GetChannelValue(Color color, ColorChannel channel)
@@ -117,6 +128,52 @@ namespace Zaaml.PresentationCore.Utils
 				default:
 					throw new ArgumentOutOfRangeException(nameof(channel), channel, null);
 			}
+		}
+
+		public static bool TryConvertFromString(string colorString, out Color color)
+		{
+			return TryConvertFromString(colorString, CultureInfo.CurrentCulture, out color);
+		}
+
+		public static bool TryConvertFromString(string colorString, IFormatProvider formatProvider, out Color color)
+		{
+			var normalized = colorString.Trim();
+			var index = normalized.StartsWith("#") ? 1 : 0;
+
+			if (index == 0 && KnownColors.TryGetColor(normalized, out color))
+				return true;
+
+			if (normalized.Length == index + 8)
+			{
+				var pa = byte.TryParse(colorString.Substring(index, 2), NumberStyles.HexNumber, formatProvider, out var a);
+				var pr = byte.TryParse(colorString.Substring(index + 2, 2), NumberStyles.HexNumber, formatProvider, out var r);
+				var pg = byte.TryParse(colorString.Substring(index + 4, 2), NumberStyles.HexNumber, formatProvider, out var g);
+				var pb = byte.TryParse(colorString.Substring(index + 6, 2), NumberStyles.HexNumber, formatProvider, out var b);
+
+				if (pa && pr && pg && pb)
+				{
+					color = Color.FromArgb(a, r, g, b);
+
+					return true;
+				}
+			}
+			else if (normalized.Length == index + 6)
+			{
+				var pr = byte.TryParse(colorString.Substring(index, 2), NumberStyles.HexNumber, formatProvider, out var r);
+				var pg = byte.TryParse(colorString.Substring(index + 2, 2), NumberStyles.HexNumber, formatProvider, out var g);
+				var pb = byte.TryParse(colorString.Substring(index + 4, 2), NumberStyles.HexNumber, formatProvider, out var b);
+
+				if (pr && pg && pb)
+				{
+					color = Color.FromArgb(0xFF, r, g, b);
+
+					return true;
+				}
+			}
+
+			color = default;
+
+			return false;
 		}
 	}
 }

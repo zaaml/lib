@@ -4,173 +4,140 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Style = System.Windows.Style;
-#if !SILVERLIGHT
-using System.Windows.Input;
-#endif
 
 namespace Zaaml.UI.Controls.Primitives.TextPrimitives
 {
-  public class WatermarkTextBox : TextBoxBase
-  {
-    #region Static Fields and Constants
+	public class WatermarkTextBox : TextBoxBase
+	{
+		private static readonly Style DefaultWatermarkTextStyle = new Style(typeof(TextBlock))
+		{
+			Setters =
+			{
+				new Setter(TextBlock.FontSizeProperty, 11.0),
+				new Setter(TextBlock.FontFamilyProperty, new FontFamily("Portable User Interface")),
+				new Setter(TextBlock.FontStyleProperty, FontStyles.Normal),
+				new Setter(TextBlock.FontWeightProperty, FontWeights.Normal),
+			}
+		};
 
-    private static readonly Style DefaultWatermarkTextStyle = new Style(typeof(TextBlock))
-    {
-      Setters =
-      {
-        new Setter(TextBlock.FontSizeProperty, 11.0),
-        new Setter(TextBlock.FontFamilyProperty, new FontFamily("Portable User Interface")),
-        new Setter(TextBlock.FontStyleProperty, FontStyles.Normal),
-        new Setter(TextBlock.FontWeightProperty, FontWeights.Normal),
-      }
-    };
+		public static readonly DependencyProperty WatermarkTextProperty = DPM.Register<string, WatermarkTextBox>
+			("WatermarkText");
 
-    public static readonly DependencyProperty WatermarkTextProperty = DPM.Register<string, WatermarkTextBox>
-      ("WatermarkText");
+		public static readonly DependencyProperty WatermarkIconProperty = DPM.Register<ImageSource, WatermarkTextBox>
+			("WatermarkIcon");
 
-    public static readonly DependencyProperty WatermarkIconProperty = DPM.Register<ImageSource, WatermarkTextBox>
-      ("WatermarkIcon");
+		public static readonly DependencyProperty ShowWatermarkProperty = DPM.Register<bool, WatermarkTextBox>
+			("ShowWatermark", true, s => s.OnShowWatermarkChanged);
 
-    public static readonly DependencyProperty ShowWatermarkProperty = DPM.Register<bool, WatermarkTextBox>
-      ("ShowWatermark", true, s => s.OnShowWatermarkChanged);
+		private static readonly DependencyPropertyKey ActualShowWatermarkPropertyKey = DPM.RegisterReadOnly<bool, WatermarkTextBox>
+			("ActualShowWatermark", true);
 
-    private static readonly DependencyPropertyKey ActualShowWatermarkPropertyKey = DPM.RegisterReadOnly<bool, WatermarkTextBox>
-      ("ActualShowWatermark", true);
+		public static readonly DependencyProperty WatermarkTextStyleProperty = DPM.Register<Style, WatermarkTextBox>
+			("WatermarkTextStyle", DefaultWatermarkTextStyle);
 
-    public static readonly DependencyProperty WatermarkTextStyleProperty = DPM.Register<Style, WatermarkTextBox>
-      ("WatermarkTextStyle", DefaultWatermarkTextStyle);
+		public static readonly DependencyProperty ActualShowWatermarkProperty = ActualShowWatermarkPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty ActualShowWatermarkProperty = ActualShowWatermarkPropertyKey.DependencyProperty;
+		private bool _isInEditState;
 
-    private bool _isInEditState;
+		static WatermarkTextBox()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<WatermarkTextBox>();
+		}
 
-    #endregion
+		public WatermarkTextBox()
+		{
+			this.OverrideStyleKey<WatermarkTextBox>();
+		}
 
-    #region Ctors
+		public bool ActualShowWatermark
+		{
+			get => (bool) GetValue(ActualShowWatermarkProperty);
+			private set => this.SetReadOnlyValue(ActualShowWatermarkPropertyKey, value);
+		}
 
-    static WatermarkTextBox()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<WatermarkTextBox>();
-    }
+		private bool IsInEditState
+		{
+			get => _isInEditState;
+			set
+			{
+				if (_isInEditState == value)
+					return;
 
-    public WatermarkTextBox()
-    {
-      this.OverrideStyleKey<WatermarkTextBox>();
-    }
+				_isInEditState = value;
 
-    #endregion
+				UpdateWatermark();
+			}
+		}
 
-    #region Properties
+		public bool ShowWatermark
+		{
+			get => (bool) GetValue(ShowWatermarkProperty);
+			set => SetValue(ShowWatermarkProperty, value);
+		}
 
-    public Style WatermarkTextStyle
-    {
-      get => (Style) GetValue(WatermarkTextStyleProperty);
-      set => SetValue(WatermarkTextStyleProperty, value);
-    }
+		public ImageSource WatermarkIcon
+		{
+			get => (ImageSource) GetValue(WatermarkIconProperty);
+			set => SetValue(WatermarkIconProperty, value);
+		}
 
-    public bool ShowWatermark
-    {
-      get => (bool) GetValue(ShowWatermarkProperty);
-      set => SetValue(ShowWatermarkProperty, value);
-    }
+		public string WatermarkText
+		{
+			get => (string) GetValue(WatermarkTextProperty);
+			set => SetValue(WatermarkTextProperty, value);
+		}
 
-    public ImageSource WatermarkIcon
-    {
-      get => (ImageSource) GetValue(WatermarkIconProperty);
-      set => SetValue(WatermarkIconProperty, value);
-    }
+		public Style WatermarkTextStyle
+		{
+			get => (Style) GetValue(WatermarkTextStyleProperty);
+			set => SetValue(WatermarkTextStyleProperty, value);
+		}
 
-    public string WatermarkText
-    {
-      get => (string) GetValue(WatermarkTextProperty);
-      set => SetValue(WatermarkTextProperty, value);
-    }
+		private void EnterEditState()
+		{
+			IsInEditState = true;
+		}
 
-    public bool ActualShowWatermark
-    {
-      get => (bool) GetValue(ActualShowWatermarkProperty);
-      private set => this.SetReadOnlyValue(ActualShowWatermarkPropertyKey, value);
-    }
+		private void ExitEditState()
+		{
+			IsInEditState = false;
+		}
 
-    #endregion
+		protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e)
+		{
+			base.OnGotKeyboardFocus(e);
 
-    #region  Methods
+			EnterEditState();
+		}
 
-    private void OnShowWatermarkChanged()
-    {
-      UpdateWatermark();
-    }
+		protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
+		{
+			base.OnLostKeyboardFocus(e);
 
-    private void UpdateWatermark()
-    {
-      ActualShowWatermark = ShowWatermark && IsInEditState == false && string.IsNullOrEmpty(Text);
-    }
+			ExitEditState();
+		}
 
-#if SILVERLIGHT
-    protected override void OnGotFocus(RoutedEventArgs e)
-    {
-      base.OnGotFocus(e);
-      EnterEditState();
-    }
+		private void OnShowWatermarkChanged()
+		{
+			UpdateWatermark();
+		}
 
-    protected override void OnLostFocus(RoutedEventArgs e)
-    {
-      base.OnLostFocus(e);
-      ExitEditState();
-    }
-#else
-    protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e)
-    {
-      base.OnGotKeyboardFocus(e);
-
-      EnterEditState();
-    }
-
-    protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
-    {
-      base.OnLostKeyboardFocus(e);
-
-      ExitEditState();
-    }
-
-#endif
-
-	  protected override void OnTextChanged(TextChangedEventArgs e)
-	  {
-		  base.OnTextChanged(e);
+		protected override void OnTextChanged(TextChangedEventArgs e)
+		{
+			base.OnTextChanged(e);
 
 			UpdateWatermark();
-	  }
+		}
 
-	  private void EnterEditState()
-    {
-      IsInEditState = true;
-    }
-
-    private void ExitEditState()
-    {
-      IsInEditState = false;
-    }
-
-    private bool IsInEditState
-    {
-      get => _isInEditState;
-      set
-      {
-        if (_isInEditState == value)
-          return;
-
-        _isInEditState = value;
-
-        UpdateWatermark();
-      }
-    }
-
-    #endregion
-  }
+		private void UpdateWatermark()
+		{
+			ActualShowWatermark = ShowWatermark && IsInEditState == false && string.IsNullOrEmpty(Text);
+		}
+	}
 }

@@ -326,6 +326,8 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private PopupBar PopupBar => TemplateContract.PopupBar;
 
+		protected override PopupControlBase PopupControlCore => PopupBar;
+
 		public object PopupFooter
 		{
 			get => GetValue(PopupFooterProperty);

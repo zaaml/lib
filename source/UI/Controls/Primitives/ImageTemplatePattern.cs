@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -10,22 +9,10 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Primitives
 {
-	internal sealed class ImageTemplatePattern : DependencyObject, IPattern
+	internal sealed class ImageTemplatePattern : BackgroundPatternBase
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty ImageProperty = DPM.Register<ImageSource, ImageTemplatePattern>
-			("Image", i => i.OnChanged);
-
-		#endregion
-
-		#region Fields
-
-		public event EventHandler TemplateChanged;
-
-		#endregion
-
-		#region Properties
+			("Image", i => i.OnImageChanged);
 
 		public ImageSource Image
 		{
@@ -33,20 +20,14 @@ namespace Zaaml.UI.Controls.Primitives
 			set => SetValue(ImageProperty, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
-		public UIElement CreateElement()
+		protected override UIElement CreatePatternElementCore()
 		{
 			return new Image {Source = Image, Stretch = Stretch.None};
 		}
 
-		private void OnChanged()
+		private void OnImageChanged()
 		{
-			TemplateChanged?.Invoke(this, EventArgs.Empty);
+			OnPatternChanged();
 		}
-
-		#endregion
 	}
 }
