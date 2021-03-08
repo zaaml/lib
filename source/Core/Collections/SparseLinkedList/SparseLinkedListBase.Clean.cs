@@ -33,9 +33,9 @@ namespace Zaaml.Core.Collections
 
 				if (isPrevHead && isNextTail)
 				{
-					InitHeadTail();
-
 					ReleaseNode(realizedNode);
+
+					InitHeadTail();
 
 					return;
 				}

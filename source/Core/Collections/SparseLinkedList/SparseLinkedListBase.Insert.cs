@@ -13,8 +13,10 @@ namespace Zaaml.Core.Collections
 			if (Count == 0 || ReferenceEquals(HeadNode.Next, TailNode))
 				return HeadCursor;
 
-			if (TailCursor.Contains(index))
-				return TailCursor;
+			var tailCursor = TailCursor;
+
+			if (tailCursor.Contains(index))
+				return tailCursor;
 
 			var cursor = Cursor;
 
@@ -302,7 +304,7 @@ namespace Zaaml.Core.Collections
 			{
 				BaseEnumerator = null;
 				List = list;
-				SparseMemorySpan = SparseMemorySpan<T>.Empty;
+				SparseMemorySpan = Memory<T>.Empty;
 				ItemsCount = 0;
 				Current = singleItem;
 				CurrentItemIndex = -1;
@@ -314,16 +316,16 @@ namespace Zaaml.Core.Collections
 			{
 				BaseEnumerator = baseEnumerator;
 				List = list;
-				SparseMemorySpan = SparseMemorySpan<T>.Empty;
+				SparseMemorySpan = Memory<T>.Empty;
 				ItemsCount = 0;
 
 				CurrentItemIndex = 0;
 
 				HasAny = baseEnumerator.MoveNext();
-				Current = baseEnumerator.Current;
+				Current = HasAny ? baseEnumerator.Current : default;
 			}
 
-			private InsertEnumerator(InsertEnumerator enumerator, SparseMemorySpan<T> sparseMemorySpan, int count)
+			private InsertEnumerator(InsertEnumerator enumerator, Memory<T> sparseMemorySpan, int count)
 			{
 				BaseEnumerator = enumerator.BaseEnumerator;
 				SparseMemorySpan = sparseMemorySpan;
@@ -334,7 +336,7 @@ namespace Zaaml.Core.Collections
 				HasAny = enumerator.HasAny;
 			}
 
-			public InsertEnumerator WithItems(SparseMemorySpan<T> items, int count)
+			public InsertEnumerator WithItems(Memory<T> items, int count)
 			{
 				return new InsertEnumerator(this, items, count);
 			}
@@ -390,7 +392,7 @@ namespace Zaaml.Core.Collections
 				if (SparseMemorySpan.IsEmpty == false)
 				{
 					List.DeallocateItems(SparseMemorySpan);
-					SparseMemorySpan = SparseMemorySpan<T>.Empty;
+					SparseMemorySpan = Memory<T>.Empty;
 				}
 
 				List = null;
@@ -402,7 +404,7 @@ namespace Zaaml.Core.Collections
 
 			private SparseLinkedListBase<T> List { get; set; }
 
-			private SparseMemorySpan<T> SparseMemorySpan { get; set; }
+			private Memory<T> SparseMemorySpan { get; set; }
 
 			private int ItemsCount { get; }
 

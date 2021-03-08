@@ -215,10 +215,5 @@ namespace Zaaml.Core.Collections
 				cursor = Cursor.NavigateTo(index);
 			}
 		}
-
-		private void ReleaseNode(NodeBase node)
-		{
-			Manager.ReleaseNode(node);
-		}
 	}
 }

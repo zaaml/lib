@@ -3,7 +3,6 @@
 // </copyright>
 
 using System;
-using Zaaml.Core;
 using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore
@@ -21,7 +20,7 @@ namespace Zaaml.PresentationCore
 
 		private void Update()
 		{
-			var gcCount = GarbageCleanupCounter.CleanupCount;
+			var gcCount = GC.CollectionCount(0);
 			var isAlive = _gcCount == gcCount;
 
 			try

@@ -180,7 +180,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private sealed class SparseLinkedListManager : SparseLinkedListManager<GeneratedItem>
 		{
-			public SparseLinkedListManager(VirtualItemCollection<T> virtualSource) : base(new SparseMemoryManager<GeneratedItem>(16))
+			public SparseLinkedListManager(VirtualItemCollection<T> virtualSource) : base(new SparseMemoryAllocator<GeneratedItem>(16))
 			{
 				VirtualSource = virtualSource;
 			}

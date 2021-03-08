@@ -9,20 +9,20 @@ namespace Zaaml.Core.Collections
 {
 	internal class SparseLinkedListManager<T>
 	{
-		public SparseLinkedListManager(SparseMemoryManager<T> sparseMemoryManager)
+		public SparseLinkedListManager(SparseMemoryAllocator<T> sparseMemoryAllocator)
 		{
-			SparseMemoryManager = sparseMemoryManager;
+			SparseMemoryAllocator = sparseMemoryAllocator;
 		}
 
 		private Stack<SparseLinkedListBase<T>.GapNode> GapNodePool { get; } = new Stack<SparseLinkedListBase<T>.GapNode>();
 
 		private Stack<SparseLinkedListBase<T>.RealizedNode> RealizedNodePool { get; } = new Stack<SparseLinkedListBase<T>.RealizedNode>();
 
-		public SparseMemoryManager<T> SparseMemoryManager { get; }
+		public SparseMemoryAllocator<T> SparseMemoryAllocator { get; }
 
-		public SparseMemorySpan<T> Allocate()
+		public Memory<T> Allocate()
 		{
-			return SparseMemoryManager.Allocate();
+			return SparseMemoryAllocator.Allocate();
 		}
 
 		public SparseLinkedListBase<T>.GapNode GetGapNode()
@@ -50,7 +50,7 @@ namespace Zaaml.Core.Collections
 				: new SparseLinkedListBase<T>.RealizedNode();
 
 			MountNode(realizedNode);
-			realizedNode.Mount(SparseMemoryManager.Allocate());
+			realizedNode.Mount(SparseMemoryAllocator.Allocate());
 
 			return realizedNode;
 		}

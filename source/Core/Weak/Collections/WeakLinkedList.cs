@@ -22,7 +22,7 @@ namespace Zaaml.Core.Weak.Collections
 
     public bool IsEmpty => _head == null;
 
-    private bool IsGCOccurred => GarbageCleanupCounter.CleanupCount != _gcCount;
+    private bool IsGCOccurred => GC.CollectionCount(0) != _gcCount;
 
     #endregion
 
@@ -41,9 +41,9 @@ namespace Zaaml.Core.Weak.Collections
       return node;
     }
 
-    public void Cleanup()
+    public bool Cleanup()
     {
-      EnsureClean();
+      return EnsureClean();
     }
 
     public void Clear()
@@ -76,16 +76,18 @@ namespace Zaaml.Core.Weak.Collections
 	    OnCollectionChanged();
 		}
 
-    private void EnsureClean()
+    private bool EnsureClean()
     {
       if (_head == null || IsGCOccurred == false)
-        return;
+        return false;
 
       WeakLinkedNode.Clean(ref _head, out _tail);
 
       OnCollectionChanged();
 
       UpdateGCCounter();
+
+      return true;
     }
 
     private void EnsureGC()
@@ -118,7 +120,7 @@ namespace Zaaml.Core.Weak.Collections
 
     private void UpdateGCCounter()
     {
-      _gcCount = GarbageCleanupCounter.CleanupCount;
+      _gcCount = GC.CollectionCount(0);
     }
 
     #endregion

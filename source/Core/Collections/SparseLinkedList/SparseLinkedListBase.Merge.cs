@@ -24,13 +24,18 @@ namespace Zaaml.Core.Collections
 				EnterStructureChange();
 				sourceList.EnterStructureChange();
 
-				var first = new LinkedListStruct(this);
-				var second = new LinkedListStruct(sourceList);
+				if (LongCount == 0)
+					SwapImpl(sourceList);
+				else
+				{
+					var first = new LinkedListStruct(this);
+					var second = new LinkedListStruct(sourceList);
 
-				first.Merge(ref second);
+					first.Merge(ref second);
 
-				first.Store(this);
-				second.Store(sourceList);
+					first.Store(this);
+					second.Store(sourceList);
+				}
 			}
 			finally
 			{
