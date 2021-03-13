@@ -314,5 +314,31 @@ namespace Zaaml.Core.Collections
 
 			cursor.Node.SetItem(ref cursor, value);
 		}
+
+		private protected void CopyToImpl(T[] array, int arrayIndex)
+		{
+			if (array.Length - arrayIndex < Count)
+				throw new InvalidOperationException("Insufficient array length");
+
+			long index = arrayIndex;
+			NodeBase current = HeadNode;
+
+			while (current != null)
+			{
+				if (current is RealizedNode realizedNode)
+				{
+					//Array.Copy(realizedNode.ItemsPrivate, 0, array, index, realizedNode.Count);
+
+					var sourceSpan = realizedNode.Span.Slice(0, (int)realizedNode.Size);
+					var targetSpan = new Span<T>(array, (int)index, (int)realizedNode.Size);
+
+					sourceSpan.CopyTo(targetSpan);
+				}
+
+				index += current.Size;
+
+				current = current.Next;
+			}
+		}
 	}
 }
