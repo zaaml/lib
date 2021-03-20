@@ -522,7 +522,7 @@ namespace Zaaml.Text
 					private static readonly FieldInfo LexemeTokenFieldInfo = typeof(Lexeme<TExternalToken>).GetField(nameof(Lexeme<TExternalToken>.TokenField), Flags);
 					private static readonly FieldInfo LexemeStartFieldInfo = typeof(Lexeme<TExternalToken>).GetField(nameof(Lexeme<TExternalToken>.StartField), Flags);
 					private static readonly FieldInfo LexemeEndFieldInfo = typeof(Lexeme<TExternalToken>).GetField(nameof(Lexeme<TExternalToken>.EndField), Flags);
-					private static readonly MethodInfo TextSourceGetTextMethodInfo = typeof(TextSource).GetMethod(nameof(TextSource.GetText), Flags);
+					private static readonly MethodInfo TextSourceSpanGetTextMethodInfo = typeof(TextSourceSpan).GetMethod(nameof(TextSourceSpan.GetText), Flags);
 					private static readonly MethodInfo DebugMethodInfo = typeof(ExtParserILBuilder).GetMethod(nameof(Debug), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
 
 					#endregion
@@ -543,14 +543,20 @@ namespace Zaaml.Text
 
 					public void EmitGetLexemeText(LocalBuilder lexemeLocal, ILBuilderContext ilBuilderContext)
 					{
-						EmitLdTextSource(ilBuilderContext);
+						EmitLdTextSourceSpan(ilBuilderContext);
 
 						ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
 						ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
+
 						ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
 						ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
 
-						ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceGetTextMethodInfo);
+						ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+						ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
+						
+						ilBuilderContext.IL.Emit(OpCodes.Sub);
+
+						ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceSpanGetTextMethodInfo);
 					}
 
 					public void Enter(IParserILBuilder builder, ILBuilderContext ilBuilderContext)
@@ -591,9 +597,9 @@ namespace Zaaml.Text
 						ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeTokenFieldInfo);
 					}
 
-					public void EmitLdTextSource(ILBuilderContext ilBuilderContext)
+					public void EmitLdTextSourceSpan(ILBuilderContext ilBuilderContext)
 					{
-						_actualBuilder.EmitLdTextSource(ilBuilderContext);
+						_actualBuilder.EmitLdTextSourceSpan(ilBuilderContext);
 					}
 
 					#endregion

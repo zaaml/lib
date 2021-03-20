@@ -49,3 +49,13 @@ using Zaaml.Core.Converters;
 
 [assembly: InternalsVisibleTo("Zaaml.Platform,PublicKey=" +
                               ZaamlInfo.PublicKey)]
+
+
+[assembly: InternalsVisibleTo("Zaaml.Core.Dev,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Zaaml.Text.Dev,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Dev.ConsoleApp,PublicKey=" +
+                              ZaamlInfo.PublicKey)]

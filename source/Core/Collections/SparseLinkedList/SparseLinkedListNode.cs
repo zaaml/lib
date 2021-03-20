@@ -1,4 +1,4 @@
-﻿// <copyright file="SparseLinkedList.Node.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SparseLinkedListNode.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -16,7 +16,7 @@ namespace Zaaml.Core.Collections
 			_version = list.StructureVersion;
 		}
 
-		private SparseLinkedListNode(int version)
+		private SparseLinkedListNode(ulong version)
 		{
 			_node = null;
 			_list = null;
@@ -24,7 +24,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		private readonly SparseLinkedListBase<T> _list;
-		private readonly int _version;
+		private readonly ulong _version;
 		private readonly SparseLinkedListBase<T>.NodeBase _node;
 
 		private void Verify()
@@ -36,9 +36,9 @@ namespace Zaaml.Core.Collections
 				throw new InvalidOperationException("List has changed.");
 		}
 
-		public static SparseLinkedListNode<T> Empty => new SparseLinkedListNode<T>(-1);
+		public static SparseLinkedListNode<T> Empty => new SparseLinkedListNode<T>(0);
 
-		[PublicAPI] public bool IsEmpty => _version == -1;
+		[PublicAPI] public bool IsEmpty => _version == ulong.MaxValue;
 
 		[PublicAPI]
 		public SparseLinkedListNode<T> Prev

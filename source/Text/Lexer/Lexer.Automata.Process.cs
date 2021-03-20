@@ -18,9 +18,9 @@ namespace Zaaml.Text
 			{
 				#region Ctors
 
-				protected LexerProcess(TextSource textSource)
+				protected LexerProcess(TextSourceSpan textSourceSpan)
 				{
-					TextSource = textSource;
+					TextSourceSpan = textSourceSpan;
 				}
 
 				#endregion
@@ -29,7 +29,7 @@ namespace Zaaml.Text
 
 				public abstract int TextPointer { get; set; }
 
-				public TextSource TextSource { get; }
+				public TextSourceSpan TextSourceSpan { get; }
 
 				#endregion
 

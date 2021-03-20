@@ -34,15 +34,6 @@ namespace Zaaml.Core.Collections
 			return gapNode;
 		}
 
-		private static void MountNode(SparseLinkedListBase<T>.NodeBase node)
-		{
-			Debug.Assert(node.Size == -1);
-
-			node.Next = null;
-			node.Prev = null;
-			node.Size = 0;
-		}
-
 		public SparseLinkedListBase<T>.RealizedNode GetRealizedNode()
 		{
 			var realizedNode = RealizedNodePool.Count > 0
@@ -53,6 +44,15 @@ namespace Zaaml.Core.Collections
 			realizedNode.Mount(SparseMemoryAllocator.Allocate());
 
 			return realizedNode;
+		}
+
+		private static void MountNode(SparseLinkedListBase<T>.NodeBase node)
+		{
+			Debug.Assert(node.Size == -1);
+
+			node.Next = null;
+			node.Prev = null;
+			node.Size = 0;
 		}
 
 		protected virtual void OnNodeReleased(SparseLinkedListBase<T>.NodeBase node)

@@ -174,7 +174,7 @@ namespace Zaaml.UI.Controls.Core
 			public void EnsureCount(int count)
 			{
 				if (count > Count)
-					AddCleanRange(count - Count);
+					AddVoidRange(count - Count);
 			}
 		}
 

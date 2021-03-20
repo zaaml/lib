@@ -298,8 +298,8 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var itemsCount = items.Count;
 
-			PrevGeneratedItems.InsertCleanRange(index, itemsCount);
-			NextGeneratedItems.InsertCleanRange(index, itemsCount);
+			PrevGeneratedItems.InsertVoidRange(index, itemsCount);
+			NextGeneratedItems.InsertVoidRange(index, itemsCount);
 		}
 
 		private static bool IsLocked(GeneratedItem generatedItem)

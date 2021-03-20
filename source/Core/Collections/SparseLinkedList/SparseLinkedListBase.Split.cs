@@ -42,7 +42,7 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				var cursor = NavigateTo(index);
+				ref var cursor = ref NavigateTo(index);
 
 				if (targetList.Count == 0)
 				{

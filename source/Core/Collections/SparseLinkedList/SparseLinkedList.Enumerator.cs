@@ -9,6 +9,12 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedList<T>
 	{
+		[PublicAPI]
+		public Enumerator GetEnumerator()
+		{
+			return new Enumerator(this);
+		}
+
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
@@ -17,12 +23,6 @@ namespace Zaaml.Core.Collections
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
 			return GetEnumerator();
-		}
-
-		[PublicAPI]
-		public Enumerator GetEnumerator()
-		{
-			return new Enumerator(this);
 		}
 	}
 }

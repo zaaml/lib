@@ -1,4 +1,4 @@
-﻿// <copyright file="SparseLinkedListBase - Copy (3).Realize.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SparseLinkedListBase.RealizedNode.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -14,16 +14,6 @@ namespace Zaaml.Core.Collections
 
 			private Memory<T> SparseMemorySpan { get; set; } = Memory<T>.Empty;
 
-			internal override T GetLocalItem(int index)
-			{
-#if DEBUG
-				if (ContainsLocal(index) == false)
-					throw new IndexOutOfRangeException();
-#endif
-
-				return Span[index];
-			}
-
 			internal override T GetItem(ref NodeCursor cursor)
 			{
 #if DEBUG
@@ -34,13 +24,14 @@ namespace Zaaml.Core.Collections
 				return Span[cursor.LocalIndex];
 			}
 
-			internal override void SetItem(ref NodeCursor cursor, T item)
+			internal override T GetLocalItem(int index)
 			{
 #if DEBUG
-				if (ContainsLocal(cursor.LocalIndex) == false)
+				if (ContainsLocal(index) == false)
 					throw new IndexOutOfRangeException();
 #endif
-				Span[cursor.LocalIndex] = item;
+
+				return Span[index];
 			}
 
 			public void Mount(Memory<T> sparseMemorySpan)
@@ -55,6 +46,15 @@ namespace Zaaml.Core.Collections
 				SparseMemorySpan.Span.Clear();
 				SparseMemorySpan.Dispose();
 				SparseMemorySpan = Memory<T>.Empty;
+			}
+
+			internal override void SetItem(ref NodeCursor cursor, T item)
+			{
+#if DEBUG
+				if (ContainsLocal(cursor.LocalIndex) == false)
+					throw new IndexOutOfRangeException();
+#endif
+				Span[cursor.LocalIndex] = item;
 			}
 		}
 	}

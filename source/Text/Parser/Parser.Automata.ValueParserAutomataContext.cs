@@ -73,9 +73,9 @@ namespace Zaaml.Text
 			private abstract class ValueParserAutomataContext : ParserAutomataContext, IParserILBuilder
 			{
 				private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-				private static readonly FieldInfo TextSourceFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(TextSource), Flags);
-				private static readonly MethodInfo TextSourceGetTextMethodInfo = typeof(TextSource).GetMethod(nameof(Text.TextSource.GetText), Flags);
-				private static readonly MethodInfo TextSourceGetSpanMethodInfo = typeof(TextSource).GetMethod(nameof(Text.TextSource.GetSpan), Flags);
+				private static readonly FieldInfo TextSourceSpanFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(TextSourceSpan), Flags);
+				//private static readonly MethodInfo TextSourceGetTextMethodInfo = typeof(TextSource).GetMethod(nameof(Text.TextSource.GetText), Flags);
+				//private static readonly MethodInfo TextSourceGetSpanMethodInfo = typeof(TextSource).GetMethod(nameof(Text.TextSource.GetSpan), Flags);
 				private static readonly FieldInfo LexemeStartFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.StartField), Flags);
 				private static readonly FieldInfo LexemeEndFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.EndField), Flags);
 				private static readonly FieldInfo LexemeTokenFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.TokenField), Flags);
@@ -419,23 +419,23 @@ namespace Zaaml.Text
 					ilBuilderContext.IL.Emit(OpCodes.Call, GetInstructionMethodInfo);
 				}
 
-				private static void EmitGetInstructionSpan(ILBuilderContext ilBuilderContext)
-				{
-					var lexemeLocal = ilBuilderContext.IL.DeclareLocal(typeof(Lexeme<TToken>*));
+				//private static void EmitGetInstructionSpan(ILBuilderContext ilBuilderContext)
+				//{
+				//	var lexemeLocal = ilBuilderContext.IL.DeclareLocal(typeof(Lexeme<TToken>*));
 
-					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Call, GetInstructionReferenceMethodInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Stloc, lexemeLocal);
-					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceFieldInfo);
+				//	ilBuilderContext.EmitLdContext();
+				//	ilBuilderContext.IL.Emit(OpCodes.Call, GetInstructionReferenceMethodInfo);
+				//	ilBuilderContext.IL.Emit(OpCodes.Stloc, lexemeLocal);
+				//	ilBuilderContext.EmitLdContext();
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceFieldInfo);
 
-					ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
 
-					ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceGetSpanMethodInfo);
-				}
+				//	ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceGetSpanMethodInfo);
+				//}
 
 				private static void EmitGetInstructionText(ILBuilderContext ilBuilderContext)
 				{
@@ -450,36 +450,36 @@ namespace Zaaml.Text
 					ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeTokenFieldInfo);
 				}
 
-				private static void EmitGetLexemeSpan(LocalBuilder lexemeLocal, ILBuilderContext ilBuilderContext)
+				//private static void EmitGetLexemeSpan(LocalBuilder lexemeLocal, ILBuilderContext ilBuilderContext)
+				//{
+				//	ilBuilderContext.EmitLdContext();
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceFieldInfo);
+
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
+
+				//	ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceGetSpanMethodInfo);
+				//}
+
+				//private static void EmitGetLexemeText(LocalBuilder lexemeLocal, ILBuilderContext ilBuilderContext)
+				//{
+				//	ilBuilderContext.EmitLdContext();
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceFieldInfo);
+
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+				//	ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
+
+				//	ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceGetTextMethodInfo);
+				//}
+
+				private static void EmitLdTextSourceSpan(ILBuilderContext ilBuilderContext)
 				{
 					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceFieldInfo);
-
-					ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
-
-					ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceGetSpanMethodInfo);
-				}
-
-				private static void EmitGetLexemeText(LocalBuilder lexemeLocal, ILBuilderContext ilBuilderContext)
-				{
-					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceFieldInfo);
-
-					ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
-
-					ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceGetTextMethodInfo);
-				}
-
-				private static void EmitLdTextSource(ILBuilderContext ilBuilderContext)
-				{
-					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceFieldInfo);
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceSpanFieldInfo);
 				}
 
 				private void EnsureStateEntrySize(int delta)
@@ -495,7 +495,7 @@ namespace Zaaml.Text
 					if (operand < 0)
 						return null;
 
-					return StaticLexemes[operand] ?? TextSource.GetText(lexeme.StartField, lexeme.EndField);
+					return StaticLexemes[operand] ?? TextSourceSpan.GetText(lexeme.StartField, lexeme.EndField - lexeme.StartField);
 				}
 
 				public TResult GetResult<TResult>()
@@ -558,7 +558,7 @@ namespace Zaaml.Text
 
 				void IParserILBuilder.EmitGetInstruction(ILBuilderContext ilBuilderContext) => EmitGetInstruction(ilBuilderContext);
 
-				void IParserILBuilder.EmitLdTextSource(ILBuilderContext ilBuilderContext) => EmitLdTextSource(ilBuilderContext);
+				void IParserILBuilder.EmitLdTextSourceSpan(ILBuilderContext ilBuilderContext) => EmitLdTextSourceSpan(ilBuilderContext);
 			}
 		}
 	}

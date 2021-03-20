@@ -8,50 +8,23 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		private NodeCursor FindInsertNodeCursorImpl(long index)
+		private int StructureChangeCount { get; set; }
+
+		private void CoerceInsertNodeCursor(ref NodeCursor cursor)
 		{
-			if (Count == 0 || ReferenceEquals(HeadNode.Next, TailNode))
-				return HeadCursor;
-
-			var tailCursor = TailCursor;
-
-			if (tailCursor.Contains(index))
-				return tailCursor;
-
-			var cursor = Cursor;
-
-			if (cursor.Contains(index))
-				return cursor;
-
-			if (index >= cursor.Index)
-			{
-				while (cursor.Node != null)
-				{
-					var next = cursor.GetNext();
-
-					if (cursor.Contains(index, true))
-						return (next.Contains(index) ? next : cursor).WithIndex(index);
-
-					cursor = next;
-				}
-			}
-			else
-			{
-				while (cursor.Node != null)
-				{
-					var prev = cursor.GetPrev();
-
-					if (cursor.Contains(index, true))
-						return (prev.Contains(index) ? prev : cursor).WithIndex(index);
-
-					cursor = prev;
-				}
-			}
-
-			return NodeCursor.Empty;
+			if (cursor.Node is RealizedNode && cursor.NodeSize == NodeCapacity && cursor.Index == cursor.NodeOffset + cursor.NodeSize)
+				cursor = cursor.GetNext();
 		}
 
-		private protected void InsertCleanRangeImpl(long index, long count)
+		private void EnterStructureChange()
+		{
+			StructureChangeCount++;
+
+			if (StructureChangeCount == 1)
+				ActualStructureVersion = StructureVersion + 1;
+		}
+
+		private protected void InsertVoidRangeImpl(long index, long count)
 		{
 			try
 			{
@@ -65,7 +38,7 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				if (index == 0 || HeadCursor.Contains(index))
+				if (index == 0 || GetHeadCursor().Contains(index))
 				{
 					HeadNode.Size += count;
 					LongCount += count;
@@ -73,7 +46,7 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				if (index == LongCount || TailCursor.Contains(index))
+				if (index == LongCount || GetTailCursor().Contains(index))
 				{
 					TailNode.Size += count;
 					LongCount += count;
@@ -81,7 +54,7 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				var cursor = FindInsertNodeCursorImpl(index);
+				var cursor = NavigateToInsert(index);
 				var node = cursor.Node;
 				var realizedNode = node as RealizedNode;
 				var prevNode = node.Prev;
@@ -108,14 +81,10 @@ namespace Zaaml.Core.Collections
 
 				if (count <= NodeCapacity - realizedNode.Size)
 				{
-					//Array.Copy(realizedNode.Items, splitIndex, realizedNode.Items, splitIndex + count, splitCount);
-
 					var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
 					var targetSpan = realizedNode.Span.Slice((int) (splitIndex + count), splitCount);
 
 					sourceSpan.CopyTo(targetSpan);
-
-					//Array.Clear(realizedNode.Items, splitIndex, count);
 
 					var clearSpan = realizedNode.Span.Slice(splitIndex, (int) count);
 
@@ -128,7 +97,7 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				var gapNode = Manager.GetGapNode();
+				var gapNode = GetGapNode();
 
 				gapNode.Size = count;
 
@@ -142,7 +111,7 @@ namespace Zaaml.Core.Collections
 				}
 				else
 				{
-					var nextRealizedNode = Manager.GetRealizedNode();
+					var nextRealizedNode = GetRealizedNode();
 
 					node.Next = gapNode;
 
@@ -156,13 +125,11 @@ namespace Zaaml.Core.Collections
 
 					realizedNode.Size = splitIndex;
 
-					//Array.Copy(realizedNode.ItemsPrivate, splitIndex, nextRealizedNode.ItemsPrivate, 0, splitCount);
 					var sourceSpan = realizedNode.Span.Slice(splitIndex, splitCount);
 					var targetSpan = nextRealizedNode.Span.Slice(0, splitCount);
 
 					sourceSpan.CopyTo(targetSpan);
 
-					//Array.Clear(realizedNode.ItemsPrivate, splitIndex, splitCount);
 					sourceSpan.Clear();
 				}
 
@@ -174,32 +141,99 @@ namespace Zaaml.Core.Collections
 			}
 		}
 
-		private int StructureChangeCount { get; set; }
-
-		private void EnterStructureChange()
-		{
-			StructureChangeCount++;
-		}
-
-		private void LeaveStructureChange()
-		{
-			StructureChangeCount--;
-
-			if(StructureChangeCount == 0)
-				IncrementStructureVersion();
-		}
-
-		private void IncrementStructureVersion()
-		{
-			StructureVersion++;
-		}
-
 		private protected void InsertImpl(long index, T item)
 		{
-			InsertRangeImpl(index, new InsertEnumerator(item, this));
+			if (index == LongCount)
+			{
+				AddImpl(item);
+
+				return;
+			}
+
+			ref var cursor = ref NavigateToInsert(index);
+
+			InsertImpl(item, ref cursor);
 		}
 
-		private protected void InsertRangeImpl(long index, InsertEnumerator enumerator)
+		private protected void InsertImpl(T item, ref NodeCursor cursor)
+		{
+			try
+			{
+				EnterStructureChange();
+
+				CoerceInsertNodeCursor(ref cursor);
+
+				var index = cursor.Index;
+				var node = cursor.Node;
+
+				if (node is RealizedNode realizedNode)
+				{
+					var splitIndex = (int) (index - cursor.NodeOffset);
+					var splitCount = (int) (realizedNode.Size - splitIndex);
+					var span = realizedNode.Span;
+
+					if (realizedNode.Size < NodeCapacity)
+					{
+						if (splitCount == 0)
+							span[(int) realizedNode.Size++] = item;
+						else
+						{
+							var sourceSpan = span.Slice(splitIndex, splitCount);
+							var targetSpan = span.Slice(splitIndex + 1, splitCount);
+
+							sourceSpan.CopyTo(targetSpan);
+
+							realizedNode.Size++;
+							span[splitIndex] = item;
+						}
+					}
+					else
+					{
+						splitCount--;
+
+						var lastItem = span[(int) realizedNode.Size - 1];
+						var sourceSpan = span.Slice(splitIndex, splitCount);
+						var targetSpan = span.Slice(splitIndex + 1, splitCount);
+
+						sourceSpan.CopyTo(targetSpan);
+
+						span[splitIndex] = item;
+
+						var newNode = GetRealizedNode();
+
+						newNode.Span[0] = lastItem;
+						newNode.Size = 1;
+
+						InsertNode(newNode, node);
+					}
+				}
+				else
+				{
+					realizedNode = EnsureRealizedNode(ref cursor, index, true);
+					realizedNode.SetItem(ref cursor, item);
+				}
+
+				LongCount++;
+			}
+			finally
+			{
+				LeaveStructureChange();
+			}
+		}
+
+		private void InsertNode(RealizedNode node, NodeBase afterNode)
+		{
+			var nextNode = afterNode.Next;
+
+			node.Prev = afterNode;
+
+			afterNode.Next = node;
+
+			node.Next = nextNode;
+			nextNode.Prev = node;
+		}
+
+		private protected void InsertRangeImpl(ref InsertEnumerator enumerator, ref NodeCursor cursor)
 		{
 			if (enumerator.HasAny == false)
 				return;
@@ -208,12 +242,10 @@ namespace Zaaml.Core.Collections
 			{
 				EnterStructureChange();
 
+				CoerceInsertNodeCursor(ref cursor);
+
 				var count = 1;
-				var cursor = FindInsertNodeCursorImpl(index);
-
-				if (cursor.Node is RealizedNode && cursor.NodeSize == NodeCapacity && index == cursor.NodeOffset + cursor.NodeSize)
-					cursor = cursor.GetNext();
-
+				var index = cursor.Index;
 				var nextNode = cursor.Node.Next;
 
 				if (cursor.Node is RealizedNode realizedNode)
@@ -246,18 +278,23 @@ namespace Zaaml.Core.Collections
 					realizedNode = EnsureRealizedNode(ref cursor, index, true);
 					nextNode = realizedNode.Next;
 
-					cursor = NavigateTo(index);
+					cursor = ref NavigateTo(index);
 
 					cursor.Node.SetItem(ref cursor, enumerator.Current);
 				}
 
 				while (true)
 				{
-					while (realizedNode.Size < NodeCapacity && enumerator.MoveNext())
+					var realizedNodeSpan = realizedNode.Span;
+					var realizedNodeIndex = (int) realizedNode.Size;
+
+					while (realizedNodeIndex < NodeCapacity && enumerator.MoveNext())
 					{
-						realizedNode.Span[(int) realizedNode.Size++] = enumerator.Current;
+						realizedNodeSpan[realizedNodeIndex++] = enumerator.Current;
 						count++;
 					}
+
+					realizedNode.Size = realizedNodeIndex;
 
 					if (realizedNode.Size < NodeCapacity)
 						break;
@@ -267,7 +304,7 @@ namespace Zaaml.Core.Collections
 
 					count++;
 
-					var next = Manager.GetRealizedNode();
+					var next = GetRealizedNode();
 
 					next.Size = 1;
 					next.Prev = realizedNode;
@@ -293,9 +330,25 @@ namespace Zaaml.Core.Collections
 
 		private protected void InsertRangeImpl(long index, IEnumerable<T> collection)
 		{
-			var enumerator = new InsertEnumerator(collection.GetEnumerator(), this);
+			if (index == LongCount)
+			{
+				AddRangeImpl(collection);
 
-			InsertRangeImpl(index, enumerator);
+				return;
+			}
+
+			var enumerator = new InsertEnumerator(collection.GetEnumerator(), this);
+			ref var cursor = ref NavigateToInsert(index);
+
+			InsertRangeImpl(ref enumerator, ref cursor);
+		}
+
+		private void LeaveStructureChange()
+		{
+			StructureChangeCount--;
+
+			if (StructureChangeCount == 0)
+				StructureVersion = ActualStructureVersion;
 		}
 
 		private protected struct InsertEnumerator

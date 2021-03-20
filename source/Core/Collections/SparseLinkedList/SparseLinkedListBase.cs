@@ -30,8 +30,8 @@ namespace Zaaml.Core.Collections
 		{
 			Manager = manager;
 
-			HeadNode = Manager.GetGapNode();
-			TailNode = Manager.GetGapNode();
+			HeadNode = GetGapNode();
+			TailNode = GetGapNode();
 
 			LongCount = count;
 
@@ -42,7 +42,9 @@ namespace Zaaml.Core.Collections
 
 		public SparseLinkedListNode<T> Tail => new SparseLinkedListNode<T>(TailNode, this);
 
-		internal int StructureVersion { get; private set; }
+		internal ulong StructureVersion { get; private set; }
+
+		internal ulong ActualStructureVersion { get; private set; }
 
 		protected GapNode HeadNode { get; private set; }
 
@@ -50,28 +52,44 @@ namespace Zaaml.Core.Collections
 
 		private SparseLinkedListManager<T> Manager { get; }
 
+		private RealizedNode GetRealizedNode()
+		{
+			return Manager.GetRealizedNode();
+		}
+
+		private GapNode GetGapNode()
+		{
+			return Manager.GetGapNode();
+		}
+
 		private void ReleaseNode(NodeBase node)
 		{
 			Manager.ReleaseNode(node);
 		}
 
-		protected GapNode TailNode { get; private set; }
-
-		private NodeCursor Cursor
+		private ref NodeCursor GetCursor()
 		{
-			get
-			{
-				if (_cursor.IsEmpty || _cursor.StructureVersion != StructureVersion || StructureChangeCount > 0)
-					_cursor = new NodeCursor(0, this, HeadNode, 0);
+			if (_cursor.IsEmpty || _cursor.StructureVersion != StructureVersion)
+				_cursor = new NodeCursor(0, this, HeadNode, 0);
 
-				return _cursor;
-			}
-			set => _cursor = value;
+			return ref _cursor;
 		}
 
-		private NodeCursor HeadCursor => new(0, this, HeadNode, 0);
+		protected GapNode TailNode { get; private set; }
 
-		private NodeCursor TailCursor => new(LongCount > 0 ? LongCount - 1 : 0, this, TailNode, LongCount - TailNode.Size);
+		private ref NodeCursor GetHeadCursor()
+		{
+			_cursor = new NodeCursor(0, this, HeadNode, 0);
+
+			return ref _cursor;
+		}
+
+		private ref NodeCursor GetTailCursor()
+		{
+			_cursor = new(LongCount > 0 ? LongCount - 1 : 0, this, TailNode, LongCount - TailNode.Size);
+
+			return ref _cursor;
+		}
 
 		public long LongCount { get; private set; }
 
@@ -153,8 +171,7 @@ namespace Zaaml.Core.Collections
 			}
 		}
 
-		[Conditional("DEBUG")]
-		[Conditional("TEST")]
+		[Conditional("COLLECTION_VERIFY_STRUCTURE")]
 		private protected void VerifyStructure()
 		{
 			VerifyStructureImpl();
@@ -221,42 +238,54 @@ namespace Zaaml.Core.Collections
 
 		private NodeBase FindNodeImpl(long index, out long offset)
 		{
-			var cursor = NavigateTo(index);
+			ref var cursor = ref NavigateTo(index);
 
 			offset = cursor.NodeOffset;
 
 			return cursor.Node;
 		}
 
-		private NodeBase FindNodeImpl(long index)
+		private ref NodeCursor NavigateTo(long index)
 		{
-			return NavigateTo(index).Node;
+			ref var cursor = ref GetCursor();
+
+			cursor.NavigateTo(index);
+
+			return ref cursor;
 		}
 
-		private NodeCursor NavigateTo(long index)
+		private ref NodeCursor NavigateTo(long index, bool realize)
 		{
-			var cursor = Cursor.NavigateTo(index);
+			ref var cursor = ref GetCursor();
 
-			Cursor = cursor;
-
-			return cursor;
-		}
-
-		private NodeCursor NavigateTo(long index, bool realize)
-		{
-			var cursor = Cursor.NavigateTo(index);
+			cursor.NavigateTo(index);
 
 			if (realize)
 				EnsureRealizedNode(ref cursor, index, false);
 
-			Cursor = cursor;
+			return ref cursor;
+		}
 
-			return cursor;
+		private ref NodeCursor NavigateToInsert(long index)
+		{
+			if (Count == 0 || ReferenceEquals(HeadNode.Next, TailNode))
+				return ref GetHeadCursor();
+
+			ref var tailCursor = ref GetTailCursor();
+
+			if (tailCursor.Contains(index))
+				return ref tailCursor;
+
+			ref var cursor = ref GetCursor();
+
+			cursor.NavigateToInsert(index);
+
+			return ref cursor;
 		}
 
 		private protected T GetItemImpl(long index)
 		{
-			var cursor = NavigateTo(index);
+			ref var cursor = ref NavigateTo(index);
 
 			return cursor.Node.GetItem(ref cursor);
 		}
@@ -310,7 +339,7 @@ namespace Zaaml.Core.Collections
 
 		private protected void SetItemImpl(long index, T value)
 		{
-			var cursor = NavigateTo(index, true);
+			ref var cursor = ref NavigateTo(index, true);
 
 			cursor.Node.SetItem(ref cursor, value);
 		}
@@ -327,10 +356,8 @@ namespace Zaaml.Core.Collections
 			{
 				if (current is RealizedNode realizedNode)
 				{
-					//Array.Copy(realizedNode.ItemsPrivate, 0, array, index, realizedNode.Count);
-
-					var sourceSpan = realizedNode.Span.Slice(0, (int)realizedNode.Size);
-					var targetSpan = new Span<T>(array, (int)index, (int)realizedNode.Size);
+					var sourceSpan = realizedNode.Span.Slice(0, (int) realizedNode.Size);
+					var targetSpan = new Span<T>(array, (int) index, (int) realizedNode.Size);
 
 					sourceSpan.CopyTo(targetSpan);
 				}

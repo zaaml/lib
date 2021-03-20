@@ -1,4 +1,4 @@
-﻿// <copyright file="SparseLinkedListBase.Realize.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SparseLinkedListBase.GapNode.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -10,20 +10,20 @@ namespace Zaaml.Core.Collections
 	{
 		internal sealed class GapNode : NodeBase
 		{
-			internal override T GetLocalItem(int index)
+			internal override T GetItem(ref NodeCursor cursor)
 			{
 #if DEBUG
-				if (ContainsLocal(index) == false)
+				if (ContainsLocal(cursor.LocalIndex) == false)
 					throw new IndexOutOfRangeException();
 #endif
 
 				return default;
 			}
 
-			internal override T GetItem(ref NodeCursor cursor)
+			internal override T GetLocalItem(int index)
 			{
 #if DEBUG
-				if (ContainsLocal(cursor.LocalIndex) == false)
+				if (ContainsLocal(index) == false)
 					throw new IndexOutOfRangeException();
 #endif
 

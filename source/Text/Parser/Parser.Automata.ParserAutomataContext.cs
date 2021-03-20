@@ -62,7 +62,7 @@ namespace Zaaml.Text
 
 				void EmitGetInstructionToken(ILBuilderContext ilBuilderContext);
 
-				void EmitLdTextSource(ILBuilderContext ilBuilderContext);
+				void EmitLdTextSourceSpan(ILBuilderContext ilBuilderContext);
 
 				#endregion
 			}
@@ -92,7 +92,7 @@ namespace Zaaml.Text
 				private Dictionary<Type, SubParserPoolCollection> _poolDictionary;
 				protected LexemeSource<TToken> LexemeSource;
 				protected ParserContext ParserContext;
-				protected TextSource TextSource;
+				protected TextSourceSpan TextSourceSpan;
 
 				#endregion
 
@@ -116,7 +116,7 @@ namespace Zaaml.Text
 				public bool CallSubLexer<TSubToken>(SubLexerInvokeInfo<TSubToken> invokeInfo, out Lexeme<TSubToken> result) where TSubToken : unmanaged, Enum
 				{
 					var offset = TextPointer;
-					var textSource = LexemeSource.TextSource.Slice(offset);
+					var textSource = LexemeSource.TextSourceSpan.Slice(offset);
 					var lexer = invokeInfo.Lexer;
 					var lexemeSource = lexer.GetLexemeSource(textSource);
 					var enumerator = lexemeSource.GetEnumerator();
@@ -155,7 +155,7 @@ namespace Zaaml.Text
 				public PredicateResult CallSubParser<TSubGrammar, TSubToken>(SubParserInvokeInfo<TSubGrammar, TSubToken> invokeInfo) where TSubGrammar : Grammar<TSubToken> where TSubToken : unmanaged, Enum
 				{
 					var offset = TextPointer;
-					var textSource = LexemeSource.TextSource.Slice(offset);
+					var textSource = LexemeSource.TextSourceSpan.Slice(offset);
 					var subAutomata = invokeInfo.Parser.Automata;
 					var lexemeSource = invokeInfo.Lexer.GetLexemeSource(textSource);
 					var subParserContext = invokeInfo.Parser.CreateContext(lexemeSource);
@@ -198,7 +198,7 @@ namespace Zaaml.Text
 					where TSubGrammar : Grammar<TSubToken, TSubNodeBase> where TSubToken : unmanaged, Enum where TSubNode : TSubNodeBase where TSubNodeBase : class
 				{
 					var offset = TextPointer;
-					var textSource = LexemeSource.TextSource.Slice(offset);
+					var textSource = LexemeSource.TextSourceSpan.Slice(offset);
 					var subAutomata = invokeInfo.Parser.Automata;
 					var lexemeSource = invokeInfo.Lexer.GetLexemeSource(textSource);
 					var subParserContext = invokeInfo.Parser.CreateContext(lexemeSource);
@@ -283,7 +283,7 @@ namespace Zaaml.Text
 					_poolDictionary = _threadLocalPoolDictionary.Value;
 
 					LexemeSource = lexemeSource;
-					TextSource = lexemeSource.TextSource;
+					TextSourceSpan = lexemeSource.TextSourceSpan;
 					ParserContext = parserContext;
 
 					if (ParserContext != null)
@@ -298,7 +298,7 @@ namespace Zaaml.Text
 
 				public virtual void Dispose()
 				{
-					TextSource = null;
+					TextSourceSpan = TextSourceSpan.Empty;
 					LexemeSource = null;
 					_poolDictionary = null;
 
@@ -321,6 +321,7 @@ namespace Zaaml.Text
 					set
 					{
 						LexemeSource.Position = value;
+
 						AdvanceInstructionPosition();
 					}
 				}

@@ -486,7 +486,7 @@ namespace Zaaml.Core.Collections.Specialized
 				throw new IndexOutOfRangeException(nameof(count));
 		}
 
-		[Conditional("DEBUG")]
+		[Conditional("COLLECTION_VERIFY_STRUCTURE")]
 		private void VerifyStructure()
 		{
 			if (Head == null || Tail == null)

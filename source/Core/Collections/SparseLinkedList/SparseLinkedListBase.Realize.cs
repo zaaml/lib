@@ -21,51 +21,10 @@ namespace Zaaml.Core.Collections
 		private RealizedNode RealizeNode(ref NodeCursor cursor, long index, bool insert)
 		{
 			var prevCursor = cursor.GetPrev();
-			var gapNode = (GapNode)cursor.Node;
+			var gapNode = (GapNode) cursor.Node;
 			var prevNode = gapNode.Prev;
 			var nextNode = gapNode.Next;
-			var realizedNode = Manager.GetRealizedNode();
-
-			if (index == LongCount && insert)
-			{
-				EnterStructureChange();
-
-				if (ReferenceEquals(TailNode, gapNode))
-				{
-					if (TailNode.Size > 0)
-					{
-						TailNode.Next = realizedNode;
-						realizedNode.Prev = TailNode;
-
-						TailNode = Manager.GetGapNode();
-
-						TailNode.Prev = realizedNode;
-						realizedNode.Next = TailNode;
-					}
-					else
-					{
-						prevNode.Next = realizedNode;
-						realizedNode.Prev = prevNode;
-						realizedNode.Next = TailNode;
-						TailNode.Prev = realizedNode;
-					}
-				}
-				else if (ReferenceEquals(HeadNode, gapNode))
-				{
-					HeadNode.Next = realizedNode;
-					realizedNode.Prev = HeadNode;
-					realizedNode.Next = TailNode;
-					TailNode.Prev = realizedNode;
-				}
-
-				realizedNode.Size = 1;
-
-				LeaveStructureChange();
-
-				cursor = new NodeCursor(index, this, realizedNode, index);
-
-				return realizedNode;
-			}
+			var realizedNode = GetRealizedNode();
 
 			Debug.Assert(index < LongCount);
 
@@ -80,7 +39,8 @@ namespace Zaaml.Core.Collections
 
 				RemoveEmptyGapNode(gapNode);
 
-				cursor = prevCursor.NavigateTo(index);
+				prevCursor.NavigateTo(index);
+				cursor = prevCursor;
 
 				return prevRealizedNode;
 			}
@@ -104,7 +64,7 @@ namespace Zaaml.Core.Collections
 				{
 					Debug.Assert(TailNode.Size == 0);
 
-					cursor = HeadCursor;
+					cursor = ref GetHeadCursor();
 
 					HeadNode.Next = realizedNode;
 					TailNode.Prev = realizedNode;
@@ -165,7 +125,7 @@ namespace Zaaml.Core.Collections
 					}
 					else
 					{
-						var nextGapNode = Manager.GetGapNode();
+						var nextGapNode = GetGapNode();
 
 						nextGapNode.Size = nextGapCount;
 
@@ -181,13 +141,13 @@ namespace Zaaml.Core.Collections
 					HeadNode.Next = realizedNode;
 					HeadNode.Size = alignedIndex;
 
-					cursor = HeadCursor;
+					cursor = ref GetHeadCursor();
 				}
 				else
 				{
 					// ReSharper disable once PossibleNullReferenceException
 					var prevGapCount = alignedIndex - cursor.NodeOffset;
-					var prevGapNode = Manager.GetGapNode();
+					var prevGapNode = GetGapNode();
 
 					prevGapNode.Size = prevGapCount;
 					prevGapNode.Prev = prevNode;
@@ -212,7 +172,8 @@ namespace Zaaml.Core.Collections
 			{
 				LeaveStructureChange();
 
-				cursor = Cursor.NavigateTo(index);
+				cursor = ref GetCursor();
+				cursor.NavigateTo(index);
 			}
 		}
 	}

@@ -15,7 +15,7 @@ namespace Zaaml.Text
 			{
 				private readonly Stack<LexerAutomataContextState> _lexerAutomataContextStatesPool = new Stack<LexerAutomataContextState>();
 				private LexerContext<TToken> _lexerContext;
-				private TextSource _textSource;
+				private TextSourceSpan _textSourceSpan;
 
 				public LexerAutomataContext() : base(null)
 				{
@@ -35,9 +35,9 @@ namespace Zaaml.Text
 					return contextState;
 				}
 
-				public void Mount(TextSource textSource, LexerContext<TToken> parserContext)
+				public void Mount(TextSourceSpan textSourceSpan, LexerContext<TToken> parserContext)
 				{
-					_textSource = textSource;
+					_textSourceSpan = textSourceSpan;
 					_lexerContext = parserContext;
 
 					if (_lexerContext != null)

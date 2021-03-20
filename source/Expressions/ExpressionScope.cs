@@ -9,7 +9,20 @@ namespace Zaaml.Expressions
 {
 	internal sealed class ExpressionScope : IExpressionScope
 	{
-		private Dictionary<string, ExpressionParameter> Parameters { get; } = new Dictionary<string, ExpressionParameter>();
+		public static readonly ExpressionScope Empty = new(true);
+
+		public ExpressionScope()
+		{
+		}
+
+		internal ExpressionScope(bool isSealed)
+		{
+			IsSealed = isSealed;
+		}
+
+		private bool IsSealed { get; }
+
+		private Dictionary<string, ExpressionParameter> Parameters { get; } = new();
 
 		public object GetParameterValue(string parameterName)
 		{
@@ -18,6 +31,9 @@ namespace Zaaml.Expressions
 
 		public void SetParameterValue(string parameterName, object value)
 		{
+			if (IsSealed)
+				throw new InvalidOperationException("The scope is sealed and can not be changed.");
+
 			if (Parameters.TryGetValue(parameterName, out var parameter) == false)
 				Parameters[parameterName] = parameter = new ExpressionParameter();
 

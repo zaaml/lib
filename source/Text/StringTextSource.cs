@@ -9,86 +9,84 @@ namespace Zaaml.Text
 {
 	internal sealed class StringTextSource : TextSource
 	{
-		#region Fields
+		private readonly string _string;
 
-		public readonly int Offset;
-
-		public readonly string String;
-
-		#endregion
-
-		#region Ctors
-
-		public StringTextSource(string @string)
+		public StringTextSource(string value)
 		{
-			String = @string;
+			_string = value;
 		}
 
-		public StringTextSource(string @string, int offset)
-		{
-			String = @string;
-			Offset = offset;
-		}
-
-		#endregion
-
-		#region Properties
-
-		public override int TextLength => String.Length - Offset;
-
-		#endregion
-
-		#region Methods
+		public override int Length => _string.Length;
 
 		public override TextReader CreateReader()
 		{
-			if (Offset == 0)
-				return new StringReader(String);
-
-			var stringReader = new StringReader(String);
-
-			for (var i = 0; i < Offset; i++)
-				stringReader.Read();
-
-			return stringReader;
+			return new StringReader(_string);
 		}
 
-		public override void Dispose()
+		public override char GetChar(int offset)
 		{
+			if (offset < 0 || offset >= _string.Length)
+				throw new ArgumentOutOfRangeException();
+
+			return _string[offset];
 		}
 
-		public override char GetChar(int textPointer)
+		public override string GetText()
 		{
-			textPointer += Offset;
-
-			return textPointer < String.Length ? String[textPointer] : (char) 0;
+			return _string;
 		}
 
-		public override ReadOnlySpan<char> GetSpan(int start, int end)
+		public override string GetText(int start)
 		{
-			start += Offset;
-			end += Offset;
-
-			return String.AsSpan(start, end - start);
-		}
-
-		public override string GetText(int start, int end)
-		{
-			start += Offset;
-			end += Offset;
-
-#if NETCOREAPP3_1
-			return new string(String.AsSpan(start, end - start));
+#if NETCOREAPP
+			return new string(_string.AsSpan(start));
 #else
-			return String.Substring(start, end - start);
+			return String.Substring(start);
 #endif
 		}
 
-		public override TextSource Slice(int offset)
+		public override string GetText(int start, int length)
 		{
-			return new StringTextSource(String, Offset + offset);
+#if NETCOREAPP
+			return new string(_string.AsSpan(start, length));
+#else
+			return String.Substring(start, length);
+#endif
 		}
 
-		#endregion
+		public override ReadOnlyMemory<char> GetTextMemory()
+		{
+			return _string.AsMemory();
+		}
+
+		public override ReadOnlyMemory<char> GetTextMemory(int start)
+		{
+			return _string.AsMemory(start);
+		}
+
+		public override ReadOnlyMemory<char> GetTextMemory(int start, int length)
+		{
+			return _string.AsMemory(start, length);
+		}
+
+		public override TextSourceSpan GetTextSpan()
+		{
+			return new TextSourceSpan(this);
+		}
+
+		public override TextSourceSpan GetTextSpan(int start)
+		{
+			return new TextSourceSpan(this, start);
+		}
+
+		public override TextSourceSpan GetTextSpan(int start, int length)
+		{
+			return new TextSourceSpan(this, start, length);
+		}
+
+		public override void WriteTo(TextWriter textWriter)
+		{
+			textWriter.Write(_string);
+		}
 	}
 }

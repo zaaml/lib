@@ -48,30 +48,24 @@ namespace Zaaml.Core.Collections
 				}
 				else
 				{
-					var removeStartIndex = (int)(index - cursor.NodeOffset);
+					var removeStartIndex = (int) (index - cursor.NodeOffset);
 
 					if (removeStartIndex + count == realizedNode.Size)
 					{
-						//Array.Clear(realizedNode.ItemsPrivate, removeStartIndex, count);
-
-						realizedNode.Span.Slice(removeStartIndex, (int)count).Clear();
+						realizedNode.Span.Slice(removeStartIndex, (int) count).Clear();
 					}
 					else
 					{
-						var moveIndex = (int)(removeStartIndex + count);
-						var moveCount = (int)(realizedNode.Size - moveIndex);
-						var clearIndex = (int)(removeStartIndex + moveCount);
-
-						//Array.Copy(realizedNode.ItemsPrivate, moveIndex, realizedNode.ItemsPrivate, removeStartIndex, moveCount);
+						var moveIndex = (int) (removeStartIndex + count);
+						var moveCount = (int) (realizedNode.Size - moveIndex);
+						var clearIndex = removeStartIndex + moveCount;
 
 						var sourceSpan = realizedNode.Span.Slice(moveIndex, moveCount);
 						var targetSpan = realizedNode.Span.Slice(removeStartIndex, moveCount);
 
 						sourceSpan.CopyTo(targetSpan);
 
-						//Array.Clear(realizedNode.ItemsPrivate, clearIndex, realizedNode.Count - clearIndex);
-
-						var clearSpan = realizedNode.Span.Slice(clearIndex, (int)(realizedNode.Size - clearIndex));
+						var clearSpan = realizedNode.Span.Slice(clearIndex, (int) (realizedNode.Size - clearIndex));
 
 						clearSpan.Clear();
 					}
@@ -103,9 +97,9 @@ namespace Zaaml.Core.Collections
 			{
 				EnterStructureChange();
 
+				ref var firstNodeCursor = ref NavigateTo(index);
+				var firstNode = firstNodeCursor.Node;
 				var endIndex = index + count - 1;
-				var firstNode = FindNodeImpl(index);
-				var firstNodeCursor = Cursor.NavigateTo(index);
 
 				// Single Node
 				if (firstNodeCursor.Contains(endIndex))

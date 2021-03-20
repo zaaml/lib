@@ -17,16 +17,16 @@ namespace Zaaml.Text
 			return (int) EnumConverter<TToken>.Convert(token);
 		}
 
-		protected abstract LexemeSource<TToken> GetLexemeSourceCore(TextSource textSource, IServiceProvider serviceProvider);
+		protected abstract LexemeSource<TToken> GetLexemeSourceCore(TextSourceSpan textSourceSpan, IServiceProvider serviceProvider);
 
 		public LexemeSource<TToken> GetLexemeSource(string text, IServiceProvider serviceProvider = null)
 		{
-			return GetLexemeSourceCore(new StringTextSource(text), serviceProvider);
+			return GetLexemeSourceCore(new StringTextSource(text).GetTextSpan(), serviceProvider);
 		}
 
-		public LexemeSource<TToken> GetLexemeSource(TextSource textSource, IServiceProvider serviceProvider = null)
+		public LexemeSource<TToken> GetLexemeSource(TextSourceSpan textSourceSpan, IServiceProvider serviceProvider = null)
 		{
-			return GetLexemeSourceCore(textSource, serviceProvider);
+			return GetLexemeSourceCore(textSourceSpan, serviceProvider);
 		}
 
 		#endregion
@@ -94,9 +94,9 @@ namespace Zaaml.Text
 			return null;
 		}
 
-		protected override LexemeSource<TToken> GetLexemeSourceCore(TextSource textSource, IServiceProvider serviceProvider)
+		protected override LexemeSource<TToken> GetLexemeSourceCore(TextSourceSpan textSourceSpan, IServiceProvider serviceProvider)
 		{
-			return new LexemeSourceImpl(this, textSource, serviceProvider);
+			return new LexemeSourceImpl(this, textSourceSpan, serviceProvider);
 		}
 
 		internal static void RentLexemeBuffers(int bufferLength, out Lexeme<TToken>[] lexemesBuffer, out int[] operandsBuffer)
@@ -125,7 +125,7 @@ namespace Zaaml.Text
 
 			#region Ctors
 
-			public LexemeSourceImpl(Lexer<TGrammar, TToken> lexer, TextSource textSource, IServiceProvider serviceProvider) : base(textSource, serviceProvider)
+			public LexemeSourceImpl(Lexer<TGrammar, TToken> lexer, TextSourceSpan textSourceSpan, IServiceProvider serviceProvider) : base(textSourceSpan, serviceProvider)
 			{
 				_lexerProcess = new LexerProcess(lexer, this);
 			}
@@ -169,13 +169,15 @@ namespace Zaaml.Text
 
 			public LexerProcess(Lexer<TGrammar, TToken> lexer, LexemeSource<TToken> lexemeSource)
 			{
-				var textSource = lexemeSource.TextSource;
+				var textSourceSpan = lexemeSource.TextSourceSpan;
 				var lexerContext = lexer.CreateContext(lexemeSource);
 
-				if (textSource is StringTextSource stringTextSource)
-					_process = new LexerAutomata.SpanProcess(stringTextSource, lexer, lexerContext);
-				else
-					_process = new LexerAutomata.ReaderProcess(textSource, lexer, lexerContext);
+				_process = new LexerAutomata.SpanProcess(textSourceSpan, lexer, lexerContext);
+
+				//if (textSourceSpan.TextSource is StringTextSource stringTextSource)
+				//	_process = new LexerAutomata.SpanProcess(textSourceSpan, lexer, lexerContext);
+				//else
+				//	_process = new LexerAutomata.ReaderProcess(textSource, lexer, lexerContext);
 			}
 
 			#endregion
@@ -188,7 +190,7 @@ namespace Zaaml.Text
 				set => _process.TextPointer = value;
 			}
 
-			public TextSource TextSource => _process.TextSource;
+			public TextSourceSpan TextSourceSpan => _process.TextSourceSpan;
 
 			#endregion
 

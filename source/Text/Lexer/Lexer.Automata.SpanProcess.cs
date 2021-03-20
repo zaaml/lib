@@ -28,15 +28,15 @@ namespace Zaaml.Text
 
 				#region Ctors
 
-				public SpanProcess(StringTextSource textSource, Lexer<TGrammar, TToken> lexer, LexerContext<TToken> lexerContext) : base(textSource)
+				public SpanProcess(TextSourceSpan textSourceSpan, Lexer<TGrammar, TToken> lexer, LexerContext<TToken> lexerContext) : base(textSourceSpan)
 				{
-					_charMemory = textSource.String.AsMemory().Slice(textSource.Offset);
+					_charMemory = textSourceSpan.AsMemory();
 					_dfaInitialState = lexer.Automata._dfaBuilder.InitialState;
 					_noOpDfaInitialState = lexer.Automata._dfaBuilder.NoOpInitialState;
 
 					Context = new LexerAutomataContext();
 
-					Context.Mount(textSource, lexerContext);
+					Context.Mount(textSourceSpan, lexerContext);
 				}
 
 				#endregion

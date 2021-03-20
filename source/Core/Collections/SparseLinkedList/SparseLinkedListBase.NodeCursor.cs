@@ -3,26 +3,80 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
 		[SuppressMessage("ReSharper", "InconsistentNaming")]
-		internal readonly struct NodeCursor
+		internal struct NodeCursor
 		{
-			private readonly NodeBase NodePrivate;
-			private readonly long NodeOffsetPrivate;
-			private readonly long IndexPrivate;
+			public static readonly NodeCursor Empty = new NodeCursor(-1, null, null, -1, 0);
 			public readonly SparseLinkedListBase<T> List;
-			public readonly int StructureVersion;
+			private long IndexPrivate;
+			private long NodeOffsetPrivate;
+			private NodeBase NodePrivate;
+			public ulong StructureVersion;
 
-			public static NodeCursor Empty => new NodeCursor(-1, null, null, -1);
+			public NodeCursor(SparseLinkedListBase<T> list)
+			{
+				IndexPrivate = 0;
+				List = list;
+				NodePrivate = list.HeadNode;
+				NodeOffsetPrivate = 0;
+				StructureVersion = list.StructureVersion;
+			}
 
-			public bool IsEmpty => List == null;
+			public NodeCursor(long index, SparseLinkedListBase<T> list, NodeBase node, long nodeOffset)
+			{
+				IndexPrivate = index;
+				List = list;
+				NodePrivate = node;
+				NodeOffsetPrivate = nodeOffset;
+				StructureVersion = list.StructureVersion;
+			}
+
+			private NodeCursor(long index, SparseLinkedListBase<T> list, NodeBase node, long nodeOffset, ulong structureVersion)
+			{
+				IndexPrivate = index;
+				List = list;
+				NodePrivate = node;
+				NodeOffsetPrivate = nodeOffset;
+				StructureVersion = structureVersion;
+			}
+
+			public long Index
+			{
+				get
+				{
+					VerifyValid();
+
+					return IndexPrivate;
+				}
+				set
+				{
+					VerifyValid();
+
+					IndexPrivate = value;
+				}
+			}
+
+			public bool IsEmpty => NodePrivate == null;
 
 			public bool IsValid => IsEmpty == false && StructureVersion == List.StructureVersion;
+
+			public int LocalIndex
+			{
+				get
+				{
+					VerifyValid();
+
+					return (int) (IndexPrivate - NodeOffsetPrivate);
+				}
+			}
 
 			public NodeBase Node
 			{
@@ -44,24 +98,22 @@ namespace Zaaml.Core.Collections
 				}
 			}
 
-			public long Index
+			public long NodeSize
 			{
 				get
 				{
 					VerifyValid();
 
-					return IndexPrivate;
+					return NodePrivate.Size;
 				}
 			}
 
-			public int LocalIndex
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public bool Contains(long index)
 			{
-				get
-				{
-					VerifyValid();
+				VerifyValid();
 
-					return (int) (IndexPrivate - NodeOffsetPrivate);
-				}
+				return index >= NodeOffsetPrivate && index < NodeOffsetPrivate + NodePrivate.Size;
 			}
 
 			public NodeCursor GetNext()
@@ -75,40 +127,6 @@ namespace Zaaml.Core.Collections
 					NodeOffsetPrivate + NodePrivate.Size);
 			}
 
-			public long NodeSize
-			{
-				get
-				{
-					VerifyValid();
-
-					return NodePrivate.Size;
-				}
-			}
-
-			public NodeCursor WithIndex(long index)
-			{
-				if (Contains(index, true) == false)
-				{
-					if (index < NodeOffsetPrivate)
-						index = NodeOffsetPrivate;
-					else
-						index = NodeOffsetPrivate + NodeSize;
-				}
-
-				return new NodeCursor(index, List, NodePrivate, NodeOffsetPrivate);
-			}
-
-			public NodeCursor UpdateStructureVersion()
-			{
-				return new NodeCursor(IndexPrivate, List, NodePrivate, NodeOffsetPrivate);
-			}
-
-			private void VerifyValid()
-			{
-				if (IsValid == false)
-					throw new InvalidOperationException();
-			}
-
 			public NodeCursor GetPrev()
 			{
 				VerifyValid();
@@ -119,25 +137,39 @@ namespace Zaaml.Core.Collections
 				return new NodeCursor(NodeOffsetPrivate - 1, List, NodePrivate.Prev, NodeOffsetPrivate - NodePrivate.Prev.Size);
 			}
 
-			private NodeCursor(long index, SparseLinkedListBase<T> list)
+			public void MoveNext()
 			{
-				IndexPrivate = index;
-				List = list;
-				NodePrivate = list.HeadNode;
-				NodeOffsetPrivate = 0;
-				StructureVersion = list.StructureVersion;
+				VerifyValid();
+
+				if (NodePrivate.Next == null)
+				{
+					this = Empty;
+
+					return;
+				}
+
+				IndexPrivate = NodeOffsetPrivate + NodePrivate.Size;
+				NodeOffsetPrivate += NodePrivate.Size;
+				NodePrivate = NodePrivate.Next;
 			}
 
-			public NodeCursor(long index, SparseLinkedListBase<T> list, NodeBase node, long nodeOffset)
+			public void MovePrev()
 			{
-				IndexPrivate = index;
-				List = list;
-				NodePrivate = node;
-				NodeOffsetPrivate = nodeOffset;
-				StructureVersion = list?.StructureVersion ?? -1;
+				VerifyValid();
+
+				if (NodePrivate.Prev == null)
+				{
+					this = Empty;
+
+					return;
+				}
+
+				IndexPrivate = NodeOffsetPrivate - 1;
+				NodePrivate = NodePrivate.Prev;
+				NodeOffsetPrivate -= NodePrivate.Size;
 			}
 
-			public NodeCursor NavigateTo(long index)
+			public void NavigateTo(long index)
 			{
 				VerifyValid();
 
@@ -146,7 +178,11 @@ namespace Zaaml.Core.Collections
 				var cursorIndex = IndexPrivate;
 
 				if (Contains(index))
-					return new NodeCursor(index, List, node, NodeOffsetPrivate);
+				{
+					IndexPrivate = index;
+
+					return;
+				}
 
 				if (index >= cursorIndex)
 				{
@@ -172,43 +208,86 @@ namespace Zaaml.Core.Collections
 					}
 				}
 
-				return node == null ? Empty : new NodeCursor(index, List, node, nodeOffset);
+				if (node == null)
+				{
+					this = Empty;
+				}
+				else
+				{
+					IndexPrivate = index;
+					NodePrivate = node;
+					NodeOffsetPrivate = nodeOffset;
+				}
 			}
 
-			public bool Contains(long index)
+			public void NavigateToInsert(long index)
 			{
-				if (IsEmpty)
-					return false;
-
 				VerifyValid();
 
-				return index >= NodeOffsetPrivate && index < NodeOffsetPrivate + NodePrivate.Size;
-			}
+				var node = NodePrivate;
+				var nodeOffset = NodeOffsetPrivate;
+				var cursorIndex = IndexPrivate;
 
-			public bool Contains(long index, bool includeEnd)
-			{
-				if (IsEmpty)
-					return false;
+				if (Contains(index))
+				{
+					IndexPrivate = index;
 
-				VerifyValid();
+					return;
+				}
 
-				if (includeEnd)
-					return index >= NodeOffsetPrivate && index <= NodeOffsetPrivate + NodePrivate.Size;
+				if (index >= cursorIndex)
+				{
+					while (node != null)
+					{
+						var next = node.Next;
+						var nextNodeOffset = nodeOffset + node.Size;
 
-				return index >= NodeOffsetPrivate && index < NodeOffsetPrivate + NodePrivate.Size;
-			}
+						if (index >= nodeOffset && index <= nodeOffset + node.Size)
+						{
+							if (next != null && index >= nextNodeOffset && index < nextNodeOffset + next.Size)
+							{
+								node = next;
+								nodeOffset = nextNodeOffset;
+							}
 
-			public bool Equals(NodeCursor other)
-			{
-				if (IsEmpty && other.IsEmpty)
-					return true;
+							break;
+						}
 
-				VerifyValid();
-				other.VerifyValid();
+						node = next;
+						nodeOffset = nextNodeOffset;
+					}
+				}
+				else
+				{
+					while (node != null)
+					{
+						var prev = node.Prev;
+						var prevNodeOffset = nodeOffset - prev?.Size ?? 0;
 
-				return Equals(NodePrivate, other.NodePrivate) && NodeOffsetPrivate == other.NodeOffsetPrivate &&
-				       IndexPrivate == other.IndexPrivate &&
-				       Equals(List, other.List) && StructureVersion == other.StructureVersion;
+						if (index >= nodeOffset && index <= nodeOffset + node.Size)
+						{
+							if (prev != null && index >= prevNodeOffset && index < prevNodeOffset + prev.Size)
+							{
+								node = prev;
+								nodeOffset = prevNodeOffset;
+							}
+
+							break;
+						}
+
+						node = prev;
+						nodeOffset = prevNodeOffset;
+					}
+				}
+
+				if (node == null)
+					this = Empty;
+				else
+				{
+					IndexPrivate = index;
+					NodePrivate = node;
+					NodeOffsetPrivate = nodeOffset;
+				}
 			}
 
 			public override string ToString()
@@ -217,6 +296,24 @@ namespace Zaaml.Core.Collections
 					return "Empty";
 
 				return $"Index: {IndexPrivate}, NodeOffset: {NodeOffsetPrivate}, Node: {NodePrivate}";
+			}
+
+			public void UpdateStructureVersion()
+			{
+				StructureVersion = List.ActualStructureVersion;
+			}
+
+			public void UpgradeWithNode(NodeBase node)
+			{
+				NodePrivate = node;
+				StructureVersion = List.ActualStructureVersion;
+			}
+
+			[Conditional("COLLECTION_VERIFY")]
+			private void VerifyValid()
+			{
+				if (IsValid == false)
+					throw new InvalidOperationException();
 			}
 		}
 	}
