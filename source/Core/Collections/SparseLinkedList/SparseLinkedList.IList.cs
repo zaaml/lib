@@ -23,7 +23,7 @@ namespace Zaaml.Core.Collections
 
 		int IList.IndexOf(object value)
 		{
-			return IndexOf((T) value);
+			return (int)IndexOf((T) value);
 		}
 
 		void IList.Insert(int index, object value)
@@ -36,6 +36,11 @@ namespace Zaaml.Core.Collections
 			Remove((T) value);
 		}
 
+		void IList.RemoveAt(int index)
+		{
+			RemoveAt(index);
+		}
+
 		object IList.this[int index]
 		{
 			get => this[index];
@@ -44,9 +49,25 @@ namespace Zaaml.Core.Collections
 
 		bool IList.IsFixedSize => false;
 
+		void IList<T>.RemoveAt(int index)
+		{
+			RemoveAt(index);
+		}
+
+		T IList<T>.this[int index]
+		{
+			get => this[index];
+			set => this[index] = value;
+		}
+
 		int IList<T>.IndexOf(T item)
 		{
-			return IndexOf(item);
+			return (int)IndexOf(item);
+		}
+
+		void IList<T>.Insert(int index, T item)
+		{
+			Insert(index, item);
 		}
 	}
 }

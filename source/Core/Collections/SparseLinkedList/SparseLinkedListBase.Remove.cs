@@ -136,11 +136,11 @@ namespace Zaaml.Core.Collections
 
 				Debug.Assert(lastNode != null);
 
-				var gapSize = lastNodeCursor.NodeOffset - firstNodeCursor.NodeOffset - firstNode.Size;
-				var firstGap = firstNode is GapNode;
-				var lastGap = lastNode is GapNode;
+				var voidSize = lastNodeCursor.NodeOffset - firstNodeCursor.NodeOffset - firstNode.Size;
+				var firstVoidNode = firstNode is VoidNode;
+				var lastVoidNode = lastNode is VoidNode;
 
-				if (firstGap && lastGap)
+				if (firstVoidNode && lastVoidNode)
 				{
 					if (ReferenceEquals(firstNode, HeadNode))
 					{
@@ -155,7 +155,7 @@ namespace Zaaml.Core.Collections
 
 						HeadNode.Next = lastNode.Next;
 						lastNode.Next.Prev = HeadNode;
-						HeadNode.Size += gapSize + lastNode.Size - count;
+						HeadNode.Size += voidSize + lastNode.Size - count;
 
 						ReleaseNode(lastNode);
 
@@ -163,7 +163,7 @@ namespace Zaaml.Core.Collections
 					}
 					else
 					{
-						lastNode.Size += gapSize + firstNode.Size - count;
+						lastNode.Size += voidSize + firstNode.Size - count;
 
 						lastNode.Prev = firstNode.Prev;
 						firstNode.Prev.Next = lastNode;

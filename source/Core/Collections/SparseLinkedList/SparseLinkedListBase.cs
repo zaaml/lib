@@ -14,24 +14,19 @@ namespace Zaaml.Core.Collections
 #if TEST
 		private const int DefaultCapacity = 4;
 #else
-		protected const int DefaultCapacity = 16;
+		private const int DefaultCapacity = 16;
 #endif
 
-		public SparseLinkedListBase() : this(0, new SparseLinkedListManager<T>(new SparseMemoryAllocator<T>(DefaultCapacity)))
+		protected SparseLinkedListBase() : this(0, new SparseLinkedListManager<T>(new SparseMemoryAllocator<T>(DefaultCapacity)))
 		{
 		}
 
-		public SparseLinkedListBase(int count) : this(count,
-			new SparseLinkedListManager<T>(new SparseMemoryAllocator<T>(DefaultCapacity)))
-		{
-		}
-
-		protected SparseLinkedListBase(int count, SparseLinkedListManager<T> manager)
+		protected SparseLinkedListBase(long count, SparseLinkedListManager<T> manager)
 		{
 			Manager = manager;
 
-			HeadNode = GetGapNode();
-			TailNode = GetGapNode();
+			HeadNode = GetVoidNode();
+			TailNode = GetVoidNode();
 
 			LongCount = count;
 
@@ -46,7 +41,7 @@ namespace Zaaml.Core.Collections
 
 		internal ulong ActualStructureVersion { get; private set; }
 
-		protected GapNode HeadNode { get; private set; }
+		protected VoidNode HeadNode { get; private set; }
 
 		protected int NodeCapacity => Manager.SparseMemoryAllocator.NodeCapacity;
 
@@ -57,9 +52,9 @@ namespace Zaaml.Core.Collections
 			return Manager.GetRealizedNode();
 		}
 
-		private GapNode GetGapNode()
+		private VoidNode GetVoidNode()
 		{
-			return Manager.GetGapNode();
+			return Manager.GetVoidNode();
 		}
 
 		private void ReleaseNode(NodeBase node)
@@ -75,7 +70,7 @@ namespace Zaaml.Core.Collections
 			return ref _cursor;
 		}
 
-		protected GapNode TailNode { get; private set; }
+		protected VoidNode TailNode { get; private set; }
 
 		private ref NodeCursor GetHeadCursor()
 		{
@@ -93,7 +88,8 @@ namespace Zaaml.Core.Collections
 
 		public long LongCount { get; private set; }
 
-		[PublicAPI] public int Count => (int) LongCount;
+		[PublicAPI]
+		public int Count => (int) LongCount;
 
 		private void InitHeadTail()
 		{
@@ -133,7 +129,7 @@ namespace Zaaml.Core.Collections
 			if (HeadNode.Prev != null || TailNode.Next != null)
 				throw new InvalidOperationException();
 
-			if (HeadNode.Next is GapNode && ReferenceEquals(HeadNode.Next, TailNode) == false)
+			if (HeadNode.Next is VoidNode && ReferenceEquals(HeadNode.Next, TailNode) == false)
 				throw new InvalidOperationException();
 
 			if (ReferenceEquals(HeadNode.Next, TailNode))
@@ -161,7 +157,7 @@ namespace Zaaml.Core.Collections
 					if (ReferenceEquals(next.Prev, current) == false)
 						throw new InvalidOperationException();
 
-					if (next is GapNode && current is GapNode)
+					if (next is VoidNode && current is VoidNode)
 					{
 						throw new InvalidOperationException();
 					}
@@ -178,7 +174,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-		private protected void VerifyIndex(int index, bool insert = false)
+		private protected void VerifyIndex(long index, bool insert = false)
 		{
 			if (index == 0 && Count == 0)
 				return;
@@ -187,7 +183,7 @@ namespace Zaaml.Core.Collections
 				throw new IndexOutOfRangeException(nameof(index));
 		}
 
-		private protected void VerifyRange(int index, int count)
+		private protected void VerifyRange(long index, long count)
 		{
 			if (index == 0 && Count == 0 && count == 0)
 				return;
@@ -317,10 +313,10 @@ namespace Zaaml.Core.Collections
 			LeaveStructureChange();
 		}
 
-		private void RemoveEmptyGapNode(GapNode gapNode)
+		private void RemoveEmptyVoidNode(VoidNode voidNode)
 		{
-			if (gapNode.Size == 0 && ReferenceEquals(gapNode, HeadNode) == false && ReferenceEquals(gapNode, TailNode) == false)
-				RemoveNode(gapNode);
+			if (voidNode.Size == 0 && ReferenceEquals(voidNode, HeadNode) == false && ReferenceEquals(voidNode, TailNode) == false)
+				RemoveNode(voidNode);
 		}
 
 		private void RemoveNode(NodeBase node)
@@ -367,5 +363,7 @@ namespace Zaaml.Core.Collections
 				current = current.Next;
 			}
 		}
+
+		private protected bool IsVoidImpl => ReferenceEquals(HeadNode.Next, TailNode);
 	}
 }

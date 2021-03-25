@@ -26,11 +26,18 @@ namespace Zaaml.Core.Collections
 
 		private protected void InsertVoidRangeImpl(long index, long count)
 		{
+			if (index == LongCount)
+			{
+				AddVoidRangeImpl(count);
+
+				return;
+			}
+
 			try
 			{
 				EnterStructureChange();
 
-				if (ReferenceEquals(HeadNode.Next, TailNode))
+				if (GetHeadCursor().Contains(index))
 				{
 					HeadNode.Size += count;
 					LongCount += count;
@@ -38,15 +45,7 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				if (index == 0 || GetHeadCursor().Contains(index))
-				{
-					HeadNode.Size += count;
-					LongCount += count;
-
-					return;
-				}
-
-				if (index == LongCount || GetTailCursor().Contains(index))
+				if (GetTailCursor().Contains(index))
 				{
 					TailNode.Size += count;
 					LongCount += count;
@@ -60,9 +59,9 @@ namespace Zaaml.Core.Collections
 				var prevNode = node.Prev;
 				var nextNode = node.Next;
 
-				if (prevNode is GapNode prevGapNode && cursor.GetPrev().NodeOffset == index)
+				if (prevNode is VoidNode prevVoidNode && cursor.GetPrev().NodeOffset == index)
 				{
-					prevGapNode.Size += count;
+					prevVoidNode.Size += count;
 					LongCount += count;
 
 					return;
@@ -97,29 +96,29 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				var gapNode = GetGapNode();
+				var voidNode = GetVoidNode();
 
-				gapNode.Size = count;
+				voidNode.Size = count;
 
 				if (index == cursor.NodeOffset)
 				{
-					gapNode.Prev = prevNode;
-					gapNode.Next = realizedNode;
+					voidNode.Prev = prevNode;
+					voidNode.Next = realizedNode;
 
-					prevNode.Next = gapNode;
-					realizedNode.Prev = gapNode;
+					prevNode.Next = voidNode;
+					realizedNode.Prev = voidNode;
 				}
 				else
 				{
 					var nextRealizedNode = GetRealizedNode();
 
-					node.Next = gapNode;
+					node.Next = voidNode;
 
-					gapNode.Prev = node;
-					gapNode.Next = nextRealizedNode;
+					voidNode.Prev = node;
+					voidNode.Next = nextRealizedNode;
 
 					nextRealizedNode.Size = splitCount;
-					nextRealizedNode.Prev = gapNode;
+					nextRealizedNode.Prev = voidNode;
 					nextRealizedNode.Next = nextNode;
 					nextNode.Prev = nextRealizedNode;
 
@@ -155,7 +154,7 @@ namespace Zaaml.Core.Collections
 			InsertImpl(item, ref cursor);
 		}
 
-		private protected void InsertImpl(T item, ref NodeCursor cursor)
+		private void InsertImpl(T item, ref NodeCursor cursor)
 		{
 			try
 			{

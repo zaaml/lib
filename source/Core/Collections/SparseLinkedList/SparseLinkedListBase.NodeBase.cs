@@ -34,7 +34,7 @@ namespace Zaaml.Core.Collections
 				var index = GetGlobalIndex();
 				var range = Size == 0 ? $"[{index}]" : $"[{index}..{index + Size - 1}]";
 
-				return this is GapNode ? $"gap{range}" : $"real{range}";
+				return this is VoidNode ? $"void{range}" : $"real{range}";
 			}
 
 			internal long GetGlobalIndex()

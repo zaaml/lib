@@ -63,13 +63,13 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public bool IsGap
+		public bool IsVoid
 		{
 			get
 			{
 				Verify();
 
-				return _node is SparseLinkedListBase<T>.GapNode;
+				return _node is SparseLinkedListBase<T>.VoidNode;
 			}
 		}
 

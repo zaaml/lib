@@ -9,20 +9,20 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		private protected void VoidAtImpl(int index)
+		private protected void VoidAtImpl(long index)
 		{
 			VoidRangeImpl(index, 1);
 		}
 
 		private void VoidNodeRange(ref NodeCursor cursor, long index, long count)
 		{
-			if (!(cursor.Node is RealizedNode realizedNode))
+			if (cursor.Node is not RealizedNode realizedNode)
 				return;
 
 			var prevNode = realizedNode.Prev;
 			var nextNode = realizedNode.Next;
 
-			GapNode gapNode;
+			VoidNode voidNode;
 
 			// Remove whole node
 			if (cursor.NodeOffset == index && count >= realizedNode.Size)
@@ -40,10 +40,10 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				var isPrevGap = prevNode is GapNode;
-				var isNextGap = nextNode is GapNode;
+				var isPrevVoid = prevNode is VoidNode;
+				var isNextVoid = nextNode is VoidNode;
 
-				if (isPrevGap && isNextGap)
+				if (isPrevVoid && isNextVoid)
 				{
 					if (isPrevHead)
 					{
@@ -73,8 +73,8 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				// Prev Node Gap. Expand
-				if (isPrevGap)
+				// Prev Node Void. Expand
+				if (isPrevVoid)
 				{
 					prevNode.Size += realizedNode.Size;
 					prevNode.Next = nextNode;
@@ -85,8 +85,8 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				// Next Node Gap. Expand
-				if (isNextGap)
+				// Next Node Void. Expand
+				if (isNextVoid)
 				{
 					nextNode.Size += realizedNode.Size;
 					prevNode.Next = nextNode;
@@ -97,15 +97,15 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				// Create Gap Node.
-				gapNode = GetGapNode();
+				// Create Void Node.
+				voidNode = GetVoidNode();
 
-				gapNode.Prev = prevNode;
-				gapNode.Next = nextNode;
-				gapNode.Size = realizedNode.Size;
+				voidNode.Prev = prevNode;
+				voidNode.Next = nextNode;
+				voidNode.Size = realizedNode.Size;
 
-				prevNode.Next = gapNode;
-				nextNode.Prev = gapNode;
+				prevNode.Next = voidNode;
+				nextNode.Prev = voidNode;
 
 				ReleaseNode(realizedNode);
 
@@ -123,23 +123,23 @@ namespace Zaaml.Core.Collections
 			if (itemsEnd < realizedNode.Size)
 				return;
 
-			gapNode = nextNode as GapNode;
+			voidNode = nextNode as VoidNode;
 
-			if (gapNode == null)
+			if (voidNode == null)
 			{
-				gapNode = GetGapNode();
-				gapNode.Prev = realizedNode;
-				gapNode.Next = nextNode;
+				voidNode = GetVoidNode();
+				voidNode.Prev = realizedNode;
+				voidNode.Next = nextNode;
 
-				nextNode.Prev = gapNode;
-				realizedNode.Next = gapNode;
+				nextNode.Prev = voidNode;
+				realizedNode.Next = voidNode;
 			}
 
-			gapNode.Size += realizedNode.Size - itemsStart;
+			voidNode.Size += realizedNode.Size - itemsStart;
 			realizedNode.Size = itemsStart;
 		}
 
-		private protected void VoidRangeImpl(int index, int count)
+		private protected void VoidRangeImpl(long index, long count)
 		{
 			if (count == 0)
 				return;
@@ -166,17 +166,17 @@ namespace Zaaml.Core.Collections
 				// Contiguous nodes
 				if (lastNodeCursor.IsValid && lastNodeCursor.Contains(endIndex))
 				{
-					// First is Gap. Expand to next
-					if (firstNode is GapNode)
+					// First is Void. Expand to next
+					if (firstNode is VoidNode)
 					{
 						VoidNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, count - (lastNodeCursor.NodeOffset - index));
 					}
-					// Last is Gap. Expand to prev
-					else if (lastNode is GapNode)
+					// Last is Void. Expand to prev
+					else if (lastNode is VoidNode)
 					{
 						VoidNodeRange(ref firstNodeCursor, index, firstNode.Size - (index - firstNodeCursor.NodeOffset));
 					}
-					// Contiguous realized nodes. Make gap between
+					// Contiguous realized nodes. Make void between
 					else
 					{
 						var firstCount = firstNode.Size - (index - firstNodeCursor.NodeOffset);
@@ -189,7 +189,7 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				GapNode gapNode = null;
+				VoidNode voidNode = null;
 
 				while (lastNodeCursor.IsValid && lastNodeCursor.Contains(endIndex) == false)
 				{
@@ -197,7 +197,7 @@ namespace Zaaml.Core.Collections
 
 					ReleaseNode(lastNodeCursor.Node);
 
-					gapNode ??= lastNodeCursor.Node as GapNode;
+					voidNode ??= lastNodeCursor.Node as VoidNode;
 
 					lastNodeCursor = nextCursor;
 					lastNode = lastNodeCursor.Node;
@@ -205,11 +205,11 @@ namespace Zaaml.Core.Collections
 
 				Debug.Assert(lastNode != null);
 
-				var gapSize = lastNodeCursor.NodeOffset - firstNodeCursor.NodeOffset - firstNode.Size;
-				var firstGap = firstNode is GapNode;
-				var lastGap = lastNode is GapNode;
+				var voidSize = lastNodeCursor.NodeOffset - firstNodeCursor.NodeOffset - firstNode.Size;
+				var firstVoid = firstNode is VoidNode;
+				var lastVoid = lastNode is VoidNode;
 
-				if (firstGap && lastGap)
+				if (firstVoid && lastVoid)
 				{
 					if (ReferenceEquals(firstNode, HeadNode))
 					{
@@ -222,13 +222,13 @@ namespace Zaaml.Core.Collections
 
 						HeadNode.Next = lastNode.Next;
 						lastNode.Next.Prev = HeadNode;
-						HeadNode.Size += gapSize + lastNode.Size;
+						HeadNode.Size += voidSize + lastNode.Size;
 
 						ReleaseNode(lastNode);
 					}
 					else
 					{
-						lastNode.Size += gapSize + firstNode.Size;
+						lastNode.Size += voidSize + firstNode.Size;
 
 						lastNode.Prev = firstNode.Prev;
 						firstNode.Prev.Next = lastNode;
@@ -236,34 +236,34 @@ namespace Zaaml.Core.Collections
 						ReleaseNode(firstNode);
 					}
 				}
-				else if (firstGap)
+				else if (firstVoid)
 				{
 					firstNode.Next = lastNode;
 					lastNode.Prev = firstNode;
 
-					firstNode.Size += gapSize;
+					firstNode.Size += voidSize;
 
 					VoidNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, count - (lastNodeCursor.NodeOffset - index));
 				}
-				else if (lastGap)
+				else if (lastVoid)
 				{
 					firstNode.Next = lastNode;
 					lastNode.Prev = firstNode;
 
-					lastNode.Size += gapSize;
+					lastNode.Size += voidSize;
 
 					VoidNodeRange(ref firstNodeCursor, index, firstNode.Size - (index - firstNodeCursor.NodeOffset));
 				}
 				else
 				{
-					gapNode ??= GetGapNode();
+					voidNode ??= GetVoidNode();
 
-					gapNode.Size = gapSize;
+					voidNode.Size = voidSize;
 
-					firstNode.Next = gapNode;
-					lastNode.Prev = gapNode;
-					gapNode.Prev = firstNode;
-					gapNode.Next = lastNode;
+					firstNode.Next = voidNode;
+					lastNode.Prev = voidNode;
+					voidNode.Prev = firstNode;
+					voidNode.Next = lastNode;
 
 					VoidNodeRange(ref firstNodeCursor, index, firstNode.Size - (index - firstNodeCursor.NodeOffset));
 					VoidNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, count - (lastNodeCursor.NodeOffset - index));

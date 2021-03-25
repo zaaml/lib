@@ -9,11 +9,6 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		private protected void AddVoidRangeImpl(long count)
-		{
-			InsertVoidRangeImpl(Count, count);
-		}
-
 		private protected void AddImpl(T item)
 		{
 			try
@@ -111,6 +106,16 @@ namespace Zaaml.Core.Collections
 			LongCount += count;
 		}
 
+		private protected void AddVoidRangeImpl(long count)
+		{
+			if (ReferenceEquals(HeadNode.Next, TailNode))
+				HeadNode.Size += count;
+			else
+				TailNode.Size += count;
+
+			LongCount += count;
+		}
+
 		private ref NodeCursor NavigateToAdd()
 		{
 			ref var cursor = ref GetCursor();
@@ -140,7 +145,7 @@ namespace Zaaml.Core.Collections
 				TailNode.Next = realNode;
 				realNode.Prev = TailNode;
 
-				TailNode = GetGapNode();
+				TailNode = GetVoidNode();
 				realNode.Next = TailNode;
 				TailNode.Prev = realNode;
 			}

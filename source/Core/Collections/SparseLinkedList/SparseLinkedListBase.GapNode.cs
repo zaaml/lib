@@ -1,4 +1,4 @@
-﻿// <copyright file="SparseLinkedListBase.GapNode.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SparseLinkedListBase.VoidNode.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -8,7 +8,7 @@ namespace Zaaml.Core.Collections
 {
 	internal partial class SparseLinkedListBase<T>
 	{
-		internal sealed class GapNode : NodeBase
+		internal sealed class VoidNode : NodeBase
 		{
 			internal override T GetItem(ref NodeCursor cursor)
 			{

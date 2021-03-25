@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace Zaaml.Core.Collections
 {
-	internal partial class SparseLinkedList<T> : SparseLinkedListBase<T>
+	internal partial class SparseLinkedList<T> : SparseLinkedListBase<T>, ISparseList<T>
 	{
 		public SparseLinkedList()
 		{
