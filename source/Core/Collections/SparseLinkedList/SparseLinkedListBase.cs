@@ -345,20 +345,32 @@ namespace Zaaml.Core.Collections
 			if (array.Length - arrayIndex < Count)
 				throw new InvalidOperationException("Insufficient array length");
 
-			long index = arrayIndex;
+			CopyToImpl(array.AsSpan(arrayIndex));
+		}
+
+		private protected void CopyToImpl(Span<T> array)
+		{
+			if (array.Length < Count)
+				throw new InvalidOperationException("Insufficient array length");
+
+			var index = 0;
 			NodeBase current = HeadNode;
 
 			while (current != null)
 			{
+				var size = (int) current.Size;
+				var targetSpan = array.Slice(index, size);
+
 				if (current is RealizedNode realizedNode)
 				{
-					var sourceSpan = realizedNode.Span.Slice(0, (int) realizedNode.Size);
-					var targetSpan = new Span<T>(array, (int) index, (int) realizedNode.Size);
+					var sourceSpan = realizedNode.Span.Slice(0, size);
 
 					sourceSpan.CopyTo(targetSpan);
 				}
+				else
+					targetSpan.Clear();
 
-				index += current.Size;
+				index += size;
 
 				current = current.Next;
 			}
