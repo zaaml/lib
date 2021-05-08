@@ -51,16 +51,6 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public void CopyTo(T[] array, int arrayIndex)
-		{
-			Lock();
-
-			CopyToImpl(array, arrayIndex);
-
-			Unlock();
-		}
-
-		[PublicAPI]
 		public long IndexOf(T item)
 		{
 			Lock();

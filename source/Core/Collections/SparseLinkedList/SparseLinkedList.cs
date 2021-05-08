@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Zaaml.Core.Collections
@@ -19,9 +20,19 @@ namespace Zaaml.Core.Collections
 
 		private bool Locked { get; set; }
 
-		internal int Version { get; private set; }
+		private int Version { get; set; }
+
+		private void CopyTo(T[] array, int arrayIndex)
+		{
+			Lock();
+
+			CopyToImpl(array, arrayIndex);
+
+			Unlock();
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional("DEBUG")]
 		private void Lock()
 		{
 			if (Locked)
@@ -31,6 +42,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional("DEBUG")]
 		private void Unlock()
 		{
 			if (Locked == false)

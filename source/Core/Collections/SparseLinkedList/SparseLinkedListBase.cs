@@ -348,30 +348,75 @@ namespace Zaaml.Core.Collections
 			CopyToImpl(array.AsSpan(arrayIndex));
 		}
 
-		private protected void CopyToImpl(Span<T> array)
+		private protected void CopyToImpl(Span<T> span)
 		{
-			if (array.Length < Count)
-				throw new InvalidOperationException("Insufficient array length");
+			CopyToImpl(0, LongCount, span);
+		}
 
+		private protected void CopyToImplSafe(Span<T> span)
+		{
+			CopyToImplSafe(0, LongCount, span);
+		}
+
+		private protected void CopyToImpl(long offset, long length, Span<T> span)
+		{
+			if (span.Length < length)
+				throw new InvalidOperationException("Insufficient span length");
+
+			if (offset + length > LongCount || offset < 0)
+				throw new ArgumentOutOfRangeException();
+
+			CopyToImplSafe(offset, length, span);
+		}
+
+		private void CopyToImplSafe(long offset, long length, Span<T> span)
+		{
 			var index = 0;
 			NodeBase current = HeadNode;
 
-			while (current != null)
+			if (offset > 0)
 			{
-				var size = (int) current.Size;
-				var targetSpan = array.Slice(index, size);
+				long currentOffset = 0;
+
+				while (currentOffset + current.Size < offset)
+				{
+					currentOffset += current.Size;
+					current = current.Next;
+				}
+
+				var localOffset = (int) (offset - currentOffset);
+				var copyLength = (int) Math.Min(current.Size - localOffset, length);
+				var targetSpan = span.Slice(index, copyLength);
 
 				if (current is RealizedNode realizedNode)
 				{
-					var sourceSpan = realizedNode.Span.Slice(0, size);
+					var sourceSpan = realizedNode.Span.Slice(localOffset, copyLength);
 
 					sourceSpan.CopyTo(targetSpan);
 				}
 				else
 					targetSpan.Clear();
 
-				index += size;
+				length -= copyLength;
+				index += copyLength;
+			}
 
+			while (current != null && length > 0)
+			{
+				var copyLength = (int) Math.Min(current.Size, length);
+				var targetSpan = span.Slice(index, copyLength);
+
+				if (current is RealizedNode realizedNode)
+				{
+					var sourceSpan = realizedNode.Span.Slice(0, copyLength);
+
+					sourceSpan.CopyTo(targetSpan);
+				}
+				else
+					targetSpan.Clear();
+
+				index += copyLength;
+				length -= copyLength;
 				current = current.Next;
 			}
 		}
