@@ -41,7 +41,7 @@ namespace Zaaml.Text
 #if NETCOREAPP
 			return new string(_string.AsSpan(start));
 #else
-			return String.Substring(start);
+			return _string.Substring(start);
 #endif
 		}
 
@@ -50,7 +50,7 @@ namespace Zaaml.Text
 #if NETCOREAPP
 			return new string(_string.AsSpan(start, length));
 #else
-			return String.Substring(start, length);
+			return _string.Substring(start, length);
 #endif
 		}
 

@@ -156,11 +156,11 @@ namespace Zaaml.UI.Controls.Core
 
 		private sealed class GeneratedItemList : SparseLinkedList<GeneratedItem>
 		{
-			public GeneratedItemList(SparseLinkedListManager<GeneratedItem> linkedListManager) : base(0, linkedListManager)
+			public GeneratedItemList(SparseLinkedListManager<GeneratedItem> linkedListManager) : base(linkedListManager)
 			{
 			}
 
-			public new GeneratedItem this[int index]
+			public GeneratedItem this[int index]
 			{
 				get => index >= Count ? null : base[index];
 				set

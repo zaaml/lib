@@ -80,21 +80,33 @@ namespace Zaaml.Text
 		{
 			Verify();
 
+#if NETCOREAPP
 			return TextSource != null ? TextSource.GetText(Start + start, Length - start) : new string(TextMemory.Slice(start).Span);
+#else
+			return TextSource != null ? TextSource.GetText(Start + start, Length - start) : TextMemory.Slice(start).Span.ToString();
+#endif
 		}
 
 		public string GetText()
 		{
 			Verify();
 
+#if NETCOREAPP
 			return TextSource != null ? TextSource.GetText(Start, Length) : new string(TextMemory.Span);
+#else
+			return TextSource != null ? TextSource.GetText(Start, Length) : TextMemory.Span.ToString();
+#endif
 		}
 
 		public string GetText(int start, int length)
 		{
 			Verify();
 
+#if NETCOREAPP
 			return TextSource != null ? TextSource.GetText(Start + start, length) : new string(TextMemory.Slice(start, length).Span);
+#else
+			return TextSource != null ? TextSource.GetText(Start + start, length) : TextMemory.Slice(start, length).Span.ToString();
+#endif
 		}
 
 		public TextSourceSpan Slice(int start, int length)
