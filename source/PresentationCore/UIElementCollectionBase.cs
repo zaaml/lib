@@ -82,7 +82,7 @@ namespace Zaaml.PresentationCore
 
 		private void LogicalAttachElement(T element)
 		{
-			LogicalHost.AddLogicalChild(element);
+			LogicalHost?.AddLogicalChild(element);
 		}
 
 		private void LogicalAttachElements()
@@ -93,7 +93,7 @@ namespace Zaaml.PresentationCore
 
 		private void LogicalDetachElement(T element)
 		{
-			LogicalHost.RemoveLogicalChild(element);
+			LogicalHost?.RemoveLogicalChild(element);
 		}
 
 		private void LogicalDetachElements()

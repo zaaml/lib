@@ -8,152 +8,191 @@ using System.Collections.Generic;
 
 namespace Zaaml.Core.Weak.Collections
 {
-  internal class WeakLinkedList<T> : IEnumerable<T> where T : class
-  {
-    #region Fields
-
-    private int _gcCount;
+	internal class WeakLinkedList<T> : IEnumerable<T> where T : class
+	{
+		private readonly WeakLinkedListNodePool<T> _nodePool;
+		private int _gcCount;
 		private WeakLinkedNode<T> _head;
-    private WeakLinkedNode<T> _tail;
+		private WeakLinkedNode<T> _tail;
 
-    #endregion
-
-    #region Properties
-
-    public bool IsEmpty => _head == null;
-
-    private bool IsGCOccurred => GC.CollectionCount(0) != _gcCount;
-
-    #endregion
-
-    #region  Methods
-
-    public WeakLinkedNode<T> Add(T item)
-    {
-      EnsureClean();
-
-      var node = WeakLinkedNode.Insert(ref _head, ref _tail, item);
-
-      OnCollectionChanged();
-
-      EnsureGC();
-
-      return node;
-    }
-
-    public bool Cleanup()
-    {
-      return EnsureClean();
-    }
-
-    public void Clear()
-    {
-      if (_head == null)
-        return;
-
-      while (_head != null)
-        _head = _head.CleanNext();
-
-      _tail = null;
-      _head = null;
-
-      OnCollectionChanged();
-
-      UpdateGCCounter();
-    }
-
-    protected virtual void OnCollectionChanged()
-    {
-    }
-
-    public void Cleanup(Func<T, bool> predicate)
-    {
-	    if (_head == null)
-		    return;
-
-	    WeakLinkedNode.Clean(ref _head, out _tail, predicate);
-
-	    OnCollectionChanged();
+		public WeakLinkedList()
+		{
 		}
 
-    private bool EnsureClean()
-    {
-      if (_head == null || IsGCOccurred == false)
-        return false;
+		internal WeakLinkedList(WeakLinkedListNodePool<T> nodePool)
+		{
+			_nodePool = nodePool;
+		}
 
-      WeakLinkedNode.Clean(ref _head, out _tail);
+		public bool IsEmpty => _head == null;
 
-      OnCollectionChanged();
+		private bool IsGCOccurred => GC.CollectionCount(0) != _gcCount;
 
-      UpdateGCCounter();
+		public WeakLinkedNode<T> Add(T item)
+		{
+			EnsureClean();
 
-      return true;
-    }
+			var node = WeakLinkedNode.Insert(GetNode(item), ref _head, ref _tail);
 
-    private void EnsureGC()
-    {
-      if (IsGCOccurred)
-        UpdateGCCounter();
-    }
+			OnCollectionChanged();
 
-    public void Remove(T item)
-    {
-      EnsureClean();
+			EnsureGC();
 
-      WeakLinkedNode.Remove(ref _head, ref _tail, item);
+			return node;
+		}
 
-      OnCollectionChanged();
+		internal void AddNode(WeakLinkedNode<T> node)
+		{
+			if (node.Next != null)
+				throw new InvalidOperationException();
 
-      EnsureGC();
-    }
+			EnsureClean();
 
-    public void Remove(WeakLinkedNode<T> node)
-    {
-      EnsureClean();
+			WeakLinkedNode.Insert(node, ref _head, ref _tail);
 
-      WeakLinkedNode.RemoveNode(ref _head, ref _tail, node);
+			OnCollectionChanged();
 
-      OnCollectionChanged();
+			EnsureGC();
+		}
 
-      EnsureGC();
-    }
+		public bool Cleanup()
+		{
+			return EnsureClean();
+		}
 
-    private void UpdateGCCounter()
-    {
-      _gcCount = GC.CollectionCount(0);
-    }
+		public void Cleanup(Func<T, bool> predicate)
+		{
+			if (_head == null)
+				return;
 
-    #endregion
+			WeakLinkedNode.Clean(ref _head, out _tail, predicate);
 
-    #region Interface Implementations
+			OnCollectionChanged();
+		}
 
-    #region IEnumerable
+		public void Clear()
+		{
+			if (_head == null)
+				return;
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-      return GetEnumerator();
-    }
+			while (_head != null)
+			{
+				var head = _head;
 
-    #endregion
+				_head = _head.Next;
 
-    #region IEnumerable<T>
+				head.Dispose();
+			}
 
-    public IEnumerator<T> GetEnumerator()
-    {
-      if (_head == null)
-        yield break;
+			_tail = null;
+			_head = null;
 
-      EnsureClean();
+			OnCollectionChanged();
 
-      if (_head == null)
-        yield break;
+			UpdateGCCounter();
+		}
 
-      foreach (var item in _head.EnumerateAlive(false))
-        yield return item;
-    }
+		internal WeakLinkedNode<T> DetachNodes()
+		{
+			EnsureClean();
 
-    #endregion
+			var head = _head;
 
-    #endregion
-  }
+			_head = null;
+			_tail = null;
+
+			return head;
+		}
+
+		private bool EnsureClean()
+		{
+			if (_head == null || IsGCOccurred == false)
+				return false;
+
+			WeakLinkedNode.Clean(ref _head, out _tail);
+
+			OnCollectionChanged();
+
+			UpdateGCCounter();
+
+			return true;
+		}
+
+		private void EnsureGC()
+		{
+			if (IsGCOccurred)
+				UpdateGCCounter();
+		}
+
+		private WeakLinkedNode<T> GetNode(T item)
+		{
+			if (_nodePool == null)
+				return WeakLinkedNode.Create(item);
+
+			var node = _nodePool.RentNode();
+
+			node.Mount(item);
+
+			return node;
+		}
+
+		protected virtual void OnCollectionChanged()
+		{
+		}
+
+		public void Remove(T item)
+		{
+			EnsureClean();
+
+			WeakLinkedNode.Remove(ref _head, ref _tail, item);
+
+			OnCollectionChanged();
+
+			EnsureGC();
+		}
+
+		public void Remove(WeakLinkedNode<T> node)
+		{
+			EnsureClean();
+
+			WeakLinkedNode.RemoveNode(ref _head, ref _tail, node);
+
+			OnCollectionChanged();
+
+			EnsureGC();
+		}
+
+		private void UpdateGCCounter()
+		{
+			_gcCount = GC.CollectionCount(0);
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		public IEnumerator<T> GetEnumerator()
+		{
+			if (_head == null)
+				yield break;
+
+			EnsureClean();
+
+			if (_head == null)
+				yield break;
+
+			var current = _head;
+
+			while (current != null)
+			{
+				var currentTarget = current.Target;
+
+				if (currentTarget != null)
+					yield return currentTarget;
+
+				current = current.Next;
+			}
+		}
+	}
 }

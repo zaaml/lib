@@ -12,7 +12,6 @@ using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.UI.Controls.Core;
-using Zaaml.UI.Controls.ScrollView;
 
 namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 {
@@ -131,9 +130,11 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 					if (element == null)
 					{
-						index++;
+						throw new InvalidOperationException();
 
-						continue;
+						//index++;
+
+						//continue;
 					}
 
 					AddItem(element);
@@ -145,7 +146,6 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 					index++;
 				}
 			}
-
 
 			private void MeasureVisible()
 			{
@@ -160,9 +160,11 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 					if (element == null)
 					{
-						index++;
+						throw new InvalidOperationException();
 
-						continue;
+						//index++;
+
+						//continue;
 					}
 
 					realizedIndex = index;
@@ -207,9 +209,11 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 						if (element == null)
 						{
-							FirstVisibleIndex--;
+							throw new InvalidOperationException();
 
-							continue;
+							//FirstVisibleIndex--;
+
+							//continue;
 						}
 
 						InsertItem(0, element);
@@ -230,9 +234,10 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 						if (element == null)
 						{
-							FirstIndex--;
+							throw new InvalidOperationException();
+							//FirstIndex--;
 
-							continue;
+							//continue;
 						}
 
 						InsertItem(0, element);
@@ -248,6 +253,13 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 			private void MeasureTrailing()
 			{
+				if (LastVisibleIndex + 1 >= SourceCount)
+				{
+					LastIndex = LastVisibleIndex;
+
+					return;
+				}
+				
 				var constraint = OrientedConstraint.Size;
 				var index = LastVisibleIndex + 1;
 				var realizedIndex = index;
@@ -259,9 +271,11 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 					if (element == null)
 					{
-						index++;
+						throw new InvalidOperationException();
 
-						continue;
+						//index++;
+
+						//continue;
 					}
 
 					realizedIndex = index;
@@ -289,7 +303,11 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 				var focusedItem = Realize(focusedIndex);
 
 				if (focusedItem == null)
-					return;
+				{
+					throw new InvalidOperationException();
+
+					//return;
+				}
 
 				if (focusedIndex < FirstIndex)
 				{

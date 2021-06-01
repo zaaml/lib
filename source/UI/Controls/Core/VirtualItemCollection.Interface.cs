@@ -100,6 +100,11 @@ namespace Zaaml.UI.Controls.Core
 
 		public T EnsureItem(int index)
 		{
+			var actualCount = ActualCount;
+
+			if (actualCount == 0 || index < 0 || index >= actualCount)
+				return default;
+
 			return Mode == OperatingMode.Real ? RealEnsureItem(index) : VirtualEnsureItem(index);
 		}
 

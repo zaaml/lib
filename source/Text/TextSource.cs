@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Zaaml.Text
 {
-	internal abstract class TextSource
+	public abstract class TextSource
 	{
 		public abstract int Length { get; }
 

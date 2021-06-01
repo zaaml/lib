@@ -304,12 +304,11 @@ namespace Zaaml.Core.Trees
 
 				_count = num;
 
-				var index = num;
-				var obj = array[index];
+				var pop = array[num];
 
 				_array[_count] = default;
 
-				return obj;
+				return pop;
 			}
 
 			public void Push(NodeEnumerator item)
@@ -328,10 +327,7 @@ namespace Zaaml.Core.Trees
 
 				_count = size + 1;
 
-				var index = size;
-				var obj = item;
-
-				array[index] = obj;
+				array[size] = item;
 			}
 
 			public static TreeStack Rent()

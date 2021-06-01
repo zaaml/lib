@@ -206,7 +206,7 @@ namespace Zaaml.Core.Collections
 			sparseMemorySpan.Dispose();
 		}
 
-		private protected int FindImpl(T item)
+		private protected long FindImpl(T item)
 		{
 			var equalityComparer = EqualityComparer<T>.Default;
 			var enumerator = new Enumerator(this);
@@ -399,6 +399,7 @@ namespace Zaaml.Core.Collections
 
 				length -= copyLength;
 				index += copyLength;
+				current = current.Next;
 			}
 
 			while (current != null && length > 0)

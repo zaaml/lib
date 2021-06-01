@@ -57,8 +57,7 @@ namespace Zaaml.UI.Panels
     {
       return ArrangeStackLine(panel.Elements.Skip(line.Minimum).Take(line.Maximum - line.Minimum), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
     }
-
-
+		
     internal static Size ConstraintSize(this Size desiredSize, Size availableSize)
     {
       return new Size(desiredSize.Width.Clamp(0, availableSize.Width), desiredSize.Height.Clamp(0, availableSize.Height));
@@ -90,6 +89,7 @@ namespace Zaaml.UI.Panels
 
       if (fre.ShouldFill(Orientation.Horizontal))
         rect.Width = availableSize.Width;
+
       if (fre.ShouldFill(Orientation.Vertical))
         rect.Height = availableSize.Height;
 
@@ -98,9 +98,11 @@ namespace Zaaml.UI.Panels
 
     internal static Rect FillRectIndirect(this FrameworkElement fre, Orientation orientation, Size availableSize)
     {
-      if (!fre.ShouldFill(orientation)) return fre.DesiredSize.Rect();
+      if (!fre.ShouldFill(orientation)) 
+	      return fre.DesiredSize.Rect();
 
       var orientedSize = fre.DesiredSize.AsOriented(orientation);
+
       orientedSize.Indirect = availableSize.AsOriented(orientation).Indirect;
 
       return orientedSize.Size.Rect();
@@ -119,6 +121,7 @@ namespace Zaaml.UI.Panels
     private static Size Measure(UIElement element, Size size)
     {
       element.Measure(size);
+
       return element.DesiredSize;
     }
 
@@ -173,14 +176,14 @@ namespace Zaaml.UI.Panels
 
 		public static bool ShouldFill(this UIElement uie, Orientation orientation)
     {
-      var fre = uie as FrameworkElement;
-      return fre != null && fre.ShouldFill(orientation);
+	    return uie is FrameworkElement fre && fre.ShouldFill(orientation);
     }
 
     public static OrientedSize StackSize(this OrientedSize self, OrientedSize itemSize)
     {
       self.Indirect = Math.Max(itemSize.Indirect, self.Indirect);
       self.Direct += itemSize.Direct;
+
       return self;
     }
 
@@ -193,6 +196,7 @@ namespace Zaaml.UI.Panels
     {
       self.Direct = Math.Max(itemSize.Direct, self.Direct);
       self.Indirect += itemSize.Indirect;
+
       return self;
     }
 

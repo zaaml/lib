@@ -870,6 +870,9 @@ namespace Zaaml.Core
 
 		public static Interval<int> Normalize(this Interval<int> interval, IntervalEndPoint minimumPoint, IntervalEndPoint maximumPoint)
 		{
+			if (interval.IsEmpty)
+				return interval;
+
 			var normalizedInterval = interval;
 
 			if (normalizedInterval.MinimumPoint != minimumPoint)

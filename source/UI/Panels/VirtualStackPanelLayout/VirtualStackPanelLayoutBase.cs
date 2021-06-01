@@ -258,6 +258,14 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			ScrollInfo = CalcScrollInfo(ref _context);
 		}
 
+		public int FirstIndex => _context.FirstIndex;
+
+		public int LastIndex => _context.LastIndex;
+
+		public int FirstVisibleIndex => _context.FirstVisibleIndex;
+
+		public int LastVisibleIndex => _context.LastVisibleIndex;
+
 		private protected void UpdateTransform()
 		{
 			var transform = Panel.Transform;

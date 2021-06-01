@@ -59,10 +59,59 @@ namespace Zaaml.UI.Panels
 				if (IsEmpty)
 					return ItemLayoutInformationVisibility.Invisible;
 
-				if (RectUtils.IntersectsWith(PanelBox, BoundingBox) == false)
+				var panelBox = PanelBox;
+				var boundingBox = BoundingBox;
+
+				if (RectUtils.IntersectsWith(panelBox, boundingBox) == false)
 					return ItemLayoutInformationVisibility.Invisible;
 
-				if (RectUtils.Contains(PanelBox, BoundingBox))
+				if (RectUtils.Contains(panelBox, boundingBox))
+					return ItemLayoutInformationVisibility.Visible;
+
+				return ItemLayoutInformationVisibility.PartiallyVisible;
+			}
+		}
+
+		public ItemLayoutInformationVisibility VerticalVisibility
+		{
+			get
+			{
+				if (IsEmpty)
+					return ItemLayoutInformationVisibility.Invisible;
+
+				var panelBox = PanelBox;
+				var boundingBox = BoundingBox;
+
+				boundingBox.X = panelBox.X;
+				boundingBox.Width = panelBox.Width;
+
+				if (RectUtils.IntersectsWith(panelBox, boundingBox) == false)
+					return ItemLayoutInformationVisibility.Invisible;
+
+				if (RectUtils.Contains(panelBox, boundingBox))
+					return ItemLayoutInformationVisibility.Visible;
+
+				return ItemLayoutInformationVisibility.PartiallyVisible;
+			}
+		}
+
+		public ItemLayoutInformationVisibility HorizontalVisibility
+		{
+			get
+			{
+				if (IsEmpty)
+					return ItemLayoutInformationVisibility.Invisible;
+
+				var panelBox = PanelBox;
+				var boundingBox = BoundingBox;
+
+				boundingBox.Y = panelBox.Y;
+				boundingBox.Height = panelBox.Height;
+
+				if (RectUtils.IntersectsWith(panelBox, boundingBox) == false)
+					return ItemLayoutInformationVisibility.Invisible;
+
+				if (RectUtils.Contains(panelBox, boundingBox))
 					return ItemLayoutInformationVisibility.Visible;
 
 				return ItemLayoutInformationVisibility.PartiallyVisible;

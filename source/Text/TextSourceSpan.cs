@@ -8,7 +8,7 @@ using System;
 
 namespace Zaaml.Text
 {
-	internal readonly struct TextSourceSpan
+	public readonly struct TextSourceSpan
 	{
 		public static TextSourceSpan Empty => new(default, default, -1, 0);
 

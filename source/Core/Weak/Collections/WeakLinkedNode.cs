@@ -1,234 +1,206 @@
 ﻿// <copyright file="WeakLinkedNode.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-//   Copyright (c) zaaml. All rights reserved.
+//   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System;
-using System.Collections.Generic;
 
 namespace Zaaml.Core.Weak.Collections
 {
-  internal class WeakLinkedNode<T> : WeakReference<T> where T : class
-  {
-    #region Ctors
+	internal class WeakLinkedNode<T> where T : class
+	{
+		public WeakLinkedNode(T target)
+		{
+			Mount(target);
+		}
 
-    public WeakLinkedNode(T target) : base(target)
-    {
-    }
+		public WeakLinkedNode()
+		{
+		}
 
-    public WeakLinkedNode(T target, bool trackResurrection) : base(target, trackResurrection)
-    {
-    }
+		internal WeakLinkedNode(WeakLinkedListNodePool<T> pool)
+		{
+			Pool = pool;
+		}
 
-    #endregion
+		private bool IsAlive => WeakReference.IsAlive;
 
-    #region Properties
+		internal bool IsInPool { get; set; }
 
-    public WeakLinkedNode<T> Next { get; private set; }
+		public WeakLinkedNode<T> Next { get; internal set; }
 
-    #endregion
+		private WeakLinkedListNodePool<T> Pool { get; }
 
-    #region  Methods
+		public T Target => WeakReference.Target;
 
-    internal static WeakLinkedNode<T> CleanImpl(WeakLinkedNode<T> head, out WeakLinkedNode<T> tail, Func<T, bool> predicate = null)
-    {
-      var aliveHead = head;
+		private WeakReference<T> WeakReference { get; set; }
 
-      while (aliveHead != null && (aliveHead.IsAlive == false || predicate != null && predicate(aliveHead.Target)))
-        aliveHead = aliveHead.Next;
+		internal static WeakLinkedNode<T> CleanImpl(WeakLinkedNode<T> head, out WeakLinkedNode<T> tail, Func<T, bool> predicate = null)
+		{
+			var aliveHead = head;
 
-      if (aliveHead == null)
-      {
-        tail = null;
+			while (aliveHead != null && (aliveHead.IsAlive == false || predicate != null && predicate(aliveHead.Target)))
+			{
+				var next = aliveHead.Next;
 
-        return null;
-      }
+				aliveHead.Dispose();
 
-      var currentAlive = aliveHead;
-      var aliveTail = aliveHead;
+				aliveHead = next;
+			}
 
-      // Find tail removing dead items
-      while (currentAlive != null)
-      {
-        var current = currentAlive.Next;
+			if (aliveHead == null)
+			{
+				tail = null;
 
-        while (current != null && (current.IsAlive == false || predicate != null && predicate(current.Target)))
-          current = current.Next;
+				return null;
+			}
 
-        currentAlive.Next = current;
-        aliveTail = currentAlive;
-        currentAlive = current;
-      }
+			var currentAlive = aliveHead;
+			var aliveTail = aliveHead;
 
-      tail = aliveTail;
+			// Find tail removing dead items
+			while (currentAlive != null)
+			{
+				var current = currentAlive.Next;
 
-      return aliveHead;
-    }
+				while (current != null && (current.IsAlive == false || predicate != null && predicate(current.Target)))
+				{
+					var next = current.Next;
 
-    internal static WeakLinkedNode<T> CleanImpl(WeakLinkedNode<T> head)
-    {
-	    return CleanImpl(head, out _);
-    }
+					current.Dispose();
 
-    public IEnumerable<T> EnumerateAlive(bool clean)
-    {
-      var aliveHead = this;
+					current = next;
+				}
 
-      if (clean)
-        aliveHead = CleanImpl(aliveHead);
+				currentAlive.Next = current;
+				aliveTail = currentAlive;
+				currentAlive = current;
+			}
 
-      var current = aliveHead;
+			tail = aliveTail;
 
-      if (aliveHead == null)
-        yield break;
+			return aliveHead;
+		}
 
-      while (current != null)
-      {
-        var currentTarget = current.Target;
+		public void Dispose()
+		{
+			WeakReference = null;
+			Next = null;
+			Pool?.ReturnNode(this);
+		}
 
-        if (currentTarget != null)
-          yield return currentTarget;
+		public void InsertAfter(WeakLinkedNode<T> node)
+		{
+			Next = node;
+		}
 
-        current = current.Next;
-      }
-    }
+		internal void Mount(T target)
+		{
+			WeakReference = new WeakReference<T>(target);
+		}
 
-    public void InsertAfter(WeakLinkedNode<T> node)
-    {
-      Next = node;
-    }
+		public void RemoveAfter()
+		{
+			var remove = Next;
 
-    public void RemoveAfter()
-    {
-      var remove = Next;
+			if (remove == null)
+				return;
 
-      if (remove != null)
-      {
-        Next = remove.Next;
-        remove.Next = null;
-      }
-      else
-        Next = null;
-    }
+			Next = remove.Next;
+			remove.Next = null;
+		}
 
-    public override string ToString()
-    {
-      var target = Target;
+		public override string ToString()
+		{
+			var target = Target;
 
-      return target == null ? "Dead" : Target.ToString();
-    }
+			return target == null ? "Dead" : Target.ToString();
+		}
+	}
 
-    public WeakLinkedNode<T> CleanNext()
-    {
-      var next = Next;
+	internal static class WeakLinkedNode
+	{
+		public static void Clean<T>(ref WeakLinkedNode<T> head, out WeakLinkedNode<T> tail) where T : class
+		{
+			head = WeakLinkedNode<T>.CleanImpl(head, out tail);
+		}
 
-      Next = null;
+		public static void Clean<T>(ref WeakLinkedNode<T> head, out WeakLinkedNode<T> tail, Func<T, bool> predicate) where T : class
+		{
+			head = WeakLinkedNode<T>.CleanImpl(head, out tail, predicate);
+		}
 
-      return next;
-    }
+		public static WeakLinkedNode<T> Create<T>(T item) where T : class
+		{
+			return new WeakLinkedNode<T>(item);
+		}
 
-    #endregion
-  }
+		public static WeakLinkedNode<T> Insert<T>(WeakLinkedNode<T> node, ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail) where T : class
+		{
+			node.Next = null;
 
-  internal static class WeakLinkedNode
-  {
-    #region  Methods
+			if (head == null)
+				head = tail = node;
+			else
+			{
+				tail.InsertAfter(node);
+				tail = node;
+			}
 
-    public static void Clean<T>(ref WeakLinkedNode<T> head, out WeakLinkedNode<T> tail) where T : class
-    {
-      head = WeakLinkedNode<T>.CleanImpl(head, out tail);
-    }
+			return node;
+		}
 
-    public static void Clean<T>(ref WeakLinkedNode<T> head, out WeakLinkedNode<T> tail, Func<T, bool> predicate) where T : class
-    {
-      head = WeakLinkedNode<T>.CleanImpl(head, out tail, predicate);
-    }
+		public static void Remove<T>(ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail, T item) where T : class
+		{
+			item.EnsureNotNull(nameof(item));
 
-    public static WeakLinkedNode<T> Create<T>(T item) where T : class
-    {
-      return new WeakLinkedNode<T>(item);
-    }
+			if (head == null)
+			{
+				tail = null;
 
-    public static WeakLinkedNode<T> Insert<T>(ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail, T item) where T : class
-    {
-      var node = Create(item);
+				return;
+			}
 
-      if (head == null)
-        head = tail = node;
-      else
-      {
-        tail.InsertAfter(node);
-        tail = node;
-      }
+			if (ReferenceEquals(head.Target, item))
+			{
+				var result = head;
+				var next = head.Next;
 
-      return node;
-    }
+				if (ReferenceEquals(head, tail))
+					head = tail = null;
+				else
+					head = next;
 
-    public static void RemoveNode<T>(ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail, WeakLinkedNode<T> node) where T : class
-    {
-      //node.EnsureNotNull(nameof(node));
+				result.Dispose();
 
-      //if (head == null)
-      //{
-      //  tail = null;
-      //  return;
-      //}
+				return;
+			}
 
-      //if (ReferenceEquals(head, node))
-      //{
-      //  if (ReferenceEquals(head, tail))
-      //    head = tail = head.Next;
-      //  else
-      //    head = head.Next;
+			var current = head;
 
-      //  return;
-      //}
+			while (current.Next != null && ReferenceEquals(current.Next.Target, item) == false)
+				current = current.Next;
 
-      //if (ReferenceEquals(node.Next, tail))
-      //  tail = node;
+			if (current.Next == null)
+				return;
 
-      //node.RemoveAfter();
+			if (ReferenceEquals(current.Next, tail))
+				tail = current;
 
-      var target = node.Target;
+			{
+				var result = current.Next;
 
-      if (target != null)
-        Remove(ref head, ref tail, target);
-    }
+				current.RemoveAfter();
 
-    public static void Remove<T>(ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail, T item) where T : class
-    {
-      item.EnsureNotNull(nameof(item));
+				result.Dispose();
+			}
+		}
 
-      if (head == null)
-      {
-        tail = null;
+		public static void RemoveNode<T>(ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail, WeakLinkedNode<T> node) where T : class
+		{
+			var target = node.Target;
 
-        return;
-      }
-
-      if (ReferenceEquals(head.Target, item))
-      {
-        if (ReferenceEquals(head, tail))
-          head = tail = head.Next;
-        else
-          head = head.Next;
-
-        return;
-      }
-
-      var current = head;
-
-      while (current.Next != null && ReferenceEquals(current.Next.Target, item) == false)
-        current = current.Next;
-
-      if (current.Next == null || !ReferenceEquals(current.Next.Target, item)) 
-	      return;
-
-      if (ReferenceEquals(current.Next, tail))
-        tail = current;
-
-      current.RemoveAfter();
-    }
-
-    #endregion
-  }
+			if (target != null)
+				Remove(ref head, ref tail, target);
+		}
+	}
 }
