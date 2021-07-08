@@ -13,71 +13,98 @@ namespace Zaaml.Core.Collections
 			RemoveRangeAtImpl(index, 1);
 		}
 
-		private void RemoveNodeRange(ref NodeCursor cursor, long index, long count)
+		private NodeBase RemoveNodeRange(ref NodeCursor cursor, long index, long count, bool returnNext)
 		{
-			try
+			var cursorNode = cursor.Node;
+			var cursorNodeOffset = cursor.NodeOffset;
+
+			// Remove whole node
+			if (index == cursorNodeOffset && count == cursorNode.Size)
 			{
-				EnterStructureChange();
-
-				// Remove whole node
-				if (index == cursor.NodeOffset && count == cursor.Node.Size)
+				if (ReferenceEquals(cursorNode, HeadNode) || ReferenceEquals(cursorNode, TailNode))
 				{
-					if (ReferenceEquals(cursor.Node, HeadNode) || ReferenceEquals(cursor.Node, TailNode))
-					{
-						cursor.Node.Size -= count;
-
-						LongCount -= count;
-					}
-					else
-					{
-						RemoveNode(cursor.Node);
-
-						LongCount -= count;
-					}
-
-					return;
-				}
-
-				var realizedNode = cursor.Node as RealizedNode;
-
-				if (realizedNode == null)
-				{
-					cursor.Node.Size -= count;
+					cursorNode.Size -= count;
 
 					LongCount -= count;
+
+					return returnNext ? TailNode : HeadNode;
+				}
+
+				var returnNode = returnNext ? cursorNode.Next : cursorNode.Prev;
+
+				RemoveNode(cursorNode);
+
+				LongCount -= count;
+
+				return returnNode;
+			}
+
+			if (cursorNode is RealizedNode realizedNode)
+			{
+				var removeStartIndex = (int)(index - cursorNodeOffset);
+
+				if (removeStartIndex + count == realizedNode.Size)
+				{
+					realizedNode.Span.Slice(removeStartIndex, (int)count).Clear();
 				}
 				else
 				{
-					var removeStartIndex = (int) (index - cursor.NodeOffset);
+					var moveIndex = (int)(removeStartIndex + count);
+					var moveCount = (int)(realizedNode.Size - moveIndex);
+					var clearIndex = removeStartIndex + moveCount;
 
-					if (removeStartIndex + count == realizedNode.Size)
-					{
-						realizedNode.Span.Slice(removeStartIndex, (int) count).Clear();
-					}
-					else
-					{
-						var moveIndex = (int) (removeStartIndex + count);
-						var moveCount = (int) (realizedNode.Size - moveIndex);
-						var clearIndex = removeStartIndex + moveCount;
+					var sourceSpan = realizedNode.Span.Slice(moveIndex, moveCount);
+					var targetSpan = realizedNode.Span.Slice(removeStartIndex, moveCount);
 
-						var sourceSpan = realizedNode.Span.Slice(moveIndex, moveCount);
-						var targetSpan = realizedNode.Span.Slice(removeStartIndex, moveCount);
+					sourceSpan.CopyTo(targetSpan);
 
-						sourceSpan.CopyTo(targetSpan);
+					var clearSpan = realizedNode.Span.Slice(clearIndex, (int)(realizedNode.Size - clearIndex));
 
-						var clearSpan = realizedNode.Span.Slice(clearIndex, (int) (realizedNode.Size - clearIndex));
-
-						clearSpan.Clear();
-					}
-
-					realizedNode.Size -= count;
-
-					LongCount -= count;
+					clearSpan.Clear();
 				}
 			}
-			finally
+
+			cursorNode.Size -= count;
+			LongCount -= count;
+
+			return cursorNode;
+		}
+
+		private void MergeVoidNodes(NodeBase first, NodeBase last)
+		{
+			while (first != null && ReferenceEquals(first, last) == false)
 			{
-				LeaveStructureChange();
+				var next = first.Next;
+
+				if (first is VoidNode && next is VoidNode)
+				{
+					if (ReferenceEquals(next, TailNode))
+					{
+						if (ReferenceEquals(first, HeadNode))
+						{
+							HeadNode.Size += TailNode.Size;
+							TailNode.Size = 0;
+
+							return;
+						}
+
+						TailNode.Size += first.Size;
+						first.Size = 0;
+
+						RemoveNode(first);
+
+						return;
+					}
+
+					first.Size += next.Size;
+					next.Size = 0;
+
+					RemoveNode(next);
+
+					continue;
+				}
+
+				first = next;
 			}
 		}
 
@@ -104,7 +131,9 @@ namespace Zaaml.Core.Collections
 				// Single Node
 				if (firstNodeCursor.Contains(endIndex))
 				{
-					RemoveNodeRange(ref firstNodeCursor, index, count);
+					var mergeNode = RemoveNodeRange(ref firstNodeCursor, index, count, false);
+
+					MergeVoidNodes(mergeNode, mergeNode.Next);
 
 					return;
 				}
@@ -118,8 +147,10 @@ namespace Zaaml.Core.Collections
 					var firstCount = firstNode.Size - (index - firstNodeCursor.NodeOffset);
 					var lastCount = count - (lastNodeCursor.NodeOffset - index);
 
-					RemoveNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, lastCount);
-					RemoveNodeRange(ref firstNodeCursor, index, firstCount);
+					lastNode = RemoveNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, lastCount, true);
+					firstNode = RemoveNodeRange(ref firstNodeCursor, index, firstCount, false);
+
+					MergeVoidNodes(firstNode, lastNode);
 
 					return;
 				}
@@ -135,13 +166,14 @@ namespace Zaaml.Core.Collections
 				}
 
 				Debug.Assert(lastNode != null);
-
-				var voidSize = lastNodeCursor.NodeOffset - firstNodeCursor.NodeOffset - firstNode.Size;
+				
 				var firstVoidNode = firstNode is VoidNode;
 				var lastVoidNode = lastNode is VoidNode;
 
 				if (firstVoidNode && lastVoidNode)
 				{
+					var voidSize = lastNodeCursor.NodeOffset - firstNodeCursor.NodeOffset - firstNode.Size;
+
 					if (ReferenceEquals(firstNode, HeadNode))
 					{
 						if (ReferenceEquals(lastNode, TailNode))
@@ -183,20 +215,16 @@ namespace Zaaml.Core.Collections
 					var firstCount = firstNode.Size - (index - firstNodeCursor.NodeOffset);
 					var lastCount = count - (lastNodeCursor.NodeOffset - index);
 
-					RemoveNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, lastCount);
-					RemoveNodeRange(ref firstNodeCursor, index, firstCount);
+					lastNode = RemoveNodeRange(ref lastNodeCursor, lastNodeCursor.NodeOffset, lastCount, true);
+					firstNode = RemoveNodeRange(ref firstNodeCursor, index, firstCount, false);
+
+					MergeVoidNodes(firstNode, lastNode);
 
 					LongCount -= count - firstCount - lastCount;
 				}
 			}
 			finally
 			{
-				if (ReferenceEquals(HeadNode.Next, TailNode) && TailNode.Size > 0)
-				{
-					HeadNode.Size += TailNode.Size;
-					TailNode.Size = 0;
-				}
-
 				LeaveStructureChange();
 			}
 		}

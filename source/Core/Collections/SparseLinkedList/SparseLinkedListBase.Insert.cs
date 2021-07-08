@@ -347,7 +347,11 @@ namespace Zaaml.Core.Collections
 			StructureChangeCount--;
 
 			if (StructureChangeCount == 0)
+			{
 				StructureVersion = ActualStructureVersion;
+
+				VerifyStructure();
+			}
 		}
 
 		private protected struct InsertEnumerator
