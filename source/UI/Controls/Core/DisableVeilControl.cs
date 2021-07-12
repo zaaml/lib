@@ -43,7 +43,7 @@ namespace Zaaml.UI.Controls.Core
 		public static readonly DependencyProperty VeilBrushProperty = DPM.RegisterAttached<Brush, DisableVeilControl>
 			("VeilBrush", OnVeilBrushChanged);
 
-		private static readonly WeakLinkedList<DisableVeilControl> VisibleVeils = new WeakLinkedList<DisableVeilControl>();
+		private static readonly WeakLinkedList<DisableVeilControl> VisibleVeils = new();
 
 #if SILVERLIGHT
 		private static readonly DependencyProperty BackgroundIntProperty = DPM.Register<Brush, DisableVeilControl>
@@ -105,7 +105,11 @@ namespace Zaaml.UI.Controls.Core
 				ActualShowVeilField = value;
 
 				if (ActualShowVeilField)
-					_visibleNode = VisibleVeils.Add(this);
+				{
+					_visibleNode = new WeakLinkedNode<DisableVeilControl>(this);
+
+					VisibleVeils.AddNode(_visibleNode);
+				}
 
 				ActualVeilBrush = GetActualVeilBrush();
 

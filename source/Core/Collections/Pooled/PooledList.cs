@@ -4,22 +4,24 @@
 
 using System;
 using System.Buffers;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Zaaml.Core.Collections.Pooled
 {
-	internal class PooledList<T> : IEnumerable<T>
+	internal partial class PooledList<T>
 	{
 		private const int MaxArrayLength = 0x7FEFFFFF;
 		private const int DefaultCapacity = 4;
 		private static readonly T[] EmptyArray = Array.Empty<T>();
+		private static readonly ThreadLocal<Stack<PooledList<T>>> ThreadPool = new(() => new Stack<PooledList<T>>());
 		private readonly bool _clearArray;
 		private readonly int _defaultCapacity;
 		private readonly ArrayPool<T> _pool;
 		private T[] _items;
 		private int _size;
+		private object _syncRoot;
 		private int _version;
 
 		public PooledList() : this(DefaultCapacity, true, ArrayPool<T>.Shared)
@@ -73,44 +75,6 @@ namespace Zaaml.Core.Collections.Pooled
 			}
 		}
 
-		public int Count => _size;
-
-		public T this[int index]
-		{
-			get
-			{
-				if ((uint) index >= (uint) _size)
-					throw new ArgumentOutOfRangeException();
-
-				return _items[index];
-			}
-
-			set
-			{
-				if ((uint) index >= (uint) _size)
-					throw new ArgumentOutOfRangeException();
-
-				_items[index] = value;
-				_version++;
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(T item)
-		{
-			_version++;
-
-			var size = _size;
-
-			if ((uint) size < (uint) _items.Length)
-			{
-				_size = size + 1;
-				_items[size] = item;
-			}
-			else
-				AddWithResize(item);
-		}
-
 		public void AddRange(IEnumerable<T> collection)
 		{
 			InsertRange(_size, collection);
@@ -125,20 +89,6 @@ namespace Zaaml.Core.Collections.Pooled
 
 			_size = size + 1;
 			_items[size] = item;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear()
-		{
-			ReturnArray();
-
-			_size = 0;
-			_version++;
-		}
-
-		public bool Contains(T item)
-		{
-			return _size != 0 && IndexOf(item) != -1;
 		}
 
 		private void EnsureCapacity(int min)
@@ -162,11 +112,6 @@ namespace Zaaml.Core.Collections.Pooled
 			return new Enumerator(this);
 		}
 
-		public int IndexOf(T item)
-		{
-			return Array.IndexOf(_items, item, 0, _size);
-		}
-
 		public int IndexOf(T item, int index)
 		{
 			if (index > _size)
@@ -184,22 +129,6 @@ namespace Zaaml.Core.Collections.Pooled
 				throw new ArgumentOutOfRangeException(nameof(count));
 
 			return Array.IndexOf(_items, item, index, count);
-		}
-
-		public void Insert(int index, T item)
-		{
-			if ((uint) index > (uint) _size)
-				throw new ArgumentOutOfRangeException(nameof(index));
-
-			if (_size == _items.Length)
-				EnsureCapacity(_size + 1);
-
-			if (index < _size)
-				Array.Copy(_items, index, _items, index + 1, _size - index);
-
-			_items[index] = item;
-			_size++;
-			_version++;
 		}
 
 		public void InsertRange(int index, IEnumerable<T> collection)
@@ -252,6 +181,141 @@ namespace Zaaml.Core.Collections.Pooled
 			_version++;
 		}
 
+		public void RemoveRange(int index, int count)
+		{
+			if (index < 0)
+				throw new ArgumentOutOfRangeException(nameof(index));
+
+			if (count < 0)
+				throw new ArgumentOutOfRangeException(nameof(count));
+
+			if (_size - index < count)
+				throw new ArgumentException();
+
+			if (count <= 0)
+				return;
+
+			_size -= count;
+
+			if (index < _size) Array.Copy(_items, index + count, _items, index, _size - index);
+
+			_version++;
+
+			if (_clearArray)
+				Array.Clear(_items, _size, count);
+		}
+
+		internal static PooledList<T> RentList()
+		{
+			var pool = ThreadPool.Value;
+
+			return pool.Count > 0 ? pool.Pop() : new PooledList<T>(true);
+		}
+
+		private void ReturnArray()
+		{
+			if (_items.Length == 0)
+				return;
+
+			try
+			{
+				_pool.Return(_items, _clearArray);
+			}
+			catch (ArgumentException)
+			{
+			}
+
+			_items = EmptyArray;
+		}
+
+		internal static void ReturnList(PooledList<T> list)
+		{
+			list.Clear();
+
+			ThreadPool.Value.Push(list);
+		}
+
+		public void TrimExcess()
+		{
+			var threshold = (int) (_items.Length * 0.9);
+
+			if (_size < threshold)
+				Capacity = _size;
+		}
+
+		public int Count => _size;
+
+		public T this[int index]
+		{
+			get
+			{
+				if ((uint) index >= (uint) _size)
+					throw new ArgumentOutOfRangeException();
+
+				return _items[index];
+			}
+
+			set
+			{
+				if ((uint) index >= (uint) _size)
+					throw new ArgumentOutOfRangeException();
+
+				_items[index] = value;
+				_version++;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Add(T item)
+		{
+			_version++;
+
+			var size = _size;
+
+			if ((uint) size < (uint) _items.Length)
+			{
+				_size = size + 1;
+				_items[size] = item;
+			}
+			else
+				AddWithResize(item);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Clear()
+		{
+			ReturnArray();
+
+			_size = 0;
+			_version++;
+		}
+
+		public bool Contains(T item)
+		{
+			return _size != 0 && IndexOf(item) != -1;
+		}
+
+		public int IndexOf(T item)
+		{
+			return Array.IndexOf(_items, item, 0, _size);
+		}
+
+		public void Insert(int index, T item)
+		{
+			if ((uint) index > (uint) _size)
+				throw new ArgumentOutOfRangeException(nameof(index));
+
+			if (_size == _items.Length)
+				EnsureCapacity(_size + 1);
+
+			if (index < _size)
+				Array.Copy(_items, index, _items, index + 1, _size - index);
+
+			_items[index] = item;
+			_size++;
+			_version++;
+		}
+
 		public bool Remove(T item)
 		{
 			var index = IndexOf(item);
@@ -278,131 +342,6 @@ namespace Zaaml.Core.Collections.Pooled
 
 			if (_clearArray)
 				_items[_size] = default;
-		}
-
-		public void RemoveRange(int index, int count)
-		{
-			if (index < 0)
-				throw new ArgumentOutOfRangeException(nameof(index));
-
-			if (count < 0)
-				throw new ArgumentOutOfRangeException(nameof(count));
-
-			if (_size - index < count)
-				throw new ArgumentException();
-
-			if (count <= 0)
-				return;
-
-			_size -= count;
-
-			if (index < _size) Array.Copy(_items, index + count, _items, index, _size - index);
-
-			_version++;
-
-			if (_clearArray)
-				Array.Clear(_items, _size, count);
-		}
-
-		private void ReturnArray()
-		{
-			if (_items.Length == 0)
-				return;
-
-			try
-			{
-				_pool.Return(_items, _clearArray);
-			}
-			catch (ArgumentException)
-			{
-			}
-
-			_items = EmptyArray;
-		}
-
-		public void TrimExcess()
-		{
-			var threshold = (int) (_items.Length * 0.9);
-
-			if (_size < threshold)
-				Capacity = _size;
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return new Enumerator(this);
-		}
-
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			return new Enumerator(this);
-		}
-
-		public struct Enumerator : IEnumerator<T>
-		{
-			private readonly PooledList<T> _list;
-			private int _index;
-			private readonly int _version;
-			private T _current;
-
-			internal Enumerator(PooledList<T> list)
-			{
-				_list = list;
-				_index = 0;
-				_version = list._version;
-				_current = default;
-			}
-
-			public void Dispose()
-			{
-			}
-
-			public bool MoveNext()
-			{
-				var localList = _list;
-
-				if (_version == localList._version && ((uint) _index < (uint) localList._size))
-				{
-					_current = localList._items[_index];
-					_index++;
-
-					return true;
-				}
-
-				return MoveNextRare();
-			}
-
-			private bool MoveNextRare()
-			{
-				if (_version != _list._version)
-					throw new InvalidOperationException();
-
-				_index = _list._size + 1;
-				_current = default;
-				return false;
-			}
-
-			public T Current => _current;
-
-			object IEnumerator.Current
-			{
-				get
-				{
-					if (_index == 0 || _index == _list._size + 1)
-						throw new InvalidOperationException();
-
-					return Current;
-				}
-			}
-
-			void IEnumerator.Reset()
-			{
-				if (_version != _list._version)
-					throw new InvalidOperationException();
-
-				_index = 0;
-				_current = default;
-			}
 		}
 	}
 }

@@ -159,7 +159,10 @@ namespace Zaaml.UI.Controls.Core
 				OnGeneratedItemDetached(index, generatedItem.Item);
 
 				if (ReferenceEquals(generatedItem.Item, generatedItem.Source) == false)
+				{
 					generatedItem.Generator.DetachItemCore(generatedItem.Item, generatedItem.Source);
+					generatedItem.Source = default;
+				}
 
 				ItemHost?.OnItemDetached(generatedItem.Item);
 			}
@@ -687,7 +690,7 @@ namespace Zaaml.UI.Controls.Core
 				return generatedItem.Item;
 			}
 
-			generatedItem = Generate(generator, source, out _, out var attach);
+			generatedItem = Generate(generator, source, out var generatedItemSource, out var attach);
 
 			RemoveFromTemp(generatedItem);
 

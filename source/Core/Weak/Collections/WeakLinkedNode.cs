@@ -3,6 +3,8 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Zaaml.Core.Weak.Collections
 {
@@ -22,7 +24,7 @@ namespace Zaaml.Core.Weak.Collections
 			Pool = pool;
 		}
 
-		private bool IsAlive => WeakReference.IsAlive;
+		internal bool IsAlive => WeakReference.IsAlive;
 
 		internal bool IsInPool { get; set; }
 
@@ -88,14 +90,37 @@ namespace Zaaml.Core.Weak.Collections
 			Pool?.ReturnNode(this);
 		}
 
-		public void InsertAfter(WeakLinkedNode<T> node)
-		{
-			Next = node;
-		}
-
 		internal void Mount(T target)
 		{
 			WeakReference = new WeakReference<T>(target);
+		}
+
+		internal static WeakLinkedNode<T> CleanImpl(WeakLinkedNode<T> head)
+		{
+			return CleanImpl(head, out _);
+		}
+
+		internal IEnumerable<T> EnumerateAlive(bool clean)
+		{
+			var aliveHead = this;
+
+			if (clean)
+				aliveHead = CleanImpl(aliveHead);
+
+			var current = aliveHead;
+
+			if (aliveHead == null)
+				yield break;
+
+			while (current != null)
+			{
+				var currentTarget = current.Target;
+
+				if (currentTarget != null)
+					yield return currentTarget;
+
+				current = current.Next;
+			}
 		}
 
 		public void RemoveAfter()
@@ -134,19 +159,15 @@ namespace Zaaml.Core.Weak.Collections
 			return new WeakLinkedNode<T>(item);
 		}
 
-		public static WeakLinkedNode<T> Insert<T>(WeakLinkedNode<T> node, ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail) where T : class
+		public static void Insert<T>(WeakLinkedNode<T> node, ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail) where T : class
 		{
-			node.Next = null;
-
 			if (head == null)
 				head = tail = node;
 			else
-			{
-				tail.InsertAfter(node);
-				tail = node;
-			}
+				tail.Next = node;
 
-			return node;
+			while (tail.Next != null) 
+				tail = tail.Next;
 		}
 
 		public static void Remove<T>(ref WeakLinkedNode<T> head, ref WeakLinkedNode<T> tail, T item) where T : class
