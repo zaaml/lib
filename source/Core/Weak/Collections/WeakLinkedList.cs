@@ -28,24 +28,19 @@ namespace Zaaml.Core.Weak.Collections
 
 		private bool IsGCOccurred => GC.CollectionCount(0) != _gcCount;
 
-		public WeakLinkedNode<T> Add(T item)
+		public void Add(T item)
 		{
 			EnsureClean();
 
-			var node = WeakLinkedNode.Insert(GetNode(item), ref _head, ref _tail);
+			WeakLinkedNode.Insert(GetNode(item), ref _head, ref _tail);
 
 			OnCollectionChanged();
 
 			EnsureGC();
-
-			return node;
 		}
 
 		internal void AddNode(WeakLinkedNode<T> node)
 		{
-			if (node.Next != null)
-				throw new InvalidOperationException();
-
 			EnsureClean();
 
 			WeakLinkedNode.Insert(node, ref _head, ref _tail);

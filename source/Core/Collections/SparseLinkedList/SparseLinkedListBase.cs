@@ -81,7 +81,7 @@ namespace Zaaml.Core.Collections
 
 		private ref NodeCursor GetTailCursor()
 		{
-			_cursor = new(LongCount > 0 ? LongCount - 1 : 0, this, TailNode, LongCount - TailNode.Size);
+			_cursor = new(LongCount - TailNode.Size, this, TailNode, LongCount - TailNode.Size);
 
 			return ref _cursor;
 		}
