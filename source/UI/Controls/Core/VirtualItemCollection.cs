@@ -194,6 +194,11 @@ namespace Zaaml.UI.Controls.Core
 		{
 			return generatedItems.FindRealizedValue(g => g != null && ReferenceEquals(g.Item, item));
 		}
+		
+		private static GeneratedIndexItemPair FindGeneratedItemSource(object source, GeneratedItemList generatedItems)
+		{
+			return generatedItems.FindRealizedValue(g => g != null && ReferenceEquals(g.Source, source));
+		}
 
 		private GeneratedIndexItemPair FindGeneratedItem(T item)
 		{
@@ -462,6 +467,15 @@ namespace Zaaml.UI.Controls.Core
 			generatedItem.IsInTemp = false;
 		}
 
+		private void RemoveFromTemp(int index)
+		{
+			var generatedItem = TempGeneratedItems[index];
+
+			TempGeneratedItems[index] = null;
+
+			generatedItem.IsInTemp = false;
+		}
+
 		private void RemoveLockedSource(GeneratedItem generatedItem)
 		{
 			if (LockedSourceDictionary.ContainsKey(generatedItem.Source))
@@ -696,7 +710,21 @@ namespace Zaaml.UI.Controls.Core
 			nextItems[index] = generatedItem;
 
 			if (attach)
+			{
+				if (isGenerating == false)
+				{
+					var tempItem = FindGeneratedItemSource(generatedItem.Source, TempGeneratedItems);
+
+					if (tempItem.IsEmpty == false)
+					{
+						RemoveFromTemp(tempItem.Index);
+
+						ReleaseItem(tempItem.Item, true);
+					}
+				}
+
 				AttachItem(index, generatedItem);
+			}
 
 			return generatedItem.Item;
 		}
