@@ -39,7 +39,17 @@ namespace Zaaml.UI.Panels.Core
 		{
 			return ItemLayoutInformation.Empty;
 		}
-		
+
+		internal ItemLayoutInformation GetLayoutInformationInternal(int index)
+		{
+			return GetLayoutInformation(index);
+		}
+
+		internal ItemLayoutInformation GetLayoutInformationInternal(TItem item)
+		{
+			return GetLayoutInformation(item);
+		}
+
 		void IItemsHost<TItem>.BringIntoView(BringIntoViewRequest<TItem> request)
 		{
 			BringIntoView(request);

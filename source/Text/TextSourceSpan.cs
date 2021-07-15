@@ -150,12 +150,14 @@ namespace Zaaml.Text
 			return TextSource?.GetTextMemory(Start + start, length) ?? TextMemory.Slice(start, length);
 		}
 
-		public int GetChar(int offset)
+		public char GetChar(int offset)
 		{
 			if (offset < 0 || offset >= Length)
 				throw new ArgumentOutOfRangeException();
 
 			return TextSource?.GetChar(Start + offset) ?? TextMemory.Span[Start + offset];
 		}
+
+		public char this[int index] => GetChar(index);
 	}
 }

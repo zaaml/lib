@@ -698,6 +698,8 @@ namespace Zaaml.UI.Controls.Core
 
 			if (generatedItem != null)
 			{
+				Debug.Assert(Equals(generatedItem.Source, source));
+
 				generatedItem.CollectionVersion = Version;
 				nextItems[index] = generatedItem;
 
@@ -706,7 +708,9 @@ namespace Zaaml.UI.Controls.Core
 
 			generatedItem = Generate(generator, source, out var generatedItemSource, out var attach);
 
-			RemoveFromTemp(generatedItem);
+			// TODO Review
+			Debug.Assert(generatedItem.IsInTemp == false);
+			//RemoveFromTemp(generatedItem);
 
 			generatedItem.CollectionVersion = Version;
 
