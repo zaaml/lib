@@ -209,17 +209,24 @@ namespace Zaaml.Core.Collections
 		private protected long FindImpl(T item)
 		{
 			var equalityComparer = EqualityComparer<T>.Default;
-			var enumerator = new Enumerator(this);
-			var index = 0;
+			var nodeOffset = 0L;
+			NodeBase currentNode = HeadNode;
 
-			while (enumerator.MoveNext())
+			while (currentNode != null)
 			{
-				var current = enumerator.Current;
+				if (currentNode is RealizedNode realizedNode)
+				{
+					var span = realizedNode.Span;
 
-				if (equalityComparer.Equals(current, item))
-					return index;
+					for (var i = 0; i < span.Length; i++)
+					{
+						if (equalityComparer.Equals(item, span[i]))
+							return i + nodeOffset;
+					}
+				}
 
-				index++;
+				nodeOffset += currentNode.Size;
+				currentNode = currentNode.Next;
 			}
 
 			return -1;

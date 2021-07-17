@@ -59,7 +59,7 @@ namespace Zaaml.Core.Collections
 				var prevNode = node.Prev;
 				var nextNode = node.Next;
 
-				if (prevNode is VoidNode prevVoidNode && cursor.GetPrev().NodeOffset == index)
+				if (prevNode is VoidNode prevVoidNode && cursor.NodeOffset == index)
 				{
 					prevVoidNode.Size += count;
 					LongCount += count;
