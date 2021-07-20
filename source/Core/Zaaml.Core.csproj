@@ -7,9 +7,9 @@
 	</PropertyGroup>
 
 	<!-- COLLECTION_VERIFY_STRUCTURE -->
-	<PropertyGroup Condition="$(Configuration) == 'DEBUG' OR $(Configuration) == 'TEST'">
+	<!--<PropertyGroup Condition="$(Configuration) == 'DEBUG' OR $(Configuration) == 'TEST'">
 		<DefineConstants>$(DefineConstants);COLLECTION_VERIFY_STRUCTURE</DefineConstants>
-	</PropertyGroup>
+	</PropertyGroup>-->
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>

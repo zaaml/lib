@@ -1,4 +1,4 @@
-// <copyright file="ICountOnlyCollection.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="NotifyCollectionChangedEventArgsEx.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -7,14 +7,8 @@ using System.Collections.Specialized;
 
 namespace Zaaml.Core.Collections
 {
-	internal interface ICountOnlyCollection
-	{
-	}
-
 	internal class NotifyCollectionChangedEventArgsEx : NotifyCollectionChangedEventArgs
 	{
-		internal IList OriginalChangedItems { get; set; }
-
 		public NotifyCollectionChangedEventArgsEx(NotifyCollectionChangedAction action) : base(action)
 		{
 		}
@@ -58,5 +52,7 @@ namespace Zaaml.Core.Collections
 		public NotifyCollectionChangedEventArgsEx(NotifyCollectionChangedAction action, [CanBeNull] object newItem, [CanBeNull] object oldItem, int index) : base(action, newItem, oldItem, index)
 		{
 		}
+
+		internal IList OriginalChangedItems { get; set; }
 	}
 }

@@ -44,12 +44,12 @@ namespace Zaaml.UI.Data.Hierarchy
 		protected HierarchyView()
 		{
 			Cursor = new NodeCursor((THierarchy) this);
-			DataPlainListView = new HierarchyDataPlainListView(this);
+			FlatListView = new HierarchyFlatListView(this);
 		}
 
 		private NodeCursor Cursor { get; }
 
-		public HierarchyDataPlainListView DataPlainListView { get; }
+		public HierarchyFlatListView FlatListView { get; }
 
 		protected abstract IHierarchyViewFilter<THierarchy, TNodeCollection, TNode> FilterCore { get; }
 
@@ -68,6 +68,11 @@ namespace Zaaml.UI.Data.Hierarchy
 
 				ResetCursor();
 			}
+		}
+
+		public override IEnumerator<object> GetDataEnumerator()
+		{
+			return TreeEnumerator.GetEnumerator(Nodes, n => n.IsExpanded ? n.Nodes.GetEnumerator() : EmptyEnumerator).Enumerate().Select(t => t.Data).GetEnumerator();
 		}
 
 		internal IndexedEnumerable IndexedSource { get; private set; } = IndexedEnumerable.Empty;
@@ -308,11 +313,6 @@ namespace Zaaml.UI.Data.Hierarchy
 			return Cursor.NavigateTo(index).Data;
 		}
 
-		public override IEnumerator<object> GetDataEnumerator()
-		{
-			return TreeEnumerator.GetEnumerator(Nodes, this).Enumerate().Select(t => t.Data).GetEnumerator();
-		}
-
 		internal IEnumerable GetDataNodes(TNode node)
 		{
 			return GetDataNodesCore(node);
@@ -517,7 +517,7 @@ namespace Zaaml.UI.Data.Hierarchy
 				return;
 
 			// TODO SelectionController exception
-			DataPlainListView.RaiseChange(index, count);
+			FlatListView.RaiseChange(index, count);
 		}
 
 		internal void RaiseReset()
@@ -527,7 +527,7 @@ namespace Zaaml.UI.Data.Hierarchy
 			if (SuspendCollectionChange)
 				return;
 
-			DataPlainListView.RaiseReset();
+			FlatListView.RaiseReset();
 		}
 
 		private void Rebuild()
@@ -566,9 +566,9 @@ namespace Zaaml.UI.Data.Hierarchy
 				Rebuild();
 			}
 
-			ResetCursor();
 			RaiseReset();
 		}
+
 		//private void DebugCount()
 		//{
 		//	var flatVis = VisibleFlatCount;

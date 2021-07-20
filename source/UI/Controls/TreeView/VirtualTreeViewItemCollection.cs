@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 				_treeViewData = value;
 
-				Init(_treeViewData.DataPlainListView, ReferenceEquals(_treeViewData.Source, TreeViewControl.ItemCollection) ? OperatingMode.Real : OperatingMode.Virtual);
+				Init(_treeViewData.FlatListView, ReferenceEquals(_treeViewData.Source, TreeViewControl.ItemCollection) ? OperatingMode.Real : OperatingMode.Virtual);
 			}
 		}
 

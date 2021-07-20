@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
-	internal class HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode> : IEnumerable<TNode>
+	internal class HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode> : IReadOnlyList<TNode>
 		where THierarchy : HierarchyView<THierarchy, TNodeCollection, TNode>
 		where TNodeCollection : HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode>
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
@@ -57,6 +57,7 @@ namespace Zaaml.UI.Data.Hierarchy
 		private Func<object, TNode> NodeFactory { get; }
 
 		private TNode ParentViewItemData { get; }
+
 		private long RefreshFilterVersion { get; set; }
 
 		public IEnumerable Source

@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.ListView
 
 				_listViewData = value;
 
-				Init(_listViewData.DataPlainListView, ReferenceEquals(_listViewData.Source, ListViewControl.ItemCollection) ? OperatingMode.Real : OperatingMode.Virtual);
+				Init(_listViewData.FlatListView, ReferenceEquals(_listViewData.Source, ListViewControl.ItemCollection) ? OperatingMode.Real : OperatingMode.Virtual);
 			}
 		}
 

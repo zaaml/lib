@@ -1,27 +1,14 @@
-﻿// <copyright file="HierarchyDataPlainListView.IList.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="TreeFlatListView.IList.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System;
 using System.Collections;
 
-namespace Zaaml.UI.Data.Hierarchy
+namespace Zaaml.Core.Trees
 {
-	internal partial class HierarchyDataPlainListView : IList
+	internal partial class TreeFlatListView<T> : IList
 	{
-		#region  Methods
-
-		public IEnumerator GetEnumerator()
-		{
-			return HierarchyView.GetDataEnumerator();
-		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IList
-
 		int IList.Add(object value)
 		{
 			throw new NotSupportedException();
@@ -29,12 +16,12 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		bool IList.Contains(object value)
 		{
-			return HierarchyView.FindDataIndex(value) != -1;
+			return IndexOf((T) value) != -1;
 		}
 
 		int IList.IndexOf(object value)
 		{
-			return HierarchyView.FindDataIndex(value);
+			return IndexOf((T) value);
 		}
 
 		void IList.Insert(int index, object value)
@@ -59,16 +46,12 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		object IList.this[int index]
 		{
-			get => HierarchyView.GetData(index);
+			get => GetItem(index);
 			set => throw new NotSupportedException();
 		}
 
 		bool IList.IsReadOnly => true;
 
 		bool IList.IsFixedSize => false;
-
-		#endregion
-
-		#endregion
 	}
 }
