@@ -24,7 +24,7 @@ namespace Zaaml.PresentationCore.Input
 
 		public override string ToString()
 		{
-			return string.Join(',', _keyStrokeCollectionInternal);
+			return string.Join(",", _keyStrokeCollectionInternal);
 		}
 
 		public static bool TryParse(string str, out KeyStrokeCollection keyStrokes)
