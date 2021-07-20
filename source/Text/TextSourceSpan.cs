@@ -159,5 +159,10 @@ namespace Zaaml.Text
 		}
 
 		public char this[int index] => GetChar(index);
+
+		public override string ToString()
+		{
+			return GetText();
+		}
 	}
 }

@@ -10,36 +10,7 @@ namespace Zaaml.Core.Utils
 {
 	internal static class LinkedListUtils
 	{
-		public static void AddFirst<TNode>(ILinkedList<TNode> linkedList, TNode node)
-			where TNode : class, ILinkedListNode<TNode>
-		{
-			if (node.Prev != null || node.Next != null)
-				throw new InvalidOperationException();
-
-			try
-			{
-				if (linkedList.Head == null && linkedList.Tail == null)
-				{
-					linkedList.Head = linkedList.Tail = node;
-
-					return;
-				}
-
-				if (linkedList.Head == null || linkedList.Tail == null)
-					throw new InvalidOperationException();
-
-				node.Next = linkedList.Head;
-				linkedList.Head.Prev = node;
-
-				linkedList.Head = node;
-			}
-			finally
-			{
-				linkedList.Version++;
-			}
-		}
-
-		public static void AddLast<TNode>(ILinkedList<TNode> linkedList, TNode node)
+		public static void Append<TNode>(ILinkedList<TNode> linkedList, TNode node)
 			where TNode : class, ILinkedListNode<TNode>
 		{
 			if (node.Prev != null || node.Next != null)
@@ -110,6 +81,20 @@ namespace Zaaml.Core.Utils
 			linkedList.Version++;
 		}
 
+		public static int Count<TNode>(ILinkedList<TNode> linkedList) where TNode : class, ILinkedListNode<TNode>
+		{
+			var count = 0;
+			var current = linkedList.Head;
+
+			while (current != null)
+			{
+				count++;
+				current = current.Next;
+			}
+
+			return count;
+		}
+
 		public static TNode Find<TNode>(ILinkedList<TNode> linkedList, Func<TNode, bool> predicate)
 			where TNode : class, ILinkedListNode<TNode>
 		{
@@ -128,10 +113,39 @@ namespace Zaaml.Core.Utils
 			return null;
 		}
 
-		public static LinkedListEnumerator<TNode> GetEnumerator<TNode>(ILinkedList<TNode> linkedList)
+		public static LinkedListEnumerator<TNode> GetLinkedListEnumerator<TNode>(ILinkedList<TNode> linkedList, Direction direction)
 			where TNode : class, ILinkedListNode<TNode>
 		{
-			return new(linkedList);
+			return new(linkedList, direction);
+		}
+
+		public static void Prepend<TNode>(ILinkedList<TNode> linkedList, TNode node)
+			where TNode : class, ILinkedListNode<TNode>
+		{
+			if (node.Prev != null || node.Next != null)
+				throw new InvalidOperationException();
+
+			try
+			{
+				if (linkedList.Head == null && linkedList.Tail == null)
+				{
+					linkedList.Head = linkedList.Tail = node;
+
+					return;
+				}
+
+				if (linkedList.Head == null || linkedList.Tail == null)
+					throw new InvalidOperationException();
+
+				node.Next = linkedList.Head;
+				linkedList.Head.Prev = node;
+
+				linkedList.Head = node;
+			}
+			finally
+			{
+				linkedList.Version++;
+			}
 		}
 
 		public static void Remove<TNode>(ILinkedList<TNode> linkedList, TNode node)
@@ -172,7 +186,6 @@ namespace Zaaml.Core.Utils
 
 	internal struct LinkedListEnumerator<TNode> : IEnumerator<TNode>
 		where TNode : class, ILinkedListNode<TNode>
-
 	{
 		private const int Initial = 0;
 		private const int Started = 1;
@@ -180,16 +193,19 @@ namespace Zaaml.Core.Utils
 		private const int Disposed = 3;
 
 		private ILinkedList<TNode> _linkedList;
+		public readonly Direction Direction;
 		private TNode _current;
 		private int _status;
 		private int _version;
 
-		public LinkedListEnumerator(ILinkedList<TNode> linkedList)
+		public LinkedListEnumerator(ILinkedList<TNode> linkedList, Direction direction)
 		{
 			_linkedList = linkedList;
 			_version = linkedList.Version;
 			_current = default;
 			_status = Initial;
+
+			Direction = direction;
 		}
 
 		private void Verify(bool starting)
@@ -215,7 +231,7 @@ namespace Zaaml.Core.Utils
 			{
 				_status = Started;
 
-				_current = _linkedList.Head;
+				_current = Direction == Direction.Forward ? _linkedList.Head : _linkedList.Tail;
 
 				if (_current == null)
 				{
@@ -227,7 +243,7 @@ namespace Zaaml.Core.Utils
 				return true;
 			}
 
-			_current = _current.Next;
+			_current = Direction == Direction.Forward ? _current.Next : _current.Prev;
 
 			if (_current == null)
 			{

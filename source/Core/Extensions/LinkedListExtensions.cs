@@ -9,16 +9,10 @@ namespace Zaaml.Core.Extensions
 {
 	internal static class LinkedListExtensions
 	{
-		public static void AddFirst<TNode>(this ILinkedList<TNode> linkedList, TNode node)
+		public static void Append<TNode>(this ILinkedList<TNode> linkedList, TNode node)
 			where TNode : class, ILinkedListNode<TNode>
 		{
-			LinkedListUtils.AddFirst(linkedList, node);
-		}
-
-		public static void AddLast<TNode>(this ILinkedList<TNode> linkedList, TNode node)
-			where TNode : class, ILinkedListNode<TNode>
-		{
-			LinkedListUtils.AddLast(linkedList, node);
+			LinkedListUtils.Append(linkedList, node);
 		}
 
 		public static void Clear<TNode>(this ILinkedList<TNode> linkedList)
@@ -33,16 +27,28 @@ namespace Zaaml.Core.Extensions
 			LinkedListUtils.Clear(linkedList, clearAction);
 		}
 
+		public static int Count<TNode>(this ILinkedList<TNode> linkedList)
+			where TNode : class, ILinkedListNode<TNode>
+		{
+			return LinkedListUtils.Count(linkedList);
+		}
+
 		public static TNode Find<TNode>(this ILinkedList<TNode> linkedList, Func<TNode, bool> predicate)
 			where TNode : class, ILinkedListNode<TNode>
 		{
 			return LinkedListUtils.Find(linkedList, predicate);
 		}
 
-		public static LinkedListEnumerator<TNode> GetEnumerator<TNode>(this ILinkedList<TNode> linkedList)
+		public static LinkedListEnumerator<TNode> GetLinkedListEnumerator<TNode>(this ILinkedList<TNode> linkedList, Direction direction)
 			where TNode : class, ILinkedListNode<TNode>
 		{
-			return new(linkedList);
+			return LinkedListUtils.GetLinkedListEnumerator(linkedList, direction);
+		}
+
+		public static void Prepend<TNode>(this ILinkedList<TNode> linkedList, TNode node)
+			where TNode : class, ILinkedListNode<TNode>
+		{
+			LinkedListUtils.Prepend(linkedList, node);
 		}
 
 		public static void Remove<TNode>(this ILinkedList<TNode> linkedList, TNode node)
