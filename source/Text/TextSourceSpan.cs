@@ -10,6 +10,8 @@ namespace Zaaml.Text
 {
 	public readonly struct TextSourceSpan
 	{
+		private static readonly ReadOnlyMemory<char> EmptyMemory = ReadOnlyMemory<char>.Empty;
+
 		public static TextSourceSpan Empty => new(default, default, -1, 0);
 
 		public TextSourceSpan(TextSource textSource)
@@ -60,6 +62,14 @@ namespace Zaaml.Text
 			Length = length;
 		}
 
+		public TextSourceSpan(int start)
+		{
+			TextSource = default;
+			TextMemory = EmptyMemory;
+			Start = start;
+			Length = 0;
+		}
+
 		private TextSourceSpan(TextSource textSource, ReadOnlyMemory<char> textMemory, int start, int length)
 		{
 			TextSource = textSource;
@@ -68,13 +78,15 @@ namespace Zaaml.Text
 			Length = length;
 		}
 
-		private TextSource TextSource { get; }
+		internal TextSource TextSource { get; }
 
-		private ReadOnlyMemory<char> TextMemory { get; }
+		internal ReadOnlyMemory<char> TextMemory { get; }
 
-		private int Start { get; }
+		internal int Start { get; }
 
 		public int Length { get; }
+
+		internal TextSpan Span => new TextSpan(new TextPoint(Start), Length);
 
 		public string GetText(int start)
 		{
