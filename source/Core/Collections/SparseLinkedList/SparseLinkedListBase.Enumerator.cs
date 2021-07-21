@@ -39,7 +39,7 @@ namespace Zaaml.Core.Collections
 					throw new InvalidOperationException("Enumerator has been disposed.");
 
 				if (_structureVersion != _list.StructureVersion)
-					throw new InvalidOperationException("List has changed.");
+					throw new InvalidOperationException("List has been changed.");
 			}
 
 			public bool MoveNext()

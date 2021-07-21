@@ -33,7 +33,7 @@ namespace Zaaml.Core.Collections
 				throw new InvalidOperationException("Node is Empty.");
 
 			if (_version != _list.StructureVersion)
-				throw new InvalidOperationException("List has changed.");
+				throw new InvalidOperationException("List has been changed.");
 		}
 
 		public static SparseLinkedListNode<T> Empty => new SparseLinkedListNode<T>(ulong.MaxValue);

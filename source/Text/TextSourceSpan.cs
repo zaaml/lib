@@ -82,11 +82,9 @@ namespace Zaaml.Text
 
 		internal ReadOnlyMemory<char> TextMemory { get; }
 
-		internal int Start { get; }
+		private int Start { get; }
 
 		public int Length { get; }
-
-		internal TextSpan Span => new TextSpan(new TextPoint(Start), Length);
 
 		public string GetText(int start)
 		{

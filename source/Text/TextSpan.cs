@@ -13,7 +13,13 @@ namespace Zaaml.Text
 
 		public TextSpan(TextPoint start, int length)
 		{
-			Start = start;
+			StartIndex = start.Index;
+			Length = length;
+		}
+
+		public TextSpan(int start, int length)
+		{
+			StartIndex = start;
 			Length = length;
 		}
 
@@ -21,21 +27,25 @@ namespace Zaaml.Text
 		{
 			if (start.Index < end.Index)
 			{
-				Start = start;
+				StartIndex = start;
 				Length = end.Index - start.Index;
 			}
 			else
 			{
-				Start = end;
+				StartIndex = end;
 				Length = start.Index - end.Index;
 			}
 		}
 
-		public bool IsEmpty => Start.IsEmpty;
+		private int StartIndex { get; }
 
-		public TextPoint Start { get; }
+		private int EndIndex => StartIndex + Length;
 
-		public TextPoint End => Start + Length;
+		public bool IsEmpty => StartIndex < 0;
+
+		public TextPoint Start => new TextPoint(StartIndex);
+
+		public TextPoint End => new TextPoint(EndIndex);
 
 		public int Length { get; }
 
@@ -44,7 +54,7 @@ namespace Zaaml.Text
 			if (IsEmpty)
 				return false;
 
-			return Start <= span.Start && span.End <= End;
+			return StartIndex <= span.StartIndex && span.EndIndex <= EndIndex;
 		}
 
 		public bool Contains(TextPoint textPoint)
@@ -52,25 +62,27 @@ namespace Zaaml.Text
 			if (IsEmpty)
 				return false;
 
-			return textPoint >= Start && textPoint < End;
+			var pointIndex = textPoint.Index;
+
+			return pointIndex >= StartIndex && pointIndex < EndIndex;
 		}
 
 		public static bool operator ==(TextSpan first, TextSpan second)
 		{
-			return first.Start == second.Start && first.Length == second.Length;
+			return first.StartIndex == second.StartIndex && first.Length == second.Length;
 		}
 
 		public static bool operator !=(TextSpan first, TextSpan second)
 		{
-			return first.Start != second.Start || first.Length != second.Length;
+			return first.StartIndex != second.StartIndex || first.Length != second.Length;
 		}
 
 		public override string ToString()
 		{
-			return IsEmpty ? "Empty" : $"[{Start}-{End})";
+			return IsEmpty ? "Empty" : $"[{StartIndex}-{EndIndex})";
 		}
 
-		internal Interval<int> Interval => IsEmpty ? Interval<int>.Empty : new Interval<int>(Start, IntervalEndPoint.Closed, End, IntervalEndPoint.Open);
+		internal Interval<int> Interval => IsEmpty ? Interval<int>.Empty : new Interval<int>(StartIndex, IntervalEndPoint.Closed, EndIndex, IntervalEndPoint.Open);
 
 		internal TextSpan IntersectWith(TextSpan textSpan)
 		{
@@ -83,7 +95,7 @@ namespace Zaaml.Text
 
 		public bool Equals(TextSpan other)
 		{
-			return Start.Equals(other.Start) && Length.Equals(other.Length);
+			return StartIndex == other.StartIndex && Length == other.Length;
 		}
 
 		public override bool Equals(object obj)
@@ -93,7 +105,7 @@ namespace Zaaml.Text
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(Start, Length);
+			return HashCode.Combine(StartIndex, Length);
 		}
 	}
 }
