@@ -9,7 +9,7 @@ using Zaaml.Core.Collections.Specialized;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
-	internal partial class HierarchyFlatListView : INotifyCollectionChanged
+	internal partial class HierarchyFlatListView<TNode> : INotifyCollectionChanged where TNode : class
 	{
 		private event NotifyCollectionChangedEventHandler CollectionChanged;
 

@@ -9,6 +9,7 @@ using Zaaml.Core.Utils;
 
 namespace Zaaml.Core.Trees
 {
+
 	internal abstract class TreeFlatCursor<TNode> where TNode : class
 	{
 		private Data[] _data = new Data[4];
@@ -82,7 +83,7 @@ namespace Zaaml.Core.Trees
 			ArrayUtils.EnsureArrayLength(ref _data, size, true);
 		}
 
-		public int FindIndex(Func<TNode, bool> predicate)
+		public int IndexOf(Func<TNode, bool> predicate)
 		{
 			Ensure();
 
@@ -104,7 +105,7 @@ namespace Zaaml.Core.Trees
 			return -1;
 		}
 
-		public int FindIndex(TNode treeNode)
+		public int IndexOf(TNode treeNode)
 		{
 			Ensure();
 
@@ -354,7 +355,7 @@ namespace Zaaml.Core.Trees
 			return true;
 		}
 
-		public TNode NavigateTo(int flatIndex)
+		public TNode ElementAt(int flatIndex)
 		{
 			Ensure();
 

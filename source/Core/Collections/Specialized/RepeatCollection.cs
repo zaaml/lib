@@ -4,12 +4,13 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Zaaml.Core.Utils;
 
 namespace Zaaml.Core.Collections.Specialized
 {
-	internal sealed class RepeatCollection<T> : IList, IRepeatCollection
+	internal sealed class RepeatCollection<T> : IList, IReadOnlyList<T>, IRepeatCollection
 	{
 		public RepeatCollection(int count, T value)
 		{
@@ -28,6 +29,11 @@ namespace Zaaml.Core.Collections.Specialized
 		public void CopyTo(Array array, int index)
 		{
 			throw new NotSupportedException();
+		}
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return Enumerable.Repeat(Value, Count).GetEnumerator();
 		}
 
 		public IEnumerator GetEnumerator()
@@ -79,6 +85,8 @@ namespace Zaaml.Core.Collections.Specialized
 		{
 			throw new NotSupportedException();
 		}
+
+		T IReadOnlyList<T>.this[int index] => throw new NotImplementedException();
 	}
 
 	internal interface IRepeatCollection

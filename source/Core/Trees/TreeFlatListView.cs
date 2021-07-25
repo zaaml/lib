@@ -2,18 +2,29 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Collections.Generic;
+using Zaaml.Core.Collections;
 
 namespace Zaaml.Core.Trees
 {
-	internal abstract partial class TreeFlatListView<T>
+	internal abstract partial class TreeFlatListView<T> where T : class
 	{
-		protected abstract int Count { get; }
+		public virtual int Count => CursorCore.Count;
 
-		protected abstract IEnumerator<T> GetEnumerator();
+		protected abstract TreeFlatCursor<T> CursorCore { get; }
 
-		protected abstract T GetItem(int index);
+		public virtual ReadOnlyListEnumerator<T> GetEnumerator()
+		{
+			return new ReadOnlyListEnumerator<T>(this);
+		}
 
-		protected abstract int IndexOf(T value);
+		public virtual T ElementAt(int index)
+		{
+			return CursorCore.ElementAt(index);
+		}
+
+		public virtual int IndexOf(T value)
+		{
+			return CursorCore.IndexOf(value);
+		}
 	}
 }

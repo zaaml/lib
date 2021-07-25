@@ -7,7 +7,7 @@ using System.Collections;
 
 namespace Zaaml.Core.Trees
 {
-	internal partial class TreeFlatListView<T>
+	internal partial class TreeFlatListView<T> where T : class
 	{
 		void ICollection.CopyTo(Array array, int index)
 		{

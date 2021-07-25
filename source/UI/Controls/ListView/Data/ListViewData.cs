@@ -3,6 +3,9 @@
 // </copyright>
 
 using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using Zaaml.Core.Collections;
 using Zaaml.UI.Data.Hierarchy;
 
 namespace Zaaml.UI.Controls.ListView.Data
@@ -13,11 +16,14 @@ namespace Zaaml.UI.Controls.ListView.Data
 		{
 			ListViewControl = listViewControl;
 			DataFilter = new ListViewDataFilter(this);
+			FlatListView = new FlatSourceListView(this);
 		}
 
 		public ListViewDataFilter DataFilter { get; }
 
 		protected override IHierarchyViewFilter<ListViewData, ListViewItemDataCollection, ListViewItemData> FilterCore => DataFilter;
+
+		public FlatSourceListView FlatListView { get; }
 
 		public ListViewControl ListViewControl { get; }
 
@@ -54,6 +60,44 @@ namespace Zaaml.UI.Controls.ListView.Data
 		public void RefreshFilter()
 		{
 			RefreshFilterCore();
+		}
+
+		public sealed class FlatSourceListView : IReadOnlyList<object>, INotifyCollectionChanged
+		{
+			public FlatSourceListView(ListViewData listViewData)
+			{
+				ListViewData = listViewData;
+
+				(ListViewData.FlatListViewCore as INotifyCollectionChanged).CollectionChanged += OnCollectionChanged;
+			}
+
+			private ListViewData ListViewData { get; }
+
+			public ReadOnlyListEnumerator<object> GetEnumerator()
+			{
+				return new ReadOnlyListEnumerator<object>(this);
+			}
+
+			private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+			{
+				CollectionChanged?.Invoke(this, e);
+			}
+
+			public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+			IEnumerator<object> IEnumerable<object>.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+			public int Count => ListViewData.FlatListViewCore.Count;
+
+			public object this[int index] => ListViewData.FlatListViewCore.ElementAt(index).Data;
 		}
 	}
 }

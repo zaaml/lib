@@ -3,6 +3,9 @@
 // </copyright>
 
 using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using Zaaml.Core.Collections;
 using Zaaml.UI.Data.Hierarchy;
 
 namespace Zaaml.UI.Controls.TreeView.Data
@@ -14,6 +17,7 @@ namespace Zaaml.UI.Controls.TreeView.Data
 			TreeViewControl = treeViewControl;
 			TreeAdvisor = treeAdvisor;
 			DataFilter = new TreeViewDataFilter(this);
+			FlatTreeView = new FlatSourceTreeView(this);
 		}
 
 		public TreeViewDataFilter DataFilter { get; }
@@ -21,6 +25,8 @@ namespace Zaaml.UI.Controls.TreeView.Data
 		protected override IHierarchyViewFilter<TreeViewData, TreeViewItemDataCollection, TreeViewItemData> FilterCore => DataFilter;
 
 		protected override FilteringStrategy<TreeViewData, TreeViewItemDataCollection, TreeViewItemData> FilteringStrategy => TreeViewControl.FilteringStrategy;
+
+		public FlatSourceTreeView FlatTreeView { get; }
 
 		internal override bool ShouldExpand => IsFilteredInternal && TreeViewControl.ExpandNodesOnFiltering;
 
@@ -41,6 +47,13 @@ namespace Zaaml.UI.Controls.TreeView.Data
 			return new TreeViewItemDataCollection(this, null, CreateChild);
 		}
 
+		protected override void DisposeCore()
+		{
+			base.DisposeCore();
+
+			DataFilter.Filter = null;
+		}
+
 		protected override IEnumerable GetDataNodesCore(TreeViewItemData viewItemData)
 		{
 			return TreeAdvisor.GetNodes(viewItemData.Data);
@@ -56,11 +69,42 @@ namespace Zaaml.UI.Controls.TreeView.Data
 			RefreshFilterCore();
 		}
 
-		protected override void DisposeCore()
+		public sealed class FlatSourceTreeView : IReadOnlyList<object>, INotifyCollectionChanged
 		{
-			base.DisposeCore();
+			public FlatSourceTreeView(TreeViewData treeViewData)
+			{
+				TreeViewData = treeViewData;
 
-			DataFilter.Filter = null;
+				(TreeViewData.FlatListViewCore as INotifyCollectionChanged).CollectionChanged += OnCollectionChanged;
+			}
+
+			private TreeViewData TreeViewData { get; }
+
+			public ReadOnlyListEnumerator<object> GetEnumerator()
+			{
+				return new ReadOnlyListEnumerator<object>(this);
+			}
+
+			private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+			{
+				CollectionChanged?.Invoke(this, e);
+			}
+
+			public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+			IEnumerator<object> IEnumerable<object>.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+			public int Count => TreeViewData.FlatListViewCore.Count;
+
+			public object this[int index] => TreeViewData.FlatListViewCore.ElementAt(index).Data;
 		}
 	}
 }

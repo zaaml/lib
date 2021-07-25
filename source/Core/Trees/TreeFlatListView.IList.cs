@@ -7,7 +7,7 @@ using System.Collections;
 
 namespace Zaaml.Core.Trees
 {
-	internal partial class TreeFlatListView<T> : IList
+	internal partial class TreeFlatListView<T> : IList where T : class
 	{
 		int IList.Add(object value)
 		{
@@ -46,7 +46,7 @@ namespace Zaaml.Core.Trees
 
 		object IList.this[int index]
 		{
-			get => GetItem(index);
+			get => ElementAt(index);
 			set => throw new NotSupportedException();
 		}
 

@@ -128,6 +128,13 @@ namespace Zaaml.UI.Controls.Core
 			return Mode == OperatingMode.Real ? RealGetItemFromIndex(index) : VirtualGetItemFromIndex(index);
 		}
 
+		public T GetItemFromSource(object source)
+		{
+			var index = GetIndexFromSource(source);
+
+			return index != -1 ? GetItemFromIndex(index) : default;
+		}
+
 		public object GetSourceFromIndex(int index)
 		{
 			return Mode == OperatingMode.Real ? RealGetSourceFromIndex(index) : VirtualGetSourceFromIndex(index);

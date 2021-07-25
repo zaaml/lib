@@ -20,7 +20,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 			public int FindDataIndex(object data)
 			{
-				return FindIndex(n => ReferenceEquals(n.Data, data));
+				return IndexOf(n => ReferenceEquals(n.Data, data));
 			}
 
 			protected override int CalcFlatCount()

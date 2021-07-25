@@ -200,7 +200,12 @@ namespace Zaaml.UI.Controls.Core
 		
 		private static GeneratedIndexItemPair FindGeneratedItemSource(object source, GeneratedItemList generatedItems)
 		{
-			return generatedItems.FindRealizedValue(g => g != null && ReferenceEquals(g.Source, source));
+			return generatedItems.FindRealizedValue(g => g != null && EqualSource(g.Source, source));
+		}
+
+		private static bool EqualSource(object source1, object source2)
+		{
+			return Equals(source1, source2);
 		}
 
 		private GeneratedIndexItemPair FindGeneratedItem(T item)
@@ -245,7 +250,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				if (CanReuse(lockedItem, generator))
 				{
-					Debug.Assert(ReferenceEquals(source, lockedItem.Source));
+					Debug.Assert(EqualSource(source, lockedItem.Source));
 					Debug.Assert(lockedItem.IsAttached);
 
 					lockedItem.Mount(lockedItem.Item, lockedItem.Source, generator, GeneratorVersion, Version);
@@ -257,6 +262,9 @@ namespace Zaaml.UI.Controls.Core
 				}
 
 				RemoveLockedSource(lockedItem);
+
+				if (lockedItem.IsAttached)
+					ReleaseItem(lockedItem, true);
 			}
 
 			var poolItem = GetFromPool(generator);
@@ -481,13 +489,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private void RemoveLockedSource(GeneratedItem generatedItem)
 		{
-			if (LockedSourceDictionary.ContainsKey(generatedItem.Source))
-				LockedSourceDictionary.Remove(generatedItem.Source);
-			else
-			{
-				if (generatedItem.IsAttached)
-					ReleaseItem(generatedItem, true);
-			}
+			LockedSourceDictionary.Remove(generatedItem.Source);
 		}
 
 		private void RemoveRange(int index, ICollection items)
@@ -687,10 +689,12 @@ namespace Zaaml.UI.Controls.Core
 
 			if (generatedItem != null && IsLocked(generatedItem))
 			{
-				if (ReferenceEquals(generatedItem.Source, source) == false)
+				if (EqualSource(generatedItem.Source, source) == false)
 				{
-					ReleaseItem(generatedItem, true);
 					RemoveLockedSource(generatedItem);
+
+					if (generatedItem.IsAttached)
+						ReleaseItem(generatedItem, true);
 
 					generatedItem = null;
 				}
@@ -698,7 +702,7 @@ namespace Zaaml.UI.Controls.Core
 
 			if (generatedItem != null)
 			{
-				Debug.Assert(Equals(generatedItem.Source, source));
+				Debug.Assert(EqualSource(generatedItem.Source, source));
 
 				generatedItem.CollectionVersion = Version;
 				nextItems[index] = generatedItem;
@@ -746,7 +750,11 @@ namespace Zaaml.UI.Controls.Core
 					return;
 
 				LockedItemDictionary.Remove(item);
+
 				RemoveLockedSource(generatedItem);
+
+				if (generatedItem.IsAttached && generatedItem.IsInTemp == false && generatedItem.IsInPool == false && FindGeneratedItem(generatedItem.Item).IsEmpty) 
+					PushIntoTempItems(generatedItem);
 			}
 		}
 

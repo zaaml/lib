@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Zaaml.Core.Trees
 {
-	internal partial class TreeFlatListView<T> : IList<T>, IReadOnlyList<T>
+	internal partial class TreeFlatListView<T> : IList<T>, IReadOnlyList<T> where T : class
 	{
 		IEnumerator IEnumerable.GetEnumerator()
 		{
@@ -51,7 +51,7 @@ namespace Zaaml.Core.Trees
 
 		T IList<T>.this[int index]
 		{
-			get => GetItem(index);
+			get => ElementAt(index);
 			set => throw new NotSupportedException();
 		}
 
@@ -72,6 +72,6 @@ namespace Zaaml.Core.Trees
 
 		int IReadOnlyCollection<T>.Count => Count;
 
-		T IReadOnlyList<T>.this[int index] => GetItem(index);
+		T IReadOnlyList<T>.this[int index] => ElementAt(index);
 	}
 }
