@@ -12,14 +12,16 @@ namespace Zaaml.Core.Trees
 
 		protected abstract TreeFlatCursor<T> CursorCore { get; }
 
-		public virtual ReadOnlyListEnumerator<T> GetEnumerator()
-		{
-			return new ReadOnlyListEnumerator<T>(this);
-		}
+		public T this[int index] => ElementAt(index);
 
 		public virtual T ElementAt(int index)
 		{
 			return CursorCore.ElementAt(index);
+		}
+
+		public virtual ReadOnlyListEnumerator<T> GetEnumerator()
+		{
+			return new(this);
 		}
 
 		public virtual int IndexOf(T value)

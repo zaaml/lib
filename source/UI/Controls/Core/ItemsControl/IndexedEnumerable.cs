@@ -391,8 +391,7 @@ namespace Zaaml.UI.Controls.Core
 
 			return isNativeValue;
 		}
-
-
+		
 		internal int IndexOf(object item)
 		{
 			if (GetNativeIndexOf(item, out var index))
