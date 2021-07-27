@@ -12,7 +12,7 @@ namespace Zaaml.Text
 {
 	internal abstract class LexemeSource<TToken> : IDisposable, IEnumerable<Lexeme<TToken>> where TToken : unmanaged, Enum
 	{
-		protected LexemeSource(TextSourceSpan textSourceSpan, IServiceProvider serviceProvider)
+		protected LexemeSource(TextSpan textSourceSpan, IServiceProvider serviceProvider)
 		{
 			TextSourceSpan = textSourceSpan;
 			ServiceProvider = serviceProvider;
@@ -20,7 +20,7 @@ namespace Zaaml.Text
 
 		internal abstract int Position { get; set; }
 
-		public TextSourceSpan TextSourceSpan { get; }
+		public TextSpan TextSourceSpan { get; }
 
 		public IServiceProvider ServiceProvider { get; }
 

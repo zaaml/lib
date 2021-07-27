@@ -92,7 +92,7 @@ namespace Zaaml.Text
 				private Dictionary<Type, SubParserPoolCollection> _poolDictionary;
 				protected LexemeSource<TToken> LexemeSource;
 				protected ParserContext ParserContext;
-				protected TextSourceSpan TextSourceSpan;
+				protected TextSpan TextSourceSpan;
 
 				#endregion
 
@@ -298,7 +298,7 @@ namespace Zaaml.Text
 
 				public virtual void Dispose()
 				{
-					TextSourceSpan = TextSourceSpan.Empty;
+					TextSourceSpan = TextSpan.Empty;
 					LexemeSource = null;
 					_poolDictionary = null;
 

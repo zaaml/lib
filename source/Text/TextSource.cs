@@ -27,11 +27,11 @@ namespace Zaaml.Text
 
 		public abstract ReadOnlyMemory<char> GetTextMemory(int start, int length);
 
-		public abstract TextSourceSpan GetTextSpan();
+		public abstract TextSpan GetTextSpan();
 
-		public abstract TextSourceSpan GetTextSpan(int start);
+		public abstract TextSpan GetTextSpan(int start);
 
-		public abstract TextSourceSpan GetTextSpan(int start, int length);
+		public abstract TextSpan GetTextSpan(int start, int length);
 
 		public abstract void WriteTo(TextWriter textWriter);
 	}

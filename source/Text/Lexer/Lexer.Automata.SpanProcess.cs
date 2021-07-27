@@ -28,7 +28,7 @@ namespace Zaaml.Text
 
 				#region Ctors
 
-				public SpanProcess(TextSourceSpan textSourceSpan, Lexer<TGrammar, TToken> lexer, LexerContext<TToken> lexerContext) : base(textSourceSpan)
+				public SpanProcess(TextSpan textSourceSpan, Lexer<TGrammar, TToken> lexer, LexerContext<TToken> lexerContext) : base(textSourceSpan)
 				{
 					_charMemory = textSourceSpan.AsMemory();
 					_dfaInitialState = lexer.Automata._dfaBuilder.InitialState;

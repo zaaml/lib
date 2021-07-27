@@ -19,7 +19,7 @@ namespace Zaaml.Text
 	{
 		#region Ctors
 
-		protected ParserContext(TextSourceSpan textSourceSpan)
+		protected ParserContext(TextSpan textSourceSpan)
 		{
 			TextSourceSpan = textSourceSpan;
 		}
@@ -36,7 +36,7 @@ namespace Zaaml.Text
 			set => ParserAutomataContext.TextPointer = value;
 		}
 
-		public TextSourceSpan TextSourceSpan { get; }
+		public TextSpan TextSourceSpan { get; }
 
 		#endregion
 

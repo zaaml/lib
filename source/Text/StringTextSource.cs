@@ -69,19 +69,19 @@ namespace Zaaml.Text
 			return _string.AsMemory(start, length);
 		}
 
-		public override TextSourceSpan GetTextSpan()
+		public override TextSpan GetTextSpan()
 		{
-			return new TextSourceSpan(this);
+			return new TextSpan(this);
 		}
 
-		public override TextSourceSpan GetTextSpan(int start)
+		public override TextSpan GetTextSpan(int start)
 		{
-			return new TextSourceSpan(this, start);
+			return new TextSpan(this, start);
 		}
 
-		public override TextSourceSpan GetTextSpan(int start, int length)
+		public override TextSpan GetTextSpan(int start, int length)
 		{
-			return new TextSourceSpan(this, start, length);
+			return new TextSpan(this, start, length);
 		}
 
 		public override void WriteTo(TextWriter textWriter)

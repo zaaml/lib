@@ -522,7 +522,7 @@ namespace Zaaml.Text
 					private static readonly FieldInfo LexemeTokenFieldInfo = typeof(Lexeme<TExternalToken>).GetField(nameof(Lexeme<TExternalToken>.TokenField), Flags);
 					private static readonly FieldInfo LexemeStartFieldInfo = typeof(Lexeme<TExternalToken>).GetField(nameof(Lexeme<TExternalToken>.StartField), Flags);
 					private static readonly FieldInfo LexemeEndFieldInfo = typeof(Lexeme<TExternalToken>).GetField(nameof(Lexeme<TExternalToken>.EndField), Flags);
-					private static readonly MethodInfo TextSourceSpanGetTextMethodInfo = typeof(TextSourceSpan).GetMethod(nameof(TextSourceSpan.GetText), Flags);
+					private static readonly MethodInfo TextSourceSpanGetTextMethodInfo = typeof(TextSpan).GetMethod(nameof(TextSpan.GetText), Flags);
 					private static readonly MethodInfo DebugMethodInfo = typeof(ExtParserILBuilder).GetMethod(nameof(Debug), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
 
 					#endregion
