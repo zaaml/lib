@@ -728,15 +728,18 @@ namespace Zaaml.Text
 
 					ExecuteParallel(executionPath);
 
-					if (_currentThread.CurrentNode == null)
-						return false;
-
-					if (_currentThread.CurrentNode is ForkNode forkNode)
+					switch (_currentThread.CurrentNode)
 					{
-						for (var j = index + 1; j < executionPaths.Count; j++)
-							forkNode.ForkExecutionPaths.Add(executionPaths[j]);
+						case null:
+							return false;
+						
+						case ForkNode forkNode:
+						{
+							for (var j = index + 1; j < executionPaths.Count; j++)
+								forkNode.ForkExecutionPaths.Add(executionPaths[j]);
 
-						return true;
+							return true;
+						}
 					}
 				}
 

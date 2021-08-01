@@ -59,9 +59,13 @@ namespace Zaaml.Core
 
 					if (referenceCount == 0)
 					{
-						PageManager.ReturnArray(Array);
+						if (Array != null)
+						{
+							PageManager.ReturnArray(Array);
+							
+							Array = null;
+						}
 
-						Array = null;
 						Offset = 0;
 
 						if (releasePage)
