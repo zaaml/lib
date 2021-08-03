@@ -15,11 +15,11 @@ namespace Zaaml.Text
 		{
 			#region Nested Types
 
-			private sealed class ParserState : FiniteState<ParserAutomataContext>
+			private sealed class ParserRule : Rule<ParserAutomataContext>
 			{
 				#region Ctors
 
-				public ParserState(string name, bool inline) : base(name)
+				public ParserRule(string name, bool inline) : base(name)
 				{
 					Inline = inline;
 

@@ -8,16 +8,16 @@ namespace Zaaml.Text
 	{
 		private protected partial class LexerAutomata
 		{
-			private sealed class LexerState : FiniteState
+			private sealed class LexerRule : Rule
 			{
-				public readonly Grammar<TToken>.TokenRule Rule;
+				public readonly Grammar<TToken>.TokenRule TokenRule;
 
-				public LexerState(Grammar<TToken>.TokenRule tokenRule) : base(tokenRule.Name)
+				public LexerRule(Grammar<TToken>.TokenRule tokenRule) : base(tokenRule.Name)
 				{
-					Rule = tokenRule;
+					TokenRule = tokenRule;
 				}
 
-				public LexerState(string name) : base(name)
+				public LexerRule(string name) : base(name)
 				{
 				}
 			}

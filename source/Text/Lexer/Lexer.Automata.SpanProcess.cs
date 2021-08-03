@@ -91,7 +91,6 @@ namespace Zaaml.Text
 						lexeme.TokenField = dfaState.Token;
 						lexeme.StartField = _instructionPointer;
 						lexeme.EndField = _instructionPointer;
-
 						operands[iLexeme] = dfaState.TokenCode;
 						iLexeme++;
 					}
@@ -315,7 +314,7 @@ namespace Zaaml.Text
 							lexeme.TokenField = dfaState.Token;
 							lexeme.StartField = lexemeStart;
 							lexeme.EndField = successInstructionPointer;
-
+							
 							operands[iLexeme] = dfaState.TokenCode;
 							iLexeme++;
 						}

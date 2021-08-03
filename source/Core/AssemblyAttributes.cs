@@ -50,6 +50,8 @@ using Zaaml.Core.Converters;
 [assembly: InternalsVisibleTo("Zaaml.Platform,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
+[assembly: InternalsVisibleTo("Zaaml.Text.GrammarCompiler,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Zaaml.Core.Dev,PublicKey=" +
                               ZaamlInfo.PublicKey)]

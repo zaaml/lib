@@ -19,16 +19,15 @@ namespace Zaaml.Text
 				return new CharEntry(c);
 			}
 
-#if NETCORE
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
 			public static implicit operator PrimitiveMatchEntry(Range range)
 			{
 				return new RangeEntry((char) range.Start.Value, (char) range.End.Value);
 			}
 #endif
-
-#endregion
+			#endregion
 		}
 
-#endregion
+		#endregion
 	}
 }

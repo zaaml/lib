@@ -18,7 +18,7 @@ namespace Zaaml.Text
 			{
 				#region Ctors
 
-				public ProcessAutomataContext(ParserState state, ParserAutomata parserAutomata) : base(state, parserAutomata)
+				public ProcessAutomataContext(ParserRule rule, ParserAutomata parserAutomata) : base(rule, parserAutomata)
 				{
 				}
 
@@ -36,7 +36,7 @@ namespace Zaaml.Text
 				{
 				}
 
-				protected override void BuildEnterStateEntry(ILBuilderContext ilBuilderContext, StateEntry stateEntry)
+				protected override void BuildEnterRuleEntry(ILBuilderContext ilBuilderContext, RuleEntry ruleEntry)
 				{
 				}
 
@@ -48,7 +48,7 @@ namespace Zaaml.Text
 				{
 				}
 
-				protected override void BuildLeaveStateEntry(ILBuilderContext ilBuilderContext, StateEntry stateEntry)
+				protected override void BuildLeaveRuleEntry(ILBuilderContext ilBuilderContext, RuleEntry ruleEntry)
 				{
 				}
 
@@ -56,7 +56,7 @@ namespace Zaaml.Text
 				{
 					base.Dispose();
 
-					((ParserState) State).ReleaseProcessContext(this);
+					((ParserRule) Rule).ReleaseProcessContext(this);
 				}
 
 				#endregion

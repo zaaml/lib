@@ -29,7 +29,7 @@ namespace Zaaml.Text
 
 			#region Properties
 
-			public Entry[] Entries { get; internal set; }
+			public Entry[] Entries { get; }
 
 			#endregion
 		}

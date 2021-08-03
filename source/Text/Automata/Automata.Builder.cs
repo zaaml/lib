@@ -17,25 +17,25 @@ namespace Zaaml.Text
 
 		#region Properties
 
-		private HashSet<FiniteState> States { get; } = new HashSet<FiniteState>();
+		private HashSet<Rule> States { get; } = new HashSet<Rule>();
 
 		#endregion
 
 		#region Methods
 
-		protected void AddState(FiniteState state, Production production)
+		protected void AddState(Rule state, Production production)
 		{
 			state.Productions.Add(production);
 
 			States.Add(state);
 		}
 
-		protected void AddState(FiniteState state, params Production[] productions)
+		protected void AddState(Rule state, params Production[] productions)
 		{
 			AddState(state, productions.AsEnumerable());
 		}
 
-		protected void AddState(FiniteState state, IEnumerable<Production> productions)
+		protected void AddState(Rule state, IEnumerable<Production> productions)
 		{
 			foreach (var production in productions)
 				AddState(state, production);
@@ -46,16 +46,16 @@ namespace Zaaml.Text
 			return new Production(entries);
 		}
 
-		protected StateEntry Inline(IEnumerable<Entry> entries)
+		protected RuleEntry Inline(IEnumerable<Entry> entries)
 		{
 			var internalState = new InternalState("Internal_" + _inlineStateCounter++);
 
 			AddState(internalState, new Production(entries));
 
-			return new StateEntry(internalState);
+			return new RuleEntry(internalState);
 		}
 
-		protected StateEntry Inline(params Entry[] entries)
+		protected RuleEntry Inline(params Entry[] entries)
 		{
 			return Inline(entries.AsEnumerable());
 		}

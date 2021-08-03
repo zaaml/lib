@@ -98,7 +98,7 @@ namespace Zaaml.Text
 
 				#region Ctors
 
-				protected ParserAutomataContext(ParserState state, ParserAutomata parserAutomata) : base(state)
+				protected ParserAutomataContext(ParserRule rule, ParserAutomata parserAutomata) : base(rule)
 				{
 					Automata = parserAutomata;
 				}
@@ -159,7 +159,7 @@ namespace Zaaml.Text
 					var subAutomata = invokeInfo.Parser.Automata;
 					var lexemeSource = invokeInfo.Lexer.GetLexemeSource(textSource);
 					var subParserContext = invokeInfo.Parser.CreateContext(lexemeSource);
-					var subParserAutomataContext = subAutomata.GetParserState(invokeInfo.Rule).MountProcessContext(subAutomata, lexemeSource, subParserContext, invokeInfo.Parser);
+					var subParserAutomataContext = subAutomata.GetParserRule(invokeInfo.Rule).MountProcessContext(subAutomata, lexemeSource, subParserContext, invokeInfo.Parser);
 					var subParseResult = subAutomata.PartialRunCore(lexemeSource, subParserAutomataContext);
 					var poolCollection = GetSubParserPoolCollection<TSubGrammar, TSubToken>();
 					var callSubParserContext = poolCollection.CallSubParserContextPool.Get().Mount(this, invokeInfo, lexemeSource, offset, subParserContext, subParserAutomataContext, subParseResult);
@@ -202,7 +202,7 @@ namespace Zaaml.Text
 					var subAutomata = invokeInfo.Parser.Automata;
 					var lexemeSource = invokeInfo.Lexer.GetLexemeSource(textSource);
 					var subParserContext = invokeInfo.Parser.CreateContext(lexemeSource);
-					var subParserAutomataContext = subAutomata.GetParserState(invokeInfo.Rule).MountSyntaxTreeContext(subAutomata, lexemeSource, subParserContext, invokeInfo.Parser);
+					var subParserAutomataContext = subAutomata.GetParserRule(invokeInfo.Rule).MountSyntaxTreeContext(subAutomata, lexemeSource, subParserContext, invokeInfo.Parser);
 					var subParseResult = subAutomata.PartialRunCore(lexemeSource, subParserAutomataContext);
 					var poolCollection = GetSubParserPoolCollection<TSubGrammar, TSubToken, TSubNode, TSubNodeBase>();
 					var callSubParserContext = poolCollection.CallSubParserContextPool.Get().Mount(this, invokeInfo, lexemeSource, offset, subParserContext, subParserAutomataContext, subParseResult);

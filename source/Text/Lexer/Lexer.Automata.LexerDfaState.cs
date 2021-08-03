@@ -25,7 +25,7 @@ namespace Zaaml.Text
 					if (SuccessSubGraph == null)
 						return;
 
-					var lexerStateRule = ((LexerState) SuccessSubGraph.State).Rule;
+					var lexerStateRule = ((LexerRule) SuccessSubGraph.State).TokenRule;
 
 					Token = lexerStateRule.Token;
 					TokenCode = lexerStateRule.TokenCode;
@@ -39,7 +39,7 @@ namespace Zaaml.Text
 					if (SuccessSubGraph == null)
 						return;
 
-					var lexerStateRule = ((LexerState) SuccessSubGraph.State).Rule;
+					var lexerStateRule = ((LexerRule) SuccessSubGraph.State).TokenRule;
 
 					Token = lexerStateRule.Token;
 					TokenCode = lexerStateRule.TokenCode;

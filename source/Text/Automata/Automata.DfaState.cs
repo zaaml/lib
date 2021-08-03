@@ -90,7 +90,7 @@ namespace Zaaml.Text
 					var dfaNode = Nodes[0];
 					var node = (Node) dfaNode.Node;
 
-					if ((node is ReturnStateNode || node.ReturnPath.IsInvalid) && node.ExecutionPaths.Length == 0)
+					if ((node is ReturnRuleNode || node.ReturnPath.IsInvalid) && node.ExecutionPaths.Length == 0)
 						Break = true;
 				}
 

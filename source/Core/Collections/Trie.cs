@@ -66,7 +66,7 @@ namespace Zaaml.Core.Collections
 			#endregion
 		}
 
-		public ref struct TrieNode
+		public readonly ref struct TrieNode
 		{
 			private readonly TrieNodeInner _node;
 

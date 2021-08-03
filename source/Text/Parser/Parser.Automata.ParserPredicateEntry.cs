@@ -8,77 +8,41 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Parser<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private sealed partial class ParserAutomata
 		{
-			#region Nested Types
-
 			private sealed class ParserPredicateEntry : PredicateEntry, IParserEntry, IParserPredicate
 			{
-				#region Ctors
-
 				public ParserPredicateEntry(Grammar<TToken>.ParserPredicate grammarEntry) : base(CreatePredicateDelegate(grammarEntry.PredicateEntry))
 				{
-					ParserEntryData = new ParserEntryData(EnsureName(grammarEntry), this);
+					GrammarEntry = grammarEntry;
 				}
 
 				public ParserPredicateEntry(Grammar<TToken>.ParserEntry grammarEntry, Func<AutomataContext, PredicateResult> predicate) : base(predicate)
 				{
-					ParserEntryData = new ParserEntryData(EnsureName(grammarEntry), this);
+					GrammarEntry = grammarEntry;
 				}
 
-				#endregion
+				public Grammar<TToken>.ParserEntry GrammarEntry { get; }
 
-				#region Interface Implementations
-
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserEntry
-
-				public ParserEntryData ParserEntryData { get; }
-
-				#endregion
-
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserPredicate
+				public ProductionArgument ProductionArgument { get; set; }
 
 				public ParserPredicateKind PredicateKind => ParserPredicateKind.Generic;
-
-				#endregion
-
-				#endregion
 			}
 
 			private sealed class ParserPredicateEntry<TResult> : PredicateEntry<TResult>, IParserEntry, IParserPredicate
 			{
-				#region Ctors
-
 				public ParserPredicateEntry(Grammar<TToken>.ParserEntry grammarEntry, Func<AutomataContext, PredicateResult<TResult>> predicate, ParserPredicateKind predicateKind) : base(predicate)
 				{
+					GrammarEntry = grammarEntry;
 					PredicateKind = predicateKind;
-					ParserEntryData = new ParserEntryData(EnsureName(grammarEntry), this);
 				}
 
-				#endregion
+				public Grammar<TToken>.ParserEntry GrammarEntry { get; }
 
-				#region Interface Implementations
-
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserEntry
-
-				public ParserEntryData ParserEntryData { get; }
-
-				#endregion
-
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserPredicate
+				public ProductionArgument ProductionArgument { get; set; }
 
 				public ParserPredicateKind PredicateKind { get; }
-
-				#endregion
-
-				#endregion
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

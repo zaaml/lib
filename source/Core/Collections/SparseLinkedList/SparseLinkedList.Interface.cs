@@ -25,6 +25,37 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
+		public T this[long index]
+		{
+			get
+			{
+				Lock();
+
+				VerifyIndex(index);
+
+				var item = GetItemImpl(index);
+
+				Unlock();
+
+				return item;
+			}
+			set
+			{
+				Lock();
+
+				VerifyIndex(index);
+
+				Version++;
+
+				SetItemImpl(index, value);
+
+				VerifyStructure();
+
+				Unlock();
+			}
+		}
+
+		[PublicAPI]
 		public void AddRange(IEnumerable<T> collection)
 		{
 			Lock();
@@ -60,6 +91,22 @@ namespace Zaaml.Core.Collections
 			Unlock();
 
 			return findImpl;
+		}
+
+		[PublicAPI]
+		public void Insert(long index, T item)
+		{
+			Lock();
+
+			VerifyIndex(index, true);
+
+			Version++;
+
+			InsertImpl(index, item);
+
+			VerifyStructure();
+
+			Unlock();
 		}
 
 		[PublicAPI]
@@ -117,6 +164,22 @@ namespace Zaaml.Core.Collections
 			Unlock();
 
 			return true;
+		}
+
+		[PublicAPI]
+		public void RemoveAt(long index)
+		{
+			Lock();
+
+			VerifyIndex(index);
+
+			Version++;
+
+			RemoveAtImpl(index);
+
+			VerifyStructure();
+
+			Unlock();
 		}
 
 		[PublicAPI]
@@ -181,6 +244,20 @@ namespace Zaaml.Core.Collections
 			Lock();
 
 			ClearImpl();
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void Add(T item)
+		{
+			Lock();
+
+			Version++;
+
+			AddImpl(item);
 
 			VerifyStructure();
 
@@ -287,83 +364,6 @@ namespace Zaaml.Core.Collections
 			Version++;
 
 			InsertVoidRangeImpl(index, 1);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public void Add(T item)
-		{
-			Lock();
-
-			Version++;
-
-			AddImpl(item);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public T this[long index]
-		{
-			get
-			{
-				Lock();
-
-				VerifyIndex(index);
-
-				var item = GetItemImpl(index);
-
-				Unlock();
-
-				return item;
-			}
-			set
-			{
-				Lock();
-
-				VerifyIndex(index);
-
-				Version++;
-
-				SetItemImpl(index, value);
-
-				VerifyStructure();
-
-				Unlock();
-			}
-		}
-
-		[PublicAPI]
-		public void Insert(long index, T item)
-		{
-			Lock();
-
-			VerifyIndex(index, true);
-
-			Version++;
-
-			InsertImpl(index, item);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public void RemoveAt(long index)
-		{
-			Lock();
-
-			VerifyIndex(index);
-
-			Version++;
-
-			RemoveAtImpl(index);
 
 			VerifyStructure();
 

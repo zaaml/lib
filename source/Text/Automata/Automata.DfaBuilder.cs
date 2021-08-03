@@ -34,7 +34,7 @@ namespace Zaaml.Text
 
 			#region Ctors
 
-			protected DfaBuilder(IEnumerable<FiniteState> states, Automata<TInstruction, TOperand> automata)
+			protected DfaBuilder(IEnumerable<Rule> states, Automata<TInstruction, TOperand> automata)
 			{
 				_initialStateNodes = new List<DfaNode>();
 				_noOpInitialStateNodes = new List<DfaNode>();

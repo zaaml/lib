@@ -52,199 +52,199 @@ namespace Zaaml.Text
 		{
 			public void BindFactory<TResult>(SyntaxBindFunc<TSyntaxFactory, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}
 			public void BindFactory<TArg1, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TArg29, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TArg29, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TArg29, TArg30, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TArg29, TArg30, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TArg29, TArg30, TArg31, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TArg29, TArg30, TArg31, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			
 			public void BindFactory<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TArg29, TArg30, TArg31, TArg32, TResult>(SyntaxBindFunc<TSyntaxFactory, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TArg11, TArg12, TArg13, TArg14, TArg15, TArg16, TArg17, TArg18, TArg19, TArg20, TArg21, TArg22, TArg23, TArg24, TArg25, TArg26, TArg27, TArg28, TArg29, TArg30, TArg31, TArg32, TResult> expression, ParserProduction parserProduction)
 			{
-				parserProduction.Binding = SyntaxFactoryParserProductionBinding.Bind<TNode, TSyntaxFactory>(expression);
+				parserProduction.ProductionBinding = SyntaxFactoryBinding.Bind<TNode, TSyntaxFactory>(expression);
 
 				Productions.Add(parserProduction);
 			}			

@@ -172,12 +172,12 @@ namespace Zaaml.Text
 					{
 						flags |= node.Flags;
 
-						if (node is EnterStateNode)
+						if (node is EnterRuleNode)
 						{
 							stackEvalDelta++;
 							(enterNodesList ??= new List<Node>()).Add(node);
 						}
-						else if (node is ReturnStateNode)
+						else if (node is ReturnRuleNode)
 						{
 							//stackEvalDelta--;
 							(enterNodesList ??= new List<Node>()).Add(node);
@@ -199,12 +199,12 @@ namespace Zaaml.Text
 					// ReSharper disable once LoopCanBeConvertedToQuery
 					foreach (var node in Nodes)
 					{
-						if (node is EnterStateNode)
+						if (node is EnterRuleNode)
 						{
 							stackEvalDelta++;
 							(enterNodesList ??= new List<Node>()).Add(node);
 						}
-						else if (node is ReturnStateNode)
+						else if (node is ReturnRuleNode)
 						{
 							//stackEvalDelta--;
 							(enterNodesList ??= new List<Node>()).Add(node);
@@ -257,7 +257,7 @@ namespace Zaaml.Text
 
 					foreach (var node in Nodes)
 					{
-						if (node is EnterStateNode enterStateNode)
+						if (node is EnterRuleNode enterStateNode)
 						{
 							var subGraph = enterStateNode.SubGraph;
 							var leaveStateNode = subGraph.LeaveNode;
@@ -267,7 +267,7 @@ namespace Zaaml.Text
 						}
 					}
 
-					if (Output is LeaveStateNode == false)
+					if (Output is LeaveRuleNode == false)
 					{
 						if (Output.Safe == false)
 							Output.MakeSafe();

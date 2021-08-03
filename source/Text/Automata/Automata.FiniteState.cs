@@ -12,11 +12,11 @@ namespace Zaaml.Text
 		#region Nested Types
 
 		[DebuggerDisplay("{" + nameof(Name) + "}")]
-		protected abstract class FiniteState : EntryPoint
+		protected abstract class Rule : EntryPoint
 		{
 			#region Ctors
 
-			protected FiniteState(string name)
+			protected Rule(string name)
 			{
 				Name = name;
 			}
@@ -34,11 +34,11 @@ namespace Zaaml.Text
 			#endregion
 		}
 
-		protected class FiniteState<TContext> : FiniteState where TContext : AutomataContext
+		protected class Rule<TContext> : Rule where TContext : AutomataContext
 		{
 			#region Ctors
 
-			protected FiniteState(string name) : base(name)
+			protected Rule(string name) : base(name)
 			{
 			}
 

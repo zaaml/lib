@@ -38,6 +38,11 @@ namespace Zaaml.Core.Utils
 #endif
 		}
 
+		public static void ExpandArrayLength<T>(ref T[] array, bool copyItems)
+		{
+			EnsureArrayLength(ref array, array.Length * 2, copyItems);
+		}
+
 		public static void EnsureArrayLength<T>(ref T[] array, int minLength, bool copyItems)
 		{
 			if (array == null)

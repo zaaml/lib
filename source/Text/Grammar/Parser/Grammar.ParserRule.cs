@@ -25,6 +25,8 @@ namespace Zaaml.Text
 
 			public string Name { get; internal set; }
 
+			public virtual Type NodeType => null;
+
 			public ParserProductionCollection Productions { get; } = new ParserProductionCollection();
 
 			public void AddProduction(ParserProduction parserProduction)

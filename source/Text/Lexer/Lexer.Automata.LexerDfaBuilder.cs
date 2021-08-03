@@ -12,7 +12,7 @@ namespace Zaaml.Text
 		{
 			private sealed class LexerDfaBuilder : DfaBuilder<LexerDfaState>
 			{
-				public LexerDfaBuilder(IEnumerable<LexerState> states, Automata<char, int> automata) : base(states, automata)
+				public LexerDfaBuilder(IEnumerable<LexerRule> states, Automata<char, int> automata) : base(states, automata)
 				{
 				}
 

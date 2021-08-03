@@ -16,7 +16,9 @@ namespace Zaaml.Text
 			{
 				#region Properties
 
-				ParserEntryData ParserEntryData { get; }
+				Grammar<TToken>.ParserEntry GrammarEntry { get; }
+
+				ProductionArgument ProductionArgument { get; set; }
 
 				#endregion
 			}

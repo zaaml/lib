@@ -12,69 +12,26 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Parser<TGrammar, TToken> where TGrammar : Grammar<TToken> where TToken : unmanaged, Enum
 	{
-		#region Nested Types
-
-		private sealed partial class ParserAutomata : ParserAutomataBase<TGrammar, TToken>
+		private sealed partial class ParserAutomata : Automata<Lexeme<TToken>, TToken>
 		{
-			#region Fields
-
-			//private readonly Parser<TGrammar, TToken> _parser;
-			private readonly HashSet<Grammar<TToken>.ParserRule> _registeredRules = new HashSet<Grammar<TToken>.ParserRule>();
+			private readonly HashSet<Grammar<TToken>.ParserRule> _registeredRules = new();
 			private int _generateProductionNameCount;
-
-			#endregion
-
-			#region Ctors
 
 			public ParserAutomata(AutomataManager manager) : base(manager)
 			{
-				//_parser = parser;
-
 				var grammar = Grammar.Get<TGrammar, TToken>();
 
 				foreach (var parserRule in grammar.ParserRules)
 					RegisterParserRule(parserRule);
 			}
 
-			#endregion
-
-			#region Properties
-
 			protected override bool AllowParallelInstructionReader => false; //_parser.AllowParallel;
 
-			private Dictionary<Grammar<TToken>.ParserRule, ParserState> ParserStateDictionary { get; } = new Dictionary<Grammar<TToken>.ParserRule, ParserState>();
+			protected override bool LookAheadEnabled => true;
 
-			private List<ParserProduction> Productions { get; } = new List<ParserProduction>();
+			private Dictionary<Grammar<TToken>.ParserRule, ParserRule> ParserRuleDictionary { get; } = new();
 
-			#endregion
-
-			#region Methods
-
-			private static LeftRecursionClassifier Classify(ParserProduction production, ParserState parserState)
-			{
-				if (production.Entries.Length == 0)
-					return LeftRecursionClassifier.Primary;
-
-				var firstRecursion = IsRecursion(production.Entries[0], parserState);
-				var lastRecursion = IsRecursion(production.Entries[production.Entries.Length - 1], parserState);
-
-				if (production.Entries.Length == 1)
-					return firstRecursion ? LeftRecursionClassifier.Generic : LeftRecursionClassifier.Primary;
-
-				if (production.Entries.Length == 3 && IsRecursion(production.Entries[1], parserState) == false && firstRecursion && lastRecursion)
-					return LeftRecursionClassifier.Binary;
-
-				if (production.Entries.Length > 3 && firstRecursion && lastRecursion)
-					return LeftRecursionClassifier.Ternary;
-
-				if (firstRecursion && lastRecursion == false)
-					return LeftRecursionClassifier.Suffix;
-
-				if (firstRecursion == false && lastRecursion)
-					return LeftRecursionClassifier.Prefix;
-
-				return firstRecursion ? LeftRecursionClassifier.Generic : LeftRecursionClassifier.Primary;
-			}
+			private List<ParserProduction> Productions { get; } = new();
 
 			private static Action<AutomataContext> CreateActionDelegate(Parser<TToken>.ActionEntry actionEntry)
 			{
@@ -108,19 +65,24 @@ namespace Zaaml.Text
 				return rule;
 			}
 
+			private protected override Pool<InstructionStream> CreateInstructionQueuePool()
+			{
+				return new(p => new LexemeStream(p));
+			}
+
 			private static ParserSingleMatchEntry CreateLexerEntry(Grammar<TToken>.ParserTokenRuleEntry tokenEntry)
 			{
-				return new ParserSingleMatchEntry(EnsureName(tokenEntry), tokenEntry.TokenRule.Token);
+				return new(tokenEntry, tokenEntry.TokenRule.Token);
 			}
 
 			private static ParserSingleMatchEntry CreateLexerEntry(Grammar<TToken>.TokenRule tokenRule)
 			{
-				return new ParserSingleMatchEntry(EnsureName(tokenRule), tokenRule.Token);
+				return new(tokenRule, tokenRule.Token);
 			}
 
 			private static ParserSetMatchEntry CreateLexerSetEntry(Grammar<TToken>.TokenRuleSet tokenRuleEntrySet)
 			{
-				return new ParserSetMatchEntry(tokenRuleEntrySet);
+				return new(tokenRuleEntrySet);
 			}
 
 			private Entry CreateParserEntry(Grammar<TToken>.ParserEntry grammarParserEntry)
@@ -157,17 +119,17 @@ namespace Zaaml.Text
 
 						RegisterParserRule(ruleClone);
 
-						return new ParserStateEntry(EnsureName(parserRuleEntry), GetParserState(ruleClone), true, false);
+						return new ParserRuleEntry(parserRuleEntry, GetParserRule(ruleClone), true, false);
 					}
 
-					return new ParserStateEntry(EnsureName(parserRuleEntry), GetParserState(rule), false, parserRuleEntry.IsReturn);
+					return new ParserRuleEntry(parserRuleEntry, GetParserRule(rule), false, parserRuleEntry.IsReturn);
 				}
 
 				if (grammarParserEntry is Grammar<TToken>.ParserFragment parserFragment)
 				{
 					var fragmentRule = CreateFragmentRule(parserFragment);
 
-					return new ParserStateEntry(EnsureName(parserFragment), GetParserState(fragmentRule), true, false);
+					return new ParserRuleEntry(parserFragment, GetParserRule(fragmentRule), true, false);
 				}
 
 				if (grammarParserEntry is Grammar<TToken>.ParserPredicate parserPredicate)
@@ -232,56 +194,6 @@ namespace Zaaml.Text
 				return new SubParserInvokeInfo<TSubGrammar, TSubToken>(subParserEntry).PredicateEntry;
 			}
 
-			private static void EliminateLeftRecursion(ParserState parserState, List<ParserProduction> productions)
-			{
-				var hasLeftRecursion = false;
-
-				foreach (var stateProduction in productions)
-				{
-					stateProduction.LeftRecursionClassifier = Classify(stateProduction, parserState);
-
-					hasLeftRecursion |= IsLeftRecursion(stateProduction.LeftRecursionClassifier);
-				}
-
-				if (hasLeftRecursion == false)
-					return;
-
-				var count = productions.Count;
-				var recursionState = new ParserState(null, true);
-				var index = 0;
-
-				foreach (var production in productions)
-				{
-					if (production.LeftRecursionClassifier == LeftRecursionClassifier.Binary ||
-					    production.LeftRecursionClassifier == LeftRecursionClassifier.Ternary ||
-					    production.LeftRecursionClassifier == LeftRecursionClassifier.Prefix)
-					{
-						var assoc = production.IsRightAssoc ? 0 : 1;
-						var nextPriority = new PriorityStateEntryContext(count - index + assoc);
-
-						foreach (var parserStateEntry in production.Entries.Skip(1).OfType<ParserStateEntry>().Where(e => ReferenceEquals(e.State, parserState)))
-							parserStateEntry.StateEntryContext = nextPriority;
-					}
-
-					if (IsLeftRecursion(production.LeftRecursionClassifier) == false)
-						continue;
-
-					production.LeftRecursionEntry = (ParserStateEntry) production.Entries[0];
-					production.Entries[0] = ShouldPrefixPredicate(production.LeftRecursionClassifier) ? (Entry) new LeftRecursionPredicate(parserState, count - index).Entry : EpsilonEntry.Instance;
-
-					recursionState.Productions.Add(production);
-
-					index++;
-				}
-
-				var quantifierEntry = new QuantifierEntry(new StateEntry(recursionState) { SkipStack = true }, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
-				var primaryState = new ParserState(null, true);
-
-				primaryState.Productions.AddRange(productions.Where(production => IsLeftRecursion(production.LeftRecursionClassifier) == false));
-
-				productions.Clear();
-				productions.Add(new ParserProduction(new Entry[] { new StateEntry(primaryState) { SkipStack = true }, quantifierEntry }));
-			}
 
 			private static string EnsureName(Grammar<TToken>.ParserEntry parserEntry)
 			{
@@ -308,29 +220,19 @@ namespace Zaaml.Text
 				return $"GeneratedTransition{_generateProductionNameCount++}";
 			}
 
-			private static ParserEntryData GetParserEntryData(Entry entry)
+			private static ProductionArgument GetParserEntryArgument(Entry entry)
 			{
-				return ((IParserEntry) entry).ParserEntryData;
+				return ((IParserEntry) entry).ProductionArgument;
 			}
 
-			private ParserState GetParserState(Grammar<TToken>.ParserRule parserRule)
+			private ParserRule GetParserRule(Grammar<TToken>.ParserRule parserRule)
 			{
-				return ParserStateDictionary.GetValueOrCreate(parserRule, pr => new ParserState(pr.Name, parserRule.IsInline));
-			}
-
-			private static bool IsLeftRecursion(LeftRecursionClassifier classifier)
-			{
-				return (classifier == LeftRecursionClassifier.Primary || classifier == LeftRecursionClassifier.Prefix) == false;
-			}
-
-			private static bool IsRecursion(Entry entry, ParserState state)
-			{
-				return entry is ParserStateEntry parserStateEntry && ReferenceEquals(parserStateEntry.State, state);
+				return ParserRuleDictionary.GetValueOrCreate(parserRule, pr => new ParserRule(pr.Name, parserRule.IsInline));
 			}
 
 			public TResult Parse<TResult>(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
 			{
-				using var context = GetParserState(parserRule).MountSyntaxTreeContext(this, lexemeSource, parserContext, parser);
+				using var context = GetParserRule(parserRule).MountSyntaxTreeContext(this, lexemeSource, parserContext, parser);
 
 				RunCore(lexemeSource, context);
 
@@ -339,18 +241,25 @@ namespace Zaaml.Text
 
 			public void Parse(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
 			{
-				using var context = GetParserState(parserRule).MountProcessContext(this, lexemeSource, parserContext, parser);
+				using var context = GetParserRule(parserRule).MountProcessContext(this, lexemeSource, parserContext, parser);
 
 				RunCore(lexemeSource, context);
 			}
 
 			public TResult Parse<TResult>(Visitor<TResult> visitor, Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
 			{
-				using var context = GetParserState(parserRule).MountVisitorContext(visitor, this, lexemeSource, parserContext, parser);
+				using var context = GetParserRule(parserRule).MountVisitorContext(visitor, this, lexemeSource, parserContext, parser);
 
 				RunCore(lexemeSource, context);
 
 				return context.GetResult<TResult>();
+			}
+
+			private AutomataResult PartialRunCore<TContext>(LexemeSource<TToken> lexemeSource, TContext context) where TContext : AutomataContext
+			{
+				using var instructionReader = new LexemeStreamInstructionReader(lexemeSource);
+
+				return PartialRunCore(instructionReader, context);
 			}
 
 			private void RegisterParserRule(Grammar<TToken>.ParserRule parserRule)
@@ -358,26 +267,179 @@ namespace Zaaml.Text
 				if (_registeredRules.Add(parserRule) == false)
 					throw new InvalidOperationException();
 
-				var parserState = GetParserState(parserRule);
-				var parserProductions = parserRule.Productions.Select(t => new ParserProduction(this, parserRule, t, Productions)).ToList();
+				var parserState = GetParserRule(parserRule);
+				var parserProductions = parserRule.Productions.Select(t => new ParserProduction(this, parserRule, t)).ToList();
 
 				//parserState.Inline |= parserRule.AggressiveInlining;
 
 				EliminateLeftRecursion(parserState, parserProductions);
+				//EliminateLeftFactoring(parserState, parserProductions);
 
 				AddState(parserState, parserProductions);
 			}
 
-			private static bool ShouldPrefixPredicate(LeftRecursionClassifier classifier)
+			private int RegisterProduction(ParserProduction parserProduction)
 			{
-				return classifier == LeftRecursionClassifier.Binary ||
-				       classifier == LeftRecursionClassifier.Ternary ||
-				       classifier == LeftRecursionClassifier.Suffix;
+				var productionIndex = Productions.Count;
+
+				Productions.Add(parserProduction);
+
+				return productionIndex;
 			}
 
-			#endregion
-		}
+			private void RunCore<TContext>(LexemeSource<TToken> lexemeSource, TContext context) where TContext : AutomataContext
+			{
+				using var instructionReader = new LexemeStreamInstructionReader(lexemeSource);
 
-		#endregion
+				RunCore(instructionReader, context);
+			}
+
+			private sealed class LexemeStream : InstructionStream
+			{
+				private int _instructionReaderPosition;
+
+				public LexemeStream(Pool<InstructionStream> pool) : base(pool)
+				{
+				}
+
+				private ISeekableInstructionReader SeekableInstructionReader => (ISeekableInstructionReader) InstructionReader;
+
+				public override InstructionStream Advance(int instructionPointer, Automata<Lexeme<TToken>, TToken> automata)
+				{
+					var copy = (LexemeStream) Pool.Get().Mount(InstructionReader, automata);
+
+					copy.AdvanceInstructionPosition(this, instructionPointer);
+
+					return copy;
+				}
+
+				private void AdvanceInstructionPosition(LexemeStream lexemeStream, int instructionPointer)
+				{
+					StartPosition = SeekableInstructionReader.Position;
+					StartInstructionPointer = instructionPointer;
+
+					var lexemeIndex = instructionPointer & LocalIndexMask;
+					var lexemePageIndex = instructionPointer >> PageIndexShift;
+
+					EnsurePagesCapacity(lexemePageIndex + 1);
+
+					for (var iPage = lexemeStream.HeadPage; iPage <= lexemePageIndex; iPage++)
+					{
+						InstructionReader.RentBuffers(PageSize, out var instructionsBuffer, out var operandsBuffer);
+
+						var pageSource = lexemeStream.Pages[iPage];
+						var pageCopy = new InstructionPage(instructionsBuffer, operandsBuffer, pageSource.PageIndex, pageSource.PageLength);
+
+						Array.Copy(pageSource.InstructionsBuffer, 0, pageCopy.InstructionsBuffer, 0, pageCopy.PageLength);
+						Array.Copy(pageSource.OperandsBuffer, 0, pageCopy.OperandsBuffer, 0, pageCopy.PageLength);
+
+						pageCopy.ReferenceCount = pageSource.ReferenceCount;
+
+						Pages[pageCopy.PageIndex] = pageCopy;
+					}
+
+					var lexemePage = Pages[lexemePageIndex];
+
+					lexemePage.PageLength = lexemeIndex;
+
+					for (var i = lexemeIndex; i < PageSize; i++)
+					{
+						lexemePage.OperandsBuffer[i] = int.MinValue;
+						lexemePage.InstructionsBuffer[i] = default;
+					}
+
+					HeadPage = lexemeStream.HeadPage;
+					PageCount = lexemePageIndex + 1;
+
+					ReadOperand(ref instructionPointer);
+				}
+
+				public override int GetPosition(int instructionPointer)
+				{
+					if (instructionPointer == 0 || instructionPointer == StartInstructionPointer)
+						return StartPosition;
+
+					instructionPointer--;
+
+					var localInstructionPointer = instructionPointer;
+
+					ReadOperand(ref instructionPointer);
+
+					return PeekInstruction(localInstructionPointer).End;
+				}
+
+				protected override void LoadPosition()
+				{
+					if (SeekableInstructionReader.Position != _instructionReaderPosition)
+						SeekableInstructionReader.Position = _instructionReaderPosition;
+				}
+
+				public override InstructionStream Mount(IInstructionReader instructionReader, Automata<Lexeme<TToken>, TToken> automata)
+				{
+					var instructionQueue = base.Mount(instructionReader, automata);
+
+					_instructionReaderPosition = SeekableInstructionReader.Position;
+
+					return instructionQueue;
+				}
+
+				protected override void OnReleased()
+				{
+					_instructionReaderPosition = -1;
+
+					base.OnReleased();
+				}
+
+				protected override void SavePosition()
+				{
+					_instructionReaderPosition = SeekableInstructionReader.Position;
+				}
+			}
+
+			private sealed class LexemeStreamInstructionReader : ISeekableInstructionReader
+			{
+				private readonly LexemeSource<TToken> _lexemeSource;
+
+				public LexemeStreamInstructionReader(LexemeSource<TToken> lexemeSource)
+				{
+					_lexemeSource = lexemeSource;
+				}
+
+				public int ReadPage(int bufferLength, out Lexeme<TToken>[] lexemesBuffer, out int[] operandsBuffer)
+				{
+					RentBuffers(bufferLength, out var localLexemesBuffer, out var localOperandsBuffer);
+
+					lexemesBuffer = localLexemesBuffer;
+					operandsBuffer = localOperandsBuffer;
+
+					return _lexemeSource.Read(localLexemesBuffer, localOperandsBuffer, 0, bufferLength, true);
+				}
+
+				public int ReadPage(int bufferOffset, int bufferLength, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer)
+				{
+					return _lexemeSource.Read(lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, true);
+				}
+
+				public void ReleaseBuffers(Lexeme<TToken>[] instructionsBuffer, int[] operandsBuffer)
+				{
+					Lexer<TGrammar, TToken>.ReturnLexemeBuffers(instructionsBuffer, operandsBuffer);
+				}
+
+				public void RentBuffers(int bufferLength, out Lexeme<TToken>[] instructionsBuffer, out int[] operandsBuffer)
+				{
+					Lexer<TGrammar, TToken>.RentLexemeBuffers(bufferLength, out instructionsBuffer, out operandsBuffer);
+				}
+
+				public int Position
+				{
+					get => _lexemeSource.Position;
+					set => _lexemeSource.Position = value;
+				}
+
+				public void Dispose()
+				{
+				}
+			}
+		}
 	}
 }

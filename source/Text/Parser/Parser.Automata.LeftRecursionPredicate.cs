@@ -19,16 +19,16 @@ namespace Zaaml.Text
 				#region Fields
 
 				private readonly int _priority;
-				private readonly ParserState _state;
+				private readonly ParserRule _rule;
 				public readonly PredicateEntry Entry;
 
 				#endregion
 
 				#region Ctors
 
-				public LeftRecursionPredicate(ParserState state, int priority)
+				public LeftRecursionPredicate(ParserRule rule, int priority)
 				{
-					_state = state;
+					_rule = rule;
 					_priority = priority;
 
 					Entry = new PredicateEntry((Func<AutomataContext, bool>) Predicate);
@@ -40,7 +40,7 @@ namespace Zaaml.Text
 
 				private bool Predicate(AutomataContext context)
 				{
-					var stateEntryContext = (PriorityStateEntryContext) context.GetTopStateEntryContext(_state);
+					var stateEntryContext = (PriorityRuleEntryContext) context.GetTopRuleEntryContext(_rule);
 					var pr = stateEntryContext?.Priority ?? 0;
 
 					return _priority >= pr;

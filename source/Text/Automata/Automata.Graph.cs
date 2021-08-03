@@ -21,9 +21,9 @@ namespace Zaaml.Text
 
 		#region Properties
 
-		private Dictionary<FiniteState, Graph> GraphDictionary { get; } = new Dictionary<FiniteState, Graph>();
+		private Dictionary<Rule, Graph> GraphDictionary { get; } = new Dictionary<Rule, Graph>();
 
-		private Dictionary<FiniteState, EntryPointSubGraph> SubGraphDictionary { get; } = new Dictionary<FiniteState, EntryPointSubGraph>();
+		private Dictionary<Rule, EntryPointSubGraph> SubGraphDictionary { get; } = new Dictionary<Rule, EntryPointSubGraph>();
 
 		#endregion
 
@@ -45,7 +45,7 @@ namespace Zaaml.Text
 			}
 		}
 
-		private Graph EnsureGraph(FiniteState state)
+		private Graph EnsureGraph(Rule state)
 		{
 			var graph = GraphDictionary.GetValueOrDefault(state);
 
@@ -61,14 +61,14 @@ namespace Zaaml.Text
 			return graph;
 		}
 
-		private EntryPointSubGraph EnsureSubGraph(FiniteState finiteState)
+		private EntryPointSubGraph EnsureSubGraph(Rule rule)
 		{
-			var subGraph = SubGraphDictionary.GetValueOrDefault(finiteState);
+			var subGraph = SubGraphDictionary.GetValueOrDefault(rule);
 
 			if (subGraph != null)
 				return subGraph;
 
-			subGraph = SubGraphDictionary[finiteState] = new EntryPointSubGraph(this, finiteState);
+			subGraph = SubGraphDictionary[rule] = new EntryPointSubGraph(this, rule);
 
 			subGraph.BuildExecutionGraph();
 
@@ -77,14 +77,14 @@ namespace Zaaml.Text
 
 		private void EvaluateInlineStates()
 		{
-			var outboundCallsDictionary = new Dictionary<FiniteState, HashSet<FiniteState>>();
-			var inboundCallsDictionary = new Dictionary<FiniteState, HashSet<FiniteState>>();
-			var inlinedStates = new HashSet<FiniteState>();
+			var outboundCallsDictionary = new Dictionary<Rule, HashSet<Rule>>();
+			var inboundCallsDictionary = new Dictionary<Rule, HashSet<Rule>>();
+			var inlinedStates = new HashSet<Rule>();
 
 			foreach (var state in States)
 			{
-				outboundCallsDictionary[state] = new HashSet<FiniteState>(state.Productions.SelectMany(transition => transition.Entries).Select(GetState).Where(s => s != null));
-				inboundCallsDictionary[state] = new HashSet<FiniteState>();
+				outboundCallsDictionary[state] = new HashSet<Rule>(state.Productions.SelectMany(transition => transition.Entries).Select(GetState).Where(s => s != null));
+				inboundCallsDictionary[state] = new HashSet<Rule>();
 			}
 
 			foreach (var kv in outboundCallsDictionary)
@@ -118,12 +118,12 @@ namespace Zaaml.Text
 			}
 		}
 
-		private static FiniteState GetState(Entry entry)
+		private static Rule GetState(Entry entry)
 		{
 			return entry switch
 			{
-				StateEntry stateEntry => stateEntry.State,
-				QuantifierEntry quantifier when quantifier.PrimitiveEntry is StateEntry quantifierStateEntry => quantifierStateEntry.State,
+				RuleEntry stateEntry => stateEntry.Rule,
+				QuantifierEntry quantifier when quantifier.PrimitiveEntry is RuleEntry quantifierStateEntry => quantifierStateEntry.Rule,
 				_ => null
 			};
 		}
@@ -180,13 +180,13 @@ namespace Zaaml.Text
 
 			#region Ctors
 
-			public Graph(FiniteState state, Automata<TInstruction, TOperand> automata)
+			public Graph(Rule state, Automata<TInstruction, TOperand> automata)
 			{
 				State = state;
 				Automata = automata;
 
-				BeginNode = new BeginStateNode(Automata, this);
-				ReturnNode = new ReturnStateNode(Automata, this);
+				BeginNode = new BeginRuleNode(Automata, this);
+				ReturnNode = new ReturnRuleNode(Automata, this);
 			}
 
 			#endregion
@@ -219,7 +219,7 @@ namespace Zaaml.Text
 
 			public Node ReturnNode { get; }
 
-			public FiniteState State { get; }
+			public Rule State { get; }
 
 			public OperandNode SingleOperandBeforeReturn { get; private set; }
 
@@ -245,7 +245,7 @@ namespace Zaaml.Text
 				foreach (var transition in State.Productions)
 					BuildProduction(transition);
 
-				CanSimulateDfa = Nodes.OfType<EnterStateNode>().Any() == false;
+				CanSimulateDfa = Nodes.OfType<EnterRuleNode>().Any() == false;
 			}
 
 			private void EvalSingleOperandBeforeReturn()
@@ -313,7 +313,7 @@ namespace Zaaml.Text
 				return entry switch
 				{
 					MatchEntry matchEntry => ConnectMatch(source, matchEntry),
-					StateEntry stateEntry => ConnectState(source, stateEntry, stateEntry.State.Inline || Automata.ForceInlineAll),
+					RuleEntry stateEntry => ConnectState(source, stateEntry, stateEntry.Rule.Inline || Automata.ForceInlineAll),
 					QuantifierEntry quantifierEntry => ConnectQuantifier(source, quantifierEntry),
 					PredicateEntryBase predicateEntry => ConnectPredicate(source, predicateEntry),
 					ActionEntry actionEntry => ConnectAction(source, actionEntry),
@@ -402,14 +402,14 @@ namespace Zaaml.Text
 				return output;
 			}
 
-			private Node ConnectState(Node source, StateEntry stateEntry, bool inline)
+			private Node ConnectState(Node source, RuleEntry ruleEntry, bool inline)
 			{
-				var state = stateEntry.State;
+				var state = ruleEntry.Rule;
 
 				if (inline)
 				{
-					var inputNode = new InlineEnterStateNode(Automata, this, stateEntry);
-					var outputNode = new InlineLeaveStateNode(Automata, this, stateEntry);
+					var inputNode = new InlineEnterRuleNode(Automata, this, ruleEntry);
+					var outputNode = new InlineLeaveRuleNode(Automata, this, ruleEntry);
 
 					source.Connect(inputNode);
 
@@ -419,16 +419,16 @@ namespace Zaaml.Text
 					return outputNode;
 				}
 
-				var subGraph = CreateSubGraph(stateEntry);
+				var subGraph = CreateSubGraph(ruleEntry);
 
 				source.Connect(subGraph.EnterNode);
 
 				return subGraph.LeaveNode;
 			}
 
-			private SubGraph CreateSubGraph(StateEntry stateEntry)
+			private SubGraph CreateSubGraph(RuleEntry ruleEntry)
 			{
-				var subGraph = new SubGraph(Automata, stateEntry, this);
+				var subGraph = new SubGraph(Automata, ruleEntry, this);
 
 				subGraph.Graph.RegisterInboundCall(subGraph);
 				RegisterOutboundCall(subGraph);

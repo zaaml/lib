@@ -4,29 +4,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 namespace Zaaml.Text
 {
 	internal abstract class Grammar
 	{
-		#region Static Fields and Constants
-
 		private static readonly Dictionary<Type, Grammar> Grammars = new Dictionary<Type, Grammar>();
-
-		#endregion
-
-		#region Ctors
 
 		protected Grammar()
 		{
 			Grammars[GetType()] = this;
 		}
-
-		#endregion
-
-		#region Methods
 
 		public static Grammar<TToken> Get<TToken>(Type grammarType) where TToken : unmanaged, Enum
 		{
@@ -56,30 +45,18 @@ namespace Zaaml.Text
 		{
 			return (TGrammar) Get<TToken>(typeof(TGrammar));
 		}
-
-		#endregion
 	}
 
 	internal abstract partial class Grammar<TToken> : Grammar where TToken : unmanaged, Enum
 	{
-		#region Static Fields and Constants
-
 		// ReSharper disable once StaticMemberInGenericType
 		private static readonly int EnumTokenCodeOffset;
-
-		#endregion
-
-		#region Fields
 
 		private readonly Dictionary<string, ParserRule> _parserRuleDictionary = new Dictionary<string, ParserRule>();
 		private readonly Dictionary<string, TokenFragment> _tokenFragmentDictionary = new Dictionary<string, TokenFragment>();
 		private readonly Dictionary<string, TokenRule> _tokenRuleDictionary = new Dictionary<string, TokenRule>();
 		private bool _isBuilt;
 		private int _tokenCounter;
-
-		#endregion
-
-		#region Ctors
 
 		static Grammar()
 		{
@@ -94,10 +71,6 @@ namespace Zaaml.Text
 		{
 		}
 
-		#endregion
-
-		#region Properties
-
 		protected EmptyEntry Empty => EmptyEntry.Instance;
 
 		internal IEnumerable<ParserRule> ParserRules => _parserRuleDictionary.Values;
@@ -105,10 +78,6 @@ namespace Zaaml.Text
 		internal IEnumerable<TokenFragment> TokenFragments => _tokenFragmentDictionary.Values;
 
 		internal IEnumerable<TokenRule> TokenRules => _tokenRuleDictionary.Values;
-
-		#endregion
-
-		#region Methods
 
 		internal void Build()
 		{
@@ -148,43 +117,23 @@ namespace Zaaml.Text
 			return EnumTokenCodeOffset + _tokenCounter++;
 		}
 
-		#endregion
-
-		#region Nested Types
-
 		protected sealed class EmptyEntry
 		{
-			#region Static Fields and Constants
-
 			internal static readonly EmptyEntry Instance = new EmptyEntry();
-
-			#endregion
-
-			#region Ctors
 
 			private EmptyEntry()
 			{
 			}
 
-			#endregion
-
-			#region Methods
-
 			public static implicit operator ParserProduction(EmptyEntry entry)
 			{
 				return ParserProduction.Empty;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 
 	internal abstract class Grammar<TToken, TNode> : Grammar<TToken> where TToken : unmanaged, Enum where TNode : class
 	{
-		#region Methods
-
 		protected static ParserRule<TActualNode> CreateParserRule<TActualNode>([CallerMemberName] string name = null) where TActualNode : TNode
 		{
 			var parserRule = new ParserRule<TActualNode>
@@ -197,48 +146,36 @@ namespace Zaaml.Text
 			return parserRule;
 		}
 
-		#endregion
-
-		#region Nested Types
-
 		protected internal sealed class ParserRule<TActualNode> : ParserRule where TActualNode : TNode
 		{
-			#region Ctors
-
 			internal ParserRule()
 			{
 			}
 
-			#endregion
-
-			#region Properties
-
 			public new Grammar<TToken, TNode> Grammar => (Grammar<TToken, TNode>) base.Grammar;
-
-			#endregion
 
 			public void Bind<TResultNode>(ParserProduction parserProduction) where TResultNode : TActualNode
 			{
 				parserProduction.Name = typeof(TResultNode).Name;
-				parserProduction.Binding = ConstructorParserProductionBinding.Bind<TResultNode>();
+				parserProduction.ProductionBinding = ConstructorBinding.Bind<TResultNode>();
 
 				Productions.Add(parserProduction);
 			}
 
 			public void BindReturn<TResultNode, TBaseNode>(Grammar<TToken, TBaseNode>.ParserRule<TResultNode> rule) where TResultNode : TBaseNode where TBaseNode : class
 			{
-				var transition = new ParserProduction(new ParserEntry[] { rule })
+				var transition = new ParserProduction(new ParserEntry[] {rule})
 				{
 					Name = typeof(TResultNode).Name,
-					Binding = ConstructorParserProductionBinding.Bind<TResultNode>(),
+					ProductionBinding = ConstructorBinding.Bind<TResultNode>(),
 					Unwrap = true
 				};
 
 				Productions.Add(transition);
 			}
-		}
 
-		#endregion
+			public override Type NodeType => typeof(TActualNode);
+		}
 	}
 
 	internal abstract partial class Grammar<TToken, TNode, TSyntaxFactory> : Grammar<TToken> where TToken : unmanaged, Enum where TNode : class where TSyntaxFactory : SyntaxFactory<TNode>
@@ -255,21 +192,15 @@ namespace Zaaml.Text
 			return parserRule;
 		}
 
-		protected internal sealed partial  class ParserRule<TActualNode> : ParserRule where TActualNode : TNode
+		protected internal sealed partial class ParserRule<TActualNode> : ParserRule where TActualNode : TNode
 		{
-			#region Ctors
-
 			internal ParserRule()
 			{
 			}
 
-			#endregion
+			public new Grammar<TToken, TNode, TSyntaxFactory> Grammar => (Grammar<TToken, TNode, TSyntaxFactory>) base.Grammar;
 
-			#region Properties
-
-			public new Grammar<TToken, TNode, TSyntaxFactory> Grammar => (Grammar<TToken, TNode, TSyntaxFactory>)base.Grammar;
-
-			#endregion
+			public override Type NodeType => typeof(TActualNode);
 		}
 	}
 }

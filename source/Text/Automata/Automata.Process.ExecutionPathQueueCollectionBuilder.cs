@@ -17,7 +17,7 @@ namespace Zaaml.Text
 			private sealed partial class ExecutionPathGroupBuilder : PoolSharedObject<ExecutionPathGroupBuilder>
 			{
 				private readonly Automata<TInstruction, TOperand> _automata;
-				private const int MaxLookAhead = 0;
+				private const int MaxLookAhead = 5;
 				private bool _finished;
 				private int _returnPathCount;
 				public int ExecutionPathBuilderCount;
@@ -205,8 +205,8 @@ namespace Zaaml.Text
 						return;
 					}
 					
-					if (ExecutionPathBuilderCount > resolveLimit && lookAhead > 0)
-						ResolveBranch(resolveLimit, lookAhead, ref pathLookup);
+					//if (ExecutionPathBuilderCount > resolveLimit && lookAhead > 0)
+					//	ResolveBranch(resolveLimit, lookAhead, ref pathLookup);
 
 					//CollapseSinglePath();
 				}

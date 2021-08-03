@@ -14,8 +14,6 @@ namespace Zaaml.Text
 
 			public string Name { get; internal set; }
 
-
-
 			#endregion
 
 			#region Methods

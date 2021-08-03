@@ -3,7 +3,6 @@
 // </copyright>
 
 using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 using Zaaml.Core;
 using Zaaml.Core.Utils;
@@ -433,7 +432,7 @@ namespace Zaaml.Text
 				#endregion
 			}
 
-			protected struct InstructionPageStruct
+			protected readonly struct InstructionPageStruct
 			{
 				public InstructionPageStruct(TInstruction[] instructionsBuffer, int[] operandsBuffer, int instructionsCount)
 				{

@@ -176,21 +176,14 @@ namespace Zaaml.Text
 				{
 					_executionPathQueueBuilder.BuildExecutionPath(this, ref continueBuild);
 
-#if DEBUG
-					//var dbgPaths = DebugExecutionPaths();
-#endif
-
 					switch (_executionPathQueueBuilder.ExecutionPathBuilderCount)
 					{
 						case 0:
 
-							if (ReferenceEquals(_currentThread.CurrentNode, _entryPointSubGraph.EndNode))
-								return StatusKind.Finished;
-
-							return StatusKind.Unexpected;
+							return ReferenceEquals(_currentThread.CurrentNode, _entryPointSubGraph.EndNode) ? StatusKind.Finished : StatusKind.Unexpected;
 
 						case 1:
-
+							
 							_currentThread.InstructionStream.UnlockPointer(_currentThread.InstructionPointer);
 
 #if DEV_EXP
@@ -249,19 +242,19 @@ namespace Zaaml.Text
 									{
 										ExecuteMain(executionPathQueueBuilder.ReturnPaths[i]);
 
-										if (_currentThread.CurrentNode is ForkNode forkNode)
-										{
-											for (var j = i + 1; j < returnPathCount; j++)
-												forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ReturnPaths[i]);
+										if (_currentThread.CurrentNode is not ForkNode forkNode) 
+											continue;
 
-											forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ExecutionPath);
+										for (var j = i + 1; j < returnPathCount; j++)
+											forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ReturnPaths[i]);
 
-											_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
+										forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ExecutionPath);
 
-											executionPathQueueBuilder.NextBuilder = executionPathQueueBuilder.NextBuilder?.DisposeExchange();
+										_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
 
-											return ForkThreadNode(forkNode, true);
-										}
+										executionPathQueueBuilder.NextBuilder = executionPathQueueBuilder.NextBuilder?.DisposeExchange();
+
+										return ForkThreadNode(forkNode, true);
 									}
 
 									ExecuteMain(executionPathQueueBuilder.ExecutionPath);
@@ -272,19 +265,19 @@ namespace Zaaml.Text
 									{
 										ExecuteParallel(executionPathQueueBuilder.ReturnPaths[i]);
 
-										if (_currentThread.CurrentNode is ForkNode forkNode)
-										{
-											for (var j = i + 1; j < returnPathCount; j++)
-												forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ReturnPaths[i]);
+										if (_currentThread.CurrentNode is not ForkNode forkNode) 
+											continue;
 
-											forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ExecutionPath);
+										for (var j = i + 1; j < returnPathCount; j++)
+											forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ReturnPaths[i]);
 
-											_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
+										forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ExecutionPath);
 
-											executionPathQueueBuilder.NextBuilder = executionPathQueueBuilder.NextBuilder?.DisposeExchange();
+										_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
 
-											return ForkThreadNode(forkNode, false);
-										}
+										executionPathQueueBuilder.NextBuilder = executionPathQueueBuilder.NextBuilder?.DisposeExchange();
+
+										return ForkThreadNode(forkNode, false);
 									}
 
 									ExecuteParallel(executionPathQueueBuilder.ExecutionPath);
@@ -412,21 +405,21 @@ namespace Zaaml.Text
 			{
 				var thread = _parallelThreads.Pop();
 
-				if (thread.DfaTrails != null)
+				if (thread.DfaTrails == null) 
+					return thread;
+
+				var dfaTrail = thread.DfaTrails[thread.DfaTrailIndex];
+
+				if (thread.DfaTrailIndex + 1 < thread.DfaTrails.Length)
 				{
-					var dfaTrail = thread.DfaTrails[thread.DfaTrailIndex];
+					var contextState = thread.ContextState != null ? Context.CloneContextStateInternal(thread.ContextState) : null;
 
-					if (thread.DfaTrailIndex + 1 < thread.DfaTrails.Length)
-					{
-						var contextState = thread.ContextState != null ? Context.CloneContextStateInternal(thread.ContextState) : null;
-
-						_parallelThreads.Push(new Thread(thread.Parent, thread.CurrentNode, thread.InstructionStream, thread.InstructionPointer, contextState, thread.DfaTrails, thread.DfaTrailIndex + 1));
-					}
-
-					thread.EnsureStartExecutionQueue();
-
-					_executionPathQueueBuilder.EnqueueDfaPath(thread.StartExecutionQueue, dfaTrail);
+					_parallelThreads.Push(new Thread(thread.Parent, thread.CurrentNode, thread.InstructionStream, thread.InstructionPointer, contextState, thread.DfaTrails, thread.DfaTrailIndex + 1));
 				}
+
+				thread.EnsureStartExecutionQueue();
+
+				_executionPathQueueBuilder.EnqueueDfaPath(thread.StartExecutionQueue, dfaTrail);
 
 				return thread;
 			}
@@ -563,7 +556,7 @@ namespace Zaaml.Text
 				return threadParent;
 			}
 
-			public StateEntryContext GetTopStateEntryContext(FiniteState state)
+			public RuleEntryContext GetTopRuleEntryContext(Rule state)
 			{
 				var stack = _currentThread.Stack;
 				var subGraphRegistry = _automata._subGraphRegistry;
@@ -573,7 +566,7 @@ namespace Zaaml.Text
 					var subGraph = subGraphRegistry[stack.Array[i]];
 
 					if (ReferenceEquals(subGraph.State, state))
-						return subGraph.StateEntry?.StateEntryContext;
+						return subGraph.RuleEntry?.RuleEntryContext;
 				}
 
 				return null;
@@ -594,7 +587,7 @@ namespace Zaaml.Text
 
 				var entryPoint = context.EntryPoint;
 
-				if (!(entryPoint is FiniteState state))
+				if (entryPoint is not Rule state)
 					return;
 
 				var instructionQueue = _processResources.InstructionQueuePool.Get().Mount(instructionReader, _automata);

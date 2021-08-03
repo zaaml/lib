@@ -8,31 +8,31 @@ namespace Zaaml.Text
 	{
 		#region Nested Types
 
-		protected class StateEntry : PrimitiveEntry
+		protected class RuleEntry : PrimitiveEntry
 		{
 			#region Ctors
 
-			public StateEntry(FiniteState state)
+			public RuleEntry(Rule rule)
 			{
-				State = state;
+				Rule = rule;
 			}
 
 			#endregion
 
 			#region Properties
 
-			protected override string DebuggerDisplay => State.Name;
+			protected override string DebuggerDisplay => Rule.Name;
 
 			internal bool SkipStack { get; set; }
 
-			public FiniteState State { get; }
+			public Rule Rule { get; }
 
-			internal StateEntryContext StateEntryContext { get; set; }
+			internal RuleEntryContext RuleEntryContext { get; set; }
 
 			#endregion
 		}
 
-		protected abstract class StateEntryContext
+		protected abstract class RuleEntryContext
 		{
 		}
 

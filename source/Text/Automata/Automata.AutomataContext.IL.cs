@@ -46,7 +46,7 @@ namespace Zaaml.Text
 
 			#region Methods
 
-			protected virtual void BuildEnterStateEntry(ILBuilderContext ilBuilderContext, StateEntry stateEntry)
+			protected virtual void BuildEnterRuleEntry(ILBuilderContext ilBuilderContext, RuleEntry ruleEntry)
 			{
 			}
 
@@ -62,7 +62,7 @@ namespace Zaaml.Text
 			{
 			}
 
-			protected virtual void BuildLeaveStateEntry(ILBuilderContext ilBuilderContext, StateEntry stateEntry)
+			protected virtual void BuildLeaveRuleEntry(ILBuilderContext ilBuilderContext, RuleEntry ruleEntry)
 			{
 			}
 
@@ -168,7 +168,7 @@ namespace Zaaml.Text
 
 					switch (node)
 					{
-						case EnterStateNode enterStateNode:
+						case EnterRuleNode enterStateNode:
 						{
 							var subGraph = enterStateNode.SubGraph;
 
@@ -258,7 +258,7 @@ namespace Zaaml.Text
 							break;
 						}
 
-						case ReturnStateNode _:
+						case ReturnRuleNode _:
 						{
 							//return stack.Pop().LeaveNode;
 							ilBuilderContext.EmitLdStack();
@@ -323,16 +323,16 @@ namespace Zaaml.Text
 				}
 
 				{
-					if (executionPath.PathSourceNode is LeaveStateNode leaveStateNode)
+					if (executionPath.PathSourceNode is LeaveRuleNode leaveStateNode)
 					{
 						EmitDebugNode(ilBuilderContext, executionPath.PathSourceNode, executionPath);
 
 						var subGraph = leaveStateNode.SubGraph;
 
-						if (subGraph.StateEntry != null)
+						if (subGraph.RuleEntry != null)
 						{
-							if (IsOverriden(nameof(BuildLeaveStateEntry)))
-								BuildLeaveStateEntry(ilBuilderContext, subGraph.StateEntry);
+							if (IsOverriden(nameof(BuildLeaveRuleEntry)))
+								BuildLeaveRuleEntry(ilBuilderContext, subGraph.RuleEntry);
 						}
 					}
 				}
@@ -345,16 +345,16 @@ namespace Zaaml.Text
 
 					switch (node)
 					{
-						case LeaveStateNode leaveStateNode:
+						case LeaveRuleNode leaveStateNode:
 						{
 							EmitDebugNode(ilBuilderContext, executionPath.PathSourceNode, executionPath);
 
 							var subGraph = leaveStateNode.SubGraph;
 
-							if (subGraph.StateEntry != null)
+							if (subGraph.RuleEntry != null)
 							{
-								if (IsOverriden(nameof(BuildLeaveStateEntry)))
-									BuildLeaveStateEntry(ilBuilderContext, subGraph.StateEntry);
+								if (IsOverriden(nameof(BuildLeaveRuleEntry)))
+									BuildLeaveRuleEntry(ilBuilderContext, subGraph.RuleEntry);
 							}
 
 							break;
@@ -379,7 +379,7 @@ namespace Zaaml.Text
 							break;
 						}
 
-						case BeginStateNode beginStateNode:
+						case BeginRuleNode beginStateNode:
 						{
 							EmitDebugNode(ilBuilderContext, node, executionPath);
 
@@ -406,14 +406,14 @@ namespace Zaaml.Text
 							break;
 						}
 
-						case EnterStateNode enterStateNode:
+						case EnterRuleNode enterStateNode:
 						{
 							EmitDebugNode(ilBuilderContext, node, executionPath);
 
 							var subGraph = enterStateNode.SubGraph;
 
-							if (IsOverriden(nameof(BuildEnterStateEntry)))
-								BuildEnterStateEntry(ilBuilderContext, subGraph.StateEntry);
+							if (IsOverriden(nameof(BuildEnterRuleEntry)))
+								BuildEnterRuleEntry(ilBuilderContext, subGraph.RuleEntry);
 
 							//stack.Push(subGraph);
 
@@ -425,26 +425,26 @@ namespace Zaaml.Text
 							break;
 						}
 
-						case InlineEnterStateNode inlineEnterStateNode:
+						case InlineEnterRuleNode inlineEnterStateNode:
 						{
 							EmitDebugNode(ilBuilderContext, node, executionPath);
 
-							var stateEntry = inlineEnterStateNode.StateEntry;
+							var stateEntry = inlineEnterStateNode.RuleEntry;
 
-							if (IsOverriden(nameof(BuildEnterStateEntry)))
-								BuildEnterStateEntry(ilBuilderContext, stateEntry);
+							if (IsOverriden(nameof(BuildEnterRuleEntry)))
+								BuildEnterRuleEntry(ilBuilderContext, stateEntry);
 
 							break;
 						}
 
-						case InlineLeaveStateNode inlineLeaveStateNode:
+						case InlineLeaveRuleNode inlineLeaveStateNode:
 						{
 							EmitDebugNode(ilBuilderContext, node, executionPath);
 
-							var stateEntry = inlineLeaveStateNode.StateEntry;
+							var stateEntry = inlineLeaveStateNode.RuleEntry;
 
-							if (IsOverriden(nameof(BuildLeaveStateEntry)))
-								BuildLeaveStateEntry(ilBuilderContext, stateEntry);
+							if (IsOverriden(nameof(BuildLeaveRuleEntry)))
+								BuildLeaveRuleEntry(ilBuilderContext, stateEntry);
 
 							break;
 						}
@@ -551,7 +551,7 @@ namespace Zaaml.Text
 							break;
 						}
 
-						case ReturnStateNode returnStateNode:
+						case ReturnRuleNode returnStateNode:
 						{
 							EmitDebugNode(ilBuilderContext, node, executionPath);
 							

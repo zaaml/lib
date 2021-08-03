@@ -46,3 +46,6 @@ using Zaaml.Core;
 
 [assembly: InternalsVisibleTo("Zaaml.Platform,PublicKey=" +
                               ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Zaaml.Text.GrammarCompiler,PublicKey=" +
+                              ZaamlInfo.PublicKey)]

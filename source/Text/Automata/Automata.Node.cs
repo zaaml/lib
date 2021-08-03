@@ -81,7 +81,7 @@ namespace Zaaml.Text
 
 				automata.RegisterNode(this);
 
-				if (this is EnterStateNode || this is LeaveStateNode)
+				if (this is EnterRuleNode || this is LeaveRuleNode)
 					Flags |= EnterReturn;
 
 				if (this is LazyNode)
@@ -314,7 +314,7 @@ namespace Zaaml.Text
 					if (node.OutEdges.Count > 0)
 						weight = Math.Max(weight, node.OutEdges[edgeDfs.Index].Weight);
 
-					if (node is LeaveStateNode leaveStateNode)
+					if (node is LeaveRuleNode leaveStateNode)
 					{
 						var subGraph = leaveStateNode.SubGraph;
 
@@ -332,7 +332,7 @@ namespace Zaaml.Text
 					if (lastNode?.OutEdges.Count > 0)
 						weight = Math.Max(weight, lastNode.GetTargetNodeEdge(outputNode).Weight);
 
-					if (outputNode is LeaveStateNode leaveStateNode)
+					if (outputNode is LeaveRuleNode leaveStateNode)
 					{
 						var subGraph = leaveStateNode.SubGraph;
 
@@ -390,7 +390,7 @@ namespace Zaaml.Text
 
 					switch (peekNode)
 					{
-						case EnterStateNode enterStateNode:
+						case EnterRuleNode enterStateNode:
 						{
 							var subGraph = enterStateNode.SubGraph;
 							var beginNode = subGraph.Graph.BeginNode;
@@ -473,7 +473,7 @@ namespace Zaaml.Text
 
 					switch (peekNode)
 					{
-						case EnterStateNode enterStateNode:
+						case EnterRuleNode enterStateNode:
 						{
 							var subGraph = enterStateNode.SubGraph;
 							var beginNode = subGraph.Graph.BeginNode;
@@ -498,7 +498,7 @@ namespace Zaaml.Text
 
 					if (nextNode != null && nodeVisitor.Add(nextNode))
 					{
-						if (nextNode is ReturnStateNode)
+						if (nextNode is ReturnRuleNode)
 						{
 							var route = BuildRoute(stack, nextNode, out var weight);
 
@@ -573,7 +573,7 @@ namespace Zaaml.Text
 			{
 				nodeVisitor.Remove(node);
 
-				if (node is EnterStateNode enterStateNode)
+				if (node is EnterRuleNode enterStateNode)
 					nodeVisitor.Remove(enterStateNode.SubGraph.LeaveNode);
 			}
 

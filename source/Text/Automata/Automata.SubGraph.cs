@@ -34,13 +34,13 @@ namespace Zaaml.Text
 		{
 			#region Fields
 
-			public readonly FiniteState State;
+			public readonly Rule State;
 
 			#endregion
 
 			#region Ctors
 
-			private protected SubGraphBase(FiniteState state)
+			private protected SubGraphBase(Rule state)
 			{
 				State = state;
 			}
@@ -58,12 +58,12 @@ namespace Zaaml.Text
 
 			#region Fields
 
-			public readonly EnterStateNode EnterNode;
+			public readonly EnterRuleNode EnterNode;
 			public readonly Graph Graph;
 			public readonly Graph InvokingGraph;
 			public int Id;
-			public readonly LeaveStateNode LeaveNode;
-			public readonly StateEntry StateEntry;
+			public readonly LeaveRuleNode LeaveNode;
+			public readonly RuleEntry RuleEntry;
 			public readonly bool DfaBarrier;
 
 			#endregion
@@ -74,20 +74,20 @@ namespace Zaaml.Text
 			{
 			}
 
-			protected SubGraph(Automata<TInstruction, TOperand> automata, FiniteState state, Graph invokingGraph) : base(state)
+			protected SubGraph(Automata<TInstruction, TOperand> automata, Rule state, Graph invokingGraph) : base(state)
 			{
 				Automata = automata;
 				automata.RegisterSubGraph(this);
 				Graph = automata.EnsureGraph(state);
 				InvokingGraph = invokingGraph;
-				EnterNode = new EnterStateNode(automata, invokingGraph, this);
-				LeaveNode = new LeaveStateNode(automata, invokingGraph, this);
+				EnterNode = new EnterRuleNode(automata, invokingGraph, this);
+				LeaveNode = new LeaveRuleNode(automata, invokingGraph, this);
 				DfaBarrier = Graph.DfaBarrier;
 			}
 
-			public SubGraph(Automata<TInstruction, TOperand> automata, StateEntry stateEntry, Graph invokingGraph) : this(automata, stateEntry.State, invokingGraph)
+			public SubGraph(Automata<TInstruction, TOperand> automata, RuleEntry ruleEntry, Graph invokingGraph) : this(automata, ruleEntry.Rule, invokingGraph)
 			{
-				StateEntry = stateEntry;
+				RuleEntry = ruleEntry;
 			}
 
 			#endregion
@@ -117,9 +117,9 @@ namespace Zaaml.Text
 		{
 			#region Fields
 
-			public readonly EndStateNode EndNode;
+			public readonly EndRuleNode EndNode;
 			public readonly ExecutionPath EndPath;
-			public readonly InitStateNode InitNode;
+			public readonly InitRuleNode InitNode;
 			private bool _executionGraphBuilt;
 			public ExecutionPath EmptyPath = ExecutionPath.Invalid;
 
@@ -127,10 +127,10 @@ namespace Zaaml.Text
 
 			#region Ctors
 
-			public EntryPointSubGraph(Automata<TInstruction, TOperand> automata, FiniteState state) : base(automata, state, null)
+			public EntryPointSubGraph(Automata<TInstruction, TOperand> automata, Rule state) : base(automata, state, null)
 			{
-				InitNode = new InitStateNode(automata, this);
-				EndNode = new EndStateNode(automata, this);
+				InitNode = new InitRuleNode(automata, this);
+				EndNode = new EndRuleNode(automata, this);
 
 				InitNode.OutEdges.Add(new Edge(InitNode, EnterNode));
 				LeaveNode.OutEdges.Add(new Edge(LeaveNode, EndNode));

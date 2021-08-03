@@ -26,9 +26,9 @@ namespace Zaaml.Text
 				return new SingleMatchEntry(operand);
 			}
 
-			public static implicit operator Entry(FiniteState state)
+			public static implicit operator Entry(Rule state)
 			{
-				return new StateEntry(state);
+				return new RuleEntry(state);
 			}
 
 			public override string ToString()

@@ -23,7 +23,7 @@ namespace Zaaml.Core.Collections
 
 		int IList.IndexOf(object value)
 		{
-			return (int)IndexOf((T) value);
+			return (int) IndexOf((T) value);
 		}
 
 		void IList.Insert(int index, object value)
@@ -62,7 +62,7 @@ namespace Zaaml.Core.Collections
 
 		int IList<T>.IndexOf(T item)
 		{
-			return (int)IndexOf(item);
+			return (int) IndexOf(item);
 		}
 
 		void IList<T>.Insert(int index, T item)

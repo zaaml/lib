@@ -12,11 +12,11 @@ namespace Zaaml.Text
 		{
 			#region Nested Types
 
-			private sealed class PriorityStateEntryContext : StateEntryContext
+			private sealed class PriorityRuleEntryContext : RuleEntryContext
 			{
 				#region Ctors
 
-				public PriorityStateEntryContext(int priority)
+				public PriorityRuleEntryContext(int priority)
 				{
 					Priority = priority;
 				}

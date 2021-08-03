@@ -8,6 +8,7 @@ namespace Zaaml.Core.Collections
 {
 	internal interface ISparseList<T> : IList<T>
 	{
+		bool IsVoid { get; }
 		void AddVoid();
 
 		void AddVoidRange(long length);
@@ -15,13 +16,11 @@ namespace Zaaml.Core.Collections
 		void InsertVoid(long index);
 
 		void InsertVoidRange(long index, long length);
-		
+
+		void Void();
+
 		void VoidAt(long index);
 
 		void VoidRange(long index, long length);
-
-		bool IsVoid { get; }
-
-		void Void();
 	}
 }

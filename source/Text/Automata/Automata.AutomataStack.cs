@@ -241,13 +241,13 @@ namespace Zaaml.Text
 
 				foreach (var node in path.EnterReturnNodes)
 				{
-					if (node is EnterStateNode enterStateNode)
+					if (node is EnterRuleNode enterStateNode)
 						Array[Count++] = enterStateNode.SubGraph.Id;
 					else
 						output = _automataSubGraphRegistry[Array[--Count]].LeaveNode;
 				}
 
-				if (!(path.Output is ReturnStateNode))
+				if (path.Output is not ReturnRuleNode)
 					output = path.Output;
 
 				_hashCodeDirty = true;

@@ -6,37 +6,19 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Parser<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private sealed partial class ParserAutomata
 		{
-			#region Nested Types
-
 			private sealed class ParserActionEntry : ActionEntry, IParserEntry
 			{
-				#region Ctors
-
 				public ParserActionEntry(Grammar<TToken>.ParserAction grammarEntry) : base(CreateActionDelegate(grammarEntry.ActionEntry))
 				{
-					ParserEntryData = new ParserEntryData(EnsureName(grammarEntry), this);
+					GrammarEntry = grammarEntry;
 				}
 
-				#endregion
+				public Grammar<TToken>.ParserEntry GrammarEntry { get; }
 
-				#region Interface Implementations
-
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserEntry
-
-				public ParserEntryData ParserEntryData { get; }
-
-				#endregion
-
-				#endregion
+				public ProductionArgument ProductionArgument { get; set; }
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -8,7 +8,7 @@ namespace Zaaml.Text
 	{
 		#region Nested Types
 
-		private class InternalState : FiniteState
+		private class InternalState : Rule
 		{
 			#region Ctors
 

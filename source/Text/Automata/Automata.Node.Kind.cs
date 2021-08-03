@@ -12,11 +12,11 @@ namespace Zaaml.Text
 	{
 		#region Nested Types
 
-		private sealed class BeginStateNode : Node
+		private sealed class BeginRuleNode : Node
 		{
 			#region Ctors
 
-			public BeginStateNode(Automata<TInstruction, TOperand> automata, Graph graph) : base(automata, graph)
+			public BeginRuleNode(Automata<TInstruction, TOperand> automata, Graph graph) : base(automata, graph)
 			{
 			}
 
@@ -29,11 +29,11 @@ namespace Zaaml.Text
 			#endregion
 		}
 
-		private sealed class ReturnStateNode : Node
+		private sealed class ReturnRuleNode : Node
 		{
 			#region Ctors
 
-			public ReturnStateNode(Automata<TInstruction, TOperand> automata, Graph graph) : base(automata, graph)
+			public ReturnRuleNode(Automata<TInstruction, TOperand> automata, Graph graph) : base(automata, graph)
 			{
 			}
 
@@ -75,11 +75,11 @@ namespace Zaaml.Text
 			#endregion
 		}
 
-		private sealed class EnterStateNode : SubGraphNode
+		private sealed class EnterRuleNode : SubGraphNode
 		{
 			#region Ctors
 
-			public EnterStateNode(Automata<TInstruction, TOperand> automata, Graph graph, SubGraph subGraph) : base(automata, graph, subGraph)
+			public EnterRuleNode(Automata<TInstruction, TOperand> automata, Graph graph, SubGraph subGraph) : base(automata, graph, subGraph)
 			{
 			}
 
@@ -92,11 +92,11 @@ namespace Zaaml.Text
 			#endregion
 		}
 
-		private sealed class LeaveStateNode : SubGraphNode
+		private sealed class LeaveRuleNode : SubGraphNode
 		{
 			#region Ctors
 
-			public LeaveStateNode(Automata<TInstruction, TOperand> automata, Graph graph, SubGraph subGraph) : base(automata, graph, subGraph)
+			public LeaveRuleNode(Automata<TInstruction, TOperand> automata, Graph graph, SubGraph subGraph) : base(automata, graph, subGraph)
 			{
 				//LeavePath = new ExecutionPath(this, new Node[] {this});
 			}
@@ -112,46 +112,29 @@ namespace Zaaml.Text
 			//private ExecutionPath LeavePath { get; }
 		}
 
-		private abstract class StateEntryNode : Node
+		private abstract class RuleEntryNode : Node
 		{
 			#region Fields
 
-			public readonly StateEntry StateEntry;
+			public readonly RuleEntry RuleEntry;
 
 			#endregion
 
 			#region Ctors
 
-			protected StateEntryNode(Automata<TInstruction, TOperand> automata, Graph graph, StateEntry stateEntry) : base(automata, graph)
+			protected RuleEntryNode(Automata<TInstruction, TOperand> automata, Graph graph, RuleEntry ruleEntry) : base(automata, graph)
 			{
-				StateEntry = stateEntry;
+				RuleEntry = ruleEntry;
 			}
 
 			#endregion
 		}
 
-		private sealed class InlineEnterStateNode : StateEntryNode
+		private sealed class InlineEnterRuleNode : RuleEntryNode
 		{
 			#region Ctors
 
-			public InlineEnterStateNode(Automata<TInstruction, TOperand> automata, Graph graph, StateEntry stateEntry) : base(automata, graph, stateEntry)
-			{
-			}
-
-			#endregion
-
-			#region Properties
-
-			protected override string KindString => $"_inline_enter({StateEntry})";
-
-			#endregion
-		}
-
-		private sealed class InlineLeaveStateNode : StateEntryNode
-		{
-			#region Ctors
-
-			public InlineLeaveStateNode(Automata<TInstruction, TOperand> automata, Graph graph, StateEntry stateEntry) : base(automata, graph, stateEntry)
+			public InlineEnterRuleNode(Automata<TInstruction, TOperand> automata, Graph graph, RuleEntry ruleEntry) : base(automata, graph, ruleEntry)
 			{
 			}
 
@@ -159,16 +142,33 @@ namespace Zaaml.Text
 
 			#region Properties
 
-			protected override string KindString => $"_inline_leave({StateEntry})";
+			protected override string KindString => $"_inline_enter({RuleEntry})";
 
 			#endregion
 		}
 
-		private sealed class InitStateNode : EntryPointSubGraphNode
+		private sealed class InlineLeaveRuleNode : RuleEntryNode
 		{
 			#region Ctors
 
-			public InitStateNode(Automata<TInstruction, TOperand> automata, SubGraph subGraph) : base(automata, subGraph)
+			public InlineLeaveRuleNode(Automata<TInstruction, TOperand> automata, Graph graph, RuleEntry ruleEntry) : base(automata, graph, ruleEntry)
+			{
+			}
+
+			#endregion
+
+			#region Properties
+
+			protected override string KindString => $"_inline_leave({RuleEntry})";
+
+			#endregion
+		}
+
+		private sealed class InitRuleNode : EntryPointSubGraphNode
+		{
+			#region Ctors
+
+			public InitRuleNode(Automata<TInstruction, TOperand> automata, SubGraph subGraph) : base(automata, subGraph)
 			{
 			}
 
@@ -181,11 +181,11 @@ namespace Zaaml.Text
 			#endregion
 		}
 
-		private sealed class EndStateNode : EntryPointSubGraphNode
+		private sealed class EndRuleNode : EntryPointSubGraphNode
 		{
 			#region Ctors
 
-			public EndStateNode(Automata<TInstruction, TOperand> automata, SubGraph subGraph) : base(automata, subGraph)
+			public EndRuleNode(Automata<TInstruction, TOperand> automata, SubGraph subGraph) : base(automata, subGraph)
 			{
 			}
 

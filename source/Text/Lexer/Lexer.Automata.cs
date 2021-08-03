@@ -17,7 +17,7 @@ namespace Zaaml.Text
 
 		private protected partial class LexerAutomata : Automata<char, int>
 		{
-			private readonly Dictionary<string, LexerState> _lexerStateDictionary = new Dictionary<string, LexerState>();
+			private readonly Dictionary<string, LexerRule> _lexerStateDictionary = new Dictionary<string, LexerRule>();
 			private readonly HashSet<Grammar<TToken>.TokenFragment> _registeredFragments = new HashSet<Grammar<TToken>.TokenFragment>();
 			private LexerDfaBuilder _dfaBuilder;
 			private int _generatedLexerStateCount;
@@ -44,7 +44,7 @@ namespace Zaaml.Text
 
 			private void BuildStates()
 			{
-				_dfaBuilder = new LexerDfaBuilder(_lexerStateDictionary.Values.Where(s => s.Rule != null), this);
+				_dfaBuilder = new LexerDfaBuilder(_lexerStateDictionary.Values.Where(s => s.TokenRule != null), this);
 			}
 
 			private static Action<AutomataContext> CreateActionDelegate(Lexer<TToken>.ActionEntry actionEntry)
@@ -74,7 +74,7 @@ namespace Zaaml.Text
 
 					RegisterLexerFragment(tokenFragment);
 
-					return new StateEntry(lexerState);
+					return new RuleEntry(lexerState);
 				}
 
 				if (tokenEntry is Grammar<TToken>.TokenFragmentEntry tokenFragmentEntry)
@@ -83,7 +83,7 @@ namespace Zaaml.Text
 
 					RegisterLexerFragment(tokenFragmentEntry.Fragment);
 
-					return new StateEntry(lexerState);
+					return new RuleEntry(lexerState);
 				}
 
 				if (tokenEntry is Grammar<TToken>.LexerPredicate lexerPredicate)
@@ -95,9 +95,9 @@ namespace Zaaml.Text
 				throw new NotImplementedException();
 			}
 
-			private LexerState CreateLexerFragmentState(Grammar<TToken>.TokenFragment tokenFragment)
+			private LexerRule CreateLexerFragmentState(Grammar<TToken>.TokenFragment tokenFragment)
 			{
-				return new LexerState(tokenFragment.Name);
+				return new LexerRule(tokenFragment.Name);
 			}
 
 			private static PrimitiveMatchEntry CreateLexerPrimitiveMatchEntry(Grammar<TToken>.PrimitiveMatchEntry match)
@@ -115,9 +115,9 @@ namespace Zaaml.Text
 				}
 			}
 
-			private LexerState CreateLexerRuleState(Grammar<TToken>.TokenRule tokenRule)
+			private LexerRule CreateLexerRuleState(Grammar<TToken>.TokenRule tokenRule)
 			{
-				return new LexerState(tokenRule);
+				return new LexerRule(tokenRule);
 			}
 
 			private static Func<AutomataContext, PredicateResult> CreatePredicateDelegate(Lexer<TToken>.PredicateEntry predicateEntry)
@@ -130,7 +130,7 @@ namespace Zaaml.Text
 				return $"GeneratedLexerState{_generatedLexerStateCount++}";
 			}
 
-			private LexerState GetLexerState(Grammar<TToken>.TokenRule tokenRule)
+			private LexerRule GetLexerState(Grammar<TToken>.TokenRule tokenRule)
 			{
 				if (tokenRule.Name == null)
 					tokenRule.Name = GenerateLexerStateName();
@@ -138,7 +138,7 @@ namespace Zaaml.Text
 				return _lexerStateDictionary.GetValueOrCreate(tokenRule.Name, () => CreateLexerRuleState(tokenRule));
 			}
 
-			private LexerState GetLexerState(Grammar<TToken>.TokenFragment tokenFragment)
+			private LexerRule GetLexerState(Grammar<TToken>.TokenFragment tokenFragment)
 			{
 				if (tokenFragment.Name == null)
 					tokenFragment.Name = GenerateLexerStateName();

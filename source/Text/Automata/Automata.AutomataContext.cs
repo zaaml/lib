@@ -20,9 +20,9 @@ namespace Zaaml.Text
 
 			#region Ctors
 
-			protected AutomataContext(FiniteState finiteState)
+			protected AutomataContext(Rule rule)
 			{
-				EntryPoint = finiteState;
+				EntryPoint = rule;
 			}
 
 			#endregion
@@ -54,7 +54,7 @@ namespace Zaaml.Text
 				set => _process = (Process) value;
 			}
 
-			protected FiniteState State => (FiniteState) EntryPoint;
+			protected Rule Rule => (Rule) EntryPoint;
 
 			#endregion
 
@@ -99,9 +99,9 @@ namespace Zaaml.Text
 				DisposeContextState(contextState);
 			}
 
-			internal StateEntryContext GetTopStateEntryContext(FiniteState state)
+			internal RuleEntryContext GetTopRuleEntryContext(Rule state)
 			{
-				return _process.GetTopStateEntryContext(state);
+				return _process.GetTopRuleEntryContext(state);
 			}
 
 			#endregion

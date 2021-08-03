@@ -19,9 +19,12 @@ namespace Zaaml.Text
 
 		#region Methods
 
-		protected static ParserFragment CreateParserFragment()
+		protected static ParserFragment CreateParserFragment([CallerMemberName] string name = null)
 		{
-			var parserFragment = new ParserFragment(false);
+			var parserFragment = new ParserFragment(false)
+			{
+				Name = name
+			};
 
 			CreatedParserFragments.Add(parserFragment);
 

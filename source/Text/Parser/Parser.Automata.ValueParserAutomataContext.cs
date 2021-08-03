@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Utils;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -72,149 +72,148 @@ namespace Zaaml.Text
 
 			private abstract class ValueParserAutomataContext : ParserAutomataContext, IParserILBuilder
 			{
-				private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-				private static readonly FieldInfo TextSourceSpanFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(TextSourceSpan), Flags);
-				//private static readonly MethodInfo TextSourceGetTextMethodInfo = typeof(TextSource).GetMethod(nameof(Text.TextSource.GetText), Flags);
-				//private static readonly MethodInfo TextSourceGetSpanMethodInfo = typeof(TextSource).GetMethod(nameof(Text.TextSource.GetSpan), Flags);
-				private static readonly FieldInfo LexemeStartFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.StartField), Flags);
-				private static readonly FieldInfo LexemeEndFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.EndField), Flags);
-				private static readonly FieldInfo LexemeTokenFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.TokenField), Flags);
-				private static readonly FieldInfo ProductionInstanceBuilderArgumentsFieldInfo = typeof(ProductionInstanceBuilder).GetField(nameof(ProductionInstanceBuilder.Arguments), Flags);
-				private static readonly FieldInfo StateEntryIndexFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(_stateEntryIndex), Flags);
-				private static readonly FieldInfo SyntaxTreeFactoryFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(_syntaxTreeFactory), Flags);
+				private const BindingFlags InstancePublicPrivate = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
-				[UsedImplicitly] private static readonly MethodInfo DebugMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(Debug), BindingFlags.Instance | BindingFlags.NonPublic);
+				private static readonly FieldInfo TextSourceSpanFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(TextSourceSpan), InstancePublicPrivate);
+				//private static readonly MethodInfo TextSourceGetTextMethodInfo = typeof(TextSource).GetMethod(nameof(Text.TextSource.GetText), InstancePublicPrivate);
+				//private static readonly MethodInfo TextSourceGetSpanMethodInfo = typeof(TextSource).GetMethod(nameof(Text.TextSource.GetSpan), InstancePublicPrivate);
+				private static readonly FieldInfo LexemeStartFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.StartField), InstancePublicPrivate);
+				private static readonly FieldInfo LexemeEndFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.EndField), InstancePublicPrivate);
+				private static readonly FieldInfo LexemeTokenFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.TokenField), InstancePublicPrivate);
+				private static readonly FieldInfo ProductionEntityArgumentsFieldInfo = typeof(ProductionEntity).GetField(nameof(ProductionEntity.Arguments), InstancePublicPrivate);
+				private static readonly FieldInfo ProductionEntityStackFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(_productionEntityStack), InstancePublicPrivate);
+				private static readonly FieldInfo ProductionEntityStackTailFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(_productionEntityStackTail), InstancePublicPrivate);
 
-				private static readonly MethodInfo GetInstructionReferenceMethodInfo = typeof(ValueParserAutomataContext).GetProperty(nameof(InstructionReference), Flags)?.GetGetMethod();
-				private static readonly MethodInfo GetInstructionTextMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(GetInstructionText), Flags);
-				private static readonly MethodInfo GetInstructionMethodInfo = typeof(ValueParserAutomataContext).GetProperty(nameof(Instruction), Flags)?.GetGetMethod();
-				private static readonly MethodInfo EnsureStateEntrySizeMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(EnsureStateEntrySize), Flags);
-				private static readonly MethodInfo PeekStateEntryMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(PeekStateEntry), Flags);
-				private static readonly MethodInfo PredicateResultGetResultMethodInfo = typeof(PredicateResult).GetMethod(nameof(PredicateResult.GetResult), BindingFlags.Instance | BindingFlags.NonPublic);
-				private static readonly MethodInfo PushProductionInstanceBuilderMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(PushProductionInstanceBuilder), BindingFlags.Instance | BindingFlags.NonPublic);
-				private static readonly MethodInfo ConsumeEntryMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(ConsumeEntry), BindingFlags.Instance | BindingFlags.NonPublic);
 
-				private static readonly MethodInfo PushLeftRecursionProductionInstanceBuilderMethodInfo =
-					typeof(ValueParserAutomataContext).GetMethod(nameof(PushLeftRecursionProductionInstanceBuilder), BindingFlags.Instance | BindingFlags.NonPublic);
+				private static readonly FieldInfo ProductionEntityResultFieldInfo = typeof(ProductionEntity).GetField(nameof(ProductionEntity.Result), InstancePublicPrivate);
 
-				private static readonly MethodInfo ConsumeLexerEntryMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(ConsumeLexerEntry), BindingFlags.Instance | BindingFlags.NonPublic);
-				private static readonly MethodInfo OnAfterConsumeValueMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(OnAfterConsumeValue), BindingFlags.Instance | BindingFlags.NonPublic);
+				public static readonly FieldInfo SyntaxTreeFactoryFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(_syntaxTreeFactory), InstancePublicPrivate);
 
-				private readonly Stack<ParserAutomataContextState> _parserAutomataContextStatesPool = new Stack<ParserAutomataContextState>();
-				private readonly ProductionInstanceBuilderPool[] _productionBuilderPool;
-				private ProductionInstanceBuilder[] _stateEntryArray = new ProductionInstanceBuilder[64];
-				private int _stateEntryIndex;
+
+				public static readonly FieldInfo LexemeStringConverterFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(LexemeStringConverter), InstancePublicPrivate);
+				public static readonly FieldInfo LexemeTokenConverterFieldInfo = typeof(ValueParserAutomataContext).GetField(nameof(LexemeTokenConverter), InstancePublicPrivate);
+
+
+				[UsedImplicitly] private static readonly MethodInfo DebugMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(Debug), InstancePublicPrivate);
+
+				private static readonly MethodInfo GetInstructionReferenceMethodInfo = typeof(ValueParserAutomataContext).GetProperty(nameof(InstructionReference), InstancePublicPrivate)?.GetGetMethod();
+				private static readonly MethodInfo GetInstructionTextMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(GetInstructionText), InstancePublicPrivate);
+				private static readonly MethodInfo GetInstructionMethodInfo = typeof(ValueParserAutomataContext).GetProperty(nameof(Instruction), InstancePublicPrivate)?.GetGetMethod();
+				private static readonly MethodInfo EnsureProductionEntityStackDepthMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(EnsureProductionEntityStackDepth), InstancePublicPrivate);
+				private static readonly MethodInfo PeekProductionEntityMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(PeekProductionEntity), InstancePublicPrivate);
+				private static readonly MethodInfo PredicateResultGetResultMethodInfo = typeof(PredicateResult).GetMethod(nameof(PredicateResult.GetResult), InstancePublicPrivate);
+				private static readonly MethodInfo EnterProductionMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(EnterProduction), InstancePublicPrivate);
+				private static readonly MethodInfo ConsumeProductionEntityMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(ConsumeProductionEntity), InstancePublicPrivate);
+				private static readonly MethodInfo LeaveRuleEntryMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(LeaveRuleEntry), InstancePublicPrivate);
+				private static readonly MethodInfo ProductionEntityReturnMethodInfo = typeof(ProductionEntity).GetMethod(nameof(ProductionEntity.Return), InstancePublicPrivate);
+
+				private static readonly MethodInfo EnterLeftRecursionProductionMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(EnterLeftRecursionProduction), InstancePublicPrivate);
+				private static readonly MethodInfo PushLeftFactorProductionInstanceBuilderMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(PushLeftFactorProductionInstanceBuilder), InstancePublicPrivate);
+
+				private static readonly MethodInfo LeaveLeftFactorProductionMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(LeaveLeftFactorProduction), InstancePublicPrivate);
+				private static readonly MethodInfo LeaveProductionMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(LeaveProduction), InstancePublicPrivate);
+
+				private static readonly MethodInfo OnAfterConsumeValueMethodInfo = typeof(ValueParserAutomataContext).GetMethod(nameof(OnAfterConsumeValue), InstancePublicPrivate);
+
+				private readonly Stack<ParserAutomataContextState> _parserAutomataContextStatesPool = new();
+				private readonly ParserProduction[] _productions;
+				private ProductionEntity[] _productionEntityStack = new ProductionEntity[64];
+				private int _productionEntityStackTail;
 				private SyntaxFactory _syntaxTreeFactory;
 
+				public readonly Converter<Lexeme<TToken>, string> LexemeStringConverter;
+				public readonly Converter<Lexeme<TToken>, TToken> LexemeTokenConverter;
 
-				protected ValueParserAutomataContext(ParserState state, ParserAutomata parserAutomata) : base(state, parserAutomata)
+				protected ValueParserAutomataContext(ParserRule rule, ParserAutomata parserAutomata) : base(rule, parserAutomata)
 				{
-					var productionsCount = parserAutomata.Productions.Count;
+					_productions = Automata.Productions.ToArray();
 
-					_productionBuilderPool = new ProductionInstanceBuilderPool[productionsCount];
-
-					for (var i = 0; i < productionsCount; i++)
-					{
-						var automataProduction = Automata.Productions[i];
-
-						if (automataProduction.IsInline == false)
-							_productionBuilderPool[i] = new ProductionInstanceBuilderPool(automataProduction);
-					}
+					LexemeStringConverter = lexeme => TextSourceSpan.GetText(lexeme.StartField, lexeme.EndField - lexeme.StartField);
+					LexemeTokenConverter = lexeme => lexeme.TokenField;
 				}
 
 				protected override void BuildBeginExecutionPath(ILBuilderContext ilBuilderContext, int stackDelta)
 				{
-					if (stackDelta > 0)
-					{
-						ilBuilderContext.EmitLdContext();
-						ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, stackDelta);
-						ilBuilderContext.IL.Emit(OpCodes.Call, EnsureStateEntrySizeMethodInfo);
-					}
-				}
-
-				protected override void BuildConsumePredicateResult(ILBuilderContext ilBuilderContext, LocalBuilder resultLocal, PredicateEntryBase predicateEntryBase)
-				{
-					var parserEntry = ((IParserEntry) predicateEntryBase.GetActualPredicateEntry()).ParserEntryData;
-
-					if (parserEntry == null || parserEntry.FlatIndex == -1)
+					if (stackDelta <= 0) 
 						return;
-
-					var parserTransition = parserEntry.ParserProduction;
-					var argumentBuilder = parserTransition.Binder.Template[parserEntry.FlatIndex];
-
-					if (argumentBuilder is ParserArgumentBuilder)
-						BuildConsumeResult(ilBuilderContext, resultLocal, parserEntry);
-
-					if (argumentBuilder is LexerArgumentBuilder)
-						BuildConsumeResult(ilBuilderContext, resultLocal, parserEntry);
-				}
-
-				private void BuildConsumeResult(ILBuilderContext ilBuilderContext, LocalBuilder resultLocal, ParserEntryData parserEntry)
-				{
-					if (parserEntry == null || parserEntry.FlatIndex == -1)
-						return;
-
-					var parserProduction = parserEntry.ParserProduction;
-					var parserTransition = parserProduction;
-					var argumentBuilder = parserTransition.Binder.Template[parserEntry.FlatIndex];
 
 					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Call, PeekStateEntryMethodInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionInstanceBuilderArgumentsFieldInfo);
+					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, stackDelta);
+					ilBuilderContext.IL.Emit(OpCodes.Call, EnsureProductionEntityStackDepthMethodInfo);
+				}
 
-					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserEntry.FlatIndex);
-					ilBuilderContext.IL.Emit(OpCodes.Ldelem_Ref);
+				protected override void BuildConsumePredicateResult(ILBuilderContext ilBuilderContext, LocalBuilder predicateResultLocal, PredicateEntryBase predicateEntryBase)
+				{
+					var argument = ((IParserEntry) predicateEntryBase.GetActualPredicateEntry()).ProductionArgument;
+					
+					if (argument is not (ParserProductionArgument or LexerProductionArgument)) 
+						return;
 
-					ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
+					var argumentLocal = ilBuilderContext.IL.DeclareLocal(typeof(ProductionEntityArgument));
+					var resultLocal = ilBuilderContext.IL.DeclareLocal(typeof(object));
+
+					EmitPushArgument(ilBuilderContext, argument, 0);
+
+					ilBuilderContext.IL.Emit(OpCodes.Stloc, argumentLocal);
+
+					ilBuilderContext.IL.Emit(OpCodes.Ldloc, predicateResultLocal);
 					ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultGetResultMethodInfo);
+					ilBuilderContext.IL.Emit(OpCodes.Stloc, predicateResultLocal);
 
-					if (argumentBuilder is ParserArgumentBuilder parserArgumentBuilder)
-					{
-						parserArgumentBuilder.EmitConsumeValue(ilBuilderContext);
-					}
-					else if (argumentBuilder is LexerArgumentBuilder lexerArgumentBuilder)
-					{
-						ilBuilderContext.IL.Emit(OpCodes.Unbox_Any, typeof(Lexeme<>).MakeGenericType(lexerArgumentBuilder.TokenType));
-						lexerArgumentBuilder.EmitConsumeValue(this, ilBuilderContext);
-					}
+					argument.EmitConsumeValue(argumentLocal, resultLocal, this, ilBuilderContext);
 
-					if (parserProduction.Binder.TryReturn)
-					{
-						ilBuilderContext.EmitLdContext();
-						ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserEntry.FlatIndex);
-						ilBuilderContext.IL.Emit(OpCodes.Call, OnAfterConsumeValueMethodInfo);
-					}
+					EmitTryReturn(ilBuilderContext, argument);
+				}
+
+				private static void EmitTryReturn(ILBuilderContext ilBuilderContext, ProductionArgument argument)
+				{
+					if (argument.ParserProduction.Binder.TryReturn == false)
+						return;
+
+					ilBuilderContext.EmitLdContext();
+					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, argument.ArgumentIndex);
+					ilBuilderContext.IL.Emit(OpCodes.Call, OnAfterConsumeValueMethodInfo);
 				}
 
 				protected override void BuildEnterProduction(ILBuilderContext ilBuilderContext, Production production)
 				{
-					if (!(production is ParserProduction parserProduction))
+					if (production is not ParserProduction parserProduction)
 						return;
 
-					if (parserProduction.IsInline)
-						return;
+					MethodInfo method = null;
 
-					var pushMethod = parserProduction.LeftRecursionEntry != null ? PushLeftRecursionProductionInstanceBuilderMethodInfo : PushProductionInstanceBuilderMethodInfo;
+					if (parserProduction.LeftFactorProduction != null || parserProduction.LeftFactorEntry != null) 
+						method = PushLeftFactorProductionInstanceBuilderMethodInfo;
+					else if (parserProduction.IsInline)
+						return;
+					
+					if (method == null)
+						method = parserProduction.LeftRecursionEntry != null ? EnterLeftRecursionProductionMethodInfo : EnterProductionMethodInfo;
 
 					ilBuilderContext.EmitLdContext();
 					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserProduction.ProductionIndex);
-					ilBuilderContext.IL.Emit(OpCodes.Call, pushMethod);
+					ilBuilderContext.IL.Emit(OpCodes.Call, method);
 				}
 
-				protected override void BuildEnterStateEntry(ILBuilderContext ilBuilderContext, StateEntry stateEntry)
+				protected override void BuildEnterRuleEntry(ILBuilderContext ilBuilderContext, RuleEntry ruleEntry)
 				{
-					if (stateEntry == null || stateEntry.SkipStack)
+					if (ruleEntry == null || ruleEntry.SkipStack)
 						return;
 
-					if (!(stateEntry is ParserStateEntry parserStateEntry) || parserStateEntry.ParserEntryData.FlatIndex == -1) 
+					if (ruleEntry is not ParserRuleEntry parserStateEntry || parserStateEntry.ProductionArgument == null) 
 						return;
 
 					ilBuilderContext.EmitLdContext();
 					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, StateEntryIndexFieldInfo);
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionEntityStackTailFieldInfo);
 					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4_1);
 					ilBuilderContext.IL.Emit(OpCodes.Add);
-					ilBuilderContext.IL.Emit(OpCodes.Stfld, StateEntryIndexFieldInfo);
+					ilBuilderContext.IL.Emit(OpCodes.Stfld, ProductionEntityStackTailFieldInfo);
+				}
+
+				private void LeaveRuleEntry()
+				{
+					_productionEntityStack[_productionEntityStackTail--].Return();
 				}
 
 				protected override void BuildInvoke(ILBuilderContext ilBuilderContext, MatchEntry matchEntry, bool main)
@@ -222,83 +221,134 @@ namespace Zaaml.Text
 					if (main == false)
 						return;
 
-					var parserEntry = matchEntry switch
+					var argument = matchEntry switch
 					{
-						ParserSingleMatchEntry s => s.ParserEntryData,
-						ParserSetMatchEntry s => s.ParserEntryData,
+						ParserSingleMatchEntry s => s.ProductionArgument,
+						ParserSetMatchEntry s => s.ProductionArgument,
 						_ => throw new ArgumentOutOfRangeException()
 					};
 
-					if (parserEntry.FlatIndex == -1)
+					if (argument is not LexerProductionArgument lexerArgument)
 						return;
 
-					var parserProduction = parserEntry.ParserProduction;
-
-					if (parserProduction == null)
+					if (argument.Binder == null)
 						return;
 
-					if (parserProduction.IsInline)
-						return;
+					var argumentLocal = ilBuilderContext.IL.DeclareLocal(typeof(ProductionEntityArgument));
+					var resultLocal = ilBuilderContext.IL.DeclareLocal(typeof(Lexeme<TToken>));
 
-					var entryBuilder = parserProduction.Binder.Template[parserEntry.FlatIndex];
+					EmitPushArgument(ilBuilderContext, lexerArgument, 0);
 
-					if (entryBuilder == null)
-						return;
+					ilBuilderContext.IL.Emit(OpCodes.Stloc, argumentLocal);
 
-					if (!(entryBuilder is LexerArgumentBuilder lexerArgumentBuilder))
-						throw new InvalidOperationException();
+					EmitGetInstruction(ilBuilderContext);
+					ilBuilderContext.IL.Emit(OpCodes.Stloc, resultLocal);
 
-					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Call, PeekStateEntryMethodInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionInstanceBuilderArgumentsFieldInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserEntry.FlatIndex);
+					lexerArgument.EmitConsumeValue(argumentLocal, resultLocal, this, ilBuilderContext);
+
+					EmitTryReturn(ilBuilderContext, argument);
+				}
+
+				private static void EmitPushArgument(ILBuilderContext ilBuilderContext, ProductionArgument productionArgument, int tailDelta)
+				{
+					EmitPeekProductionEntity(ilBuilderContext, tailDelta);
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionEntityArgumentsFieldInfo);
+					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, productionArgument.ArgumentIndex);
 					ilBuilderContext.IL.Emit(OpCodes.Ldelem_Ref);
-
-					lexerArgumentBuilder.EmitConsumeValue(this, ilBuilderContext);
-
-					if (parserProduction.Binder.TryReturn)
-					{
-						ilBuilderContext.EmitLdContext();
-						ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserEntry.FlatIndex);
-						ilBuilderContext.IL.Emit(OpCodes.Call, OnAfterConsumeValueMethodInfo);
-					}
-
-					//ilBuilderContext.EmitLdContext();
-					//ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserStateEntry.FlatIndex);
-					//ilBuilderContext.IL.Emit(OpCodes.Call, ConsumeLexerEntryMethodInfo);
 				}
 
 				protected override void BuildLeaveProduction(ILBuilderContext ilBuilderContext, Production production)
 				{
-				}
-
-				protected override void BuildLeaveStateEntry(ILBuilderContext ilBuilderContext, StateEntry stateEntry)
-				{
-					if (stateEntry == null || stateEntry.SkipStack)
+					if (production is not ParserProduction parserProduction)
 						return;
 
-					var parserStateEntry = stateEntry as ParserStateEntry;
-					var parserEntry = parserStateEntry?.ParserEntryData;
+					var method = LeaveProductionMethodInfo;
 
-					if (parserEntry != null && parserEntry.FlatIndex != -1)
+					if (parserProduction.LeftFactorProduction != null || parserProduction.LeftFactorEntry != null)
+						method = LeaveLeftFactorProductionMethodInfo;
+
+					ilBuilderContext.EmitLdContext();
+					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserProduction.ProductionIndex);
+					ilBuilderContext.IL.Emit(OpCodes.Call, method);
+				}
+
+				protected override void BuildLeaveRuleEntry(ILBuilderContext ilBuilderContext, RuleEntry ruleEntry)
+				{
+					if (ruleEntry == null || ruleEntry.SkipStack)
+						return;
+
+					var parserStateEntry = ruleEntry as ParserRuleEntry;
+					var argument = parserStateEntry?.ProductionArgument;
+
+					if (argument is not ParserProductionArgument) 
+						return;
+
+					if (argument.Binder == null)
+						return;
+
+#if EMIT_COMSUME_PARSER == false
+					var argumentLocal = ilBuilderContext.IL.DeclareLocal(typeof(ProductionEntityArgument));
+					var resultLocal = ilBuilderContext.IL.DeclareLocal(typeof(object));
+
+					EmitPushArgument(ilBuilderContext, argument, 1);
+
+					ilBuilderContext.IL.Emit(OpCodes.Stloc, argumentLocal);
+
+					EmitPeekProductionEntityResult(ilBuilderContext);
+
+					ilBuilderContext.IL.Emit(OpCodes.Stloc, resultLocal);
+
+					argument.EmitConsumeValue(argumentLocal, resultLocal, this, ilBuilderContext);
+
+					EmitLeaveRuleEntry(ilBuilderContext);
+#else
+					ilBuilderContext.EmitLdContext();
+					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, argument.ArgumentIndex);
+					ilBuilderContext.IL.Emit(OpCodes.Call, ConsumeProductionEntityMethodInfo);
+
+					//ilBuilderContext.EmitLdContext();
+					//ilBuilderContext.IL.Emit(OpCodes.Call, LeaveRuleEntryMethodInfo);
+#endif
+					EmitTryReturn(ilBuilderContext, argument);
+				}
+
+				private static void EmitLeaveRuleEntry(ILBuilderContext ilBuilderContext)
+				{
+					EmitPeekProductionEntity(ilBuilderContext, 0);
+					ilBuilderContext.IL.Emit(OpCodes.Call, ProductionEntityReturnMethodInfo);
+
+					ilBuilderContext.EmitLdContext();
+					ilBuilderContext.EmitLdContext();
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionEntityStackTailFieldInfo);
+					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4_1);
+					ilBuilderContext.IL.Emit(OpCodes.Sub);
+					ilBuilderContext.IL.Emit(OpCodes.Stfld, ProductionEntityStackTailFieldInfo);
+				}
+
+				private static void EmitPeekProductionEntity(ILBuilderContext ilBuilderContext, int tailDelta)
+				{
+					ilBuilderContext.EmitLdContext();
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionEntityStackFieldInfo);
+					ilBuilderContext.EmitLdContext();
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionEntityStackTailFieldInfo);
+					
+					if (tailDelta > 0)
 					{
-						var parserProduction = parserEntry.ParserProduction;
-						var argumentBuilder = parserProduction.Binder.Template[parserEntry.FlatIndex];
+						if (tailDelta == 1)
+							ilBuilderContext.IL.Emit(OpCodes.Ldc_I4_1);
+						else
+							ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, tailDelta);
 
-						if (!(argumentBuilder is ParserArgumentBuilder parserArgumentBuilder))
-							throw new InvalidOperationException();
-
-						ilBuilderContext.EmitLdContext();
-						ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserEntry.FlatIndex);
-						ilBuilderContext.IL.Emit(OpCodes.Call, ConsumeEntryMethodInfo);
-
-						if (parserProduction.Binder.TryReturn)
-						{
-							ilBuilderContext.EmitLdContext();
-							ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserEntry.FlatIndex);
-							ilBuilderContext.IL.Emit(OpCodes.Call, OnAfterConsumeValueMethodInfo);
-						}
+						ilBuilderContext.IL.Emit(OpCodes.Sub);
 					}
+
+					ilBuilderContext.IL.Emit(OpCodes.Ldelem_Ref);
+				}
+
+				private static void EmitPeekProductionEntityResult(ILBuilderContext ilBuilderContext)
+				{
+					EmitPeekProductionEntity(ilBuilderContext, 0);
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionEntityResultFieldInfo);
 				}
 
 				protected sealed override AutomataContextState CloneContextState(AutomataContextState contextState)
@@ -316,18 +366,11 @@ namespace Zaaml.Text
 					return cloneContextState;
 				}
 
-				private void ConsumeEntry(int entryIndex)
+				private void ConsumeProductionEntity(int entryIndex)
 				{
-					var value = _stateEntryArray[_stateEntryIndex--];
-					var consume = _stateEntryArray[_stateEntryIndex];
-					var argument = consume.Arguments[entryIndex];
+					var value = _productionEntityStack[_productionEntityStackTail].Result;
 
-					argument.ConsumeParserValue(value.CreateInstance(_syntaxTreeFactory));
-				}
-
-				private void ConsumeLexerEntry(int entryIndex)
-				{
-					_stateEntryArray[_stateEntryIndex].Arguments[entryIndex].ConsumeLexerEntry(this);
+					_productionEntityStack[_productionEntityStackTail - 1].Arguments[entryIndex].ConsumeValue(value);
 				}
 
 				protected sealed override AutomataContextState CreateContextState()
@@ -349,13 +392,13 @@ namespace Zaaml.Text
 
 				public override void Dispose()
 				{
-					while (_stateEntryIndex >= 0)
+					while (_productionEntityStackTail >= 0)
 					{
-						_stateEntryArray[_stateEntryIndex].Reset();
-						_stateEntryIndex--;
+						_productionEntityStack[_productionEntityStackTail].Reset();
+						_productionEntityStackTail--;
 					}
 
-					_stateEntryIndex = 0;
+					_productionEntityStackTail = 0;
 
 					_syntaxTreeFactory?.DetachParserContextInternal(ParserContext);
 					_syntaxTreeFactory = _syntaxTreeFactory.DisposeExchange();
@@ -374,36 +417,6 @@ namespace Zaaml.Text
 					parserContextState.ParserContext = null;
 
 					_parserAutomataContextStatesPool.Push(parserContextState);
-				}
-
-				private void EmitConsumeEntry(ILBuilderContext ilBuilderContext, ParserStateEntry parserStateEntry, LocalBuilder resultLocal)
-				{
-					var parserEntry = parserStateEntry?.ParserEntryData;
-
-					if (parserEntry == null || parserEntry.FlatIndex == -1)
-						return;
-
-					var parserProduction = parserEntry.ParserProduction;
-					var argumentBuilder = parserProduction.Binder.Template[parserEntry.FlatIndex];
-
-					if (!(argumentBuilder is ParserArgumentBuilder parserArgumentBuilder))
-						throw new InvalidOperationException();
-
-					ilBuilderContext.EmitLdContext();
-					ilBuilderContext.IL.Emit(OpCodes.Call, PeekStateEntryMethodInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ProductionInstanceBuilderArgumentsFieldInfo);
-					ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserEntry.FlatIndex);
-					ilBuilderContext.IL.Emit(OpCodes.Ldelem_Ref);
-
-					ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
-					parserArgumentBuilder.EmitConsumeValue(ilBuilderContext);
-
-					if (parserProduction.Binder.TryReturn)
-					{
-						ilBuilderContext.EmitLdContext();
-						ilBuilderContext.IL.Emit(OpCodes.Ldc_I4, parserEntry.FlatIndex);
-						ilBuilderContext.IL.Emit(OpCodes.Call, OnAfterConsumeValueMethodInfo);
-					}
 				}
 
 				private void EmitDebugValue(ILBuilderContext ilBuilderContext, object value)
@@ -482,10 +495,10 @@ namespace Zaaml.Text
 					ilBuilderContext.IL.Emit(OpCodes.Ldfld, TextSourceSpanFieldInfo);
 				}
 
-				private void EnsureStateEntrySize(int delta)
+				private void EnsureProductionEntityStackDepth(int delta)
 				{
-					if (_stateEntryIndex + delta >= _stateEntryArray.Length)
-						ResizeStateEntryArrays();
+					if (_productionEntityStackTail + delta >= _productionEntityStack.Length)
+						ArrayUtils.ExpandArrayLength(ref _productionEntityStack, true);
 				}
 
 				internal string GetInstructionText()
@@ -500,10 +513,10 @@ namespace Zaaml.Text
 
 				public TResult GetResult<TResult>()
 				{
-					if (_stateEntryIndex != 0)
+					if (_productionEntityStackTail != 0)
 						throw new InvalidOperationException();
 
-					return (TResult) _stateEntryArray[0].CreateInstance(_syntaxTreeFactory);
+					return (TResult) _productionEntityStack[0].Result;
 				}
 
 				public override void Mount(LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
@@ -516,40 +529,70 @@ namespace Zaaml.Text
 
 				private void OnAfterConsumeValue(int entryIndex)
 				{
-					_stateEntryArray[_stateEntryIndex].OnAfterConsumeValue(entryIndex);
+					_productionEntityStack[_productionEntityStackTail].OnAfterConsumeValue(entryIndex);
 				}
 
-				private object PeekStateEntry()
+				private ProductionEntity PeekProductionEntity()
 				{
-					return _stateEntryArray[_stateEntryIndex];
+					return _productionEntityStack[_productionEntityStackTail];
 				}
 
-				private void PushLeftRecursionProductionInstanceBuilder(int productionIndex)
+				private void EnterLeftRecursionProduction(int productionIndex)
 				{
-					ref var instanceBuilder = ref _stateEntryArray[_stateEntryIndex];
-					var value = instanceBuilder.CreateInstance(_syntaxTreeFactory);
+					ref var productionEntity = ref _productionEntityStack[_productionEntityStackTail];
+					productionEntity.BuildEntity(this);
 
-					instanceBuilder = _productionBuilderPool[productionIndex].Rent();
+					var value = productionEntity.Result;
 
-					if (instanceBuilder.LeftRecursionArgument == null) 
+					productionEntity.Return();
+
+					productionEntity = _productions[productionIndex].RentEntity();
+
+					var leftRecursionArgumentIndex = productionEntity.ParserProduction.LeftRecursionEntry?.ProductionArgument.ArgumentIndex ?? -1;
+
+					if (leftRecursionArgumentIndex == -1)
 						return;
 
-					instanceBuilder.LeftRecursionArgument.ConsumeParserValue(value);
-					instanceBuilder.OnAfterConsumeValue(instanceBuilder.LeftRecursionArgument.Index);
+					var leftRecursionArgument = productionEntity.Arguments[leftRecursionArgumentIndex];
+					
+					leftRecursionArgument.ConsumeValue(value);
+
+					productionEntity.OnAfterConsumeValue(leftRecursionArgument.ArgumentIndex);
 				}
 
-				private void PushProductionInstanceBuilder(int productionIndex)
+				private void PushLeftFactorProductionInstanceBuilder(int productionIndex)
 				{
-					_stateEntryArray[_stateEntryIndex] = _productionBuilderPool[productionIndex].Rent();
+					var parserProduction = _productions[productionIndex];
+
+					if (parserProduction.LeftFactorProduction != null)
+						_productionEntityStackTail++;
+					
+					_productionEntityStack[_productionEntityStackTail] = _productions[productionIndex].RentEntity();
 				}
 
-				private void ResizeStateEntryArrays()
+				private void LeaveProduction(int productionIndex)
 				{
-					var stateEntryArray = new ProductionInstanceBuilder[_stateEntryArray.Length * 2];
+					if (_productions[productionIndex].IsInline)
+						return;
 
-					Array.Copy(_stateEntryArray, stateEntryArray, _stateEntryArray.Length);
+					_productionEntityStack[_productionEntityStackTail].BuildEntity(this);
+				}
 
-					_stateEntryArray = stateEntryArray;
+				private void LeaveLeftFactorProduction(int productionIndex)
+				{
+					var parserProduction = _productions[productionIndex];
+
+					if (parserProduction.LeftFactorProduction == null) 
+						return;
+
+					var productionInstanceBuilder = _productionEntityStack[_productionEntityStackTail--];
+
+					_productionEntityStack[_productionEntityStackTail].UnwindLeftFactorBuilder(productionInstanceBuilder);
+				}
+
+				private void EnterProduction(int productionIndex)
+				{
+					_productionEntityStack[_productionEntityStackTail] = _productions[productionIndex].RentEntity();
 				}
 
 				void IParserILBuilder.EmitGetInstructionText(ILBuilderContext ilBuilderContext) => EmitGetInstructionText(ilBuilderContext);

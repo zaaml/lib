@@ -2,27 +2,20 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using Zaaml.Core;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected class QuantifierEntry : Entry
 		{
-			#region Fields
-
 			public readonly QuantifierKind Kind;
 			public readonly int Maximum;
 			public readonly int Minimum;
 			public readonly QuantifierMode Mode;
 			public readonly PrimitiveEntry PrimitiveEntry;
-
-			#endregion
-
-			#region Ctors
 
 			public QuantifierEntry(PrimitiveEntry primitiveEntry, QuantifierKind kind, QuantifierMode mode)
 			{
@@ -55,15 +48,19 @@ namespace Zaaml.Text
 				Minimum = minimum;
 			}
 
-			#endregion
+			protected override string DebuggerDisplay => $"{PrimitiveEntry}{GetQuantifierKindString(Kind, Minimum, Maximum)}";
 
-			#region Properties
-
-			protected override string DebuggerDisplay => "Quantifier";
-
-			#endregion
+			private string GetQuantifierKindString(QuantifierKind kind, int minimum, int maximum)
+			{
+				return kind switch
+				{
+					QuantifierKind.Generic => $"{{{minimum},{maximum}}}",
+					QuantifierKind.ZeroOrOne => "?",
+					QuantifierKind.ZeroOrMore => "*",
+					QuantifierKind.OneOrMore => "+",
+					_ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+				};
+			}
 		}
-
-		#endregion
 	}
 }

@@ -20,7 +20,7 @@ namespace Zaaml.Text
 			{
 				#region Ctors
 
-				public VisitorAutomataContext(Visitor visitor, ParserState state, ParserAutomata parserAutomata) : base(state, parserAutomata)
+				public VisitorAutomataContext(Visitor visitor, ParserRule rule, ParserAutomata parserAutomata) : base(rule, parserAutomata)
 				{
 					Visitor = visitor;
 				}
@@ -41,7 +41,7 @@ namespace Zaaml.Text
 				{
 					base.Dispose();
 
-					((ParserState) State).ReleaseVisitorContext(this);
+					((ParserRule) Rule).ReleaseVisitorContext(this);
 				}
 
 				#endregion

@@ -12,9 +12,9 @@ namespace Zaaml.Text
 		{
 			#region Methods
 
-			public static implicit operator PrimitiveEntry(FiniteState state)
+			public static implicit operator PrimitiveEntry(Rule state)
 			{
-				return new StateEntry(state);
+				return new RuleEntry(state);
 			}
 
 			public static implicit operator PrimitiveEntry(TOperand input)

@@ -64,7 +64,7 @@ namespace Zaaml.Text
 
 					_nodesCollection.Add(dfaNode);
 
-					if (predicatePath == null && (node is ReturnStateNode || node.ReturnPath.IsInvalid == false))
+					if (predicatePath == null && (node is ReturnRuleNode || node.ReturnPath.IsInvalid == false))
 						_successTransition = transition;
 				}
 

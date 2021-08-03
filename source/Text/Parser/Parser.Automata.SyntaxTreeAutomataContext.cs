@@ -20,7 +20,7 @@ namespace Zaaml.Text
 			{
 				#region Ctors
 
-				public SyntaxTreeAutomataContext(ParserState state, ParserAutomata parserAutomata) : base(state, parserAutomata)
+				public SyntaxTreeAutomataContext(ParserRule rule, ParserAutomata parserAutomata) : base(rule, parserAutomata)
 				{
 				}
 
@@ -38,7 +38,7 @@ namespace Zaaml.Text
 				{
 					base.Dispose();
 
-					((ParserState) State).ReleaseSyntaxTreeContext(this);
+					((ParserRule) Rule).ReleaseSyntaxTreeContext(this);
 				}
 
 				#endregion
