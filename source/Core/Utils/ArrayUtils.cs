@@ -3,73 +3,23 @@
 // </copyright>
 
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace Zaaml.Core.Utils
 {
 	internal static class ArrayUtils
 	{
-		#region Static Fields and Constants
-
 		internal const int MaxArrayLength = 0X7FEFFFFF;
 		internal const int DefaultCapacity = 8;
 
-		#endregion
-
-		#region  Methods
-
-		public static void Fill<T>(T[] array, T value)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void AddList<T>(T value, ref T[] array, ref int count)
 		{
-#if NETCOREAPP3_1
-			Array.Fill(array, value);
-#else
-			for (var i = 0; i < array.Length; i++)
-				array[i] = value;			
-#endif
-		}
+			if (count >= array.Length)
+				EnsureArrayLength(ref array, count + 1, true);
 
-		public static void Fill<T>(T[] array, T value, int startIndex, int length)
-		{
-#if NETCOREAPP3_1
-			Array.Fill(array, value, startIndex, length);
-#else
-			for (var i = startIndex; i < startIndex + length; i++)
-				array[i] = value;
-#endif
-		}
-
-		public static void ExpandArrayLength<T>(ref T[] array, bool copyItems)
-		{
-			EnsureArrayLength(ref array, array.Length * 2, copyItems);
-		}
-
-		public static void EnsureArrayLength<T>(ref T[] array, int minLength, bool copyItems)
-		{
-			if (array == null)
-			{
-				array = new T[minLength];
-
-				return;
-			}
-
-			if (array.Length >= minLength)
-				return;
-
-			var newCapacity = array.Length == 0 ? DefaultCapacity : array.Length * 2;
-
-			if ((uint) newCapacity > MaxArrayLength)
-				newCapacity = MaxArrayLength;
-
-			if (newCapacity < minLength)
-				newCapacity = minLength;
-
-			var newArray = new T[newCapacity];
-
-			if (copyItems)
-				for (var index = 0; index < array.Length; index++)
-					newArray[index] = array[index];
-
-			array = newArray;
+			array[count++] = value;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,15 +31,97 @@ namespace Zaaml.Core.Utils
 			count = 0;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void AddList<T>(T value, ref T[] array, ref int count)
+		public static void EnsureArrayLength<T>(ref T[] array, int length)
 		{
-			if (count >= array.Length) 
-				EnsureArrayLength(ref array, count * 2, true);
+			length = BitUtils.Power2Ceiling(length);
 
-			array[count++] = value;
+			if (array == null)
+			{
+				array = new T[length];
+
+				return;
+			}
+
+			if (length <= array.Length)
+				return;
+
+			array = new T[length];
 		}
 
-#endregion
+		public static void EnsureArrayLength<T>(ref T[] array, int length, bool copyItems)
+		{
+			length = BitUtils.Power2Ceiling(length);
+
+			if (array == null)
+			{
+				array = new T[length];
+
+				return;
+			}
+
+			if (length <= array.Length)
+				return;
+
+			var newArray = new T[length];
+
+			if (copyItems)
+				Array.Copy(array, newArray, array.Length);
+
+			array = newArray;
+		}
+
+		public static void EnsureArrayLength<T>(ref T[] array, int length, ArrayPool<T> pool, bool copyItems, bool clearArray)
+		{
+			length = BitUtils.Power2Ceiling(length);
+
+			if (array == null)
+			{
+				array = pool.Rent(length);
+
+				return;
+			}
+
+			if (length <= array.Length)
+				return;
+			
+			var newArray = pool.Rent(length);
+
+			if (copyItems)
+				Array.Copy(array, newArray, array.Length);
+
+			pool.Return(array, clearArray);
+
+			array = newArray;
+		}
+
+		public static void ExpandArrayLength<T>(ref T[] array, bool copyItems)
+		{
+			EnsureArrayLength(ref array, array.Length + 1, copyItems);
+		}
+
+		public static void ExpandArrayLength<T>(ref T[] array, ArrayPool<T> pool, bool copyItems, bool clearArray)
+		{
+			EnsureArrayLength(ref array, array.Length + 1, pool, copyItems, clearArray);
+		}
+
+		public static void Fill<T>(T[] array, T value)
+		{
+#if NETCOREAPP
+			Array.Fill(array, value);
+#else
+			for (var i = 0; i < array.Length; i++)
+				array[i] = value;
+#endif
+		}
+
+		public static void Fill<T>(T[] array, T value, int startIndex, int length)
+		{
+#if NETCOREAPP
+			Array.Fill(array, value, startIndex, length);
+#else
+			for (var i = startIndex; i < startIndex + length; i++)
+				array[i] = value;
+#endif
+		}
 	}
 }

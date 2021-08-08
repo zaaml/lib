@@ -9,12 +9,8 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken> where TToken : unmanaged, Enum
 	{
-		#region Nested Types
-
 		protected internal class ParserProductionCollection : List<ParserProduction>
 		{
-			#region Methods
-
 			public void FromBuilder(ParserProductionCollectionBuilder builder)
 			{
 				for (var i = 0; i < builder.EntryCount; i++)
@@ -38,7 +34,7 @@ namespace Zaaml.Text
 
 			public static implicit operator ParserProductionCollection(ParserEntry parserEntry)
 			{
-				return new ParserProductionCollection().WithProduction(new ParserProduction(new[] {parserEntry}));
+				return new ParserProductionCollection().WithProduction(new ParserProduction(new[] { parserEntry }));
 			}
 
 			public static implicit operator ParserProductionCollection(ParserProductionCollectionBuilder builder)
@@ -57,10 +53,6 @@ namespace Zaaml.Text
 
 				return this;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

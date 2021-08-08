@@ -21,15 +21,9 @@ namespace Zaaml.Text
 				private static readonly Dictionary<Type, Type> ArrayTypeDictionary = new();
 				public readonly ProductionBinder Binder;
 				private ProductionEntity[] _productionEntityPool;
-				private int _productionEntityPoolTail;
+				private int _productionEntityPoolTail = -1;
 
-				private ParserProduction(IEnumerable<Entry> entries) : base(entries)
-				{
-					_productionEntityPool = new ProductionEntity[8];
-					_productionEntityPoolTail = -1;
-				}
-
-				public ParserProduction(ParserAutomata automata, Func<ParserProduction, ProductionBinder> binderFactory, IEnumerable<Entry> entries) : this(entries)
+				public ParserProduction(ParserAutomata automata, Func<ParserProduction, ProductionBinder> binderFactory, IEnumerable<Entry> entries) : base(entries)
 				{
 					if (binderFactory == null)
 					{
@@ -44,7 +38,7 @@ namespace Zaaml.Text
 				}
 
 				public ParserProduction(ParserAutomata automata, Grammar<TToken>.ParserRule grammarParserRule, Grammar<TToken>.ParserProduction grammarParserProduction)
-					: this(grammarParserProduction.Entries.Select(automata.CreateParserEntry))
+					: base(grammarParserProduction.Entries.Select(automata.CreateParserEntry))
 				{
 					Name = grammarParserProduction.Name ?? automata.GenerateProductionName();
 
@@ -61,8 +55,7 @@ namespace Zaaml.Text
 					{
 						Grammar<TToken>.ConstructorBinding ctorBinding => new ConstructorBinder(ctorBinding.NodeType, this),
 						Grammar<TToken>.SyntaxFactoryBinding _ => new SyntaxFactoryBinder(this),
-						null => null,
-						_ => throw new InvalidOperationException("Unknown binder")
+						_ => null
 					};
 				}
 
@@ -72,17 +65,11 @@ namespace Zaaml.Text
 
 				public bool IsInline { get; }
 
-				internal bool IsRightAssoc { get; set; }
-
-				internal ParserRuleEntry LeftFactorEntry { get; set; }
-
-				internal ParserProduction LeftFactorProduction { get; set; }
-
-				internal LeftRecursionClassifier LeftRecursionClassifier { get; set; }
-
-				internal ParserRuleEntry LeftRecursionEntry { get; set; }
+				internal bool LeftFactorProduction { get; set; }
 
 				private string Name { get; }
+
+				internal ParserProduction OriginalProduction { get; set; }
 
 				public int ProductionIndex { get; }
 
@@ -90,7 +77,7 @@ namespace Zaaml.Text
 				{
 					var entry = stack[stack.Count - 1];
 
-					if (entry is ParserRuleEntry {Fragment: true} parserStateEntry)
+					if (entry is ParserRuleEntry { Fragment: true } parserStateEntry)
 					{
 						stack.Add(parserStateEntry);
 
@@ -147,19 +134,6 @@ namespace Zaaml.Text
 					}
 				}
 
-				private static string EnsureEntryName(Entry entry, List<Entry> stack)
-				{
-					if (entry is not IParserEntry parserEntry)
-						return null;
-
-					var name = EnsureName(parserEntry.GrammarEntry);
-
-					if (stack.Count > 1 && stack[stack.Count - 2] is ParserQuantifierEntry parserQuantifierEntry)
-						return EnsureName(parserQuantifierEntry.GrammarEntry) ?? name;
-
-					return name;
-				}
-
 				private void CreateArgument(Entry entry, List<Entry> stack)
 				{
 					if (entry is not IParserEntry parserEntry)
@@ -196,17 +170,30 @@ namespace Zaaml.Text
 					var parserArgumentGenericType = array ? typeof(ParserValueArrayArgument<>) : typeof(ParserValueArgument<>);
 					var parserArgumentType = parserArgumentGenericType.MakeGenericType(typeof(TGrammar), typeof(TToken), argumentType);
 
-					return (ProductionArgument) Activator.CreateInstance(parserArgumentType, name, parserEntry, argumentIndex, array ? GetArrayType(argumentType) : argumentType, this);
+					return (ProductionArgument)Activator.CreateInstance(parserArgumentType, name, parserEntry, argumentIndex, array ? GetArrayType(argumentType) : argumentType, this);
 				}
 
 				private ProductionArgument CreatePredicateArgument(string name, IParserPredicate parserPredicateEntry, int argumentIndex, Type argumentType, bool array)
 				{
 					return parserPredicateEntry.PredicateKind switch
 					{
-						ParserPredicateKind.SubParser => CreateParserArgument(name, (Entry) parserPredicateEntry, argumentIndex, argumentType, array),
+						ParserPredicateKind.ExternalParser => CreateParserArgument(name, (Entry)parserPredicateEntry, argumentIndex, argumentType, array),
 						//ParserPredicateKind.SubLexer => CreateSubLexerArgumentFactory(parserPredicateEntry),
 						_ => null
 					};
+				}
+
+				private static string EnsureEntryName(Entry entry, List<Entry> stack)
+				{
+					if (entry is not IParserEntry parserEntry)
+						return null;
+
+					var name = EnsureName(parserEntry.GrammarEntry);
+
+					if (stack.Count > 1 && stack[stack.Count - 2] is ParserQuantifierEntry parserQuantifierEntry)
+						return EnsureName(parserQuantifierEntry.GrammarEntry) ?? name;
+
+					return name;
 				}
 
 				public ProductionArgumentCollection GetArguments(string name, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
@@ -219,7 +206,7 @@ namespace Zaaml.Text
 					return parserEntry switch
 					{
 						IParserPredicate parserPredicateEntry => GetPredicateArgumentType(parserPredicateEntry),
-						ParserRuleEntry parserRuleEntry => ((Grammar<TToken>.ParserRuleEntry) parserRuleEntry.GrammarEntry).Rule.NodeType,
+						ParserRuleEntry parserRuleEntry => ((Grammar<TToken>.ParserRuleEntry)parserRuleEntry.GrammarEntry).Rule.NodeType,
 						ParserSetMatchEntry _ => typeof(Lexeme<TToken>),
 						ParserSingleMatchEntry _ => typeof(Lexeme<TToken>),
 						_ => null
@@ -234,29 +221,31 @@ namespace Zaaml.Text
 					return arrayType;
 				}
 
+				private static Type GetExternalTokenType(IParserPredicate parserPredicateEntry)
+				{
+					return parserPredicateEntry.GetType().GetGenericArguments().Last().GetGenericArguments().Single();
+				}
+
 				private static Type GetPredicateArgumentType(IParserPredicate parserPredicateEntry)
 				{
 					return parserPredicateEntry.PredicateKind switch
 					{
-						ParserPredicateKind.SubParser => null,
-						ParserPredicateKind.SubLexer => GetSubTokenType(parserPredicateEntry),
+						ParserPredicateKind.ExternalParser => null,
+						ParserPredicateKind.ExternalLexer => GetExternalTokenType(parserPredicateEntry),
 						_ => null
 					};
 				}
 
-				//private ProductionArgument CreateSubLexerArgumentFactory(IParserPredicate parserPredicateEntry)
-				//{
-				//	var tokenType = GetSubTokenType(parserPredicateEntry);
-				//	var argumentBuilderType = typeof(ExternalLexerEntityArgumentFactory<>).MakeGenericType(typeof(TGrammar), typeof(TToken), tokenType);
-				//	var argumentBuilderCtor = argumentBuilderType.GetConstructors().Single();
-				//	var argumentBuilder = (ProductionArgument)argumentBuilderCtor.Invoke(new object[] { this });
-
-				//	return argumentBuilder;
-				//}
-
-				private static Type GetSubTokenType(IParserPredicate parserPredicateEntry)
+				private void InitPool()
 				{
-					return parserPredicateEntry.GetType().GetGenericArguments().Last().GetGenericArguments().Single();
+					_productionEntityPool = new ProductionEntity[8];
+
+					var length = _productionEntityPool.Length;
+
+					for (var i = 0; i < length; i++)
+						_productionEntityPool[i] = new ProductionEntity(this);
+
+					_productionEntityPoolTail = length - 1;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -265,18 +254,27 @@ namespace Zaaml.Text
 					if (_productionEntityPoolTail == -1)
 						Resize();
 
-					var productionInstanceBuilder = _productionEntityPool[_productionEntityPoolTail--];
+					var productionEntity = _productionEntityPool[_productionEntityPoolTail--];
 
-					productionInstanceBuilder.Busy = true;
+					_productionEntityPool[_productionEntityPoolTail + 1] = null;
 
-					return productionInstanceBuilder;
+					productionEntity.Busy = true;
+
+					return productionEntity;
 				}
 
 				private void Resize()
 				{
-					ArrayUtils.ExpandArrayLength(ref _productionEntityPool, false);
+					if (_productionEntityPool == null)
+					{
+						InitPool();
+
+						return;
+					}
 
 					var length = _productionEntityPool.Length;
+
+					ArrayUtils.ExpandArrayLength(ref _productionEntityPool, false);
 
 					for (var i = 0; i < length; i++)
 						_productionEntityPool[i] = new ProductionEntity(this);

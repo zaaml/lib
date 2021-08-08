@@ -7,27 +7,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Zaaml.Core;
-using Zaaml.Core.Extensions;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Fields
-
 		private bool _built;
 
-		#endregion
+		private Dictionary<Rule, Graph> GraphDictionary { get; } = new();
 
-		#region Properties
-
-		private Dictionary<Rule, Graph> GraphDictionary { get; } = new Dictionary<Rule, Graph>();
-
-		private Dictionary<Rule, EntryPointSubGraph> SubGraphDictionary { get; } = new Dictionary<Rule, EntryPointSubGraph>();
-
-		#endregion
-
-		#region Methods
+		private Dictionary<Rule, EntryPointSubGraph> SubGraphDictionary { get; } = new();
 
 		private void Build()
 		{
@@ -45,16 +34,16 @@ namespace Zaaml.Text
 			}
 		}
 
-		private Graph EnsureGraph(Rule state)
+		private Graph EnsureGraph(Rule rule)
 		{
-			var graph = GraphDictionary.GetValueOrDefault(state);
+			var graph = GraphDictionary.GetValueOrDefault(rule);
 
 			if (graph != null)
 				return graph;
 
-			graph = new Graph(state, this);
+			graph = new Graph(rule, this);
 
-			GraphDictionary[state] = graph;
+			GraphDictionary[rule] = graph;
 
 			graph.Build();
 
@@ -75,16 +64,34 @@ namespace Zaaml.Text
 			return subGraph;
 		}
 
-		private void EvaluateInlineStates()
+		private void EvalDfaGraph()
+		{
+			//var dfaBarriers = new HashSet<Graph>();
+
+			//foreach (var state in States)
+			//{
+			//	if (state.Inline || state.Name == null)
+			//		continue;
+
+			//	var graph = EnsureGraph(state);
+
+			//	graph.EvalDfaBarrier();
+
+			//	if (graph.DfaBarrier)
+			//		dfaBarriers.Add(graph);
+			//}
+		}
+
+		private void EvaluateInlineRules()
 		{
 			var outboundCallsDictionary = new Dictionary<Rule, HashSet<Rule>>();
 			var inboundCallsDictionary = new Dictionary<Rule, HashSet<Rule>>();
-			var inlinedStates = new HashSet<Rule>();
+			var inlinedRules = new HashSet<Rule>();
 
-			foreach (var state in States)
+			foreach (var rule in Rules)
 			{
-				outboundCallsDictionary[state] = new HashSet<Rule>(state.Productions.SelectMany(transition => transition.Entries).Select(GetState).Where(s => s != null));
-				inboundCallsDictionary[state] = new HashSet<Rule>();
+				outboundCallsDictionary[rule] = new HashSet<Rule>(rule.Productions.SelectMany(production => production.Entries).Select(GetRule).Where(s => s != null));
+				inboundCallsDictionary[rule] = new HashSet<Rule>();
 			}
 
 			foreach (var kv in outboundCallsDictionary)
@@ -92,106 +99,77 @@ namespace Zaaml.Text
 				var key = kv.Key;
 				var value = kv.Value;
 
-				foreach (var state in value)
-					inboundCallsDictionary[state].Add(key);
+				foreach (var rule in value)
+				{
+					if (inboundCallsDictionary.TryGetValue(rule, out var set))
+						set.Add(key);
+				}
 			}
 
 			while (true)
 			{
-				var inlineSates = outboundCallsDictionary.Where(kv => kv.Value.Count == 0 && kv.Key.Inline == false).Select(kv => kv.Key).ToList();
+				var inlineRules = outboundCallsDictionary.Where(kv => kv.Value.Count == 0 && kv.Key.Inline == false).Select(kv => kv.Key).ToList();
 
-				if (inlineSates.Count == 0)
+				if (inlineRules.Count == 0)
 					break;
 
-				foreach (var outState in inlineSates)
+				foreach (var rule in inlineRules)
 				{
-					outState.Inline = true;
+					rule.Inline = true;
 
-					inlinedStates.Add(outState);
+					inlinedRules.Add(rule);
 
-					if (!inboundCallsDictionary.TryGetValue(outState, out var inboundCallsSet))
+					if (inboundCallsDictionary.TryGetValue(rule, out var inboundCallsSet) == false)
 						continue;
 
 					foreach (var inState in inboundCallsSet)
-						outboundCallsDictionary[inState].Remove(outState);
+						outboundCallsDictionary[inState].Remove(rule);
 				}
 			}
 		}
 
-		private static Rule GetState(Entry entry)
+		private static Rule GetRule(Entry entry)
 		{
 			return entry switch
 			{
-				RuleEntry stateEntry => stateEntry.Rule,
-				QuantifierEntry quantifier when quantifier.PrimitiveEntry is RuleEntry quantifierStateEntry => quantifierStateEntry.Rule,
+				RuleEntry ruleEntry => ruleEntry.Rule,
+				QuantifierEntry { PrimitiveEntry: RuleEntry quantifierRuleEntry } => quantifierRuleEntry.Rule,
 				_ => null
 			};
 		}
 
 		private void SyncBuild()
 		{
-			//EvaluateInlineStates();
+			EvaluateInlineRules();
 
-			foreach (var state in States)
+			foreach (var rule in Rules)
 			{
-				if (state.Inline == false)
-					EnsureGraph(state);
+				if (rule.Inline == false)
+					EnsureGraph(rule);
 			}
 
-			foreach (var state in States)
+			foreach (var rule in Rules)
 			{
-				if (state.Inline == false)
-					EnsureSubGraph(state);
+				if (rule.Inline == false)
+					EnsureSubGraph(rule);
 			}
 
-			EvalDfaGraph();
+			//EvalDfaGraph();
 		}
-
-		private void EvalDfaGraph()
-		{
-			var dfaBarriers = new HashSet<Graph>();
-
-			foreach (var state in States)
-			{
-				if (state.Inline || state.Name == null)
-					continue;
-
-				var graph = EnsureGraph(state);
-
-				graph.EvalDfaBarrier();
-
-				if (graph.DfaBarrier)
-					dfaBarriers.Add(graph);
-			}
-		}
-
-		#endregion
-
-		#region Nested Types
 
 		[DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
-		private sealed class Graph
+		private protected sealed class Graph
 		{
-			#region Fields
-
 			private int _innerCounter;
 
-			#endregion
-
-			#region Ctors
-
-			public Graph(Rule state, Automata<TInstruction, TOperand> automata)
+			public Graph(Rule rule, Automata<TInstruction, TOperand> automata)
 			{
-				State = state;
+				Rule = rule;
 				Automata = automata;
 
 				BeginNode = new BeginRuleNode(Automata, this);
 				ReturnNode = new ReturnRuleNode(Automata, this);
 			}
-
-			#endregion
-
-			#region Properties
 
 			private Automata<TInstruction, TOperand> Automata { get; }
 
@@ -199,37 +177,37 @@ namespace Zaaml.Text
 
 			public bool CanSimulateDfa { get; private set; }
 
-			private string DebuggerDisplay => State.Name;
+			private string DebuggerDisplay => Rule.Name;
 
-			[UsedImplicitly] private IEnumerable<Edge> Edges => Nodes.SelectMany(n => n.OutEdges);
+			[UsedImplicitly]
+			private IEnumerable<Edge> Edges => Nodes.SelectMany(n => n.OutEdges);
 
 			public bool HasOperandNodes { get; private set; }
 
-			[UsedImplicitly] public HashSet<Graph> InboundGraphCall { get; } = new HashSet<Graph>();
+			[UsedImplicitly]
+			public HashSet<Graph> InboundGraphCall { get; } = new();
 
-			[UsedImplicitly] public List<SubGraph> InboundSubGraphCall { get; } = new List<SubGraph>();
+			[UsedImplicitly]
+			public List<SubGraph> InboundSubGraphCall { get; } = new();
 
-			public List<Node> Nodes { get; } = new List<Node>();
+			public List<Node> Nodes { get; } = new();
 
-			[UsedImplicitly] public HashSet<Graph> OutboundDescendantsGraphCall { get; } = new HashSet<Graph>();
+			[UsedImplicitly]
+			public HashSet<Graph> OutboundDescendantsGraphCall { get; } = new();
 
-			[UsedImplicitly] public HashSet<Graph> OutboundGraphCall { get; } = new HashSet<Graph>();
+			[UsedImplicitly]
+			public HashSet<Graph> OutboundGraphCall { get; } = new();
 
-			[UsedImplicitly] public List<SubGraph> OutboundSubGraphCall { get; } = new List<SubGraph>();
+			[UsedImplicitly]
+			public List<SubGraph> OutboundSubGraphCall { get; } = new();
 
 			public Node ReturnNode { get; }
 
-			public Rule State { get; }
-
-			public OperandNode SingleOperandBeforeReturn { get; private set; }
+			public Rule Rule { get; }
 
 			public OperandNode SingleOperandAfterBegin { get; private set; }
 
-			public bool DfaBarrier { get; private set; }
-
-			#endregion
-
-			#region Methods
+			public OperandNode SingleOperandBeforeReturn { get; private set; }
 
 			public void AddNode(Node node)
 			{
@@ -242,48 +220,10 @@ namespace Zaaml.Text
 
 			public void Build()
 			{
-				foreach (var transition in State.Productions)
-					BuildProduction(transition);
+				foreach (var production in Rule.Productions)
+					BuildProduction(production);
 
 				CanSimulateDfa = Nodes.OfType<EnterRuleNode>().Any() == false;
-			}
-
-			private void EvalSingleOperandBeforeReturn()
-			{
-				var currentNode = ReturnNode;
-
-				while (currentNode.InEdges.Count == 1)
-				{
-					var edge = currentNode.InEdges[0];
-
-					currentNode = edge.SourceNode;
-
-					if (currentNode is OperandNode operandNode)
-					{
-						SingleOperandBeforeReturn = operandNode;
-
-						break;
-					}
-				}
-			}
-
-			private void EvalSingleOperandAfterBegin()
-			{
-				var currentNode = BeginNode;
-
-				while (currentNode.OutEdges.Count == 1)
-				{
-					var edge = currentNode.OutEdges[0];
-
-					currentNode = edge.TargetNode;
-
-					if (currentNode is OperandNode operandNode)
-					{
-						SingleOperandAfterBegin = operandNode;
-
-						break;
-					}
-				}
 			}
 
 			private void BuildProduction(Production production)
@@ -299,7 +239,7 @@ namespace Zaaml.Text
 				production.Entries.Aggregate(startNode.Connect(beginTransitionNode), ConnectEntry).Connect(endTransitionNode).Connect(endNode);
 			}
 
-			private Node ConnectAction(Node source, ActionEntry actionEntry)
+			private Node ConnectActionEntry(Node source, ActionEntry actionEntry)
 			{
 				var outputNode = new ActionNode(Automata, this, actionEntry);
 
@@ -312,17 +252,17 @@ namespace Zaaml.Text
 			{
 				return entry switch
 				{
-					MatchEntry matchEntry => ConnectMatch(source, matchEntry),
-					RuleEntry stateEntry => ConnectState(source, stateEntry, stateEntry.Rule.Inline || Automata.ForceInlineAll),
-					QuantifierEntry quantifierEntry => ConnectQuantifier(source, quantifierEntry),
-					PredicateEntryBase predicateEntry => ConnectPredicate(source, predicateEntry),
-					ActionEntry actionEntry => ConnectAction(source, actionEntry),
+					MatchEntry matchEntry => ConnectMatchEntry(source, matchEntry),
+					RuleEntry stateEntry => ConnectRuleEntry(source, stateEntry, stateEntry.Rule.Inline || Automata.ForceInlineAll),
+					QuantifierEntry quantifierEntry => ConnectQuantifierEntry(source, quantifierEntry),
+					PredicateEntryBase predicateEntry => ConnectPredicateEntry(source, predicateEntry),
+					ActionEntry actionEntry => ConnectActionEntry(source, actionEntry),
 					EpsilonEntry _ => source,
 					_ => throw new ArgumentOutOfRangeException(nameof(entry))
 				};
 			}
 
-			private Node ConnectMatch(Node source, MatchEntry operandEntry)
+			private Node ConnectMatchEntry(Node source, MatchEntry operandEntry)
 			{
 				var outputNode = new OperandNode(Automata, this, operandEntry);
 
@@ -331,7 +271,7 @@ namespace Zaaml.Text
 				return outputNode;
 			}
 
-			private Node ConnectPredicate(Node source, PredicateEntryBase predicateEntry)
+			private Node ConnectPredicateEntry(Node source, PredicateEntryBase predicateEntry)
 			{
 				var outputNode = new PredicateNode(Automata, this, predicateEntry);
 
@@ -340,7 +280,7 @@ namespace Zaaml.Text
 				return outputNode;
 			}
 
-			private Node ConnectQuantifier(Node source, QuantifierEntry quantifierEntry)
+			private Node ConnectQuantifierEntry(Node source, QuantifierEntry quantifierEntry)
 			{
 				var actualMinimum = quantifierEntry.Minimum;
 				var actualMaximum = quantifierEntry.Maximum;
@@ -402,7 +342,7 @@ namespace Zaaml.Text
 				return output;
 			}
 
-			private Node ConnectState(Node source, RuleEntry ruleEntry, bool inline)
+			private Node ConnectRuleEntry(Node source, RuleEntry ruleEntry, bool inline)
 			{
 				var state = ruleEntry.Rule;
 
@@ -436,24 +376,26 @@ namespace Zaaml.Text
 				return subGraph;
 			}
 
-			private void RegisterInboundCall(SubGraph subGraph)
+			public void EvalDfaBarrier()
 			{
-				InboundSubGraphCall.Add(subGraph);
-				InboundGraphCall.Add(subGraph.Graph);
-			}
+				//EvalSingleOperandAfterBegin();
+				//EvalSingleOperandBeforeReturn();
 
-			private void RegisterOutboundCall(SubGraph subGraph)
-			{
-				OutboundSubGraphCall.Add(subGraph);
-				OutboundGraphCall.Add(subGraph.Graph);
-			}
+				//if (State.Name == "type_declaration")
+				//{
+				//	var roots = EvalRoots().ToList();
+				//}
+				//DfaBarrier = InboundSubGraphCall.Count == 1 && SingleOperandBeforeReturn?.MatchEntry is SingleMatchEntry && SingleOperandAfterBegin?.MatchEntry is SingleMatchEntry;
+				//DfaBarrier = InboundSubGraphCall.Count == 1 && SingleOperandBeforeReturn?.MatchEntry is SingleMatchEntry;
 
-			public override string ToString()
-			{
-				return DebuggerDisplay;
-			}
+				//var roots = EvalRoots(1000, 1000);
 
-			#endregion
+				//if (roots.Count < 50)
+				//{
+				//}
+
+				//DfaBarrier = false;
+			}
 
 			private List<List<Graph>> EvalRoots(int maxCount = 100, int maxDepth = int.MaxValue)
 			{
@@ -507,28 +449,60 @@ namespace Zaaml.Text
 				return roots;
 			}
 
-			public void EvalDfaBarrier()
+			private void EvalSingleOperandAfterBegin()
 			{
-				EvalSingleOperandAfterBegin();
-				EvalSingleOperandBeforeReturn();
+				var currentNode = BeginNode;
 
-				//if (State.Name == "type_declaration")
-				//{
-				//	var roots = EvalRoots().ToList();
-				//}
-				//DfaBarrier = InboundSubGraphCall.Count == 1 && SingleOperandBeforeReturn?.MatchEntry is SingleMatchEntry && SingleOperandAfterBegin?.MatchEntry is SingleMatchEntry;
-				//DfaBarrier = InboundSubGraphCall.Count == 1 && SingleOperandBeforeReturn?.MatchEntry is SingleMatchEntry;
-
-				var roots = EvalRoots(1000, 1000);
-
-				if (roots.Count < 50)
+				while (currentNode.OutEdges.Count == 1)
 				{
-				}
+					var edge = currentNode.OutEdges[0];
 
-				DfaBarrier = false;
+					currentNode = edge.TargetNode;
+
+					if (currentNode is OperandNode operandNode)
+					{
+						SingleOperandAfterBegin = operandNode;
+
+						break;
+					}
+				}
+			}
+
+			private void EvalSingleOperandBeforeReturn()
+			{
+				var currentNode = ReturnNode;
+
+				while (currentNode.InEdges.Count == 1)
+				{
+					var edge = currentNode.InEdges[0];
+
+					currentNode = edge.SourceNode;
+
+					if (currentNode is OperandNode operandNode)
+					{
+						SingleOperandBeforeReturn = operandNode;
+
+						break;
+					}
+				}
+			}
+
+			private void RegisterInboundCall(SubGraph subGraph)
+			{
+				InboundSubGraphCall.Add(subGraph);
+				InboundGraphCall.Add(subGraph.Graph);
+			}
+
+			private void RegisterOutboundCall(SubGraph subGraph)
+			{
+				OutboundSubGraphCall.Add(subGraph);
+				OutboundGraphCall.Add(subGraph.Graph);
+			}
+
+			public override string ToString()
+			{
+				return DebuggerDisplay;
 			}
 		}
-
-		#endregion
 	}
 }

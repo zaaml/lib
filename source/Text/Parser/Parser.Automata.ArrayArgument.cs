@@ -5,7 +5,9 @@
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
 // ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable StaticMemberInGenericType
 
 namespace Zaaml.Text
 {
@@ -47,14 +49,9 @@ namespace Zaaml.Text
 					return ToArray();
 				}
 
-				public override int GetCount()
-				{
-					return _count;
-				}
-
 				public override void ConsumeValue(object value)
 				{
-					ConsumeValue((TValue) value);
+					ConsumeValue((TValue)value);
 				}
 
 				public void ConsumeValue(TValue value)
@@ -71,10 +68,40 @@ namespace Zaaml.Text
 					_count++;
 				}
 
+				public TValue[] CopyToArray(TValue[] array, ref int index)
+				{
+					if (_count == 0)
+						return array;
+
+					Array.Copy(_valueArray, 0, array, index, _count);
+
+					index += _count;
+
+					Array.Clear(_valueArray, 0, _count);
+					_count = 0;
+
+					return array;
+				}
+
+				public TConvertValue[] CopyToArrayConvert<TConvertValue>(TConvertValue[] array, ref int index, Converter<TValue, TConvertValue> converter)
+				{
+					for (var i = 0; i < _count; i++)
+						array[index++] = converter(_valueArray[i]);
+
+					Array.Clear(_valueArray, 0, _count);
+					_count = 0;
+
+					return array;
+				}
+
+				public override int GetCount()
+				{
+					return _count;
+				}
+
 				public override void Reset()
 				{
 					Array.Clear(_valueArray, 0, _count);
-
 					_count = 0;
 				}
 
@@ -87,7 +114,6 @@ namespace Zaaml.Text
 					var result = new TValue[_count];
 
 					Array.Copy(_valueArray, result, _count);
-
 					_count = 0;
 
 					return result;
@@ -103,46 +129,44 @@ namespace Zaaml.Text
 					for (var i = 0; i < _count; i++)
 						result[i] = converter(_valueArray[i]);
 
+					Array.Clear(_valueArray, 0, _count);
 					_count = 0;
 
 					return result;
 				}
 
-				public TValue[] CopyToArray(TValue[] array, ref int index)
+				public override void TransferValue(ProductionEntityArgument argument)
 				{
-					if (_count == 0)
-						return array;
+					var arrayArgument = (ArrayArgument<TValue>)argument;
 
-					Array.Copy(_valueArray, 0, array, index, _count);
+					var array = arrayArgument._valueArray;
+					var count = arrayArgument._count;
 
-					index += _count;
+					arrayArgument._valueArray = _valueArray;
+					arrayArgument._count = _count;
 
+					_count = count;
+					_valueArray = array;
+
+					Array.Clear(_valueArray, 0, _count);
 					_count = 0;
-
-					return array;
-				}
-
-				public TConvertValue[] CopyToArrayConvert<TConvertValue>(TConvertValue[] array, ref int index, Converter<TValue, TConvertValue> converter)
-				{
-					for (var i = 0; i < _count; i++)
-						array[index++] = converter(_valueArray[i]);
-
-					_count = 0;
-
-					return array;
 				}
 			}
 
 			private sealed class Argument<TValue> : ProductionEntityArgument
 			{
-				public static readonly FieldInfo ValueFieldInfo = typeof(Argument<TValue>).GetField(nameof(Value), BindingFlags.Public | BindingFlags.Instance);
-				public static readonly FieldInfo CountFieldInfo = typeof(Argument<TValue>).GetField(nameof(Count), BindingFlags.Public | BindingFlags.Instance);
-				public static readonly MethodInfo ConvertValueMethodInfo = typeof(Argument<TValue>).GetMethod(nameof(ConvertValue), BindingFlags.Public | BindingFlags.Instance);
-				public static readonly MethodInfo CopyToArrayMethodInfo = typeof(Argument<TValue>).GetMethod(nameof(CopyToArray), BindingFlags.Public | BindingFlags.Instance);
-				public static readonly MethodInfo CopyToArrayConvertMethodInfo = typeof(Argument<TValue>).GetMethod(nameof(CopyToArrayConvert), BindingFlags.Public | BindingFlags.Instance);
-				
-				public TValue Value;
+				private static readonly BindingFlags BindingFlags = BindingFlags.Public | BindingFlags.Instance;
+				private static readonly Type Type = typeof(Argument<TValue>);
+
+				public static readonly FieldInfo ValueFieldInfo = Type.GetField(nameof(Value), BindingFlags);
+				public static readonly FieldInfo CountFieldInfo = Type.GetField(nameof(Count), BindingFlags);
+				public static readonly MethodInfo ConvertValueMethodInfo = Type.GetMethod(nameof(ConvertValue), BindingFlags);
+				public static readonly MethodInfo CopyToArrayMethodInfo = Type.GetMethod(nameof(CopyToArray), BindingFlags);
+				public static readonly MethodInfo CopyToArrayConvertMethodInfo = Type.GetMethod(nameof(CopyToArrayConvert), BindingFlags);
 				public int Count;
+
+				public TValue Value;
+
 
 				public Argument(ProductionEntity entity, ProductionArgument argument) : base(entity, argument)
 				{
@@ -159,15 +183,10 @@ namespace Zaaml.Text
 					return result;
 				}
 
-				public override int GetCount()
-				{
-					return Count;
-				}
-
 				public override void ConsumeValue(object value)
 				{
 					Count = 1;
-					Value = (TValue) value;
+					Value = (TValue)value;
 				}
 
 				public TConvertValue ConvertValue<TConvertValue>(Converter<TValue, TConvertValue> converter)
@@ -182,6 +201,9 @@ namespace Zaaml.Text
 
 					array[index++] = Value;
 
+					Value = default;
+					Count = 0;
+
 					return array;
 				}
 
@@ -192,13 +214,32 @@ namespace Zaaml.Text
 
 					array[index++] = converter(Value);
 
+					Value = default;
+					Count = 0;
+
 					return array;
+				}
+
+				public override int GetCount()
+				{
+					return Count;
 				}
 
 				public override void Reset()
 				{
 					Count = 0;
 					Value = default;
+				}
+
+				public override void TransferValue(ProductionEntityArgument argument)
+				{
+					var valueArgument = (Argument<TValue>)argument;
+
+					valueArgument.Value = Value;
+					valueArgument.Count = Count;
+
+					Value = default;
+					Count = 0;
 				}
 			}
 		}

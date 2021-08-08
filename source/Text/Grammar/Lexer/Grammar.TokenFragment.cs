@@ -6,12 +6,8 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed partial class TokenFragment : TokenEntry
 		{
-			#region Ctors
-
 			public TokenFragment()
 			{
 			}
@@ -26,17 +22,9 @@ namespace Zaaml.Text
 				Pattern = pattern;
 			}
 
-			#endregion
-
-			#region Properties
-
 			public PatternCollection Pattern { get; set; }
 
 			internal int TokenCode { get; set; }
-
-			#endregion
-
-			#region Methods
 
 			public QuantifierEntry AtLeast(int count, QuantifierMode mode = QuantifierMode.Greedy)
 			{
@@ -65,7 +53,7 @@ namespace Zaaml.Text
 
 			public static implicit operator TokenFragment(MatchEntry entry)
 			{
-				return new TokenFragment(new TokenPattern(new TokenEntry[] {entry}));
+				return new TokenFragment(new TokenPattern(new TokenEntry[] { entry }));
 			}
 
 			public QuantifierEntry ZeroOrMore(QuantifierMode mode = QuantifierMode.Greedy)
@@ -77,10 +65,6 @@ namespace Zaaml.Text
 			{
 				return new QuantifierEntry(new TokenFragmentEntry(this), QuantifierKind.ZeroOrOne, mode);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

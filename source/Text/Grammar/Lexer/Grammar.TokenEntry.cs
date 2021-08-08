@@ -6,8 +6,6 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal abstract class TokenEntry
 		{
 			#region Properties
@@ -39,7 +37,5 @@ namespace Zaaml.Text
 
 			#endregion
 		}
-
-		#endregion
 	}
 }

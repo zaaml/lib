@@ -1,10 +1,9 @@
-﻿// <copyright file="TextSourceSpan.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="TextSpan.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Zaaml.Core;
 
 // ReSharper disable ReplaceSliceWithRangeIndexer
@@ -14,6 +13,11 @@ namespace Zaaml.Text
 	public readonly struct TextSpan
 	{
 		public static TextSpan Empty => new(true);
+
+		internal readonly TextSource TextSource;
+		internal readonly string TextString;
+		public readonly int StartIndex;
+		public readonly int Length;
 
 		public TextSpan(TextSource textSource)
 		{
@@ -97,14 +101,6 @@ namespace Zaaml.Text
 			Length = length;
 		}
 
-		internal TextSource TextSource { get; }
-
-		internal string TextString { get; }
-
-		public int StartIndex { get; }
-
-		public int Length { get; }
-
 		public string GetText(int start)
 		{
 			Verify();
@@ -123,6 +119,11 @@ namespace Zaaml.Text
 		{
 			Verify();
 
+			return TextSource != null ? TextSource.GetText(StartIndex + start, length) : TextString.Substring(start, length);
+		}
+
+		internal string GetTextInternal(int start, int length)
+		{
 			return TextSource != null ? TextSource.GetText(StartIndex + start, length) : TextString.Substring(start, length);
 		}
 

@@ -3,7 +3,6 @@
 // </copyright>
 
 using System;
-using System.Runtime.CompilerServices;
 
 namespace Zaaml.Text
 {
@@ -19,6 +18,8 @@ namespace Zaaml.Text
 				public bool Busy;
 				public int ConsumeCount;
 
+				public object Result;
+
 				public ProductionEntity(ParserProduction parserProduction)
 				{
 					ParserProduction = parserProduction;
@@ -28,9 +29,10 @@ namespace Zaaml.Text
 						Arguments[index] = parserProduction.Arguments[index].CreateArgument(this);
 				}
 
-				internal ProductionEntity LeftFactor { get; set; }
-
-				public object Result;
+				public void CreateEntityInstance(ParserProcess process)
+				{
+					Result = ParserProduction.Binder.CreateInstance(this, process);
+				}
 
 				public void OnAfterConsumeValue(int entryIndex)
 				{
@@ -49,14 +51,14 @@ namespace Zaaml.Text
 						ParserProduction.ReturnEntity(this);
 				}
 
+				public void Return()
+				{
+					ParserProduction.ReturnEntity(this);
+				}
+
 				public override string ToString()
 				{
 					return ParserProduction.ToString();
-				}
-
-				public void BuildEntity(ValueParserAutomataContext context)
-				{
-					Result = ParserProduction.Binder.CreateInstance(this, context);
 				}
 
 				public void UnwindLeftFactorBuilder(ProductionEntity productionEntity)
@@ -66,11 +68,6 @@ namespace Zaaml.Text
 					//	LeftFactor.EntityArguments[argument.ArgumentIndex].ConsumeParserValue(argument.Build());
 				}
 
-				public void Return()
-				{
-					ParserProduction.ReturnEntity(this);
-				}
-				
 				//[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				//public object CreateInstance(SyntaxFactory syntaxFactory)
 				//{

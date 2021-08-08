@@ -8,12 +8,8 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed partial class QuantifierEntry : TokenEntry
 		{
-			#region Ctors
-
 			public QuantifierEntry(TokenPrimitiveEntry primitiveEntry, QuantifierKind kind, QuantifierMode mode)
 			{
 				PrimitiveEntry = primitiveEntry;
@@ -30,10 +26,6 @@ namespace Zaaml.Text
 				Mode = mode;
 			}
 
-			#endregion
-
-			#region Properties
-
 			public QuantifierKind Kind { get; }
 
 			public QuantifierMode Mode { get; }
@@ -41,10 +33,6 @@ namespace Zaaml.Text
 			public TokenPrimitiveEntry PrimitiveEntry { get; }
 
 			public Interval<int> Range { get; }
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

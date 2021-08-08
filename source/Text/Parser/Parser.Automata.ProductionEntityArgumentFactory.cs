@@ -1,6 +1,6 @@
-//// <copyright file="Parser.Automata.ProductionEntityArgumentFactory.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-////   Copyright (c) Zaaml. All rights reserved.
-//// </copyright>
+// <copyright file="Parser.Automata.ProductionEntityArgumentFactory.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+//   Copyright (c) Zaaml. All rights reserved.
+// </copyright>
 
 //using System;
 //using System.Reflection.Emit;
@@ -29,9 +29,10 @@
 //				public abstract ProductionEntityArgument CreateArgument(ProductionEntity entity);
 
 //				public abstract void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il);
-				
-//				public abstract void EmitConsumeValue(IParserILBuilder builder, ILBuilderContext ilBuilderContext);
+
+//				public abstract void EmitConsumeValue(IParserILBuilder builder, context context);
 //			}
 //		}
 //	}
 //}
+

@@ -6,12 +6,8 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal abstract class ParserPrimitiveEntry : ParserEntry
 		{
-			#region Methods
-
 			public ParserQuantifierEntry AtLeast(int count, QuantifierMode mode = QuantifierMode.Greedy)
 			{
 				return new ParserQuantifierEntry(this, QuantifierHelper.AtLeast(count), mode);
@@ -41,10 +37,6 @@ namespace Zaaml.Text
 			{
 				return new ParserQuantifierEntry(this, QuantifierKind.ZeroOrOne, mode);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

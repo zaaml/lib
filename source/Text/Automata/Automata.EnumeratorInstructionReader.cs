@@ -10,18 +10,10 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected sealed class EnumeratorInstructionReader : IInstructionReader
 		{
-			#region Fields
-
 			private readonly Func<TInstruction, int> _decoder;
 			private readonly IEnumerator<TInstruction> _enumerator;
-
-			#endregion
-
-			#region Ctors
 
 			public EnumeratorInstructionReader(IEnumerator<TInstruction> enumerator, Func<TInstruction, int> decoder)
 			{
@@ -29,17 +21,7 @@ namespace Zaaml.Text
 				_decoder = decoder;
 			}
 
-			#endregion
-
-			#region Properties
-
 			private int ReaderPosition { get; set; }
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region Automata<TInstruction,TOperand>.IInstructionReader
 
 			public int ReadPage(int bufferOffset, int bufferLength, TInstruction[] instructionsBuffer, int[] operandsBuffer)
 			{
@@ -70,8 +52,8 @@ namespace Zaaml.Text
 
 			public void ReleaseBuffers(TInstruction[] instructionsBuffer, int[] operandsBuffer)
 			{
-				ArrayPool<TInstruction>.Shared.Return(instructionsBuffer);
-				ArrayPool<int>.Shared.Return(operandsBuffer);
+				ArrayPool<TInstruction>.Shared.Return(instructionsBuffer, true);
+				ArrayPool<int>.Shared.Return(operandsBuffer, true);
 			}
 
 			public void RentBuffers(int bufferLength, out TInstruction[] instructionsBuffer, out int[] operandsBuffer)
@@ -80,20 +62,10 @@ namespace Zaaml.Text
 				operandsBuffer = ArrayPool<int>.Shared.Rent(bufferLength);
 			}
 
-			#endregion
-
-			#region IDisposable
-
 			public void Dispose()
 			{
 				_enumerator.Dispose();
 			}
-
-			#endregion
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

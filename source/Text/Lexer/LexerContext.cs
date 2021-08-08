@@ -8,39 +8,19 @@ namespace Zaaml.Text
 {
 	internal abstract class LexerContext<TToken> : IDisposable where TToken : unmanaged, Enum
 	{
-		#region Ctors
-
 		protected LexerContext(LexemeSource<TToken> lexemeSource)
 		{
 			LexemeSource = lexemeSource;
 		}
 
-		#endregion
-
-		#region Properties
+		public LexemeSource<TToken> LexemeSource { get; }
 
 		internal ILexerAutomataContextInterface LexerAutomataContext { get; set; }
 
 		public int TextPointer { get; internal set; }
 
-		public LexemeSource<TToken> LexemeSource { get; }
-
-		#endregion
-
-		#region Methods
-
 		public abstract LexerContext<TToken> Clone();
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IDisposable
-
 		public abstract void Dispose();
-
-		#endregion
-
-		#endregion
 	}
 }

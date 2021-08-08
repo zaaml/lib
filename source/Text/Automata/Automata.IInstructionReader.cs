@@ -8,12 +8,8 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected interface IInstructionReader : IDisposable
 		{
-			#region Methods
-
 			int ReadPage(int bufferLength, out TInstruction[] instructions, out int[] operands);
 
 			int ReadPage(int bufferOffset, int bufferLength, TInstruction[] instructions, int[] operands);
@@ -21,19 +17,11 @@ namespace Zaaml.Text
 			void ReleaseBuffers(TInstruction[] instructionsBuffer, int[] operandsBuffer);
 
 			void RentBuffers(int bufferLength, out TInstruction[] instructionsBuffer, out int[] operandsBuffer);
-
-			#endregion
 		}
 
 		protected interface ISeekableInstructionReader : IInstructionReader
 		{
-			#region Properties
-
 			int Position { get; set; }
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

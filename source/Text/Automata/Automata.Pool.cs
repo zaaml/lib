@@ -10,29 +10,15 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		private protected class Pool<T> : IPool<T>
 		{
-			#region Fields
-
 			private readonly Func<Pool<T>, T> _factory;
-			private readonly Stack<T> _stack = new Stack<T>();
-
-			#endregion
-
-			#region Ctors
+			private readonly Stack<T> _stack = new();
 
 			public Pool(Func<Pool<T>, T> factory)
 			{
 				_factory = factory;
 			}
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region IPool<T>
 
 			public T Get()
 			{
@@ -43,12 +29,6 @@ namespace Zaaml.Text
 			{
 				_stack.Push(item);
 			}
-
-			#endregion
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

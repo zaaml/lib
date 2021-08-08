@@ -11,22 +11,12 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken> where TToken : unmanaged, Enum
 	{
-		#region Static Fields and Constants
+		protected static readonly List<TokenFragment> CreatedTokenFragments = new();
+		protected static readonly List<TokenRule> CreatedTokenRules = new();
+		protected static readonly List<ParserFragment> CreatedParserFragments = new();
+		protected static readonly List<ParserRule> CreatedParserRules = new();
 
-		protected static readonly List<TokenFragment> CreatedTokenFragments = new List<TokenFragment>();
-		protected static readonly List<TokenRule> CreatedTokenRules = new List<TokenRule>();
-		protected static readonly List<ParserFragment> CreatedParserFragments = new List<ParserFragment>();
-		protected static readonly List<ParserRule> CreatedParserRules = new List<ParserRule>();
-
-		#endregion
-
-		#region Properties
-
-		protected static RangeEntry Any { get; } = new RangeEntry(char.MinValue, char.MaxValue);
-
-		#endregion
-
-		#region Methods
+		protected static RangeEntry Any { get; } = new(char.MinValue, char.MaxValue);
 
 		protected static TokenFragment CreateTokenFragment([CallerMemberName] string name = null)
 		{
@@ -54,12 +44,12 @@ namespace Zaaml.Text
 
 		protected static SetEntry Except(RangeEntry rangeEntry)
 		{
-			return Except(new SetEntry(new[] {rangeEntry}));
+			return Except(new SetEntry(new[] { rangeEntry }));
 		}
 
 		protected static SetEntry Except(CharEntry charEntry)
 		{
-			return Except(new SetEntry(new[] {charEntry}));
+			return Except(new SetEntry(new[] { charEntry }));
 		}
 
 		protected static SetEntry Except(SetEntry setEntry)
@@ -73,24 +63,24 @@ namespace Zaaml.Text
 				{
 					if (range.First > current)
 					{
-						var next = (char) (range.First - 1);
+						var next = (char)(range.First - 1);
 
 						if (current < next)
 							listRanges.Add(new RangeEntry(current, next));
 					}
 
-					current = (char) (range.Last + 1);
+					current = (char)(range.Last + 1);
 
 					continue;
 				}
 
-				var charEntry = (CharEntry) entry;
-				var prev = (char) (charEntry.Char - 1);
+				var charEntry = (CharEntry)entry;
+				var prev = (char)(charEntry.Char - 1);
 
 				if (current < prev)
 					listRanges.Add(new RangeEntry(current, prev));
 
-				current = (char) (charEntry.Char + 1);
+				current = (char)(charEntry.Char + 1);
 			}
 
 			if (current < char.MaxValue)
@@ -104,7 +94,7 @@ namespace Zaaml.Text
 			if (entry is RangeEntry range)
 				return range.First;
 
-			return ((CharEntry) entry).Char;
+			return ((CharEntry)entry).Char;
 		}
 
 		protected static TokenFragment Literal(string str)
@@ -131,7 +121,5 @@ namespace Zaaml.Text
 		{
 			return new TokenRuleSet(tokenRules);
 		}
-
-		#endregion
 	}
 }

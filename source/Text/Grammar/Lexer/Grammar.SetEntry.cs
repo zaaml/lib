@@ -8,26 +8,14 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed partial class SetEntry : MatchEntry
 		{
-			#region Ctors
-
 			public SetEntry(IEnumerable<PrimitiveMatchEntry> matches)
 			{
 				Matches = matches;
 			}
 
-			#endregion
-
-			#region Properties
-
 			public IEnumerable<PrimitiveMatchEntry> Matches { get; }
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

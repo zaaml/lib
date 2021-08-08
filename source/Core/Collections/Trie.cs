@@ -8,19 +8,11 @@ namespace Zaaml.Core.Collections
 {
 	internal sealed class Trie<TValue>
 	{
-		#region Static Fields and Constants
-
 		private const byte Mask = 0xF;
-
-		#endregion
-
-		#region Fields
 
 		private readonly TrieNodeInner _root = new TrieNodeInner();
 
-		#endregion
-
-		#region  Methods
+		public TrieNode Root => new TrieNode(_root);
 
 		public TrieNode GetNodeOrCreate(ReadOnlySpan<char> span)
 		{
@@ -52,18 +44,36 @@ namespace Zaaml.Core.Collections
 			return new TrieNode(currentNode);
 		}
 
-		#endregion
-
-		#region  Nested Types
-
 		public class TrieNodeInner
 		{
-			#region Fields
-
 			public readonly TrieNodeInner[] InnerNodes = new TrieNodeInner[16];
 			public TValue Value;
 
-			#endregion
+			public TrieNodeInner Next(char c)
+			{
+				var local = c;
+				var i = local & Mask;
+				var currentNode = this;
+
+				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
+
+				local >>= 4;
+				i = local & Mask;
+
+				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
+
+				local >>= 4;
+				i = local & Mask;
+
+				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
+
+				local >>= 4;
+				i = local & Mask;
+
+				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
+
+				return currentNode;
+			}
 		}
 
 		public readonly ref struct TrieNode
@@ -80,8 +90,11 @@ namespace Zaaml.Core.Collections
 				get => _node.Value;
 				set => _node.Value = value;
 			}
-		}
 
-		#endregion
+			public TrieNode Next(char c)
+			{
+				return new TrieNode(_node.Next(c));
+			}
+		}
 	}
 }

@@ -15,13 +15,13 @@ namespace Zaaml.Text
 				GrammarType = GetGrammarType();
 			}
 
+			internal bool AggressiveInlining { get; set; }
+
 			public Grammar<TToken> Grammar => Get<TToken>(GrammarType);
 
 			private Type GrammarType { get; }
 
 			internal bool IsInline { get; set; }
-
-			internal bool AggressiveInlining { get; set; }
 
 			public string Name { get; internal set; }
 
@@ -34,23 +34,6 @@ namespace Zaaml.Text
 				Productions.Add(parserProduction);
 			}
 
-			public ParserRuleEntry Bind(string name)
-			{
-				return new ParserRuleEntry(this)
-				{
-					Name = name
-				};
-			}
-
-			public ParserRuleEntry Return()
-			{
-				return new ParserRuleEntry(this)
-				{
-					Name = Name,
-					IsReturn = true
-				};
-			}
-
 			public ParserQuantifierEntry AtLeast(int count)
 			{
 				return new ParserQuantifierEntry(new ParserRuleEntry(this), QuantifierHelper.AtLeast(count), QuantifierMode.Greedy);
@@ -59,6 +42,14 @@ namespace Zaaml.Text
 			public ParserQuantifierEntry Between(int from, int to)
 			{
 				return new ParserQuantifierEntry(new ParserRuleEntry(this), QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
+			}
+
+			public ParserRuleEntry Bind(string name)
+			{
+				return new ParserRuleEntry(this)
+				{
+					Name = name
+				};
 			}
 
 			internal string EnsureName()
@@ -74,6 +65,15 @@ namespace Zaaml.Text
 			public ParserQuantifierEntry OneOrMore(QuantifierMode quantifierMode = QuantifierMode.Greedy)
 			{
 				return new ParserQuantifierEntry(new ParserRuleEntry(this), QuantifierKind.OneOrMore, quantifierMode);
+			}
+
+			public ParserRuleEntry Return()
+			{
+				return new ParserRuleEntry(this)
+				{
+					Name = Name,
+					IsReturn = true
+				};
 			}
 
 			public override string ToString()

@@ -12,7 +12,7 @@ namespace Zaaml.Core.Collections
 		{
 			public Span<T> Span => SparseMemorySpan.Span;
 
-			private Memory<T> SparseMemorySpan { get; set; } = Memory<T>.Empty;
+			private MemorySpan<T> SparseMemorySpan { get; set; } = MemorySpan<T>.Empty;
 
 			internal override T GetItem(ref NodeCursor cursor)
 			{
@@ -34,7 +34,7 @@ namespace Zaaml.Core.Collections
 				return Span[index];
 			}
 
-			public void Mount(Memory<T> sparseMemorySpan)
+			public void Mount(MemorySpan<T> sparseMemorySpan)
 			{
 				SparseMemorySpan = sparseMemorySpan;
 			}
@@ -45,7 +45,7 @@ namespace Zaaml.Core.Collections
 
 				SparseMemorySpan.Span.Clear();
 				SparseMemorySpan.Dispose();
-				SparseMemorySpan = Memory<T>.Empty;
+				SparseMemorySpan = MemorySpan<T>.Empty;
 			}
 
 			internal override void SetItem(ref NodeCursor cursor, T item)

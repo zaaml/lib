@@ -42,5 +42,10 @@ namespace Zaaml.Text
 		{
 			return Token.ToString();
 		}
+
+		public string GetText(TextSource textSource)
+		{
+			return textSource.GetText(StartField, EndField - StartField);
+		}
 	}
 }

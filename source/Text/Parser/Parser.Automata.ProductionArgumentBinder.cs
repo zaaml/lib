@@ -23,7 +23,7 @@ namespace Zaaml.Text
 
 				public Type ArgumentType { get; }
 
-				public abstract void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode contextLdArg);
+				public abstract void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg);
 			}
 		}
 	}

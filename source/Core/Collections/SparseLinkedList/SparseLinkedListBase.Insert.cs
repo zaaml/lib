@@ -360,7 +360,7 @@ namespace Zaaml.Core.Collections
 			{
 				BaseEnumerator = null;
 				List = list;
-				SparseMemorySpan = Memory<T>.Empty;
+				SparseMemorySpan = MemorySpan<T>.Empty;
 				ItemsCount = 0;
 				Current = singleItem;
 				CurrentItemIndex = -1;
@@ -372,7 +372,7 @@ namespace Zaaml.Core.Collections
 			{
 				BaseEnumerator = baseEnumerator;
 				List = list;
-				SparseMemorySpan = Memory<T>.Empty;
+				SparseMemorySpan = MemorySpan<T>.Empty;
 				ItemsCount = 0;
 
 				CurrentItemIndex = 0;
@@ -381,7 +381,7 @@ namespace Zaaml.Core.Collections
 				Current = HasAny ? baseEnumerator.Current : default;
 			}
 
-			private InsertEnumerator(InsertEnumerator enumerator, Memory<T> sparseMemorySpan, int count)
+			private InsertEnumerator(InsertEnumerator enumerator, MemorySpan<T> sparseMemorySpan, int count)
 			{
 				BaseEnumerator = enumerator.BaseEnumerator;
 				SparseMemorySpan = sparseMemorySpan;
@@ -392,7 +392,7 @@ namespace Zaaml.Core.Collections
 				HasAny = enumerator.HasAny;
 			}
 
-			public InsertEnumerator WithItems(Memory<T> items, int count)
+			public InsertEnumerator WithItems(MemorySpan<T> items, int count)
 			{
 				return new InsertEnumerator(this, items, count);
 			}
@@ -448,7 +448,7 @@ namespace Zaaml.Core.Collections
 				if (SparseMemorySpan.IsEmpty == false)
 				{
 					List.DeallocateItems(SparseMemorySpan);
-					SparseMemorySpan = Memory<T>.Empty;
+					SparseMemorySpan = MemorySpan<T>.Empty;
 				}
 
 				List = null;
@@ -460,7 +460,7 @@ namespace Zaaml.Core.Collections
 
 			private SparseLinkedListBase<T> List { get; set; }
 
-			private Memory<T> SparseMemorySpan { get; set; }
+			private MemorySpan<T> SparseMemorySpan { get; set; }
 
 			private int ItemsCount { get; }
 

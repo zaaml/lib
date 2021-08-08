@@ -6,12 +6,8 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed class TokenPattern
 		{
-			#region Ctors
-
 			public TokenPattern(TokenEntry[] entries)
 			{
 				Entries = entries;
@@ -29,15 +25,7 @@ namespace Zaaml.Text
 					Entries[index++] = new CharEntry(ch);
 			}
 
-			#endregion
-
-			#region Properties
-
 			public TokenEntry[] Entries { get; }
-
-			#endregion
-
-			#region Methods
 
 			public static implicit operator TokenPattern(string pattern)
 			{
@@ -46,17 +34,13 @@ namespace Zaaml.Text
 
 			public static implicit operator TokenPattern(Lexer<TToken>.PredicateEntry lexerPredicateEntry)
 			{
-				return new TokenPattern(new TokenEntry[] {new LexerPredicate(lexerPredicateEntry)});
+				return new TokenPattern(new TokenEntry[] { new LexerPredicate(lexerPredicateEntry) });
 			}
 
 			public static implicit operator TokenPattern(Lexer<TToken>.ActionEntry lexerActionEntry)
 			{
-				return new TokenPattern(new TokenEntry[] {new LexerAction(lexerActionEntry)});
+				return new TokenPattern(new TokenEntry[] { new LexerAction(lexerActionEntry) });
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

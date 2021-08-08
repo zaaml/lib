@@ -39,7 +39,7 @@ namespace Zaaml.Core.Packed
 
     public PackedUIntItemDefinition AllocateUIntItem(uint maxValue)
     {
-      return IncrementOffset(new PackedUIntItemDefinition(_bitOffset, BitUtils.SignificantBitCount(maxValue)));
+      return IncrementOffset(new PackedUIntItemDefinition(_bitOffset, 1 + BitUtils.MostSignificantPosition(maxValue)));
     }
 
     public PackedUShortItemDefinition AllocateUShortItem()
@@ -59,6 +59,7 @@ namespace Zaaml.Core.Packed
     private TDefinition IncrementOffset<TDefinition>(TDefinition itemDefinition) where TDefinition : PackedItemDefinition
     {
       _bitOffset += itemDefinition.BitCount;
+
       return itemDefinition;
     }
 

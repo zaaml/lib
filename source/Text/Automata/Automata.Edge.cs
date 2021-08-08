@@ -10,41 +10,31 @@ namespace Zaaml.Text
 	[SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		[DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
-		private sealed class Edge
+		private protected sealed class Edge
 		{
-			#region Ctors
-
 			public Edge(Node sourceNode, Node targetNode, int weight = 0)
 			{
 				SourceNode = sourceNode;
 				TargetNode = targetNode;
 
-				IsMatch = false;
 				Weight = weight;
+				Terminal = targetNode is EndRuleNode;
 			}
 
 			public Edge(Node sourceNode, Node targetNode, MatchEntry operandMatch, int weight = 0) : this(sourceNode, targetNode, weight)
 			{
 				OperandMatch = operandMatch;
-				IsMatch = true;
+				Terminal = true;
 			}
 
 			public Edge(Node sourceNode, Node targetNode, PredicateEntryBase predicateMatch, int weight = 0) : this(sourceNode, targetNode, weight)
 			{
 				PredicateMatch = predicateMatch;
-				IsMatch = true;
+				Terminal = true;
 			}
 
-			#endregion
-
-			#region Properties
-
 			private string DebuggerDisplay => SourceNode + " - " + ValueString + " - " + TargetNode;
-
-			public bool IsMatch { get; }
 
 			public MatchEntry OperandMatch { get; }
 
@@ -54,22 +44,16 @@ namespace Zaaml.Text
 
 			public Node TargetNode { get; }
 
-			private string ValueString => IsMatch ? OperandMatch?.ToString() ?? PredicateMatch?.ToString() : "?";
+			public bool Terminal { get; }
+
+			private string ValueString => Terminal ? OperandMatch?.ToString() ?? PredicateMatch?.ToString() : "?";
 
 			public int Weight { get; }
-
-			#endregion
-
-			#region Methods
 
 			public override string ToString()
 			{
 				return DebuggerDisplay;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -1,4 +1,4 @@
-// <copyright file="Grammar.ConstructorFactoryBinding.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="Grammar.ConstructorBinding.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 

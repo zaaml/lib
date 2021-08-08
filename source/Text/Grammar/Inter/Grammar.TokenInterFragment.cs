@@ -8,17 +8,9 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed class TokenInterFragment : TokenInterPrimitiveEntry
 		{
-			#region Properties
-
 			public TokenInterProductionCollection Productions { get; } = new TokenInterProductionCollection();
-
-			#endregion
-
-			#region Methods
 
 			public override ParserEntry CreateParserEntry()
 			{
@@ -32,12 +24,8 @@ namespace Zaaml.Text
 
 			public static implicit operator TokenInterProduction(TokenInterFragment entry)
 			{
-				return new TokenInterProduction(new TokenInterEntry[] {entry});
+				return new TokenInterProduction(new TokenInterEntry[] { entry });
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

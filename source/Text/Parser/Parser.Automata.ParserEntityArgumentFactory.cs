@@ -1,6 +1,6 @@
-//// <copyright file="Parser.Automata.ParserEntityArgumentFactory.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-////   Copyright (c) Zaaml. All rights reserved.
-//// </copyright>
+// <copyright file="Parser.Automata.ParserEntityArgumentFactory.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+//   Copyright (c) Zaaml. All rights reserved.
+// </copyright>
 
 //using System;
 //using System.Reflection;
@@ -38,9 +38,9 @@
 //					return _argumentFactory.CreateArgument(entity);
 //				}
 
-//				public override void EmitConsumeValue(IParserILBuilder builder, ILBuilderContext ilBuilderContext)
+//				public override void EmitConsumeValue(IParserILBuilder builder, context context)
 //				{
-//					_argumentFactory.EmitConsumeValue(ilBuilderContext);
+//					_argumentFactory.EmitConsumeValue(context);
 //				}
 
 //				public override void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il)
@@ -59,7 +59,7 @@
 
 //					public abstract ProductionEntityArgument CreateArgument(ProductionEntity entity);
 
-//					public abstract void EmitConsumeValue(ILBuilderContext ilBuilderContext);
+//					public abstract void EmitConsumeValue(context context);
 
 //					public abstract void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il);
 //				}
@@ -77,9 +77,9 @@
 //						return new Argument<TResult>(entity, EntityArgumentFactory);
 //					}
 
-//					public override void EmitConsumeValue(ILBuilderContext ilBuilderContext)
+//					public override void EmitConsumeValue(context context)
 //					{
-//						ilBuilderContext.IL.Emit(OpCodes.Stfld, ValueArgumentResultFieldInfo);
+//						context.IL.Emit(OpCodes.Stfld, ValueArgumentResultFieldInfo);
 //					}
 
 //					public override void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il)
@@ -108,9 +108,9 @@
 //						return new ArrayArgument<TResult>(entity, EntityArgumentFactory);
 //					}
 
-//					public override void EmitConsumeValue(ILBuilderContext ilBuilderContext)
+//					public override void EmitConsumeValue(context context)
 //					{
-//						ilBuilderContext.IL.Emit(OpCodes.Call, ListTResultAddMethodInfo);
+//						context.IL.Emit(OpCodes.Call, ListTResultAddMethodInfo);
 //					}
 
 //					public override void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il)
@@ -123,3 +123,4 @@
 //		}
 //	}
 //}
+

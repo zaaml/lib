@@ -1,4 +1,4 @@
-﻿// <copyright file="Parser.Automata.SyntaxFactoryProductionBinder.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="Parser.Automata.SyntaxFactoryBinder.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -20,7 +20,7 @@ namespace Zaaml.Text
 
 				public SyntaxFactoryBinder(ParserProduction parserProduction)
 				{
-					var binding = (Grammar<TToken>.SyntaxFactoryBinding) parserProduction.GrammarParserProduction.ProductionBinding;
+					var binding = (Grammar<TToken>.SyntaxFactoryBinding)parserProduction.GrammarParserProduction.ProductionBinding;
 					var nodeType = binding.NodeType;
 
 					var arguments = parserProduction.Arguments;
@@ -68,10 +68,12 @@ namespace Zaaml.Text
 				}
 
 				protected override ProductionArgumentBinder[] ArgumentBinders { get; }
-				
+
+				public override bool IsFactoryBinder => true;
+
 				protected override void EmitEnter(ILGenerator ilBuilder)
 				{
-					if (_factoryTarget == null) 
+					if (_factoryTarget == null)
 						return;
 
 					ilBuilder.Emit(OpCodes.Ldarg_0);
@@ -89,10 +91,10 @@ namespace Zaaml.Text
 					{
 					}
 
-					public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode contextLdArg)
+					public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
 					{
-						ilBuilder.Emit(contextLdArg);
-						ilBuilder.Emit(OpCodes.Ldfld, ValueParserAutomataContext.SyntaxTreeFactoryFieldInfo);
+						ilBuilder.Emit(processLdArg);
+						ilBuilder.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.SyntaxTreeFactoryFieldInfo);
 					}
 				}
 			}

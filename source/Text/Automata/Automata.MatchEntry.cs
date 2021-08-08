@@ -6,12 +6,8 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected abstract class MatchEntry : PrimitiveEntry
 		{
-			#region Methods
-
 			public abstract bool Match(TOperand operand);
 
 			public abstract bool Match(int operand);
@@ -30,10 +26,6 @@ namespace Zaaml.Text
 			{
 				return new QuantifierEntry(this, QuantifierKind.ZeroOrOne, mode);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

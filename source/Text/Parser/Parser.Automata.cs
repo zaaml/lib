@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Zaaml.Core.Converters;
 using Zaaml.Core.Extensions;
 
 namespace Zaaml.Text
@@ -20,6 +21,23 @@ namespace Zaaml.Text
 			public ParserAutomata(AutomataManager manager) : base(manager)
 			{
 				var grammar = Grammar.Get<TGrammar, TToken>();
+				var undefinedTokenName = Enum.GetName(grammar.UndefinedToken);
+
+				foreach (TToken token in Enum.GetValues(typeof(TToken)))
+				{
+					var tokenCode = (int)EnumConverter<TToken>.Convert(token);
+
+					if (grammar.UndefinedToken.Equals(token) && Enum.GetName(token) == undefinedTokenName)
+					{
+						if (tokenCode != 0)
+							throw new InvalidOperationException("Undefined token must have value of 0.");
+
+						continue;
+					}
+
+					if (tokenCode == 0)
+						throw new InvalidOperationException("No token except of Grammar.UndefinedToken may have value of 0.");
+				}
 
 				foreach (var parserRule in grammar.ParserRules)
 					RegisterParserRule(parserRule);
@@ -35,7 +53,32 @@ namespace Zaaml.Text
 
 			private static Action<AutomataContext> CreateActionDelegate(Parser<TToken>.ActionEntry actionEntry)
 			{
-				return c => actionEntry.Action(((ParserAutomataContextState) ((ParserAutomataContext) c).ContextStateInternal)?.ParserContext);
+				return c => actionEntry.Action(((ParserAutomataContextState)((ParserAutomataContext)c).ContextStateInternal)?.ParserContext);
+			}
+
+			private Entry CreateExternalParserEntry(Grammar<TToken>.ExternalParserEntry externalParserEntry)
+			{
+				var type = externalParserEntry.GetType();
+				var typeArguments = type.GenericTypeArguments.Skip(1).ToList();
+
+				typeArguments.Insert(0, externalParserEntry.GrammarType);
+
+				var externalParserMethod = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == nameof(CreateExternalParserEntry) && m.GetGenericArguments().Length == typeArguments.Count);
+				var externalParserGenericMethod = externalParserMethod.MakeGenericMethod(typeArguments.ToArray());
+
+				return (Entry)externalParserGenericMethod.Invoke(this, new object[] { externalParserEntry });
+			}
+
+			private Entry CreateExternalParserEntry<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>(Grammar<TToken>.ExternalParserEntry<TExternalToken, TExternalNode, TExternalNodeBase> externalParserEntry)
+				where TExternalGrammar : Grammar<TExternalToken, TExternalNodeBase> where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
+			{
+				return new ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>(externalParserEntry).PredicateEntry;
+			}
+
+			private Entry CreateExternalParserEntry<TExternalGrammar, TExternalToken>(Grammar<TToken>.ExternalParserEntry<TExternalToken> externalParserEntry)
+				where TExternalGrammar : Grammar<TExternalToken> where TExternalToken : unmanaged, Enum
+			{
+				return new ExternalParserInvokeInfo<TExternalGrammar, TExternalToken>(externalParserEntry).PredicateEntry;
 			}
 
 			private Grammar<TToken>.ParserRule CreateFragmentRule(Grammar<TToken>.ParserFragment parserFragment)
@@ -47,12 +90,12 @@ namespace Zaaml.Text
 
 				if (parserFragment.Productions.All(t => t.Entries.Length == 1 && t.Entries[0] is Grammar<TToken>.TokenRule))
 				{
-					var setEntry = new Grammar<TToken>.TokenRuleSet(parserFragment.Productions.Select(t => (Grammar<TToken>.TokenRule) t.Entries[0]).ToArray())
+					var setEntry = new Grammar<TToken>.TokenRuleSet(parserFragment.Productions.Select(t => (Grammar<TToken>.TokenRule)t.Entries[0]).ToArray())
 					{
 						Name = parserFragment.Name
 					};
 
-					rule.Productions.Add(new Grammar<TToken>.ParserProduction(new Grammar<TToken>.ParserEntry[] {setEntry}));
+					rule.Productions.Add(new Grammar<TToken>.ParserProduction(new Grammar<TToken>.ParserEntry[] { setEntry }));
 				}
 				else
 				{
@@ -65,7 +108,7 @@ namespace Zaaml.Text
 				return rule;
 			}
 
-			private protected override Pool<InstructionStream> CreateInstructionQueuePool()
+			private protected override Pool<InstructionStream> CreateInstructionStreamPool()
 			{
 				return new(p => new LexemeStream(p));
 			}
@@ -89,7 +132,7 @@ namespace Zaaml.Text
 			{
 				if (grammarParserEntry is Grammar<TToken>.ParserQuantifierEntry quantifierEntry)
 				{
-					var primitiveEntry = (PrimitiveEntry) CreateParserEntry(quantifierEntry.PrimitiveEntry);
+					var primitiveEntry = (PrimitiveEntry)CreateParserEntry(quantifierEntry.PrimitiveEntry);
 
 					return new ParserQuantifierEntry(quantifierEntry, primitiveEntry, quantifierEntry.Range, quantifierEntry.Mode);
 				}
@@ -126,11 +169,7 @@ namespace Zaaml.Text
 				}
 
 				if (grammarParserEntry is Grammar<TToken>.ParserFragment parserFragment)
-				{
-					var fragmentRule = CreateFragmentRule(parserFragment);
-
-					return new ParserRuleEntry(parserFragment, GetParserRule(fragmentRule), true, false);
-				}
+					return new ParserRuleEntry(parserFragment, GetParserRule(CreateFragmentRule(parserFragment)), true, false);
 
 				if (grammarParserEntry is Grammar<TToken>.ParserPredicate parserPredicate)
 					return new ParserPredicateEntry(parserPredicate);
@@ -138,62 +177,52 @@ namespace Zaaml.Text
 				if (grammarParserEntry is Grammar<TToken>.ParserAction parserAction)
 					return new ParserActionEntry(parserAction);
 
-				if (grammarParserEntry is Grammar<TToken>.SubParserEntry subParserEntry)
-					return CreateSubParserEntry(subParserEntry);
+				if (grammarParserEntry is Grammar<TToken>.ExternalParserEntry externalParserEntry)
+					return CreateExternalParserEntry(externalParserEntry);
 
-				if (grammarParserEntry is Grammar<TToken>.SubLexerEntry subLexerEntry)
-					return CreateSubLexerEntry(subLexerEntry);
+				if (grammarParserEntry is Grammar<TToken>.ExternalLexerEntry externalLexerEntry)
+					return CreateSubLexerEntry(externalLexerEntry);
 
 				throw new ArgumentOutOfRangeException(nameof(grammarParserEntry));
 			}
 
 			private static Func<AutomataContext, PredicateResult> CreatePredicateDelegate(Parser<TToken>.PredicateEntry predicateEntry)
 			{
-				return c => predicateEntry.Predicate(((ParserAutomataContextState) ((ParserAutomataContext) c).ContextStateInternal).ParserContext) ? PredicateResult.True : PredicateResult.False;
+				return c => predicateEntry.Predicate(((ParserAutomataContextState)((ParserAutomataContext)c).ContextStateInternal).ParserContext) ? PredicateResult.True : PredicateResult.False;
 			}
 
-			private Entry CreateSubLexerEntry(Grammar<TToken>.SubLexerEntry subLexerEntry)
+			private ProcessAutomataContext CreateProcessContext(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind, Parser<TGrammar, TToken> parser)
 			{
-				var type = subLexerEntry.GetType();
+				return new ProcessAutomataContext(GetParserRule(parserRule), lexemeSource, parserContext, processKind, parser, this);
+			}
+
+			private Entry CreateSubLexerEntry(Grammar<TToken>.ExternalLexerEntry externalLexerEntry)
+			{
+				var type = externalLexerEntry.GetType();
 				var typeArguments = type.GenericTypeArguments.Skip(1).ToArray();
-				var subParserMethod = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == nameof(CreateSubLexerEntry) && m.GetGenericArguments().Length == typeArguments.Length);
-				var subParserGenericMethod = subParserMethod.MakeGenericMethod(typeArguments);
+				var externalParserMethod = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == nameof(CreateSubLexerEntry) && m.GetGenericArguments().Length == typeArguments.Length);
+				var externalParserGenericMethod = externalParserMethod.MakeGenericMethod(typeArguments);
 
-				return (Entry) subParserGenericMethod.Invoke(this, new object[] {subLexerEntry});
+				return (Entry)externalParserGenericMethod.Invoke(this, new object[] { externalLexerEntry });
 			}
 
-			private Entry CreateSubLexerEntry<TSubToken>(Grammar<TToken>.SubLexerEntry<TSubToken> subLexerEntry) where TSubToken : unmanaged, Enum
+			private Entry CreateSubLexerEntry<TExternalToken>(Grammar<TToken>.ExternalLexerEntry<TExternalToken> externalLexerEntry) where TExternalToken : unmanaged, Enum
 			{
-				var subLexerInvokeInfo = new SubLexerInvokeInfo<TSubToken>(subLexerEntry);
+				var externalLexerInvokeInfo = new ExternalLexerInvokeInfo<TExternalToken>(externalLexerEntry);
 
-				return new ParserPredicateEntry<Lexeme<TSubToken>>(subLexerEntry, c => subLexerInvokeInfo.SubLex(c), ParserPredicateKind.SubLexer);
+				return new ParserPredicateEntry<Lexeme<TExternalToken>>(externalLexerEntry, c => externalLexerInvokeInfo.ExternalLex(c), ParserPredicateKind.ExternalLexer);
 			}
 
-			private Entry CreateSubParserEntry(Grammar<TToken>.SubParserEntry subParserEntry)
+			private SyntaxTreeAutomataContext CreateSyntaxTreeContext(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind, Parser<TGrammar, TToken> parser)
 			{
-				var type = subParserEntry.GetType();
-				var typeArguments = type.GenericTypeArguments.Skip(1).ToList();
-
-				typeArguments.Insert(0, subParserEntry.GrammarType);
-
-				var subParserMethod = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == nameof(CreateSubParserEntry) && m.GetGenericArguments().Length == typeArguments.Count);
-				var subParserGenericMethod = subParserMethod.MakeGenericMethod(typeArguments.ToArray());
-
-				return (Entry) subParserGenericMethod.Invoke(this, new object[] {subParserEntry});
+				return new SyntaxTreeAutomataContext(GetParserRule(parserRule), lexemeSource, parserContext, processKind, parser, this);
 			}
 
-			private Entry CreateSubParserEntry<TSubGrammar, TSubToken, TSubNode, TSubNodeBase>(Grammar<TToken>.SubParserEntry<TSubToken, TSubNode, TSubNodeBase> subParserEntry)
-				where TSubGrammar : Grammar<TSubToken, TSubNodeBase> where TSubToken : unmanaged, Enum where TSubNode : TSubNodeBase where TSubNodeBase : class
+			private VisitorAutomataContext CreateVisitorContext<TResult>(Visitor<TResult> visitor, Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind,
+				Parser<TGrammar, TToken> parser)
 			{
-				return new SubParserInvokeInfo<TSubGrammar, TSubToken, TSubNode, TSubNodeBase>(subParserEntry).PredicateEntry;
+				return new VisitorAutomataContext(visitor, GetParserRule(parserRule), lexemeSource, parserContext, processKind, parser, this);
 			}
-
-			private Entry CreateSubParserEntry<TSubGrammar, TSubToken>(Grammar<TToken>.SubParserEntry<TSubToken> subParserEntry)
-				where TSubGrammar : Grammar<TSubToken> where TSubToken : unmanaged, Enum
-			{
-				return new SubParserInvokeInfo<TSubGrammar, TSubToken>(subParserEntry).PredicateEntry;
-			}
-
 
 			private static string EnsureName(Grammar<TToken>.ParserEntry parserEntry)
 			{
@@ -209,8 +238,8 @@ namespace Zaaml.Text
 					Grammar<TToken>.TokenRule tokenEntry => tokenEntry.Name,
 					Grammar<TToken>.ParserTokenRuleEntry tokenRuleEntry => tokenRuleEntry.Name ?? tokenRuleEntry.TokenRule.Name,
 					Grammar<TToken>.ParserQuantifierEntry quantifierEntry => quantifierEntry.Name ?? EnsureName(quantifierEntry.PrimitiveEntry),
-					Grammar<TToken>.SubParserEntry subParserEntry => subParserEntry.Name,
-					Grammar<TToken>.SubLexerEntry subLexerEntry => subLexerEntry.Name,
+					Grammar<TToken>.ExternalParserEntry externalParserEntry => externalParserEntry.Name,
+					Grammar<TToken>.ExternalLexerEntry externalLexerEntry => externalLexerEntry.Name,
 					_ => null
 				};
 			}
@@ -222,7 +251,7 @@ namespace Zaaml.Text
 
 			private static ProductionArgument GetParserEntryArgument(Entry entry)
 			{
-				return ((IParserEntry) entry).ProductionArgument;
+				return ((IParserEntry)entry).ProductionArgument;
 			}
 
 			private ParserRule GetParserRule(Grammar<TToken>.ParserRule parserRule)
@@ -232,50 +261,40 @@ namespace Zaaml.Text
 
 			public TResult Parse<TResult>(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
 			{
-				using var context = GetParserRule(parserRule).MountSyntaxTreeContext(this, lexemeSource, parserContext, parser);
-
-				RunCore(lexemeSource, context);
+				using var context = CreateSyntaxTreeContext(parserRule, lexemeSource, parserContext, ProcessKind.Process, parser);
+				using var result = context.Process.Run().Verify();
 
 				return context.GetResult<TResult>();
 			}
 
 			public void Parse(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
 			{
-				using var context = GetParserRule(parserRule).MountProcessContext(this, lexemeSource, parserContext, parser);
-
-				RunCore(lexemeSource, context);
+				using var context = CreateProcessContext(parserRule, lexemeSource, parserContext, ProcessKind.Process, parser);
+				using var result = context.Process.Run().Verify();
 			}
 
 			public TResult Parse<TResult>(Visitor<TResult> visitor, Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
 			{
-				using var context = GetParserRule(parserRule).MountVisitorContext(visitor, this, lexemeSource, parserContext, parser);
-
-				RunCore(lexemeSource, context);
+				using var context = CreateVisitorContext(visitor, parserRule, lexemeSource, parserContext, ProcessKind.Process, parser);
+				using var result = context.Process.Run().Verify();
 
 				return context.GetResult<TResult>();
 			}
 
-			private AutomataResult PartialRunCore<TContext>(LexemeSource<TToken> lexemeSource, TContext context) where TContext : AutomataContext
+			private void RegisterParserRule(Grammar<TToken>.ParserRule grammarParserRule)
 			{
-				using var instructionReader = new LexemeStreamInstructionReader(lexemeSource);
-
-				return PartialRunCore(instructionReader, context);
-			}
-
-			private void RegisterParserRule(Grammar<TToken>.ParserRule parserRule)
-			{
-				if (_registeredRules.Add(parserRule) == false)
+				if (_registeredRules.Add(grammarParserRule) == false)
 					throw new InvalidOperationException();
 
-				var parserState = GetParserRule(parserRule);
-				var parserProductions = parserRule.Productions.Select(t => new ParserProduction(this, parserRule, t)).ToList();
+				var parserRule = GetParserRule(grammarParserRule);
+				var parserProductions = grammarParserRule.Productions.Select(t => new ParserProduction(this, grammarParserRule, t)).ToList();
 
 				//parserState.Inline |= parserRule.AggressiveInlining;
 
-				EliminateLeftRecursion(parserState, parserProductions);
-				//EliminateLeftFactoring(parserState, parserProductions);
+				EliminateLeftRecursion(parserRule, parserProductions);
+				//EliminateLeftFactoring(parserRule, parserProductions);
 
-				AddState(parserState, parserProductions);
+				AddRule(parserRule, parserProductions);
 			}
 
 			private int RegisterProduction(ParserProduction parserProduction)
@@ -287,13 +306,6 @@ namespace Zaaml.Text
 				return productionIndex;
 			}
 
-			private void RunCore<TContext>(LexemeSource<TToken> lexemeSource, TContext context) where TContext : AutomataContext
-			{
-				using var instructionReader = new LexemeStreamInstructionReader(lexemeSource);
-
-				RunCore(instructionReader, context);
-			}
-
 			private sealed class LexemeStream : InstructionStream
 			{
 				private int _instructionReaderPosition;
@@ -302,11 +314,11 @@ namespace Zaaml.Text
 				{
 				}
 
-				private ISeekableInstructionReader SeekableInstructionReader => (ISeekableInstructionReader) InstructionReader;
+				private ISeekableInstructionReader SeekableInstructionReader => (ISeekableInstructionReader)InstructionReader;
 
 				public override InstructionStream Advance(int instructionPointer, Automata<Lexeme<TToken>, TToken> automata)
 				{
-					var copy = (LexemeStream) Pool.Get().Mount(InstructionReader, automata);
+					var copy = (LexemeStream)Pool.Get().Mount(InstructionReader, automata);
 
 					copy.AdvanceInstructionPosition(this, instructionPointer);
 
@@ -351,7 +363,7 @@ namespace Zaaml.Text
 					HeadPage = lexemeStream.HeadPage;
 					PageCount = lexemePageIndex + 1;
 
-					ReadOperand(ref instructionPointer);
+					FetchReadOperand(ref instructionPointer);
 				}
 
 				public override int GetPosition(int instructionPointer)
@@ -363,7 +375,7 @@ namespace Zaaml.Text
 
 					var localInstructionPointer = instructionPointer;
 
-					ReadOperand(ref instructionPointer);
+					FetchReadOperand(ref instructionPointer);
 
 					return PeekInstruction(localInstructionPointer).End;
 				}

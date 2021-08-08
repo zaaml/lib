@@ -8,12 +8,8 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed class TokenInterQuantifier : TokenInterEntry
 		{
-			#region Ctors
-
 			public TokenInterQuantifier(TokenInterPrimitiveEntry primitiveEntry, Interval<int> range, QuantifierMode mode)
 			{
 				PrimitiveEntry = primitiveEntry;
@@ -30,10 +26,6 @@ namespace Zaaml.Text
 				Mode = mode;
 			}
 
-			#endregion
-
-			#region Properties
-
 			public QuantifierKind Kind { get; }
 
 			public QuantifierMode Mode { get; }
@@ -42,15 +34,11 @@ namespace Zaaml.Text
 
 			public Interval<int> Range { get; }
 
-			#endregion
-
-			#region Methods
-
 			private TokenInterFragment AsFragment()
 			{
 				var parserFragment = new TokenInterFragment();
 
-				parserFragment.Productions.Add(new TokenInterProduction(new TokenInterEntry[] {this}));
+				parserFragment.Productions.Add(new TokenInterProduction(new TokenInterEntry[] { this }));
 
 				return parserFragment;
 			}
@@ -68,7 +56,7 @@ namespace Zaaml.Text
 
 			public override ParserEntry CreateParserEntry()
 			{
-				return new ParserQuantifierEntry((ParserPrimitiveEntry) PrimitiveEntry.CreateParserEntry(), Kind, Mode);
+				return new ParserQuantifierEntry((ParserPrimitiveEntry)PrimitiveEntry.CreateParserEntry(), Kind, Mode);
 			}
 
 			public TokenInterQuantifier Exact(int count, QuantifierMode mode = QuantifierMode.Greedy)
@@ -86,7 +74,7 @@ namespace Zaaml.Text
 
 			public static implicit operator TokenInterProduction(TokenInterQuantifier entry)
 			{
-				return new TokenInterProduction(new TokenInterEntry[] {entry});
+				return new TokenInterProduction(new TokenInterEntry[] { entry });
 			}
 
 			public TokenInterQuantifier ZeroOrMore(QuantifierMode mode = QuantifierMode.Greedy)
@@ -104,10 +92,6 @@ namespace Zaaml.Text
 
 				return new TokenInterQuantifier(AsFragment(), QuantifierKind.ZeroOrOne, mode);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -29,7 +29,7 @@ namespace Zaaml.Text
 
 				public ProductionArgument[] ProductionArguments { get; }
 
-				public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode contextLdArg)
+				public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
 				{
 					var elementType = ArgumentType.GetElementType();
 
@@ -70,7 +70,7 @@ namespace Zaaml.Text
 
 						ilBuilder.Emit(OpCodes.Ldloca, indexLocal);
 
-						argument.EmitCopyArgument(entityArgumentLocal, ArgumentType, ilBuilder, contextLdArg);
+						argument.EmitCopyArgument(entityArgumentLocal, ArgumentType, ilBuilder, processLdArg);
 					}
 				}
 			}

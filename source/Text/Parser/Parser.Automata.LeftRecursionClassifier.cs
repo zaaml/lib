@@ -6,12 +6,8 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Parser<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private sealed partial class ParserAutomata
 		{
-			#region Nested Types
-
 			private enum LeftRecursionClassifier
 			{
 				Primary,
@@ -21,10 +17,6 @@ namespace Zaaml.Text
 				Suffix,
 				Generic
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

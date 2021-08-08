@@ -8,12 +8,8 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed partial class ParserQuantifierEntry : ParserEntry
 		{
-			#region Ctors
-
 			public ParserQuantifierEntry(ParserPrimitiveEntry primitiveEntry, QuantifierKind kind, QuantifierMode mode)
 			{
 				PrimitiveEntry = primitiveEntry;
@@ -30,10 +26,6 @@ namespace Zaaml.Text
 				Mode = mode;
 			}
 
-			#endregion
-
-			#region Properties
-
 			private QuantifierKind Kind { get; }
 
 			public QuantifierMode Mode { get; }
@@ -42,23 +34,11 @@ namespace Zaaml.Text
 
 			public Interval<int> Range { get; }
 
-			#endregion
-
-			#region Methods
-
-			public ParserQuantifierEntry Bind(string name)
-			{
-				return new ParserQuantifierEntry(PrimitiveEntry, Kind, Mode)
-				{
-					Name = name
-				};
-			}
-
 			private ParserFragment AsFragment()
 			{
 				var parserFragment = new ParserFragment(true);
 
-				parserFragment.Productions.Add(new ParserProduction(new ParserEntry[] {this}));
+				parserFragment.Productions.Add(new ParserProduction(new ParserEntry[] { this }));
 
 				return parserFragment;
 			}
@@ -71,6 +51,14 @@ namespace Zaaml.Text
 			public ParserQuantifierEntry Between(int from, int to, QuantifierMode mode = QuantifierMode.Greedy)
 			{
 				return new ParserQuantifierEntry(AsFragment(), QuantifierHelper.Between(from, to), mode);
+			}
+
+			public ParserQuantifierEntry Bind(string name)
+			{
+				return new ParserQuantifierEntry(PrimitiveEntry, Kind, Mode)
+				{
+					Name = name
+				};
 			}
 
 			public ParserQuantifierEntry Exact(int count, QuantifierMode mode = QuantifierMode.Greedy)
@@ -101,10 +89,6 @@ namespace Zaaml.Text
 
 				return new ParserQuantifierEntry(AsFragment(), QuantifierKind.ZeroOrOne, mode);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

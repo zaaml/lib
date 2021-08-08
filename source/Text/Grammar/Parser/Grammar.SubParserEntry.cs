@@ -8,58 +8,34 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
-		protected internal abstract partial class SubParserEntry : ParserPrimitiveEntry
+		protected internal abstract partial class ExternalParserEntry : ParserPrimitiveEntry
 		{
-			#region Properties
-
 			internal abstract Type GrammarType { get; }
-
-			#endregion
 		}
 
-		protected internal sealed class SubParserEntry<TSubToken> : SubParserEntry where TSubToken : unmanaged, Enum
+		protected internal sealed class ExternalParserEntry<TExternalToken> : ExternalParserEntry where TExternalToken : unmanaged, Enum
 		{
-			#region Ctors
-
-			public SubParserEntry(Grammar<TSubToken>.ParserRule subParserRule)
+			public ExternalParserEntry(Grammar<TExternalToken>.ParserRule externalParserRule)
 			{
-				SubParserRule = subParserRule;
+				ExternalParserRule = externalParserRule;
 			}
 
-			#endregion
+			internal override Type GrammarType => ExternalParserRule.Grammar.GetType();
 
-			#region Properties
-
-			internal override Type GrammarType => SubParserRule.Grammar.GetType();
-
-			public Grammar<TSubToken>.ParserRule SubParserRule { get; }
-
-			#endregion
+			public Grammar<TExternalToken>.ParserRule ExternalParserRule { get; }
 		}
 
-		protected internal sealed class SubParserEntry<TSubToken, TSubNode, TSubNodeBase> : SubParserEntry where TSubToken : unmanaged, Enum where TSubNode : TSubNodeBase where TSubNodeBase : class
+		protected internal sealed class ExternalParserEntry<TExternalToken, TExternalNode, TExternalNodeBase> : ExternalParserEntry where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
 		{
-			#region Ctors
-
-			public SubParserEntry(Grammar<TSubToken, TSubNodeBase>.ParserRule<TSubNode> subParserRule)
+			public ExternalParserEntry(Grammar<TExternalToken, TExternalNodeBase>.ParserRule<TExternalNode> externalParserRule)
 			{
-				SubParserRule = subParserRule;
-				Name = subParserRule.EnsureName();
+				ExternalParserRule = externalParserRule;
+				Name = externalParserRule.EnsureName();
 			}
 
-			#endregion
+			internal override Type GrammarType => ExternalParserRule.Grammar.GetType();
 
-			#region Properties
-
-			internal override Type GrammarType => SubParserRule.Grammar.GetType();
-
-			public Grammar<TSubToken, TSubNodeBase>.ParserRule<TSubNode> SubParserRule { get; }
-
-			#endregion
+			public Grammar<TExternalToken, TExternalNodeBase>.ParserRule<TExternalNode> ExternalParserRule { get; }
 		}
-
-		#endregion
 	}
 }

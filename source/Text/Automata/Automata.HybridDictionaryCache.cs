@@ -9,19 +9,11 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		private sealed class HybridDictionaryCache<T> : ICache<T> where T : class
 		{
-			#region Fields
-
 			private readonly int _arrayLimit = 127;
 			private T[] _array;
 			private Dictionary<int, T> _dictionary;
-
-			#endregion
-
-			#region Ctors
 
 			public HybridDictionaryCache()
 			{
@@ -31,12 +23,6 @@ namespace Zaaml.Text
 			{
 				_arrayLimit = arrayLimit;
 			}
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region Automata<TInstruction,TOperand>.ICache<T>
 
 			public bool TryGetValue(int operand, out T result)
 			{
@@ -71,29 +57,15 @@ namespace Zaaml.Text
 					_array[operand] = value;
 				}
 			}
-
-			#endregion
-
-			#endregion
 		}
 
 		private sealed class HybridDictionaryCacheEx<T> : ICache<T> where T : class
 		{
-			#region Static Fields and Constants
-
 			private const int DefaultArrayLimit = 127;
-
-			#endregion
-
-			#region Fields
 
 			private readonly T[] _array;
 			private readonly int _arrayLimit;
 			private readonly Dictionary<int, T> _dictionary;
-
-			#endregion
-
-			#region Ctors
 
 			public HybridDictionaryCacheEx() : this(DefaultArrayLimit)
 			{
@@ -105,12 +77,6 @@ namespace Zaaml.Text
 				_dictionary = new Dictionary<int, T>();
 				_array = new T[_arrayLimit];
 			}
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region Automata<TInstruction,TOperand>.ICache<T>
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool TryGetValue(int operand, out T result)
@@ -132,12 +98,6 @@ namespace Zaaml.Text
 				else
 					_array[operand] = value;
 			}
-
-			#endregion
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

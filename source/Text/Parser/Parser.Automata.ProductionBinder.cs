@@ -1,4 +1,4 @@
-// <copyright file="Parser.Automata.ProductionEntityFactory.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="Parser.Automata.ProductionBinder.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -17,24 +17,26 @@ namespace Zaaml.Text
 		{
 			private abstract class ProductionBinder
 			{
-				private Func<ProductionEntity, ValueParserAutomataContext, object> _createInstanceDelegate;
+				private Func<ProductionEntity, ParserProcess, object> _createInstanceDelegate;
 
 				protected virtual ProductionArgumentBinder[] ArgumentBinders => Array.Empty<ProductionArgumentBinder>();
 
 				protected virtual object ConstValue => null;
 
-				private Func<ProductionEntity, ValueParserAutomataContext, object> CreateInstanceDelegate => _createInstanceDelegate ??= BuildCreateInstanceDelegate();
+				private Func<ProductionEntity, ParserProcess, object> CreateInstanceDelegate => _createInstanceDelegate ??= BuildCreateInstanceDelegate();
+
+				public abstract bool IsFactoryBinder { get; }
 
 				protected bool Return { get; set; }
 
 				public bool TryReturn { get; protected set; }
 
-				private Func<ProductionEntity, ValueParserAutomataContext, object> BuildCreateInstanceDelegate()
+				private Func<ProductionEntity, ParserProcess, object> BuildCreateInstanceDelegate()
 				{
 					if (ConstValue != null)
 						return (_, _) => ConstValue;
 
-					var dynMethod = new DynamicMethod("CreateInstance", typeof(object), new[] {typeof(ProductionBinder), typeof(ProductionEntity), typeof(ValueParserAutomataContext)}, typeof(ProductionBinder), true);
+					var dynMethod = new DynamicMethod("CreateInstance", typeof(object), new[] { typeof(ProductionBinder), typeof(ProductionEntity), typeof(ParserProcess) }, typeof(ProductionBinder), true);
 					var ilBuilder = dynMethod.GetILGenerator();
 					var productionEntityLocal = ilBuilder.DeclareLocal(typeof(ProductionEntity));
 					var entityArgumentLocal = ilBuilder.DeclareLocal(typeof(ProductionEntityArgument));
@@ -55,18 +57,23 @@ namespace Zaaml.Text
 
 					ilBuilder.Emit(OpCodes.Ret);
 
-					var delegateType = Expression.GetDelegateType(typeof(ProductionEntity), typeof(ValueParserAutomataContext), typeof(object));
+					var delegateType = Expression.GetDelegateType(typeof(ProductionEntity), typeof(ParserProcess), typeof(object));
 
-					return (Func<ProductionEntity, ValueParserAutomataContext, object>) dynMethod.CreateDelegate(delegateType, this);
+					return (Func<ProductionEntity, ParserProcess, object>)dynMethod.CreateDelegate(delegateType, this);
+				}
+
+				protected static ProductionArgumentBinder CreateArgumentBinder(Type argumentType, ProductionArgumentCollection productionArguments)
+				{
+					return productionArguments.Length == 1 ? new SingleArgumentBinder(productionArguments[0], argumentType) : new MultiArgumentBinder(productionArguments.ToArray(), argumentType);
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				public object CreateInstance(ProductionEntity productionEntity, ValueParserAutomataContext context)
+				public object CreateInstance(ProductionEntity productionEntity, ParserProcess process)
 				{
 					if (TryReturn && productionEntity.ConsumeCount == 1)
 						return productionEntity.Arguments[0].Build();
 
-					return CreateInstanceDelegate(productionEntity, context);
+					return CreateInstanceDelegate(productionEntity, process);
 				}
 
 				protected virtual void EmitEnter(ILGenerator ilBuilder)
@@ -75,11 +82,6 @@ namespace Zaaml.Text
 
 				protected virtual void EmitLeave(ILGenerator ilBuilder)
 				{
-				}
-
-				protected static ProductionArgumentBinder CreateArgumentBinder(Type argumentType, ProductionArgumentCollection productionArguments)
-				{
-					return productionArguments.Length == 1 ? new SingleArgumentBinder(productionArguments[0], argumentType) : new MultiArgumentBinder(productionArguments.ToArray(), argumentType);
 				}
 			}
 		}

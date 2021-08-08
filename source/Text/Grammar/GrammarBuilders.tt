@@ -39,8 +39,8 @@ var parserEntries = new List<string>
 	"ParserRuleEntry",
 	"ParserTokenRuleEntry",
 	"ParserRule",
-	"SubParserEntry",
-	"SubLexerEntry",
+	"ExternalParserEntry",
+	"ExternalLexerEntry",
 	"TokenRuleSet"
 };
 

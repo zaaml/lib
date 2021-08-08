@@ -23,7 +23,7 @@ namespace Zaaml.Core.Packed
 
     static PackedEnumItemDefinition()
     {
-      EnumBitCount = BitUtils.SignificantBitCount(Enum.GetValues(typeof(TEnum)).Cast<TEnum>().Select(EnumConverter<TEnum>.Convert).Max());
+      EnumBitCount = 1 + BitUtils.MostSignificantPosition(Enum.GetValues(typeof(TEnum)).Cast<TEnum>().Select(EnumConverter<TEnum>.Convert).Max());
 
       if (EnumBitCount < 9)
         Converter = new TableEnumConverter();

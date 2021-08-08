@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 // ReSharper disable UseIndexFromEndExpression
 
 namespace Zaaml.Text
@@ -13,11 +14,8 @@ namespace Zaaml.Text
 	{
 		private sealed partial class ParserAutomata
 		{
-			private void EliminateLeftFactoring(ParserRule parserRule, List<ParserProduction> productions, bool subfactor = false)
+			private void EliminateLeftFactoring(ParserRule parserRule, List<ParserProduction> productions)
 			{
-				if (parserRule.Name != "CallExpr" && subfactor == false)
-					return;
-
 				var dictionary = new Dictionary<LeftFactoringPrefix, List<Tuple<int, ParserProduction>>>();
 
 				for (var index = 0; index < productions.Count; index++)
@@ -62,41 +60,83 @@ namespace Zaaml.Text
 						continue;
 
 					var prefixLength = kv.Key.Entries.Count;
-					var baseProduction = productions[kv.Key.Index];
-					var parserStateFactorProductions = new List<ParserProduction>();
+					var prefixEntries = kv.Key.Entries.Take(prefixLength).Select(e => e.ParserEntry).ToArray();
+					var factorPostfixProductions = new List<ParserProduction>();
 
 					foreach (var tuple in kv.Value.OrderBy(k => k.Item1))
 					{
 						var parserProduction = tuple.Item2;
-						var factorProduction = new ParserProduction(this, p => new LeftFactorProductionFactory(p, parserRule, parserProduction, false), parserProduction.Entries.Skip(prefixLength))
+						var postfixEntries = parserProduction.Entries.Skip(prefixLength).ToArray();
+						var factorPostfixProduction = new ParserProduction(this, _ => LeftFactoringBinder.Instance, postfixEntries)
 						{
-							LeftFactorProduction = parserProduction
+							OriginalProduction = parserProduction
 						};
+
+						for (var j = 0; j < postfixEntries.Length; j++)
+						{
+							var postfixEntry = postfixEntries[j];
+
+							if (postfixEntry is not IParserEntry postfixParserEntry)
+								continue;
+
+							var postfixArgument = postfixParserEntry.ProductionArgument;
+
+							if (postfixArgument == null)
+								continue;
+
+							var factorPostfixEntry = factorPostfixProduction.Entries[j];
+							var factorPostfixArgument = (postfixArgument.OriginalArgument ?? postfixArgument).MapArgument(j, factorPostfixEntry, factorPostfixProduction);
+							var factorPostfixParserEntry = (IParserEntry)factorPostfixEntry;
+
+							factorPostfixParserEntry.ProductionArgument = factorPostfixArgument;
+							factorPostfixProduction.Arguments.Add(factorPostfixArgument);
+							factorPostfixArgument.Bind(postfixArgument.Binder);
+						}
 
 						productions[tuple.Item1] = null;
 
-						parserStateFactorProductions.Add(factorProduction);
+						factorPostfixProductions.Add(factorPostfixProduction);
 					}
 
-					var factorRule = new ParserRule($"{parserRule.Name}Factor", false);
-					var factorRuleEntry = new ParserRuleEntry(new Grammar<TToken>.ParserRule { Name = factorRule.Name }, factorRule, false, false) { SkipStack = true };
+					var factorPrefixRule = new ParserRule($"{parserRule.Name}Factor", false);
+					var factorPrefixRuleEntry = new ParserRuleEntry(new Grammar<TToken>.ParserRule { Name = factorPrefixRule.Name }, factorPrefixRule, false, false) { SkipStack = false };
+					var factorPrefixProduction = new ParserProduction(this, _ => LeftFactoringBinder.Instance, prefixEntries.Append(factorPrefixRuleEntry)) { LeftFactorProduction = true };
+					var factorRuleEntryArgument = new NullProductionArgument(factorPrefixRule.Name, factorPrefixRuleEntry, prefixLength, factorPrefixProduction);
 
-					var production = new ParserProduction(this, p => new LeftFactorProductionFactory(p, parserRule, baseProduction, true), kv.Key.Entries.Take(prefixLength).Select(e => e.ParserEntry).Append(factorRuleEntry))
+					for (var i = 0; i < prefixEntries.Length; i++)
 					{
-						LeftFactorEntry = factorRuleEntry
-					};
+						var prefixEntry = prefixEntries[i];
 
-					productions[kv.Key.Index] = production;
+						if (prefixEntry is not IParserEntry prefixParserEntry)
+							continue;
 
-					EliminateLeftFactoring(factorRule, parserStateFactorProductions, true);
+						var prefixArgument = prefixParserEntry.ProductionArgument;
 
-					foreach (var factorProduction in parserStateFactorProductions) 
-						factorRule.Productions.Add(factorProduction);
+						if (prefixArgument == null)
+							continue;
+
+						var factorPrefixEntry = factorPrefixProduction.Entries[i];
+						var factorPrefixArgument = (prefixArgument.OriginalArgument ?? prefixArgument).MapArgument(i, factorPrefixEntry, factorPrefixProduction);
+						var factorPrefixParserEntry = (IParserEntry)factorPrefixEntry;
+
+						factorPrefixParserEntry.ProductionArgument = factorPrefixArgument;
+						factorPrefixProduction.Arguments.Add(factorPrefixArgument);
+						factorPrefixArgument.Bind(prefixArgument.Binder);
+					}
+
+					factorPrefixRuleEntry.ProductionArgument = factorRuleEntryArgument;
+
+					productions[kv.Key.Index] = factorPrefixProduction;
+
+					EliminateLeftFactoring(factorPrefixRule, factorPostfixProductions);
+
+					foreach (var factorPostfixProduction in factorPostfixProductions)
+						factorPrefixRule.Productions.Add(factorPostfixProduction);
 				}
 
 				for (var i = 0; i < productions.Count; i++)
 				{
-					if (productions[i] != null) 
+					if (productions[i] != null)
 						continue;
 
 					productions.RemoveAt(i);
@@ -104,16 +144,26 @@ namespace Zaaml.Text
 				}
 			}
 
+			private sealed class LeftFactoringBinder : ProductionBinder
+			{
+				public static readonly LeftFactoringBinder Instance = new LeftFactoringBinder();
+
+				private LeftFactoringBinder()
+				{
+				}
+
+				public override bool IsFactoryBinder => false;
+			}
+
 			private sealed class LeftFactoringPrefix
 			{
-				public int Index { get; }
-
-				public List<LeftFactoringEntry> Entries { get; } = new List<LeftFactoringEntry>();
-
 				public LeftFactoringPrefix(int index)
 				{
 					Index = index;
 				}
+
+				public List<LeftFactoringEntry> Entries { get; } = new List<LeftFactoringEntry>();
+				public int Index { get; }
 
 				private bool Equals(LeftFactoringPrefix other)
 				{
@@ -133,26 +183,6 @@ namespace Zaaml.Text
 						hashCode = (hashCode * 397) ^ entry.GetHashCode();
 
 					return hashCode;
-				}
-			}
-
-			private sealed class LeftFactorProductionFactory : ProductionBinder
-			{
-				public ParserRule OriginalRule { get; }
-
-				public LeftFactorProductionFactory(ParserProduction parserProduction, ParserRule originalRule, ParserProduction baseProduction, bool prefix)
-				{
-					throw new NotImplementedException();
-
-					//OriginalRule = originalRule;
-					//ArgumentFactories = new ProductionEntityArgumentFactory[baseProduction.EntityFactory.ArgumentFactories.Length];
-
-					//foreach (var argument in baseProduction.Arguments)
-					//{
-					//	var argumentFactory = baseProduction.EntityFactory.ArgumentFactories[argument.Index];
-
-					//	ArgumentFactories[argument.Index] = argumentFactory;
-					//}
 				}
 			}
 
@@ -189,7 +219,7 @@ namespace Zaaml.Text
 					if (obj.GetType() != GetType())
 						return false;
 
-					return Equals((LeftFactoringEntry) obj);
+					return Equals((LeftFactoringEntry)obj);
 				}
 
 				private bool EqualsMatchEntry(PrimitiveMatchEntry first, PrimitiveMatchEntry second)
@@ -206,9 +236,6 @@ namespace Zaaml.Text
 						return false;
 
 					if (first.TryReturn != second.TryReturn)
-						return false;
-
-					if (first.RuleEntryContext != second.RuleEntryContext)
 						return false;
 
 					return true;

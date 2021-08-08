@@ -18,6 +18,7 @@ namespace Zaaml.Expressions
 {
 	internal enum ExpressionToken
 	{
+		Undefined,
 		Double,
 		Identifier,
 		Whitespace,
@@ -47,6 +48,10 @@ namespace Zaaml.Expressions
 		internal static readonly ParserRule<TermNode> Term = CreateParserRule<TermNode>();
 		internal static readonly ParserRule<FactorNode> Factor = CreateParserRule<FactorNode>();
 		internal static readonly ParserRule<NumberDoubleNode> Number = CreateParserRule<NumberDoubleNode>();
+
+		private ExpressionGrammar() : base(ExpressionToken.Undefined)
+		{
+		}
 
 		static ExpressionGrammar()
 		{

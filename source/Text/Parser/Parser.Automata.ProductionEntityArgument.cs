@@ -28,11 +28,11 @@ namespace Zaaml.Text
 
 				public abstract object Build();
 
-				public abstract int GetCount();
-
 				public virtual void ConsumeValue(object value)
 				{
 				}
+
+				public abstract int GetCount();
 
 				public abstract void Reset();
 
@@ -40,6 +40,8 @@ namespace Zaaml.Text
 				{
 					return ArgumentType.Name;
 				}
+
+				public abstract void TransferValue(ProductionEntityArgument argument);
 			}
 		}
 	}

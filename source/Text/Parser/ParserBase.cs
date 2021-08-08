@@ -8,12 +8,8 @@ namespace Zaaml.Text
 {
 	internal abstract class ParserBase
 	{
-		#region Nested Types
-
 		protected sealed class VisitorAttribute : Attribute
 		{
 		}
-
-		#endregion
 	}
 }

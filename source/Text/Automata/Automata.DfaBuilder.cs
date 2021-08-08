@@ -11,28 +11,22 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		private protected abstract partial class DfaBuilder<TDfaState> where TDfaState : DfaState<TDfaState>
 		{
-			#region Fields
+			private const int NullSaveIndexOffset = 0x10000000;
 
-			private readonly Stack<DfaBuilderKey> _builderKeyPool = new Stack<DfaBuilderKey>();
-			private readonly Dictionary<(Node, DfaTransition, ExecutionPath), DfaNode> _dfaNodesDictionary = new Dictionary<(Node, DfaTransition, ExecutionPath), DfaNode>();
-			private readonly Dictionary<DfaTransitionCollection, DfaTransitionCollection> _frozenLazyTransitionsDictionary = new Dictionary<DfaTransitionCollection, DfaTransitionCollection>();
-			private readonly Dictionary<DfaNodeCollection, DfaNodeCollection> _frozenNodesDictionary = new Dictionary<DfaNodeCollection, DfaNodeCollection>();
-			private readonly Dictionary<DfaStateKey, TDfaState> _frozenStatesDictionary = new Dictionary<DfaStateKey, TDfaState>();
+			private readonly Stack<DfaBuilderKey> _builderKeyPool = new();
+			private readonly Dictionary<(Node, DfaTransition, ExecutionPath), DfaNode> _dfaNodesDictionary = new();
+			private readonly Dictionary<DfaTransitionCollection, DfaTransitionCollection> _frozenLazyTransitionsDictionary = new();
+			private readonly Dictionary<DfaNodeCollection, DfaNodeCollection> _frozenNodesDictionary = new();
+			private readonly Dictionary<DfaStateKey, TDfaState> _frozenStatesDictionary = new();
 			private readonly List<DfaNode> _initialStateNodes;
 			private readonly List<DfaNode> _noOpInitialStateNodes;
-			private readonly object _syncRoot = new object();
+			private readonly object _syncRoot = new();
 			private readonly int _transitionCount;
 			public readonly TDfaState InitialState;
 			public readonly TDfaState NoOpInitialState;
-			private TDfaState[] StateRepository = new TDfaState[128];
-
-			#endregion
-
-			#region Ctors
+			public TDfaState[] StateRepository = new TDfaState[128];
 
 			protected DfaBuilder(IEnumerable<Rule> states, Automata<TInstruction, TOperand> automata)
 			{
@@ -42,7 +36,7 @@ namespace Zaaml.Text
 				foreach (var subGraph in states.Select(automata.EnsureSubGraph))
 				{
 					if (subGraph.Graph.CanSimulateDfa == false)
-						throw new InvalidOperationException($"FiniteState {subGraph.State} can not be simulated as DFA");
+						throw new InvalidOperationException($"FiniteState {subGraph.Rule} can not be simulated as DFA");
 
 					if (subGraph.Graph.HasOperandNodes == false)
 						_noOpInitialStateNodes.Add(CreateDfaNode(subGraph.Graph.BeginNode, new DfaTransition(subGraph, _transitionCount), null));
@@ -65,17 +59,9 @@ namespace Zaaml.Text
 					BuildFastLookup(InitialState);
 			}
 
-			#endregion
-
-			#region Properties
-
 			public bool FastLookup { get; }
 
 			private int StateCount { get; set; }
-
-			#endregion
-
-			#region Methods
 
 			public TDfaState Build(int operand, TDfaState currentState)
 			{
@@ -89,23 +75,6 @@ namespace Zaaml.Text
 					dfaState = BuildImpl(operand, currentState);
 
 					currentState.SetState(operand, dfaState);
-
-					return dfaState;
-				}
-			}
-
-			public TDfaState Build(TDfaState currentState)
-			{
-				lock (_syncRoot)
-				{
-					var dfaState = currentState.EndState;
-
-					if (dfaState != null)
-						return dfaState;
-
-					dfaState = BuildImpl(-1, currentState);
-
-					currentState.EndState = dfaState;
 
 					return dfaState;
 				}
@@ -126,8 +95,9 @@ namespace Zaaml.Text
 				while (queue.Count > 0)
 				{
 					var state = queue.Dequeue();
+					var nextBreakCount = 0;
 
-					for (var i = 0; i < DfaState<TDfaState>.ArrayLimit; i++)
+					for (var i = 0; i < DfaState.ArrayLimit; i++)
 					{
 						var next = state.TryGetState(i);
 
@@ -138,10 +108,31 @@ namespace Zaaml.Text
 						}
 
 						if (next.Break)
+						{
+							nextBreakCount++;
+
 							continue;
+						}
 
 						if (hashSet.Add(next))
 							queue.Enqueue(next);
+					}
+
+					if (nextBreakCount == DfaState.ArrayLimit && state.SuccessSubGraph != null && state.SavePointer)
+						state.NoFastNext = true;
+				}
+
+				foreach (var dfaState in hashSet)
+				{
+					if (dfaState.Array == null)
+						continue;
+
+					for (var i = 0; i < DfaState.ArrayLimit; i++)
+					{
+						var next = dfaState.Array[i];
+
+						if (next.NoFastNext)
+							dfaState.Array[i] = next.NullSaveState;
 					}
 				}
 
@@ -162,7 +153,7 @@ namespace Zaaml.Text
 			{
 				lock (_syncRoot)
 				{
-					var dfaState = operand == -1 ? currentState.TryGetPredicateState(predicateResult) : currentState.TryGetPredicateState(operand, predicateResult);
+					var dfaState = operand == 0 ? currentState.TryGetPredicateState(predicateResult) : currentState.TryGetPredicateState(operand, predicateResult);
 
 					if (dfaState != null)
 						return dfaState;
@@ -172,7 +163,7 @@ namespace Zaaml.Text
 
 					ReleaseBuilderKey(builderKey);
 
-					if (operand == -1)
+					if (operand == 0)
 						currentState.SetPredicateState(state, predicateResult);
 					else
 						currentState.SetPredicateState(operand, state, predicateResult);
@@ -206,6 +197,16 @@ namespace Zaaml.Text
 				return StateRepository[id];
 			}
 
+			public static int GetNullIndex(bool save, int stateIndex)
+			{
+				return save ? -stateIndex - NullSaveIndexOffset : -stateIndex;
+			}
+
+			public static int GetNullOwnerIndex(int index)
+			{
+				return index + NullSaveIndexOffset < 0 ? -(index + NullSaveIndexOffset) : -index;
+			}
+
 			public int Register(TDfaState dfaState)
 			{
 				var stateIndex = StateCount;
@@ -224,10 +225,6 @@ namespace Zaaml.Text
 				_builderKeyPool.Push(dfaBuilderKey);
 			}
 
-			#endregion
-
-			#region Nested Types
-
 			private sealed class DfaNodeCollection : CollectionKey<DfaNode, DfaNodeCollection>
 			{
 			}
@@ -235,31 +232,19 @@ namespace Zaaml.Text
 			private sealed class DfaTransitionCollection : CollectionKey<DfaTransition, DfaTransitionCollection>
 			{
 			}
-
-			#endregion
 		}
 
 		private abstract class CollectionKey<TElement, TCollection> where TElement : IEquatable<TElement> where TCollection : CollectionKey<TElement, TCollection>, new()
 		{
-			#region Fields
-
 			private int _count;
 			private TElement[] _elements;
 			private int _elementsHashCode;
-
-			#endregion
-
-			#region Properties
 
 			public int Count => _count;
 
 			public TElement[] Elements => _elements;
 
 			public int ElementsHashCode => _elementsHashCode;
-
-			#endregion
-
-			#region Methods
 
 			public void Add(TElement element)
 			{
@@ -323,10 +308,6 @@ namespace Zaaml.Text
 				// ReSharper disable once NonReadonlyMemberInGetHashCode
 				return ElementsHashCode;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

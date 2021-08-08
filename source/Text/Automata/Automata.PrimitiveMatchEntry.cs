@@ -6,12 +6,8 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected abstract class PrimitiveMatchEntry : MatchEntry
 		{
 		}
-
-		#endregion
 	}
 }

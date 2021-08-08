@@ -2,18 +2,12 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using Zaaml.Core;
-
 namespace Zaaml.Text
 {
 	internal partial class Lexer<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private protected partial class LexerAutomata
 		{
-			#region Nested Types
-
 			//public sealed class ReaderProcess : LexerProcess
 			//{
 			//	#region Fields
@@ -142,10 +136,6 @@ namespace Zaaml.Text
 
 			//	#endregion
 			//}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

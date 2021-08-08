@@ -11,20 +11,12 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected class SetMatchEntry : MatchEntry
 		{
-			#region Ctors
-
 			public SetMatchEntry(IEnumerable<PrimitiveMatchEntry> matches)
 			{
 				Matches = matches.ToArray();
 			}
-
-			#endregion
-
-			#region Properties
 
 			protected override string DebuggerDisplay
 			{
@@ -37,10 +29,6 @@ namespace Zaaml.Text
 			}
 
 			public PrimitiveMatchEntry[] Matches { get; }
-
-			#endregion
-
-			#region Methods
 
 			public override bool Match(TOperand operand)
 			{
@@ -67,10 +55,6 @@ namespace Zaaml.Text
 
 				return false;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

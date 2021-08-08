@@ -8,18 +8,10 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		[DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
 		protected abstract class Entry
 		{
-			#region Properties
-
 			protected abstract string DebuggerDisplay { get; }
-
-			#endregion
-
-			#region Methods
 
 			public static implicit operator Entry(TOperand operand)
 			{
@@ -35,10 +27,6 @@ namespace Zaaml.Text
 			{
 				return DebuggerDisplay;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

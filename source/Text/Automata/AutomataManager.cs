@@ -4,21 +4,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using Zaaml.Core.Reflection;
 
 namespace Zaaml.Text
 {
 	internal sealed class AutomataManager
 	{
-		#region Static Fields and Constants
-
 		private static int _instanceCount;
-		private static readonly AutomataManager Instance = new AutomataManager();
-		private static readonly Dictionary<Type, Automata> AutomataDictionary = new Dictionary<Type, Automata>();
-
-		#endregion
-
-		#region Ctors
+		private static readonly AutomataManager Instance = new();
+		private static readonly Dictionary<Type, Automata> AutomataDictionary = new();
 
 		private AutomataManager()
 		{
@@ -26,23 +20,14 @@ namespace Zaaml.Text
 				throw new InvalidOperationException("AutomataManager must be a singleton.");
 		}
 
-		#endregion
-
-		#region Methods
-
 		public static Automata Get(Type automataType)
 		{
-			{
-				if (AutomataDictionary.TryGetValue(automataType, out var automata))
-					return automata;
-			}
-
 			lock (AutomataDictionary)
 			{
 				if (AutomataDictionary.TryGetValue(automataType, out var automata))
 					return automata;
 
-				automata = (Automata) Activator.CreateInstance(automataType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] {Instance}, null);
+				automata = (Automata)Activator.CreateInstance(automataType, BF.IPNP, null, new object[] { Instance }, null);
 
 				AutomataDictionary.Add(automataType, automata);
 
@@ -52,9 +37,7 @@ namespace Zaaml.Text
 
 		public static TAutomata Get<TAutomata>() where TAutomata : Automata
 		{
-			return (TAutomata) Get(typeof(TAutomata));
+			return (TAutomata)Get(typeof(TAutomata));
 		}
-
-		#endregion
 	}
 }

@@ -10,36 +10,24 @@ namespace Zaaml.Text
 	[SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass")]
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		private protected sealed class DfaNode : IEquatable<DfaNode>
 		{
-			#region Fields
-
 			public readonly object ExecutionPathObject;
-			public readonly NodeBase Node;
+			public readonly Node Node;
 			public readonly DfaTransition Transition;
 
-			#endregion
-
-			#region Ctors
-
-			public DfaNode(NodeBase node, DfaTransition transition)
+			public DfaNode(Node node, DfaTransition transition)
 			{
 				Node = node;
 				Transition = transition;
 			}
 
-			public DfaNode(NodeBase node, DfaTransition transition, object executionPathObject)
+			public DfaNode(Node node, DfaTransition transition, object executionPathObject)
 			{
 				Node = node;
 				Transition = transition;
 				ExecutionPathObject = executionPathObject;
 			}
-
-			#endregion
-
-			#region Methods
 
 			public override bool Equals(object obj)
 			{
@@ -71,12 +59,6 @@ namespace Zaaml.Text
 				return Node.ToString();
 			}
 
-			#endregion
-
-			#region Interface Implementations
-
-			#region IEquatable<Automata<TInstruction,TOperand>.DfaNode>
-
 			public bool Equals(DfaNode other)
 			{
 				if (ReferenceEquals(null, other)) return false;
@@ -84,12 +66,6 @@ namespace Zaaml.Text
 
 				return Equals(Node, other.Node) && Equals(Transition, other.Transition) && Equals(ExecutionPathObject, other.ExecutionPathObject);
 			}
-
-			#endregion
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -14,84 +14,80 @@ namespace Zaaml.Text
 	{
 		private sealed partial class ParserAutomata
 		{
-			private static LeftRecursionClassifier ClassifyLeftRecursion(ParserProduction production, ParserRule parserRule)
-			{
-				if (production.Entries.Length == 0)
-					return LeftRecursionClassifier.Primary;
-
-				var firstRecursion = IsRecursion(production.Entries[0], parserRule);
-				var lastRecursion = IsRecursion(production.Entries[production.Entries.Length - 1], parserRule);
-
-				if (production.Entries.Length == 1)
-					return firstRecursion ? LeftRecursionClassifier.Generic : LeftRecursionClassifier.Primary;
-
-				if (production.Entries.Length == 3 && IsRecursion(production.Entries[1], parserRule) == false && firstRecursion && lastRecursion)
-					return LeftRecursionClassifier.Binary;
-
-				if (production.Entries.Length > 3 && firstRecursion && lastRecursion)
-					return LeftRecursionClassifier.Ternary;
-
-				if (firstRecursion && lastRecursion == false)
-					return LeftRecursionClassifier.Suffix;
-
-				if (firstRecursion == false && lastRecursion)
-					return LeftRecursionClassifier.Prefix;
-
-				return firstRecursion ? LeftRecursionClassifier.Generic : LeftRecursionClassifier.Primary;
-			}
-
 			private void EliminateLeftRecursion(ParserRule parserRule, List<ParserProduction> productions)
 			{
 				var hasLeftRecursion = false;
 
-				foreach (var stateProduction in productions)
-				{
-					stateProduction.LeftRecursionClassifier = ClassifyLeftRecursion(stateProduction, parserRule);
-
-					hasLeftRecursion |= IsLeftRecursion(stateProduction.LeftRecursionClassifier);
-				}
+				foreach (var parserProduction in productions)
+					hasLeftRecursion |= IsLeftRecursion(parserRule, parserProduction);
 
 				if (hasLeftRecursion == false)
 					return;
 
-				var count = productions.Count;
-				var recursionState = new ParserRule(null, true);
-				var index = 0;
+				var tailRule = new ParserRule($"{parserRule.Name}Tail", false);
+				var tailGrammarRule = new Grammar<TToken>.ParserRule { Name = tailRule.Name };
+				var tailRuleProductions = new List<ParserProduction>();
 
-				foreach (var production in productions)
+				for (var index = 0; index < productions.Count; index++)
 				{
-					if (production.LeftRecursionClassifier is LeftRecursionClassifier.Binary or LeftRecursionClassifier.Ternary or LeftRecursionClassifier.Prefix)
+					var parserProduction = productions[index];
+
+					productions[index] = null;
+
+					var tailRuleEntry = new ParserRuleEntry(tailGrammarRule, tailRule, false, false);
+
+					if (IsLeftRecursion(parserRule, parserProduction))
 					{
-						var assoc = production.IsRightAssoc ? 0 : 1;
-						var nextPriority = new PriorityRuleEntryContext(count - index + assoc);
+						var tailProduction = new ParserProduction(this, _ => LeftRecursionBinder.RecursiveInstance, parserProduction.Entries.Skip(1).Append(tailRuleEntry));
+						var tailRuleEntryArgument = new NullProductionArgument(tailRule.Name, tailRuleEntry, tailProduction.Entries.Length - 1, tailProduction);
 
-						foreach (var parserStateEntry in production.Entries.Skip(1).OfType<ParserRuleEntry>().Where(e => ReferenceEquals(e.Rule, parserRule)))
-							parserStateEntry.RuleEntryContext = nextPriority;
+						tailProduction.OriginalProduction = parserProduction;
+
+						tailRuleEntry.ProductionArgument = tailRuleEntryArgument;
+
+						tailRuleProductions.Add(tailProduction);
+
+						for (var j = 1; j < parserProduction.Entries.Length; j++)
+							MapArgument(j, parserProduction, j - 1, tailProduction);
 					}
+					else
+					{
+						var headProduction = new ParserProduction(this, _ => LeftRecursionBinder.NonRecursiveInstance, parserProduction.Entries.Append(tailRuleEntry));
+						var tailRuleEntryArgument = new NullProductionArgument(tailRule.Name, tailRuleEntry, headProduction.Entries.Length - 1, headProduction);
 
-					if (IsLeftRecursion(production.LeftRecursionClassifier) == false)
-						continue;
+						headProduction.OriginalProduction = parserProduction;
 
-					production.LeftRecursionEntry = (ParserRuleEntry) production.Entries[0];
-					production.Entries[0] = ShouldPrefixLeftRecursionPredicate(production.LeftRecursionClassifier) ? new LeftRecursionPredicate(parserRule, count - index).Entry : EpsilonEntry.Instance;
+						tailRuleEntry.ProductionArgument = tailRuleEntryArgument;
 
-					recursionState.Productions.Add(production);
+						productions[index] = headProduction;
 
-					index++;
+						for (var j = 0; j < parserProduction.Entries.Length; j++)
+							MapArgument(j, parserProduction, j, headProduction);
+					}
 				}
 
-				var quantifierEntry = new QuantifierEntry(new RuleEntry(recursionState) {SkipStack = true}, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
-				var primaryState = new ParserRule(null, true);
+				var tailEpsilonProduction = new ParserProduction(this, _ => LeftRecursionBinder.NonRecursiveInstance, new[] { EpsilonEntry.Instance });
 
-				primaryState.Productions.AddRange(productions.Where(production => IsLeftRecursion(production.LeftRecursionClassifier) == false));
+				tailRuleProductions.Add(tailEpsilonProduction);
 
-				productions.Clear();
-				productions.Add(new ParserProduction(this, null, new Entry[] {new RuleEntry(primaryState) {SkipStack = true}, quantifierEntry}));
+				EliminateLeftRecursion(tailRule, tailRuleProductions);
+
+				foreach (var tailProduction in tailRuleProductions)
+					tailRule.Productions.Add(tailProduction);
+
+				for (var i = 0; i < productions.Count; i++)
+				{
+					if (productions[i] != null)
+						continue;
+
+					productions.RemoveAt(i);
+					i--;
+				}
 			}
 
-			private static bool IsLeftRecursion(LeftRecursionClassifier classifier)
+			private static bool IsLeftRecursion(ParserRule parserRule, ParserProduction parserProduction)
 			{
-				return classifier is LeftRecursionClassifier.Primary or LeftRecursionClassifier.Prefix == false;
+				return IsRecursion(parserProduction.Entries[0], parserRule);
 			}
 
 			private static bool IsRecursion(Entry entry, ParserRule rule)
@@ -99,9 +95,40 @@ namespace Zaaml.Text
 				return entry is ParserRuleEntry parserStateEntry && ReferenceEquals(parserStateEntry.Rule, rule);
 			}
 
-			private static bool ShouldPrefixLeftRecursionPredicate(LeftRecursionClassifier classifier)
+			private static void MapArgument(int sourceEntryIndex, ParserProduction sourceProduction, int targetEntryIndex, ParserProduction targetProduction)
 			{
-				return classifier is LeftRecursionClassifier.Binary or LeftRecursionClassifier.Ternary or LeftRecursionClassifier.Suffix;
+				var entry = sourceProduction.Entries[sourceEntryIndex];
+
+				if (entry is not IParserEntry parserEntry)
+					return;
+
+				var entryArgument = parserEntry.ProductionArgument;
+
+				if (entryArgument == null)
+					return;
+
+				var targetEntry = targetProduction.Entries[targetEntryIndex];
+				var targetArgument = (entryArgument.OriginalArgument ?? entryArgument).MapArgument(targetEntryIndex, targetEntry, targetProduction);
+				var targetParserEntry = (IParserEntry)targetEntry;
+
+				targetParserEntry.ProductionArgument = targetArgument;
+				targetProduction.Arguments.Add(targetArgument);
+				targetArgument.Bind(entryArgument.Binder);
+			}
+
+			private sealed class LeftRecursionBinder : ProductionBinder
+			{
+				public static readonly LeftRecursionBinder RecursiveInstance = new(true);
+				public static readonly LeftRecursionBinder NonRecursiveInstance = new(false);
+
+				private LeftRecursionBinder(bool recursive)
+				{
+					Recursive = recursive;
+				}
+
+				public override bool IsFactoryBinder => false;
+
+				public bool Recursive { get; }
 			}
 		}
 	}

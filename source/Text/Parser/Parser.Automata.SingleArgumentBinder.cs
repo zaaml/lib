@@ -21,7 +21,7 @@ namespace Zaaml.Text
 
 				public ProductionArgument ProductionArgument { get; }
 
-				public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode contextLdArg)
+				public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
 				{
 					ilBuilder.Emit(OpCodes.Ldloc, productionEntityLocal);
 					ilBuilder.Emit(OpCodes.Ldfld, ProductionEntityArgumentsFieldInfo);
@@ -29,7 +29,7 @@ namespace Zaaml.Text
 					ilBuilder.Emit(OpCodes.Ldelem_Ref);
 					ilBuilder.Emit(OpCodes.Stloc, entityArgumentLocal);
 
-					ProductionArgument.EmitPushResetArgument(entityArgumentLocal, ArgumentType, ilBuilder, contextLdArg);
+					ProductionArgument.EmitPushResetArgument(entityArgumentLocal, ArgumentType, ilBuilder, processLdArg);
 				}
 			}
 		}

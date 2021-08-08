@@ -8,42 +8,26 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
-		protected internal abstract partial class SubLexerEntry : ParserPrimitiveEntry
+		protected internal abstract partial class ExternalLexerEntry : ParserPrimitiveEntry
 		{
-			#region Properties
-
 			public abstract Type GrammarType { get; }
 
 			public abstract Type TokenType { get; }
-
-			#endregion
 		}
 
-		protected internal sealed class SubLexerEntry<TSubToken> : SubLexerEntry where TSubToken : unmanaged, Enum
+		protected internal sealed class ExternalLexerEntry<TExternalToken> : ExternalLexerEntry where TExternalToken : unmanaged, Enum
 		{
-			#region Ctors
-
-			public SubLexerEntry(Grammar<TSubToken>.TokenRule subLexerRule)
+			public ExternalLexerEntry(Grammar<TExternalToken>.TokenRule externalLexerRule)
 			{
-				SubLexerRule = subLexerRule;
-				Name = subLexerRule.EnsureName();
+				ExternalLexerRule = externalLexerRule;
+				Name = externalLexerRule.EnsureName();
 			}
 
-			#endregion
+			public override Type GrammarType => ExternalLexerRule.Grammar?.GetType();
 
-			#region Properties
+			public Grammar<TExternalToken>.TokenRule ExternalLexerRule { get; }
 
-			public override Type GrammarType => SubLexerRule.Grammar?.GetType();
-
-			public Grammar<TSubToken>.TokenRule SubLexerRule { get; }
-
-			public override Type TokenType => typeof(TSubToken);
-
-			#endregion
+			public override Type TokenType => typeof(TExternalToken);
 		}
-
-		#endregion
 	}
 }

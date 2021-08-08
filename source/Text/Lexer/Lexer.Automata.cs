@@ -24,7 +24,8 @@ namespace Zaaml.Text
 
 			static LexerAutomata()
 			{
-				Converter = c => c;
+				FromConverter = ch => ch + 1;
+				ToConverter = code => code - 1;
 			}
 
 			public LexerAutomata(AutomataManager manager) : base(manager)
@@ -49,13 +50,13 @@ namespace Zaaml.Text
 
 			private static Action<AutomataContext> CreateActionDelegate(Lexer<TToken>.ActionEntry actionEntry)
 			{
-				return c => actionEntry.Action(((LexerAutomataContextState) ((LexerAutomataContext) c).ContextStateInternal).LexerContext);
+				return c => actionEntry.Action(((LexerAutomataContextState)((LexerAutomataContext)c).ContextStateInternal).LexerContext);
 			}
 
 			private Entry CreateLexerEntry(Grammar<TToken>.TokenEntry tokenEntry)
 			{
 				if (tokenEntry is Grammar<TToken>.QuantifierEntry quantifierEntry)
-					return new QuantifierEntry((PrimitiveEntry) CreateLexerEntry(quantifierEntry.PrimitiveEntry), quantifierEntry.Range, quantifierEntry.Mode);
+					return new QuantifierEntry((PrimitiveEntry)CreateLexerEntry(quantifierEntry.PrimitiveEntry), quantifierEntry.Range, quantifierEntry.Mode);
 
 				if (tokenEntry is Grammar<TToken>.MatchEntry matchEntry)
 				{
@@ -122,7 +123,7 @@ namespace Zaaml.Text
 
 			private static Func<AutomataContext, PredicateResult> CreatePredicateDelegate(Lexer<TToken>.PredicateEntry predicateEntry)
 			{
-				return c => predicateEntry.Predicate(((LexerAutomataContext) c).LexerContext) ? PredicateResult.True : PredicateResult.False;
+				return c => predicateEntry.Predicate(((LexerAutomataContext)c).LexerContext) ? PredicateResult.True : PredicateResult.False;
 			}
 
 			private string GenerateLexerStateName()
@@ -154,7 +155,7 @@ namespace Zaaml.Text
 				var lexerState = GetLexerState(tokenFragment);
 				var transitions = tokenFragment.Pattern.Patterns.Select(pattern => new LexerProduction(pattern.Entries.Select(CreateLexerEntry))).ToList();
 
-				AddState(lexerState, transitions);
+				AddRule(lexerState, transitions);
 			}
 
 			private void RegisterLexerRule(Grammar<TToken>.TokenRule tokenRule)
@@ -162,7 +163,7 @@ namespace Zaaml.Text
 				var lexerState = GetLexerState(tokenRule);
 				var transitions = tokenRule.Pattern.Patterns.Select(pattern => new LexerProduction(pattern.Entries.Select(CreateLexerEntry))).ToList();
 
-				AddState(lexerState, transitions);
+				AddRule(lexerState, transitions);
 			}
 		}
 	}

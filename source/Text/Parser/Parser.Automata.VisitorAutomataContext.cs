@@ -2,54 +2,24 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
-
 // ReSharper disable StaticMemberInGenericType
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Parser<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private sealed partial class ParserAutomata
 		{
-			#region Nested Types
-
-			private sealed class VisitorAutomataContext : ValueParserAutomataContext
+			private sealed class VisitorAutomataContext : ValueAutomataContext
 			{
-				#region Ctors
-
-				public VisitorAutomataContext(Visitor visitor, ParserRule rule, ParserAutomata parserAutomata) : base(rule, parserAutomata)
+				public VisitorAutomataContext(Visitor visitor, ParserRule rule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind, Parser<TGrammar, TToken> parser, ParserAutomata parserAutomata)
+					: base(rule, lexemeSource, parserContext, processKind, parser, parserAutomata)
 				{
 					Visitor = visitor;
 				}
 
-				#endregion
-
-				#region Properties
-
-				private protected override Type ILBuilderType => typeof(VisitorAutomataContext);
-
 				public Visitor Visitor { get; }
-
-				#endregion
-
-				#region Methods
-
-				public override void Dispose()
-				{
-					base.Dispose();
-
-					((ParserRule) Rule).ReleaseVisitorContext(this);
-				}
-
-				#endregion
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

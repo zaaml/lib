@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,60 +10,58 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
+		private readonly List<ExecutionPathGroup> _executionPathGroupRegistry = new();
 
-		private sealed class ExecutionPathGroup
+		private int RegisterExecutionPathGroup(ExecutionPathGroup executionPathGroup)
 		{
-			#region Static Fields and Constants
+			lock (_executionPathGroupRegistry)
+			{
+				var id = _executionPathGroupRegistry.Count;
 
-			public static readonly ExecutionPathGroup Empty = new ExecutionPathGroup();
+				_executionPathGroupRegistry.Add(executionPathGroup);
 
-			#endregion
+				return id;
+			}
+		}
 
-			#region Fields
-
+		private protected sealed class ExecutionPathGroup
+		{
+			public static readonly ExecutionPathGroup Empty = new();
 			public readonly ExecutionPath[] ExecutionPaths;
+
+			public readonly int Id;
 			public readonly PrimitiveMatchEntry Match;
-
-			#endregion
-
-			#region Ctors
 
 			private ExecutionPathGroup()
 			{
 				Match = null;
-				ExecutionPaths = new ExecutionPath[0];
+				ExecutionPaths = Array.Empty<ExecutionPath>();
 			}
 
-			public ExecutionPathGroup(IEnumerable<ExecutionPath> executionPaths)
+			public ExecutionPathGroup(Automata<TInstruction, TOperand> automata, IEnumerable<ExecutionPath> executionPaths)
 			{
+				Id = automata.RegisterExecutionPathGroup(this);
 				ExecutionPaths = BuildPathArray(executionPaths);
 			}
 
-			public ExecutionPathGroup(TOperand operand, IEnumerable<ExecutionPath> executionPaths)
+			public ExecutionPathGroup(Automata<TInstruction, TOperand> automata, TOperand operand, IEnumerable<ExecutionPath> executionPaths)
 			{
+				Id = automata.RegisterExecutionPathGroup(this);
 				Match = new SingleMatchEntry(operand);
 				ExecutionPaths = BuildPathArray(executionPaths);
 			}
 
-			public ExecutionPathGroup(PrimitiveMatchEntry match, IEnumerable<ExecutionPath> executionPaths)
+			public ExecutionPathGroup(Automata<TInstruction, TOperand> automata, PrimitiveMatchEntry match, IEnumerable<ExecutionPath> executionPaths)
 			{
+				Id = automata.RegisterExecutionPathGroup(this);
 				Match = match;
 				ExecutionPaths = BuildPathArray(executionPaths);
 			}
-
-			#endregion
-
-			#region Methods
 
 			private static ExecutionPath[] BuildPathArray(IEnumerable<ExecutionPath> executionPaths)
 			{
 				return executionPaths.ToList().Distinct(NodesEqualityComparer.Instance).OrderBy(e => e.PriorityIndex).ThenByDescending(e => e.Weight).ToArray();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

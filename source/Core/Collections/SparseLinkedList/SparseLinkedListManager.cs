@@ -20,7 +20,7 @@ namespace Zaaml.Core.Collections
 
 		public SparseMemoryAllocator<T> SparseMemoryAllocator { get; }
 
-		public Memory<T> Allocate()
+		public MemorySpan<T> Allocate()
 		{
 			return SparseMemoryAllocator.Allocate();
 		}

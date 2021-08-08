@@ -9,8 +9,6 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal struct TokenInterProductionCollectionBuilder
 		{
 			private TokenInterProduction _entry0;
@@ -114,12 +112,12 @@ namespace Zaaml.Text
 
 			public static TokenInterProductionCollectionBuilder operator |(TokenInterProductionCollectionBuilder op1, TokenRule op2)
 			{
-				return op1 | new TokenInterProductionCollectionBuilder(new TokenInterProduction(new TokenInterEntry[] {new TokenInterRuleEntry(op2)}));
+				return op1 | new TokenInterProductionCollectionBuilder(new TokenInterProduction(new TokenInterEntry[] { new TokenInterRuleEntry(op2) }));
 			}
 
 			public static TokenInterProductionCollectionBuilder operator |(TokenRule op1, TokenInterProductionCollectionBuilder op2)
 			{
-				return new TokenInterProductionCollectionBuilder(new TokenInterProduction(new TokenInterEntry[] {new TokenInterRuleEntry(op1)})) | op2;
+				return new TokenInterProductionCollectionBuilder(new TokenInterProduction(new TokenInterEntry[] { new TokenInterRuleEntry(op1) })) | op2;
 			}
 
 			public static TokenInterProductionBuilder operator +(TokenInterProductionCollectionBuilder op1, TokenInterProductionCollectionBuilder op2)
@@ -193,7 +191,5 @@ namespace Zaaml.Text
 
 			#endregion
 		}
-
-		#endregion
 	}
 }

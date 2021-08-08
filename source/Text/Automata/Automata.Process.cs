@@ -8,88 +8,98 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Zaaml.Core;
-using Zaaml.Core.Collections;
-using Zaaml.Core.Extensions;
+using Zaaml.Core.Utils;
+
+// ReSharper disable ForCanBeConvertedToForeach
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
-		private protected sealed partial class Process
+		private protected enum ExecutionPathMethodKind
 		{
-			#region Static Fields and Constants
+			Main,
+			Parallel
+		}
 
-			public static readonly Process DummyProcess = new Process(null);
+		private protected sealed class ExecutionPathMethodCollection
+		{
+			private readonly Process.ProcessILGenerator _ilBuilder;
+			private readonly ExecutionPathMethodKind _kind;
+			private ExecutionPathMethod[] _executionPaths;
 
-			#endregion
+			public ExecutionPathMethodCollection(ExecutionPathMethodKind kind, Process.ProcessILGenerator ilBuilder)
+			{
+				_kind = kind;
+				_ilBuilder = ilBuilder;
+				_executionPaths = Array.Empty<ExecutionPathMethod>();
+			}
 
-			#region Fields
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public ExecutionPathMethod GetExecutionPathMethod(ExecutionPath executionPath)
+			{
+				if (executionPath.Id < _executionPaths.Length)
+					return _executionPaths[executionPath.Id] ??= new ExecutionPathMethod(_kind, _ilBuilder, executionPath);
 
+				ArrayUtils.EnsureArrayLength(ref _executionPaths, executionPath.Id + 1, true);
+
+				return _executionPaths[executionPath.Id] ??= new ExecutionPathMethod(_kind, _ilBuilder, executionPath);
+			}
+		}
+
+		private protected partial class Process
+		{
 			private readonly Automata<TInstruction, TOperand> _automata;
+			private readonly AutomataContext _context;
+			private readonly ProcessKind _processKind;
+			private readonly ProcessResources _processResources;
+			private readonly AutomataStack _stack;
+			private MemorySpan<int> _executionPathBuilder;
+			private ReferenceCounter _referenceCount;
+			private ThreadCollection _threads;
 
-			//private readonly DebugId<Process> Id = DebugId<Process>.Create(typeof(TOperand).ToString());
-
-			private readonly List<ForkThreadData> _forkThreads = new List<ForkThreadData>
+			public Process(IInstructionReader instructionReader, AutomataContext context, ProcessILGenerator ilGenerator = null)
 			{
-				new ForkThreadData(),
-				new ForkThreadData(),
-				new ForkThreadData(),
-				new ForkThreadData(),
-				new ForkThreadData(),
-				new ForkThreadData(),
-				new ForkThreadData(),
-				new ForkThreadData(),
-			};
+				_context = context;
+				_automata = context.Automata;
+				_processKind = context.ProcessKind;
+				_processResources = ProcessResources.Get(_automata);
+				_executionPathBuilder = _processResources.IntMemorySpanAllocator.Allocate(1024);
 
-			private Thread _currentThread = Thread.Empty;
-			private EntryPointSubGraph _entryPointSubGraph;
-			private ExecutionPathMethodCollection _executionMethods;
-			private Thread _mainThread = Thread.Empty;
+				ILGenerator = ilGenerator ?? _automata.ILGenerator;
 
-			private LinkedListStack<Thread> _parallelThreads;
-			private bool _partialRun;
-			private PredicateResultQueue _predicateResultQueue;
-			private ProcessResources _processResources;
-			private ReferenceCounter _referenceCount = new ReferenceCounter();
-			private ExecutionPathGroupBuilder _executionPathQueueBuilder;
-			internal AutomataContext Context;
-			internal bool ExecuteThreadQueue;
+				var initNode = _automata.EnsureSubGraph(context.Rule).InitNode.EnsureSafe();
+				var executionStream = _processResources.ExecutionStreamPool.Get();
+				var instructionStream = _processResources.InstructionStreamPool.Get().Mount(instructionReader, _automata);
+				var predicateResultStream = _processResources.PredicateResultStreamPool.Get();
 
-			#endregion
+				_stack = _processResources.StackPool.Get().Allocate(StackCapacity).AddReference();
 
-			#region Ctors
+				var thread = new Thread(initNode, _stack);
+				var threadContext = new ThreadContext(this, instructionStream, executionStream, predicateResultStream, context.CreateContextStateInternal());
 
-			public Process(Automata<TInstruction, TOperand> automata)
-			{
-				_automata = automata;
+				_threads = new ThreadCollection(this, thread, threadContext);
 			}
 
-			#endregion
+			public AutomataContextState ContextState => CurrentThreadContext.ContextState;
 
-			#region Properties
+			private ref ThreadContext CurrentThreadContext => ref _threads.Context;
 
-			public AutomataContextState ContextState => _currentThread.ContextState;
+			private ProcessILGenerator ILGenerator { get; }
 
-			public ref TInstruction Instruction => ref _currentThread.Instruction;
+			public TInstruction Instruction => CurrentThreadContext.Instruction;
 
-			public int InstructionOperand => _currentThread.InstructionOperand;
+			public int InstructionOperand => CurrentThreadContext.InstructionOperand;
 
-			public int InstructionPointer => _currentThread.InstructionPointer;
+			public int InstructionPointer => CurrentThreadContext.InstructionStreamPointer;
 
-			public int InstructionStreamPosition => _currentThread.InstructionStreamPosition;
+			public ref TInstruction InstructionReference => ref CurrentThreadContext.Instruction;
 
-			public bool IsMainThread => _currentThread.Parent == null;
+			public int InstructionStreamPosition => CurrentThreadContext.InstructionStreamPosition;
 
-			#endregion
+			public bool IsMainThread => CurrentThreadContext.Index == 0;
 
-			#region Methods
-
-			public ref TInstruction GetInstructionOperand(out int operand)
-			{
-				return ref _currentThread.GetInstructionOperand(out operand);
-			}
+			public int StackCapacity => 0xFFFF;
 
 			public void AddReference()
 			{
@@ -98,9 +108,10 @@ namespace Zaaml.Text
 
 			public void AdvanceInstructionPosition()
 			{
-				var instructionQueue = _currentThread.InstructionStream;
+				ref var threadContext = ref CurrentThreadContext;
+				var instructionQueue = threadContext.InstructionStream;
 
-				_currentThread.InstructionStream = instructionQueue.Advance(_currentThread.InstructionPointer, _automata).AddReference();
+				threadContext.InstructionStream = instructionQueue.Advance(threadContext.InstructionStreamPointer, _automata).AddReference();
 
 				instructionQueue.ReleaseReference();
 			}
@@ -108,517 +119,83 @@ namespace Zaaml.Text
 			[UsedImplicitly]
 			private ForkNode BuildForkNode(int nodeIndex, ExecutionPath executionPath, PredicateResult predicateResult)
 			{
-				var forkNode = _processResources.ForkNodePool.Get().Mount(nodeIndex, executionPath, predicateResult);
+				// TODO Review
+				// predicateResult.Dispose();
 
-				predicateResult.Dispose();
-
-				return forkNode;
+				return _processResources.ForkNodePool.Get().Mount(nodeIndex, executionPath, predicateResult);
 			}
 
-			private void ClearThreads()
+			private PredicateResult CallPredicate(ExecutionPath executionPath)
 			{
-				while (_parallelThreads.Count > 0)
-					_parallelThreads.Pop().Dispose(this);
+				var predicateNode = (PredicateNode)executionPath.Nodes[executionPath.Nodes.Length - 1];
+
+				return predicateNode.PredicateEntry.PassInternal(_context);
 			}
 
-			private List<DebugExecutionAlternative> DebugExecutionPaths()
+			internal PredicateResult DequeuePredicateResult()
 			{
-				var alt = new List<DebugExecutionAlternative>();
-				var executionPathBuilderCount = _executionPathQueueBuilder.ExecutionPathBuilderCount;
-
-				for (var j = 0; j < executionPathBuilderCount; j++)
-					alt.Add(new DebugExecutionAlternative(_executionPathQueueBuilder.ExecutionPathBuilders[j]));
-
-				return alt;
+				return CurrentThreadContext.DequeuePredicateResult();
 			}
 
-			internal PredicateResult DequePredicateResult()
+			protected virtual void Dispose()
 			{
-				if (_predicateResultQueue.Queue.Count == 0)
-					_predicateResultQueue = _predicateResultQueue.Next;
-
-				if (_predicateResultQueue == null)
-					throw new InvalidOperationException();
-
-				var result = _predicateResultQueue.Queue.Dequeue();
-
-				return result;
+				_stack.ReleaseReference();
+				_executionPathBuilder.Dispose();
+				_threads.Dispose();
 			}
 
-			private void Dispose()
+			private void EnqueueParallelPath(ExecutionPath executionPath)
 			{
-				ClearThreads();
-
-				_parallelThreads = _parallelThreads.DisposeExchange();
-				_executionPathQueueBuilder = _executionPathQueueBuilder.DisposeExchange();
-				_currentThread.Dispose(this);
-				_currentThread = Thread.Empty;
-				_executionMethods = null;
-				_partialRun = false;
-
-				Context.ProcessField = DummyProcess;
-				Context = null;
-
-				_processResources = null;
-				_automata.ReleaseProcess(this);
+				CurrentThreadContext.EnqueueParallelPath(executionPath);
 			}
 
 			internal void EnqueuePredicateResult(PredicateResult predicateResult)
 			{
-				_currentThread.EnqueuePredicateResult(predicateResult);
-			}
-
-			private StatusKind ExecuteInstruction(bool main)
-			{
-				var continueBuild = false;
-
-				while (true)
-				{
-					_executionPathQueueBuilder.BuildExecutionPath(this, ref continueBuild);
-
-					switch (_executionPathQueueBuilder.ExecutionPathBuilderCount)
-					{
-						case 0:
-
-							return ReferenceEquals(_currentThread.CurrentNode, _entryPointSubGraph.EndNode) ? StatusKind.Finished : StatusKind.Unexpected;
-
-						case 1:
-							
-							_currentThread.InstructionStream.UnlockPointer(_currentThread.InstructionPointer);
-
-#if DEV_EXP
-							var dfaPathArray = _executionPathQueueBuilder.DfaBuilder.ExecutionPathsArray;
-
-							if (dfaPathArray != null)
-							{
-								if (main)
-								{
-									var dfaExecutionPaths = dfaPathArray;
-
-									for (var i = 0; i < dfaExecutionPaths.Length; i++)
-									{
-										ExecuteMain(dfaExecutionPaths[i]);
-
-										if (_currentThread.CurrentNode is ForkNode forkNode)
-										{
-											for (var j = i + 1; j < dfaExecutionPaths.Length; j++)
-												forkNode.ForkExecutionPaths.Add(dfaExecutionPaths[i]);
-
-											_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
-											
-											return ForkThreadNode(forkNode, true);
-										}
-									}
-								}
-								else
-								{
-									var dfaExecutionPaths = dfaPathArray;
-
-									for (var i = 0; i < dfaExecutionPaths.Length; i++)
-									{
-										ExecuteParallel(dfaExecutionPaths[i]);
-
-										if (_currentThread.CurrentNode is ForkNode forkNode)
-										{
-											for (var j = i + 1; j < dfaExecutionPaths.Length; j++)
-												forkNode.ForkExecutionPaths.Add(dfaExecutionPaths[i]);
-
-											_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
-
-											return ForkThreadNode(forkNode, true);
-										}
-									}
-								}
-							}
-							else
-#endif
-							{
-								var executionPathQueueBuilder = _executionPathQueueBuilder.ExecutionPathBuilders[0];
-								var returnPathCount = executionPathQueueBuilder.ReturnPathCount;
-
-								if (main)
-								{
-									for (var i = 0; i < returnPathCount; i++)
-									{
-										ExecuteMain(executionPathQueueBuilder.ReturnPaths[i]);
-
-										if (_currentThread.CurrentNode is not ForkNode forkNode) 
-											continue;
-
-										for (var j = i + 1; j < returnPathCount; j++)
-											forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ReturnPaths[i]);
-
-										forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ExecutionPath);
-
-										_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
-
-										executionPathQueueBuilder.NextBuilder = executionPathQueueBuilder.NextBuilder?.DisposeExchange();
-
-										return ForkThreadNode(forkNode, true);
-									}
-
-									ExecuteMain(executionPathQueueBuilder.ExecutionPath);
-								}
-								else
-								{
-									for (var i = 0; i < returnPathCount; i++)
-									{
-										ExecuteParallel(executionPathQueueBuilder.ReturnPaths[i]);
-
-										if (_currentThread.CurrentNode is not ForkNode forkNode) 
-											continue;
-
-										for (var j = i + 1; j < returnPathCount; j++)
-											forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ReturnPaths[i]);
-
-										forkNode.ForkExecutionPaths.Add(executionPathQueueBuilder.ExecutionPath);
-
-										_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
-
-										executionPathQueueBuilder.NextBuilder = executionPathQueueBuilder.NextBuilder?.DisposeExchange();
-
-										return ForkThreadNode(forkNode, false);
-									}
-
-									ExecuteParallel(executionPathQueueBuilder.ExecutionPath);
-								}
-							}
-
-							_currentThread.InstructionStream.LockPointer(_currentThread.InstructionPointer);
-
-							if (_currentThread.CurrentNode == null)
-								return StatusKind.Unexpected;
-
-							if (ReferenceEquals(_currentThread.CurrentNode, _entryPointSubGraph.EndNode))
-								return StatusKind.Finished;
-
-							//if (executionPathQueueBuilder.NextBuilder != null)
-							//{
-							//	continueBuild = true;
-
-							//	_executionPathQueueBuilder = _executionPathQueueBuilder.DisposeExchange(executionPathQueueBuilder.NextBuilder);
-							//}
-
-							{
-								if (_currentThread.CurrentNode is ForkNode forkNode)
-									return ForkThreadNode(forkNode, main);
-							}
-
-							continue;
-
-						default:
-
-#if DEV_EXP
-							if (_executionPathQueueBuilder.DfaBuilder.DfaState.Length > 1)
-								return ForkDfaThread(main);
-#endif
-
-							return ForkThread(main);
-					}
-				}
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			private void ExecuteMain(ExecutionPath executionPath)
-			{
-				_currentThread.CurrentNode = _executionMethods.GetExecutionPathMethod(executionPath).ExecuteMain(this, _currentThread.Stack);
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			private void ExecuteParallel(ExecutionPath executionPath)
-			{
-				_currentThread.EnqueuePath(executionPath);
-
-				if (executionPath.ForkPredicatePath)
-					executionPath.AddReference();
-
-				_currentThread.CurrentNode = _executionMethods.GetExecutionPathMethod(executionPath).ExecuteParallel(this, _currentThread.Stack);
-			}
-
-			private void ExecuteThread()
-			{
-				var thread = _currentThread;
-
-				_currentThread = _mainThread;
-				_mainThread = Thread.Empty;
-
-				var instructionQueue = thread.InstructionStream;
-
-				thread.InstructionStream = _currentThread.InstructionStream;
-
-				_currentThread.InstructionStream = instructionQueue;
-
-				var currentParent = thread.Parent;
-				var executionQueue = thread.ExecutionQueue;
-
-				_predicateResultQueue = thread.PredicateResultQueue;
-
-				while (currentParent != null)
-				{
-					if (currentParent.PredicateResultQueue != null && ReferenceEquals(_predicateResultQueue, currentParent.PredicateResultQueue) == false)
-					{
-						currentParent.PredicateResultQueue.Next = _predicateResultQueue;
-						_predicateResultQueue = currentParent.PredicateResultQueue;
-					}
-
-					currentParent.ExecutionQueue.Next = executionQueue;
-					executionQueue = currentParent.ExecutionQueue;
-
-					currentParent = currentParent.Parent;
-				}
-
-				ExecuteThreadQueue = true;
-
-				while (executionQueue != null)
-				{
-					var executionQueueList = executionQueue.List;
-
-					// ReSharper disable once ForCanBeConvertedToForeach
-					for (var i = 0; i < executionQueueList.Count; i++)
-						ExecuteMain(executionQueueList[i]);
-
-					executionQueue = executionQueue.Next;
-				}
-
-				ExecuteThreadQueue = false;
-
-				_predicateResultQueue = null;
-
-				thread.Dispose(this);
+				CurrentThreadContext.EnqueuePredicateResult(predicateResult);
 			}
 
 			public AutomataResult ForkFinish()
 			{
-				ExecuteThread();
+				RunExecutionStream();
 
 				return _processResources.SuccessAutomataResultPool.Get().Mount(this);
 			}
 
 			public AutomataResult ForkRunNext()
 			{
-				_currentThread.Dispose(this);
-
 				return Run();
 			}
 
-			private Thread PopParallelThread()
+			private ThreadStatusKind ForkThread(ref Thread thread, ref ThreadContext context, ReadOnlySpan<int> executionPaths)
 			{
-				var thread = _parallelThreads.Pop();
-
-				if (thread.DfaTrails == null) 
-					return thread;
-
-				var dfaTrail = thread.DfaTrails[thread.DfaTrailIndex];
-
-				if (thread.DfaTrailIndex + 1 < thread.DfaTrails.Length)
-				{
-					var contextState = thread.ContextState != null ? Context.CloneContextStateInternal(thread.ContextState) : null;
-
-					_parallelThreads.Push(new Thread(thread.Parent, thread.CurrentNode, thread.InstructionStream, thread.InstructionPointer, contextState, thread.DfaTrails, thread.DfaTrailIndex + 1));
-				}
-
-				thread.EnsureStartExecutionQueue();
-
-				_executionPathQueueBuilder.EnqueueDfaPath(thread.StartExecutionQueue, dfaTrail);
-
-				return thread;
-			}
-
-#if DEV_EXP
-			private StatusKind ForkDfaThread(bool main)
-			{
-				var threadParent = ForkThreadParent();
-				var contextState = _currentThread.ContextState != null ? Context.CloneContextStateInternal(_currentThread.ContextState) : null;
-				var dfaThread = new Thread(threadParent, _currentThread.CurrentNode, _currentThread.InstructionStream, _currentThread.InstructionPointer, contextState, _executionPathQueueBuilder.DfaBuilder.DfaState, 0);
-
-				_parallelThreads.PushRef(ref dfaThread);
-
-				if (main)
-					_mainThread = _currentThread;
-				else
-					_currentThread.Dispose(this);
-
-				return StatusKind.Fork;
-			}
-#endif
-
-			private StatusKind ForkThread(bool main)
-			{
-				var threadParent = ForkThreadParent();
-				var executionPathBuilderCount = _executionPathQueueBuilder.ExecutionPathBuilderCount;
-
-				while (_forkThreads.Count < executionPathBuilderCount)
-					_forkThreads.Add(new ForkThreadData());
-
-				for (var j = 0; j < executionPathBuilderCount; j++)
-				{
-					var executionPathQueue = _executionPathQueueBuilder.ExecutionPathBuilders[j];
-					var returnPathCount = executionPathQueue.ReturnPathCount;
-					var contextState = _currentThread.ContextState != null ? Context.CloneContextStateInternal(_currentThread.ContextState) : null;
-					var forkThreadData = _forkThreads[executionPathBuilderCount - j - 1];
-					var thread = new Thread(threadParent, _currentThread.CurrentNode, _currentThread.InstructionStream, _currentThread.InstructionPointer, contextState);
-
-					thread.EnsureStartExecutionQueue();
-					forkThreadData.Weight = 0;
-
-					for (var i = 0; i < returnPathCount; i++)
-					{
-						var executionPath = executionPathQueue.ReturnPaths[i];
-
-						thread.EnqueueStartPath(executionPath);
-						forkThreadData.Weight += executionPath.Weight;
-					}
-
-					thread.EnqueueStartPath(executionPathQueue.ExecutionPath);
-					forkThreadData.Weight += executionPathQueue.ExecutionPath.Weight;
-					forkThreadData.Thread = thread;
-				}
-
-				foreach (var forkThreadData in _forkThreads.Take(executionPathBuilderCount).OrderBy(t => t.Weight))
-					_parallelThreads.PushRef(ref forkThreadData.Thread);
-
-				if (main)
-					_mainThread = _currentThread;
-				else
-					_currentThread.Dispose(this);
-
-				return StatusKind.Fork;
-			}
-
-			private StatusKind ForkThreadNode(ForkNode forkNode, bool main)
-			{
-				var forkPredicateResult = (IForkPredicateResult)forkNode.PredicateResult;
-				var startNode = (PredicateNode)forkNode.ExecutionPath.Nodes[forkNode.NodeIndex];
-				var threadParent = ForkThreadParent();
-
-				for (var i = 1; i >= 0; i--)
-				{
-					var predicateEntry = i == 0 ? forkPredicateResult.First : forkPredicateResult.Second;
-					var predicateNode = _processResources.ForkPredicateNodePool.Get().Mount(predicateEntry);
-					var predicateExecutionPath = _processResources.ForkExecutionPathPool.Get().Mount(startNode, predicateNode);
-
-					predicateNode.CopyLookup(forkNode);
-
-					if (startNode.ForkPathIndex == -1)
-					{
-						lock (startNode)
-						{
-							if (startNode.ForkPathIndex == -1)
-							{
-								_automata.RegisterExecutionPath(predicateExecutionPath);
-								startNode.ForkPathIndex = predicateExecutionPath.Id;
-							}
-							else
-								predicateExecutionPath.Id = startNode.ForkPathIndex;
-						}
-					}
-					else
-						predicateExecutionPath.Id = startNode.ForkPathIndex;
-
-					predicateNode.ForkPathIndex = startNode.ForkPathIndex;
-
-					var contextState = _currentThread.ContextState != null ? Context.CloneContextStateInternal(_currentThread.ContextState) : null;
-					var thread = new Thread(threadParent, forkNode, _currentThread.InstructionStream, _currentThread.InstructionPointer, contextState);
-
-					thread.EnsureStartExecutionQueue();
-					thread.EnqueueStartPath(predicateExecutionPath);
-
-					// ReSharper disable once ForCanBeConvertedToForeach
-					for (var j = 0; j < forkNode.ForkExecutionPaths.Count; j++)
-						thread.EnqueueStartPath(forkNode.ForkExecutionPaths[j]);
-
-					_parallelThreads.PushRef(ref thread);
-				}
-
-				if (main)
-					_mainThread = _currentThread;
-				else
-					_currentThread.Dispose(this);
-
-				forkNode.Release();
-
-				return StatusKind.Fork;
+				return _threads.ForkThread(ref thread, ref context, executionPaths);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			private ThreadParent ForkThreadParent()
+			private AutomataStack GetAutomataStack()
 			{
-				ThreadParent threadParent;
-
-				if (_currentThread.OwnStack || _currentThread.OwnExecutionQueue || _currentThread.OwnPredicateResult)
-				{
-					threadParent = _processResources.ThreadParentPool.Get();
-					threadParent.Mount(ref _currentThread);
-				}
-				else
-					threadParent = _currentThread.Parent;
-
-				return threadParent;
+				return _threads.Thread.Stack;
 			}
 
-			public RuleEntryContext GetTopRuleEntryContext(Rule state)
+			private bool GetExecuteThreadQueue()
 			{
-				var stack = _currentThread.Stack;
-				var subGraphRegistry = _automata._subGraphRegistry;
-
-				for (var i = stack.Count - 1; i >= 0; i--)
-				{
-					var subGraph = subGraphRegistry[stack.Array[i]];
-
-					if (ReferenceEquals(subGraph.State, state))
-						return subGraph.RuleEntry?.RuleEntryContext;
-				}
-
-				return null;
+				return CurrentThreadContext.IsExecutionStreamRunning;
 			}
 
-			internal void Initialize(IInstructionReader instructionReader, AutomataContext context)
+			public ref TInstruction GetInstructionOperand(out int operand)
 			{
-				if (ReferenceEquals(context.ProcessField, DummyProcess) == false)
-					throw new InvalidOperationException("Context is busy");
+				return ref CurrentThreadContext.GetInstructionOperand(out operand);
+			}
 
-				_processResources = ProcessResources.ThreadLocalInstance.Value;
-				_executionPathQueueBuilder = _processResources.ExecutionPathGroupBuilderPool.Get().AddReference();
-				_parallelThreads = _processResources.ThreadListPool.Get().AddReference();
-				_executionMethods = _automata.GetExecutionMethods(context);
-
-				Context = context;
-				Context.ProcessField = this;
-
-				var entryPoint = context.EntryPoint;
-
-				if (entryPoint is not Rule state)
-					return;
-
-				var instructionQueue = _processResources.InstructionQueuePool.Get().Mount(instructionReader, _automata);
-
-				_entryPointSubGraph = _automata.EnsureSubGraph(state);
-
-				var initNode = _entryPointSubGraph.InitNode;
-
-				if (initNode.Safe == false)
-					initNode.MakeSafe();
-
-				_currentThread = new Thread(initNode, instructionQueue, context.CreateContextStateInternal())
-				{
-					Stack = _processResources.StackPool.Get().AddReference(),
-					ExecutionQueue = _processResources.ExecutionPathPool.Get().AddReference(),
-					PredicateResultQueue = _processResources.PredicateResultPool.Get().AddReference()
-				};
+			private UnexpectedNode GetUnexpectedNode()
+			{
+				return UnexpectedNode.Instance;
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void MoveInstructionPointer()
 			{
-				_currentThread.InstructionPointer++;
-				//_currentThread.InstructionStream.Move(ref _currentThread.InstructionPointer);
-			}
-
-			public AutomataResult PartialRun()
-			{
-				_partialRun = true;
-
-				return Run();
+				CurrentThreadContext.InstructionStreamPointer++;
 			}
 
 			public void ReleaseReference()
@@ -631,70 +208,36 @@ namespace Zaaml.Text
 			{
 				try
 				{
-					loopSingle:
-
-					//switch (ExecuteInstruction(true))
-					switch (_parallelThreads.Count > 0 ? StatusKind.Fork : ExecuteInstruction(true))
+					while (true)
 					{
-						case StatusKind.Fork:
-							{
-								loopParallel:
+						ref var threadFork = ref _threads.Pop();
 
-								_currentThread = PopParallelThread();
+						if (threadFork.IsEmpty)
+							break;
 
-								if (_parallelThreads.Count == 0)
-								{
-									if (StartThread() == false)
-										break;
+						ref var thread = ref threadFork.Thread;
+						ref var threadContext = ref threadFork.Context;
 
-									if (_currentThread.CurrentNode is ForkNode forkNode)
-									{
-										ForkThreadNode(forkNode, false);
+						switch (thread.Run(ref threadContext))
+						{
+							case ThreadStatusKind.Run:
+								throw new InvalidOperationException();
 
-										goto loopParallel;
-									}
+							case ThreadStatusKind.Fork:
+								continue;
 
-									ExecuteThread();
+							case ThreadStatusKind.Finished:
 
-									goto loopSingle;
-								}
+								if (_processKind == ProcessKind.SubProcess && _threads.Parallel)
+									return _processResources.ForkAutomataResultPool.Get().Mount(this);
 
-								if (StartThread())
-								{
-									if (_currentThread.CurrentNode is ForkNode forkNode)
-									{
-										ForkThreadNode(forkNode, false);
+								RunExecutionStream();
 
-										goto loopParallel;
-									}
+								return _processResources.SuccessAutomataResultPool.Get().Mount(this);
 
-									switch (ExecuteInstruction(false))
-									{
-										case StatusKind.Fork:
-											goto loopParallel;
-
-										case StatusKind.Finished:
-
-											if (_parallelThreads.Count > 0 && _partialRun)
-												return _processResources.ForkAutomataResultPool.Get().Mount(this);
-
-											ExecuteThread();
-
-											return _processResources.SuccessAutomataResultPool.Get().Mount(this);
-									}
-								}
-
-								_currentThread.Dispose(this);
-
-								if (_parallelThreads.Count == 0)
-									break;
-
-								goto loopParallel;
-							}
-
-						case StatusKind.Finished:
-
-							return _processResources.SuccessAutomataResultPool.Get().Mount(this);
+							case ThreadStatusKind.Unexpected:
+								continue;
+						}
 					}
 				}
 				catch (Exception e)
@@ -705,169 +248,98 @@ namespace Zaaml.Text
 				return _processResources.ExceptionAutomataResultPool.Get().Mount(new InvalidOperationException(), this);
 			}
 
-			private bool StartThread()
+			private void RunExecutionStream()
 			{
-				_currentThread.Stack = _currentThread.Parent.Stack.Clone();
-				_currentThread.ExecutionQueue = _currentThread.Parent.ExecutionQueue.Pool.Get().AddReference();
-
-				var executionPaths = _currentThread.StartExecutionQueue?.List;
-
-				if (executionPaths == null)
-					return true;
-
-				for (var index = 0; index < executionPaths.Count; index++)
-				{
-					var executionPath = executionPaths[index];
-
-					ExecuteParallel(executionPath);
-
-					switch (_currentThread.CurrentNode)
-					{
-						case null:
-							return false;
-						
-						case ForkNode forkNode:
-						{
-							for (var j = index + 1; j < executionPaths.Count; j++)
-								forkNode.ForkExecutionPaths.Add(executionPaths[j]);
-
-							return true;
-						}
-					}
-				}
-
-				return true;
+				_threads.RunExecutionStream();
 			}
 
-			#endregion
+			private bool ShouldPopPredicateResult(ExecutionPath executionPath)
+			{
+				var predicateNode = (PredicateNode)executionPath.Nodes[executionPath.Nodes.Length - 1];
 
-			#region Nested Types
+				return predicateNode.PredicateEntry.PopResult;
+			}
 
 			private sealed class ProcessResources
 			{
-				#region Static Fields and Constants
+				private static readonly ThreadLocal<Dictionary<Automata<TInstruction, TOperand>, ProcessResources>> ThreadLocalDictionary = new(() => new Dictionary<Automata<TInstruction, TOperand>, ProcessResources>());
 
-				public static readonly ThreadLocal<ProcessResources> ThreadLocalInstance = new ThreadLocal<ProcessResources>(() => new ProcessResources());
-
-				#endregion
-
-				#region Fields
-
-				private readonly LinkedListStackNodePool<Thread> _linkedListStackNodeThreadPool = new LinkedListStackNodePool<Thread>(16);
 				public readonly Pool<ExceptionAutomataResult> ExceptionAutomataResultPool;
-				public readonly Pool<ExecutionPathQueue> ExecutionPathPool;
+				public readonly Pool<ExecutionStream> ExecutionStreamPool;
+				public readonly Pool<PredicateResultStream> PredicateResultStreamPool;
 				public readonly Pool<ForkAutomataResult> ForkAutomataResultPool;
 				public readonly Pool<ExecutionPath> ForkExecutionPathPool;
 				public readonly Pool<ForkNode> ForkNodePool;
 				public readonly Pool<PredicateNode> ForkPredicateNodePool;
-				public readonly Pool<InstructionStream> InstructionQueuePool;
-				public readonly Pool<PredicateResultQueue> PredicateResultPool;
+				public readonly Pool<InstructionStream> InstructionStreamPool;
+				public readonly MemorySpanAllocator<int> IntMemorySpanAllocator = MemorySpanAllocator<int>.Shared;
 				public readonly Pool<AutomataStack> StackPool;
 				public readonly Pool<SuccessAutomataResult> SuccessAutomataResultPool;
-				public readonly Pool<LinkedListStack<Thread>> ThreadListPool;
-				public readonly Pool<ThreadParent> ThreadParentPool;
-				public readonly Pool<ExecutionPathGroupBuilder> ExecutionPathGroupBuilderPool;
 
-				#endregion
-
-				#region Ctors
-
-				private ProcessResources()
+				private ProcessResources(Automata<TInstruction, TOperand> automata)
 				{
-					var automata = Instance;
-
-					StackPool = new Pool<AutomataStack>(p => new AutomataStack(automata, p));
-					ThreadParentPool = new Pool<ThreadParent>(p => new ThreadParent(p));
-					ExecutionPathPool = new Pool<ExecutionPathQueue>(p => new ExecutionPathQueue(p));
-					PredicateResultPool = new Pool<PredicateResultQueue>(p => new PredicateResultQueue(p));
-					InstructionQueuePool = automata?.CreateInstructionQueuePool() ?? new Pool<InstructionStream>(p => new InstructionStream(p));
+					StackPool = new Pool<AutomataStack>(p => new AutomataStack(automata, IntMemorySpanAllocator, p));
+					InstructionStreamPool = automata?.CreateInstructionStreamPool() ?? new Pool<InstructionStream>(p => new InstructionStream(p));
+					ExecutionStreamPool = new Pool<ExecutionStream>(p => new ExecutionStream(IntMemorySpanAllocator, p));
+					PredicateResultStreamPool = new Pool<PredicateResultStream>(p => new PredicateResultStream(MemorySpanAllocator<PredicateResult>.Shared, p));
 					ForkExecutionPathPool = new Pool<ExecutionPath>(p => new ExecutionPath(p));
 					ForkPredicateNodePool = new Pool<PredicateNode>(p => new PredicateNode(automata, p));
 					ForkNodePool = new Pool<ForkNode>(p => new ForkNode(automata, p));
-					ThreadListPool = new Pool<LinkedListStack<Thread>>(p => new LinkedListStack<Thread>(_linkedListStackNodeThreadPool, p));
 					SuccessAutomataResultPool = new Pool<SuccessAutomataResult>(p => new SuccessAutomataResult(p));
 					ExceptionAutomataResultPool = new Pool<ExceptionAutomataResult>(p => new ExceptionAutomataResult(p));
 					ForkAutomataResultPool = new Pool<ForkAutomataResult>(p => new ForkAutomataResult(p));
-					ExecutionPathGroupBuilderPool = new Pool<ExecutionPathGroupBuilder>(p => new ExecutionPathGroupBuilder(automata, p));
 				}
 
-				#endregion
+				public static ProcessResources Get(Automata<TInstruction, TOperand> automata)
+				{
+					var threadLocalDictionary = ThreadLocalDictionary.Value;
+
+					if (threadLocalDictionary.TryGetValue(automata, out var resources) == false)
+						threadLocalDictionary[automata] = resources = new ProcessResources(automata);
+
+					return resources;
+				}
 			}
 
 			private sealed class DebugExecutionAlternative
 			{
-				#region Ctors
-
 				public DebugExecutionAlternative(List<ExecutionPath> executionPaths)
 				{
 					ExecutionPaths = executionPaths;
 					DebugNodes = string.Join("\n ", executionPaths.SelectMany(p => p.Nodes).Select(n => n.ToString()));
 				}
 
-				public DebugExecutionAlternative(ExecutionPathQueueBuilder executionPathQueue)
+				public DebugExecutionAlternative()
 				{
-					ExecutionPaths = new List<ExecutionPath>();
+					//ExecutionPaths = new List<ExecutionPath>();
 
-					while (true)
-					{
-						var returnPathCount = executionPathQueue.ReturnPathCount;
+					//var returnPathCount = executionPathQueue.ReturnPathCount;
 
-						for (var i = 0; i < returnPathCount; i++)
-							ExecutionPaths.Add(executionPathQueue.ReturnPaths[i]);
+					//for (var i = 0; i < returnPathCount; i++)
+					//	ExecutionPaths.Add(groupBuilder.ReturnPaths[i]);
 
-						ExecutionPaths.Add(executionPathQueue.ExecutionPath);
+					//ExecutionPaths.Add(executionPathQueue.ExecutionPath);
 
-						if (executionPathQueue.NextBuilder != null && executionPathQueue.NextBuilder.ExecutionPathBuilderCount == 1)
-						{
-							executionPathQueue = executionPathQueue.NextBuilder.ExecutionPathBuilders[0];
-						}
-						else
-							break;
-					}
-
-					DebugNodes = string.Join("\n ", ExecutionPaths.SelectMany(p => p.Nodes).Select(n => n.ToString()));
+					//DebugNodes = string.Join("\n ", ExecutionPaths.SelectMany(p => p.Nodes).Select(n => n.ToString()));
 				}
-
-				#endregion
-
-				#region Properties
 
 				public string DebugNodes { get; }
 
 				public List<ExecutionPath> ExecutionPaths { get; }
 
-				#endregion
-
-				#region Methods
-
 				public override string ToString()
 				{
 					return DebugNodes;
 				}
-
-				#endregion
 			}
-
-			private sealed class ForkThreadData
-			{
-				#region Fields
-
-				public Thread Thread;
-				public int Weight;
-
-				#endregion
-			}
-
-			#endregion
 		}
 
-		private enum StatusKind
+		private protected enum ThreadStatusKind
 		{
+			Run,
 			Fork,
 			Finished,
 			Unexpected
 		}
-
-		#endregion
 	}
 }

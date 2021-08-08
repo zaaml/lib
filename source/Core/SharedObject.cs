@@ -11,9 +11,11 @@ namespace Zaaml.Core
 	{
 		#region Properties
 
-		private ReferenceCounter _referenceCount = new ReferenceCounter();
+		private ReferenceCounter _referenceCount = new();
 
 		#endregion
+
+		private protected int ReferenceCount => _referenceCount.ReferenceCount;
 
 		#region Methods
 

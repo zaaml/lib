@@ -13,15 +13,17 @@ namespace Zaaml.Text
 		{
 			private sealed class LexerAutomataContext : AutomataContext, ILexerAutomataContextInterface, IDisposable
 			{
-				private readonly Stack<LexerAutomataContextState> _lexerAutomataContextStatesPool = new Stack<LexerAutomataContextState>();
+				private readonly Stack<LexerAutomataContextState> _lexerAutomataContextStatesPool = new();
 				private LexerContext<TToken> _lexerContext;
 				private TextSpan _textSourceSpan;
 
-				public LexerAutomataContext() : base(null)
+				public LexerAutomataContext(LexerAutomata automata) : base(null, automata)
 				{
 				}
 
 				public LexerContext<TToken> LexerContext => _lexerContext;
+
+				public override Process Process => null;
 
 				protected override AutomataContextState CreateContextState()
 				{
@@ -34,6 +36,8 @@ namespace Zaaml.Text
 
 					return contextState;
 				}
+
+				public override ProcessKind ProcessKind => ProcessKind.Process;
 
 				public void Mount(TextSpan textSourceSpan, LexerContext<TToken> parserContext)
 				{

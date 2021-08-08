@@ -6,8 +6,6 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed partial class ParserFragment : ParserPrimitiveEntry
 		{
 			internal ParserFragment(bool inline)
@@ -15,20 +13,14 @@ namespace Zaaml.Text
 				Inline = inline;
 			}
 
-			#region Properties
-
-			public ParserProductionCollection Productions { get; } = new ParserProductionCollection();
-			
 			public bool Inline { get; }
 
-			#endregion
+			public ParserProductionCollection Productions { get; } = new ParserProductionCollection();
 
 			public void AddProduction(ParserProduction production)
 			{
 				Productions.Add(production);
 			}
 		}
-
-		#endregion
 	}
 }

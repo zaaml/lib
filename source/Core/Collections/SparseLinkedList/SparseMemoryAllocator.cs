@@ -2,6 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Buffers;
+
 namespace Zaaml.Core.Collections
 {
 	internal sealed class SparseMemoryAllocator<T>
@@ -10,16 +12,16 @@ namespace Zaaml.Core.Collections
 		{
 			NodeCapacity = nodeCapacity;
 
-			Allocator = MemoryAllocator.Create<T>();
+			SpanAllocator = MemorySpanAllocator.Create(ArrayPool<T>.Create());
 		}
 
-		private MemoryAllocator<T> Allocator { get; }
+		private MemorySpanAllocator<T> SpanAllocator { get; }
 
 		public int NodeCapacity { get; }
 
-		public Memory<T> Allocate()
+		public MemorySpan<T> Allocate()
 		{
-			return Allocator.Allocate(NodeCapacity);
+			return SpanAllocator.Allocate(NodeCapacity);
 		}
 	}
 }

@@ -47,7 +47,7 @@ namespace Zaaml.UI.Panels.Flexible
 
     private void Distribute(FlexElementCollection elements, FlexDistributeDirection direction, double target)
     {
-      ArrayUtils.EnsureArrayLength(ref _index, elements.Count, false);
+      ArrayUtils.EnsureArrayLength(ref _index, elements.Count);
 
       _priorityStack.Clear();
       _priorityStack.Push(0);
@@ -466,8 +466,8 @@ namespace Zaaml.UI.Panels.Flexible
 
     private double Sort(FlexElementCollection elements, FlexDistributeDirection direction)
     {
-      ArrayUtils.EnsureArrayLength(ref _sortedElements, elements.Count, false);
-      ArrayUtils.EnsureArrayLength(ref _sortedIndex, elements.Count, false);
+      ArrayUtils.EnsureArrayLength(ref _sortedElements, elements.Count);
+      ArrayUtils.EnsureArrayLength(ref _sortedIndex, elements.Count);
 
       _actualCount = 0;
 

@@ -9,40 +9,26 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		private protected abstract partial class DfaBuilder<TDfaState> where TDfaState : DfaState<TDfaState>
 		{
-			#region Nested Types
-
 			private sealed class DfaBuilderKey : DfaStateKey
 			{
-				#region Fields
-
 				private readonly DfaBuilder<TDfaState> _builder;
-				private readonly DfaTransitionCollection _lazyTransitionsCollection = new DfaTransitionCollection();
+				private readonly DfaTransitionCollection _lazyTransitionsCollection = new();
 				private readonly bool[] _lazyTransitionsState;
-				private readonly DfaNodeCollection _nodesCollection = new DfaNodeCollection();
-				private readonly HashSet<Node> _nodeSet = new HashSet<Node>();
+				private readonly DfaNodeCollection _nodesCollection = new();
+				private readonly HashSet<Node> _nodeSet = new();
 				private DfaNodeCollection _frozenNodes;
 				private DfaTransitionCollection _frozenTransitions;
 				private DfaTransition _prevSuccessTransition;
 				private int _stateHashCode;
 				private DfaTransition _successTransition;
 
-				#endregion
-
-				#region Ctors
-
 				public DfaBuilderKey(DfaBuilder<TDfaState> builder, int transitionsCount)
 				{
 					_builder = builder;
 					_lazyTransitionsState = new bool[transitionsCount];
 				}
-
-				#endregion
-
-				#region Methods
 
 				private void AddLazyTransition(DfaTransition transition)
 				{
@@ -64,7 +50,7 @@ namespace Zaaml.Text
 
 					_nodesCollection.Add(dfaNode);
 
-					if (predicatePath == null && (node is ReturnRuleNode || node.ReturnPath.IsInvalid == false))
+					if (predicatePath == null && (node is ReturnRuleNode || node.HasReturn))
 						_successTransition = transition;
 				}
 
@@ -84,11 +70,14 @@ namespace Zaaml.Text
 							continue;
 
 						var passLazyNode = _lazyTransitionsState[lazyIndex];
-						var node = (Node) dfaNode.Node;
-						var executionPaths = operand == -1 ? node.GetExecutionPaths() : node.GetExecutionPaths(operand);
+						var node = dfaNode.Node;
+						var executionPaths = node.GetExecutionPaths(operand);
 
 						foreach (var executionPath in executionPaths)
 						{
+							if (executionPath.OutputReturn)
+								continue;
+
 							AddNode(executionPath.Output, transition, executionPath.IsPredicate ? executionPath : null);
 
 							passLazyNode |= executionPath.PassLazyNode;
@@ -129,8 +118,8 @@ namespace Zaaml.Text
 
 					foreach (var dfaNode in state.Nodes)
 					{
-						var node = (Node) dfaNode.Node;
-						var predicateExecutionPath = (ExecutionPath) dfaNode.ExecutionPathObject;
+						var node = dfaNode.Node;
+						var predicateExecutionPath = (ExecutionPath)dfaNode.ExecutionPathObject;
 
 						if (predicateExecutionPath == null || predicateFound)
 						{
@@ -150,18 +139,21 @@ namespace Zaaml.Text
 						if (ReferenceEquals(transition, _prevSuccessTransition) && _lazyTransitionsState[lazyIndex])
 							continue;
 
-						if (node.ReturnPath.IsInvalid == false)
+						if (node.HasReturn)
 						{
-							AddNode(node.ReturnPath.Output, transition, null);
+							AddNode(node.ReturnPaths[0].Output, transition, null);
 
 							_successTransition = transition;
 						}
 
 						var passLazyNode = _lazyTransitionsState[lazyIndex];
-						var executionPaths = operand == -1 ? node.GetExecutionPaths() : node.GetExecutionPaths(operand);
+						var executionPaths = node.GetExecutionPaths(operand);
 
 						foreach (var executionPath in executionPaths)
 						{
+							if (executionPath.OutputReturn)
+								continue;
+
 							AddNode(executionPath.Output, transition, executionPath.IsPredicate ? executionPath : null);
 
 							passLazyNode |= executionPath.PassLazyNode;
@@ -268,13 +260,7 @@ namespace Zaaml.Text
 				{
 					return _successTransition;
 				}
-
-				#endregion
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

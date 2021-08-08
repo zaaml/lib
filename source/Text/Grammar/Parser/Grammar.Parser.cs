@@ -11,13 +11,7 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken> where TToken : unmanaged, Enum
 	{
-		#region Static Fields and Constants
-
 		private static Type _grammarType;
-
-		#endregion
-
-		#region Methods
 
 		protected static ParserFragment CreateParserFragment([CallerMemberName] string name = null)
 		{
@@ -75,22 +69,20 @@ namespace Zaaml.Text
 			return _grammarType;
 		}
 
-		protected static SubLexerEntry<TSubToken> SubLexer<TSubToken>(Grammar<TSubToken>.TokenRule subLexerRule) where TSubToken : unmanaged, Enum
+		protected static ExternalLexerEntry<TExternalToken> ExternalLexer<TExternalToken>(Grammar<TExternalToken>.TokenRule externalLexerRule) where TExternalToken : unmanaged, Enum
 		{
-			return new SubLexerEntry<TSubToken>(subLexerRule);
+			return new ExternalLexerEntry<TExternalToken>(externalLexerRule);
 		}
 
-		protected static SubParserEntry<TSubToken, TSubNode, TSubNodeBase> SubParser<TSubToken, TSubNode, TSubNodeBase>(Grammar<TSubToken, TSubNodeBase>.ParserRule<TSubNode> subParserRule)
-			where TSubToken : unmanaged, Enum where TSubNode : TSubNodeBase where TSubNodeBase : class
+		protected static ExternalParserEntry<TExternalToken, TExternalNode, TExternalNodeBase> ExternalParser<TExternalToken, TExternalNode, TExternalNodeBase>(Grammar<TExternalToken, TExternalNodeBase>.ParserRule<TExternalNode> externalParserRule)
+			where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
 		{
-			return new SubParserEntry<TSubToken, TSubNode, TSubNodeBase>(subParserRule);
+			return new ExternalParserEntry<TExternalToken, TExternalNode, TExternalNodeBase>(externalParserRule);
 		}
 
-		protected static SubParserEntry<TSubToken> SubParser<TSubToken>(Grammar<TSubToken>.ParserRule subParserRule) where TSubToken : unmanaged, Enum
+		protected static ExternalParserEntry<TExternalToken> ExternalParser<TExternalToken>(Grammar<TExternalToken>.ParserRule externalParserRule) where TExternalToken : unmanaged, Enum
 		{
-			return new SubParserEntry<TSubToken>(subParserRule);
+			return new ExternalParserEntry<TExternalToken>(externalParserRule);
 		}
-
-		#endregion
 	}
 }

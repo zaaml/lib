@@ -9,8 +9,6 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken> where TToken : unmanaged, Enum
 	{
-		#region Nested Types
-
 		protected internal struct PatternBuilder
 		{
 			private TokenEntry _entry0;
@@ -150,7 +148,5 @@ namespace Zaaml.Text
 				return new QuantifierEntry(new TokenFragmentEntry(new TokenFragment(this)), QuantifierKind.OneOrMore, mode);
 			}
 		}
-
-		#endregion
 	}
 }

@@ -4,8 +4,6 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -53,25 +51,25 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 		public Color BaseColor
 		{
-			get => (Color) GetValue(BaseColorProperty);
+			get => (Color)GetValue(BaseColorProperty);
 			set => SetValue(BaseColorProperty, value);
 		}
 
 		public ColorRectangleRendererAxis XAxis
 		{
-			get => (ColorRectangleRendererAxis) GetValue(XAxisProperty);
+			get => (ColorRectangleRendererAxis)GetValue(XAxisProperty);
 			set => SetValue(XAxisProperty, value);
 		}
 
 		public ColorRectangleRendererAxis YAxis
 		{
-			get => (ColorRectangleRendererAxis) GetValue(YAxisProperty);
+			get => (ColorRectangleRendererAxis)GetValue(YAxisProperty);
 			set => SetValue(YAxisProperty, value);
 		}
 
 		public ColorRectangleRendererAxis ZAxis
 		{
-			get => (ColorRectangleRendererAxis) GetValue(ZAxisProperty);
+			get => (ColorRectangleRendererAxis)GetValue(ZAxisProperty);
 			set => SetValue(ZAxisProperty, value);
 		}
 
@@ -95,8 +93,8 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 		private void BuildSurfaceBitmap(Size arrangeBounds)
 		{
-			var width = (int) arrangeBounds.Width;
-			var height = (int) arrangeBounds.Height;
+			var width = (int)arrangeBounds.Width;
+			var height = (int)arrangeBounds.Height;
 
 			if (width == 0 || height == 0)
 				return;
@@ -151,7 +149,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 				for (var y = 0; y < height; y++)
 				{
-					var relY = yScale * (1.0 - (double) y / height);
+					var relY = yScale * (1.0 - (double)y / height);
 					var actualYChannelValue = yChannelValue ?? relY;
 
 					hsvSetter.SetValues(actualXChannelValue, actualYChannelValue, actualZChannelValue, hsvValues);
@@ -196,7 +194,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 				for (var y = 0; y < height; y++)
 				{
-					var relY = yScale * (1.0 - (double) y / height);
+					var relY = yScale * (1.0 - (double)y / height);
 					var actualYChannelValue = yChannelValue ?? relY;
 
 					hsvSetter.SetValues(actualXChannelValue, actualYChannelValue, actualZChannelValue, hsvValues);
@@ -229,12 +227,12 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 			for (var x = 0; x < width; x++)
 			{
-				var relX = (double) x / width;
+				var relX = (double)x / width;
 				var actualXChannelValue = xChannelValue ?? relX;
 
 				for (var y = 0; y < height; y++)
 				{
-					var relY = 1.0 - (double) y / height;
+					var relY = 1.0 - (double)y / height;
 					var actualYChannelValue = yChannelValue ?? relY;
 
 					rgbSetter.SetValues(actualXChannelValue, actualYChannelValue, actualZChannelValue, rgbValues);
@@ -261,10 +259,10 @@ namespace Zaaml.UI.Controls.ColorEditor
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int GetPixelColor(double a, double r, double g, double b)
 		{
-			var alpha = (byte) (a * 255.0);
-			var red = (byte) (r * 255.0);
-			var green = (byte) (g * 255.0);
-			var blue = (byte) (b * 255.0);
+			var alpha = (byte)(a * 255.0);
+			var red = (byte)(r * 255.0);
+			var green = (byte)(g * 255.0);
+			var blue = (byte)(b * 255.0);
 
 			return alpha << 24 | red << 16 | green << 8 | blue << 0;
 		}
@@ -318,7 +316,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 		private void OnAxisValueChanged(object sender, EventArgs e)
 		{
-			var axis = (ColorRectangleRendererAxis) sender;
+			var axis = (ColorRectangleRendererAxis)sender;
 
 			if (axis.Value != null)
 				InvalidateSurfaceBitmap();
@@ -389,7 +387,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 				var hn = Math.Floor(h / 60.0);
 
-				var hi = (int) hn % 6;
+				var hi = (int)hn % 6;
 				var f = h / 60.0 - hn;
 
 				var p = v * (1.0 - s);
@@ -464,7 +462,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 				var hn = Math.Floor(h / 60.0);
 
-				var hi = (int) hn % 6;
+				var hi = (int)hn % 6;
 				var f = (h / 60.0) - hn;
 
 				var p = v * (1.0 - s);
@@ -535,13 +533,13 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 		public ColorChannel Channel
 		{
-			get => (ColorChannel) GetValue(ChannelProperty);
+			get => (ColorChannel)GetValue(ChannelProperty);
 			set => SetValue(ChannelProperty, value);
 		}
 
 		public double? Value
 		{
-			get => (double?) GetValue(ValueProperty);
+			get => (double?)GetValue(ValueProperty);
 			set => SetValue(ValueProperty, value);
 		}
 
@@ -565,65 +563,6 @@ namespace Zaaml.UI.Controls.ColorEditor
 				channelValue = editorColor.Value.GetChannelValue(channel);
 
 			Value = channelValue;
-		}
-	}
-
-	internal static class CombinatorialExtensions
-	{
-		private static IEnumerable<T> GeneratePermutation<T>(T[] array, IReadOnlyList<int> sequence)
-		{
-			var clone = (T[]) array.Clone();
-
-			for (var i = 0; i < clone.Length - 1; i++)
-				Swap(ref clone[i], ref clone[i + sequence[i]]);
-
-			return clone;
-		}
-
-		private static int[] GenerateSequence(long number, int size, IReadOnlyList<long> factorials)
-		{
-			var sequence = new int[size];
-
-			for (var j = 0; j < sequence.Length; j++)
-			{
-				var factorial = factorials[sequence.Length - j];
-
-				sequence[j] = (int) (number / factorial);
-				number = (int) (number % factorial);
-			}
-
-			return sequence;
-		}
-
-		private static long GetFactorial(int n)
-		{
-			long result = n;
-
-			for (var i = 1; i < n; i++)
-				result *= i;
-
-			return result;
-		}
-
-		public static IEnumerable<IEnumerable<T>> GetPermutations<T>(this IEnumerable<T> enumerable)
-		{
-			var array = enumerable as T[] ?? enumerable.ToArray();
-			var factorials = Enumerable.Range(0, array.Length + 1).Select(GetFactorial).ToArray();
-
-			for (var i = 0L; i < factorials[array.Length]; i++)
-			{
-				var sequence = GenerateSequence(i, array.Length - 1, factorials);
-
-				yield return GeneratePermutation(array, sequence);
-			}
-		}
-
-		private static void Swap<T>(ref T a, ref T b)
-		{
-			var temp = a;
-
-			a = b;
-			b = temp;
 		}
 	}
 }

@@ -6,16 +6,10 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		private protected abstract partial class DfaBuilder<TDfaState> where TDfaState : DfaState<TDfaState>
 		{
-			#region Nested Types
-
 			private abstract class DfaStateKey
 			{
-				#region Methods
-
 				private bool Equals(DfaStateKey other)
 				{
 					return ReferenceEquals(GetNodes(), other.GetNodes()) &&
@@ -26,7 +20,7 @@ namespace Zaaml.Text
 
 				public override bool Equals(object obj)
 				{
-					return Equals((DfaStateKey) obj);
+					return Equals((DfaStateKey)obj);
 				}
 
 				public override int GetHashCode()
@@ -43,28 +37,16 @@ namespace Zaaml.Text
 				protected abstract DfaTransition GetPrevSuccessTransition();
 
 				protected abstract DfaTransition GetSuccessTransition();
-
-				#endregion
 			}
 
 			private sealed class DfaFrozenStateKey : DfaStateKey
 			{
-				#region Fields
-
 				private readonly TDfaState _state;
-
-				#endregion
-
-				#region Ctors
 
 				public DfaFrozenStateKey(TDfaState state)
 				{
 					_state = state;
 				}
-
-				#endregion
-
-				#region Methods
 
 				protected override int GetKeyHashCode()
 				{
@@ -90,13 +72,7 @@ namespace Zaaml.Text
 				{
 					return _state.SuccessTransition;
 				}
-
-				#endregion
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

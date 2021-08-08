@@ -9,15 +9,9 @@ namespace Zaaml.Text
 {
 	internal static class QuantifierHelper
 	{
-		#region Static Fields and Constants
-
-		private static readonly Interval<int> OneOrMoreRange = new Interval<int>(1, IntervalEndPoint.Closed, int.MaxValue, IntervalEndPoint.Unbounded);
-		private static readonly Interval<int> ZeroOrMoreRange = new Interval<int>(0, IntervalEndPoint.Closed, int.MaxValue, IntervalEndPoint.Unbounded);
-		private static readonly Interval<int> ZeroOrOneRange = new Interval<int>(0, 1);
-
-		#endregion
-
-		#region Methods
+		private static readonly Interval<int> OneOrMoreRange = new(1, IntervalEndPoint.Closed, int.MaxValue, IntervalEndPoint.Unbounded);
+		private static readonly Interval<int> ZeroOrMoreRange = new(0, IntervalEndPoint.Closed, int.MaxValue, IntervalEndPoint.Unbounded);
+		private static readonly Interval<int> ZeroOrOneRange = new(0, 1);
 
 		public static Interval<int> AtLeast(int count)
 		{
@@ -75,19 +69,13 @@ namespace Zaaml.Text
 
 		public static Interval<int> GetRange(QuantifierKind kind)
 		{
-			switch (kind)
+			return kind switch
 			{
-				case QuantifierKind.ZeroOrOne:
-					return ZeroOrOneRange;
-				case QuantifierKind.ZeroOrMore:
-					return ZeroOrMoreRange;
-				case QuantifierKind.OneOrMore:
-					return OneOrMoreRange;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(kind));
-			}
+				QuantifierKind.ZeroOrOne => ZeroOrOneRange,
+				QuantifierKind.ZeroOrMore => ZeroOrMoreRange,
+				QuantifierKind.OneOrMore => OneOrMoreRange,
+				_ => throw new ArgumentOutOfRangeException(nameof(kind))
+			};
 		}
-
-		#endregion
 	}
 }

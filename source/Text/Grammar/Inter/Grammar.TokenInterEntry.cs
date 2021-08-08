@@ -6,12 +6,8 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal abstract class TokenInterEntry
 		{
-			#region Methods
-
 			public abstract ParserEntry CreateParserEntry();
 
 			public static TokenInterProductionBuilder operator +(TokenInterEntry op1, TokenInterEntry op2)
@@ -28,10 +24,6 @@ namespace Zaaml.Text
 			{
 				return new TokenInterProductionBuilder(op1) + new TokenInterProductionBuilder(new TokenInterRuleEntry(op2));
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

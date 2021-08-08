@@ -8,29 +8,17 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed partial class TokenRule : ParserPrimitiveEntry
 		{
-			#region Fields
-
 			public readonly TToken Token;
 
 			internal int TokenCode;
-
-			#endregion
-
-			#region Ctors
 
 			internal TokenRule(TToken token)
 			{
 				Token = token;
 				GrammarType = GetGrammarType();
 			}
-
-			#endregion
-
-			#region Properties
 
 			public Grammar<TToken> Grammar => Get<TToken>(GrammarType);
 
@@ -40,23 +28,11 @@ namespace Zaaml.Text
 
 			public bool Skip { get; set; }
 
-			#endregion
-
-			#region Methods
-
 			public ParserTokenRuleEntry Bind(string name)
 			{
 				return new ParserTokenRuleEntry(this)
 				{
 					Name = name
-				};
-			}
-
-			public ParserTokenRuleEntry Converter<TEntryType>()
-			{
-				return new ParserTokenRuleEntry(this)
-				{
-					ConverterType = typeof(TEntryType)
 				};
 			}
 
@@ -74,18 +50,6 @@ namespace Zaaml.Text
 			{
 				return new TokenInterProductionCollectionBuilder() | op1 | op2;
 			}
-
-			public ParserTokenRuleEntry Pointer()
-			{
-				return new ParserTokenRuleEntry(this)
-				{
-					ConverterType = typeof(LexemePointerConverter)
-				};
-			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

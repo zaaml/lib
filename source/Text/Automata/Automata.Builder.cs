@@ -9,36 +9,26 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Fields
-
 		private int _inlineStateCounter;
 
-		#endregion
+		private HashSet<Rule> Rules { get; } = new HashSet<Rule>();
 
-		#region Properties
-
-		private HashSet<Rule> States { get; } = new HashSet<Rule>();
-
-		#endregion
-
-		#region Methods
-
-		protected void AddState(Rule state, Production production)
+		protected void AddRule(Rule rule, Production production)
 		{
-			state.Productions.Add(production);
+			rule.Productions.Add(production);
 
-			States.Add(state);
+			Rules.Add(rule);
 		}
 
-		protected void AddState(Rule state, params Production[] productions)
+		protected void AddRule(Rule rule, params Production[] productions)
 		{
-			AddState(state, productions.AsEnumerable());
+			AddRule(rule, productions.AsEnumerable());
 		}
 
-		protected void AddState(Rule state, IEnumerable<Production> productions)
+		protected void AddRule(Rule rule, IEnumerable<Production> productions)
 		{
 			foreach (var production in productions)
-				AddState(state, production);
+				AddRule(rule, production);
 		}
 
 		protected Production CreateProduction(params Entry[] entries)
@@ -50,7 +40,7 @@ namespace Zaaml.Text
 		{
 			var internalState = new InternalState("Internal_" + _inlineStateCounter++);
 
-			AddState(internalState, new Production(entries));
+			AddRule(internalState, new Production(entries));
 
 			return new RuleEntry(internalState);
 		}
@@ -74,7 +64,5 @@ namespace Zaaml.Text
 		{
 			return new SingleMatchEntry(operand);
 		}
-
-		#endregion
 	}
 }

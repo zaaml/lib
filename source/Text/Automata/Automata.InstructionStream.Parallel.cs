@@ -10,29 +10,17 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		private protected partial class InstructionStream
 		{
-			#region Static Fields and Constants
-
 			private const int PageSizeFactor = 1;
 			private const int ParallelStartThreshold = 2 * PageSizeFactor;
 			private const int QueueReadThreshold = 3 * PageSizeFactor;
 			private const int QueueWriteThreshold = 9 * PageSizeFactor;
 
-			#endregion
-
-			#region Fields
-
 			private bool _allowParallel;
 			private ConcurrentQueue<InstructionPageStruct> _instructionPageQueue;
 			private bool _readerBusy;
 			private bool _readerFinished;
-
-			#endregion
-
-			#region Methods
 
 			private void DisposeParallel()
 			{
@@ -139,10 +127,6 @@ namespace Zaaml.Text
 
 				RunParallel();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

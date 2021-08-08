@@ -9,15 +9,11 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected class Production
 		{
-			#region Ctors
-
 			protected Production(Entry entry)
 			{
-				Entries = new[] {entry};
+				Entries = new[] { entry };
 			}
 
 			public Production(IEnumerable<Entry> entries)
@@ -25,15 +21,7 @@ namespace Zaaml.Text
 				Entries = entries.ToArray();
 			}
 
-			#endregion
-
-			#region Properties
-
 			public Entry[] Entries { get; }
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

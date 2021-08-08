@@ -6,27 +6,17 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed partial class ParserRuleEntry : ParserPrimitiveEntry
 		{
-			#region Ctors
-
 			public ParserRuleEntry(ParserRule rule)
 			{
 				Rule = rule;
 				Name = rule.Name;
 			}
 
-			#endregion
-
-			#region Properties
-
-			public ParserRule Rule { get; }
-
 			public bool IsReturn { get; internal set; }
 
-			#endregion
+			public ParserRule Rule { get; }
 
 			public ParserRuleEntry Return()
 			{
@@ -35,7 +25,5 @@ namespace Zaaml.Text
 				return this;
 			}
 		}
-
-		#endregion
 	}
 }

@@ -9,67 +9,83 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+// ReSharper disable VirtualMemberCallInConstructor
+
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
-		private protected abstract class DfaState<TDfaState> where TDfaState : DfaState<TDfaState>
+		private protected class DfaState
 		{
-			#region Static Fields and Constants
+			public const int ArrayLimit = 128;
+			public const int ArraySentinel = 129;
 
-			public const int ArrayLimit = 127;
 
-			#endregion
+			public const int SwitchReturn = 6;
+			public const int SwitchSave = 1;
+			public const int SwitchBreakSkip = 2;
+			public const int SwitchBreakSkipSave = 3;
+			public const int SwitchBreakTake = 4;
+			public const int SwitchBreakTakeSave = 5;
 
-			#region Fields
 
+			public const int EndSwitchTake = 0;
+			public const int EndSwitchSkip = 1;
+		}
+
+		private protected abstract class DfaState<TDfaState> : DfaState where TDfaState : DfaState<TDfaState>
+		{
 			public readonly TDfaState[] Array;
 			public readonly bool Break;
 			public readonly DfaBuilder<TDfaState> Builder;
 			public readonly bool Continue;
 			public readonly DfaDictionary<TDfaState> Dictionary;
+			public readonly int EndSwitch;
 			public readonly TDfaState[] FalsePredicateArray;
 			public readonly Dictionary<int, TDfaState> FalsePredicateDictionary;
 			public readonly int HashCode;
 			public readonly int Index;
 			public readonly DfaTransition[] LazyTransitions;
 			public readonly DfaNode[] Nodes;
+			public readonly TDfaState NullSaveState;
 			public readonly TDfaState NullState;
 			public readonly object Predicate;
 			public readonly DfaTransition PrevSuccessTransition;
 			public readonly bool SavePointer;
-			public readonly SubGraphBase SuccessSubGraph;
+			public readonly bool Skip;
+			public readonly SubGraph SuccessSubGraph;
 			public readonly DfaTransition SuccessTransition;
+			public readonly int Switch;
 			public readonly TDfaState[] TruePredicateArray;
 			public readonly Dictionary<int, TDfaState> TruePredicateDictionary;
 			public TDfaState EndState;
 			public TDfaState FalsePredicateEndState;
+			public bool NoFastNext;
 			public TDfaState TruePredicateEndState;
-
-			#endregion
-
-			#region Ctors
 
 			protected DfaState()
 			{
 			}
 
-			protected DfaState(TDfaState state)
+			protected DfaState(TDfaState state, bool save)
 			{
 				Nodes = state.Nodes;
 				LazyTransitions = state.LazyTransitions;
 
 				HashCode = state.HashCode;
 				SuccessSubGraph = state.PrevSuccessTransition?.SubGraph;
+				Skip = GetSkip(SuccessSubGraph);
 				Break = true;
 				Builder = state.Builder;
+				SavePointer = save;
+				Index = DfaBuilder<TDfaState>.GetNullIndex(save, state.Index);
+
+				SetBreakContinue(out Switch, out EndSwitch);
 			}
 
 			protected DfaState(DfaNode[] nodes, DfaTransition[] lazyTransitions, DfaTransition successTransition, DfaTransition prevSuccessTransition, int hashCode, DfaBuilder<TDfaState> builder)
 			{
-				Index = builder.Register((TDfaState) this);
+				Index = builder.Register((TDfaState)this);
 				Array = builder.FastLookup ? new TDfaState[ArrayLimit] : System.Array.Empty<TDfaState>();
 
 				Dictionary = new DfaDictionary<TDfaState>();
@@ -88,9 +104,9 @@ namespace Zaaml.Text
 				if (nodes.Length == 1 && SuccessTransition != null)
 				{
 					var dfaNode = Nodes[0];
-					var node = (Node) dfaNode.Node;
+					var node = dfaNode.Node;
 
-					if ((node is ReturnRuleNode || node.ReturnPath.IsInvalid) && node.ExecutionPaths.Length == 0)
+					if ((node is ReturnRuleNode || node.HasReturn == false) && node.ExecutionPaths.Length == 0)
 						Break = true;
 				}
 
@@ -105,35 +121,55 @@ namespace Zaaml.Text
 					FalsePredicateDictionary = new Dictionary<int, TDfaState>();
 				}
 
-				// ReSharper disable once VirtualMemberCallInConstructor
-				NullState = CreateNullState();
+				NullState = CreateNullState(false);
+				NullSaveState = CreateNullState(true);
 
 				if (SavePointer == false && Break == false && Predicate == null)
 					Continue = true;
+
+				SetBreakContinue(out Switch, out EndSwitch);
 			}
-
-			#endregion
-
-			#region Methods
 
 			protected abstract TDfaState CreateEmptyState();
 
-			protected abstract TDfaState CreateNullState();
+			protected abstract TDfaState CreateNullState(bool save);
 
 			public TDfaState EvalPredicates(int operand, AutomataContext context)
 			{
-				var predicate = ((ExecutionPath) Predicate).Predicate;
+				var predicate = ((ExecutionPath)Predicate).Predicate;
 				var predicateResult = predicate.PassInternal(context) != null;
 
-				return TryGetPredicateState(operand, predicateResult) ?? Builder.BuildPredicateState(operand, (TDfaState) this, predicateResult);
+				return TryGetPredicateState(operand, predicateResult) ?? Builder.BuildPredicateState(operand, (TDfaState)this, predicateResult);
 			}
 
 			public TDfaState EvalPredicates(AutomataContext context)
 			{
-				var predicate = ((ExecutionPath) Predicate).Predicate;
+				var predicate = ((ExecutionPath)Predicate).Predicate;
 				var predicateResult = predicate.PassInternal(context) != null;
 
-				return TryGetPredicateState(predicateResult) ?? Builder.BuildPredicateState(-1, (TDfaState) this, predicateResult);
+				return TryGetPredicateState(predicateResult) ?? Builder.BuildPredicateState(0, (TDfaState)this, predicateResult);
+			}
+
+			protected abstract bool GetSkip(SubGraph subGraph);
+
+			private void SetBreakContinue(out int flowSwitch, out int flowEndSwitch)
+			{
+				flowSwitch = SwitchReturn;
+				flowEndSwitch = 0;
+
+				if (SavePointer)
+					flowSwitch = SwitchSave;
+
+				if (Break)
+				{
+					if (Skip)
+						flowSwitch = SavePointer ? SwitchBreakSkipSave : SwitchBreakSkip;
+					else
+						flowSwitch = SavePointer ? SwitchBreakTakeSave : SwitchBreakTake;
+				}
+
+				if (SuccessSubGraph != null)
+					flowEndSwitch = Skip ? EndSwitchSkip : EndSwitchTake;
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -206,12 +242,10 @@ namespace Zaaml.Text
 
 				return Dictionary.TryGetValue(operand, out var result) ? result : null;
 			}
-
-			#endregion
 		}
 
 		//public sealed class DfaDictionary<TValue>  : Dictionary<int, TValue>
-		public sealed class DfaDictionary<TValue>  : DfaDictionaryEx<TValue>
+		public sealed class DfaDictionary<TValue> : DfaDictionaryEx<TValue>
 		{
 		}
 
@@ -226,10 +260,7 @@ namespace Zaaml.Text
 				_entries = new Entry[capacity];
 			}
 
-			public void Add(int key, TValue value)
-			{
-				this[key] = value;
-			}
+			private int Count { get; set; }
 
 			private ref TValue this[int key]
 			{
@@ -262,29 +293,9 @@ namespace Zaaml.Text
 				}
 			}
 
-			private int Count { get; set; }
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public bool TryGetValue(int key, out TValue value)
+			public void Add(int key, TValue value)
 			{
-				var entries = _entries;
-				var entryIndex = _buckets[key % _buckets.Length] - 1;
-
-				while (entryIndex != -1)
-				{
-					if (entries[entryIndex].Key == key)
-					{
-						value = entries[entryIndex].Value;
-
-						return true;
-					}
-
-					entryIndex = entries[entryIndex].Next;
-				}
-
-				value = default;
-
-				return false;
+				this[key] = value;
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -312,6 +323,29 @@ namespace Zaaml.Text
 				return entries;
 			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public bool TryGetValue(int key, out TValue value)
+			{
+				var entries = _entries;
+				var entryIndex = _buckets[key % _buckets.Length] - 1;
+
+				while (entryIndex != -1)
+				{
+					if (entries[entryIndex].Key == key)
+					{
+						value = entries[entryIndex].Value;
+
+						return true;
+					}
+
+					entryIndex = entries[entryIndex].Next;
+				}
+
+				value = default;
+
+				return false;
+			}
+
 			private struct Entry
 			{
 				public int Key;
@@ -319,7 +353,5 @@ namespace Zaaml.Text
 				public int Next;
 			}
 		}
-
-		#endregion
 	}
 }

@@ -739,7 +739,7 @@ namespace Zaaml.UI.Panels.Flexible
   {
     #region Fields
 
-    private readonly List<T[]> _pool = new List<T[]>();
+    private readonly List<T[]> _pool = new();
 
     #endregion
 
@@ -747,12 +747,14 @@ namespace Zaaml.UI.Panels.Flexible
 
     public T[] GetArray(int capacity)
     {
-      if (_pool.Count == 0) return new T[capacity];
+      if (_pool.Count == 0)
+	      return new T[capacity];
 
       var array = _pool[_pool.Count - 1];
+
       _pool.RemoveAt(_pool.Count - 1);
 
-      ArrayUtils.EnsureArrayLength(ref array, capacity, false);
+      ArrayUtils.EnsureArrayLength(ref array, capacity);
 
       return array;
     }

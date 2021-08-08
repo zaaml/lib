@@ -30,32 +30,32 @@ namespace Zaaml.Text
 
 			public static implicit operator ParserProduction(Parser<TToken>.PredicateEntry parserPredicateEntry)
 			{
-				return new ParserProduction(new ParserEntry[] {new ParserPredicate(parserPredicateEntry)});
+				return new ParserProduction(new ParserEntry[] { new ParserPredicate(parserPredicateEntry) });
 			}
 
 			public static implicit operator ParserProduction(Parser<TToken>.ActionEntry parserActionEntry)
 			{
-				return new ParserProduction(new ParserEntry[] {new ParserAction(parserActionEntry)});
+				return new ParserProduction(new ParserEntry[] { new ParserAction(parserActionEntry) });
 			}
 
 			public static implicit operator ParserProduction(TokenRule tokenRule)
 			{
-				return new ParserProduction(new ParserEntry[] {tokenRule});
+				return new ParserProduction(new ParserEntry[] { tokenRule });
 			}
 
 			public static implicit operator ParserProduction(TokenInterProductionBuilder builder)
 			{
-				return new ParserProduction(new[] {builder.AsParserEntry()});
+				return new ParserProduction(new[] { builder.AsParserEntry() });
 			}
 
 			public static implicit operator ParserProduction(TokenInterProductionCollectionBuilder builder)
 			{
-				return new ParserProduction(new[] {builder.AsFragment().CreateParserEntry()});
+				return new ParserProduction(new[] { builder.AsFragment().CreateParserEntry() });
 			}
 
 			public static implicit operator ParserProduction(TokenInterEntry entry)
 			{
-				return new ParserProduction(new[] {entry.CreateParserEntry()});
+				return new ParserProduction(new[] { entry.CreateParserEntry() });
 			}
 
 			public override string ToString()

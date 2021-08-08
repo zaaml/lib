@@ -8,17 +8,9 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal sealed class PatternCollection
 		{
-			#region Properties
-
 			internal List<TokenPattern> Patterns { get; } = new List<TokenPattern>();
-
-			#endregion
-
-			#region Methods
 
 			public static implicit operator PatternCollection(TokenPattern transition)
 			{
@@ -32,7 +24,7 @@ namespace Zaaml.Text
 
 			public static implicit operator PatternCollection(TokenEntry parserEntry)
 			{
-				return new PatternCollection().WithPattern(new TokenPattern(new[] {parserEntry}));
+				return new PatternCollection().WithPattern(new TokenPattern(new[] { parserEntry }));
 			}
 
 			public static implicit operator PatternCollection(PatternCollectionBuilder parserEntry)
@@ -51,10 +43,6 @@ namespace Zaaml.Text
 
 				return this;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

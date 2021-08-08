@@ -12,47 +12,23 @@ namespace Zaaml.Text
 {
 	internal partial class Lexer<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private protected sealed partial class LexerAutomata
 		{
-			#region Nested Types
-
 			private sealed class TextInstructionReader : IInstructionReader
 			{
-				#region Static Fields and Constants
-
 				private static readonly ArrayPool<char> CharArrayPool = ArrayPool<char>.Shared;
 				private static readonly ArrayPool<int> IntArrayPool = ArrayPool<int>.Shared;
-
-				#endregion
-
-				#region Fields
 
 				private readonly TextReader _textReader;
 				private bool _isHighSurrogate;
 				private char _prevChar;
-
-				#endregion
-
-				#region Ctors
 
 				public TextInstructionReader(TextReader textReader)
 				{
 					_textReader = textReader;
 				}
 
-				#endregion
-
-				#region Properties
-
 				public int ReaderPosition => throw new NotImplementedException();
-
-				#endregion
-
-				#region Interface Implementations
-
-				#region Automata<char,int>.IInstructionReader
 
 				public int ReadPage(int bufferOffset, int bufferLength, char[] instructionsBuffer, int[] operandsBuffer)
 				{
@@ -110,8 +86,8 @@ namespace Zaaml.Text
 
 				public void ReleaseBuffers(char[] instructionsBuffer, int[] operandsBuffer)
 				{
-					CharArrayPool.Return(instructionsBuffer);
-					IntArrayPool.Return(operandsBuffer);
+					CharArrayPool.Return(instructionsBuffer, true);
+					IntArrayPool.Return(operandsBuffer, true);
 				}
 
 				public void RentBuffers(int bufferLength, out char[] instructionsBuffer, out int[] operandsBuffer)
@@ -120,23 +96,11 @@ namespace Zaaml.Text
 					operandsBuffer = IntArrayPool.Rent(bufferLength);
 				}
 
-				#endregion
-
-				#region IDisposable
-
 				public void Dispose()
 				{
 					_textReader.Dispose();
 				}
-
-				#endregion
-
-				#endregion
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

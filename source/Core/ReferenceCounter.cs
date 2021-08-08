@@ -31,6 +31,8 @@ namespace Zaaml.Core
 			return _referenceCount;
 		}
 
+		public int ReferenceCount => _referenceCount;
+
 		public override string ToString()
 		{
 			return _referenceCount.ToString();

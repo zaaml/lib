@@ -6,12 +6,8 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected abstract class PrimitiveEntry : Entry
 		{
-			#region Methods
-
 			public static implicit operator PrimitiveEntry(Rule state)
 			{
 				return new RuleEntry(state);
@@ -21,10 +17,6 @@ namespace Zaaml.Text
 			{
 				return new SingleMatchEntry(input);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

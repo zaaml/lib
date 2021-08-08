@@ -1470,41 +1470,41 @@ namespace Zaaml.Text
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}	
-				public static ParserProductionBuilder operator +(SubParserEntry op1, TokenRule op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, TokenRule op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(TokenRule op1, SubParserEntry op2)
-				{
-					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
-				}	
-
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, TokenRule op2)
-				{
-					return new ParserProductionCollectionBuilder() | op1 | op2;
-				}
-
-				public static ParserProductionCollectionBuilder operator |(TokenRule op1, SubParserEntry op2)
-				{
-					return new ParserProductionCollectionBuilder() | op1 | op2;
-				}	
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, TokenRule op2)
-				{
-					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
-				}
-
-				public static ParserProductionBuilder operator +(TokenRule op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(TokenRule op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}	
 
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, TokenRule op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, TokenRule op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionCollectionBuilder operator |(TokenRule op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(TokenRule op1, ExternalParserEntry op2)
+				{
+					return new ParserProductionCollectionBuilder() | op1 | op2;
+				}	
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, TokenRule op2)
+				{
+					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
+				}
+
+				public static ParserProductionBuilder operator +(TokenRule op1, ExternalLexerEntry op2)
+				{
+					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
+				}	
+
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, TokenRule op2)
+				{
+					return new ParserProductionCollectionBuilder() | op1 | op2;
+				}
+
+				public static ParserProductionCollectionBuilder operator |(TokenRule op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}	
@@ -1733,22 +1733,22 @@ namespace Zaaml.Text
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserAction op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserAction op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserAction op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserAction op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserAction op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserAction op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserAction op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserAction op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
@@ -1931,22 +1931,22 @@ namespace Zaaml.Text
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserFragment op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserFragment op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserFragment op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserFragment op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserFragment op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserFragment op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserFragment op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserFragment op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
@@ -2129,22 +2129,22 @@ namespace Zaaml.Text
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserPredicate op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserPredicate op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserPredicate op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserPredicate op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserPredicate op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserPredicate op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserPredicate op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserPredicate op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
@@ -2327,22 +2327,22 @@ namespace Zaaml.Text
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserQuantifierEntry op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserQuantifierEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserQuantifierEntry op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserQuantifierEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserQuantifierEntry op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserQuantifierEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserQuantifierEntry op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserQuantifierEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
@@ -2525,22 +2525,22 @@ namespace Zaaml.Text
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserRuleEntry op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserRuleEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserRuleEntry op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserRuleEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserRuleEntry op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserRuleEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserRuleEntry op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserRuleEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
@@ -2723,22 +2723,22 @@ namespace Zaaml.Text
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserTokenRuleEntry op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserTokenRuleEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserTokenRuleEntry op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserTokenRuleEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserTokenRuleEntry op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserTokenRuleEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserTokenRuleEntry op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserTokenRuleEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
@@ -2921,22 +2921,22 @@ namespace Zaaml.Text
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserRule op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserRule op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserRule op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserRule op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(ParserRule op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserRule op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(ParserRule op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserRule op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
@@ -2953,396 +2953,396 @@ namespace Zaaml.Text
 
 			}
 
-			partial class SubParserEntry
+			partial class ExternalParserEntry
 			{
-				public static implicit operator ParserProduction(SubParserEntry entry)
+				public static implicit operator ParserProduction(ExternalParserEntry entry)
 				{
 					return new ParserProduction(new ParserEntry[] { entry });
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserProductionCollectionBuilder op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserProductionCollectionBuilder op2)
 				{
 					return new ParserProductionBuilder(op1) + op2.AsFragment();
 				}
 
-				public static ParserProductionBuilder operator +(ParserProductionCollectionBuilder op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserProductionCollectionBuilder op1, ExternalParserEntry op2)
 				{
 					return op1.AsFragment() + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, TokenInterProductionCollectionBuilder op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, TokenInterProductionCollectionBuilder op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2.AsFragment().CreateParserEntry());
 				}
 
-				public static ParserProductionBuilder operator +(TokenInterProductionCollectionBuilder op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(TokenInterProductionCollectionBuilder op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1.AsFragment().CreateParserEntry()) + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(ParserProductionBuilder op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ParserProductionBuilder op1, ExternalParserEntry op2)
 				{
 					return op1 + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserProductionBuilder op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserProductionBuilder op2)
 				{
 					return new ParserProductionBuilder(op1) + op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, TokenInterProductionBuilder op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, TokenInterProductionBuilder op2)
 				{
 					return new ParserProductionBuilder(op1) + op2.AsParserProductionBuilder();
 				}
 								
-				public static ParserProductionBuilder operator +(TokenInterProductionBuilder op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(TokenInterProductionBuilder op1, ExternalParserEntry op2)
 				{
 					return op1.AsParserProductionBuilder() + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, TokenInterEntry op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, TokenInterEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2.CreateParserEntry());
 				}
 								
-				public static ParserProductionBuilder operator +(TokenInterEntry op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(TokenInterEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1.CreateParserEntry()) + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserProductionCollectionBuilder op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserProductionCollectionBuilder op2)
 				{
 					return new ParserProductionCollectionBuilder(new ParserProduction(new ParserEntry[] { op1 })) | op2;
 				}
 
-				public static ParserProductionCollectionBuilder operator |(ParserProductionCollectionBuilder op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserProductionCollectionBuilder op1, ExternalParserEntry op2)
 				{
 					return op1 | new ParserProductionCollectionBuilder(new ParserProduction(new ParserEntry[] { op2 }));
 				}
 
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserProductionBuilder op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserProductionBuilder op2)
 				{
 					return new ParserProductionCollectionBuilder() | new ParserProductionBuilder(op1) | op2;
 				}
-				public static ParserProductionCollectionBuilder operator |(ParserProductionBuilder op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserProductionBuilder op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, TokenInterProductionBuilder op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, TokenInterProductionBuilder op2)
 				{
 					return new ParserProductionCollectionBuilder() | new ParserProductionBuilder(op1) | op2.AsParserProductionBuilder();
 				}
 								
-				public static ParserProductionCollectionBuilder operator |(TokenInterProductionBuilder op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(TokenInterProductionBuilder op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1.AsParserProductionBuilder() | new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, TokenInterProductionCollectionBuilder op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, TokenInterProductionCollectionBuilder op2)
 				{
 					return new ParserProductionCollectionBuilder() | new ParserProductionBuilder(op1) | new ParserProductionBuilder(op2.AsFragment().CreateParserEntry());
 				}
 								
-				public static ParserProductionCollectionBuilder operator |(TokenInterProductionCollectionBuilder op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(TokenInterProductionCollectionBuilder op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | new ParserProductionBuilder(op1.AsFragment().CreateParserEntry()) | new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserAction op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserAction op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserAction op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserAction op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserFragment op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserFragment op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserFragment op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserFragment op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserPredicate op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserPredicate op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserPredicate op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserPredicate op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserQuantifierEntry op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserQuantifierEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserQuantifierEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserQuantifierEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserRuleEntry op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserRuleEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserRuleEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserRuleEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserTokenRuleEntry op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserTokenRuleEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserTokenRuleEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserTokenRuleEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, ParserRule op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ParserRule op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, ParserRule op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ParserRule op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubParserEntry op1, TokenRuleSet op2)
+				public static ParserProductionBuilder operator +(ExternalParserEntry op1, TokenRuleSet op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubParserEntry op1, TokenRuleSet op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalParserEntry op1, TokenRuleSet op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
 			}
 
-			partial class SubLexerEntry
+			partial class ExternalLexerEntry
 			{
-				public static implicit operator ParserProduction(SubLexerEntry entry)
+				public static implicit operator ParserProduction(ExternalLexerEntry entry)
 				{
 					return new ParserProduction(new ParserEntry[] { entry });
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserProductionCollectionBuilder op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserProductionCollectionBuilder op2)
 				{
 					return new ParserProductionBuilder(op1) + op2.AsFragment();
 				}
 
-				public static ParserProductionBuilder operator +(ParserProductionCollectionBuilder op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserProductionCollectionBuilder op1, ExternalLexerEntry op2)
 				{
 					return op1.AsFragment() + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, TokenInterProductionCollectionBuilder op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, TokenInterProductionCollectionBuilder op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2.AsFragment().CreateParserEntry());
 				}
 
-				public static ParserProductionBuilder operator +(TokenInterProductionCollectionBuilder op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(TokenInterProductionCollectionBuilder op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1.AsFragment().CreateParserEntry()) + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(ParserProductionBuilder op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ParserProductionBuilder op1, ExternalLexerEntry op2)
 				{
 					return op1 + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserProductionBuilder op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserProductionBuilder op2)
 				{
 					return new ParserProductionBuilder(op1) + op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, TokenInterProductionBuilder op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, TokenInterProductionBuilder op2)
 				{
 					return new ParserProductionBuilder(op1) + op2.AsParserProductionBuilder();
 				}
 								
-				public static ParserProductionBuilder operator +(TokenInterProductionBuilder op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(TokenInterProductionBuilder op1, ExternalLexerEntry op2)
 				{
 					return op1.AsParserProductionBuilder() + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, TokenInterEntry op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, TokenInterEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2.CreateParserEntry());
 				}
 								
-				public static ParserProductionBuilder operator +(TokenInterEntry op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(TokenInterEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1.CreateParserEntry()) + new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserProductionCollectionBuilder op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserProductionCollectionBuilder op2)
 				{
 					return new ParserProductionCollectionBuilder(new ParserProduction(new ParserEntry[] { op1 })) | op2;
 				}
 
-				public static ParserProductionCollectionBuilder operator |(ParserProductionCollectionBuilder op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserProductionCollectionBuilder op1, ExternalLexerEntry op2)
 				{
 					return op1 | new ParserProductionCollectionBuilder(new ParserProduction(new ParserEntry[] { op2 }));
 				}
 
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserProductionBuilder op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserProductionBuilder op2)
 				{
 					return new ParserProductionCollectionBuilder() | new ParserProductionBuilder(op1) | op2;
 				}
-				public static ParserProductionCollectionBuilder operator |(ParserProductionBuilder op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ParserProductionBuilder op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, TokenInterProductionBuilder op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, TokenInterProductionBuilder op2)
 				{
 					return new ParserProductionCollectionBuilder() | new ParserProductionBuilder(op1) | op2.AsParserProductionBuilder();
 				}
 								
-				public static ParserProductionCollectionBuilder operator |(TokenInterProductionBuilder op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(TokenInterProductionBuilder op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1.AsParserProductionBuilder() | new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, TokenInterProductionCollectionBuilder op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, TokenInterProductionCollectionBuilder op2)
 				{
 					return new ParserProductionCollectionBuilder() | new ParserProductionBuilder(op1) | new ParserProductionBuilder(op2.AsFragment().CreateParserEntry());
 				}
 								
-				public static ParserProductionCollectionBuilder operator |(TokenInterProductionCollectionBuilder op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(TokenInterProductionCollectionBuilder op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | new ParserProductionBuilder(op1.AsFragment().CreateParserEntry()) | new ParserProductionBuilder(op2);
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserAction op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserAction op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserAction op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserAction op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserFragment op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserFragment op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserFragment op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserFragment op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserPredicate op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserPredicate op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserPredicate op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserPredicate op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserQuantifierEntry op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserQuantifierEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserQuantifierEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserQuantifierEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserRuleEntry op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserRuleEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserRuleEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserRuleEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserTokenRuleEntry op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserTokenRuleEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserTokenRuleEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserTokenRuleEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, ParserRule op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ParserRule op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, ParserRule op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ParserRule op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(SubLexerEntry op1, TokenRuleSet op2)
+				public static ParserProductionBuilder operator +(ExternalLexerEntry op1, TokenRuleSet op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(SubLexerEntry op1, TokenRuleSet op2)
+				public static ParserProductionCollectionBuilder operator |(ExternalLexerEntry op1, TokenRuleSet op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
@@ -3515,22 +3515,22 @@ namespace Zaaml.Text
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(TokenRuleSet op1, SubParserEntry op2)
+				public static ParserProductionBuilder operator +(TokenRuleSet op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(TokenRuleSet op1, SubParserEntry op2)
+				public static ParserProductionCollectionBuilder operator |(TokenRuleSet op1, ExternalParserEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}
 
-				public static ParserProductionBuilder operator +(TokenRuleSet op1, SubLexerEntry op2)
+				public static ParserProductionBuilder operator +(TokenRuleSet op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionBuilder(op1) + new ParserProductionBuilder(op2);
 				}		
 				
-				public static ParserProductionCollectionBuilder operator |(TokenRuleSet op1, SubLexerEntry op2)
+				public static ParserProductionCollectionBuilder operator |(TokenRuleSet op1, ExternalLexerEntry op2)
 				{
 					return new ParserProductionCollectionBuilder() | op1 | op2;
 				}

@@ -1,6 +1,6 @@
-﻿//// <copyright file="Parser.Automata.LexerEntityArgumentFactory.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-////   Copyright (c) Zaaml. All rights reserved.
-//// </copyright>
+﻿// <copyright file="Parser.Automata.LexerEntityArgumentFactory.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+//   Copyright (c) Zaaml. All rights reserved.
+// </copyright>
 
 //using System;
 //using System.Reflection;
@@ -42,11 +42,11 @@
 //					return _argumentFactory.CreateArgument(entity);
 //				}
 
-//				public override void EmitConsumeValue(IParserILBuilder builder, ILBuilderContext ilBuilderContext)
+//				public override void EmitConsumeValue(IParserILBuilder builder, context context)
 //				{
-//					ilBuilderContext.IL.Emit(OpCodes.Unbox_Any, typeof(Lexeme<>).MakeGenericType(typeof(TActualToken)));
+//					context.IL.Emit(OpCodes.Unbox_Any, typeof(Lexeme<>).MakeGenericType(typeof(TActualToken)));
 
-//					_argumentFactory.EmitConsumeValue(builder, ilBuilderContext);
+//					_argumentFactory.EmitConsumeValue(builder, context);
 //				}
 
 //				public override void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il)
@@ -65,7 +65,7 @@
 
 //					public abstract ProductionEntityArgument CreateArgument(ProductionEntity entity);
 
-//					public abstract void EmitConsumeValue(IParserILBuilder builder, ILBuilderContext ilBuilderContext);
+//					public abstract void EmitConsumeValue(IParserILBuilder builder, context context);
 
 //					public abstract void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il);
 //				}
@@ -87,10 +87,10 @@
 //					}
 
 
-//					public override void EmitConsumeValue(IParserILBuilder builder, ILBuilderContext ilBuilderContext)
+//					public override void EmitConsumeValue(IParserILBuilder builder, context context)
 //					{
-//						builder.EmitGetInstruction(ilBuilderContext);
-//						ilBuilderContext.IL.Emit(OpCodes.Call, ListTResultAddMethodInfo);
+//						builder.EmitGetInstruction(context);
+//						context.IL.Emit(OpCodes.Call, ListTResultAddMethodInfo);
 //					}
 
 //					public override void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il)
@@ -114,10 +114,10 @@
 //						return new Argument<TActualToken>(entity, LexerEntityArgumentFactory);
 //					}
 
-//					public override void EmitConsumeValue(IParserILBuilder builder, ILBuilderContext ilBuilderContext)
+//					public override void EmitConsumeValue(IParserILBuilder builder, context context)
 //					{
-//						builder.EmitGetInstruction(ilBuilderContext);
-//						ilBuilderContext.IL.Emit(OpCodes.Stfld, ArgumentValueFieldInfo);
+//						builder.EmitGetInstruction(context);
+//						context.IL.Emit(OpCodes.Stfld, ArgumentValueFieldInfo);
 //					}
 
 //					public override void EmitPushResetArgument(LocalBuilder argumentLocal, ILGenerator il)
@@ -146,11 +146,11 @@
 //				{
 //				}
 
-//				public override void EmitConsumeValue(IParserILBuilder builder, ILBuilderContext ilBuilderContext)
+//				public override void EmitConsumeValue(IParserILBuilder builder, context context)
 //				{
-//					_parserBuilder.Enter(builder, ilBuilderContext);
+//					_parserBuilder.Enter(builder, context);
 
-//					base.EmitConsumeValue(_parserBuilder, ilBuilderContext);
+//					base.EmitConsumeValue(_parserBuilder, context);
 
 //					_parserBuilder.Leave();
 //				}
@@ -173,33 +173,33 @@
 //					{
 //					}
 
-//					public void EmitGetLexemeText(LocalBuilder lexemeLocal, ILBuilderContext ilBuilderContext)
+//					public void EmitGetLexemeText(LocalBuilder lexemeLocal, context context)
 //					{
-//						EmitLdTextSourceSpan(ilBuilderContext);
+//						EmitLdTextSourceSpan(context);
 
-//						ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-//						ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
+//						context.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+//						context.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
 
-//						ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-//						ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
+//						context.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+//						context.IL.Emit(OpCodes.Ldfld, LexemeEndFieldInfo);
 
-//						ilBuilderContext.IL.Emit(OpCodes.Ldloc, lexemeLocal);
-//						ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
+//						context.IL.Emit(OpCodes.Ldloc, lexemeLocal);
+//						context.IL.Emit(OpCodes.Ldfld, LexemeStartFieldInfo);
 
-//						ilBuilderContext.IL.Emit(OpCodes.Sub);
+//						context.IL.Emit(OpCodes.Sub);
 
-//						ilBuilderContext.IL.Emit(OpCodes.Callvirt, TextSourceSpanGetTextMethodInfo);
+//						context.IL.Emit(OpCodes.Callvirt, TextSourceSpanGetTextMethodInfo);
 //					}
 
-//					public void Enter(IParserILBuilder builder, ILBuilderContext ilBuilderContext)
+//					public void Enter(IParserILBuilder builder, context context)
 //					{
-//						_lexemeLocal = ilBuilderContext.IL.DeclareLocal(typeof(Lexeme<TExternalToken>));
+//						_lexemeLocal = context.IL.DeclareLocal(typeof(Lexeme<TExternalToken>));
 //						_actualBuilder = builder;
 
-//						ilBuilderContext.IL.Emit(OpCodes.Stloc, _lexemeLocal);
+//						context.IL.Emit(OpCodes.Stloc, _lexemeLocal);
 
-//						//ilBuilderContext.IL.Emit(OpCodes.Ldloc, _lexemeLocal);
-//						//ilBuilderContext.IL.Emit(OpCodes.Call, DebugMethodInfo);
+//						//context.IL.Emit(OpCodes.Ldloc, _lexemeLocal);
+//						//context.IL.Emit(OpCodes.Call, DebugMethodInfo);
 //					}
 
 //					public void Leave()
@@ -208,27 +208,28 @@
 //						_actualBuilder = null;
 //					}
 
-//					public void EmitGetInstruction(ILBuilderContext ilBuilderContext)
+//					public void EmitGetInstruction(context context)
 //					{
-//						ilBuilderContext.IL.Emit(OpCodes.Ldloc, _lexemeLocal);
+//						context.IL.Emit(OpCodes.Ldloc, _lexemeLocal);
 //					}
 
-//					public void EmitGetInstructionText(ILBuilderContext ilBuilderContext)
+//					public void EmitGetInstructionText(context context)
 //					{
-//						EmitGetLexemeText(_lexemeLocal, ilBuilderContext);
+//						EmitGetLexemeText(_lexemeLocal, context);
 //					}
 
-//					public void EmitGetInstructionToken(ILBuilderContext ilBuilderContext)
+//					public void EmitGetInstructionToken(context context)
 //					{
-//						ilBuilderContext.IL.Emit(OpCodes.Ldfld, LexemeTokenFieldInfo);
+//						context.IL.Emit(OpCodes.Ldfld, LexemeTokenFieldInfo);
 //					}
 
-//					public void EmitLdTextSourceSpan(ILBuilderContext ilBuilderContext)
+//					public void EmitLdTextSourceSpan(context context)
 //					{
-//						_actualBuilder.EmitLdTextSourceSpan(ilBuilderContext);
+//						_actualBuilder.EmitLdTextSourceSpan(context);
 //					}
 //				}
 //			}
 //		}
 //	}
 //}
+

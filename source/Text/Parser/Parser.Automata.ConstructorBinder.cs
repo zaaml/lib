@@ -21,7 +21,7 @@ namespace Zaaml.Text
 				{
 					if (nodeType == null)
 						throw new ArgumentNullException(nameof(nodeType));
-					
+
 					ConstructorInfo = nodeType.GetConstructors().SingleOrDefault();
 					ConstValue = ConstructorInfo == null ? GetConstValue(nodeType) : null;
 
@@ -66,6 +66,8 @@ namespace Zaaml.Text
 				private ConstructorInfo ConstructorInfo { get; }
 
 				protected override object ConstValue { get; }
+
+				public override bool IsFactoryBinder => true;
 
 				protected override void EmitEnter(ILGenerator ilBuilder)
 				{

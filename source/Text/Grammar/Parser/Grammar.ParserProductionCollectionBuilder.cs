@@ -9,8 +9,6 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal partial struct ParserProductionCollectionBuilder
 		{
 			private ParserProduction _entry0;
@@ -124,12 +122,12 @@ namespace Zaaml.Text
 
 			public static ParserProductionCollectionBuilder operator |(ParserProductionCollectionBuilder op1, TokenInterProductionCollectionBuilder op2)
 			{
-				return op1 | new ParserProductionCollectionBuilder(new ParserProduction(new[] {op2.AsFragment().CreateParserEntry()}));
+				return op1 | new ParserProductionCollectionBuilder(new ParserProduction(new[] { op2.AsFragment().CreateParserEntry() }));
 			}
 
 			public static ParserProductionCollectionBuilder operator |(TokenInterProductionCollectionBuilder op1, ParserProductionCollectionBuilder op2)
 			{
-				return new ParserProductionCollectionBuilder(new ParserProduction(new[] {op1.AsFragment().CreateParserEntry()})) | op2;
+				return new ParserProductionCollectionBuilder(new ParserProduction(new[] { op1.AsFragment().CreateParserEntry() })) | op2;
 			}
 
 			public static ParserProductionBuilder operator +(ParserProductionCollectionBuilder op1, ParserProductionCollectionBuilder op2)
@@ -232,7 +230,5 @@ namespace Zaaml.Text
 
 			#endregion
 		}
-
-		#endregion
 	}
 }

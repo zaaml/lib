@@ -20,9 +20,9 @@ namespace Zaaml.Text
 
 		internal abstract int Position { get; set; }
 
-		public TextSpan TextSourceSpan { get; }
-
 		public IServiceProvider ServiceProvider { get; }
+
+		public TextSpan TextSourceSpan { get; }
 
 		protected abstract void DisposeCore();
 

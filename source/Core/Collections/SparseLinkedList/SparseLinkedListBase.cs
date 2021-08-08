@@ -201,7 +201,7 @@ namespace Zaaml.Core.Collections
 				throw new IndexOutOfRangeException(nameof(count));
 		}
 
-		private void DeallocateItems(Memory<T> sparseMemorySpan)
+		private void DeallocateItems(MemorySpan<T> sparseMemorySpan)
 		{
 			sparseMemorySpan.Dispose();
 		}
@@ -293,7 +293,7 @@ namespace Zaaml.Core.Collections
 			return cursor.Node.GetItem(ref cursor);
 		}
 
-		private Memory<T> AllocateItems()
+		private MemorySpan<T> AllocateItems()
 		{
 			return Manager.Allocate();
 		}

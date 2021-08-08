@@ -9,8 +9,6 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal partial struct TokenInterProductionBuilder
 		{
 			private TokenInterEntry _entry0;
@@ -194,7 +192,5 @@ namespace Zaaml.Text
 				return new ParserProductionBuilder(AsFragment().CreateParserEntry());
 			}
 		}
-
-		#endregion
 	}
 }

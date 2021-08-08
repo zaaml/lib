@@ -9,31 +9,19 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected class SingleMatchEntry : PrimitiveMatchEntry
 		{
-			#region Ctors
-
 			public SingleMatchEntry(TOperand operand)
 			{
 				Operand = operand;
-				IntOperand = ConvertOperand(operand);
+				IntOperand = ConvertFromOperand(operand);
 			}
-
-			#endregion
-
-			#region Properties
 
 			protected override string DebuggerDisplay => $"{Operand.ToString(CultureInfo.InvariantCulture)}";
 
 			public int IntOperand { get; }
 
 			public TOperand Operand { get; }
-
-			#endregion
-
-			#region Methods
 
 			private bool Equals(SingleMatchEntry other)
 			{
@@ -70,10 +58,6 @@ namespace Zaaml.Text
 			{
 				return DebuggerDisplay;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

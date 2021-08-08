@@ -9,8 +9,6 @@ namespace Zaaml.Text
 {
 	internal partial class Grammar<TToken>
 	{
-		#region Nested Types
-
 		protected internal struct PatternCollectionBuilder
 		{
 			private TokenEntry[] _entry0;
@@ -104,7 +102,7 @@ namespace Zaaml.Text
 
 			public static implicit operator PatternCollectionBuilder(TokenEntry entry)
 			{
-				return new PatternCollectionBuilder(new[] {entry});
+				return new PatternCollectionBuilder(new[] { entry });
 			}
 
 			public static PatternCollectionBuilder operator |(PatternCollectionBuilder op1, PatternBuilder op2)
@@ -134,7 +132,5 @@ namespace Zaaml.Text
 
 			#endregion
 		}
-
-		#endregion
 	}
 }
