@@ -45,7 +45,7 @@ namespace Zaaml.Text
 
 			public static implicit operator ParserProduction(TokenInterProductionBuilder builder)
 			{
-				return new ParserProduction(new[] { builder.AsParserEntry() });
+				return builder.AsParserProductionBuilder();
 			}
 
 			public static implicit operator ParserProduction(TokenInterProductionCollectionBuilder builder)

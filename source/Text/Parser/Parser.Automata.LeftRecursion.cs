@@ -37,33 +37,9 @@ namespace Zaaml.Text
 					var tailRuleEntry = new ParserRuleEntry(tailGrammarRule, tailRule, false, false);
 
 					if (IsLeftRecursion(parserRule, parserProduction))
-					{
-						var tailProduction = new ParserProduction(this, _ => LeftRecursionBinder.RecursiveInstance, parserProduction.Entries.Skip(1).Append(tailRuleEntry));
-						var tailRuleEntryArgument = new NullProductionArgument(tailRule.Name, tailRuleEntry, tailProduction.Entries.Length - 1, tailProduction);
-
-						tailProduction.OriginalProduction = parserProduction;
-
-						tailRuleEntry.ProductionArgument = tailRuleEntryArgument;
-
-						tailRuleProductions.Add(tailProduction);
-
-						for (var j = 1; j < parserProduction.Entries.Length; j++)
-							MapArgument(j, parserProduction, j - 1, tailProduction);
-					}
+						tailRuleProductions.Add(new ParserProduction(this, _ => LeftRecursionBinder.RecursiveInstance, parserProduction.Entries.Skip(1).Append(tailRuleEntry), parserProduction));
 					else
-					{
-						var headProduction = new ParserProduction(this, _ => LeftRecursionBinder.NonRecursiveInstance, parserProduction.Entries.Append(tailRuleEntry));
-						var tailRuleEntryArgument = new NullProductionArgument(tailRule.Name, tailRuleEntry, headProduction.Entries.Length - 1, headProduction);
-
-						headProduction.OriginalProduction = parserProduction;
-
-						tailRuleEntry.ProductionArgument = tailRuleEntryArgument;
-
-						productions[index] = headProduction;
-
-						for (var j = 0; j < parserProduction.Entries.Length; j++)
-							MapArgument(j, parserProduction, j, headProduction);
-					}
+						productions[index] = new ParserProduction(this, _ => LeftRecursionBinder.NonRecursiveInstance, parserProduction.Entries.Append(tailRuleEntry), parserProduction);
 				}
 
 				var tailEpsilonProduction = new ParserProduction(this, _ => LeftRecursionBinder.NonRecursiveInstance, new[] { EpsilonEntry.Instance });
@@ -95,26 +71,6 @@ namespace Zaaml.Text
 				return entry is ParserRuleEntry parserStateEntry && ReferenceEquals(parserStateEntry.Rule, rule);
 			}
 
-			private static void MapArgument(int sourceEntryIndex, ParserProduction sourceProduction, int targetEntryIndex, ParserProduction targetProduction)
-			{
-				var entry = sourceProduction.Entries[sourceEntryIndex];
-
-				if (entry is not IParserEntry parserEntry)
-					return;
-
-				var entryArgument = parserEntry.ProductionArgument;
-
-				if (entryArgument == null)
-					return;
-
-				var targetEntry = targetProduction.Entries[targetEntryIndex];
-				var targetArgument = (entryArgument.OriginalArgument ?? entryArgument).MapArgument(targetEntryIndex, targetEntry, targetProduction);
-				var targetParserEntry = (IParserEntry)targetEntry;
-
-				targetParserEntry.ProductionArgument = targetArgument;
-				targetProduction.Arguments.Add(targetArgument);
-				targetArgument.Bind(entryArgument.Binder);
-			}
 
 			private sealed class LeftRecursionBinder : ProductionBinder
 			{

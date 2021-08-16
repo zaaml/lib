@@ -154,7 +154,7 @@ namespace Zaaml.Text
 
 			private const int Capacity = 4;
 
-			private void Add(ParserEntry parserEntry)
+			public void Add(ParserEntry parserEntry)
 			{
 				if (_entryCount >= Capacity)
 				{

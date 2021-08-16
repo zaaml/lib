@@ -189,7 +189,12 @@ namespace Zaaml.Text
 
 			public ParserProductionBuilder AsParserProductionBuilder()
 			{
-				return new ParserProductionBuilder(AsFragment().CreateParserEntry());
+				var parserProductionBuilder = new ParserProductionBuilder();
+
+				foreach (var entry in CreateArray()) 
+					parserProductionBuilder.Add(entry.CreateParserEntry());
+
+				return parserProductionBuilder;
 			}
 		}
 	}

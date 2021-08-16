@@ -207,13 +207,13 @@ namespace Zaaml.Text
 			private sealed class DictionaryLookup : ILookup
 			{
 				private readonly HybridDictionaryCacheEx<ExecutionPathGroup> _dictionary = new();
-				private readonly ExecutionPathGroup _emptyGroup;
+				private readonly ExecutionPathGroup _epsilonGroup;
 				private readonly int _maxValue;
 				private readonly int _minValue;
 
-				public DictionaryLookup(IEnumerable<ExecutionPathGroup> executionPaths, ExecutionPathGroup emptyGroup)
+				public DictionaryLookup(IEnumerable<ExecutionPathGroup> executionPaths, ExecutionPathGroup epsilonGroup)
 				{
-					_emptyGroup = emptyGroup;
+					_epsilonGroup = epsilonGroup;
 					foreach (var executionPath in executionPaths)
 					{
 						var singleMatch = (SingleMatchEntry)executionPath.Match;
@@ -228,9 +228,9 @@ namespace Zaaml.Text
 				public ExecutionPathGroup GetExecutionPathGroup(int operand)
 				{
 					if (operand < _minValue || operand > _maxValue)
-						return ExecutionPathGroup.Empty;
+						return _epsilonGroup;
 
-					return _dictionary.TryGetValue(operand, out var executionPathGroup) ? executionPathGroup : _emptyGroup;
+					return _dictionary.TryGetValue(operand, out var executionPathGroup) ? executionPathGroup : _epsilonGroup;
 				}
 			}
 
@@ -260,7 +260,7 @@ namespace Zaaml.Text
 				public ExecutionPathGroup GetExecutionPathGroup(int operand)
 				{
 					if (operand < _minValue || operand > _maxValue)
-						return ExecutionPathGroup.Empty;
+						return _epsilonGroup;
 
 					lock (_dictionary)
 					{

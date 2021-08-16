@@ -95,6 +95,29 @@ namespace Zaaml.Text
 
 							ref var prevForkThread = ref _threads[_threadsHead - 1];
 
+							while (forkThread.Count == 0 && prevForkThread.Count == 0)
+							{
+								var prevExecutionPaths = prevForkThread.ExecutionPaths;
+
+								prevForkThread.Thread.StackExchange(ref forkThread.Thread);
+								prevForkThread.ExecutionPaths = forkThread.ExecutionPaths;
+								prevForkThread.ExecutionPathsHead = forkThread.ExecutionPathsHead;
+
+								forkThread.ExecutionPaths = prevExecutionPaths;
+								forkThread.Dispose();
+
+								forkThread = ref _threads[--_threadsHead];
+
+								if (_threadsHead == 0 || _threads[_threadsHead - 1].Count > 0)
+								{
+									forkThread.Thread.EntryExecution = forkThread.ExecutionPaths.Slice(forkThread.ExecutionPathsHead);
+
+									return ref forkThread;
+								}
+
+								prevForkThread = ref _threads[_threadsHead - 1];
+							}
+
 							var head = forkThread.ExecutionPathsHead;
 							var executionPathRegistry = prevForkThread.Context.ExecutionPathRegistry;
 							var forkThreadExecutionPaths = forkThread.ExecutionPaths.Span;
@@ -149,28 +172,6 @@ namespace Zaaml.Text
 					Debug.Assert(ReferenceEquals(thread.Stack, _process._stack));
 
 					var forkCount = ForkExecutionPaths(executionPaths, out var forkExecutionPaths);
-
-					while (_threadsHead > 1 && _threads[_threadsHead].Count == 0)
-					{
-						ref var prevThreadFork = ref _threads[_threadsHead - 1];
-
-						prevThreadFork.Dispose();
-						prevThreadFork = _threads[_threadsHead];
-						prevThreadFork.Context.ChangeIndex(_threadsHead);
-
-						_threads[_threadsHead--] = default;
-					}
-
-					if (_threadsHead == 1 && _threads[_threadsHead].Count == 0)
-					{
-						PreRunExecutionStream();
-
-						_threadsHead--;
-
-						RunExecutionStreamPrivate();
-
-						_threads[_threadsHead + 1].Dispose();
-					}
 
 					if (_threadsHead == _threads.Length)
 						ArrayUtils.ExpandArrayLength(ref _threads, ArrayPool<ThreadFork>.Shared, true, true);

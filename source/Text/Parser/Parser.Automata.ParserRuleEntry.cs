@@ -2,6 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Linq;
+
 namespace Zaaml.Text
 {
 	internal abstract partial class Parser<TGrammar, TToken>
@@ -24,6 +26,17 @@ namespace Zaaml.Text
 				public Grammar<TToken>.ParserEntry GrammarEntry { get; }
 
 				public ProductionArgument ProductionArgument { get; set; }
+
+				protected override string DebuggerDisplay
+				{
+					get
+					{
+						if (Fragment)
+							return $"({string.Join(" | ", Rule.Productions.Cast<ParserProduction>().Select(p => p.EntriesDebuggerDisplay))})";
+
+						return base.DebuggerDisplay;
+					}
+				}
 			}
 		}
 	}

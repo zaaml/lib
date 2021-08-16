@@ -53,8 +53,8 @@ namespace Zaaml.Text
 				{
 					while (_productionEntityStackTail >= 0)
 					{
-						_productionEntityStack[_productionEntityStackTail].Reset();
-						_productionEntityStackTail--;
+						_productionEntityStack[_productionEntityStackTail]?.Reset();
+						_productionEntityStack[_productionEntityStackTail--] = null;
 					}
 
 					_productionEntityStackTail = 0;
@@ -116,46 +116,62 @@ namespace Zaaml.Text
 				private void LeaveLeftFactoringProduction(int productionIndex)
 				{
 					var postfix = _productionEntityStack[_productionEntityStackTail];
+					var prefixCount = 0;
+					var actualProduction = postfix.ParserProduction;
 
-					if (postfix.ParserProduction.OriginalProduction != null)
+					while (actualProduction.OriginalProduction != null)
 					{
-						var actualProduction = postfix.ParserProduction;
-
-						while (actualProduction.OriginalProduction != null)
-							actualProduction = actualProduction.OriginalProduction;
-
-						var actualEntity = actualProduction.RentEntity();
-
-						foreach (var postfixArgument in postfix.Arguments)
-						{
-							var actualArgument = actualEntity.Arguments[postfixArgument.Argument.OriginalArgument.ArgumentIndex];
-
-							postfixArgument.TransferValue(actualArgument);
-						}
-
-						postfix.Return();
-
-						_productionEntityStack[_productionEntityStackTail] = postfix = actualEntity;
+						prefixCount++;
+						actualProduction = actualProduction.OriginalProduction;
 					}
 
-					var prefix = _productionEntityStack[_productionEntityStackTail - 1];
-
-					if (prefix.ParserProduction.LeftFactorProduction == false)
+					if (prefixCount == 0)
 					{
 						postfix.CreateEntityInstance(this);
 
 						return;
 					}
 
-					foreach (var prefixArgument in prefix.Arguments)
-					{
-						var actualArgument = postfix.Arguments[prefixArgument.Argument.OriginalArgument.ArgumentIndex];
+					if (_productionEntityStack[_productionEntityStackTail - prefixCount].ParserProduction == actualProduction)
+						return;
 
-						prefixArgument.TransferValue(actualArgument);
+					var actualEntity = actualProduction.RentEntity();
+
+					foreach (var postfixArgument in postfix.Arguments)
+					{
+						var originalArgument = postfixArgument.Argument;
+
+						while (originalArgument.OriginalArgument != null) 
+							originalArgument = originalArgument.OriginalArgument;
+
+						var actualArgument = actualEntity.Arguments[originalArgument.ArgumentIndex];
+
+						postfixArgument.TransferValue(actualArgument);
 					}
 
-					_productionEntityStack[_productionEntityStackTail - 1] = postfix;
-					_productionEntityStack[_productionEntityStackTail] = prefix;
+					postfix.Return();
+
+					for (var i = 0; i < prefixCount; i++)
+					{
+						var prefix = _productionEntityStack[_productionEntityStackTail - i - 1];
+
+						for (var index = 0; index < prefix.Arguments.Length - 1; index++)
+						{
+							var prefixArgument = prefix.Arguments[index];
+							var originalArgument = prefixArgument.Argument;
+
+							while (originalArgument.OriginalArgument != null)
+								originalArgument = originalArgument.OriginalArgument;
+
+							var actualArgument = actualEntity.Arguments[originalArgument.ArgumentIndex];
+
+							prefixArgument.TransferValue(actualArgument);
+						}
+
+						_productionEntityStack[_productionEntityStackTail - i] = prefix;
+					}
+
+					_productionEntityStack[_productionEntityStackTail - prefixCount] = actualEntity;
 				}
 
 				private void LeaveLeftRecursionProduction(int productionIndex)

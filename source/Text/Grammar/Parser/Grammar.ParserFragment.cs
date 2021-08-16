@@ -15,7 +15,7 @@ namespace Zaaml.Text
 
 			public bool Inline { get; }
 
-			public ParserProductionCollection Productions { get; } = new ParserProductionCollection();
+			public ParserProductionCollection Productions { get; } = new();
 
 			public void AddProduction(ParserProduction production)
 			{

@@ -20,6 +20,8 @@ namespace Zaaml.Text
 					ArgumentType = argumentType;
 					ArgumentIndex = argumentIndex;
 					ParserProduction = parserProduction;
+
+					((IParserEntry)parserEntry).ProductionArgument = this;
 				}
 
 				protected ProductionArgument(string name, Entry parserEntry, int argumentIndex, Type argumentType, ParserProduction parserProduction, ProductionArgument originalArgument)
@@ -30,6 +32,10 @@ namespace Zaaml.Text
 					ArgumentIndex = argumentIndex;
 					ParserProduction = parserProduction;
 					OriginalArgument = originalArgument;
+
+					((IParserEntry)parserEntry).ProductionArgument = this;
+
+					Bind(OriginalArgument.Binder);
 				}
 
 				public int ArgumentIndex { get; }
@@ -39,6 +45,7 @@ namespace Zaaml.Text
 				public ProductionArgumentBinder Binder { get; private set; }
 
 				public string Name { get; }
+
 				public ProductionArgument OriginalArgument { get; }
 
 				public Entry ParserEntry { get; }
@@ -81,35 +88,57 @@ namespace Zaaml.Text
 				}
 			}
 
-			private sealed class NullProductionArgument : ProductionArgument
+			private sealed class NullArgument : ProductionArgument
 			{
-				public NullProductionArgument(string name, Entry parserEntry, int argumentIndex, ParserProduction parserProduction) : base(name, parserEntry, argumentIndex, null, parserProduction)
+				private sealed class NullEntityArgument : ProductionEntityArgument
+				{
+					public NullEntityArgument(ProductionEntity entity, ProductionArgument argument) : base(entity, argument)
+					{
+					}
+
+					public override object Build()
+					{
+						return null;
+					}
+
+					public override int GetCount()
+					{
+						return 0;
+					}
+
+					public override void Reset()
+					{
+					}
+
+					public override void TransferValue(ProductionEntityArgument argument)
+					{
+					}
+				}
+
+				public NullArgument(string name, Entry parserEntry, int argumentIndex, ParserProduction parserProduction) : base(name, parserEntry, argumentIndex, null, parserProduction)
 				{
 				}
 
 				public override ProductionEntityArgument CreateArgument(ProductionEntity entity)
 				{
-					throw new NotSupportedException();
+					return new NullEntityArgument(entity, this);
 				}
 
 				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context)
 				{
-					throw new NotSupportedException();
 				}
 
 				public override void EmitCopyArgument(LocalBuilder argumentLocal, Type targetType, ILGenerator il, OpCode processLdArg)
 				{
-					throw new NotSupportedException();
 				}
 
 				public override void EmitPushResetArgument(LocalBuilder argumentLocal, Type targetType, ILGenerator il, OpCode processLdArg)
 				{
-					throw new NotSupportedException();
 				}
 
 				public override ProductionArgument MapArgument(int index, Entry parserEntry, ParserProduction parserProduction)
 				{
-					throw new NotSupportedException();
+					return new NullArgument(Name, ParserEntry, index, parserProduction);
 				}
 			}
 

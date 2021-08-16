@@ -37,6 +37,23 @@ namespace Zaaml.Text
 					ProductionIndex = automata.RegisterProduction(this);
 				}
 
+				public ParserProduction(ParserAutomata automata, Func<ParserProduction, ProductionBinder> binderFactory, IEnumerable<Entry> entries, ParserProduction originalProduction) : base(entries)
+				{
+					if (binderFactory == null)
+					{
+						IsInline = true;
+
+						return;
+					}
+
+					IsInline = false;
+					Binder = binderFactory(this);
+					ProductionIndex = automata.RegisterProduction(this);
+					OriginalProduction = originalProduction;
+
+					BuildArguments(MapArgument);
+				}
+
 				public ParserProduction(ParserAutomata automata, Grammar<TToken>.ParserRule grammarParserRule, Grammar<TToken>.ParserProduction grammarParserProduction)
 					: base(grammarParserProduction.Entries.Select(automata.CreateParserEntry))
 				{
@@ -49,7 +66,7 @@ namespace Zaaml.Text
 					if (IsInline)
 						return;
 
-					BuildArguments();
+					BuildArguments(CreateArgument);
 
 					Binder = grammarParserProduction.ProductionBinding switch
 					{
@@ -61,19 +78,21 @@ namespace Zaaml.Text
 
 				public List<ProductionArgument> Arguments { get; } = new();
 
+				private Dictionary<Entry, ProductionArgument> ArgumentsDictionary { get; } = new();
+
+				public string EntriesDebuggerDisplay => string.Join(" ", Entries.Select(e => e.ToString()));
+
 				public Grammar<TToken>.ParserProduction GrammarParserProduction { get; }
 
 				public bool IsInline { get; }
 
-				internal bool LeftFactorProduction { get; set; }
-
 				private string Name { get; }
 
-				internal ParserProduction OriginalProduction { get; set; }
+				internal ParserProduction OriginalProduction { get; }
 
 				public int ProductionIndex { get; }
 
-				private void BuildArgument(List<Entry> stack, ParserProduction parserProduction)
+				private void BuildArgument(List<Entry> stack, ParserProduction parserProduction, Action<Entry, List<Entry>> argumentBuilder)
 				{
 					var entry = stack[stack.Count - 1];
 
@@ -82,7 +101,7 @@ namespace Zaaml.Text
 						stack.Add(parserStateEntry);
 
 						foreach (var fragmentProduction in parserStateEntry.Rule.Productions)
-							BuildArguments(parserProduction, fragmentProduction, stack);
+							BuildArguments(parserProduction, fragmentProduction, stack, argumentBuilder);
 
 						stack.RemoveAt(stack.Count - 1);
 					}
@@ -92,7 +111,7 @@ namespace Zaaml.Text
 
 						stack.Add(parserPrimitiveEntry);
 
-						BuildArgument(stack, parserProduction);
+						BuildArgument(stack, parserProduction, argumentBuilder);
 
 						stack.RemoveAt(stack.Count - 1);
 					}
@@ -111,24 +130,24 @@ namespace Zaaml.Text
 						//	flatEntries.Add(setDataEntry);
 						//}
 
-						CreateArgument(entry, stack);
+						argumentBuilder(entry, stack);
 					}
 					else
-						CreateArgument(entry, stack);
+						argumentBuilder(entry, stack);
 				}
 
-				private void BuildArguments()
+				private void BuildArguments(Action<Entry, List<Entry>> argumentBuilder)
 				{
-					BuildArguments(this, this, new List<Entry>());
+					BuildArguments(this, this, new List<Entry>(), argumentBuilder);
 				}
 
-				private void BuildArguments(ParserProduction parserProduction, Production fragmentProduction, List<Entry> stack)
+				private void BuildArguments(ParserProduction parserProduction, Production fragmentProduction, List<Entry> stack, Action<Entry, List<Entry>> argumentBuilder)
 				{
 					foreach (var entry in fragmentProduction.Entries)
 					{
 						stack.Add(entry);
 
-						BuildArgument(stack, parserProduction);
+						BuildArgument(stack, parserProduction, argumentBuilder);
 
 						stack.RemoveAt(stack.Count - 1);
 					}
@@ -139,9 +158,17 @@ namespace Zaaml.Text
 					if (entry is not IParserEntry parserEntry)
 						return;
 
+					var argumentType = GetArgumentType(entry);
+
+					if (argumentType == null)
+					{
+						AddArgument(new NullArgument(EnsureEntryName(entry, stack), entry, Arguments.Count, this));
+
+						return;
+					}
+
 					var array = stack.Any(e => e is ParserQuantifierEntry parentQuantifierEntry && parentQuantifierEntry.Maximum - parentQuantifierEntry.Minimum > 1);
 					var argumentName = EnsureEntryName(entry, stack);
-					var argumentType = GetArgumentType(entry);
 					var argumentIndex = Arguments.Count;
 					var argument = entry switch
 					{
@@ -155,9 +182,7 @@ namespace Zaaml.Text
 					if (argument == null)
 						return;
 
-					parserEntry.ProductionArgument = argument;
-
-					Arguments.Add(argument);
+					AddArgument(argument);
 				}
 
 				private ProductionArgument CreateLexerArgument(string name, Entry parserEntry, int argumentIndex, Type argumentType, bool array)
@@ -248,6 +273,20 @@ namespace Zaaml.Text
 					_productionEntityPoolTail = length - 1;
 				}
 
+				private void MapArgument(Entry entry, List<Entry> stack)
+				{
+					if (OriginalProduction.ArgumentsDictionary.TryGetValue(entry, out var originalArgument) == false)
+						CreateArgument(entry, stack);
+					else
+						AddArgument(originalArgument.MapArgument(Arguments.Count, entry, this));
+				}
+
+				private void AddArgument(ProductionArgument argument)
+				{
+					Arguments.Add(argument);
+					ArgumentsDictionary[argument.ParserEntry] = argument;
+				}
+
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public ProductionEntity RentEntity()
 				{
@@ -292,7 +331,7 @@ namespace Zaaml.Text
 
 				public override string ToString()
 				{
-					return $"{Name} => {string.Join(" ", Entries.Select(e => e.ToString()))}";
+					return $"{Name} => {EntriesDebuggerDisplay}";
 				}
 			}
 		}

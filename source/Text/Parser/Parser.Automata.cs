@@ -291,8 +291,8 @@ namespace Zaaml.Text
 
 				//parserState.Inline |= parserRule.AggressiveInlining;
 
+				EliminateLeftFactoring(parserRule, parserProductions);
 				EliminateLeftRecursion(parserRule, parserProductions);
-				//EliminateLeftFactoring(parserRule, parserProductions);
 
 				AddRule(parserRule, parserProductions);
 			}

@@ -52,6 +52,14 @@ namespace Zaaml.Text
 				}
 
 				public bool IsEmpty => Count < 0;
+
+				public override string ToString()
+				{
+					if (IsEmpty)
+						return "Empty";
+
+					return $"Node:{Thread.Node}, InstructionPointer:{Context.InstructionStreamPointer}, ForkCount:{Count}";
+				}
 			}
 		}
 	}

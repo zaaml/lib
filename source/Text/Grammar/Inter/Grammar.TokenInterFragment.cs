@@ -10,7 +10,7 @@ namespace Zaaml.Text
 	{
 		protected internal sealed class TokenInterFragment : TokenInterPrimitiveEntry
 		{
-			public TokenInterProductionCollection Productions { get; } = new TokenInterProductionCollection();
+			public TokenInterProductionCollection Productions { get; } = new();
 
 			public override ParserEntry CreateParserEntry()
 			{

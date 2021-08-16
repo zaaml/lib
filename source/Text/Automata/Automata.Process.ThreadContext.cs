@@ -4,6 +4,7 @@
 
 // ReSharper disable ForCanBeConvertedToForeach
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -50,6 +51,8 @@ namespace Zaaml.Text
 				public ThreadContext(int index, Process process, InstructionStream instructionStream, int instructionPointer, ExecutionStream executionStream, int executionStreamPointer, PredicateResultStream predicateResultStream,
 					int predicateResultStreamPointer, AutomataContextState contextState)
 				{
+					Debug.Assert(index > 0);
+
 					Index = index;
 					Process = process;
 					ContextState = contextState;
@@ -60,7 +63,7 @@ namespace Zaaml.Text
 					InstructionStreamPointer = instructionPointer;
 					PredicateResultStreamPointer = predicateResultStreamPointer;
 					ExecutionPathRegistry = Process._automata._executionPathRegistry;
-					ExecutionMethodRegistry = index == 0 ? Process.ILGenerator.MainExecutionMethods : Process.ILGenerator.ParallelExecutionMethods;
+					ExecutionMethodRegistry = Process.ILGenerator.ParallelExecutionMethods;
 
 					IsExecutionStreamRunning = false;
 					InstructionStream.LockPointer(InstructionStreamPointer);
@@ -129,15 +132,7 @@ namespace Zaaml.Text
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public Node Execute(int executionPathId)
 				{
-					var executionPath = ExecutionPathRegistry[executionPathId];
-
-					return ExecutionMethodRegistry.GetExecutionPathMethod(executionPath).Execute(Process);
-				}
-
-				public void ChangeIndex(int index)
-				{
-					Index = index;
-					ExecutionMethodRegistry = index == 0 ? Process.ILGenerator.MainExecutionMethods : Process.ILGenerator.ParallelExecutionMethods;
+					return ExecutionMethodRegistry.GetExecutionPathMethod(ExecutionPathRegistry[executionPathId]).Execute(Process);
 				}
 
 				public void EnqueuePredicateResult(PredicateResult predicateResult)
