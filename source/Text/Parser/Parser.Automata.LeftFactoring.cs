@@ -46,7 +46,7 @@ namespace Zaaml.Text
 					var prefixEntry = kv.Key.ParserEntry;
 					var factorPostfixProductions = new List<ParserProduction>();
 					var factorPrefixRule = new ParserRule($"{parserRule.Name}Factor", false);
-					var factorPrefixRuleEntry = new ParserRuleEntry(new Grammar<TToken>.ParserRule { Name = factorPrefixRule.Name }, factorPrefixRule, false, false) { SkipStack = false };
+					var factorPrefixRuleEntry = new ParserRuleEntry(new Grammar<TToken>.ParserRule { Name = factorPrefixRule.Name }, factorPrefixRule, false, false);
 
 					foreach (var tuple in kv.Value.OrderBy(k => k.Item1))
 					{
@@ -105,7 +105,7 @@ namespace Zaaml.Text
 
 					return (ParserEntry, other.ParserEntry) switch
 					{
-						(PrimitiveMatchEntry f, PrimitiveMatchEntry s) => EqualsMatchEntry(f, s),
+						(MatchEntry f, MatchEntry s) => EqualsMatchEntry(f, s),
 						(ParserRuleEntry f, ParserRuleEntry s) => EqualsParserRuleEntry(f, s),
 						_ => throw new InvalidOperationException()
 					};
@@ -125,9 +125,9 @@ namespace Zaaml.Text
 					return Equals((LeftFactoringEntry)obj);
 				}
 
-				private bool EqualsMatchEntry(PrimitiveMatchEntry first, PrimitiveMatchEntry second)
+				private bool EqualsMatchEntry(MatchEntry first, MatchEntry second)
 				{
-					return first.Equals(second);
+					return EntryEqualityComparer.Instance.Equals(first, second);
 				}
 
 				private bool EqualsParserRuleEntry(ParserRuleEntry first, ParserRuleEntry second)
@@ -148,7 +148,7 @@ namespace Zaaml.Text
 				{
 					return ParserEntry switch
 					{
-						PrimitiveMatchEntry matchEntry => matchEntry.GetHashCode(),
+						MatchEntry matchEntry => EntryEqualityComparer.Instance.GetHashCode(matchEntry),
 						ParserRuleEntry stateEntry => stateEntry.Rule.GetHashCode(),
 						_ => 0
 					};

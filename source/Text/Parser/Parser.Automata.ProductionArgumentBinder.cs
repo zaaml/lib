@@ -23,6 +23,8 @@ namespace Zaaml.Text
 
 				public Type ArgumentType { get; }
 
+				public abstract bool ConsumeValue { get; }
+
 				public abstract void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg);
 			}
 		}

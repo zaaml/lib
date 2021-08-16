@@ -90,6 +90,33 @@ namespace Zaaml.Text
 
 			private sealed class NullArgument : ProductionArgument
 			{
+				public NullArgument(string name, Entry parserEntry, int argumentIndex, ParserProduction parserProduction) : base(name, parserEntry, argumentIndex, null, parserProduction)
+				{
+					Bind(NullArgumentBinder.Instance);
+				}
+
+				public override ProductionEntityArgument CreateArgument(ProductionEntity entity)
+				{
+					return new NullEntityArgument(entity, this);
+				}
+
+				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context)
+				{
+				}
+
+				public override void EmitCopyArgument(LocalBuilder argumentLocal, Type targetType, ILGenerator il, OpCode processLdArg)
+				{
+				}
+
+				public override void EmitPushResetArgument(LocalBuilder argumentLocal, Type targetType, ILGenerator il, OpCode processLdArg)
+				{
+				}
+
+				public override ProductionArgument MapArgument(int index, Entry parserEntry, ParserProduction parserProduction)
+				{
+					return new NullArgument(Name, ParserEntry, index, parserProduction);
+				}
+
 				private sealed class NullEntityArgument : ProductionEntityArgument
 				{
 					public NullEntityArgument(ProductionEntity entity, ProductionArgument argument) : base(entity, argument)
@@ -115,30 +142,19 @@ namespace Zaaml.Text
 					}
 				}
 
-				public NullArgument(string name, Entry parserEntry, int argumentIndex, ParserProduction parserProduction) : base(name, parserEntry, argumentIndex, null, parserProduction)
+				private sealed class NullArgumentBinder : ProductionArgumentBinder
 				{
-				}
+					public static readonly NullArgumentBinder Instance = new();
 
-				public override ProductionEntityArgument CreateArgument(ProductionEntity entity)
-				{
-					return new NullEntityArgument(entity, this);
-				}
+					private NullArgumentBinder() : base(typeof(void))
+					{
+					}
 
-				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context)
-				{
-				}
+					public override bool ConsumeValue => false;
 
-				public override void EmitCopyArgument(LocalBuilder argumentLocal, Type targetType, ILGenerator il, OpCode processLdArg)
-				{
-				}
-
-				public override void EmitPushResetArgument(LocalBuilder argumentLocal, Type targetType, ILGenerator il, OpCode processLdArg)
-				{
-				}
-
-				public override ProductionArgument MapArgument(int index, Entry parserEntry, ParserProduction parserProduction)
-				{
-					return new NullArgument(Name, ParserEntry, index, parserProduction);
+					public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
+					{
+					}
 				}
 			}
 

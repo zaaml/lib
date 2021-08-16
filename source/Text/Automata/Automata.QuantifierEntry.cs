@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using Zaaml.Core;
 
 namespace Zaaml.Text
@@ -50,6 +51,8 @@ namespace Zaaml.Text
 
 			protected override string DebuggerDisplay => $"{PrimitiveEntry}{GetQuantifierKindString(Kind, Minimum, Maximum)}";
 
+			public static IEqualityComparer<QuantifierEntry> EqualityComparer => QuantifierEntryEqualityComparer.Instance;
+
 			private string GetQuantifierKindString(QuantifierKind kind, int minimum, int maximum)
 			{
 				return kind switch
@@ -60,6 +63,40 @@ namespace Zaaml.Text
 					QuantifierKind.OneOrMore => "+",
 					_ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
 				};
+			}
+
+			private sealed class QuantifierEntryEqualityComparer : IEqualityComparer<QuantifierEntry>
+			{
+				public static readonly QuantifierEntryEqualityComparer Instance = new();
+
+				private QuantifierEntryEqualityComparer()
+				{
+				}
+
+				public bool Equals(QuantifierEntry x, QuantifierEntry y)
+				{
+					if (ReferenceEquals(x, y)) return true;
+					if (ReferenceEquals(x, null)) return false;
+					if (ReferenceEquals(y, null)) return false;
+					if (x.GetType() != y.GetType()) return false;
+
+					return x.Kind == y.Kind && x.Maximum == y.Maximum && x.Minimum == y.Minimum && x.Mode == y.Mode && EntryEqualityComparer.Instance.Equals(x.PrimitiveEntry, y.PrimitiveEntry);
+				}
+
+				public int GetHashCode(QuantifierEntry obj)
+				{
+					unchecked
+					{
+						var hashCode = (int)obj.Kind;
+
+						hashCode = (hashCode * 397) ^ obj.Maximum;
+						hashCode = (hashCode * 397) ^ obj.Minimum;
+						hashCode = (hashCode * 397) ^ (int)obj.Mode;
+						hashCode = (hashCode * 397) ^ EntryEqualityComparer.Instance.GetHashCode(obj.PrimitiveEntry);
+
+						return hashCode;
+					}
+				}
 			}
 		}
 	}

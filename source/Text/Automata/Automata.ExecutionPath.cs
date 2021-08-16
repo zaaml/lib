@@ -231,7 +231,7 @@ namespace Zaaml.Text
 
 			private bool Equals(ExecutionPath other)
 			{
-				return Equals(Nodes, other.Nodes) && Equals(Match, other.Match);
+				return Equals(Nodes, other.Nodes) && EntryEqualityComparer.Instance.Equals(Match, other.Match);
 			}
 
 			public override bool Equals(object obj)
@@ -246,7 +246,7 @@ namespace Zaaml.Text
 			{
 				unchecked
 				{
-					return ((Nodes != null ? Nodes.GetHashCode() : 0) * 397) ^ (Match != null ? Match.GetHashCode() : 0);
+					return ((Nodes != null ? Nodes.GetHashCode() : 0) * 397) ^ (Match != null ? EntryEqualityComparer.Instance.GetHashCode(Match) : 0);
 				}
 			}
 

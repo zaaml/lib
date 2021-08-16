@@ -23,27 +23,6 @@ namespace Zaaml.Text
 
 			public TOperand Operand { get; }
 
-			private bool Equals(SingleMatchEntry other)
-			{
-				return EqualityComparer<TOperand>.Default.Equals(Operand, other.Operand);
-			}
-
-			public override bool Equals(object obj)
-			{
-				if (ReferenceEquals(null, obj))
-					return false;
-
-				if (ReferenceEquals(this, obj))
-					return true;
-
-				return obj is SingleMatchEntry match && Equals(match);
-			}
-
-			public override int GetHashCode()
-			{
-				return EqualityComparer<TOperand>.Default.GetHashCode(Operand);
-			}
-
 			public override bool Match(TOperand operand)
 			{
 				return Equals(operand, Operand);
@@ -57,6 +36,32 @@ namespace Zaaml.Text
 			public override string ToString()
 			{
 				return DebuggerDisplay;
+			}
+
+			public static IEqualityComparer<SingleMatchEntry> EqualityComparer => SingleMatchEntryEqualityComparer.Instance;
+
+			private sealed class SingleMatchEntryEqualityComparer : IEqualityComparer<SingleMatchEntry>
+			{
+				public static readonly SingleMatchEntryEqualityComparer Instance = new();
+
+				private SingleMatchEntryEqualityComparer()
+				{
+				}
+
+				public bool Equals(SingleMatchEntry x, SingleMatchEntry y)
+				{
+					if (ReferenceEquals(x, y)) return true;
+					if (ReferenceEquals(x, null)) return false;
+					if (ReferenceEquals(y, null)) return false;
+					if (x.GetType() != y.GetType()) return false;
+
+					return EqualityComparer<TOperand>.Default.Equals(x.Operand, y.Operand);
+				}
+
+				public int GetHashCode(SingleMatchEntry obj)
+				{
+					return EqualityComparer<TOperand>.Default.GetHashCode(obj.Operand);
+				}
 			}
 		}
 	}

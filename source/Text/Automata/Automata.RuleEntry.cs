@@ -18,8 +18,6 @@ namespace Zaaml.Text
 			public Rule Rule { get; }
 
 			internal RuleEntryContext RuleEntryContext { get; set; }
-
-			internal bool SkipStack { get; set; }
 		}
 
 		protected abstract class RuleEntryContext

@@ -29,37 +29,13 @@ namespace Zaaml.Text
 
 			protected override string DebuggerDisplay => $"[{MinOperand};{MaxOperand}]";
 
+			public static IEqualityComparer<RangeMatchEntry> EqualityComparer => RangeMatchEntryEqualityComparer.Instance;
+
 			internal Interval<int> IntRange { get; }
 
 			public TOperand MaxOperand { get; }
 
 			public TOperand MinOperand { get; }
-
-			private bool Equals(RangeMatchEntry other)
-			{
-				return EqualityComparer<TOperand>.Default.Equals(MaxOperand, other.MaxOperand) && EqualityComparer<TOperand>.Default.Equals(MinOperand, other.MinOperand);
-			}
-
-			public override bool Equals(object obj)
-			{
-				if (ReferenceEquals(null, obj))
-					return false;
-
-				if (ReferenceEquals(this, obj))
-					return true;
-
-				var match = obj as RangeMatchEntry;
-
-				return match != null && Equals(match);
-			}
-
-			public override int GetHashCode()
-			{
-				unchecked
-				{
-					return (EqualityComparer<TOperand>.Default.GetHashCode(MaxOperand) * 397) ^ EqualityComparer<TOperand>.Default.GetHashCode(MinOperand);
-				}
-			}
 
 			public override bool Match(TOperand operand)
 			{
@@ -69,6 +45,37 @@ namespace Zaaml.Text
 			public override bool Match(int operand)
 			{
 				return IntRange.Contains(operand);
+			}
+
+			private sealed class RangeMatchEntryEqualityComparer : IEqualityComparer<RangeMatchEntry>
+			{
+				public static readonly RangeMatchEntryEqualityComparer Instance = new();
+
+				private RangeMatchEntryEqualityComparer()
+				{
+				}
+
+				public bool Equals(RangeMatchEntry x, RangeMatchEntry y)
+				{
+					if (ReferenceEquals(x, y)) return true;
+					if (ReferenceEquals(x, null)) return false;
+					if (ReferenceEquals(y, null)) return false;
+					if (x.GetType() != y.GetType()) return false;
+
+					var equalityComparer = EqualityComparer<TOperand>.Default;
+
+					return equalityComparer.Equals(x.MaxOperand, y.MaxOperand) && equalityComparer.Equals(x.MinOperand, y.MinOperand);
+				}
+
+				public int GetHashCode(RangeMatchEntry obj)
+				{
+					var equalityComparer = EqualityComparer<TOperand>.Default;
+
+					unchecked
+					{
+						return (equalityComparer.GetHashCode(obj.MaxOperand) * 397) ^ equalityComparer.GetHashCode(obj.MinOperand);
+					}
+				}
 			}
 		}
 	}

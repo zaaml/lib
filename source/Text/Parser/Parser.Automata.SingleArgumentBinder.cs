@@ -21,6 +21,8 @@ namespace Zaaml.Text
 
 				public ProductionArgument ProductionArgument { get; }
 
+				public override bool ConsumeValue => true;
+
 				public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
 				{
 					ilBuilder.Emit(OpCodes.Ldloc, productionEntityLocal);

@@ -91,6 +91,8 @@ namespace Zaaml.Text
 					{
 					}
 
+					public override bool ConsumeValue => false;
+
 					public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
 					{
 						ilBuilder.Emit(processLdArg);

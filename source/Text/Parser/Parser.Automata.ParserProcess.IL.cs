@@ -103,7 +103,7 @@ namespace Zaaml.Text
 
 					private void EmitConsumeRuleEntryValue(Context context, ProductionArgument argument)
 					{
-						if (argument is not { Binder: { } })
+						if (argument is not { Binder: { ConsumeValue: true } })
 							return;
 
 						EmitDebugPreConsumeParserValue(context, argument);
@@ -151,10 +151,7 @@ namespace Zaaml.Text
 
 					protected override void EmitEnterRuleEntry(Context context, RuleEntry ruleEntry)
 					{
-						if (ruleEntry == null || ruleEntry.SkipStack)
-							return;
-
-						if (ruleEntry is not ParserRuleEntry parserRuleEntry || parserRuleEntry.ProductionArgument == null)
+						if (ruleEntry is not ParserRuleEntry parserRuleEntry || parserRuleEntry.ProductionArgument?.Binder == null)
 							return;
 
 						EmitDebugPreRuleEnter(context, ruleEntry);
@@ -259,10 +256,7 @@ namespace Zaaml.Text
 
 					protected override void EmitLeaveRuleEntry(Context context, RuleEntry ruleEntry)
 					{
-						if (ruleEntry == null || ruleEntry.SkipStack)
-							return;
-
-						if (ruleEntry is not ParserRuleEntry parserRuleEntry || parserRuleEntry.ProductionArgument == null)
+						if (ruleEntry is not ParserRuleEntry parserRuleEntry || parserRuleEntry.ProductionArgument?.Binder == null)
 							return;
 
 						EmitDebugPreRuleLeave(context, ruleEntry);
@@ -272,9 +266,9 @@ namespace Zaaml.Text
 #if EMIT_COMSUME_PARSER == false
 						EmitConsumeRuleEntryValue(context, argument);
 #else
-					context.EmitLdContext();
-					context.IL.Emit(OpCodes.Ldc_I4, argument.ArgumentIndex);
-					context.IL.Emit(OpCodes.Call, ConsumeProductionEntityMethodInfo);
+						context.EmitLdContext();
+						context.IL.Emit(OpCodes.Ldc_I4, argument.ArgumentIndex);
+						context.IL.Emit(OpCodes.Call, ConsumeProductionEntityMethodInfo);
 #endif
 						EmitLeaveRuleEntry(context);
 
