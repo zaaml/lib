@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
-		<Configurations>Debug;Release;Test</Configurations>
+		<Configurations>Debug;Release;Test;ReleaseSourceGenerator</Configurations>
 	</PropertyGroup>
 
 	<!-- COLLECTION_VERIFY_STRUCTURE -->
@@ -14,20 +14,10 @@
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
 	</PropertyGroup>
-	
-	<PropertyGroup Condition="$(Publish) == 'true'">
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
-		<TargetFramework></TargetFramework>
-	</PropertyGroup>
 
-	<PropertyGroup>
-		<TargetFramework>net5.0</TargetFramework>
-	</PropertyGroup>
-	
 	<PropertyGroup Condition="$(Publish) == 'true'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFrameworks>net5.0;netcoreapp3.1;net48;netstandard2.0</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
 

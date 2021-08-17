@@ -7,19 +7,21 @@ using System.Linq;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
-			private sealed class ExternalLexerInvokeInfo<TExternalToken> where TExternalToken : unmanaged, Enum
+			private sealed class ExternalLexerInvokeInfo<TEternalGrammar, TExternalToken>
+				where TEternalGrammar : Grammar<TEternalGrammar, TExternalToken>
+				where TExternalToken : unmanaged, Enum 
 			{
-				public readonly Lexer<TExternalToken> Lexer;
-				public readonly Grammar<TExternalToken>.TokenRule Rule;
+				public readonly Lexer<TEternalGrammar, TExternalToken> Lexer;
+				public readonly Grammar<TEternalGrammar, TExternalToken>.LexerGrammar.TokenSyntax Token;
 
-				public ExternalLexerInvokeInfo(Grammar<TToken>.ExternalLexerEntry<TExternalToken> externalGrammarEntry)
+				public ExternalLexerInvokeInfo(Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol<TEternalGrammar, TExternalToken> externalGrammarEntry)
 				{
-					Rule = externalGrammarEntry.ExternalLexerRule;
-					Lexer = (Lexer<TExternalToken>)Rule.Grammar.GetType().GetProperties().SingleOrDefault(p => typeof(Lexer<TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
+					Token = externalGrammarEntry.ExternalToken;
+					Lexer = (Lexer<TEternalGrammar, TExternalToken>)(typeof(TEternalGrammar).GetProperties().SingleOrDefault(p => typeof(Lexer<TEternalGrammar, TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null));
 
 					if (Lexer == null)
 						throw new InvalidOperationException("Lexer instance is null.");

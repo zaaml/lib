@@ -16,7 +16,7 @@ namespace Zaaml.Text
 			{
 				private static readonly FieldInfo LeaveNodeFieldInfo = typeof(SubGraph).GetField(nameof(LeaveNode), IPNP);
 
-				public static void EmitLoadLeaveNode(Process.ProcessILGenerator.Context automataILBuilder)
+				public static void EmitLoadLeaveNode(Process.ILContext automataILBuilder)
 				{
 					automataILBuilder.IL.Emit(OpCodes.Ldfld, LeaveNodeFieldInfo);
 				}

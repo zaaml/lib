@@ -2,8 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using static Zaaml.Core.Reflection.BF;
@@ -18,7 +16,7 @@ namespace Zaaml.Text
 
 		partial class Process
 		{
-			public partial class ProcessILGenerator
+			internal partial class ProcessILGenerator
 			{
 				private static readonly FieldInfo ContextFieldInfo = ProcessType.GetField(nameof(_context), IPNP | GF);
 				private static readonly MethodInfo ExecuteThreadQueueMethodInfo = ProcessType.GetMethod(nameof(GetExecuteThreadQueue), IPNP);
@@ -39,13 +37,13 @@ namespace Zaaml.Text
 					ParallelExecutionMethods = new ExecutionPathMethodCollection(ExecutionPathMethodKind.Parallel, this);
 				}
 
-				public void Emit(Context context)
+				public void Emit(ILContext context)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Call, ProcessDequePredicateResultMethodInfo);
 				}
 
-				public void EmitBuildForkNode(Context context, int nodeIndex, LocalBuilder resultLocal)
+				public void EmitBuildForkNode(ILContext context, int nodeIndex, LocalBuilder resultLocal)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Ldc_I4, nodeIndex);
@@ -54,51 +52,51 @@ namespace Zaaml.Text
 					context.IL.Emit(OpCodes.Call, BuildForkNodeMethodInfo);
 				}
 
-				public void EmitDequePredicateResult(Context context)
+				public void EmitDequePredicateResult(ILContext context)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Call, ProcessDequePredicateResultMethodInfo);
 				}
 
-				public void EmitEnqueueParallelPath(Context context)
+				public void EmitEnqueueParallelPath(ILContext context)
 				{
 					context.EmitLdProcess();
 					context.EmitExecutionPath();
 					context.IL.Emit(OpCodes.Call, EnqueueParallelPathMethodInfo);
 				}
 
-				public void EmitEnqueuePredicateResult(Context context, LocalBuilder resultLocal)
+				public void EmitEnqueuePredicateResult(ILContext context, LocalBuilder resultLocal)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Ldloc, resultLocal);
 					context.IL.Emit(OpCodes.Call, ProcessEnqueuePredicateResultMethodInfo);
 				}
 
-				public void EmitGetUnexpectedNode(Context context)
+				public void EmitGetUnexpectedNode(ILContext context)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Call, GetUnexpectedNodeMethodInfo);
 				}
 
-				public void EmitLdContext(Context context)
+				public void EmitLdContext(ILContext context)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Ldfld, ContextFieldInfo);
 				}
 
-				public void EmitLdExecuteThreadQueue(Context context)
+				public void EmitLdExecuteThreadQueue(ILContext context)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Call, ExecuteThreadQueueMethodInfo);
 				}
 
-				private void EmitLdStack(Context context)
+				public void EmitLdStack(ILContext context)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Call, GetAutomataStackMethodInfo);
 				}
 
-				public void EmitMoveNext(Context context)
+				public void EmitMoveNext(ILContext context)
 				{
 					context.EmitLdProcess();
 					context.IL.Emit(OpCodes.Call, MoveNextMethodInfo);

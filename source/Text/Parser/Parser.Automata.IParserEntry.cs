@@ -4,15 +4,19 @@
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
 			private interface IParserEntry
 			{
-				Grammar<TToken>.ParserEntry GrammarEntry { get; }
+				Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarEntry { get; }
 
 				ProductionArgument ProductionArgument { get; set; }
+				
+				IParserEntry Source { get; }
+
+				Entry Clone();
 			}
 		}
 	}

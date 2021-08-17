@@ -53,6 +53,8 @@ namespace Zaaml.Text
 
 			public static IEqualityComparer<QuantifierEntry> EqualityComparer => QuantifierEntryEqualityComparer.Instance;
 
+			protected Interval<int> Interval => new(Minimum, IntervalEndPoint.Closed, Maximum, Maximum == int.MaxValue ? IntervalEndPoint.Unbounded : IntervalEndPoint.Closed);
+
 			private string GetQuantifierKindString(QuantifierKind kind, int minimum, int maximum)
 			{
 				return kind switch

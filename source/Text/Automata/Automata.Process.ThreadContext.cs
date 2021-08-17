@@ -4,10 +4,11 @@
 
 // ReSharper disable ForCanBeConvertedToForeach
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using Zaaml.Core.Reflection;
 
 namespace Zaaml.Text
 {
@@ -15,8 +16,12 @@ namespace Zaaml.Text
 	{
 		partial class Process
 		{
-			private struct ThreadContext
+			internal struct ThreadContext
 			{
+				public static ThreadContext Empty;
+
+				public static readonly FieldInfo InstructionStreamPointerFieldInfo = typeof(ThreadContext).GetField(nameof(InstructionStreamPointer), BF.IPNP);
+				public static readonly FieldInfo InstructionStreamFieldInfo = typeof(ThreadContext).GetField(nameof(InstructionStream), BF.IPNP);
 				public int Index;
 				public Process Process;
 				public int ExecutionStreamPointer;
@@ -77,7 +82,7 @@ namespace Zaaml.Text
 						executionPath.AddReference();
 				}
 
-				public ref TInstruction Instruction => ref InstructionStream.PeekInstruction(InstructionStreamPointer);
+				public ref TInstruction Instruction => ref InstructionStream.PeekInstructionRef(InstructionStreamPointer);
 
 				public int InstructionOperand => InstructionStream.PeekOperand(InstructionStreamPointer);
 
@@ -98,8 +103,10 @@ namespace Zaaml.Text
 
 					InstructionStream.UnlockPointer(InstructionStreamPointer);
 
+					PredicateResultStreamPointer = 0;
+
 					foreach (var executionPathId in executionQueue)
-						thread.Node = Execute(executionPathId);
+						thread.Node = Execute(executionPathId, ref thread);
 
 					ExecutionStreamPointer = 0;
 					PredicateResultStreamPointer = 0;
@@ -130,9 +137,12 @@ namespace Zaaml.Text
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				public Node Execute(int executionPathId)
+				public Node Execute(int executionPathId, ref Thread thread)
 				{
-					return ExecutionMethodRegistry.GetExecutionPathMethod(ExecutionPathRegistry[executionPathId]).Execute(Process);
+					//if (Index == 0)
+					//	Debug.WriteLine(executionPathId);
+
+					return ExecutionMethodRegistry.GetExecutionPathMethod(ExecutionPathRegistry[executionPathId]).Execute(Process, ref thread, ref this);
 				}
 
 				public void EnqueuePredicateResult(PredicateResult predicateResult)

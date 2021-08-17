@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -22,33 +23,33 @@ namespace Zaaml.Text
 			Parallel
 		}
 
-		private protected sealed class ExecutionPathMethodCollection
-		{
-			private readonly Process.ProcessILGenerator _ilBuilder;
-			private readonly ExecutionPathMethodKind _kind;
-			private ExecutionPathMethod[] _executionPaths;
-
-			public ExecutionPathMethodCollection(ExecutionPathMethodKind kind, Process.ProcessILGenerator ilBuilder)
-			{
-				_kind = kind;
-				_ilBuilder = ilBuilder;
-				_executionPaths = Array.Empty<ExecutionPathMethod>();
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public ExecutionPathMethod GetExecutionPathMethod(ExecutionPath executionPath)
-			{
-				if (executionPath.Id < _executionPaths.Length)
-					return _executionPaths[executionPath.Id] ??= new ExecutionPathMethod(_kind, _ilBuilder, executionPath);
-
-				ArrayUtils.EnsureArrayLength(ref _executionPaths, executionPath.Id + 1, true);
-
-				return _executionPaths[executionPath.Id] ??= new ExecutionPathMethod(_kind, _ilBuilder, executionPath);
-			}
-		}
-
 		private protected partial class Process
 		{
+			internal sealed class ExecutionPathMethodCollection
+			{
+				private readonly ProcessILGenerator _ilBuilder;
+				private readonly ExecutionPathMethodKind _kind;
+				private ExecutionPathMethod[] _executionPaths;
+
+				public ExecutionPathMethodCollection(ExecutionPathMethodKind kind, ProcessILGenerator ilBuilder)
+				{
+					_kind = kind;
+					_ilBuilder = ilBuilder;
+					_executionPaths = Array.Empty<ExecutionPathMethod>();
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public ExecutionPathMethod GetExecutionPathMethod(ExecutionPath executionPath)
+				{
+					if (executionPath.Id < _executionPaths.Length)
+						return _executionPaths[executionPath.Id] ??= new ExecutionPathMethod(_kind, _ilBuilder, executionPath);
+
+					ArrayUtils.EnsureArrayLength(ref _executionPaths, executionPath.Id + 1, true);
+
+					return _executionPaths[executionPath.Id] ??= new ExecutionPathMethod(_kind, _ilBuilder, executionPath);
+				}
+			}
+
 			private readonly Automata<TInstruction, TOperand> _automata;
 			private readonly AutomataContext _context;
 			private readonly ProcessKind _processKind;
@@ -57,6 +58,7 @@ namespace Zaaml.Text
 			private MemorySpan<int> _executionPathBuilder;
 			private ReferenceCounter _referenceCount;
 			private ThreadCollection _threads;
+			private PrecedenceContextStack _precedenceContext;
 
 			public Process(IInstructionReader instructionReader, AutomataContext context, ProcessILGenerator ilGenerator = null)
 			{
@@ -64,7 +66,7 @@ namespace Zaaml.Text
 				_automata = context.Automata;
 				_processKind = context.ProcessKind;
 				_processResources = ProcessResources.Get(_automata);
-				_executionPathBuilder = _processResources.IntMemorySpanAllocator.Allocate(1024);
+				_executionPathBuilder = _processResources.DynamicMemorySpanAllocator.Allocate(65536);
 
 				ILGenerator = ilGenerator ?? _automata.ILGenerator;
 
@@ -75,7 +77,12 @@ namespace Zaaml.Text
 
 				_stack = _processResources.StackPool.Get().Allocate(StackCapacity).AddReference();
 
-				var thread = new Thread(initNode, _stack);
+				var precedenceStack = _processResources.PrecedenceStackPool.Get();
+
+				_precedenceContext = _processResources.PrecedenceStackPool.Get().AddReference();
+				//var thread = new Thread(initNode, _stack, new PrecedenceContext(_automata, _processResources.DynamicMemorySpanAllocator));
+
+				var thread = new Thread(initNode, _stack, precedenceStack);
 				var threadContext = new ThreadContext(this, instructionStream, executionStream, predicateResultStream, context.CreateContextStateInternal());
 
 				_threads = new ThreadCollection(this, thread, threadContext);
@@ -106,12 +113,12 @@ namespace Zaaml.Text
 				_referenceCount.AddReference();
 			}
 
-			public void AdvanceInstructionPosition()
+			public void AdvanceInstructionPosition(int position)
 			{
 				ref var threadContext = ref CurrentThreadContext;
 				var instructionQueue = threadContext.InstructionStream;
 
-				threadContext.InstructionStream = instructionQueue.Advance(threadContext.InstructionStreamPointer, _automata).AddReference();
+				threadContext.InstructionStream = instructionQueue.Advance(position, threadContext.InstructionStreamPointer, _automata).AddReference();
 
 				instructionQueue.ReleaseReference();
 			}
@@ -119,17 +126,20 @@ namespace Zaaml.Text
 			[UsedImplicitly]
 			private ForkNode BuildForkNode(int nodeIndex, ExecutionPath executionPath, PredicateResult predicateResult)
 			{
-				// TODO Review
-				// predicateResult.Dispose();
-
 				return _processResources.ForkNodePool.Get().Mount(nodeIndex, executionPath, predicateResult);
+			}
+
+			private ForkNode BuildPredicateForkNode(PredicateNode predicateNode, PredicateResult predicateResult)
+			{
+				return _processResources.ForkNodePool.Get().Mount(predicateNode, predicateResult);
 			}
 
 			private PredicateResult CallPredicate(ExecutionPath executionPath)
 			{
 				var predicateNode = (PredicateNode)executionPath.Nodes[executionPath.Nodes.Length - 1];
+				var predicateResult = predicateNode.PredicateEntry.PassInternal(_context);
 
-				return predicateNode.PredicateEntry.PassInternal(_context);
+				return predicateResult;
 			}
 
 			internal PredicateResult DequeuePredicateResult()
@@ -137,8 +147,88 @@ namespace Zaaml.Text
 				return CurrentThreadContext.DequeuePredicateResult();
 			}
 
+			private static Node ExecuteForkPath(Process process, ref Thread thread, ref ThreadContext threadContext, object[] closure)
+			{
+				var executionMethod = (ExecutionPathMethod)closure[0];
+				var executionPath = executionMethod.ExecutionPath;
+				var kind = executionMethod.Kind;
+				var predicateNode = (PredicateNode)executionPath.Nodes[0];
+
+				return kind == ExecutionPathMethodKind.Main ? process.ExecuteForkPathMain(predicateNode, executionPath, ref thread, ref threadContext) : process.ExecuteForkPathParallel(predicateNode, executionPath, ref thread, ref threadContext);
+			}
+
+			private Node ExecuteForkPathParallel(PredicateNode node, ExecutionPath executionPath, ref Thread thread, ref ThreadContext threadContext)
+			{
+				try
+				{
+					threadContext.EnqueueParallelPath(executionPath);
+
+					var predicateResult = node.PredicateEntry.PassInternal(_context);
+
+					if (predicateResult == null)
+						return UnexpectedNode.Instance;
+
+					if (predicateResult.IsFork())
+						return BuildPredicateForkNode(node, predicateResult);
+
+					if (node.PredicateEntry.ConsumeResult)
+						EnqueuePredicateResult(predicateResult);
+
+					return node;
+				}
+				finally
+				{
+					executionPath.Release();
+				}
+			}
+
+			private Node ExecuteForkPathMain(PredicateNode node, ExecutionPath executionPath, ref Thread thread, ref ThreadContext threadContext)
+			{
+				try
+				{
+					if (GetExecuteThreadQueue())
+					{
+						if (node.PredicateEntry.ConsumeResult)
+						{
+							if (node.PredicateEntry.PopResult)
+							{
+								var predicateResult = DequeuePredicateResult();
+
+								ConsumePredicateResult(predicateResult, node.PredicateEntry.GetActualPredicateEntry());
+							}
+						}
+					}
+					else
+					{
+						var predicateResult = node.PredicateEntry.PassInternal(_context);
+
+						if (predicateResult == null)
+							return UnexpectedNode.Instance;
+
+						if (predicateResult.IsFork())
+							return BuildPredicateForkNode(node, predicateResult);
+
+						if (node.PredicateEntry.ConsumeResult)
+							ConsumePredicateResult(predicateResult, node.PredicateEntry.GetActualPredicateEntry());
+
+						predicateResult.Dispose();
+					}
+
+					return node;
+				}
+				finally
+				{
+					executionPath.Release();
+				}
+			}
+
+			private protected virtual void ConsumePredicateResult(PredicateResult predicateResult, PredicateEntryBase predicateEntry)
+			{
+			}
+
 			protected virtual void Dispose()
 			{
+				_precedenceContext.ReleaseReference();
 				_stack.ReleaseReference();
 				_executionPathBuilder.Dispose();
 				_threads.Dispose();
@@ -157,6 +247,7 @@ namespace Zaaml.Text
 			public AutomataResult ForkFinish()
 			{
 				RunExecutionStream();
+				OnFinished();
 
 				return _processResources.SuccessAutomataResultPool.Get().Mount(this);
 			}
@@ -232,6 +323,7 @@ namespace Zaaml.Text
 									return _processResources.ForkAutomataResultPool.Get().Mount(this);
 
 								RunExecutionStream();
+								OnFinished();
 
 								return _processResources.SuccessAutomataResultPool.Get().Mount(this);
 
@@ -246,6 +338,10 @@ namespace Zaaml.Text
 				}
 
 				return _processResources.ExceptionAutomataResultPool.Get().Mount(new InvalidOperationException(), this);
+			}
+
+			protected virtual void OnFinished()
+			{
 			}
 
 			private void RunExecutionStream()
@@ -272,17 +368,19 @@ namespace Zaaml.Text
 				public readonly Pool<ForkNode> ForkNodePool;
 				public readonly Pool<PredicateNode> ForkPredicateNodePool;
 				public readonly Pool<InstructionStream> InstructionStreamPool;
-				public readonly MemorySpanAllocator<int> IntMemorySpanAllocator = MemorySpanAllocator<int>.Shared;
+				public readonly MemorySpanAllocator<int> DynamicMemorySpanAllocator = MemorySpanAllocator.Create(ArrayPool<int>.Shared);
 				public readonly Pool<AutomataStack> StackPool;
+				public readonly Pool<PrecedenceContextStack> PrecedenceStackPool;
 				public readonly Pool<SuccessAutomataResult> SuccessAutomataResultPool;
 
 				private ProcessResources(Automata<TInstruction, TOperand> automata)
 				{
-					StackPool = new Pool<AutomataStack>(p => new AutomataStack(automata, IntMemorySpanAllocator, p));
+					StackPool = new Pool<AutomataStack>(p => new AutomataStack(automata, DynamicMemorySpanAllocator, p));
+					PrecedenceStackPool = new Pool<PrecedenceContextStack>(p => new PrecedenceContextStack(automata, DynamicMemorySpanAllocator, p));
 					InstructionStreamPool = automata?.CreateInstructionStreamPool() ?? new Pool<InstructionStream>(p => new InstructionStream(p));
-					ExecutionStreamPool = new Pool<ExecutionStream>(p => new ExecutionStream(IntMemorySpanAllocator, p));
+					ExecutionStreamPool = new Pool<ExecutionStream>(p => new ExecutionStream(DynamicMemorySpanAllocator, p));
 					PredicateResultStreamPool = new Pool<PredicateResultStream>(p => new PredicateResultStream(MemorySpanAllocator<PredicateResult>.Shared, p));
-					ForkExecutionPathPool = new Pool<ExecutionPath>(p => new ExecutionPath(p));
+					ForkExecutionPathPool = new Pool<ExecutionPath>(p => new ExecutionPath(automata, p));
 					ForkPredicateNodePool = new Pool<PredicateNode>(p => new PredicateNode(automata, p));
 					ForkNodePool = new Pool<ForkNode>(p => new ForkNode(automata, p));
 					SuccessAutomataResultPool = new Pool<SuccessAutomataResult>(p => new SuccessAutomataResult(p));
@@ -298,38 +396,6 @@ namespace Zaaml.Text
 						threadLocalDictionary[automata] = resources = new ProcessResources(automata);
 
 					return resources;
-				}
-			}
-
-			private sealed class DebugExecutionAlternative
-			{
-				public DebugExecutionAlternative(List<ExecutionPath> executionPaths)
-				{
-					ExecutionPaths = executionPaths;
-					DebugNodes = string.Join("\n ", executionPaths.SelectMany(p => p.Nodes).Select(n => n.ToString()));
-				}
-
-				public DebugExecutionAlternative()
-				{
-					//ExecutionPaths = new List<ExecutionPath>();
-
-					//var returnPathCount = executionPathQueue.ReturnPathCount;
-
-					//for (var i = 0; i < returnPathCount; i++)
-					//	ExecutionPaths.Add(groupBuilder.ReturnPaths[i]);
-
-					//ExecutionPaths.Add(executionPathQueue.ExecutionPath);
-
-					//DebugNodes = string.Join("\n ", ExecutionPaths.SelectMany(p => p.Nodes).Select(n => n.ToString()));
-				}
-
-				public string DebugNodes { get; }
-
-				public List<ExecutionPath> ExecutionPaths { get; }
-
-				public override string ToString()
-				{
-					return DebugNodes;
 				}
 			}
 		}

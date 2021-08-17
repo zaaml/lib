@@ -11,7 +11,9 @@ namespace Zaaml.Text.Extensions
 	{
 		#region Methods
 
-		public static IEnumerable<Lexeme<TToken>> AsLexemeEnumerable<TGrammar, TToken>(this string str, Lexer<TGrammar, TToken> lexer) where TToken : unmanaged, Enum where TGrammar : Grammar<TToken>
+		public static IEnumerable<Lexeme<TToken>> AsLexemeEnumerable<TGrammar, TToken>(this string str, Lexer<TGrammar, TToken> lexer) 
+			where TToken : unmanaged, Enum 
+			where TGrammar : Grammar<TGrammar, TToken>
 		{
 			return lexer.GetLexemeSource(new StringTextSource(str).GetTextSpan());
 		}

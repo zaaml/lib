@@ -2,6 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Collections.Generic;
+
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
@@ -15,9 +17,33 @@ namespace Zaaml.Text
 
 			protected override string DebuggerDisplay => Rule.Name;
 
+			public static IEqualityComparer<RuleEntry> EqualityComparer => RuleEntryEqualityComparer.Instance;
+
 			public Rule Rule { get; }
 
-			internal RuleEntryContext RuleEntryContext { get; set; }
+			private sealed class RuleEntryEqualityComparer : IEqualityComparer<RuleEntry>
+			{
+				public static readonly RuleEntryEqualityComparer Instance = new();
+
+				private RuleEntryEqualityComparer()
+				{
+				}
+
+				public bool Equals(RuleEntry x, RuleEntry y)
+				{
+					if (ReferenceEquals(x, y)) return true;
+					if (ReferenceEquals(x, null)) return false;
+					if (ReferenceEquals(y, null)) return false;
+					if (x.GetType() != y.GetType()) return false;
+
+					return ReferenceEquals(x.Rule, y.Rule);
+				}
+
+				public int GetHashCode(RuleEntry obj)
+				{
+					return obj.Rule.GetHashCode();
+				}
+			}
 		}
 
 		protected abstract class RuleEntryContext

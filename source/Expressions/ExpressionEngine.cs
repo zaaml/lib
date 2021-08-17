@@ -16,7 +16,7 @@ namespace Zaaml.Expressions
 		{
 			var expressionCompiler = new ExpressionCompiler<T>(this);
 
-			return expressionCompiler.Compile(ExpressionGrammar.Parser.Expr(expressionString));
+			return expressionCompiler.Compile(ExpressionGrammar.Expr.Parse(expressionString));
 		}
 
 		internal ExpressionMethodInfo GetMethod(string name)

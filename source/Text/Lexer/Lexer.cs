@@ -35,15 +35,6 @@ namespace Zaaml.Text
 			}
 
 			public Func<LexerContext<TToken>, bool> Predicate { get; }
-
-			public static implicit operator Grammar<TToken>.PatternCollection(PredicateEntry parserEntry)
-			{
-				var patternCollection = new Grammar<TToken>.PatternCollection();
-
-				patternCollection.Patterns.Add(new Grammar<TToken>.TokenPattern(new Grammar<TToken>.TokenEntry[] { parserEntry }));
-
-				return patternCollection;
-			}
 		}
 
 		public class ActionEntry
@@ -57,7 +48,8 @@ namespace Zaaml.Text
 		}
 	}
 
-	internal partial class Lexer<TGrammar, TToken> : Lexer<TToken> where TGrammar : Grammar<TToken> where TToken : unmanaged, Enum
+	internal partial class Lexer<TGrammar, TToken> 
+		: Lexer<TToken> where TGrammar : Grammar<TGrammar,TToken> where TToken : unmanaged, Enum
 	{
 		protected virtual LexerContext<TToken> CreateContext(LexemeSource<TToken> lexemeSource)
 		{
@@ -90,20 +82,14 @@ namespace Zaaml.Text
 				_lexerProcess = new LexerProcess(lexer, this);
 			}
 
-			internal override int Position
-			{
-				get => _lexerProcess.TextPointer;
-				set => _lexerProcess.TextPointer = value;
-			}
-
 			protected override void DisposeCore()
 			{
 				_lexerProcess.Dispose();
 			}
 
-			protected override int ReadCore(Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes)
+			protected override int ReadCore(ref int position, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes)
 			{
-				return _lexerProcess.RunLexer(lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, skipLexemes);
+				return _lexerProcess.RunLexer(ref position, lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, skipLexemes);
 			}
 		}
 
@@ -124,17 +110,11 @@ namespace Zaaml.Text
 				//	_process = new LexerAutomata.ReaderProcess(textSource, lexer, lexerContext);
 			}
 
-			public int TextPointer
-			{
-				get => _process.TextPointer;
-				set => _process.TextPointer = value;
-			}
-
 			public TextSpan TextSourceSpan => _process.TextSourceSpan;
 
-			public int RunLexer(Lexeme<TToken>[] lexemes, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
+			public int RunLexer(ref int instructionPointer, Lexeme<TToken>[] lexemes, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
 			{
-				return _process.Run(lexemes, operands, lexemesBufferOffset, lexemesBufferSize, skipLexemes);
+				return _process.Run(ref instructionPointer, lexemes, operands, lexemesBufferOffset, lexemesBufferSize, skipLexemes);
 			}
 
 			public void Dispose()

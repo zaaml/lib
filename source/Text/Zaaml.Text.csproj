@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
-		<Configurations>Debug;Release;Test</Configurations>
+		<Configurations>Debug;Release;Test;ReleaseSourceGenerator</Configurations>
 	</PropertyGroup>
 	
 	<PropertyGroup>
@@ -13,10 +13,10 @@
 	
 	<PropertyGroup Condition="$(Publish) == 'true'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFrameworks>net5.0;netcoreapp3.1;net48;netstandard2.0</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
 	</ItemGroup>
@@ -27,6 +27,12 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="System.Memory" Version="4.5.4" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
+		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" />
+		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -40,29 +46,15 @@
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>Automata.Builder.Quantifier.tt</DependentUpon>
 		</Compile>
-		<Compile Update="Grammar\Grammar.ParserRule.BindFactory.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Grammar.ParserRule.BindFactory.tt</DependentUpon>
-		</Compile>
-		<Compile Update="Grammar\GrammarBuilders.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>GrammarBuilders.tt</DependentUpon>
-		</Compile>
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="Automata\Automata.Builder.Quantifier.tt">
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		  <LastGenOutput>Automata.Builder.Quantifier.cs</LastGenOutput>
 		</None>
-		<None Update="Grammar\Grammar.ParserRule.BindFactory.tt">
+		<None Update="Grammar\Grammar.ParserRule.BindFactory.btt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Grammar.ParserRule.BindFactory.cs</LastGenOutput>
-		</None>
-		<None Update="Grammar\GrammarBuilders.tt">
-			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>GrammarBuilders.cs</LastGenOutput>
 		</None>
 	</ItemGroup>
 	<ItemGroup>

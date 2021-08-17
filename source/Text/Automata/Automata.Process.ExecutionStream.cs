@@ -14,10 +14,11 @@ namespace Zaaml.Text
 	{
 		partial class Process
 		{
-			private sealed class ExecutionStream : PoolSharedObject<ExecutionStream>
+			internal sealed class ExecutionStream : PoolSharedObject<ExecutionStream>
 			{
 				private readonly MemorySpanAllocator<int> _memorySpanAllocator;
 				private MemorySpan<int> _executionPathMemorySpan;
+				private bool _forkPath;
 
 				public ExecutionStream(MemorySpanAllocator<int> memorySpanAllocator, Pool<ExecutionStream> pool) : base(pool)
 				{
@@ -26,6 +27,7 @@ namespace Zaaml.Text
 
 				public void Enqueue(ExecutionPath executionPath, ref int streamPointer)
 				{
+					_forkPath |= executionPath.IsForkExecutionPath;
 					_executionPathMemorySpan.EnsureSizePower2Ceiling(streamPointer + 1);
 					_executionPathMemorySpan.Span[streamPointer++] = executionPath.Id;
 				}
@@ -44,6 +46,11 @@ namespace Zaaml.Text
 
 				protected override void OnReleased()
 				{
+					if (_forkPath)
+					{
+
+					}
+
 					_executionPathMemorySpan.Dispose();
 					_executionPathMemorySpan = MemorySpan<int>.Empty;
 

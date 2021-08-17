@@ -62,6 +62,9 @@ namespace Zaaml.Text
 					ref var headThreadFork = ref _threads[_threadsHead];
 
 					tailThreadFork.Thread.StackExchange(ref headThreadFork.Thread);
+
+					(tailThreadFork.Context.InstructionStream, headThreadFork.Context.InstructionStream) = (headThreadFork.Context.InstructionStream, tailThreadFork.Context.InstructionStream);
+
 					tailThreadFork.Context.ExecutionStreamPointer = headThreadFork.Context.ExecutionStreamPointer;
 					tailThreadFork.Context.PredicateResultStreamPointer = headThreadFork.Context.PredicateResultStreamPointer;
 				}
@@ -110,7 +113,7 @@ namespace Zaaml.Text
 
 								if (_threadsHead == 0 || _threads[_threadsHead - 1].Count > 0)
 								{
-									forkThread.Thread.EntryExecution = forkThread.ExecutionPaths.Slice(forkThread.ExecutionPathsHead);
+									forkThread.Thread.EntryExecution = forkThread.ExecutionPaths.Slice(forkThread.ExecutionPathsHead, forkThread.ExecutionPaths.Length - forkThread.ExecutionPathsHead - 1);
 
 									return ref forkThread;
 								}
@@ -119,14 +122,13 @@ namespace Zaaml.Text
 							}
 
 							var head = forkThread.ExecutionPathsHead;
-							var executionPathRegistry = prevForkThread.Context.ExecutionPathRegistry;
 							var forkThreadExecutionPaths = forkThread.ExecutionPaths.Span;
 
-							while (executionPathRegistry[forkThreadExecutionPaths[forkThread.ExecutionPathsHead++]].OutputReturn)
+							while (forkThreadExecutionPaths[forkThread.ExecutionPathsHead++] != 0)
 							{
 							}
 
-							var forkPath = forkThread.ExecutionPaths.Slice(head, forkThread.ExecutionPathsHead - head);
+							var forkPath = forkThread.ExecutionPaths.Slice(head, forkThread.ExecutionPathsHead - head - 1);
 
 							if (forkThread.Thread.Stack != null)
 							{
@@ -173,7 +175,7 @@ namespace Zaaml.Text
 
 					var forkCount = ForkExecutionPaths(executionPaths, out var forkExecutionPaths);
 
-					if (_threadsHead == _threads.Length)
+					if (_threadsHead + 1 == _threads.Length)
 						ArrayUtils.ExpandArrayLength(ref _threads, ArrayPool<ThreadFork>.Shared, true, true);
 
 					_threads[++_threadsHead] = new ThreadFork(forkCount, default, default, forkExecutionPaths);
@@ -183,39 +185,20 @@ namespace Zaaml.Text
 
 				private int ForkExecutionPaths(ReadOnlySpan<int> executionPaths, out MemorySpan<int> forkExecutionPaths)
 				{
-					var sort = false;
-					var weight = 0;
-					var forkCount = 0;
-					var sortedWeight = 0;
+					forkExecutionPaths = _process._processResources.DynamicMemorySpanAllocator.Allocate(executionPaths.Length);
 
-					var executionPathsRegistry = _process._automata._executionPathRegistry;
-					forkExecutionPaths = _process._processResources.IntMemorySpanAllocator.Allocate(executionPaths.Length);
+					var forkCount = 0;
 					var forkExecutionPathsSpan = forkExecutionPaths.Span;
 
 					for (var i = 0; i < executionPaths.Length; i++)
 					{
 						var executionPathId = executionPaths[i];
-						var executionPath = executionPathsRegistry[executionPathId];
 
 						forkExecutionPathsSpan[i] = executionPathId;
 
-						weight += executionPath.Weight;
-
-						if (executionPath.OutputReturn)
-							continue;
-
-						if (weight >= sortedWeight)
-							sortedWeight = weight;
-						else
-							sort = true;
-
-						weight = 0;
-
-						forkCount++;
+						if (executionPathId == 0) 
+							forkCount++;
 					}
-
-					if (sort)
-						throw Error.Refactoring;
 
 					return forkCount;
 				}

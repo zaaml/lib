@@ -2,11 +2,11 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
+using System.Runtime.CompilerServices;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -16,7 +16,6 @@ namespace Zaaml.Text
 				public readonly ParserProduction ParserProduction;
 
 				public bool Busy;
-				public int ConsumeCount;
 
 				public object Result;
 
@@ -29,19 +28,14 @@ namespace Zaaml.Text
 						Arguments[index] = parserProduction.Arguments[index].CreateArgument(this);
 				}
 
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void CreateEntityInstance(ParserProcess process)
 				{
-					Result = ParserProduction.Binder.CreateInstance(this, process);
-				}
-
-				public void OnAfterConsumeValue(int entryIndex)
-				{
-					ConsumeCount++;
+					Result = ParserProduction.Binder.Bind(this, process);
 				}
 
 				public void Reset()
 				{
-					ConsumeCount = 0;
 					Result = default;
 
 					foreach (var argument in Arguments)
@@ -51,6 +45,7 @@ namespace Zaaml.Text
 						ParserProduction.ReturnEntity(this);
 				}
 
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void Return()
 				{
 					ParserProduction.ReturnEntity(this);
@@ -61,55 +56,42 @@ namespace Zaaml.Text
 					return ParserProduction.ToString();
 				}
 
-				public void UnwindLeftFactorBuilder(ProductionEntity productionEntity)
+				public void TransferValues(ProductionEntity targetEntity)
 				{
-					throw new NotImplementedException();
-					//foreach (var argument in EntityArguments) 
-					//	LeftFactor.EntityArguments[argument.ArgumentIndex].ConsumeParserValue(argument.Build());
+					foreach (var sourceArgument in Arguments)
+					{
+						var targetProductionArgument = sourceArgument.Argument.OriginalArgument;
+
+						if (targetProductionArgument == null)
+							continue;
+
+						var targetArgument = targetEntity.Arguments[targetProductionArgument.ArgumentIndex];
+
+						sourceArgument.TransferValue(targetArgument);
+					}
 				}
 
-				//[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				//public object CreateInstance(SyntaxFactory syntaxFactory)
-				//{
-				//	if (LeftFactorBuilder != null)
-				//	{
-				//		foreach (var argument in Arguments)
-				//		{
-				//			if (argument == null)
-				//				continue;
+				public ProductionEntity CreateSourceEntity()
+				{
+					var current = this;
 
-				//			var consumeValue = argument.Build();
+					while (true)
+					{
+						var sourceEntity = current.ParserProduction.SourceProduction.RentEntity();
 
-				//			LeftFactorBuilder.Arguments[argument.Index].ConsumeParserValue(consumeValue);
-				//		}
+						current.TransferValues(sourceEntity);
 
-				//		var factorInstance = LeftFactorBuilder._production.LeftFactorProduction.Binder.CreateInstanceDelegate(LeftFactorBuilder, syntaxFactory);
+						if (sourceEntity.ParserProduction.SourceProduction != null)
+						{
+							current = sourceEntity;
 
-				//		LeftFactorBuilder = null;
+							continue;
+						}
 
-				//		ConsumeCount = 0;
-				//		_pool.Return(this);
+						return sourceEntity;
+					}
 
-				//		return factorInstance;
-				//	}
-
-				//	if (_tryReturn && ConsumeCount == 1)
-				//	{
-				//		var build = Arguments[0].Build();
-
-				//		ConsumeCount = 0;
-				//		_pool.Return(this);
-
-				//		return build;
-				//	}
-
-				//	var instance = _createInstanceDelegate(this, syntaxFactory);
-
-				//	ConsumeCount = 0;
-				//	_pool.Return(this);
-
-				//	return instance;
-				//}
+				}
 			}
 		}
 	}

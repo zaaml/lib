@@ -7,13 +7,14 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
 			private abstract partial class ParserAutomataContext
 			{
-				private sealed class ExternalParserForkBranch<TExternalGrammar, TExternalToken> : PredicateEntryBase, IDisposable where TExternalGrammar : Grammar<TExternalToken> where TExternalToken : unmanaged, Enum
+				private sealed class ExternalParserForkBranch<TExternalGrammar, TExternalToken> : PredicateEntryBase, IDisposable 
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> where TExternalToken : unmanaged, Enum
 				{
 					private readonly ExternalParserResources<TExternalGrammar, TExternalToken> _externalParserResources;
 					private bool _finish;
@@ -48,8 +49,7 @@ namespace Zaaml.Text
 					{
 						if (_finish)
 						{
-							ExternalContext.InternalAutomataContext.LexemeSource.Position = ExternalContext.Offset + ExternalResult.InstructionStreamPosition;
-							ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition();
+							ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition(ExternalContext.Offset + ExternalResult.InstructionStreamPosition);
 
 							return _externalParserResources.ExternalParserForkBranchPredicateResultPool.Get().Mount(this);
 						}
@@ -62,8 +62,7 @@ namespace Zaaml.Text
 							{
 								case Automata<Lexeme<TExternalToken>, TExternalToken>.SuccessAutomataResult localResult:
 
-									ExternalContext.InternalAutomataContext.LexemeSource.Position = ExternalContext.Offset + localResult.InstructionPosition;
-									ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition();
+									ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition(ExternalContext.Offset + localResult.InstructionPosition);
 
 									return _externalParserResources.ExternalParserForkBranchPredicateResultPool.Get().Mount(this);
 
@@ -94,20 +93,22 @@ namespace Zaaml.Text
 					}
 				}
 
-				private sealed class ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> : PredicateEntryBase, IDisposable
-					where TExternalGrammar : Grammar<TExternalToken, TExternalNodeBase> where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
+				private sealed class ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode> : PredicateEntryBase, IDisposable
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+					where TExternalToken : unmanaged, Enum 
+					where TExternalNode : class
 				{
-					private readonly ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> _resources;
+					private readonly ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode> _resources;
 					private bool _popResult;
 
-					public ExternalParserForkBranch(ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> resources)
+					public ExternalParserForkBranch(ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode> resources)
 					{
 						_resources = resources;
 					}
 
 					internal override bool ConsumeResult => true;
 
-					public ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> ExternalContext { get; private set; }
+					public ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode> ExternalContext { get; private set; }
 
 					public Automata<Lexeme<TExternalToken>, TExternalToken>.ForkAutomataResult ExternalResult { get; private set; }
 
@@ -120,7 +121,7 @@ namespace Zaaml.Text
 						return ExternalContext.ExternalParserInvokeInfo.PredicateEntry;
 					}
 
-					public ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> Mount(ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> externalParserContext,
+					public ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode> Mount(ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode> externalParserContext,
 						Automata<Lexeme<TExternalToken>, TExternalToken>.ForkAutomataResult subParseResult, bool finish, bool popResult)
 					{
 						ExternalContext = externalParserContext.AddReference();
@@ -136,8 +137,7 @@ namespace Zaaml.Text
 					{
 						if (Finish)
 						{
-							ExternalContext.InternalAutomataContext.LexemeSource.Position = ExternalContext.Offset + ExternalResult.InstructionStreamPosition;
-							ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition();
+							ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition(ExternalContext.Offset + ExternalResult.InstructionStreamPosition);
 
 							return _resources.ExternalParserForkBranchPredicateResultPool.Get().Mount(this);
 						}
@@ -148,8 +148,7 @@ namespace Zaaml.Text
 						{
 							if (result is Automata<Lexeme<TExternalToken>, TExternalToken>.SuccessAutomataResult localResult)
 							{
-								ExternalContext.InternalAutomataContext.LexemeSource.Position = ExternalContext.Offset + localResult.InstructionPosition;
-								ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition();
+								ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition(ExternalContext.Offset + localResult.InstructionPosition);
 
 								return _resources.ExternalParserForkBranchPredicateResultPool.Get().Mount(this);
 							}

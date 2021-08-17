@@ -44,19 +44,21 @@ namespace Zaaml.Text
 			public readonly bool ContextEval;
 			public readonly int[] EnterReturnSubGraphs;
 			public readonly bool ForkPredicatePath;
+			public readonly bool HasPrecedenceNodes;
 			public readonly bool IsInvalid;
 			public readonly MatchEntry[] LookAheadMatch;
 			public readonly MatchEntry Match;
 			public readonly Node[] Nodes;
-			public readonly Node Output;
 			public readonly bool OutputEnd;
 			public readonly bool OutputReturn;
 			public readonly bool PassLazyNode;
+			public readonly PrecedenceNode[] PrecedenceNodes;
 			public readonly int StackDelta;
 			public readonly int StackDepth;
 			public readonly int Weight;
 			public int Id;
 			public ExecutionPath LookAheadPath;
+			public Node Output;
 			public Node PathSourceNode;
 			public PredicateEntryBase Predicate;
 			public ReferenceCounter ReferenceCount;
@@ -83,7 +85,7 @@ namespace Zaaml.Text
 
 				Weight = weight;
 
-				CalcInfo(ref Weight, out PassLazyNode, out EnterReturnSubGraphs, out StackDepth, out StackDelta, out ContextEval);
+				CalcInfo(ref Weight, out PassLazyNode, out EnterReturnSubGraphs, out PrecedenceNodes, out HasPrecedenceNodes, out StackDepth, out StackDelta, out ContextEval);
 			}
 
 			public ExecutionPath(Node pathSourceNode, Node[] route, int weight, PredicateEntryBase predicate)
@@ -100,22 +102,26 @@ namespace Zaaml.Text
 				LookAheadMatch = Array.Empty<MatchEntry>();
 				Weight = weight;
 
-				CalcInfo(ref Weight, out PassLazyNode, out EnterReturnSubGraphs, out StackDepth, out StackDelta, out ContextEval);
+				CalcInfo(ref Weight, out PassLazyNode, out EnterReturnSubGraphs, out PrecedenceNodes, out HasPrecedenceNodes, out StackDepth, out StackDelta, out ContextEval);
 			}
 
-			public ExecutionPath(IPool<ExecutionPath> forkExecutionPathPool)
+			public ExecutionPath(Automata<TInstruction, TOperand> automata, IPool<ExecutionPath> forkExecutionPathPool)
 			{
 				_forkExecutionPathPool = forkExecutionPathPool;
+
 				Nodes = new Node[1];
 				IsInvalid = false;
 				Output = IsInvalid ? null : Nodes[Nodes.Length - 1];
 				OutputReturn = Output is ReturnRuleNode;
 				OutputEnd = Output is EndRuleNode;
 				EnterReturnSubGraphs = Array.Empty<int>();
+				PrecedenceNodes = Array.Empty<PrecedenceNode>();
 				ForkPredicatePath = true;
 				ContextEval = false;
 				LookAheadMatch = Array.Empty<MatchEntry>();
 				Weight = 0;
+
+				automata.RegisterExecutionPath(this);
 			}
 
 			private string DebuggerDisplay
@@ -136,6 +142,8 @@ namespace Zaaml.Text
 				get { return string.Join("\n", Nodes.Select(n => n.ToString())); }
 			}
 
+			public bool IsForkExecutionPath => _forkExecutionPathPool != null;
+
 			public bool IsPredicate => Predicate != null;
 
 			public int PriorityIndex { get; set; }
@@ -149,7 +157,7 @@ namespace Zaaml.Text
 				return this;
 			}
 
-			private void CalcInfo(ref int weight, out bool passLazyNode, out int[] enterReturnSubGraphs, out int stackDepth, out int stackDelta, out bool contextEval)
+			private void CalcInfo(ref int weight, out bool passLazyNode, out int[] enterReturnSubGraphs, out PrecedenceNode[] precedenceNodes, out bool hasPrecedenceNodes, out int stackDepth, out int stackDelta, out bool contextEval)
 			{
 				contextEval = Predicate == null;
 				passLazyNode = false;
@@ -162,12 +170,15 @@ namespace Zaaml.Text
 						weight = 0;
 
 					enterReturnSubGraphs = Array.Empty<int>();
+					precedenceNodes = Array.Empty<PrecedenceNode>();
+					hasPrecedenceNodes = false;
 
 					return;
 				}
 
 				var flags = 0;
 				List<int> enterReturnSubGraphList = null;
+				List<PrecedenceNode> precedenceNodeList = null;
 
 				if (weight == -1)
 				{
@@ -184,12 +195,19 @@ namespace Zaaml.Text
 							stackDepth++;
 							stackDelta++;
 
-							(enterReturnSubGraphList ??= new List<int>()).Add(enterRuleNode.SubGraph.Id);
+							var rid = enterRuleNode.SubGraph.RId == -1 ? enterRuleNode.SubGraph.Id : enterRuleNode.SubGraph.RId;
+
+							(enterReturnSubGraphList ??= new List<int>()).Add(rid);
 						}
 						else if (node is ReturnRuleNode)
 						{
 							stackDelta--;
 							(enterReturnSubGraphList ??= new List<int>()).Add(-1);
+						}
+						else if (node is PrecedenceNode precedenceNode)
+						{
+							precedenceNodeList ??= new List<PrecedenceNode>();
+							precedenceNodeList.Add(precedenceNode);
 						}
 
 						if (ReferenceEquals(node, firstNode))
@@ -212,21 +230,31 @@ namespace Zaaml.Text
 						{
 							stackDepth++;
 							stackDelta++;
-							(enterReturnSubGraphList ??= new List<int>()).Add(enterRuleNode.SubGraph.Id);
+
+							var rid = enterRuleNode.SubGraph.RId == -1 ? enterRuleNode.SubGraph.Id : enterRuleNode.SubGraph.RId;
+
+							(enterReturnSubGraphList ??= new List<int>()).Add(rid);
 						}
 						else if (node is ReturnRuleNode)
 						{
 							stackDelta--;
 							(enterReturnSubGraphList ??= new List<int>()).Add(-1);
 						}
+						else if (node is PrecedenceNode precedenceNode)
+						{
+							precedenceNodeList ??= new List<PrecedenceNode>();
+							precedenceNodeList.Add(precedenceNode);
+						}
 
 						flags |= node.Flags;
 					}
 				}
 
+				precedenceNodes = precedenceNodeList != null ? precedenceNodeList.ToArray() : Array.Empty<PrecedenceNode>();
 				enterReturnSubGraphs = enterReturnSubGraphList != null ? enterReturnSubGraphList.ToArray() : Array.Empty<int>();
 
 				passLazyNode = (flags & Node.Lazy) != 0;
+				hasPrecedenceNodes = precedenceNodes.Length > 0;
 			}
 
 			private bool Equals(ExecutionPath other)
@@ -295,10 +323,29 @@ namespace Zaaml.Text
 				PathSourceNode = startNode;
 				Nodes[0] = predicate;
 				Predicate = predicate.PredicateEntry;
+				Output = predicate;
 
 				ReferenceCount.AddReference();
 
 				return this;
+			}
+
+			public void ReCalcRId(Automata<TInstruction, TOperand> automata)
+			{
+				for (var i = 0; i < EnterReturnSubGraphs.Length; i++)
+				{
+					var subGraphId = EnterReturnSubGraphs[i];
+
+					if (subGraphId is < 0 or > SubGraphIdMask)
+						continue;
+
+					var subGraph = automata._subGraphRegistry[subGraphId];
+
+					if (subGraph.RId == -1)
+						throw new InvalidOperationException();
+
+					EnterReturnSubGraphs[i] = subGraph.RId;
+				}
 			}
 
 			public void Release()

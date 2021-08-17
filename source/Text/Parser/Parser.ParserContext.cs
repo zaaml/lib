@@ -33,14 +33,14 @@ namespace Zaaml.Text
 		public abstract void Dispose();
 	}
 
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		protected virtual ParserContext CreateContext(LexemeSource<TToken> lexemeSource)
 		{
 			return null;
 		}
 
-		private protected virtual SyntaxFactory CreateSyntaxFactoryInternal()
+		private protected virtual SyntaxNodeFactory CreateSyntaxFactoryInternal()
 		{
 			return null;
 		}

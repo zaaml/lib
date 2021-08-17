@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Zaaml.Core.Utils;
 
@@ -37,7 +38,7 @@ namespace Zaaml.Core
 
 		public int Length => _length;
 
-		public Span<T> Span => _array == null ? Span<T>.Empty : new Span<T>(_array, _start, _length);
+		public readonly Span<T> Span => _array == null ? Span<T>.Empty : new Span<T>(_array, _start, _length);
 
 		public T this[int index]
 		{
@@ -59,17 +60,18 @@ namespace Zaaml.Core
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional("DEBUG")]
 		private void VerifyIndex(int index)
 		{
 			if (index < 0 || index >= _length || _length == 0)
 				throw new ArgumentOutOfRangeException(nameof(index));
 		}
 
-		internal bool IsEmpty => _array == null;
+		internal readonly bool IsEmpty => _array == null;
 
-		internal IMemorySpanAllocator<T> Allocator => _allocator;
+		internal readonly IMemorySpanAllocator<T> Allocator => _allocator;
 
-		internal T[] Array => _array;
+		internal readonly T[] Array => _array;
 
 		public void Dispose()
 		{
@@ -121,6 +123,18 @@ namespace Zaaml.Core
 			}
 		}
 
+		public readonly MemorySpan<T> Clone()
+		{
+			if (_array == null)
+				return Empty;
+
+			var clone = _allocator?.Allocate(_length) ?? new MemorySpan<T>(new T[_length], 0, _length);
+
+			Span.CopyTo(clone.Span);
+
+			return clone;
+		}
+
 		public readonly MemorySpan<T> Slice(int start)
 		{
 			if (start < 0 || start > _length)
@@ -137,9 +151,9 @@ namespace Zaaml.Core
 			return new MemorySpan<T>(_array, _start + start, length, null);
 		}
 
-		public Span<T>.Enumerator GetEnumerator() => Span.GetEnumerator();
+		public readonly Span<T>.Enumerator GetEnumerator() => Span.GetEnumerator();
 
-		public override string ToString()
+		public override readonly string ToString()
 		{
 			return $"{base.ToString()}[{_length}]";
 		}

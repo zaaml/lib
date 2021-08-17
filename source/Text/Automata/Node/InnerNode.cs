@@ -12,7 +12,7 @@ namespace Zaaml.Text
 			{
 			}
 
-			protected override string KindString => $"_inner_{Index}";
+			protected override string KindString => $"_inner";
 		}
 	}
 }

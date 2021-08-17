@@ -1,83 +1,59 @@
-﻿// <copyright file="Parser.Automata.ProductionArgumentCollection.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="Parser - Copy.Automata.ParserProduction.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
-// ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable StaticMemberInGenericType
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
-			private readonly struct ProductionArgumentCollection
+			private sealed class ProductionArgumentCollection : IReadOnlyList<ProductionArgument>
 			{
-				public string Name { get; }
-
-				public ParserProduction Production { get; }
-
-				public StringComparison ComparisonType { get; }
-
-				public ProductionArgumentCollection(string name, ParserProduction production, StringComparison comparisonType)
+				public ProductionArgumentCollection(ParserProduction parserProduction)
 				{
-					Name = name;
-					Production = production;
-					ComparisonType = comparisonType;
-					Length = 0;
-
-					for (var index = 0; index < production.Arguments.Count; index++)
-					{
-						var argument = production.Arguments[index];
-
-						if (string.Equals(name, argument.Name, comparisonType))
-							Length++;
-					}
+					ParserProduction = parserProduction;
+					Arguments = ArgumentsList.AsReadOnly();
 				}
 
-				public int Length { get; }
+				private ReadOnlyCollection<ProductionArgument> Arguments { get; }
 
-				public ProductionArgument this[int index]
+				private Dictionary<Entry, ProductionArgument> ArgumentsDictionary { get; } = new();
+
+				private List<ProductionArgument> ArgumentsList { get; } = new();
+
+				private ParserProduction ParserProduction { get; }
+
+				public void AddArgument(ProductionArgument argument)
 				{
-					get
-					{
-						var name = Name;
-
-						for (var i = 0; i < Production.Arguments.Count; i++)
-						{
-							var argument = Production.Arguments[i];
-
-							if (string.Equals(name, argument.Name, ComparisonType) == false)
-								continue;
-
-							if (index-- == 0)
-								return argument;
-						}
-
-						throw new InvalidOperationException();
-					}
+					ArgumentsList.Add(argument);
+					ArgumentsDictionary[argument.ParserEntry] = argument;
 				}
 
-				public ProductionArgument[] ToArray()
+				public bool TryGetArgument(Entry entry, out ProductionArgument productionArgument)
 				{
-					var name = Name;
-					var arguments = new ProductionArgument[Length];
-
-					var index = 0;
-
-					for (var i = 0; i < Production.Arguments.Count; i++)
-					{
-						var argument = Production.Arguments[i];
-
-						if (string.Equals(name, argument.Name, ComparisonType) == false)
-							continue;
-
-						arguments[index++] = argument;
-					}
-
-					return arguments;
+					return ArgumentsDictionary.TryGetValue(entry, out productionArgument);
 				}
+
+				public IEnumerator<ProductionArgument> GetEnumerator()
+				{
+					return Arguments.GetEnumerator();
+				}
+
+				IEnumerator IEnumerable.GetEnumerator()
+				{
+					return ((IEnumerable)Arguments).GetEnumerator();
+				}
+
+				public int Count => Arguments.Count;
+
+				public ProductionArgument this[int index] => Arguments[index];
 			}
 		}
 	}

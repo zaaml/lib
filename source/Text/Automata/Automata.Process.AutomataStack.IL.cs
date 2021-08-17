@@ -16,7 +16,7 @@ namespace Zaaml.Text
 		private protected partial class Process
 		{
 			// ReSharper disable once MemberCanBeProtected.Local
-			private sealed partial class AutomataStack
+			internal sealed partial class AutomataStack
 			{
 				[SuppressMessage("ReSharper", "StaticMemberInGenericType")]
 				internal static class ILGenerator
@@ -30,27 +30,27 @@ namespace Zaaml.Text
 					private static readonly MethodInfo PopNoRetMethodInfo = AutomataStackType.GetMethod(nameof(PopNoReturn), IPNP);
 
 					[Conditional("AUTOMATA_VERIFY_STACK")]
-					public static void EmitEnsureStackDepth(ProcessILGenerator.Context context, int stackDepth)
+					public static void EmitEnsureStackDepth(ILContext context, int stackDepth)
 					{
 						context.EmitLdStack();
 						context.IL.Emit(OpCodes.Ldc_I4, stackDepth);
 						context.IL.Emit(OpCodes.Call, EnsureDepthMethodInfo);
 					}
 
-					public static void EmitPopLeaveNode(ProcessILGenerator.Context context)
+					public static void EmitPopLeaveNode(ILContext context)
 					{
 						// stack.Pop().LeaveNode;
 						context.EmitLdStack();
 						context.IL.Emit(OpCodes.Call, PopLeaveNodeMethodInfo);
 					}
 
-					public static void EmitPopNoRet(ProcessILGenerator.Context context)
+					public static void EmitPopNoRet(ILContext context)
 					{
 						context.EmitLdStack();
 						context.IL.Emit(OpCodes.Call, PopNoRetMethodInfo);
 					}
 
-					public static void EmitPush(ProcessILGenerator.Context context, SubGraph subGraph)
+					public static void EmitPush(ILContext context, SubGraph subGraph)
 					{
 #if false
 						//stack.Push(subGraph);
@@ -62,7 +62,7 @@ namespace Zaaml.Text
 						//stack.PushId(subGraph.Id);
 
 						context.EmitLdStack();
-						context.IL.Emit(OpCodes.Ldc_I4, subGraph.Id);
+						context.IL.Emit(OpCodes.Ldc_I4, subGraph.RId);
 						context.IL.Emit(OpCodes.Call, PushIntMethodInfo);
 #endif
 					}

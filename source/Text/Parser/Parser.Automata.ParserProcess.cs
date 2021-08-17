@@ -4,13 +4,13 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Utils;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -25,7 +25,7 @@ namespace Zaaml.Text
 				public readonly Converter<Lexeme<TToken>, TToken> LexemeTokenConverter;
 				private ProductionEntity[] _productionEntityStack;
 				private int _productionEntityStackTail;
-				private SyntaxFactory _syntaxTreeFactory;
+				private SyntaxNodeFactory _syntaxTreeFactory;
 				private TextSpan _textSpan;
 
 				public ParserProcess(ParserAutomataContext context) : base(new LexemeStreamInstructionReader(context.LexemeSource), context, context.ParserAutomata.ILGenerator)
@@ -47,7 +47,6 @@ namespace Zaaml.Text
 
 					_productionEntityStack[_productionEntityStackTail - 1].Arguments[entryIndex].ConsumeValue(value);
 				}
-
 
 				protected override void Dispose()
 				{
@@ -85,6 +84,7 @@ namespace Zaaml.Text
 					_productionEntityStack[_productionEntityStackTail] = parserProduction.RentEntity();
 				}
 
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				private void EnterProduction(int productionIndex)
 				{
 					_productionEntityStack[_productionEntityStackTail] = _productions[productionIndex].RentEntity();
@@ -105,12 +105,34 @@ namespace Zaaml.Text
 					return lexeme.StartField == lexeme.EndField ? null : _textSpan.GetTextInternal(lexeme.StartField, lexeme.EndField - lexeme.StartField);
 				}
 
-				public TResult GetResult<TResult>()
+				private protected override void ConsumePredicateResult(PredicateResult predicateResult, PredicateEntryBase predicateEntry)
 				{
+					var argument = ((IParserEntry)predicateEntry.GetActualPredicateEntry()).ProductionArgument;
+
+					if (argument is not (ParserProductionArgument or LexerProductionArgument))
+						return;
+
+					var entityArgument = _productionEntityStack[_productionEntityStackTail].Arguments[argument.ArgumentIndex];
+					var result = predicateResult.GetResult();
+
+					entityArgument.ConsumeValue(result);
+				}
+
+				protected override void OnFinished()
+				{
+					base.OnFinished();
+
 					if (_productionEntityStackTail != 0)
 						throw new InvalidOperationException();
 
-					return (TResult)_productionEntityStack[0].Result;
+					Result = _productionEntityStack[0].Result;
+				}
+
+				private object Result { get; set; }
+
+				public TResult GetResult<TResult>()
+				{
+					return (TResult)Result;
 				}
 
 				private void LeaveLeftFactoringProduction(int productionIndex)
@@ -118,11 +140,13 @@ namespace Zaaml.Text
 					var postfix = _productionEntityStack[_productionEntityStackTail];
 					var prefixCount = 0;
 					var actualProduction = postfix.ParserProduction;
+					var sourceProduction = postfix.ParserProduction;
 
-					while (actualProduction.OriginalProduction != null)
+					while (sourceProduction.SourceProduction != null)
 					{
 						prefixCount++;
-						actualProduction = actualProduction.OriginalProduction;
+						sourceProduction = sourceProduction.SourceProduction;
+						actualProduction = actualProduction?.ActualProduction;
 					}
 
 					if (prefixCount == 0)
@@ -132,7 +156,7 @@ namespace Zaaml.Text
 						return;
 					}
 
-					if (_productionEntityStack[_productionEntityStackTail - prefixCount].ParserProduction == actualProduction)
+					if (_productionEntityStack[_productionEntityStackTail - prefixCount].ParserProduction == actualProduction || actualProduction == null)
 						return;
 
 					var actualEntity = actualProduction.RentEntity();
@@ -178,7 +202,7 @@ namespace Zaaml.Text
 				{
 					var tail = _productionEntityStack[_productionEntityStackTail];
 
-					if (tail.ParserProduction.OriginalProduction == null)
+					if (tail.ParserProduction.SourceProduction == null)
 					{
 						if (tail.ParserProduction.Binder is not LeftRecursionBinder)
 							tail.CreateEntityInstance(this);
@@ -186,13 +210,11 @@ namespace Zaaml.Text
 						return;
 					}
 
-					if (tail.ParserProduction.Binder is LeftRecursionBinder { Recursive: true })
+					if (tail.ParserProduction.Binder is LeftRecursionBinder { Kind: LeftRecursionBinderKind.Recurse})
 					{
-						var actualTail = LeftRecursionUnwind(tail);
-
+						var actualTail = tail.CreateSourceEntity();
 						var head = _productionEntityStack[_productionEntityStackTail - 1];
-
-						var actualHead = LeftRecursionUnwind(head);
+						var actualHead = head.ParserProduction.Binder is LeftRecursionBinder ? head.CreateSourceEntity() : head;
 
 						actualHead.CreateEntityInstance(this);
 
@@ -201,16 +223,40 @@ namespace Zaaml.Text
 						_productionEntityStack[_productionEntityStackTail - 1] = actualTail;
 						_productionEntityStack[_productionEntityStackTail] = actualHead;
 					}
-					else
+					else if (tail.ParserProduction.Binder is LeftRecursionBinder { Kind: LeftRecursionBinderKind.Tail})
 					{
-						var actualTail = LeftRecursionUnwind(tail);
+						var actualTail = tail.CreateSourceEntity();
+
+						while (actualTail.ParserProduction.SourceProduction != null) 
+							actualTail = actualTail.CreateSourceEntity();
 
 						actualTail.CreateEntityInstance(this);
 
 						_productionEntityStack[_productionEntityStackTail] = actualTail;
 					}
+					else if (tail.ParserProduction.Binder is LeftRecursionBinder { Kind: LeftRecursionBinderKind.Indirect })
+					{
+						var sourceEntity = tail.ParserProduction.SourceProduction.RentEntity();
+
+						tail.TransferValues(sourceEntity);
+
+						sourceEntity.CreateEntityInstance(this);
+
+						var actualEntity = tail.ParserProduction.ActualProduction.RentEntity();
+
+						sourceEntity.TransferValues(actualEntity);
+
+						actualEntity.Arguments[0].ConsumeValue(sourceEntity.Result);
+
+						sourceEntity.Return();
+
+						actualEntity.CreateEntityInstance(this);
+
+						_productionEntityStack[_productionEntityStackTail] = actualEntity;
+					}
 				}
 
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				private void LeaveProduction(int productionIndex)
 				{
 					_productionEntityStack[_productionEntityStackTail].CreateEntityInstance(this);
@@ -219,25 +265,6 @@ namespace Zaaml.Text
 				private void LeaveRuleEntry()
 				{
 					_productionEntityStack[_productionEntityStackTail--].Return();
-				}
-
-				private ProductionEntity LeftRecursionUnwind(ProductionEntity recursionEntity)
-				{
-					var actualEntity = recursionEntity.ParserProduction.OriginalProduction.RentEntity();
-
-					foreach (var tailArgument in recursionEntity.Arguments)
-					{
-						var actualArgument = actualEntity.Arguments[tailArgument.Argument.OriginalArgument.ArgumentIndex];
-
-						tailArgument.TransferValue(actualArgument);
-					}
-
-					return actualEntity;
-				}
-
-				private void OnAfterConsumeValue(int entryIndex)
-				{
-					_productionEntityStack[_productionEntityStackTail].OnAfterConsumeValue(entryIndex);
 				}
 
 				private ProductionEntity PeekProductionEntity()

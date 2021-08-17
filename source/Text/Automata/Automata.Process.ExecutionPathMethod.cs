@@ -2,27 +2,42 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Runtime.CompilerServices;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		private protected sealed class ExecutionPathMethod
+		private protected partial class Process
 		{
-			private readonly object[] _closure;
-			private readonly Func<Process, object[], Node> _delegate;
+			private static readonly ExecutionPathMethodDelegate ExecuteForkPathDelegate = ExecuteForkPath;
 
-			public ExecutionPathMethod(ExecutionPathMethodKind kind, Process.ProcessILGenerator builder, ExecutionPath executionPath)
-			{
-				_delegate = builder.Build(kind, executionPath, out _closure);
-			}
+			internal delegate Node ExecutionPathMethodDelegate(Process process, ref Thread thread, ref ThreadContext threadContext, object[] closure);
 
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public Node Execute(Process process)
+			internal sealed class ExecutionPathMethod
 			{
-				return _delegate(process, _closure);
+				private readonly object[] _closure;
+				private readonly ExecutionPathMethodDelegate _delegate;
+
+				public ExecutionPathMethod(ExecutionPathMethodKind kind, ProcessILGenerator builder, ExecutionPath executionPath)
+				{
+					Kind = kind;
+					ExecutionPath = executionPath;
+			
+					_delegate = ExecutionPath.IsForkExecutionPath ? ExecuteForkPathDelegate : builder.Build(kind, executionPath, out _closure);
+
+					if (ExecutionPath.IsForkExecutionPath)
+						_closure = new object[] { this };
+				}
+
+				public ExecutionPath ExecutionPath { get; }
+				public ExecutionPathMethodKind Kind { get; }
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public Node Execute(Process process, ref Thread thread, ref ThreadContext threadContext)
+				{
+					return _delegate(process, ref thread, ref threadContext, _closure);
+				}
 			}
 		}
 	}

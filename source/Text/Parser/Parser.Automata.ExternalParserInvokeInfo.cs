@@ -4,25 +4,29 @@
 
 using System;
 using System.Linq;
+using Zaaml.Core.Reflection;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
-			private class ExternalParserInvokeInfo<TExternalGrammar, TExternalToken> where TExternalGrammar : Grammar<TExternalToken> where TExternalToken : unmanaged, Enum
+			private class ExternalParserInvokeInfo<TExternalGrammar, TExternalToken> 
+				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> where TExternalToken : unmanaged, Enum
 			{
 				public readonly Lexer<TExternalToken> Lexer;
 				public readonly Parser<TExternalGrammar, TExternalToken> Parser;
 				public readonly ParserPredicateEntry PredicateEntry;
-				public readonly Grammar<TExternalToken>.ParserRule Rule;
+				public readonly Grammar<TExternalGrammar, TExternalToken>.ParserGrammar.NodeSyntax SyntaxNode;
 
-				public ExternalParserInvokeInfo(Grammar<TToken>.ExternalParserEntry<TExternalToken> parserSubAutomataEntry)
+				public ExternalParserInvokeInfo(Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol<TExternalGrammar, TExternalToken> parserSubAutomataEntry)
 				{
-					Rule = parserSubAutomataEntry.ExternalParserRule;
-					Parser = (Parser<TExternalGrammar, TExternalToken>)Rule.Grammar.GetType().GetProperties().SingleOrDefault(p => typeof(Parser<TExternalGrammar, TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
-					Lexer = (Lexer<TExternalToken>)Rule.Grammar.GetType().GetProperties().SingleOrDefault(p => typeof(Lexer<TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
+					SyntaxNode = parserSubAutomataEntry.ExternalParserNode;
+
+					var grammarType = typeof(TGrammar);
+					Parser = (Parser<TExternalGrammar, TExternalToken>)parserSubAutomataEntry.ExternalGrammarType.GetProperties(BF.SPNP).SingleOrDefault(p => typeof(Parser<TExternalGrammar, TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
+					Lexer = (Lexer<TExternalGrammar, TExternalToken>)parserSubAutomataEntry.ExternalGrammarType.GetProperties(BF.SPNP).SingleOrDefault(p => typeof(Lexer<TExternalGrammar, TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
 
 					if (Parser == null)
 						throw new InvalidOperationException("Parser instance is null.");
@@ -41,23 +45,21 @@ namespace Zaaml.Text
 				}
 			}
 
-			private class ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> where TExternalGrammar : Grammar<TExternalToken, TExternalNodeBase>
+			private class ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode> 
+				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
 				where TExternalToken : unmanaged, Enum
-				where TExternalNode : TExternalNodeBase
-				where TExternalNodeBase : class
+				where TExternalNode : class
 			{
 				public readonly Lexer<TExternalToken> Lexer;
-				public readonly Parser<TExternalGrammar, TExternalToken, TExternalNodeBase> Parser;
+				public readonly Parser<TExternalGrammar, TExternalToken> Parser;
 				public readonly ParserPredicateEntry<TExternalNode> PredicateEntry;
-				public readonly Grammar<TExternalToken>.ParserRule Rule;
+				public readonly Grammar<TExternalGrammar, TExternalToken>.ParserGrammar.NodeSyntax SyntaxNode;
 
-				public ExternalParserInvokeInfo(Grammar<TToken>.ExternalParserEntry<TExternalToken, TExternalNode, TExternalNodeBase> externalGrammarEntry)
+				public ExternalParserInvokeInfo(Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol<TExternalGrammar, TExternalToken, TExternalNode> externalGrammarEntry)
 				{
-					Rule = externalGrammarEntry.ExternalParserRule;
-					Parser = (Parser<TExternalGrammar, TExternalToken, TExternalNodeBase>)Rule.Grammar.GetType().GetProperties()
-						.SingleOrDefault(p => typeof(Parser<TExternalGrammar, TExternalToken, TExternalNodeBase>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
-
-					Lexer = (Lexer<TExternalToken>)Rule.Grammar.GetType().GetProperties().SingleOrDefault(p => typeof(Lexer<TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
+					SyntaxNode = externalGrammarEntry.ExternalParserNode;
+					Parser = (Parser<TExternalGrammar, TExternalToken>)SyntaxNode.Grammar.GetType().GetProperties(BF.SPNP).SingleOrDefault(p => typeof(Parser<TExternalGrammar, TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
+					Lexer = (Lexer<TExternalToken>)SyntaxNode.Grammar.GetType().GetProperties(BF.SPNP).SingleOrDefault(p => typeof(Lexer<TExternalToken>).IsAssignableFrom(p.PropertyType))?.GetValue(null);
 
 					if (Parser == null)
 						throw new InvalidOperationException("Parser instance is null.");

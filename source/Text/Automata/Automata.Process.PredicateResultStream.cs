@@ -13,7 +13,7 @@ namespace Zaaml.Text
 	{
 		partial class Process
 		{
-			private sealed class PredicateResultStream : PoolSharedObject<PredicateResultStream>
+			internal sealed class PredicateResultStream : PoolSharedObject<PredicateResultStream>
 			{
 				private readonly MemorySpanAllocator<PredicateResult> _memorySpanAllocator;
 				private MemorySpan<PredicateResult> _predicateResultMemorySpan;

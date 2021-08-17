@@ -17,11 +17,9 @@ namespace Zaaml.Text
 					TextSourceSpan = textSourceSpan;
 				}
 
-				public abstract int TextPointer { get; set; }
-
 				public TextSpan TextSourceSpan { get; }
 
-				public abstract int Run(Lexeme<TToken>[] lexemes, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes);
+				public abstract int Run(ref int textPointer, Lexeme<TToken>[] lexemes, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes);
 
 				public abstract void Dispose();
 			}

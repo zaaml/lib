@@ -8,7 +8,7 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -16,16 +16,16 @@ namespace Zaaml.Text
 			{
 				private abstract class ExternalParserContext : IDisposable
 				{
-					private ReferenceCounter ReferenceCount { get; }
+					private ReferenceCounter _referenceCount;
 
 					protected void AddReferenceCore()
 					{
-						ReferenceCount.AddReference();
+						_referenceCount.AddReference();
 					}
 
 					protected void ReleaseReferenceCore()
 					{
-						if (ReferenceCount.ReleaseReference() == 0)
+						if (_referenceCount.ReleaseReference() == 0)
 							Dispose();
 					}
 
@@ -33,7 +33,8 @@ namespace Zaaml.Text
 				}
 
 				private sealed class ExternalParserContext<TExternalGrammar, TExternalToken> : ExternalParserContext
-					where TExternalGrammar : Grammar<TExternalToken> where TExternalToken : unmanaged, Enum
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+					where TExternalToken : unmanaged, Enum
 				{
 					private readonly ExternalParserResources<TExternalGrammar, TExternalToken> _resources;
 
@@ -94,12 +95,14 @@ namespace Zaaml.Text
 					}
 				}
 
-				private sealed class ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> : ExternalParserContext
-					where TExternalGrammar : Grammar<TExternalToken, TExternalNodeBase> where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
+				private sealed class ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode> : ExternalParserContext
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> 
+					where TExternalToken : unmanaged, Enum 
+					where TExternalNode : class
 				{
-					private readonly ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> _resources;
+					private readonly ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode> _resources;
 
-					public ExternalParserContext(ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> resources)
+					public ExternalParserContext(ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode> resources)
 					{
 						_resources = resources;
 					}
@@ -108,7 +111,7 @@ namespace Zaaml.Text
 
 					private ParserContext ExternalContext { get; set; }
 
-					public ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> ExternalParserInvokeInfo { get; private set; }
+					public ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode> ExternalParserInvokeInfo { get; private set; }
 
 					private Automata<Lexeme<TExternalToken>, TExternalToken>.AutomataResult ExternalResult { get; set; }
 
@@ -118,7 +121,7 @@ namespace Zaaml.Text
 
 					public int Offset { get; private set; }
 
-					public ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> AddReference()
+					public ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode> AddReference()
 					{
 						AddReferenceCore();
 
@@ -134,8 +137,8 @@ namespace Zaaml.Text
 						_resources.ExternalParserContextPool.Release(this);
 					}
 
-					public ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> Mount(ParserAutomataContext parserAutomataContext,
-						ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> externalParserInvokeInfo,
+					public ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode> Mount(ParserAutomataContext parserAutomataContext,
+						ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode> externalParserInvokeInfo,
 						LexemeSource<TExternalToken> lexemeSource, int offset,
 						ParserContext externalContext,
 						Parser<TExternalGrammar, TExternalToken>.ParserAutomata.SyntaxTreeAutomataContext externalAutomataContext, Automata<Lexeme<TExternalToken>, TExternalToken>.AutomataResult externalResult)

@@ -2,15 +2,19 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
+
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
 			private interface IParserPredicate
 			{
 				ParserPredicateKind PredicateKind { get; }
+
+				Type ResultType { get; }
 			}
 		}
 	}

@@ -32,7 +32,7 @@ namespace Zaaml.Text
 			var id = _nodeRegistry.Count;
 
 			_nodeRegistry.Add(node);
-
+			
 			return id;
 		}
 
@@ -42,11 +42,12 @@ namespace Zaaml.Text
 			public const int EnterReturn = 1;
 			public const int Lazy = 2;
 
-			private readonly Automata<TInstruction, TOperand> _automata;
+			public Automata<TInstruction, TOperand> Automata;
 			public readonly int Flags;
 			public readonly Graph Graph;
 			public readonly int Id;
 			public readonly ThreadStatusKind ThreadStatusKind;
+			private readonly Dictionary<Process.AutomataStack, Process.Thread.Dfa> _dfaDictionary = new(Process.AutomataStack.EqualityComparer);
 			private volatile bool _buildingReturnPath;
 			private volatile ExecutionPathLookup _executionPathLookup;
 			private volatile ExecutionPath[] _executionPaths;
@@ -61,11 +62,13 @@ namespace Zaaml.Text
 			private protected Node(ThreadStatusKind threadStatusKind)
 			{
 				Debug.Assert(threadStatusKind == ThreadStatusKind.Unexpected);
+
+				ThreadStatusKind = ThreadStatusKind.Unexpected;
 			}
 
 			private Node(Automata<TInstruction, TOperand> automata, ThreadStatusKind threadStatusKind = ThreadStatusKind.Run)
 			{
-				_automata = automata;
+				Automata = automata;
 
 				Id = automata.RegisterNode(this);
 
@@ -84,6 +87,23 @@ namespace Zaaml.Text
 				Graph?.AddNode(this);
 			}
 
+			public Process.Thread.Dfa GetDfaThread(Process.AutomataStack stack)
+			{
+				lock (_dfaDictionary)
+				{
+					if (_dfaDictionary.TryGetValue(stack, out var dfa))
+						return dfa;
+
+					var dfaStack = stack.CreateDfaStack(Automata._dfaAllocator);
+
+					dfa = new Process.Thread.Dfa(this, dfaStack);
+
+					_dfaDictionary.Add(dfaStack, dfa);
+
+					return dfa;
+				}
+			}
+
 			private ExecutionPathLookup ExecutionPathLookup
 			{
 				get
@@ -96,7 +116,7 @@ namespace Zaaml.Text
 						if (_executionPathLookup != null)
 							return _executionPathLookup;
 
-						_executionPathLookup = new ExecutionPathLookup(_automata, BuildExecutionGraph());
+						_executionPathLookup = new ExecutionPathLookup(Automata, BuildExecutionGraph());
 					}
 
 					return _executionPathLookup;
@@ -124,13 +144,11 @@ namespace Zaaml.Text
 
 			public bool HasReturn => Safe ? HasReturnPathSafe : ReturnPaths.Length > 0;
 
-			public int Index { get; set; }
-
 			public List<Edge> InEdges { get; } = new();
 
 			protected abstract string KindString { get; }
 
-			private bool LookAheadEnabled => _automata.LookAheadEnabled;
+			private bool LookAheadEnabled => Automata.LookAheadEnabled;
 
 			[UsedImplicitly]
 			public string Name => Graph != null ? Graph.Rule.Name + KindString : KindString;
@@ -236,10 +254,10 @@ namespace Zaaml.Text
 
 				foreach (var executionPath in executionPaths)
 				{
-					_automata.RegisterExecutionPath(executionPath);
+					Automata.RegisterExecutionPath(executionPath);
 
 					if (executionPath.LookAheadPath != null)
-						_automata.RegisterExecutionPath(executionPath.LookAheadPath);
+						Automata.RegisterExecutionPath(executionPath.LookAheadPath);
 				}
 
 				_finalExecutionPaths = executionPaths;
@@ -247,12 +265,27 @@ namespace Zaaml.Text
 				return _finalExecutionPaths;
 			}
 
+			public void ReCalcRId(Automata<TInstruction, TOperand> automata)
+			{
+				if (_executionPaths != null)
+				{
+					foreach (var executionPath in _executionPaths) 
+						executionPath.ReCalcRId(automata);
+				}
+
+				if (_returnPaths != null)
+				{
+					foreach (var executionPath in _returnPaths) 
+						executionPath.ReCalcRId(automata);
+				}
+			}
+
 			private ExecutionPath[] BuildReturnPath()
 			{
 				var returnPaths = EnumerateReturnPaths().ToArray();
 
 				foreach (var returnPath in returnPaths)
-					_automata.RegisterExecutionPath(returnPath);
+					Automata.RegisterExecutionPath(returnPath);
 
 				return returnPaths;
 			}
@@ -449,7 +482,7 @@ namespace Zaaml.Text
 					}
 				}
 
-				return result.Concat(ReturnPaths).ToArray();
+				return result.Concat(ReturnPaths.Reverse()).ToArray();
 			}
 
 			private List<ExecutionPath> EnumerateReturnPaths()

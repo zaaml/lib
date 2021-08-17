@@ -6,34 +6,19 @@ namespace Zaaml.Text
 {
 	internal class CharRangeEntry : CharSetEntry
 	{
-		#region Ctors
-
-		public CharRangeEntry(char minChar, char maxChar)
+		public CharRangeEntry(CharEntry min, CharEntry max)
 		{
-			MinChar = minChar;
-			MaxChar = maxChar;
+			Min = min;
+			Max = max;
 		}
 
-		public CharRangeEntry(char minChar, bool minCharUnicode, char maxChar, bool maxCharUnicode)
+		public CharEntry Max { get; }
+
+		public CharEntry Min { get; }
+
+		public override string Format(bool set)
 		{
-			MinChar = minChar;
-			MinCharUnicode = minCharUnicode;
-			MaxChar = maxChar;
-			MaxCharUnicode = maxCharUnicode;
+			return set ? $"{Min.Format(true)}-{Max.Format(true)}" : $"{Min.Format(false)}..{Max.Format(false)}";
 		}
-
-		#endregion
-
-		#region Properties
-
-		public char MaxChar { get; }
-
-		public bool MaxCharUnicode { get; }
-
-		public char MinChar { get; }
-
-		public bool MinCharUnicode { get; }
-
-		#endregion
 	}
 }

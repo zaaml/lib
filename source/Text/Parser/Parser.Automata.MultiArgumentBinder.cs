@@ -11,7 +11,7 @@ using System.Reflection.Emit;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -27,9 +27,9 @@ namespace Zaaml.Text
 						ProductionArguments[i].Bind(this);
 				}
 
-				public ProductionArgument[] ProductionArguments { get; }
-
 				public override bool ConsumeValue => true;
+
+				public ProductionArgument[] ProductionArguments { get; }
 
 				public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
 				{

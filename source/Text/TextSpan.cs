@@ -132,7 +132,7 @@ namespace Zaaml.Text
 			if (start < 0 || start + length > Length)
 				throw new ArgumentOutOfRangeException();
 
-			return new TextSpan(TextSource, TextString, start, length);
+			return new TextSpan(TextSource, TextString, StartIndex + start, length);
 		}
 
 		public TextSpan Slice(int start)
@@ -140,7 +140,7 @@ namespace Zaaml.Text
 			if (start < 0 || start > Length)
 				throw new ArgumentOutOfRangeException();
 
-			return new TextSpan(TextSource, TextString, start, Length - start);
+			return new TextSpan(TextSource, TextString, StartIndex + start, Length - start);
 		}
 
 		public bool IsEmpty => StartIndex == -1;
@@ -281,7 +281,20 @@ namespace Zaaml.Text
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(StartIndex, Length, TextSource, TextString);
+			unchecked
+			{
+				var hashCode = StartIndex.GetHashCode();
+				
+				hashCode = (hashCode * 397) ^ Length.GetHashCode();
+
+				if (TextSource != null)
+					hashCode = (hashCode * 397) ^ TextSource.GetHashCode();
+
+				if (TextString != null)
+					hashCode = (hashCode * 397) ^ TextString.GetHashCode();
+
+				return hashCode;
+			}
 		}
 	}
 }

@@ -5,12 +5,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Zaaml.Core;
 
 // ReSharper disable StaticMemberInGenericType
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -57,7 +58,9 @@ namespace Zaaml.Text
 
 				public TextSpan TextSourceSpan { get; }
 
-				public bool CallExternalLexer<TExternalToken>(ExternalLexerInvokeInfo<TExternalToken> invokeInfo, out Lexeme<TExternalToken> result) where TExternalToken : unmanaged, Enum
+				public bool CallExternalLexer<TExternalGrammar, TExternalToken>(ExternalLexerInvokeInfo<TExternalGrammar, TExternalToken> invokeInfo, out Lexeme<TExternalToken> result)
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+					where TExternalToken : unmanaged, Enum 
 				{
 					var offset = TextPosition;
 					var textSource = LexemeSource.TextSourceSpan.Slice(offset);
@@ -72,18 +75,19 @@ namespace Zaaml.Text
 						if (enumerator.MoveNext() == false)
 							return false;
 
-						if (lexer.GetIntValue(result.Token) != lexer.GetIntValue(invokeInfo.Rule.Token))
-							return false;
+						throw Error.Refactoring;
+						//if (lexer.GetIntValue(result.Token) != lexer.GetIntValue(invokeInfo.SyntaxToken.Token))
+						//	return false;
 
-						result = enumerator.Current;
-						result.StartField += offset;
-						result.EndField += offset;
+						//result = enumerator.Current;
+						//result.StartField += offset;
+						//result.EndField += offset;
 
-						LexemeSource.Position = offset + result.End - result.Start;
+						//LexemeSource.Position = offset + result.End - result.Start;
 
-						Process.AdvanceInstructionPosition();
+						//Process.AdvanceInstructionPosition();
 
-						return true;
+						//return true;
 					}
 					catch
 					{
@@ -97,14 +101,15 @@ namespace Zaaml.Text
 				}
 
 				public PredicateResult CallExternalParser<TExternalGrammar, TExternalToken>(ExternalParserInvokeInfo<TExternalGrammar, TExternalToken> invokeInfo)
-					where TExternalGrammar : Grammar<TExternalToken> where TExternalToken : unmanaged, Enum
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+					where TExternalToken : unmanaged, Enum
 				{
 					var offset = TextPosition;
 					var textSource = LexemeSource.TextSourceSpan.Slice(offset);
 					var externalAutomata = invokeInfo.Parser.Automata;
 					var lexemeSource = invokeInfo.Lexer.GetLexemeSource(textSource);
 					var externalContext = invokeInfo.Parser.CreateContext(lexemeSource);
-					var externalAutomataContext = externalAutomata.CreateProcessContext(invokeInfo.Rule, lexemeSource, externalContext, ProcessKind.SubProcess, invokeInfo.Parser);
+					var externalAutomataContext = externalAutomata.CreateProcessContext(invokeInfo.SyntaxNode, lexemeSource, externalContext, ProcessKind.SubProcess, invokeInfo.Parser);
 					var externalResult = externalAutomataContext.Process.Run();
 					var poolCollection = GetExternalParserResources<TExternalGrammar, TExternalToken>();
 					var callSubParserContext = poolCollection.ExternalParserContextPool.Get().Mount(this, invokeInfo, lexemeSource, offset, externalContext, externalAutomataContext, externalResult);
@@ -113,9 +118,7 @@ namespace Zaaml.Text
 					{
 						if (externalResult is Automata<Lexeme<TExternalToken>, TExternalToken>.SuccessAutomataResult successAutomataResult)
 						{
-							LexemeSource.Position = offset + successAutomataResult.InstructionPosition;
-
-							Process.AdvanceInstructionPosition();
+							Process.AdvanceInstructionPosition(offset + successAutomataResult.InstructionPosition);
 
 							return poolCollection.ExternalParserPredicateResultPool.Get().Mount(null);
 						}
@@ -139,27 +142,27 @@ namespace Zaaml.Text
 					}
 				}
 
-				public PredicateResult<TExternalNode> CallValueExternalParser<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>(
-					ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> invokeInfo)
-					where TExternalGrammar : Grammar<TExternalToken, TExternalNodeBase> where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
+				public PredicateResult<TExternalNode> CallValueExternalParser<TExternalGrammar, TExternalToken, TExternalNode>(
+					ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode> invokeInfo)
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> 
+					where TExternalToken : unmanaged, Enum 
+					where TExternalNode :  class
 				{
 					var offset = TextPosition;
-					var textSource = LexemeSource.TextSourceSpan.Slice(offset);
+					var textSource = TextSourceSpan.Slice(offset);
 					var subAutomata = invokeInfo.Parser.Automata;
 					var lexemeSource = invokeInfo.Lexer.GetLexemeSource(textSource);
 					var externalContext = invokeInfo.Parser.CreateContext(lexemeSource);
-					var externalAutomataContext = subAutomata.CreateSyntaxTreeContext(invokeInfo.Rule, lexemeSource, externalContext, ProcessKind.SubProcess, invokeInfo.Parser);
+					var externalAutomataContext = subAutomata.CreateSyntaxTreeContext(invokeInfo.SyntaxNode, lexemeSource, externalContext, ProcessKind.SubProcess, invokeInfo.Parser);
 					var externalResult = externalAutomataContext.Process.Run();
-					var poolCollection = GetExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>();
+					var poolCollection = GetExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode>();
 					var externalParserContext = poolCollection.ExternalParserContextPool.Get().Mount(this, invokeInfo, lexemeSource, offset, externalContext, externalAutomataContext, externalResult);
 
 					try
 					{
 						if (externalResult is Automata<Lexeme<TExternalToken>, TExternalToken>.SuccessAutomataResult successAutomataResult)
 						{
-							LexemeSource.Position = offset + successAutomataResult.InstructionPosition;
-
-							Process.AdvanceInstructionPosition();
+							Process.AdvanceInstructionPosition(offset + successAutomataResult.InstructionPosition);
 
 							return poolCollection.ExternalParserPredicateResultPool.Get().Mount(externalAutomataContext.GetResult<TExternalNode>());
 						}
@@ -189,15 +192,17 @@ namespace Zaaml.Text
 				}
 
 				private ExternalParserResources<TExternalGrammar, TExternalToken> GetExternalParserResources<TExternalGrammar, TExternalToken>()
-					where TExternalGrammar : Grammar<TExternalToken> where TExternalToken : unmanaged, Enum
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> where TExternalToken : unmanaged, Enum
 				{
 					return GetExternalParserResources<ExternalParserResources<TExternalGrammar, TExternalToken>>();
 				}
 
-				private ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> GetExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>()
-					where TExternalGrammar : Grammar<TExternalToken, TExternalNodeBase> where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
+				private ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode> GetExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode>()
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> 
+					where TExternalToken : unmanaged, Enum
+					where TExternalNode : class
 				{
-					return GetExternalParserResources<ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>>();
+					return GetExternalParserResources<ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode>>();
 				}
 
 				private T GetExternalParserResources<T>() where T : ExternalParserResources, new()
@@ -228,12 +233,7 @@ namespace Zaaml.Text
 				int IParserAutomataContextInterface.TextPosition
 				{
 					get => TextPosition;
-					set
-					{
-						LexemeSource.Position = value;
-
-						Process.AdvanceInstructionPosition();
-					}
+					set => Process.AdvanceInstructionPosition(value);
 				}
 			}
 		}

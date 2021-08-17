@@ -4,15 +4,15 @@
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
 			private sealed class ParserRule : Rule
 			{
-				public ParserRule(string name, bool inline) : base(name)
+				public ParserRule(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax) : base(parserSyntax.Name)
 				{
-					Inline = inline;
+					Inline = parserSyntax is Grammar<TGrammar, TToken>.ParserGrammar.FragmentSyntax;
 				}
 			}
 		}

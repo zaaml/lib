@@ -4,62 +4,67 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Zaaml.Text
 {
 	internal class CharSet
 	{
-		#region Ctors
-
 		public CharSet(CharSetEntry[] entries, bool except = false)
 		{
 			Entries = entries;
 			Except = except;
 		}
 
-		#endregion
-
-		#region Properties
-
 		public CharSetEntry[] Entries { get; }
 
 		public bool Except { get; }
 
-		#endregion
+		public bool IsPrimitive => Except == false && Entries.Length == 1;
 
-		#region Methods
-
-		private static char GetEscapeChar(char escape)
+		private static char GetMinChar(CharSetEntry entry)
 		{
-			switch (escape)
-			{
-				case 'a': return '\a';
-				case 'b': return '\b';
-				case 'f': return '\f';
-				case 'n': return '\n';
-				case 'r': return '\r';
-				case 't': return '\t';
-				case 'v': return '\v';
-				case '\\': return '\\';
-				case '-': return '-';
-				case '\'': return '\'';
-			}
+			if (entry is CharRangeEntry range)
+				return range.Min.Char;
 
-			throw new ArgumentOutOfRangeException(nameof(escape));
+			return ((CharEntry)entry).Char;
 		}
 
-		private static int HexCharToDecimal(char c)
+		public CharSet Inverse()
 		{
-			if (c >= '0' && c <= '9')
-				return c - '0';
+			var listRanges = new List<CharSetEntry>();
+			var current = char.MinValue;
 
-			if (c >= 'a' && c <= 'f')
-				return c - 'a' + 10;
+			foreach (var entry in Entries.OrderBy(GetMinChar))
+			{
+				if (entry is CharRangeEntry range)
+				{
+					if (range.Min.Char > current)
+					{
+						var next = (char)(range.Min.Char - 1);
 
-			if (c >= 'A' && c <= 'F')
-				return c - 'A' + 10;
+						if (current < next)
+							listRanges.Add(new CharRangeEntry(new CharEntry(current), new CharEntry(next)));
+					}
 
-			return -1;
+					current = (char)(range.Max.Char + 1);
+
+					continue;
+				}
+
+				var charEntry = (CharEntry)entry;
+				var prev = (char)(charEntry.Char - 1);
+
+				if (current < prev)
+					listRanges.Add(new CharRangeEntry(new CharEntry(current), new CharEntry(prev)));
+
+				current = (char)(charEntry.Char + 1);
+			}
+
+			if (current < char.MaxValue)
+				listRanges.Add(new CharRangeEntry(new CharEntry(current), new CharEntry(char.MaxValue)));
+
+			return new CharSet(listRanges.ToArray(), !Except);
 		}
 
 		public static CharSet Parse(string charSetString)
@@ -73,15 +78,15 @@ namespace Zaaml.Text
 
 			while (index < endIndex)
 			{
-				var c = ParseChar(charSetString, endIndex, ref index, out var cu);
+				var c = CharEntry.ParseChar(charSetString, endIndex, ref index, out var cu);
 
 				if (charSetString[index] == '-')
 				{
 					index++;
 
-					var next = ParseChar(charSetString, endIndex, ref index, out var ncu);
+					var next = CharEntry.ParseChar(charSetString, endIndex, ref index, out var ncu);
 
-					entriesList.Add(new CharRangeEntry(c, cu, next, ncu));
+					entriesList.Add(new CharRangeEntry(new CharEntry(c, cu), new CharEntry(next, ncu)));
 				}
 				else
 					entriesList.Add(new CharEntry(c, cu));
@@ -89,67 +94,5 @@ namespace Zaaml.Text
 
 			return new CharSet(entriesList.ToArray());
 		}
-
-		public static char ParseChar(string charStr, out bool unicode)
-		{
-			var index = 0;
-
-			return ParseChar(charStr, charStr.Length, ref index, out unicode);
-		}
-
-		private static char ParseChar(string charSetString, int endIndex, ref int index, out bool unicode)
-		{
-			var c = charSetString[index];
-
-			if (c == '\\')
-			{
-				if (index + 1 >= endIndex)
-					throw new InvalidOperationException();
-
-				var nextChar = charSetString[++index];
-
-				if (nextChar == 'u')
-				{
-					var unicodeDigitCounter = 0;
-					var decimalValue = 0;
-
-					while (index + 1 < endIndex)
-					{
-						var decVal = HexCharToDecimal(charSetString[index + 1]);
-
-						if (decVal == -1)
-							break;
-
-						decimalValue = (decimalValue << 4) + decVal;
-
-						unicodeDigitCounter++;
-						index++;
-					}
-
-					if (unicodeDigitCounter > 4)
-						throw new InvalidOperationException();
-
-					index++;
-
-					unicode = true;
-
-					return (char) decimalValue;
-				}
-
-				index++;
-
-				unicode = false;
-
-				return GetEscapeChar(nextChar);
-			}
-
-			index++;
-
-			unicode = false;
-
-			return c;
-		}
-
-		#endregion
 	}
 }

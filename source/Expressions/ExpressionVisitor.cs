@@ -58,7 +58,7 @@ namespace Zaaml.Expressions
 			return Compiler.CompileParameter(factorParameter.Identifier);
 		}
 
-		public override Expression VisitNumberDouble(NumberDoubleNode numberDouble)
+		public override Expression VisitNumber(NumberNode numberDouble)
 		{
 			return Compiler.CompileConstant(numberDouble.Double);
 		}

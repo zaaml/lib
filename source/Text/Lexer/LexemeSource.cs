@@ -18,8 +18,6 @@ namespace Zaaml.Text
 			ServiceProvider = serviceProvider;
 		}
 
-		internal abstract int Position { get; set; }
-
 		public IServiceProvider ServiceProvider { get; }
 
 		public TextSpan TextSourceSpan { get; }
@@ -36,12 +34,12 @@ namespace Zaaml.Text
 			return TextSourceSpan.GetText(lexeme.Start, lexeme.End - lexeme.Start);
 		}
 
-		internal int Read(Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes)
+		internal int Read(ref int position, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes)
 		{
-			return ReadCore(lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, skipLexemes);
+			return ReadCore(ref position, lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, skipLexemes);
 		}
 
-		protected abstract int ReadCore(Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes);
+		protected abstract int ReadCore(ref int position, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes);
 
 		public Lexeme<TToken>[] ToArray()
 		{

@@ -2,124 +2,63 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Zaaml.Text
 {
-	internal partial class Grammar<TToken> where TToken : unmanaged, Enum
+	internal abstract partial class Grammar<TGrammar, TToken>
 	{
-		protected static readonly List<TokenFragment> CreatedTokenFragments = new();
-		protected static readonly List<TokenRule> CreatedTokenRules = new();
-		protected static readonly List<ParserFragment> CreatedParserFragments = new();
-		protected static readonly List<ParserRule> CreatedParserRules = new();
+		internal IEnumerable<LexerGrammar.FragmentSyntax> LexerSyntaxFragmentCollection => LexerGrammar.FragmentSyntaxCollection;
 
-		protected static RangeEntry Any { get; } = new(char.MinValue, char.MaxValue);
+		internal IEnumerable<LexerGrammar.TokenSyntax> LexerSyntaxTokenCollection => LexerGrammar.TokenSyntaxCollection;
 
-		protected static TokenFragment CreateTokenFragment([CallerMemberName] string name = null)
+		internal IEnumerable<LexerGrammar.TriviaSyntax> LexerSyntaxTriviaCollection => LexerGrammar.TriviaSyntaxCollection;
+
+		public partial class LexerGrammar
 		{
-			var tokenFragment = new TokenFragment
+			private static readonly Dictionary<string, FragmentSyntax> FragmentSyntaxDictionary = new();
+			private static readonly Dictionary<string, TriviaSyntax> TriviaSyntaxDictionary = new();
+			private static readonly Dictionary<string, TokenSyntax> TokenSyntaxDictionary = new();
+
+			private static readonly Dictionary<int, Production> ProductionDictionary = new();
+
+			internal static IEnumerable<FragmentSyntax> FragmentSyntaxCollection => FragmentSyntaxDictionary.Values;
+
+			internal static IEnumerable<TokenSyntax> TokenSyntaxCollection => TokenSyntaxDictionary.Values;
+
+			internal static IEnumerable<TriviaSyntax> TriviaSyntaxCollection => TriviaSyntaxDictionary.Values;
+
+			private static char GetMinChar(PrimitiveMatchSymbol entry)
 			{
-				Name = name
-			};
+				if (entry is CharRangeSymbol range)
+					return range.First;
 
-			CreatedTokenFragments.Add(tokenFragment);
-
-			return tokenFragment;
-		}
-
-		protected static TokenRule CreateTokenRule(TToken token, [CallerMemberName] string name = null)
-		{
-			var tokenRule = new TokenRule(token)
-			{
-				Name = name
-			};
-
-			CreatedTokenRules.Add(tokenRule);
-
-			return tokenRule;
-		}
-
-		protected static SetEntry Except(RangeEntry rangeEntry)
-		{
-			return Except(new SetEntry(new[] { rangeEntry }));
-		}
-
-		protected static SetEntry Except(CharEntry charEntry)
-		{
-			return Except(new SetEntry(new[] { charEntry }));
-		}
-
-		protected static SetEntry Except(SetEntry setEntry)
-		{
-			var listRanges = new List<RangeEntry>();
-			var current = char.MinValue;
-
-			foreach (var entry in setEntry.Matches.OrderBy(GetMinChar))
-			{
-				if (entry is RangeEntry range)
-				{
-					if (range.First > current)
-					{
-						var next = (char)(range.First - 1);
-
-						if (current < next)
-							listRanges.Add(new RangeEntry(current, next));
-					}
-
-					current = (char)(range.Last + 1);
-
-					continue;
-				}
-
-				var charEntry = (CharEntry)entry;
-				var prev = (char)(charEntry.Char - 1);
-
-				if (current < prev)
-					listRanges.Add(new RangeEntry(current, prev));
-
-				current = (char)(charEntry.Char + 1);
+				return ((CharSymbol)entry).Char;
 			}
 
-			if (current < char.MaxValue)
-				listRanges.Add(new RangeEntry(current, char.MaxValue));
+			private protected static void RegisterFragmentSyntax(FragmentSyntax fragment)
+			{
+				FragmentSyntaxDictionary.Add(fragment.Name, fragment);
+			}
 
-			return new SetEntry(listRanges);
-		}
+			private protected static int RegisterProduction(Production production)
+			{
+				var index = ProductionDictionary.Count;
 
-		private static char GetMinChar(PrimitiveMatchEntry entry)
-		{
-			if (entry is RangeEntry range)
-				return range.First;
+				ProductionDictionary.Add(index, production);
 
-			return ((CharEntry)entry).Char;
-		}
+				return index;
+			}
 
-		protected static TokenFragment Literal(string str)
-		{
-			return new TokenFragment(str);
-		}
+			private protected static void RegisterTokenSyntax(TokenSyntax token)
+			{
+				TokenSyntaxDictionary.Add(token.Name, token);
+			}
 
-		protected static CharEntry Match(char @char)
-		{
-			return new CharEntry(@char);
-		}
-
-		protected static RangeEntry MatchRange(char first, char last)
-		{
-			return new RangeEntry(first, last);
-		}
-
-		protected static SetEntry MatchSet(params PrimitiveMatchEntry[] matches)
-		{
-			return new SetEntry(matches);
-		}
-
-		protected static TokenRuleSet MatchSet(params TokenRule[] tokenRules)
-		{
-			return new TokenRuleSet(tokenRules);
+			private protected static void RegisterTriviaSyntax(TriviaSyntax triviaSyntax)
+			{
+				TriviaSyntaxDictionary.Add(triviaSyntax.Name, triviaSyntax);
+			}
 		}
 	}
 }

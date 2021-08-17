@@ -23,8 +23,6 @@ namespace Zaaml.Text
 				_pool = pool;
 			}
 
-			public int ForkPathIndex { get; set; } = -1;
-
 			protected override string KindString => "_predicate";
 
 			[UsedImplicitly]
@@ -39,6 +37,8 @@ namespace Zaaml.Text
 
 			public void Release()
 			{
+				PredicateEntry = null;
+
 				_pool.Release(this);
 			}
 		}

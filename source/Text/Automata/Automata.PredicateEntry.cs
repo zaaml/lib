@@ -40,7 +40,7 @@ namespace Zaaml.Text
 
 			internal override bool ConsumeResult => false;
 
-			private Func<AutomataContext, PredicateResult> Predicate { get; }
+			protected Func<AutomataContext, PredicateResult> Predicate { get; }
 
 			protected override PredicateResult Pass(AutomataContext context)
 			{
@@ -57,7 +57,7 @@ namespace Zaaml.Text
 
 			internal override bool ConsumeResult => true;
 
-			private Func<AutomataContext, PredicateResult<TResult>> Predicate { get; }
+			protected Func<AutomataContext, PredicateResult<TResult>> Predicate { get; }
 
 			protected override PredicateResult Pass(AutomataContext context)
 			{

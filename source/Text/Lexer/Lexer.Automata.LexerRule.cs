@@ -10,16 +10,29 @@ namespace Zaaml.Text
 		{
 			private sealed class LexerRule : Rule
 			{
-				public readonly Grammar<TToken>.TokenRule TokenRule;
-
-				public LexerRule(Grammar<TToken>.TokenRule tokenRule) : base(tokenRule.Name)
+				public LexerRule(Grammar<TGrammar, TToken>.LexerGrammar.Syntax syntax) : base(syntax.Name)
 				{
-					TokenRule = tokenRule;
+					Syntax = syntax;
 				}
 
-				public LexerRule(string name) : base(name)
+				public LexerRule(Grammar<TGrammar, TToken>.LexerGrammar.Syntax syntax, Grammar<TGrammar, TToken>.LexerGrammar.Production production) : base(syntax.Name)
 				{
+					Syntax = syntax;
+					Token = production.Token;
+					TokenCode = production.TokenCode;
 				}
+
+				public bool IsTrivia => Syntax is Grammar<TGrammar, TToken>.LexerGrammar.TriviaSyntax;
+				
+				public bool IsToken => Syntax is Grammar<TGrammar, TToken>.LexerGrammar.TokenSyntax;
+
+				public bool IsFragment => Syntax is Grammar<TGrammar, TToken>.LexerGrammar.FragmentSyntax;
+				
+				private Grammar<TGrammar, TToken>.LexerGrammar.Syntax Syntax { get; }
+
+				public TToken Token { get; }
+
+				public int TokenCode { get; }
 			}
 		}
 	}

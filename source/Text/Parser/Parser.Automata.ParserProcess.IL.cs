@@ -11,13 +11,13 @@ using static Zaaml.Core.Reflection.BF;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
 			private partial class ParserProcess
 			{
-				public partial class ParserILGenerator : ProcessILGenerator
+				internal partial class ParserILGenerator : ProcessILGenerator
 				{
 					private static readonly FieldInfo TextSourceSpanFieldInfo = ParserProcessType.GetField(nameof(_textSpan), IPNP);
 
@@ -59,15 +59,13 @@ namespace Zaaml.Text
 					private static readonly MethodInfo LeaveLeftRecursionProductionMethodInfo = ParserProcessType.GetMethod(nameof(LeaveLeftRecursionProduction), IPNP);
 					private static readonly MethodInfo LeaveProductionMethodInfo = ParserProcessType.GetMethod(nameof(LeaveProduction), IPNP);
 
-					private static readonly MethodInfo OnAfterConsumeValueMethodInfo = ParserProcessType.GetMethod(nameof(OnAfterConsumeValue), IPNP);
-
 					public ParserILGenerator()
 					{
 					}
 
 					private static Type ParserProcessType => typeof(ParserProcess);
 
-					protected override void EmitBeginExecutionPath(Context context, int stackDelta)
+					protected override void EmitBeginExecutionPath(ILContext context, int stackDelta)
 					{
 #if AUTOMATA_VERIFY_STACK
 					if (stackDelta <= 0) 
@@ -79,7 +77,7 @@ namespace Zaaml.Text
 #endif
 					}
 
-					protected override void EmitConsumePredicateResult(Context context, LocalBuilder predicateResultLocal, PredicateEntryBase predicateEntryBase)
+					protected override void EmitConsumePredicateResult(ILContext context, LocalBuilder predicateResultLocal, PredicateEntryBase predicateEntryBase)
 					{
 						var argument = ((IParserEntry)predicateEntryBase.GetActualPredicateEntry()).ProductionArgument;
 
@@ -94,14 +92,12 @@ namespace Zaaml.Text
 						context.IL.Emit(OpCodes.Stloc, argumentLocal);
 						context.IL.Emit(OpCodes.Ldloc, predicateResultLocal);
 						context.IL.Emit(OpCodes.Callvirt, PredicateResultGetResultMethodInfo);
-						context.IL.Emit(OpCodes.Stloc, predicateResultLocal);
+						context.IL.Emit(OpCodes.Stloc, resultLocal);
 
 						argument.EmitConsumeValue(argumentLocal, resultLocal, context);
-
-						EmitTryReturn(context, argument);
 					}
 
-					private void EmitConsumeRuleEntryValue(Context context, ProductionArgument argument)
+					private void EmitConsumeRuleEntryValue(ILContext context, ProductionArgument argument)
 					{
 						if (argument is not { Binder: { ConsumeValue: true } })
 							return;
@@ -124,7 +120,7 @@ namespace Zaaml.Text
 						EmitDebugPostConsumeParserValue(context, argument);
 					}
 
-					protected override void EmitEnterProduction(Context context, Production production)
+					protected override void EmitEnterProduction(ILContext context, Production production)
 					{
 						if (production is not ParserProduction parserProduction)
 							return;
@@ -149,7 +145,7 @@ namespace Zaaml.Text
 						EmitDebugPostProductionEnter(context, parserProduction);
 					}
 
-					protected override void EmitEnterRuleEntry(Context context, RuleEntry ruleEntry)
+					protected override void EmitEnterRuleEntry(ILContext context, RuleEntry ruleEntry)
 					{
 						if (ruleEntry is not ParserRuleEntry parserRuleEntry || parserRuleEntry.ProductionArgument?.Binder == null)
 							return;
@@ -166,26 +162,27 @@ namespace Zaaml.Text
 						EmitDebugPostRuleEnter(context, ruleEntry);
 					}
 
-					private static void EmitGetInstruction(Context context)
+					private static void EmitGetInstruction(ILContext context)
 					{
-						context.EmitLdProcess();
-						context.IL.Emit(OpCodes.Call, GetInstructionMethodInfo);
+						//context.EmitLdProcess();
+						//context.IL.Emit(OpCodes.Call, GetInstructionMethodInfo);
+						context.EmitGetInstruction();
 					}
 
-					private static void EmitGetInstructionText(Context context)
+					private static void EmitGetInstructionText(ILContext context)
 					{
 						context.EmitLdProcess();
 						context.IL.Emit(OpCodes.Call, GetInstructionTextMethodInfo);
 					}
 
-					private static void EmitGetInstructionToken(Context context)
+					private static void EmitGetInstructionToken(ILContext context)
 					{
 						context.EmitLdProcess();
 						context.IL.Emit(OpCodes.Call, GetInstructionReferenceMethodInfo);
 						context.IL.Emit(OpCodes.Ldfld, LexemeTokenFieldInfo);
 					}
 
-					protected override void EmitInvoke(Context context, MatchEntry matchEntry, bool main)
+					protected override void EmitInvoke(ILContext context, MatchEntry matchEntry, bool main)
 					{
 						if (main == false)
 							return;
@@ -218,18 +215,16 @@ namespace Zaaml.Text
 
 						lexerArgument.EmitConsumeValue(argumentLocal, resultLocal, context);
 
-						EmitTryReturn(context, argument);
-
 						EmitDebugPostConsumeLexerValue(context, argument);
 					}
 
-					private static void EmitLdTextSourceSpan(Context context)
+					private static void EmitLdTextSourceSpan(ILContext context)
 					{
 						context.EmitLdProcess();
 						context.IL.Emit(OpCodes.Ldfld, TextSourceSpanFieldInfo);
 					}
 
-					protected override void EmitLeaveProduction(Context context, Production production)
+					protected override void EmitLeaveProduction(ILContext context, Production production)
 					{
 						if (production is not ParserProduction parserProduction)
 							return;
@@ -254,7 +249,7 @@ namespace Zaaml.Text
 						EmitDebugPostProductionLeave(context, parserProduction);
 					}
 
-					protected override void EmitLeaveRuleEntry(Context context, RuleEntry ruleEntry)
+					protected override void EmitLeaveRuleEntry(ILContext context, RuleEntry ruleEntry)
 					{
 						if (ruleEntry is not ParserRuleEntry parserRuleEntry || parserRuleEntry.ProductionArgument?.Binder == null)
 							return;
@@ -272,12 +267,10 @@ namespace Zaaml.Text
 #endif
 						EmitLeaveRuleEntry(context);
 
-						EmitTryReturn(context, argument);
-
 						EmitDebugPostRuleLeave(context, ruleEntry);
 					}
 
-					private static void EmitLeaveRuleEntry(Context context)
+					private static void EmitLeaveRuleEntry(ILContext context)
 					{
 						EmitPeekProductionEntity(context, 0);
 
@@ -305,7 +298,7 @@ namespace Zaaml.Text
 						context.IL.Emit(OpCodes.Stfld, ProductionEntityStackTailFieldInfo);
 					}
 
-					private static void EmitPeekProductionEntity(Context context, int tailDelta)
+					private static void EmitPeekProductionEntity(ILContext context, int tailDelta)
 					{
 						context.EmitLdProcess();
 						context.IL.Emit(OpCodes.Ldfld, ProductionEntityStackFieldInfo);
@@ -325,33 +318,18 @@ namespace Zaaml.Text
 						context.IL.Emit(OpCodes.Ldelem_Ref);
 					}
 
-					private static void EmitPeekProductionEntityResult(Context context)
+					private static void EmitPeekProductionEntityResult(ILContext context)
 					{
 						EmitPeekProductionEntity(context, 0);
 						context.IL.Emit(OpCodes.Ldfld, ProductionEntityResultFieldInfo);
 					}
 
-					private static void EmitPushArgument(Context context, ProductionArgument productionArgument, int tailDelta)
+					private static void EmitPushArgument(ILContext context, ProductionArgument productionArgument, int tailDelta)
 					{
 						EmitPeekProductionEntity(context, tailDelta);
 						context.IL.Emit(OpCodes.Ldfld, ProductionEntityArgumentsFieldInfo);
 						context.IL.Emit(OpCodes.Ldc_I4, productionArgument.ArgumentIndex);
 						context.IL.Emit(OpCodes.Ldelem_Ref);
-					}
-
-					private static void EmitTryReturn(Context context, ProductionArgument argument)
-					{
-						var binder = argument.ParserProduction.Binder;
-
-						if (binder == null)
-							return;
-
-						if (binder.TryReturn == false)
-							return;
-
-						context.EmitLdProcess();
-						context.IL.Emit(OpCodes.Ldc_I4, argument.ArgumentIndex);
-						context.IL.Emit(OpCodes.Call, OnAfterConsumeValueMethodInfo);
 					}
 				}
 			}

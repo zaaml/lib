@@ -6,5 +6,6 @@ namespace Zaaml.Text
 {
 	internal abstract class CharSetEntry
 	{
+		public abstract string Format(bool set);
 	}
 }

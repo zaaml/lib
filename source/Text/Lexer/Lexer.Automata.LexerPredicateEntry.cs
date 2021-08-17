@@ -10,7 +10,7 @@ namespace Zaaml.Text
 		{
 			private sealed class LexerPredicateEntry : PredicateEntry
 			{
-				public LexerPredicateEntry(Grammar<TToken>.LexerPredicate grammarEntry) : base(CreatePredicateDelegate(grammarEntry.PredicateEntry))
+				public LexerPredicateEntry(Grammar<TGrammar, TToken>.LexerGrammar.PredicateSymbol grammarEntry) : base(CreatePredicateDelegate(grammarEntry.PredicateEntry))
 				{
 				}
 			}

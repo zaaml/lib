@@ -6,7 +6,7 @@ using System;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TToken> : ParserBase where TToken : unmanaged, Enum
+	internal abstract partial class Parser<TToken>
 	{
 		public class PredicateEntry
 		{

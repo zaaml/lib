@@ -12,13 +12,15 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
+		private const int SubGraphReturnMask = 0x10000000;
+		private const int SubGraphIdMask = 0x10000000 - 1;
 		private bool _built;
 
 		private Dictionary<Rule, Graph> GraphDictionary { get; } = new();
 
 		private Dictionary<Rule, EntryPointSubGraph> SubGraphDictionary { get; } = new();
 
-		private void Build()
+		protected void Build()
 		{
 			if (_built)
 				return;
@@ -36,9 +38,7 @@ namespace Zaaml.Text
 
 		private Graph EnsureGraph(Rule rule)
 		{
-			var graph = GraphDictionary.GetValueOrDefault(rule);
-
-			if (graph != null)
+			if (GraphDictionary.TryGetValue(rule, out var graph))
 				return graph;
 
 			graph = new Graph(rule, this);
@@ -52,9 +52,7 @@ namespace Zaaml.Text
 
 		private EntryPointSubGraph EnsureSubGraph(Rule rule)
 		{
-			var subGraph = SubGraphDictionary.GetValueOrDefault(rule);
-
-			if (subGraph != null)
+			if (SubGraphDictionary.TryGetValue(rule, out var subGraph))
 				return subGraph;
 
 			subGraph = SubGraphDictionary[rule] = new EntryPointSubGraph(this, rule);
@@ -62,24 +60,6 @@ namespace Zaaml.Text
 			subGraph.BuildExecutionGraph();
 
 			return subGraph;
-		}
-
-		private void EvalDfaGraph()
-		{
-			//var dfaBarriers = new HashSet<Graph>();
-
-			//foreach (var state in States)
-			//{
-			//	if (state.Inline || state.Name == null)
-			//		continue;
-
-			//	var graph = EnsureGraph(state);
-
-			//	graph.EvalDfaBarrier();
-
-			//	if (graph.DfaBarrier)
-			//		dfaBarriers.Add(graph);
-			//}
 		}
 
 		private void EvaluateInlineRules()
@@ -140,7 +120,7 @@ namespace Zaaml.Text
 
 		private void SyncBuild()
 		{
-			EvaluateInlineRules();
+			//EvaluateInlineRules();
 
 			foreach (var rule in Rules)
 			{
@@ -154,14 +134,19 @@ namespace Zaaml.Text
 					EnsureSubGraph(rule);
 			}
 
-			//EvalDfaGraph();
+			foreach (var subGraph in _subGraphRegistry)
+			{
+				subGraph.LeaveNode.EnsureSafe();
+				subGraph.RId = subGraph.LeaveNode.HasReturnPathSafe ? SubGraphReturnMask | subGraph.Id : subGraph.Id;
+			}
+
+			foreach (var node in _nodeRegistry)
+				node.ReCalcRId(this);
 		}
 
 		[DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
 		private protected sealed class Graph
 		{
-			private int _innerCounter;
-
 			public Graph(Rule rule, Automata<TInstruction, TOperand> automata)
 			{
 				Rule = rule;
@@ -211,9 +196,6 @@ namespace Zaaml.Text
 
 			public void AddNode(Node node)
 			{
-				if (node is InnerNode)
-					node.Index = _innerCounter++;
-
 				HasOperandNodes |= node is OperandNode;
 				Nodes.Add(node);
 			}
@@ -233,10 +215,19 @@ namespace Zaaml.Text
 
 			private void BuildProduction(Production production, Node startNode, Node endNode)
 			{
-				var beginTransitionNode = (Node)new BeginProductionNode(Automata, this, production);
-				var endTransitionNode = (Node)new EndProductionNode(Automata, this, production);
+				var beginProductionNode = (Node)new BeginProductionNode(Automata, this, production);
+				var endProductionNode = (Node)new EndProductionNode(Automata, this, production);
+				//var precedence = production.PrecedencePredicates.ToArray();
 
-				production.Entries.Aggregate(startNode.Connect(beginTransitionNode), ConnectEntry).Connect(endTransitionNode).Connect(endNode);
+				//if (precedence.Length > 0)
+				//{
+				//	var precedenceEnterNode = new PrecedenceEnterNode(Automata, this, production, precedence);
+				//	var precedenceLeaveNode = new PrecedenceLeaveNode(Automata, this, production, precedence);
+					
+				//	production.Entries.Aggregate(startNode.Connect(precedenceEnterNode).Connect(beginProductionNode), ConnectEntry).Connect(endProductionNode).Connect(precedenceLeaveNode).Connect(endNode);
+				//}
+
+				production.Entries.Aggregate(startNode.Connect(beginProductionNode), ConnectEntry).Connect(endProductionNode).Connect(endNode);
 			}
 
 			private Node ConnectActionEntry(Node source, ActionEntry actionEntry)
@@ -258,8 +249,24 @@ namespace Zaaml.Text
 					PredicateEntryBase predicateEntry => ConnectPredicateEntry(source, predicateEntry),
 					ActionEntry actionEntry => ConnectActionEntry(source, actionEntry),
 					EpsilonEntry _ => source,
+					EnterPrecedenceEntry enterPrecedenceEntry => ConnectEnterPrecedence(source, enterPrecedenceEntry),
+					LeavePrecedenceEntry leavePrecedenceEntry => ConnectLeavePrecedence(source, leavePrecedenceEntry),
 					_ => throw new ArgumentOutOfRangeException(nameof(entry))
 				};
+			}
+
+			private Node ConnectLeavePrecedence(Node source, LeavePrecedenceEntry leavePrecedenceEntry)
+			{
+				var precedenceLeaveNode = new PrecedenceLeaveNode(Automata, this, leavePrecedenceEntry.PrecedencePredicate);
+
+				return source.Connect(precedenceLeaveNode);
+			}
+
+			private Node ConnectEnterPrecedence(Node source, EnterPrecedenceEntry enterPrecedenceEntry)
+			{
+				var precedenceEnterNode = new PrecedenceEnterNode(Automata, this, enterPrecedenceEntry.PrecedencePredicate);
+
+				return source.Connect(precedenceEnterNode);
 			}
 
 			private Node ConnectMatchEntry(Node source, MatchEntry operandEntry)
@@ -374,117 +381,6 @@ namespace Zaaml.Text
 				RegisterOutboundCall(subGraph);
 
 				return subGraph;
-			}
-
-			public void EvalDfaBarrier()
-			{
-				//EvalSingleOperandAfterBegin();
-				//EvalSingleOperandBeforeReturn();
-
-				//if (State.Name == "type_declaration")
-				//{
-				//	var roots = EvalRoots().ToList();
-				//}
-				//DfaBarrier = InboundSubGraphCall.Count == 1 && SingleOperandBeforeReturn?.MatchEntry is SingleMatchEntry && SingleOperandAfterBegin?.MatchEntry is SingleMatchEntry;
-				//DfaBarrier = InboundSubGraphCall.Count == 1 && SingleOperandBeforeReturn?.MatchEntry is SingleMatchEntry;
-
-				//var roots = EvalRoots(1000, 1000);
-
-				//if (roots.Count < 50)
-				//{
-				//}
-
-				//DfaBarrier = false;
-			}
-
-			private List<List<Graph>> EvalRoots(int maxCount = 100, int maxDepth = int.MaxValue)
-			{
-				var visited = new HashSet<Graph>();
-				var stack = new Stack<(Graph, int)>();
-				var rootLimit = maxCount;
-				var roots = new List<List<Graph>>();
-
-				stack.Push((this, -1));
-
-				while (stack.Count > 0)
-				{
-					var edge = stack.Pop();
-
-					edge.Item2++;
-
-					if (edge.Item2 < edge.Item1.InboundSubGraphCall.Count)
-					{
-						var nextGraph = edge.Item1.InboundSubGraphCall[edge.Item2].InvokingGraph;
-
-						stack.Push(edge);
-
-						if (visited.Add(nextGraph))
-						{
-							if (nextGraph.InboundSubGraphCall.Count > 0 && stack.Count + 1 < maxDepth)
-								stack.Push((nextGraph, -1));
-							else
-							{
-								roots.Add(stack.Select(e => e.Item1).Prepend(nextGraph).ToList());
-
-								if (roots.Count == rootLimit)
-									break;
-
-								visited.Remove(nextGraph);
-							}
-						}
-						else
-						{
-							roots.Add(stack.Select(e => e.Item1).ToList());
-
-							if (roots.Count == rootLimit)
-								break;
-						}
-					}
-					else
-					{
-						visited.Remove(edge.Item1);
-					}
-				}
-
-				return roots;
-			}
-
-			private void EvalSingleOperandAfterBegin()
-			{
-				var currentNode = BeginNode;
-
-				while (currentNode.OutEdges.Count == 1)
-				{
-					var edge = currentNode.OutEdges[0];
-
-					currentNode = edge.TargetNode;
-
-					if (currentNode is OperandNode operandNode)
-					{
-						SingleOperandAfterBegin = operandNode;
-
-						break;
-					}
-				}
-			}
-
-			private void EvalSingleOperandBeforeReturn()
-			{
-				var currentNode = ReturnNode;
-
-				while (currentNode.InEdges.Count == 1)
-				{
-					var edge = currentNode.InEdges[0];
-
-					currentNode = edge.SourceNode;
-
-					if (currentNode is OperandNode operandNode)
-					{
-						SingleOperandBeforeReturn = operandNode;
-
-						break;
-					}
-				}
 			}
 
 			private void RegisterInboundCall(SubGraph subGraph)

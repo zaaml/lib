@@ -17,10 +17,10 @@ namespace Zaaml.Text
 
 		private protected partial class LexerAutomata : Automata<char, int>
 		{
-			private readonly Dictionary<string, LexerRule> _lexerStateDictionary = new Dictionary<string, LexerRule>();
-			private readonly HashSet<Grammar<TToken>.TokenFragment> _registeredFragments = new HashSet<Grammar<TToken>.TokenFragment>();
+			private readonly Dictionary<Grammar<TGrammar, TToken>.LexerGrammar.Syntax, LexerRule> _lexerFragmentDictionary = new();
+			private readonly Dictionary<Grammar<TGrammar, TToken>.LexerGrammar.Syntax, List<LexerRule>> _lexerRuleDictionary = new();
+
 			private LexerDfaBuilder _dfaBuilder;
-			private int _generatedLexerStateCount;
 
 			static LexerAutomata()
 			{
@@ -32,12 +32,16 @@ namespace Zaaml.Text
 			{
 				var grammar = Grammar.Get<TGrammar, TToken>();
 
-				foreach (var tokenFragment in grammar.TokenFragments)
-					RegisterLexerFragment(tokenFragment);
+				foreach (var fragment in grammar.LexerSyntaxFragmentCollection)
+					RegisterLexerSyntax(fragment);
 
-				foreach (var tokenRule in grammar.TokenRules.OrderByDescending(r => r.TokenCode))
-					RegisterLexerRule(tokenRule);
+				foreach (var trivia in grammar.LexerSyntaxTriviaCollection)
+					RegisterLexerSyntax(trivia);
 
+				foreach (var token in grammar.LexerSyntaxTokenCollection)
+					RegisterLexerSyntax(token);
+
+				Build();
 				BuildStates();
 			}
 
@@ -45,7 +49,9 @@ namespace Zaaml.Text
 
 			private void BuildStates()
 			{
-				_dfaBuilder = new LexerDfaBuilder(_lexerStateDictionary.Values.Where(s => s.TokenRule != null), this);
+				var rules = _lexerRuleDictionary.Values.SelectMany(l => l).OrderByDescending(p => p.TokenCode);
+
+				_dfaBuilder = new LexerDfaBuilder(rules, this);
 			}
 
 			private static Action<AutomataContext> CreateActionDelegate(Lexer<TToken>.ActionEntry actionEntry)
@@ -53,62 +59,42 @@ namespace Zaaml.Text
 				return c => actionEntry.Action(((LexerAutomataContextState)((LexerAutomataContext)c).ContextStateInternal).LexerContext);
 			}
 
-			private Entry CreateLexerEntry(Grammar<TToken>.TokenEntry tokenEntry)
+			private Entry CreateLexerEntry(Grammar<TGrammar, TToken>.LexerGrammar.Symbol lexerEntry)
 			{
-				if (tokenEntry is Grammar<TToken>.QuantifierEntry quantifierEntry)
-					return new QuantifierEntry((PrimitiveEntry)CreateLexerEntry(quantifierEntry.PrimitiveEntry), quantifierEntry.Range, quantifierEntry.Mode);
+				if (lexerEntry is Grammar<TGrammar, TToken>.LexerGrammar.QuantifierSymbol quantifierSymbol)
+					return new QuantifierEntry((PrimitiveEntry)CreateLexerEntry(quantifierSymbol.Symbol), quantifierSymbol.Range, quantifierSymbol.Mode);
 
-				if (tokenEntry is Grammar<TToken>.MatchEntry matchEntry)
+				if (lexerEntry is Grammar<TGrammar, TToken>.LexerGrammar.MatchSymbol matchSymbol)
 				{
-					if (matchEntry is Grammar<TToken>.PrimitiveMatchEntry primitiveMatchEntry)
+					if (matchSymbol is Grammar<TGrammar, TToken>.LexerGrammar.PrimitiveMatchSymbol primitiveMatchEntry)
 						return CreateLexerPrimitiveMatchEntry(primitiveMatchEntry);
 
-					if (matchEntry is Grammar<TToken>.SetEntry charGroupEntry)
-						return new SetMatchEntry(charGroupEntry.Matches.Select(CreateLexerPrimitiveMatchEntry).ToArray());
+					if (matchSymbol is Grammar<TGrammar, TToken>.LexerGrammar.CharSetSymbol charSetSymbol)
+						return new SetMatchEntry(charSetSymbol.Matches.Select(CreateLexerPrimitiveMatchEntry).ToArray());
 
 					throw new NotImplementedException();
 				}
 
-				if (tokenEntry is Grammar<TToken>.TokenFragment tokenFragment)
-				{
-					var lexerState = GetLexerState(tokenFragment);
+				if (lexerEntry is Grammar<TGrammar, TToken>.LexerGrammar.FragmentSymbol fragmentSymbol)
+					return new RuleEntry(GetLexerRule(fragmentSymbol.Fragment));
 
-					RegisterLexerFragment(tokenFragment);
+				if (lexerEntry is Grammar<TGrammar, TToken>.LexerGrammar.PredicateSymbol predicateSymbol)
+					return new LexerPredicateEntry(predicateSymbol);
 
-					return new RuleEntry(lexerState);
-				}
-
-				if (tokenEntry is Grammar<TToken>.TokenFragmentEntry tokenFragmentEntry)
-				{
-					var lexerState = GetLexerState(tokenFragmentEntry.Fragment);
-
-					RegisterLexerFragment(tokenFragmentEntry.Fragment);
-
-					return new RuleEntry(lexerState);
-				}
-
-				if (tokenEntry is Grammar<TToken>.LexerPredicate lexerPredicate)
-					return new LexerPredicateEntry(lexerPredicate);
-
-				if (tokenEntry is Grammar<TToken>.LexerAction lexerAction)
-					return new LexerActionEntry(lexerAction);
+				if (lexerEntry is Grammar<TGrammar, TToken>.LexerGrammar.ActionSymbol actionSymbol)
+					return new LexerActionEntry(actionSymbol);
 
 				throw new NotImplementedException();
 			}
 
-			private LexerRule CreateLexerFragmentState(Grammar<TToken>.TokenFragment tokenFragment)
-			{
-				return new LexerRule(tokenFragment.Name);
-			}
-
-			private static PrimitiveMatchEntry CreateLexerPrimitiveMatchEntry(Grammar<TToken>.PrimitiveMatchEntry match)
+			private static PrimitiveMatchEntry CreateLexerPrimitiveMatchEntry(Grammar<TGrammar, TToken>.LexerGrammar.PrimitiveMatchSymbol match)
 			{
 				switch (match)
 				{
-					case Grammar<TToken>.CharEntry charMatch:
+					case Grammar<TGrammar, TToken>.LexerGrammar.CharSymbol charMatch:
 						return new SingleMatchEntry(charMatch.Char);
 
-					case Grammar<TToken>.RangeEntry charRangeMatch:
+					case Grammar<TGrammar, TToken>.LexerGrammar.CharRangeSymbol charRangeMatch:
 						return new RangeMatchEntry(charRangeMatch.First, charRangeMatch.Last);
 
 					default:
@@ -116,9 +102,18 @@ namespace Zaaml.Text
 				}
 			}
 
-			private LexerRule CreateLexerRuleState(Grammar<TToken>.TokenRule tokenRule)
+			private LexerRule CreateLexerRule(Grammar<TGrammar, TToken>.LexerGrammar.Syntax syntax)
 			{
-				return new LexerRule(tokenRule);
+				var lexerRule = new LexerRule(syntax);
+
+				if (syntax is not Grammar<TGrammar, TToken>.LexerGrammar.FragmentSyntax)
+					throw new InvalidOperationException();
+
+				var productions = syntax.Productions.Select(production => new LexerProduction(production.Symbols.Select(CreateLexerEntry))).ToList();
+
+				AddRule(lexerRule, productions);
+
+				return lexerRule;
 			}
 
 			private static Func<AutomataContext, PredicateResult> CreatePredicateDelegate(Lexer<TToken>.PredicateEntry predicateEntry)
@@ -126,44 +121,32 @@ namespace Zaaml.Text
 				return c => predicateEntry.Predicate(((LexerAutomataContext)c).LexerContext) ? PredicateResult.True : PredicateResult.False;
 			}
 
-			private string GenerateLexerStateName()
+			private LexerRule GetLexerRule(Grammar<TGrammar, TToken>.LexerGrammar.Syntax syntax)
 			{
-				return $"GeneratedLexerState{_generatedLexerStateCount++}";
+				return _lexerFragmentDictionary.GetValueOrCreate(syntax, CreateLexerRule);
 			}
 
-			private LexerRule GetLexerState(Grammar<TToken>.TokenRule tokenRule)
+			private void RegisterLexerSyntax(Grammar<TGrammar, TToken>.LexerGrammar.Syntax syntax)
 			{
-				if (tokenRule.Name == null)
-					tokenRule.Name = GenerateLexerStateName();
-
-				return _lexerStateDictionary.GetValueOrCreate(tokenRule.Name, () => CreateLexerRuleState(tokenRule));
-			}
-
-			private LexerRule GetLexerState(Grammar<TToken>.TokenFragment tokenFragment)
-			{
-				if (tokenFragment.Name == null)
-					tokenFragment.Name = GenerateLexerStateName();
-
-				return _lexerStateDictionary.GetValueOrCreate(tokenFragment.Name, () => CreateLexerFragmentState(tokenFragment));
-			}
-
-			private void RegisterLexerFragment(Grammar<TToken>.TokenFragment tokenFragment)
-			{
-				if (_registeredFragments.Add(tokenFragment) == false)
+				if (syntax is not Grammar<TGrammar, TToken>.LexerGrammar.TokenBaseSyntax syntaxTokenBase)
 					return;
 
-				var lexerState = GetLexerState(tokenFragment);
-				var transitions = tokenFragment.Pattern.Patterns.Select(pattern => new LexerProduction(pattern.Entries.Select(CreateLexerEntry))).ToList();
+				var list = new List<LexerRule>();
 
-				AddRule(lexerState, transitions);
-			}
+				foreach (var tokenGroup in syntaxTokenBase.TokenGroups)
+				{
+					foreach (var production in tokenGroup.Productions)
+					{
+						var lexerRule = new LexerRule(syntax, production);
+						var productions = new List<LexerProduction> { new(production.Symbols.Select(CreateLexerEntry)) };
 
-			private void RegisterLexerRule(Grammar<TToken>.TokenRule tokenRule)
-			{
-				var lexerState = GetLexerState(tokenRule);
-				var transitions = tokenRule.Pattern.Patterns.Select(pattern => new LexerProduction(pattern.Entries.Select(CreateLexerEntry))).ToList();
+						list.Add(lexerRule);
 
-				AddRule(lexerState, transitions);
+						AddRule(lexerRule, productions);
+					}
+				}
+
+				_lexerRuleDictionary.Add(syntax, list);
 			}
 		}
 	}

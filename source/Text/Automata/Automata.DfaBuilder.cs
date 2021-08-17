@@ -28,12 +28,12 @@ namespace Zaaml.Text
 			public readonly TDfaState NoOpInitialState;
 			public TDfaState[] StateRepository = new TDfaState[128];
 
-			protected DfaBuilder(IEnumerable<Rule> states, Automata<TInstruction, TOperand> automata)
+			protected DfaBuilder(IEnumerable<Rule> rules, Automata<TInstruction, TOperand> automata)
 			{
 				_initialStateNodes = new List<DfaNode>();
 				_noOpInitialStateNodes = new List<DfaNode>();
 
-				foreach (var subGraph in states.Select(automata.EnsureSubGraph))
+				foreach (var subGraph in rules.Select(automata.EnsureSubGraph))
 				{
 					if (subGraph.Graph.CanSimulateDfa == false)
 						throw new InvalidOperationException($"FiniteState {subGraph.Rule} can not be simulated as DFA");

@@ -11,63 +11,54 @@ using System.Reflection.Emit;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private partial class ParserAutomata
 		{
-			private sealed class ConstructorBinder : ProductionBinder
+			private sealed class ConstructorBinder : FactoryBinder
 			{
-				public ConstructorBinder(Type nodeType, ParserProduction parserProduction)
+				public ConstructorBinder(ParserProduction parserProduction) : base(parserProduction)
 				{
+					Binding = (Grammar<TGrammar, TToken>.ParserGrammar.ConstructorNodeBinding)parserProduction.GrammarParserProduction.ProductionBinding;
+
+					var nodeType = Binding.NodeType;
+
 					if (nodeType == null)
 						throw new ArgumentNullException(nameof(nodeType));
 
 					ConstructorInfo = nodeType.GetConstructors().SingleOrDefault();
-					ConstValue = ConstructorInfo == null ? GetConstValue(nodeType) : null;
-
-					var arguments = parserProduction.Arguments;
-					var unwrap = parserProduction.GrammarParserProduction.Unwrap;
-
-					TryReturn = arguments.Count > 0 && ((arguments[0].ParserEntry as ParserRuleEntry)?.TryReturn ?? false);
-
-					if (unwrap)
-					{
-						Return = true;
-						ArgumentBinders = new[] { CreateArgumentBinder(nodeType, parserProduction.GetArguments(arguments[0].Name)) };
-
-						return;
-					}
 
 					if (ConstructorInfo == null)
-					{
-						ArgumentBinders = Array.Empty<ProductionArgumentBinder>();
+						throw new InvalidOperationException();
+				}
 
-						return;
-					}
+				private Grammar<TGrammar, TToken>.ParserGrammar.ConstructorNodeBinding Binding { get; }
 
+				private ConstructorInfo ConstructorInfo { get; }
+
+				protected override ProductionArgumentBinder[] CreateArgumentBinders()
+				{
+					if (ConstructorInfo == null)
+						return Array.Empty<ProductionArgumentBinder>();
+
+					var nodeType = Binding.NodeType;
 					var parameters = ConstructorInfo.GetParameters();
 
-					ArgumentBinders = new ProductionArgumentBinder[parameters.Length];
+					var argumentBinders = new ProductionArgumentBinder[parameters.Length];
 
 					for (var index = 0; index < parameters.Length; index++)
 					{
 						var parameterInfo = parameters[index];
-						var productionArguments = parserProduction.GetArguments(parameterInfo.Name);
+						var productionArguments = ParserProduction.GetArguments(parameterInfo.Name);
 
 						if (productionArguments.Length == 0)
-							throw new InvalidOperationException($"GrammarProduction '{parserProduction.GrammarParserProduction}' node type '{nodeType.Name}' ctor has argument '{parameterInfo.Name}' without corresponding production entry.");
+							throw new InvalidOperationException($"GrammarProduction '{ParserProduction.GrammarParserProduction}' node type '{nodeType.Name}' ctor has argument '{parameterInfo.Name}' without corresponding production symbol.");
 
-						ArgumentBinders[index] = CreateArgumentBinder(parameterInfo.ParameterType, productionArguments);
+						argumentBinders[index] = CreateArgumentBinder(parameterInfo.ParameterType, productionArguments);
 					}
+
+					return argumentBinders;
 				}
-
-				protected override ProductionArgumentBinder[] ArgumentBinders { get; }
-
-				private ConstructorInfo ConstructorInfo { get; }
-
-				protected override object ConstValue { get; }
-
-				public override bool IsFactoryBinder => true;
 
 				protected override void EmitEnter(ILGenerator ilBuilder)
 				{
@@ -76,20 +67,6 @@ namespace Zaaml.Text
 				protected override void EmitLeave(ILGenerator ilBuilder)
 				{
 					ilBuilder.Emit(OpCodes.Newobj, ConstructorInfo);
-				}
-
-				private static object GetConstValue(Type nodeType)
-				{
-					var instanceProperty = nodeType.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public);
-					var instanceField = nodeType.GetField("Instance", BindingFlags.Static | BindingFlags.Public);
-
-					if (instanceProperty != null && instanceProperty.PropertyType == nodeType)
-						return instanceProperty.GetValue(null);
-
-					if (instanceField != null && instanceField.FieldType == nodeType)
-						return instanceField.GetValue(null);
-
-					throw new InvalidOperationException("No public ctor or singleton accessor");
 				}
 			}
 		}

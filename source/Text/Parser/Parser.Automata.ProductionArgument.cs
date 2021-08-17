@@ -7,7 +7,7 @@ using System.Reflection.Emit;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -21,6 +21,11 @@ namespace Zaaml.Text
 					ArgumentIndex = argumentIndex;
 					ParserProduction = parserProduction;
 
+					if (((IParserEntry)parserEntry).ProductionArgument != null)
+					{
+
+					}
+
 					((IParserEntry)parserEntry).ProductionArgument = this;
 				}
 
@@ -32,6 +37,11 @@ namespace Zaaml.Text
 					ArgumentIndex = argumentIndex;
 					ParserProduction = parserProduction;
 					OriginalArgument = originalArgument;
+
+					if (((IParserEntry)parserEntry).ProductionArgument != null)
+					{
+
+					}
 
 					((IParserEntry)parserEntry).ProductionArgument = this;
 
@@ -62,7 +72,7 @@ namespace Zaaml.Text
 
 				public abstract ProductionEntityArgument CreateArgument(ProductionEntity entity);
 
-				public abstract void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context);
+				public abstract void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ILContext context);
 
 				public abstract void EmitCopyArgument(LocalBuilder argumentLocal, Type targetType, ILGenerator il, OpCode processLdArg);
 
@@ -100,7 +110,7 @@ namespace Zaaml.Text
 					return new NullEntityArgument(entity, this);
 				}
 
-				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context)
+				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ILContext context)
 				{
 				}
 
@@ -174,7 +184,7 @@ namespace Zaaml.Text
 					return new Argument<TValue>(entity, this);
 				}
 
-				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context)
+				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ILContext context)
 				{
 					var il = context.IL;
 
@@ -228,7 +238,7 @@ namespace Zaaml.Text
 					return new ArrayArgument<TValue>(entity, this);
 				}
 
-				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context)
+				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ILContext context)
 				{
 					var il = context.IL;
 
@@ -282,7 +292,7 @@ namespace Zaaml.Text
 					return new Argument<Lexeme<TToken>>(entity, this);
 				}
 
-				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context)
+				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ILContext context)
 				{
 					var il = context.IL;
 
@@ -383,7 +393,7 @@ namespace Zaaml.Text
 					return new ArrayArgument<Lexeme<TToken>>(entity, this);
 				}
 
-				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ProcessILGenerator.Context context)
+				public override void EmitConsumeValue(LocalBuilder argumentLocal, LocalBuilder valueLocal, Process.ILContext context)
 				{
 					var il = context.IL;
 
@@ -425,13 +435,13 @@ namespace Zaaml.Text
 						{
 							il.Emit(processLdArg);
 							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeStringConverterFieldInfo);
-							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.ToArrayConvertMethodInfo);
+							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.ToArrayConvertMethodInfo.MakeGenericMethod(typeof(string)));
 						}
 						else if (targetType == typeof(TToken[]))
 						{
 							il.Emit(processLdArg);
 							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeTokenConverterFieldInfo);
-							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.ToArrayConvertMethodInfo);
+							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.ToArrayConvertMethodInfo.MakeGenericMethod(typeof(TToken)));
 						}
 						else
 							throw new InvalidOperationException("Invalid target type.");

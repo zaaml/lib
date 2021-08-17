@@ -20,6 +20,7 @@ namespace Zaaml.Text
 			public readonly LeaveRuleNode LeaveNode;
 			public readonly Rule Rule;
 			public readonly RuleEntry RuleEntry;
+			public int RId = -1;
 
 			private SubGraph()
 			{
@@ -43,7 +44,7 @@ namespace Zaaml.Text
 			}
 
 			public Automata<TInstruction, TOperand> Automata { get; }
-
+			
 			public override string ToString()
 			{
 				return Rule.Name;

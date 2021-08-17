@@ -6,7 +6,7 @@ using System;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -16,31 +16,34 @@ namespace Zaaml.Text
 				{
 				}
 
-				private sealed class ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> : ExternalParserResources
-					where TExternalGrammar : Grammar<TExternalToken, TExternalNodeBase> where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
+				private sealed class ExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode> : ExternalParserResources
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+					where TExternalToken : unmanaged, Enum 
+					where TExternalNode : class
 				{
-					public readonly Pool<ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>> ExternalParserContextPool;
-					public readonly Pool<ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>> ExternalParserForkBranchPool;
-					public readonly Pool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>> ExternalParserForkBranchPredicateResultPool;
+					public readonly Pool<ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode>> ExternalParserContextPool;
+					public readonly Pool<ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode>> ExternalParserForkBranchPool;
+					public readonly Pool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode>> ExternalParserForkBranchPredicateResultPool;
 					public readonly Pool<ExternalParserForkPredicateResult<TExternalNode>> ExternalParserForkPredicateResultPool;
 					public readonly Pool<ExternalParserPredicateResult<TExternalNode>> ExternalParserPredicateResultPool;
 
 					public ExternalParserResources()
 					{
 						ExternalParserForkBranchPredicateResultPool =
-							new Pool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>>(p =>
-								new ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>(p));
+							new Pool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode>>(p =>
+								new ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode>(p));
 						ExternalParserForkPredicateResultPool = new Pool<ExternalParserForkPredicateResult<TExternalNode>>(p => new ExternalParserForkPredicateResult<TExternalNode>(p));
 						ExternalParserPredicateResultPool = new Pool<ExternalParserPredicateResult<TExternalNode>>(p => new ExternalParserPredicateResult<TExternalNode>(p));
 						ExternalParserForkBranchPool =
-							new Pool<ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>>(p => new ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>(this));
+							new Pool<ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode>>(p => new ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode>(this));
 						ExternalParserContextPool =
-							new Pool<ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>>(p => new ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>(this));
+							new Pool<ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode>>(p => new ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode>(this));
 					}
 				}
 
 				private sealed class ExternalParserResources<TExternalGrammar, TExternalToken> : ExternalParserResources
-					where TExternalGrammar : Grammar<TExternalToken> where TExternalToken : unmanaged, Enum
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> 
+					where TExternalToken : unmanaged, Enum
 				{
 					public readonly Pool<ExternalParserContext<TExternalGrammar, TExternalToken>> ExternalParserContextPool;
 					public readonly Pool<ExternalParserForkBranch<TExternalGrammar, TExternalToken>> ExternalParserForkBranchPool;

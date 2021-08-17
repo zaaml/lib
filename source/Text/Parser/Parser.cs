@@ -10,7 +10,9 @@ namespace Zaaml.Text
 	{
 	}
 
-	internal abstract partial class Parser<TGrammar, TToken> : Parser<TToken> where TGrammar : Grammar<TToken> where TToken : unmanaged, Enum
+	internal partial class Parser<TGrammar, TToken> : Parser<TToken> 
+		where TGrammar : Grammar<TGrammar, TToken> 
+		where TToken : unmanaged, Enum
 	{
 		private ParserAutomata _automata;
 
@@ -28,69 +30,85 @@ namespace Zaaml.Text
 		//	return ParseInternal<TResult>(parserRule, lexemeStream);
 		//}
 
-		private protected TResult ParseInternal<TResult>(Visitor<TResult> visitor, Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource)
+		private protected TResult ParseInternal<TResult>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource)
 		{
 			return Automata.Parse(visitor, parserRule, lexemeSource, CreateContext(lexemeSource), this);
 		}
 
-		private protected TResult ParseInternal<TResult>(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource)
+		private protected TResult ParseInternal<TResult>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource)
 		{
 			return Automata.Parse<TResult>(parserRule, lexemeSource, CreateContext(lexemeSource), this);
 		}
 
-		private protected void ParseInternal(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource)
+		private protected void ParseInternal(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource)
 		{
 			Automata.Parse(parserRule, lexemeSource, CreateContext(lexemeSource), this);
 		}
-	}
-
-	internal abstract class Parser<TGrammar, TToken, TNode> : Parser<TGrammar, TToken> where TGrammar : Grammar<TToken, TNode> where TToken : unmanaged, Enum where TNode : class
-	{
-		protected TResult ParseCore<TResult, TRuleNode>(Visitor<TResult> visitor, Grammar<TToken, TNode>.ParserRule<TRuleNode> parserRule, LexemeSource<TToken> lexemeSource) where TRuleNode : TNode
+		
+		protected TResult ParseCore<TResult, TNode>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> parserRule, LexemeSource<TToken> lexemeSource) where TNode : class
 		{
 			return ParseInternal(visitor, parserRule, lexemeSource);
 		}
 
-		protected TActualNode ParseCore<TActualNode>(Grammar<TToken, TNode>.ParserRule<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TNode
+		protected TNode ParseCore<TNode>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> parserRule, LexemeSource<TToken> lexemeSource) where TNode : class 
 		{
-			return (TActualNode)ParseInternal<TNode>(parserRule, lexemeSource);
+			return ParseInternal<TNode>(parserRule, lexemeSource);
 		}
 
-		protected TBaseNode ParseCore<TBaseNode, TActualNode>(Grammar<TToken, TNode>.ParserRule<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TBaseNode where TBaseNode : TNode
+		public readonly struct SyntaxNodeParser<TNode> where TNode : class
 		{
-			return (TBaseNode)ParseInternal<TNode>(parserRule, lexemeSource);
+			public Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> Syntax { get; }
+			
+			public Lexer<TGrammar, TToken> Lexer { get; }
+
+			public Parser<TGrammar, TToken> Parser { get; }
+
+			public SyntaxNodeParser(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> syntax, Lexer<TGrammar, TToken> lexer, Parser<TGrammar, TToken> parser)
+			{
+				Syntax = syntax;
+				Lexer = lexer;
+				Parser = parser;
+			}
+
+			public TNode Parse(string nodeString)
+			{
+				using var lexemeStream = Lexer.GetLexemeSource(nodeString);
+
+				return Parser.ParseCore(Syntax, lexemeStream);
+			}
 		}
 	}
 
-	internal abstract class Parser<TGrammar, TToken, TNode, TSyntaxFactory> : Parser<TGrammar, TToken>
-		where TGrammar : Grammar<TToken, TNode, TSyntaxFactory>
-		where TToken : unmanaged, Enum
-		where TNode : class
-		where TSyntaxFactory : SyntaxFactory<TNode>, new()
-	{
-		protected virtual TSyntaxFactory CreateSyntaxFactory()
-		{
-			return new TSyntaxFactory();
-		}
 
-		private protected override SyntaxFactory CreateSyntaxFactoryInternal()
-		{
-			return CreateSyntaxFactory();
-		}
+	//internal abstract class Parser<TGrammar, TToken, TNode, TSyntaxFactory> : Parser<TGrammar, TToken>
+	//	where TGrammar : Grammar<TGrammar, TToken, TNode, TSyntaxFactory>
+	//	where TToken : unmanaged, Enum
+	//	where TNode : class
+	//	where TSyntaxFactory : SyntaxFactory<TNode>, new()
+	//{
+	//	protected virtual TSyntaxFactory CreateSyntaxFactory()
+	//	{
+	//		return new TSyntaxFactory();
+	//	}
 
-		protected TResult ParseCore<TResult, TRuleNode>(Visitor<TResult> visitor, Grammar<TToken, TNode, TSyntaxFactory>.ParserRule<TRuleNode> parserRule, LexemeSource<TToken> lexemeSource) where TRuleNode : TNode
-		{
-			return ParseInternal(visitor, parserRule, lexemeSource);
-		}
+	//	private protected override SyntaxFactory CreateSyntaxFactoryInternal()
+	//	{
+	//		return CreateSyntaxFactory();
+	//	}
 
-		protected TActualNode ParseCore<TActualNode>(Grammar<TToken, TNode, TSyntaxFactory>.ParserRule<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TNode
-		{
-			return (TActualNode)ParseInternal<TNode>(parserRule, lexemeSource);
-		}
+	//	protected TResult ParseCore<TResult, TRuleNode>(Visitor<TResult> visitor, Grammar<TGrammar, TToken, TNode, TSyntaxFactory>.Parser.ParserSyntaxNode<TRuleNode> parserRule, LexemeSource<TToken> lexemeSource) where TRuleNode : TNode
+	//	{
+	//		return ParseInternal(visitor, parserRule, lexemeSource);
+	//	}
 
-		protected TBaseNode ParseCore<TBaseNode, TActualNode>(Grammar<TToken, TNode, TSyntaxFactory>.ParserRule<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TBaseNode where TBaseNode : TNode
-		{
-			return (TBaseNode)ParseInternal<TNode>(parserRule, lexemeSource);
-		}
-	}
+	//	protected TActualNode ParseCore<TActualNode>(Grammar<TGrammar, TToken, TNode, TSyntaxFactory>.Parser.ParserSyntaxNode<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TNode
+	//	{
+	//		return (TActualNode)ParseInternal<TNode>(parserRule, lexemeSource);
+	//	}
+
+	//	protected TBaseNode ParseCore<TBaseNode, TActualNode>(Grammar<TGrammar, TToken, TNode, TSyntaxFactory>.Parser.ParserSyntaxNode<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TBaseNode where TBaseNode : TNode
+	//	{
+	//		return (TBaseNode)ParseInternal<TNode>(parserRule, lexemeSource);
+	//	}
+	//}
 }

@@ -63,7 +63,7 @@ namespace Zaaml.Text
 
 		protected virtual bool LookAheadEnabled => false;
 
-		private int StackHashCodeDepthThreshold => 0;
+		private int StackHashCodeDepthThreshold => 1;
 
 		private static int ConvertFromOperand(TOperand operand)
 		{
@@ -128,16 +128,14 @@ namespace Zaaml.Text
 
 			internal AutomataResult Verify()
 			{
-				if (this is ExceptionAutomataResult exceptionResult)
-				{
-					var exception = exceptionResult.Exception;
+				if (this is not ExceptionAutomataResult exceptionResult) 
+					return this;
 
-					Dispose();
+				var exception = exceptionResult.Exception;
 
-					throw exception;
-				}
+				Dispose();
 
-				return this;
+				throw exception;
 			}
 		}
 

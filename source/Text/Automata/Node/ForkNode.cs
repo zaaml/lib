@@ -17,25 +17,30 @@ namespace Zaaml.Text
 				_pool = pool;
 			}
 
-			public PredicateEntryBase ActualEntry => ((PredicateNode)ExecutionPath.Nodes[NodeIndex]).PredicateEntry.GetActualPredicateEntry();
-
-			public ExecutionPath ExecutionPath { get; private set; }
+			public PredicateEntryBase ActualEntry => PredicateNode.PredicateEntry.GetActualPredicateEntry();
 
 			protected override string KindString => "_fork";
 
-			public int NodeIndex { get; private set; }
-
 			public PredicateResult PredicateResult { get; private set; }
+
+			public PredicateNode PredicateNode { get; private set; }
 
 			public ForkNode Mount(int nodeIndex, ExecutionPath executionPath, PredicateResult predicateResult)
 			{
-				NodeIndex = nodeIndex;
-				ExecutionPath = executionPath;
 				PredicateResult = predicateResult;
+				PredicateNode = (PredicateNode)executionPath.Nodes[nodeIndex];
 
-				var sourceNode = ExecutionPath.Nodes[NodeIndex];
+				CopyLookup(PredicateNode);
 
-				CopyLookup(sourceNode);
+				return this;
+			}
+
+			public ForkNode Mount(PredicateNode predicateNode, PredicateResult predicateResult)
+			{
+				PredicateResult = predicateResult;
+				PredicateNode = predicateNode;
+
+				CopyLookup(PredicateNode);
 
 				return this;
 			}

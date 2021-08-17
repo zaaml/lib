@@ -27,10 +27,10 @@ namespace Zaaml.Text
 					if (SuccessSubGraph == null)
 						return;
 
-					var lexerStateRule = ((LexerRule)SuccessSubGraph.Rule).TokenRule;
+					var lexerRule = ((LexerRule)SuccessSubGraph.Rule);
 
-					Token = lexerStateRule.Token;
-					TokenCode = lexerStateRule.TokenCode;
+					Token = lexerRule.Token;
+					TokenCode = lexerRule.TokenCode;
 				}
 
 				public LexerDfaState(DfaNode[] nodes, DfaTransition[] lazyTransitions, DfaTransition successTransition, DfaTransition prevSuccessTransition, int hashCode, LexerDfaBuilder builder, bool build = true,
@@ -40,7 +40,7 @@ namespace Zaaml.Text
 					if (SuccessSubGraph == null)
 						return;
 
-					var lexerStateRule = ((LexerRule)SuccessSubGraph.Rule).TokenRule;
+					var lexerStateRule = ((LexerRule)SuccessSubGraph.Rule);
 
 					Token = lexerStateRule.Token;
 					TokenCode = lexerStateRule.TokenCode;
@@ -61,9 +61,9 @@ namespace Zaaml.Text
 					if (subGraph == null)
 						return false;
 
-					var lexerStateRule = ((LexerRule)SuccessSubGraph.Rule).TokenRule;
+					var lexerStateRule = ((LexerRule)SuccessSubGraph.Rule);
 
-					return lexerStateRule.Skip;
+					return lexerStateRule.IsTrivia;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]

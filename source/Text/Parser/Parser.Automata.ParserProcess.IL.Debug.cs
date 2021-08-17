@@ -10,7 +10,7 @@ using static Zaaml.Core.Reflection.BF;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -64,7 +64,7 @@ namespace Zaaml.Text
 				{
 				}
 
-				public partial class ParserILGenerator
+				internal partial class ParserILGenerator
 				{
 					private static readonly MethodInfo DebugPreRuleEnterMethodInfo = ParserProcessType.GetMethod(nameof(DebugPreRuleEnter), IPNP);
 					private static readonly MethodInfo DebugPostRuleEnterMethodInfo = ParserProcessType.GetMethod(nameof(DebugPostRuleEnter), IPNP);
@@ -85,84 +85,84 @@ namespace Zaaml.Text
 					private static readonly MethodInfo DebugPostConsumeLexerValueMethodInfo = ParserProcessType.GetMethod(nameof(DebugPostConsumeLexerValue), IPNP);
 
 
-					private void EmitDebugPostConsumeLexerValue(Context context, ProductionArgument ruleEntry)
+					private void EmitDebugPostConsumeLexerValue(ILContext context, ProductionArgument ruleEntry)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(ruleEntry);
 						context.IL.Emit(OpCodes.Call, DebugPostConsumeLexerValueMethodInfo);
 					}
 
-					private void EmitDebugPostConsumeParserValue(Context context, ProductionArgument ruleEntry)
+					private void EmitDebugPostConsumeParserValue(ILContext context, ProductionArgument ruleEntry)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(ruleEntry);
 						context.IL.Emit(OpCodes.Call, DebugPostConsumeParserValueMethodInfo);
 					}
 
-					private void EmitDebugPostProductionEnter(Context context, ParserProduction parserProduction)
+					private void EmitDebugPostProductionEnter(ILContext context, ParserProduction parserProduction)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(parserProduction);
 						context.IL.Emit(OpCodes.Call, DebugPostProductionEnterMethodInfo);
 					}
 
-					private void EmitDebugPostProductionLeave(Context context, ParserProduction parserProduction)
+					private void EmitDebugPostProductionLeave(ILContext context, ParserProduction parserProduction)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(parserProduction);
 						context.IL.Emit(OpCodes.Call, DebugPostProductionLeaveMethodInfo);
 					}
 
-					private void EmitDebugPostRuleEnter(Context context, RuleEntry ruleEntry)
+					private void EmitDebugPostRuleEnter(ILContext context, RuleEntry ruleEntry)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(ruleEntry);
 						context.IL.Emit(OpCodes.Call, DebugPostRuleEnterMethodInfo);
 					}
 
-					private void EmitDebugPostRuleLeave(Context context, RuleEntry ruleEntry)
+					private void EmitDebugPostRuleLeave(ILContext context, RuleEntry ruleEntry)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(ruleEntry);
 						context.IL.Emit(OpCodes.Call, DebugPostRuleLeaveMethodInfo);
 					}
 
-					private void EmitDebugPreConsumeLexerValue(Context context, ProductionArgument ruleEntry)
+					private void EmitDebugPreConsumeLexerValue(ILContext context, ProductionArgument ruleEntry)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(ruleEntry);
 						context.IL.Emit(OpCodes.Call, DebugPreConsumeLexerValueMethodInfo);
 					}
 
-					private void EmitDebugPreConsumeParserValue(Context context, ProductionArgument ruleEntry)
+					private void EmitDebugPreConsumeParserValue(ILContext context, ProductionArgument ruleEntry)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(ruleEntry);
 						context.IL.Emit(OpCodes.Call, DebugPreConsumeParserValueMethodInfo);
 					}
 
-					private void EmitDebugPreProductionEnter(Context context, ParserProduction parserProduction)
+					private void EmitDebugPreProductionEnter(ILContext context, ParserProduction parserProduction)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(parserProduction);
 						context.IL.Emit(OpCodes.Call, DebugPreProductionEnterMethodInfo);
 					}
 
-					private void EmitDebugPreProductionLeave(Context context, ParserProduction parserProduction)
+					private void EmitDebugPreProductionLeave(ILContext context, ParserProduction parserProduction)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(parserProduction);
 						context.IL.Emit(OpCodes.Call, DebugPreProductionLeaveMethodInfo);
 					}
 
-					private void EmitDebugPreRuleEnter(Context context, RuleEntry ruleEntry)
+					private void EmitDebugPreRuleEnter(ILContext context, RuleEntry ruleEntry)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(ruleEntry);
 						context.IL.Emit(OpCodes.Call, DebugPreRuleEnterMethodInfo);
 					}
 
-					private void EmitDebugPreRuleLeave(Context context, RuleEntry ruleEntry)
+					private void EmitDebugPreRuleLeave(ILContext context, RuleEntry ruleEntry)
 					{
 						context.EmitLdProcess();
 						context.EmitLdValue(ruleEntry);

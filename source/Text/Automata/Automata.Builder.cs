@@ -11,7 +11,7 @@ namespace Zaaml.Text
 	{
 		private int _inlineStateCounter;
 
-		private HashSet<Rule> Rules { get; } = new HashSet<Rule>();
+		private HashSet<Rule> Rules { get; } = new();
 
 		protected void AddRule(Rule rule, Production production)
 		{

@@ -19,18 +19,16 @@ namespace Zaaml.Text
 		{
 			// ReSharper disable once MemberCanBeProtected.Local
 			[SuppressMessage("ReSharper", "UnusedMember.Local")]
-			private sealed partial class AutomataStack : PoolSharedObject<AutomataStack>
+			internal partial class AutomataStack : PoolSharedObject<AutomataStack>
 			{
 				private readonly Automata<TInstruction, TOperand> _automata;
 				private readonly List<SubGraph> _automataSubGraphRegistry;
 				private readonly MemorySpanAllocator<int> _memorySpanAllocator;
 				private int _count;
+				private int _hashCode;
+				private int _hashCodeDepth;
+				private bool _hashCodeDirty;
 				private MemorySpan<int> _memorySpan;
-				private int _returnHashCode;
-				private int _returnHashCodeDepth;
-				private int _stackHashCode;
-				private int _stackHashCodeDepth;
-				private bool _stackHashCodeDirty;
 
 				public AutomataStack(Automata<TInstruction, TOperand> automata, MemorySpanAllocator<int> memorySpanAllocator, Pool<AutomataStack> pool) : base(pool)
 				{
@@ -39,24 +37,41 @@ namespace Zaaml.Text
 					_automataSubGraphRegistry = _automata._subGraphRegistry;
 				}
 
+				public AutomataStack(Automata<TInstruction, TOperand> automata, MemorySpanAllocator<int> memorySpanAllocator) : base(null)
+				{
+					_automata = automata;
+					_memorySpanAllocator = memorySpanAllocator;
+					_automataSubGraphRegistry = _automata._subGraphRegistry;
+				}
+
 				public int Capacity => _memorySpan.Length;
 
-				public IEnumerable<string> DebugItems => SpanPrivate.ToArray().Select(id => _automataSubGraphRegistry[id].ToString());
+				public IEnumerable<string> DebugItems => SpanPrivate.ToArray().Select(id => _automataSubGraphRegistry[id & SubGraphIdMask].ToString());
 
 				public string DebugView => string.Join("\n", DebugItems);
 
-				public int ReturnDepth
+				public int HashCodeDepth
 				{
 					get
 					{
-						if (_stackHashCodeDirty)
-							EvalStackHashCode();
+						if (_hashCodeDirty)
+							EvalHashCode();
 
-						return _returnHashCodeDepth;
+						return _hashCodeDepth;
 					}
 				}
 
-				public int ReturnHashCode => _stackHashCodeDirty ? EvalStackHashCode() : _returnHashCode;
+				public int HashCode => _hashCodeDirty ? EvalHashCode() : _hashCode;
+
+				public ReadOnlySpan<int> HashCodeSpan
+				{
+					get
+					{
+						var hashCodeDepth = HashCodeDepth;
+
+						return _memorySpan.Span.Slice(_count - hashCodeDepth, hashCodeDepth);
+					}
+				}
 
 				public ReadOnlySpan<int> Span => SpanPrivate;
 
@@ -75,22 +90,11 @@ namespace Zaaml.Text
 
 				public static bool AreHashDepthEqual(AutomataStack stack1, AutomataStack stack2)
 				{
-					stack1.EvalStackHashCode();
-					stack2.EvalStackHashCode();
+					stack1.EvalHashCode();
+					stack2.EvalHashCode();
 
-					var span1 = stack1.SpanPrivate.Slice(stack1._stackHashCode);
-					var span2 = stack2.SpanPrivate.Slice(stack2._stackHashCode);
-
-					return span1.SequenceEqual(span2);
-				}
-
-				public static bool AreReturnDepthEqual(AutomataStack stack1, AutomataStack stack2)
-				{
-					stack1.EvalStackHashCode();
-					stack2.EvalStackHashCode();
-
-					var span1 = stack1.SpanPrivate.Slice(stack1._returnHashCodeDepth);
-					var span2 = stack2.SpanPrivate.Slice(stack2._returnHashCodeDepth);
+					var span1 = stack1.SpanPrivate.Slice(stack1._hashCode);
+					var span2 = stack2.SpanPrivate.Slice(stack2._hashCode);
 
 					return span1.SequenceEqual(span2);
 				}
@@ -98,10 +102,8 @@ namespace Zaaml.Text
 				public void Clear()
 				{
 					_count = 0;
-					_returnHashCode = 0;
-					_returnHashCodeDepth = 0;
-					_stackHashCode = 0;
-					_stackHashCodeDirty = false;
+					_hashCode = 0;
+					_hashCodeDirty = false;
 				}
 
 				public AutomataStack Clone()
@@ -111,6 +113,20 @@ namespace Zaaml.Text
 					clone.CopyFrom(this);
 
 					return clone;
+				}
+
+				private AutomataStack CloneDfa(MemorySpan<int> memorySpan, MemorySpanAllocator<int> memorySpanAllocator)
+				{
+					var automataStack = new AutomataStack(_automata, memorySpanAllocator)
+					{
+						_memorySpan = memorySpan,
+						_count = memorySpan.Length,
+						_hashCodeDirty = _hashCodeDirty,
+						_hashCodeDepth = _hashCodeDepth,
+						_hashCode = _hashCode
+					};
+
+					return automataStack;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,23 +139,29 @@ namespace Zaaml.Text
 
 					source.SpanPrivate.CopyTo(SpanPrivate);
 
-					_stackHashCodeDirty = source._stackHashCodeDirty;
-					_stackHashCodeDepth = source._stackHashCodeDepth;
-					_returnHashCode = source._returnHashCode;
-					_stackHashCode = source._stackHashCode;
-					_returnHashCodeDepth = source._returnHashCodeDepth;
+					_hashCodeDirty = source._hashCodeDirty;
+					_hashCodeDepth = source._hashCodeDepth;
+					_hashCode = source._hashCode;
 				}
 
-				public AutomataStack Deallocate()
+				public AutomataStack CreateDfaStack(MemorySpanAllocator<int> memorySpanAllocator)
+				{
+					var hashCodeDepth = HashCodeDepth;
+					var memorySpan = memorySpanAllocator.Allocate(hashCodeDepth);
+
+					HashCodeSpan.CopyTo(memorySpan.Span);
+
+					return CloneDfa(memorySpan, memorySpanAllocator);
+				}
+
+				public void Deallocate()
 				{
 					if (_memorySpan.IsEmpty)
 						throw new InvalidOperationException("Not allocated");
 
 					_memorySpan = _memorySpan.DisposeExchange();
 					_count = 0;
-					_stackHashCodeDirty = true;
-
-					return this;
+					_hashCodeDirty = true;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -165,42 +187,82 @@ namespace Zaaml.Text
 							_memorySpan[_count++] = subGraphId;
 					}
 
-					_stackHashCodeDirty = true;
+					_hashCodeDirty = true;
 
-					return path.OutputReturn ? _automataSubGraphRegistry[output].LeaveNode : path.Output;
+					return path.OutputReturn ? _automataSubGraphRegistry[output & SubGraphIdMask].LeaveNode : path.Output;
 				}
 
-				private int EvalStackHashCode()
+				public AutomataStack EvalDfa(ReadOnlySpan<int> executionPaths, out Node node)
 				{
-					_returnHashCodeDepth = 0;
-					_stackHashCodeDepth = 0;
-					_returnHashCode = 0;
-					_stackHashCode = 0;
+					var executionPathRegistry = _automata._executionPathRegistry;
+					var stackDepth = 0;
+
+					for (var i = 0; i < executionPaths.Length; i++)
+					{
+						var executionPath = executionPathRegistry[executionPaths[i]];
+
+						if (stackDepth < executionPath.StackDepth)
+							stackDepth = executionPath.StackDepth;
+					}
+
+					var nextCount = _count + stackDepth;
+					var memorySpan = _memorySpanAllocator.Allocate(nextCount);
+					var span = Span;
+
+					span.CopyTo(memorySpan);
+
+					var automataStack = new AutomataStack(_automata, _memorySpanAllocator)
+					{
+						_memorySpan = memorySpan,
+						_count = span.Length,
+						_hashCodeDirty = true
+					};
+
+					node = null;
+
+					foreach (var executionPathId in executionPaths)
+					{
+						var executionPath = executionPathRegistry[executionPathId];
+
+						node = automataStack.Eval(executionPath);
+					}
+
+					return automataStack;
+				}
+
+				private int EvalHashCode()
+				{
+					_hashCode = EvalHashCode(0, out _hashCodeDepth);
+					_hashCodeDirty = false;
+					
+					return _hashCode;
+				}
+
+				public int EvalHashCode(int tail, out int hashCodeDepth)
+				{
+					var hashCode = 0;
+
+
+					hashCodeDepth = 0;
 
 					var lastReturnFound = false;
 					var stackHashCodeDepthThreshold = _automata.StackHashCodeDepthThreshold;
-
+					
 					unchecked
 					{
 						var span = _memorySpan.Span.Slice(0, _count);
-						var subGraphRegistry = _automataSubGraphRegistry;
 
-						for (var index = span.Length - 1; index >= 0; index--)
+						for (var index = span.Length - 1; index >= tail; index--)
 						{
 							var id = span[index];
-							var subGraph = subGraphRegistry[id];
 
-							_stackHashCode *= 397;
-							_stackHashCode ^= id;
-							_stackHashCodeDepth++;
+							hashCode *= 397;
+							hashCode ^= id & SubGraphIdMask;
 
-							if (lastReturnFound == false && subGraph.LeaveNode.HasReturnPathSafe)
-							{
-								_returnHashCodeDepth = _stackHashCodeDepth;
-								_returnHashCode = _stackHashCode;
+							hashCodeDepth++;
 
+							if (lastReturnFound == false && id > SubGraphIdMask)
 								continue;
-							}
 
 							lastReturnFound = true;
 
@@ -209,9 +271,7 @@ namespace Zaaml.Text
 						}
 					}
 
-					_stackHashCodeDirty = false;
-
-					return _stackHashCode;
+					return hashCode;
 				}
 
 				private void Expand()
@@ -228,40 +288,6 @@ namespace Zaaml.Text
 					return fork;
 				}
 
-				//public void MemoryExchange(AutomataStack source, AutomataStackMemoryExchangeKind exchangeKind)
-				//{
-				//	switch (exchangeKind)
-				//	{
-				//		case AutomataStackMemoryExchangeKind.KeepNone:
-				//			break;
-
-				//		case AutomataStackMemoryExchangeKind.KeepTarget:
-
-				//		{
-				//			var targetSpan = _memorySpan.Span.Slice(0, _count);
-				//			var sourceSpan = source._memorySpan.Span.Slice(0, _count);
-
-				//			targetSpan.CopyTo(sourceSpan);
-				//		}
-
-				//			break;
-				//		case AutomataStackMemoryExchangeKind.KeepSource:
-
-				//		{
-				//			var targetSpan = _memorySpan.Span.Slice(0, source._count);
-				//			var sourceSpan = source._memorySpan.Span.Slice(0, source._count);
-
-				//			sourceSpan.CopyTo(targetSpan);
-				//		}
-
-				//			break;
-				//		default:
-				//			throw new NotSupportedException();
-				//	}
-
-				//	(_memorySpan, source._memorySpan) = (source._memorySpan, _memorySpan);
-				//}
-
 				protected override void OnReleased()
 				{
 					if (_memorySpan.IsEmpty == false)
@@ -273,68 +299,68 @@ namespace Zaaml.Text
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public SubGraph Peek(int headIndex)
 				{
-					return _automata._subGraphRegistry[_memorySpan[_count - headIndex - 1]];
+					return _automataSubGraphRegistry[_memorySpan[_count - headIndex - 1] & SubGraphIdMask];
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public SubGraph Peek()
 				{
-					return _automata._subGraphRegistry[_memorySpan[_count - 1]];
+					return _automataSubGraphRegistry[_memorySpan[_count - 1] & SubGraphIdMask];
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public LeaveRuleNode PeekLeaveNode(int headIndex)
 				{
-					return _automata._subGraphRegistry[_memorySpan[_count - headIndex - 1]].LeaveNode;
+					return _automataSubGraphRegistry[_memorySpan[_count - headIndex - 1] & SubGraphIdMask].LeaveNode;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public LeaveRuleNode PeekLeaveNode()
 				{
-					return _automata._subGraphRegistry[_memorySpan[_count - 1]].LeaveNode;
+					return _automataSubGraphRegistry[_memorySpan[_count - 1] & SubGraphIdMask].LeaveNode;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public SubGraph Pop()
 				{
-					_stackHashCodeDirty = true;
+					_hashCodeDirty = true;
 
-					return _automataSubGraphRegistry[_memorySpan[--_count]];
+					return _automataSubGraphRegistry[_memorySpan[--_count] & SubGraphIdMask];
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public LeaveRuleNode PopLeaveNode()
 				{
-					_stackHashCodeDirty = true;
+					_hashCodeDirty = true;
 
-					return _automataSubGraphRegistry[_memorySpan[--_count]].LeaveNode;
+					return _automataSubGraphRegistry[_memorySpan[--_count] & SubGraphIdMask].LeaveNode;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				private void PopNoReturn()
 				{
-					_stackHashCodeDirty = true;
+					_hashCodeDirty = true;
 					_count--;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void Push(SubGraph subGraph)
 				{
-					_stackHashCodeDirty = true;
+					_hashCodeDirty = true;
 
-					if (_count == _memorySpan.Length)
-						Expand();
+					//if (_count == _memorySpan.Length)
+					//	Expand();
 
-					_memorySpan[_count++] = subGraph.Id;
+					_memorySpan[_count++] = subGraph.RId;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				private void Push(int id)
 				{
-					_stackHashCodeDirty = true;
+					_hashCodeDirty = true;
 
-					if (_count == _memorySpan.Length)
-						Expand();
+					//if (_count == _memorySpan.Length)
+					//	Expand();
 
 					_memorySpan[_count++] = id;
 				}
@@ -342,6 +368,72 @@ namespace Zaaml.Text
 				private void Resize(int size)
 				{
 					_memorySpan.Resize(BitUtils.Power2Ceiling(size), true);
+				}
+
+				public static IEqualityComparer<AutomataStack> EqualityComparer => AutomataStackEqualityComparer.Instance;
+				
+				public static IEqualityComparer<AutomataStack> FullEqualityComparer => AutomataStackFullEqualityComparer.Instance;
+
+				private sealed class AutomataStackEqualityComparer : IEqualityComparer<AutomataStack>
+				{
+					public static readonly AutomataStackEqualityComparer Instance = new();
+
+					private AutomataStackEqualityComparer()
+					{
+					}
+
+					public bool Equals(AutomataStack x, AutomataStack y)
+					{
+						var xs = x.HashCodeSpan;
+						var ys = y.HashCodeSpan;
+
+						if (xs.Length != ys.Length)
+							return false;
+
+						for (var i = 0; i < xs.Length; i++)
+						{
+							if (xs[i] != ys[i])
+								return false;
+						}
+
+						return true;
+					}
+
+					public int GetHashCode(AutomataStack key)
+					{
+						return key.HashCode;
+					}
+				}
+				
+				private sealed class AutomataStackFullEqualityComparer : IEqualityComparer<AutomataStack>
+				{
+					public static readonly AutomataStackFullEqualityComparer Instance = new();
+
+					private AutomataStackFullEqualityComparer()
+					{
+					}
+
+					public bool Equals(AutomataStack x, AutomataStack y)
+					{
+						var xs = x.Span;
+						var ys = y.Span;
+
+						if (xs.Length != ys.Length)
+							return false;
+
+						for (var i = 0; i < xs.Length; i++)
+						{
+							if (xs[i] != ys[i])
+								return false;
+						}
+
+						return true;
+					}
+
+					public int GetHashCode(AutomataStack key)
+					{
+						return key.HashCode;
+					}
 				}
 			}
 		}

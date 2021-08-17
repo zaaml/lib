@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
@@ -11,31 +12,101 @@ using System.Runtime.CompilerServices;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
 			private abstract class ProductionBinder
 			{
+				public virtual object Bind(ProductionEntity productionEntity, ParserProcess process)
+				{
+					throw new NotSupportedException();
+				}
+
+				public void Build()
+				{
+					BuildCore();
+				}
+
+				protected abstract void BuildCore();
+			}
+
+			private abstract class ValueBinder : ProductionBinder
+			{
+				protected ValueBinder(ParserProduction parserProduction)
+				{
+					ParserProduction = parserProduction;
+				}
+
+				protected ParserProduction ParserProduction { get; }
+			}
+
+			private sealed class ConstValueBinder : ValueBinder
+			{
+				public ConstValueBinder(ParserProduction parserProduction) : base(parserProduction)
+				{
+					ConstValue = parserProduction.GrammarParserProduction.ProductionBinding.ConstValue;
+				}
+
+				private object ConstValue { get; }
+
+				public override object Bind(ProductionEntity productionEntity, ParserProcess process)
+				{
+					return ConstValue;
+				}
+
+				protected override void BuildCore()
+				{
+				}
+			}
+
+			private sealed class ReturnValueBinder : ValueBinder
+			{
+				public ReturnValueBinder(ParserProduction parserProduction) : base(parserProduction)
+				{
+				}
+
+				private SingleArgumentBinder ArgumentBinder { get; set; }
+
+				public override object Bind(ProductionEntity productionEntity, ParserProcess process)
+				{
+					return productionEntity.Arguments[ArgumentBinder.ProductionArgument.ArgumentIndex].Build();
+				}
+
+				protected override void BuildCore()
+				{
+					var node = (Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax)ParserProduction.ParserSyntax;
+					var productionArgument = ParserProduction.Arguments.Single(a => node.NodeType.IsAssignableFrom(a.ArgumentType));
+
+					ArgumentBinder = new SingleArgumentBinder(productionArgument, productionArgument.ArgumentType);
+				}
+			}
+
+			private abstract class FactoryBinder : ValueBinder
+			{
 				private Func<ProductionEntity, ParserProcess, object> _createInstanceDelegate;
 
-				protected virtual ProductionArgumentBinder[] ArgumentBinders => Array.Empty<ProductionArgumentBinder>();
+				protected FactoryBinder(ParserProduction parserProduction) : base(parserProduction)
+				{
+				}
 
-				protected virtual object ConstValue => null;
+				private ProductionArgumentBinder[] ArgumentBinders { get; set; }
 
 				private Func<ProductionEntity, ParserProcess, object> CreateInstanceDelegate => _createInstanceDelegate ??= BuildCreateInstanceDelegate();
 
-				public abstract bool IsFactoryBinder { get; }
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public sealed override object Bind(ProductionEntity productionEntity, ParserProcess process)
+				{
+					return CreateInstanceDelegate(productionEntity, process);
+				}
 
-				protected bool Return { get; set; }
-
-				public bool TryReturn { get; protected set; }
+				protected override void BuildCore()
+				{
+					ArgumentBinders = CreateArgumentBinders();
+				}
 
 				private Func<ProductionEntity, ParserProcess, object> BuildCreateInstanceDelegate()
 				{
-					if (ConstValue != null)
-						return (_, _) => ConstValue;
-
 					var dynMethod = new DynamicMethod("CreateInstance", typeof(object), new[] { typeof(ProductionBinder), typeof(ProductionEntity), typeof(ParserProcess) }, typeof(ProductionBinder), true);
 					var ilBuilder = dynMethod.GetILGenerator();
 					var productionEntityLocal = ilBuilder.DeclareLocal(typeof(ProductionEntity));
@@ -49,11 +120,7 @@ namespace Zaaml.Text
 					for (var index = 0; index < ArgumentBinders.Length; index++)
 						ArgumentBinders[index].EmitPushResetArgument(productionEntityLocal, entityArgumentLocal, ilBuilder, OpCodes.Ldarg_2);
 
-					if (Return)
-					{
-					}
-					else
-						EmitLeave(ilBuilder);
+					EmitLeave(ilBuilder);
 
 					ilBuilder.Emit(OpCodes.Ret);
 
@@ -62,19 +129,18 @@ namespace Zaaml.Text
 					return (Func<ProductionEntity, ParserProcess, object>)dynMethod.CreateDelegate(delegateType, this);
 				}
 
-				protected static ProductionArgumentBinder CreateArgumentBinder(Type argumentType, ProductionArgumentCollection productionArguments)
+				protected static ProductionArgumentBinder CreateArgumentBinder(Type argumentType, ProductionNamedArgumentCollection productionArguments)
 				{
-					return productionArguments.Length == 1 ? new SingleArgumentBinder(productionArguments[0], argumentType) : new MultiArgumentBinder(productionArguments.ToArray(), argumentType);
+					switch (productionArguments.Length)
+					{
+						case 1:
+							return new SingleArgumentBinder(productionArguments[0], argumentType);
+						default:
+							return argumentType.IsArray ? new MultiArgumentBinder(productionArguments.ToArray(), argumentType) : new SwitchArgumentBinder(productionArguments.ToArray(), argumentType);
+					}
 				}
 
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				public object CreateInstance(ProductionEntity productionEntity, ParserProcess process)
-				{
-					if (TryReturn && productionEntity.ConsumeCount == 1)
-						return productionEntity.Arguments[0].Build();
-
-					return CreateInstanceDelegate(productionEntity, process);
-				}
+				protected abstract ProductionArgumentBinder[] CreateArgumentBinders();
 
 				protected virtual void EmitEnter(ILGenerator ilBuilder)
 				{

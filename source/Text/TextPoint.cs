@@ -110,7 +110,18 @@ namespace Zaaml.Text
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(Index, TextSource, TextString);
+			unchecked
+			{
+				var hashCode = Index.GetHashCode();
+
+				if (TextSource != null)
+					hashCode = (hashCode * 397) ^ TextSource.GetHashCode();
+
+				if (TextString != null)
+					hashCode = (hashCode * 397) ^ TextString.GetHashCode();
+
+				return hashCode;
+			}
 		}
 
 		public static implicit operator int(TextPoint textPoint)

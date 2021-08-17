@@ -8,7 +8,7 @@ using System.Reflection.Emit;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
@@ -21,7 +21,7 @@ namespace Zaaml.Text
 					ArgumentType = argumentType;
 				}
 
-				public Type ArgumentType { get; }
+				protected Type ArgumentType { get; }
 
 				public abstract bool ConsumeValue { get; }
 

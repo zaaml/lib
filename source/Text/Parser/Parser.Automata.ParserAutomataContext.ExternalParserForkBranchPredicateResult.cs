@@ -7,14 +7,15 @@ using Zaaml.Core.Pools;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
 		private sealed partial class ParserAutomata
 		{
 			private abstract partial class ParserAutomataContext
 			{
 				private sealed class ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken> : PredicateResult
-					where TExternalGrammar : Grammar<TExternalToken> where TExternalToken : unmanaged, Enum
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+					where TExternalToken : unmanaged, Enum
 				{
 					private readonly IPool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken>> _pool;
 
@@ -42,13 +43,15 @@ namespace Zaaml.Text
 					}
 				}
 
-				private sealed class ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> : PredicateResult<TExternalNode>
-					where TExternalGrammar : Grammar<TExternalToken, TExternalNodeBase> where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
+				private sealed class ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode> : PredicateResult<TExternalNode>
+					where TExternalGrammar : Grammar<TExternalGrammar,TExternalToken> 
+					where TExternalToken : unmanaged, Enum 
+					where TExternalNode : class
 				{
-					private readonly IPool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>> _pool;
-					private ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> _forkBranch;
+					private readonly IPool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode>> _pool;
+					private ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode> _forkBranch;
 
-					public ExternalParserForkBranchPredicateResult(IPool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase>> pool)
+					public ExternalParserForkBranchPredicateResult(IPool<ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode>> pool)
 					{
 						_pool = pool;
 					}
@@ -69,7 +72,7 @@ namespace Zaaml.Text
 						return _forkBranch.ExternalContext.ExternalAutomataContext.GetResult<TExternalNode>();
 					}
 
-					public ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> Mount(ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode, TExternalNodeBase> forkBranch)
+					public ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken, TExternalNode> Mount(ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode> forkBranch)
 					{
 						_forkBranch = forkBranch;
 

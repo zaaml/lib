@@ -23,7 +23,7 @@ namespace Zaaml.Text
 
 			private int ReaderPosition { get; set; }
 
-			public int ReadPage(int bufferOffset, int bufferLength, TInstruction[] instructionsBuffer, int[] operandsBuffer)
+			public int ReadPage(ref int position, int bufferOffset, int bufferLength, TInstruction[] instructionsBuffer, int[] operandsBuffer)
 			{
 				var count = bufferOffset;
 				var decoder = _decoder;
@@ -43,11 +43,11 @@ namespace Zaaml.Text
 				return count - bufferOffset;
 			}
 
-			public int ReadPage(int bufferLength, out TInstruction[] instructionsBuffer, out int[] operandsBuffer)
+			public int ReadPage(ref int position, int bufferLength, out TInstruction[] instructionsBuffer, out int[] operandsBuffer)
 			{
 				RentBuffers(bufferLength, out instructionsBuffer, out operandsBuffer);
 
-				return ReadPage(0, bufferLength, instructionsBuffer, operandsBuffer);
+				return ReadPage(ref position, 0, bufferLength, instructionsBuffer, operandsBuffer);
 			}
 
 			public void ReleaseBuffers(TInstruction[] instructionsBuffer, int[] operandsBuffer)

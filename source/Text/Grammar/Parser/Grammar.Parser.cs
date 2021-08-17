@@ -3,86 +3,51 @@
 // </copyright>
 
 using System;
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 
 namespace Zaaml.Text
 {
-	internal partial class Grammar<TToken> where TToken : unmanaged, Enum
+	internal abstract partial class Grammar<TGrammar, TToken>
 	{
-		private static Type _grammarType;
+		internal IEnumerable<ParserGrammar.NodeSyntax> NodeCollection => ParserGrammar.NodeCollection;
 
-		protected static ParserFragment CreateParserFragment([CallerMemberName] string name = null)
+		internal IEnumerable<ParserGrammar.FragmentSyntax> ParserSyntaxFragmentCollection => ParserGrammar.ParserSyntaxFragmentCollection;
+
+		public partial class ParserGrammar
 		{
-			var parserFragment = new ParserFragment(false)
+			private static readonly Dictionary<string, NodeSyntax> NodeDictionary = new();
+			private static readonly Dictionary<string, FragmentSyntax> FragmentDictionary = new();
+			private static readonly Dictionary<int, Production> ProductionDictionary = new();
+
+			internal static IEnumerable<NodeSyntax> NodeCollection => NodeDictionary.Values;
+
+			internal static IEnumerable<FragmentSyntax> ParserSyntaxFragmentCollection => FragmentDictionary.Values;
+
+			protected static ExternalTokenSymbol<TExternalGrammar, TExternalToken> ExternalLexer<TExternalGrammar, TExternalToken>(Grammar<TExternalGrammar, TExternalToken>.LexerGrammar.TokenSyntax externalToken)
+				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+				where TExternalToken : unmanaged, Enum
 			{
-				Name = name
-			};
-
-			CreatedParserFragments.Add(parserFragment);
-
-			return parserFragment;
-		}
-
-		protected static ParserRule CreateParserRule([CallerMemberName] string name = null)
-		{
-			var parserRule = new ParserRule
-			{
-				Name = name
-			};
-
-			CreatedParserRules.Add(parserRule);
-
-			return parserRule;
-		}
-
-		private static Type GetGrammarType()
-		{
-			if (_grammarType != null)
-				return _grammarType;
-
-			var stackTrace = new StackTrace();
-
-			for (var i = 0; i < stackTrace.FrameCount; i++)
-			{
-				var frame = stackTrace.GetFrame(i);
-				var methodBase = frame.GetMethod();
-				var ci = methodBase as ConstructorInfo;
-
-				if (ci == null)
-					continue;
-
-				var declaringType = ci.DeclaringType;
-
-				if (declaringType == null)
-					continue;
-
-				if (!typeof(Grammar<TToken>).IsAssignableFrom(declaringType) || declaringType.TypeInitializer != ci)
-					continue;
-
-				_grammarType = declaringType;
-
-				break;
+				return new ExternalTokenSymbol<TExternalGrammar, TExternalToken>(externalToken);
 			}
 
-			return _grammarType;
-		}
+			private protected static void RegisterFragmentSyntax(FragmentSyntax fragment)
+			{
+				FragmentDictionary.Add(fragment.Name, fragment);
+			}
 
-		protected static ExternalLexerEntry<TExternalToken> ExternalLexer<TExternalToken>(Grammar<TExternalToken>.TokenRule externalLexerRule) where TExternalToken : unmanaged, Enum
-		{
-			return new ExternalLexerEntry<TExternalToken>(externalLexerRule);
-		}
+			private protected static void RegisterNodeSyntax(NodeSyntax node)
+			{
+				NodeDictionary.Add(node.Name, node);
+			}
 
-		protected static ExternalParserEntry<TExternalToken, TExternalNode, TExternalNodeBase> ExternalParser<TExternalToken, TExternalNode, TExternalNodeBase>(Grammar<TExternalToken, TExternalNodeBase>.ParserRule<TExternalNode> externalParserRule)
-			where TExternalToken : unmanaged, Enum where TExternalNode : TExternalNodeBase where TExternalNodeBase : class
-		{
-			return new ExternalParserEntry<TExternalToken, TExternalNode, TExternalNodeBase>(externalParserRule);
-		}
+			private protected static int RegisterParserSyntaxProduction(Production parserSyntaxProduction)
+			{
+				var index = ProductionDictionary.Count;
 
-		protected static ExternalParserEntry<TExternalToken> ExternalParser<TExternalToken>(Grammar<TExternalToken>.ParserRule externalParserRule) where TExternalToken : unmanaged, Enum
-		{
-			return new ExternalParserEntry<TExternalToken>(externalParserRule);
+				ProductionDictionary.Add(index, parserSyntaxProduction);
+
+				return index;
+			}
 		}
 	}
 }

@@ -10,18 +10,13 @@ namespace Zaaml.Text
 	{
 		protected interface IInstructionReader : IDisposable
 		{
-			int ReadPage(int bufferLength, out TInstruction[] instructions, out int[] operands);
+			int ReadPage(ref int position, int bufferLength, out TInstruction[] instructions, out int[] operands);
 
-			int ReadPage(int bufferOffset, int bufferLength, TInstruction[] instructions, int[] operands);
+			int ReadPage(ref int position, int bufferOffset, int bufferLength, TInstruction[] instructions, int[] operands);
 
 			void ReleaseBuffers(TInstruction[] instructionsBuffer, int[] operandsBuffer);
 
 			void RentBuffers(int bufferLength, out TInstruction[] instructionsBuffer, out int[] operandsBuffer);
-		}
-
-		protected interface ISeekableInstructionReader : IInstructionReader
-		{
-			int Position { get; set; }
 		}
 	}
 }

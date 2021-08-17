@@ -11,7 +11,7 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		protected class SetMatchEntry : MatchEntry
+		protected class SetMatchEntry : PrimitiveMatchEntry
 		{
 			public SetMatchEntry(IEnumerable<PrimitiveMatchEntry> matches)
 			{
@@ -27,6 +27,8 @@ namespace Zaaml.Text
 					return $"{{{setStr}}}";
 				}
 			}
+
+			public static IEqualityComparer<SetMatchEntry> EqualityComparer => SetMatchEntryEqualityComparer.Instance;
 
 			public PrimitiveMatchEntry[] Matches { get; }
 
@@ -54,6 +56,53 @@ namespace Zaaml.Text
 				}
 
 				return false;
+			}
+
+			private sealed class SetMatchEntryEqualityComparer : IEqualityComparer<SetMatchEntry>
+			{
+				public static readonly SetMatchEntryEqualityComparer Instance = new();
+
+				private SetMatchEntryEqualityComparer()
+				{
+				}
+
+				public bool Equals(SetMatchEntry x, SetMatchEntry y)
+				{
+					if (ReferenceEquals(x, y)) return true;
+					if (ReferenceEquals(x, null)) return false;
+					if (ReferenceEquals(y, null)) return false;
+					if (x.GetType() != y.GetType()) return false;
+
+					if (x.Matches.Length != y.Matches.Length)
+						return false;
+
+					var equalityComparer = EntryEqualityComparer.Instance;
+
+					for (var i = 0; i < x.Matches.Length; i++)
+					{
+						var xi = x.Matches[i];
+						var yi = y.Matches[i];
+
+						if (equalityComparer.Equals(xi, yi) == false)
+							return false;
+					}
+
+					return true;
+				}
+
+				public int GetHashCode(SetMatchEntry obj)
+				{
+					unchecked
+					{
+						var hashCode = 0;
+						var equalityComparer = EntryEqualityComparer.Instance;
+
+						for (var i = 0; i < obj.Matches.Length; i++)
+							hashCode = (hashCode * 397) ^ equalityComparer.GetHashCode(obj.Matches[i]);
+
+						return hashCode;
+					}
+				}
 			}
 		}
 	}
