@@ -94,11 +94,12 @@ namespace Zaaml.PresentationCore.Theming
       }
 	    else
 	    {
-	      frameworkElement.Dispatcher.BeginInvoke(() =>
-	      {
-	        if (ReferenceEquals(GetTheme(frameworkElement), theme) == false)
-	          SetTheme(frameworkElement, theme);
-	      });
+				// TODO Implement thread-based theme loading.
+	      //frameworkElement.Dispatcher.BeginInvoke(() =>
+	      //{
+	      //  if (ReferenceEquals(GetTheme(frameworkElement), theme) == false)
+	      //    SetTheme(frameworkElement, theme);
+	      //});
       }
     }
 
