@@ -11,10 +11,12 @@
 
   <!--  BluetoothPathIconRaw  -->
   <zm:PathIcon x:Key="BluetoothPathIconRaw"
+               SharedResource="True"
                Data="{StaticResource BluetoothGeometry}" />
 
   <!--  BluetoothPathIcon  -->
   <zm:PathIcon x:Key="BluetoothPathIcon"
+               SharedResource="True"
                Data="{StaticResource BluetoothGeometry}"
                Style="{StaticResource _PathIconStyle_Stroke_Size_24_StrokeThickness_2_StrokeLineJoin_Round}" />
 

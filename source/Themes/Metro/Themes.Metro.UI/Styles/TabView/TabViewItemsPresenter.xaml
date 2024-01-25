@@ -21,25 +21,25 @@
 
   <!--  MenuButtonGlyph  -->
   <zm:PathIcon x:Key="MenuButtonGlyph"
+               SharedResource="True"
                Width="16"
                Height="16"
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
                BrushMode="Fill"
                Data="{zm:ThemeResource Key=Metro.Glyphs.Menu}"
-               SharedResource="True"
                Stretch="Fill"
                StrokeThickness="0" />
 
   <!--  OverflowMenuButtonGlyph  -->
   <zm:PathIcon x:Key="OverflowMenuButtonGlyph"
+               SharedResource="True"
                Width="16"
                Height="16"
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
                BrushMode="Fill"
                Data="{zm:ThemeResource Key=Metro.Glyphs.MenuOverflowed}"
-               SharedResource="True"
                Stretch="Fill"
                StrokeThickness="0" />
 

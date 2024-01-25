@@ -11,11 +11,11 @@
 
   <!--  Fallback DropDownGlyph  -->
   <zm:PathIcon x:Key="FallbackDropDownGlyph"
+               SharedResource="True"
                Margin="4,2"
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
                Data="{zm:ThemeResource Key=Metro.DropDownButton.Glyph.Data}"
-               SharedResource="True"
                Style="{zm:ThemeResource Key=Metro.DropDownButton.Glyph.Style}" />
 
   <!--  Template  -->

@@ -25,11 +25,11 @@
 
   <!--  Editable DropDownGlyph  -->
   <zm:PathIcon x:Key="EditTemplateDropDownGlyph"
+               SharedResource="True"
                Margin="3,2"
                HorizontalAlignment="Center"
                VerticalAlignment="Center"
                Data="{zm:ThemeResource Key=Metro.DropDownButton.Glyph.Data}"
-               SharedResource="True"
                Style="{zm:ThemeResource Key=Metro.DropDownButton.Glyph.Style}" />
 
 </zm:ThemeResourceDictionary>
