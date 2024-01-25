@@ -6,21 +6,21 @@ using System;
 
 namespace Zaaml.PresentationCore.MarkupExtensions
 {
-  public class ResourceKey : MarkupExtensionBase
-  {
-    #region Properties
+	public class ResourceKey : MarkupExtensionBase
+	{
+		#region Properties
 
-    public object Value { get; set; }
+		public object Value { get; set; }
 
-    #endregion
+		#endregion
 
-    #region  Methods
+		#region Methods
 
-    public override object ProvideValue(IServiceProvider serviceProvider)
-    {
-      return Value;
-    }
+		public override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			return Value;
+		}
 
-    #endregion
-  }
+		#endregion
+	}
 }

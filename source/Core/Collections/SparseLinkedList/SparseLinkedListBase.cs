@@ -176,16 +176,16 @@ namespace Zaaml.Core.Collections
 		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
 		private protected void VerifyIndex(long index, bool insert = false)
 		{
-			if (index == 0 && Count == 0)
+			if (index == 0 && LongCount == 0)
 				return;
 
-			if (index < 0 || index > Count || index == Count && insert == false)
+			if (index < 0 || index > LongCount || index == LongCount && insert == false)
 				throw new IndexOutOfRangeException(nameof(index));
 		}
 
 		private protected void VerifyRange(long index, long count)
 		{
-			if (index == 0 && Count == 0 && count == 0)
+			if (index == 0 && LongCount == 0 && count == 0)
 				return;
 
 			if (index < 0)
@@ -194,10 +194,10 @@ namespace Zaaml.Core.Collections
 			if (count < 0)
 				throw new IndexOutOfRangeException(nameof(count));
 
-			if (index >= Count)
+			if (index >= LongCount)
 				throw new IndexOutOfRangeException(nameof(index));
 
-			if (index + count > Count)
+			if (index + count > LongCount)
 				throw new IndexOutOfRangeException(nameof(count));
 		}
 
@@ -271,7 +271,7 @@ namespace Zaaml.Core.Collections
 
 		private ref NodeCursor NavigateToInsert(long index)
 		{
-			if (Count == 0 || ReferenceEquals(HeadNode.Next, TailNode))
+			if (LongCount == 0 || ReferenceEquals(HeadNode.Next, TailNode))
 				return ref GetHeadCursor();
 
 			ref var tailCursor = ref GetTailCursor();
@@ -349,7 +349,7 @@ namespace Zaaml.Core.Collections
 
 		private protected void CopyToImpl(T[] array, int arrayIndex)
 		{
-			if (array.Length - arrayIndex < Count)
+			if (array.Length - arrayIndex < LongCount)
 				throw new InvalidOperationException("Insufficient array length");
 
 			CopyToImpl(array.AsSpan(arrayIndex));

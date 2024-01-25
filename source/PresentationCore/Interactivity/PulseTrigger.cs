@@ -13,9 +13,13 @@ namespace Zaaml.PresentationCore.Interactivity
 	[ContentProperty(nameof(Setters))]
 	public sealed class PulseTrigger : TriggerActionBase
 	{
-		#region Properties
-
 		private PulseStateTrigger ActualTrigger => Trigger ??= new PulseStateTrigger(this);
+
+		public PulseTriggerBehavior Behavior
+		{
+			get => Trigger?.PulseBehavior ?? PulseTriggerBehavior.Default;
+			set => ActualTrigger.PulseBehavior = value;
+		}
 
 		public TriggerActionCollection EnterActions => ActualTrigger.EnterActions;
 
@@ -29,12 +33,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				if (OpenDelay != value)
 					ActualTrigger.OpenDelay = value;
 			}
-		}
-
-		public PulseTriggerBehavior Behavior
-		{
-			get => Trigger?.PulseBehavior ?? PulseTriggerBehavior.Default;
-			set => ActualTrigger.PulseBehavior = value;
 		}
 
 		public SetterCollectionBase Setters => ActualTrigger.Setters;
@@ -53,17 +51,13 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		public TriggerCollectionBase Triggers => ActualTrigger.Triggers;
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var sourcePulseTrigger = (PulseTrigger) source;
+			var sourcePulseTrigger = (PulseTrigger)source;
 
-			Trigger = (PulseStateTrigger) sourcePulseTrigger.Trigger?.DeepClone();
+			Trigger = (PulseStateTrigger)sourcePulseTrigger.Trigger?.DeepClone();
 		}
 
 		protected override InteractivityObject CreateInstance()
@@ -90,14 +84,8 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.UnloadCore(root);
 		}
 
-		#endregion
-
-		#region  Nested Types
-
-		private sealed class PulseStateTrigger : DelayStateTriggerBase
+		private sealed class PulseStateTrigger : StateTriggerBase
 		{
-			#region Ctors
-
 			static PulseStateTrigger()
 			{
 				RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
@@ -112,10 +100,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				if (pulseTrigger.IsLoaded)
 					Load();
 			}
-
-			#endregion
-
-			#region Properties
 
 			public PulseTriggerBehavior PulseBehavior
 			{
@@ -137,15 +121,11 @@ namespace Zaaml.PresentationCore.Interactivity
 				}
 			}
 
-			#endregion
-
-			#region  Methods
-
 			protected internal override void CopyMembersOverride(InteractivityObject source)
 			{
 				base.CopyMembersOverride(source);
 
-				var sourcePulseStateTrigger = (PulseStateTrigger) source;
+				var sourcePulseStateTrigger = (PulseStateTrigger)source;
 
 				PulseBehavior = sourcePulseStateTrigger.PulseBehavior;
 			}
@@ -163,7 +143,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			protected override void OnOpenedCore()
 			{
 				State = StateKind.Closing;
-				
+
 				ActualDelayTrigger.InvokeClose();
 			}
 
@@ -172,18 +152,22 @@ namespace Zaaml.PresentationCore.Interactivity
 				if (State == StateKind.Closed)
 				{
 					State = StateKind.Opening;
-					
+
 					ActualDelayTrigger.InvokeOpen();
 				}
 				else if (State == StateKind.Opening)
 				{
 					if ((PulseBehavior & PulseTriggerBehavior.KeepClosed) != 0)
+					{
 						ActualDelayTrigger.InvokeOpen();
+					}
 				}
 				else if (State == StateKind.Closing)
 				{
 					if ((PulseBehavior & PulseTriggerBehavior.KeepOpened) != 0)
+					{
 						ActualDelayTrigger.InvokeClose();
+					}
 				}
 			}
 
@@ -191,10 +175,6 @@ namespace Zaaml.PresentationCore.Interactivity
 			{
 				return State != StateKind.Closed ? TriggerState.Opened : TriggerState.Closed;
 			}
-
-			#endregion
-
-			#region  Nested Types
 
 			private enum StateKind
 			{
@@ -205,14 +185,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			private static class PackedDefinition
 			{
-				#region Static Fields and Constants
-
 				public static readonly PackedEnumItemDefinition<StateKind> IsPulsing;
 				public static readonly PackedEnumItemDefinition<PulseTriggerBehavior> PulseBehavior;
-
-				#endregion
-
-				#region Ctors
 
 				static PackedDefinition()
 				{
@@ -221,13 +195,7 @@ namespace Zaaml.PresentationCore.Interactivity
 					IsPulsing = allocator.AllocateEnumItem<StateKind>();
 					PulseBehavior = allocator.AllocateEnumItem<PulseTriggerBehavior>();
 				}
-
-				#endregion
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

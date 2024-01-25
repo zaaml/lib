@@ -24,8 +24,7 @@ namespace Zaaml.Core.Collections
 			var voidNode = (VoidNode) cursor.Node;
 			var prevNode = voidNode.Prev;
 			var nextNode = voidNode.Next;
-			var realizedNode = GetRealizedNode();
-
+			
 			Debug.Assert(index < LongCount);
 
 			if (prevCursor.IsEmpty == false && prevCursor.Node is RealizedNode prevRealizedNode && index < prevCursor.NodeOffset + NodeCapacity)
@@ -49,6 +48,7 @@ namespace Zaaml.Core.Collections
 			{
 				EnterStructureChange();
 
+				var realizedNode = GetRealizedNode();
 				var alignedIndex = index / NodeCapacity * NodeCapacity;
 
 				if (ReferenceEquals(HeadNode.Next, TailNode) == false && cursor.Contains(alignedIndex) == false)
@@ -76,7 +76,7 @@ namespace Zaaml.Core.Collections
 
 					HeadNode.Size = alignedIndex;
 
-					if (index < Count)
+					if (index < LongCount)
 					{
 						if (insert == false)
 							extraCount -= realizedNode.Size;

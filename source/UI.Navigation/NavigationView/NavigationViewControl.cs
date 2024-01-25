@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -44,7 +45,7 @@ namespace Zaaml.UI.Controls.NavigationView
 			("IsPaneToggleButtonVisible", true);
 
 		public static readonly DependencyProperty IsPaneOpenProperty = DPM.Register<bool, NavigationViewControl>
-			("IsPaneOpen", true, n => n.OnIsPaneOpenPropertyChangedPrivate);
+			("IsPaneOpen", false, n => n.OnIsPaneOpenPropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey ParentWindowPropertyKey = DPM.RegisterReadOnly<WindowBase, NavigationViewControl>
 			("ParentWindow");
@@ -100,7 +101,7 @@ namespace Zaaml.UI.Controls.NavigationView
 		public bool IsPaneOpen
 		{
 			get => (bool) GetValue(IsPaneOpenProperty);
-			set => SetValue(IsPaneOpenProperty, value);
+			set => SetValue(IsPaneOpenProperty, value.Box());
 		}
 
 		private bool IsPaneOpenExpandedMode { get; set; } = true;
@@ -108,7 +109,7 @@ namespace Zaaml.UI.Controls.NavigationView
 		public bool IsPaneToggleButtonVisible
 		{
 			get => (bool) GetValue(IsPaneToggleButtonVisibleProperty);
-			set => SetValue(IsPaneToggleButtonVisibleProperty, value);
+			set => SetValue(IsPaneToggleButtonVisibleProperty, value.Box());
 		}
 
 		public double OpenPaneLength

@@ -88,5 +88,20 @@ namespace Zaaml.Text
 		{
 			textWriter.Write(_string);
 		}
+
+		public override int IndexOf(char c)
+		{
+			return _string.IndexOf(c);
+		}
+
+		public override int IndexOf(char c, int startIndex)
+		{
+			return _string.IndexOf(c, startIndex);
+		}
+
+		public override int IndexOf(char c, int startIndex, int count)
+		{
+			return _string.IndexOf(c, startIndex, count);
+		}
 	}
 }

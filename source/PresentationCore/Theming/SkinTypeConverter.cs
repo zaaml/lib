@@ -8,24 +8,21 @@ using System.Globalization;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public sealed class SkinTypeConverter : TypeConverter
-  {
-    #region  Methods
+	public sealed class SkinTypeConverter : TypeConverter
+	{
+		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		{
+			return sourceType == typeof(string) || sourceType.IsAssignableFrom(typeof(SkinDictionary));
+		}
 
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-    {
-      return sourceType == typeof(string);
-    }
-
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-	    return value switch
-	    {
-		    string strValue => new DeferSkin { Key = strValue },
-		    _ => null
-	    };
-    }
-
-    #endregion
-  }
+		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		{
+			return value switch
+			{
+				string strValue => new DeferSkin { Key = strValue },
+				SkinDictionary skinDictionary => ThemeManager.GetSkin(skinDictionary),
+				_ => null
+			};
+		}
+	}
 }

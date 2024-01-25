@@ -4,23 +4,15 @@
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class DockControlView : DockControlViewBase
-  {
-    #region Ctors
+	public sealed class DockControlView : DockControlViewBase
+	{
+		public DockControlView()
+		{
+			Controller = new DockController(this);
+		}
 
-    public DockControlView()
-    {
-      Controller = new DockController(this);
-    }
+		internal DockController Controller { get; }
 
-    #endregion
-
-    #region Properties
-
-    internal DockController Controller { get; }
-
-    internal override DockControllerBase ControllerCore => Controller;
-
-    #endregion
-  }
+		internal override DockControllerBase ControllerCore => Controller;
+	}
 }

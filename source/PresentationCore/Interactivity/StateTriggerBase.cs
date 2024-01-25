@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Markup;
 
 namespace Zaaml.PresentationCore.Interactivity
@@ -39,7 +40,15 @@ namespace Zaaml.PresentationCore.Interactivity
 			Implementation = new StateTriggerImplementation(this);
 		}
 
+		private protected DelayStateTrigger ActualDelayTrigger => Implementation.ActualDelayTrigger;
+
 		internal sealed override IEnumerable<InteractivityObject> Children => Implementation.Children;
+
+		public Duration CloseDelay
+		{
+			get => Implementation.CloseDelay;
+			set => Implementation.CloseDelay = value;
+		}
 
 		public TriggerActionCollection EnterActions => Implementation.EnterActions;
 
@@ -56,6 +65,12 @@ namespace Zaaml.PresentationCore.Interactivity
 		protected bool IsActuallyOpen => Implementation.IsActuallyOpen;
 
 		protected bool IsInitialized => Implementation.IsInitialized;
+
+		public Duration OpenDelay
+		{
+			get => Implementation.OpenDelay;
+			set => Implementation.OpenDelay = value;
+		}
 
 		public SetterCollectionBase Setters => Implementation.Setters;
 
@@ -78,7 +93,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			base.CopyMembersOverride(source);
 
-			var sourceTrigger = (StateTriggerBase) source;
+			var sourceTrigger = (StateTriggerBase)source;
 
 			Implementation.CopyMembersOverride(sourceTrigger.Implementation);
 		}
@@ -130,12 +145,12 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		protected abstract TriggerState UpdateTriggerStateCore();
 
-		IEnumerable<InteractivityObject> IStateTrigger<StateTriggerBase, StateTriggerImplementation>.BaseChildren => base.Children;
-
 		RuntimeSetter IRuntimeSetterFactory.CreateSetter()
 		{
 			return Implementation.CreateSetter();
 		}
+
+		IEnumerable<InteractivityObject> IStateTrigger<StateTriggerBase, StateTriggerImplementation>.BaseChildren => base.Children;
 
 		void IStateTrigger<StateTriggerBase, StateTriggerImplementation>.OnOpened()
 		{

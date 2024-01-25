@@ -54,7 +54,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 		private ColorRectangleRenderer ColorRectangleRenderer => TemplateContract.ColorRectangleRenderer;
 
-		private ColorRectangleEditorControlTemplateContract TemplateContract => (ColorRectangleEditorControlTemplateContract) TemplateContractInternal;
+		private ColorRectangleEditorControlTemplateContract TemplateContract => (ColorRectangleEditorControlTemplateContract) TemplateContractCore;
 
 		public ColorChannel XChannel
 		{

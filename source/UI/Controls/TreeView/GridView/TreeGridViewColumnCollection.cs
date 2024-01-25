@@ -3,11 +3,11 @@
 // </copyright>
 
 using System;
-using Zaaml.PresentationCore;
+using Zaaml.UI.Controls.Core.GridView;
 
 namespace Zaaml.UI.Controls.TreeView
 {
-	public sealed class TreeGridViewColumnCollection : InheritanceContextDependencyObjectCollection<TreeGridViewColumn>
+	public sealed class TreeGridViewColumnCollection : GridViewColumnCollection<TreeGridViewColumn>
 	{
 		internal TreeGridViewColumnCollection(TreeGridView treeGridView)
 		{
@@ -20,18 +20,18 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			base.OnItemAdded(column);
 
-			if (column.TreeGridView != null)
+			if (column.View != null)
 				throw new InvalidOperationException();
 
-			column.TreeGridView = TreeGridView;
+			column.View = TreeGridView;
 		}
 
 		protected override void OnItemRemoved(TreeGridViewColumn column)
 		{
-			if (ReferenceEquals(column.TreeGridView, TreeGridView) == false)
+			if (ReferenceEquals(column.View, TreeGridView) == false)
 				throw new InvalidOperationException();
 
-			column.TreeGridView = null;
+			column.View = null;
 
 			base.OnItemRemoved(column);
 		}

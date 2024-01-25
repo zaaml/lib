@@ -9,44 +9,24 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.ObservableCollections
 {
-  internal class NotifyCollectionEventDispatcher<T> : DelegateNotifyCollectionDispatcher<T>, IDisposable
-  {
-    #region Fields
+	internal class NotifyCollectionEventDispatcher<T> : DelegateNotifyCollectionDispatcher<T>, IDisposable
+	{
+		private IDisposable _disposer;
 
-    private IDisposable _disposer;
+		public NotifyCollectionEventDispatcher(INotifyCollectionChanged notifier, Action<T> onItemAdded, Action<T> onItemRemoved, Action onReset)
+			: base(onItemAdded, onItemRemoved, onReset)
+		{
+			_disposer = DelegateDisposable.Create(() => notifier.CollectionChanged += OnCollectionChangedHandler, () => notifier.CollectionChanged -= OnCollectionChangedHandler);
+		}
 
-    #endregion
+		private void OnCollectionChangedHandler(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			OnCollectionChangedCore(e);
+		}
 
-    #region Ctors
-
-    public NotifyCollectionEventDispatcher(INotifyCollectionChanged notifier, Action<T> onItemAdded, Action<T> onItemRemoved, Action onReset)
-      : base(onItemAdded, onItemRemoved, onReset)
-    {
-      _disposer = DelegateDisposable.Create(() => notifier.CollectionChanged += OnCollectionChangedHandler, () => notifier.CollectionChanged -= OnCollectionChangedHandler);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private void OnCollectionChangedHandler(object sender, NotifyCollectionChangedEventArgs e)
-    {
-      OnCollectionChangedCore(e);
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IDisposable
-
-    public void Dispose()
-    {
-      _disposer = _disposer.DisposeExchange();
-    }
-
-    #endregion
-
-    #endregion
-  }
+		public void Dispose()
+		{
+			_disposer = _disposer.DisposeExchange();
+		}
+	}
 }

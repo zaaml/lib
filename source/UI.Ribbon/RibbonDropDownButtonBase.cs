@@ -7,6 +7,7 @@ using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
@@ -75,7 +76,7 @@ namespace Zaaml.UI.Controls.Ribbon
 		public bool IsDropDownOpen
 		{
 			get => (bool) GetValue(IsDropDownOpenProperty);
-			set => SetValue(IsDropDownOpenProperty, value);
+			set => SetValue(IsDropDownOpenProperty, value.Box());
 		}
 
 		private bool IsDropDownOpenInt
@@ -115,8 +116,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private PopupControlHost PopupHost => TemplateContract.PopupHost;
 
-		private RibbonDropDownButtonBaseTemplateContract TemplateContract =>
-			(RibbonDropDownButtonBaseTemplateContract) TemplateContractInternal;
+		private RibbonDropDownButtonBaseTemplateContract TemplateContract => (RibbonDropDownButtonBaseTemplateContract)TemplateContractCore;
 
 		#endregion
 

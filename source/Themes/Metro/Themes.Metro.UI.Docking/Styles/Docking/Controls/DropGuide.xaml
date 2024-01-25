@@ -22,7 +22,7 @@
 
       <zm:Extension.Triggers>
         <zm:DataTrigger Binding="{zm:TemplateBinding Path=IsAllowed}" Value="False">
-          <zm:Setter Property="Opacity" Value="0" Priority="1" Target="{zm:TemplateBinding}"/>
+          <zm:Setter Property="Visibility" Value="Hidden" Target="{zm:TemplateBinding}"/>
         </zm:DataTrigger>
 
         <zm:DataTrigger Binding="{Binding Path=(zm:Interaction.IsMouseOver), RelativeSource={RelativeSource TemplatedParent}}" Value="True">

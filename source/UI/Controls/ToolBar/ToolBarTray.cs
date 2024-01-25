@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Behaviors.Draggable;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
@@ -62,30 +63,30 @@ namespace Zaaml.UI.Controls.ToolBar
 			var nextToolBar = currentBand.ToolBars.RightOfFirstOrDefault(_dragToolBar);
 			var orientation = Orientation;
 			var rotatedOrientation = orientation.Rotate();
-			var position = MouseInternal.ScreenPosition;
+			var position = MouseInternal.ScreenLogicalPosition;
 			var positionPart = position.GetPart(orientation);
 			var rotatedPositionPart = position.GetPart(rotatedOrientation);
 			var relativeMouseLocationPart = _relativeMouseLocation.GetPart(orientation);
 
 			try
 			{
-				var currentToolBarHostBox = _dragToolBar.GetScreenBox();
+				var currentToolBarHostBox = _dragToolBar.GetScreenLogicalBox();
 				var overCurrentBand = currentToolBarHostBox.GetRange(rotatedOrientation)
 					.WithExpand(currentToolBarHostBox.GetSize(rotatedOrientation) / 4)
 					.Contains(rotatedPositionPart);
 
 				if (_waitCurrentBand || overCurrentBand)
 				{
-					if (prevToolBar != null && positionPart < prevToolBar.GetScreenBox().GetMinPart(orientation))
+					if (prevToolBar != null && positionPart < prevToolBar.GetScreenLogicalBox().GetMinPart(orientation))
 						SwapToolBarsHorizontally(currentBand, _dragToolBar, prevToolBar);
-					else if (nextToolBar != null && positionPart > nextToolBar.GetScreenBox().GetMinPart(orientation))
+					else if (nextToolBar != null && positionPart > nextToolBar.GetScreenLogicalBox().GetMinPart(orientation))
 						SwapToolBarsHorizontally(currentBand, _dragToolBar, nextToolBar);
 
 					_waitCurrentBand = overCurrentBand == false;
 				}
 				else
 				{
-					var mouseBand = ToolBarHost.Bands.FirstOrDefault(b => b.GetHostBox().GetRange(rotatedOrientation).Contains(rotatedPositionPart));
+					var mouseBand = ToolBarHost.Bands.FirstOrDefault(b => b.GetScreenBox().GetRange(rotatedOrientation).Contains(rotatedPositionPart));
 
 					if (mouseBand == null)
 					{
@@ -102,7 +103,7 @@ namespace Zaaml.UI.Controls.ToolBar
 					else
 					{
 						int newBandIndex;
-						var mouseBandBox = mouseBand.GetHostBox();
+						var mouseBandBox = mouseBand.GetScreenBox();
 
 						if (positionPart <= mouseBandBox.GetMinPart(orientation))
 							newBandIndex = 0;
@@ -110,7 +111,7 @@ namespace Zaaml.UI.Controls.ToolBar
 							newBandIndex = mouseBand.ToolBars.Count;
 						else
 						{
-							var toolBar = mouseBand.ToolBars.First(t => t.GetScreenBox().GetRange(orientation).Contains(positionPart));
+							var toolBar = mouseBand.ToolBars.First(t => t.GetScreenLogicalBox().GetRange(orientation).Contains(positionPart));
 
 							newBandIndex = mouseBand.ToolBars.IndexOf(toolBar) + 1;
 						}
@@ -126,7 +127,7 @@ namespace Zaaml.UI.Controls.ToolBar
 				prevToolBar = currentBand.ToolBars.LeftOfFirstOrDefault(_dragToolBar);
 
 				if (prevToolBar != null)
-					SetToolBarLength(prevToolBar, positionPart - prevToolBar.GetScreenBox().GetMinPart(orientation) - relativeMouseLocationPart);
+					SetToolBarLength(prevToolBar, positionPart - prevToolBar.GetScreenLogicalBox().GetMinPart(orientation) - relativeMouseLocationPart);
 			}
 		}
 
@@ -164,7 +165,7 @@ namespace Zaaml.UI.Controls.ToolBar
 		public bool IsLocked
 		{
 			get => (bool) GetValue(IsLockedProperty);
-			set => SetValue(IsLockedProperty, value);
+			set => SetValue(IsLockedProperty, value.Box());
 		}
 
 		public Orientation Orientation
@@ -173,7 +174,7 @@ namespace Zaaml.UI.Controls.ToolBar
 			set => SetValue(OrientationProperty, value);
 		}
 
-		private ToolBarTrayTemplateContract TemplateContract => (ToolBarTrayTemplateContract) TemplateContractInternal;
+		private ToolBarTrayTemplateContract TemplateContract => (ToolBarTrayTemplateContract) TemplateContractCore;
 
 		internal ToolBarTrayPanel ToolBarHost => TemplateContract.ToolBarHost;
 

@@ -3,6 +3,7 @@
                             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                             xmlns:zm="http://schemas.zaaml.com/xaml"
                             xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:gridView="clr-namespace:Zaaml.UI.Controls.Core.GridView;assembly=Zaaml.UI"
                             mc:Ignorable="zmb">
 
   <!--  Visual States  -->
@@ -24,25 +25,23 @@
 
   <!--  Template  -->
   <ControlTemplate x:Key="ListViewItemGridColumnHeaderTemplate"
-                   TargetType="zm:ListViewItemGridColumnHeader">
+                   TargetType="zm:ListGridViewHeader">
 
-    <zm:GridCellRoot VisualStateGroups="{StaticResource VisualStates}">
-      <Border x:Name="Border"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}" />
-    </zm:GridCellRoot>
+    <gridView:GridViewCellRoot VisualStateGroups="{StaticResource VisualStates}">
+      <gridView:GridViewCellPresenter x:Name="CellPresenter" />
+    </gridView:GridViewCellRoot>
 
   </ControlTemplate>
 
   <!--  Base Style  -->
-  <zm:Style x:Key="ListViewItemGridColumnHeaderBaseStyle" TargetType="zm:ListViewItemGridColumnHeader">
+  <zm:Style x:Key="ListViewItemGridColumnHeaderBaseStyle" TargetType="zm:ListGridViewHeader">
     <zm:Setter Property="Template" Value="{StaticResource ListViewItemGridColumnHeaderTemplate}" />
     <zm:Setter Property="Padding" Value="4,2" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="ListViewItemGridColumnHeaderStyle" BasedOn="{StaticResource ListViewItemGridColumnHeaderBaseStyle}" Skin="Metro.ListViewItemGridColumnHeader" TargetType="zm:ListViewItemGridColumnHeader">
+  <zm:Style x:Key="ListViewItemGridColumnHeaderStyle" BasedOn="{StaticResource ListViewItemGridColumnHeaderBaseStyle}"
+            Skin="Metro.ListViewItemGridColumnHeader" TargetType="zm:ListGridViewHeader">
 
     <zm:SetterGroup ValuePathSource="Skin">
 
@@ -72,6 +71,8 @@
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="ListViewItemGridColumnHeaderThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ListViewItemGridColumnHeaderStyle}" TargetType="zm:ListViewItemGridColumnHeader" />
+  <zm:ThemeStyle x:Key="ListViewItemGridColumnHeaderThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource ListViewItemGridColumnHeaderStyle}"
+                 TargetType="zm:ListGridViewHeader" />
 
 </zm:ThemeResourceDictionary>

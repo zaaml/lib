@@ -8,55 +8,43 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.Core.Pools
 {
-  internal class MultiObjectPool<TKey, TObject> where TObject : class
-  {
-    #region Fields
+	internal class MultiObjectPool<TKey, TObject> where TObject : class
+	{
+		private readonly Action<TKey, TObject> _cleanAction;
+		private readonly Func<TKey, TObject> _factory;
+		private readonly Action<TKey, TObject> _initAction;
+		private readonly Dictionary<TKey, LightObjectPool<TObject>> _poolMap = new Dictionary<TKey, LightObjectPool<TObject>>();
 
-    private readonly Action<TKey, TObject> _cleanAction;
-    private readonly Func<TKey, TObject> _factory;
-    private readonly Action<TKey, TObject> _initAction;
-    private readonly Dictionary<TKey, LightObjectPool<TObject>> _poolMap = new Dictionary<TKey, LightObjectPool<TObject>>();
+		public MultiObjectPool(Func<TKey, TObject> factory) : this(factory, null, null)
+		{
+			_factory = factory;
+		}
 
-    #endregion
+		public MultiObjectPool(Func<TKey, TObject> factory, Action<TKey, TObject> initAction, Action<TKey, TObject> cleanAction)
+		{
+			_factory = factory;
+			_initAction = initAction ?? DummyAction<TKey, TObject>.Instance;
+			_cleanAction = cleanAction ?? DummyAction<TKey, TObject>.Instance;
+		}
 
-    #region Ctors
+		private LightObjectPool<TObject> CreatePool(TKey key)
+		{
+			return new LightObjectPool<TObject>(() => _factory(key), o => _initAction(key, o), o => _cleanAction(key, o));
+		}
 
-    public MultiObjectPool(Func<TKey, TObject> factory) : this(factory, null, null)
-    {
-      _factory = factory;
-    }
+		public TObject GetObject(TKey key)
+		{
+			return GetPool(key).GetObject();
+		}
 
-    public MultiObjectPool(Func<TKey, TObject> factory, Action<TKey, TObject> initAction, Action<TKey, TObject> cleanAction)
-    {
-      _factory = factory;
-      _initAction = initAction ?? DummyAction<TKey, TObject>.Instance;
-      _cleanAction = cleanAction ?? DummyAction<TKey, TObject>.Instance;
-    }
+		private LightObjectPool<TObject> GetPool(TKey key)
+		{
+			return _poolMap.GetValueOrCreate(key, CreatePool);
+		}
 
-    #endregion
-
-    #region  Methods
-
-    private LightObjectPool<TObject> CreatePool(TKey key)
-    {
-      return new LightObjectPool<TObject>(() => _factory(key), o => _initAction(key, o), o => _cleanAction(key, o));
-    }
-
-    public TObject GetObject(TKey key)
-    {
-      return GetPool(key).GetObject();
-    }
-
-    private LightObjectPool<TObject> GetPool(TKey key)
-    {
-      return _poolMap.GetValueOrCreate(key, CreatePool);
-    }
-
-    public void Release(TKey key, TObject obj)
-    {
-      GetPool(key).Release(obj);
-    }
-
-    #endregion
-  }
+		public void Release(TKey key, TObject obj)
+		{
+			GetPool(key).Release(obj);
+		}
+	}
 }

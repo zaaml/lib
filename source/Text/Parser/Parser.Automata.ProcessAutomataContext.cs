@@ -10,8 +10,8 @@ namespace Zaaml.Text
 		{
 			private sealed class ProcessAutomataContext : ParserAutomataContext
 			{
-				public ProcessAutomataContext(ParserRule rule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind, Parser<TGrammar, TToken> parser, ParserAutomata parserAutomata)
-					: base(rule, lexemeSource, parserContext, processKind, parser, parserAutomata)
+				public ProcessAutomataContext(ParserSyntax rule, LexemeSource<TToken> lexemeSource, ProcessKind processKind, Parser<TGrammar, TToken> parser, ParserAutomata parserAutomata)
+					: base(rule, lexemeSource, processKind, parser, parserAutomata)
 				{
 				}
 			}

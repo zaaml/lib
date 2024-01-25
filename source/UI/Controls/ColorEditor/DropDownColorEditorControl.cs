@@ -5,6 +5,7 @@
 using System.Windows;
 using System.Windows.Media;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
@@ -49,7 +50,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 		public bool IsTextEditable
 		{
 			get => (bool) GetValue(IsTextEditableProperty);
-			set => SetValue(IsTextEditableProperty, value);
+			set => SetValue(IsTextEditableProperty, value.Box());
 		}
 
 		private PopupBar PopupBar => TemplateContract.PopupBar;
@@ -59,16 +60,16 @@ namespace Zaaml.UI.Controls.ColorEditor
 		public bool ShowTextValue
 		{
 			get => (bool) GetValue(ShowTextValueProperty);
-			set => SetValue(ShowTextValueProperty, value);
+			set => SetValue(ShowTextValueProperty, value.Box());
 		}
 
 		public bool ShowTransparentPattern
 		{
 			get => (bool) GetValue(ShowTransparentPatternProperty);
-			set => SetValue(ShowTransparentPatternProperty, value);
+			set => SetValue(ShowTransparentPatternProperty, value.Box());
 		}
 
-		private DropDownColorEditorControlTemplateContract TemplateContract => (DropDownColorEditorControlTemplateContract) TemplateContractInternal;
+		private DropDownColorEditorControlTemplateContract TemplateContract => (DropDownColorEditorControlTemplateContract) TemplateContractCore;
 
 		private protected override void OnClosedCore()
 		{

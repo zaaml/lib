@@ -4,8 +4,10 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Interfaces;
 
@@ -79,21 +81,21 @@ namespace Zaaml.UI.Controls.Core
 		public HorizontalAlignment HorizontalHeaderAlignment
 		{
 			get => (HorizontalAlignment) GetValue(HorizontalHeaderAlignmentProperty);
-			set => SetValue(HorizontalHeaderAlignmentProperty, value);
+			set => SetValue(HorizontalHeaderAlignmentProperty, value.Box());
 		}
 
 
 		public bool ShowHeader
 		{
 			get => (bool) GetValue(ShowHeaderProperty);
-			set => SetValue(ShowHeaderProperty, value);
+			set => SetValue(ShowHeaderProperty, value.Box());
 		}
 
 
 		public VerticalAlignment VerticalHeaderAlignment
 		{
 			get => (VerticalAlignment) GetValue(VerticalHeaderAlignmentProperty);
-			set => SetValue(VerticalHeaderAlignmentProperty, value);
+			set => SetValue(VerticalHeaderAlignmentProperty, value.Box());
 		}
 
 		protected override Size MeasureOverride(Size availableSize)

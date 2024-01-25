@@ -3,11 +3,13 @@
 // </copyright>
 
 using System.Windows.Media;
-using Zaaml.PresentationCore.Animation.Animators;
 
 namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class TranslateTransformAnimation : Animation<TranslateTransform, TranslateTransformAnimator>
+	public sealed class TranslateTransformAnimation : AnimationBase<TranslateTransform>
 	{
+		public TranslateTransformAnimation() : base(TranslateTransformInterpolator.Instance)
+		{
+		}
 	}
 }

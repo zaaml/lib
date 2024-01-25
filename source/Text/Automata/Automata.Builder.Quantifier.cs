@@ -27,7 +27,7 @@ namespace Zaaml.Text
 			return new QuantifierEntry(operand, QuantifierHelper.AtLeast(count), QuantifierMode.Greedy);
 		}
 
-		protected QuantifierEntry AtLeast(int count, Rule state)
+		protected QuantifierEntry AtLeast(int count, Syntax state)
 		{
 			return new QuantifierEntry(state, QuantifierHelper.AtLeast(count), QuantifierMode.Greedy);
 		}
@@ -47,7 +47,7 @@ namespace Zaaml.Text
 			return new QuantifierEntry(operand, QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
 		}
 
-		protected QuantifierEntry Between(int from, int to, Rule state)
+		protected QuantifierEntry Between(int from, int to, Syntax state)
 		{
 			return new QuantifierEntry(state, QuantifierHelper.Between(from, to), QuantifierMode.Greedy);
 		}
@@ -67,7 +67,7 @@ namespace Zaaml.Text
 			return new QuantifierEntry(operand, QuantifierHelper.Exact(count), QuantifierMode.Greedy);
 		}
 
-		protected QuantifierEntry Exact(int count, Rule state)
+		protected QuantifierEntry Exact(int count, Syntax state)
 		{
 			return new QuantifierEntry(state, QuantifierHelper.Exact(count), QuantifierMode.Greedy);
 		}
@@ -87,7 +87,7 @@ namespace Zaaml.Text
 			return new QuantifierEntry(operand, QuantifierKind.OneOrMore, QuantifierMode.Greedy);
 		}
 
-		protected QuantifierEntry OneOrMore(Rule state)
+		protected QuantifierEntry OneOrMore(Syntax state)
 		{
 			return new QuantifierEntry(state, QuantifierKind.OneOrMore, QuantifierMode.Greedy);
 		}
@@ -107,7 +107,7 @@ namespace Zaaml.Text
 			return new QuantifierEntry(operand, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
 		}
 
-		protected QuantifierEntry ZeroOrMore(Rule state)
+		protected QuantifierEntry ZeroOrMore(Syntax state)
 		{
 			return new QuantifierEntry(state, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
 		}
@@ -127,7 +127,7 @@ namespace Zaaml.Text
 			return new QuantifierEntry(operand, QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
 		}
 
-		protected QuantifierEntry ZeroOrOne(Rule state)
+		protected QuantifierEntry ZeroOrOne(Syntax state)
 		{
 			return new QuantifierEntry(state, QuantifierKind.ZeroOrOne, QuantifierMode.Greedy);
 		}

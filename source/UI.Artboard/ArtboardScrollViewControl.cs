@@ -87,7 +87,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private ArtboardScrollViewPresenter ScrollViewPresenter => TemplateContract.ScrollViewPresenter;
 
-		private ArtboardScrollViewControlTemplateContract TemplateContract => (ArtboardScrollViewControlTemplateContract) TemplateContractInternal;
+		private ArtboardScrollViewControlTemplateContract TemplateContract => (ArtboardScrollViewControlTemplateContract)TemplateContractCore;
 
 		public object TopContent
 		{

@@ -4,9 +4,9 @@
 
 using System;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
@@ -34,11 +34,9 @@ namespace Zaaml.UI.Decorators
 		public ShadowChrome()
 		{
 			UseLayoutRounding = true;
-			InnerClipGeometry = new RectangleGeometry();
+
 			OuterClipGeometry = new RectangleGeometry();
-
-			Clip = new CombinedGeometry(GeometryCombineMode.Exclude, OuterClipGeometry, InnerClipGeometry);
-
+			
 			ShadowEffect = new DropShadowEffect
 			{
 				Opacity = 1.0,
@@ -48,11 +46,15 @@ namespace Zaaml.UI.Decorators
 				Color = Colors.Black
 			};
 
-			ShadowBorder = new Border
+			ShadowBorder = new ClipBorder
 			{
 				Background = new SolidColorBrush(ShadowColor),
 				Effect = ShadowEffect
 			};
+
+			ShadowClipGeometry = new CombinedGeometry(GeometryCombineMode.Exclude, OuterClipGeometry, Geometry.Empty);
+
+			Clip = ShadowClipGeometry;
 
 			Popup.SetHitTestVisible(this, false);
 			Popup.SetHitTestVisible(ShadowBorder, false);
@@ -63,11 +65,23 @@ namespace Zaaml.UI.Decorators
 			IsTabStop = false;
 		}
 
-		private RectangleGeometry InnerClipGeometry { get; }
+		private protected override void OnDependencyPropertyChangedInternal(DependencyPropertyChangedEventArgs args)
+		{
+			if (args.Property == CornerRadiusProperty)
+			{
+				InvalidateArrange();
+
+				ShadowBorder.CornerRadius = CornerRadius;
+			}
+
+			base.OnDependencyPropertyChangedInternal(args);
+		}
+
+		private CombinedGeometry ShadowClipGeometry { get; }
 
 		private RectangleGeometry OuterClipGeometry { get; }
 
-		private Border ShadowBorder { get; }
+		private ClipBorder ShadowBorder { get; }
 
 		private static Color ShadowColor => Colors.Black;
 
@@ -75,19 +89,19 @@ namespace Zaaml.UI.Decorators
 
 		public double ShadowOpacity
 		{
-			get => (double) GetValue(ShadowOpacityProperty);
+			get => (double)GetValue(ShadowOpacityProperty);
 			set => SetValue(ShadowOpacityProperty, value);
 		}
 
 		public double ShadowSize
 		{
-			get => (double) GetValue(ShadowSizeProperty);
+			get => (double)GetValue(ShadowSizeProperty);
 			set => SetValue(ShadowSizeProperty, value);
 		}
 
 		public ShadowSide Side
 		{
-			get => (ShadowSide) GetValue(SideProperty);
+			get => (ShadowSide)GetValue(SideProperty);
 			set => SetValue(SideProperty, value);
 		}
 
@@ -143,23 +157,21 @@ namespace Zaaml.UI.Decorators
 			var right = (side & ShadowSide.Right) == 0;
 			var bottom = (side & ShadowSide.Bottom) == 0;
 
-			if (left) 
+			if (left)
 				outerClipRect.X = 0;
-			
-			if (top) 
+
+			if (top)
 				outerClipRect.Y = 0;
 
 			if (right)
 				outerClipRect.Width = left ? arrangeBounds.Width : arrangeBounds.Width + shadowSize;
 
-			if (bottom) 
+			if (bottom)
 				outerClipRect.Height = top ? arrangeBounds.Height : arrangeBounds.Height + shadowSize;
 
 			OuterClipGeometry.Rect = outerClipRect;
-			
-			var innerClipRect = new Rect(arrangeBounds);
 
-			InnerClipGeometry.Rect = innerClipRect;
+			ShadowClipGeometry.Geometry2 = ClipBorder.BuildRoundRectangleGeometry(new Rect(arrangeBounds), CornerRadius);
 		}
 
 		private void UpdateMargin()

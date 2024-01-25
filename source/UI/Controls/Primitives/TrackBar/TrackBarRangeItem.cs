@@ -9,39 +9,38 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Primitives.TrackBar
 {
-  public class TrackBarRangeItem : TrackBarItem
-  {
-    #region Static Fields and Constants
+	public class TrackBarRangeItem : TrackBarItem
+	{
+		private static readonly DependencyPropertyKey ActualCornerRadiusPropertyKey = DPM.RegisterReadOnly<CornerRadius, TrackBarRangeItem>
+			("ActualCornerRadius");
 
-    private static readonly DependencyPropertyKey RangePropertyKey = DPM.RegisterReadOnly<double, TrackBarRangeItem>
-      ("Range");
+		public static readonly DependencyProperty ActualCornerRadiusProperty = ActualCornerRadiusPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty RangeProperty = RangePropertyKey.DependencyProperty;
+		private static readonly DependencyPropertyKey RangePropertyKey = DPM.RegisterReadOnly<double, TrackBarRangeItem>
+			("Range");
 
-    #endregion
+		public static readonly DependencyProperty RangeProperty = RangePropertyKey.DependencyProperty;
 
-    #region Ctors
+		static TrackBarRangeItem()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<TrackBarRangeItem>();
+		}
 
-    static TrackBarRangeItem()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<TrackBarRangeItem>();
-    }
+		public TrackBarRangeItem()
+		{
+			this.OverrideStyleKey<TrackBarRangeItem>();
+		}
 
-    public TrackBarRangeItem()
-    {
-      this.OverrideStyleKey<TrackBarRangeItem>();
-    }
+		public CornerRadius ActualCornerRadius
+		{
+			get => (CornerRadius) GetValue(ActualCornerRadiusProperty);
+			internal set => this.SetReadOnlyValue(ActualCornerRadiusPropertyKey, value);
+		}
 
-    #endregion
-
-    #region Properties
-
-    public double Range
-    {
-      get => (double) GetValue(RangeProperty);
-      internal set => this.SetReadOnlyValue(RangePropertyKey, value);
-    }
-
-    #endregion
-  }
+		public double Range
+		{
+			get => (double) GetValue(RangeProperty);
+			internal set => this.SetReadOnlyValue(RangePropertyKey, value);
+		}
+	}
 }

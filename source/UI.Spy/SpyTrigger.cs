@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -22,7 +23,13 @@ namespace Zaaml.UI.Controls.Spy
 		public bool IsOpen
 		{
 			get => (bool) GetValue(IsOpenProperty);
-			protected set => this.SetReadOnlyValue(IsOpenPropertyKey, value);
+			protected set
+			{
+				if (IsOpen == value)
+					return;
+
+				this.SetReadOnlyValue(IsOpenPropertyKey, value.Box());
+			}
 		}
 
 		private void OnIsOpenPropertyChangedPrivate(bool oldValue, bool newValue)

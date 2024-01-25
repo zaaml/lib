@@ -18,7 +18,7 @@ namespace Zaaml.UI.Controls.Spy
 			("Element", d => d.OnElementPropertyChangedPrivate);
 
 		private readonly CompositionRenderingObserver _renderingObserver;
-		private readonly TranslateTransform _renderTransform = new TranslateTransform();
+		private readonly TranslateTransform _renderTransform = new();
 
 		private OverlayContentControl _overlayContentControl;
 
@@ -69,7 +69,7 @@ namespace Zaaml.UI.Controls.Spy
 		{
 			base.ApplyTemplateOverride();
 
-			TemplateRoot.Background = new SolidColorBrush(Colors.Red) {Opacity = 0.1};
+			TemplateRoot.Background = new SolidColorBrush(Colors.Red) { Opacity = 0.1 };
 			TemplateRoot.BorderBrush = Brushes.Red;
 			TemplateRoot.BorderThickness = new Thickness(1);
 			TemplateRoot.IsHitTestVisible = false;

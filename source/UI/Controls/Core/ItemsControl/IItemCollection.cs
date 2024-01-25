@@ -14,17 +14,11 @@ namespace Zaaml.UI.Controls.Core
 
 	internal interface IItemCollection<TItem> : IItemCollection where TItem : FrameworkElement
 	{
-		#region Properties
-
 		int ActualCount { get; }
 
 		IEnumerable<TItem> ActualItems { get; }
 
 		IEnumerable SourceCollection { get; set; }
-
-		#endregion
-
-		#region  Methods
 
 		void BringIntoView(BringIntoViewRequest<TItem> bringIntoViewRequest);
 
@@ -41,7 +35,5 @@ namespace Zaaml.UI.Controls.Core
 		void LockItem(TItem item);
 
 		void UnlockItem(TItem item);
-
-		#endregion
 	}
 }

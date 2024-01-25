@@ -52,7 +52,7 @@ namespace Zaaml.PresentationCore
 
 		public static LogicalChildMentor<TControl> Create<TControl>(TControl control) where TControl : System.Windows.Controls.Control, ILogicalMentorOwner
 		{
-			return new(control);
+			return new LogicalChildMentor<TControl>(control);
 		}
 
 		public static void DetachLogical(object logicalChild)
@@ -93,7 +93,7 @@ namespace Zaaml.PresentationCore
 
 	internal sealed class LogicalChildMentor<TControl> : LogicalChildMentor where TControl : System.Windows.Controls.Control, ILogicalMentorOwner
 	{
-		private readonly List<object> _logicalChildren = new List<object>();
+		private readonly List<object> _logicalChildren = new();
 
 		public LogicalChildMentor(TControl control)
 		{

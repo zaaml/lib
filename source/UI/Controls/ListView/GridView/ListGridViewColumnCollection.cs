@@ -3,11 +3,11 @@
 // </copyright>
 
 using System;
-using Zaaml.PresentationCore;
+using Zaaml.UI.Controls.Core.GridView;
 
 namespace Zaaml.UI.Controls.ListView
 {
-	public sealed class ListGridViewColumnCollection : InheritanceContextDependencyObjectCollection<ListGridViewColumn>
+	public sealed class ListGridViewColumnCollection : GridViewColumnCollection<ListGridViewColumn>
 	{
 		internal ListGridViewColumnCollection(ListGridView listGridView)
 		{
@@ -20,18 +20,18 @@ namespace Zaaml.UI.Controls.ListView
 		{
 			base.OnItemAdded(column);
 
-			if (column.ListGridView != null)
+			if (column.View != null)
 				throw new InvalidOperationException();
 
-			column.ListGridView = ListGridView;
+			column.View = ListGridView;
 		}
 
 		protected override void OnItemRemoved(ListGridViewColumn column)
 		{
-			if (ReferenceEquals(column.ListGridView, ListGridView) == false)
+			if (ReferenceEquals(column.View, ListGridView) == false)
 				throw new InvalidOperationException();
 
-			column.ListGridView = null;
+			column.View = null;
 
 			base.OnItemRemoved(column);
 		}

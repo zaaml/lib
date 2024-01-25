@@ -25,7 +25,7 @@ namespace Zaaml.UI.Controls.Core
 
 		public SwitchContentPresenter Presenter
 		{
-			get => (SwitchContentPresenter) GetValue(PresenterProperty);
+			get => (SwitchContentPresenter)GetValue(PresenterProperty);
 			set => SetValue(PresenterProperty, value);
 		}
 

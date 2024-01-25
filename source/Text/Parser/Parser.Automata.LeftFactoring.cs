@@ -14,13 +14,13 @@ namespace Zaaml.Text
 	{
 		private sealed partial class ParserAutomata
 		{
-			private void EliminateLeftFactoring(ParserRule parserRule)
+			private void EliminateLeftFactoring(ParserSyntax parserSyntax)
 			{
-				if (parserRule.Inline)
+				if (parserSyntax.Inline)
 					return;
 
 				var dictionary = new Dictionary<Entry, List<Tuple<int, ParserProduction>>>(EntryEqualityComparer.Instance);
-				var productions = parserRule.Productions;
+				var productions = parserSyntax.Productions;
 
 				for (var index = 0; index < productions.Count; index++)
 				{
@@ -47,19 +47,19 @@ namespace Zaaml.Text
 
 					var prefixEntry = kv.Key;
 					var factorPostfixProductions = new List<ParserProduction>();
-					var parserSyntaxNode = new Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax($"{parserRule.Name}Factor", true);
+					var parserSyntaxNode = new Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax($"{parserSyntax.Name}Factor", true);
 					var parserSyntaxNodeEntry = new Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol(parserSyntaxNode);
-					var factorPrefixRule = new ParserRule(parserSyntaxNode);
-					var factorPrefixRuleEntry = new ParserRuleEntry(parserSyntaxNodeEntry, factorPrefixRule);
+					var factorPrefixSyntax = new ParserSyntax(parserSyntaxNode);
+					var factorPrefixSyntaxEntry = new ParserSyntaxEntry(parserSyntaxNodeEntry, factorPrefixSyntax);
 
 					foreach (var tuple in kv.Value.OrderBy(k => k.Item1))
 					{
 						var parserProduction = tuple.Item2;
 						var postfixEntries = parserProduction.Entries.Skip(1).ToArray();
-						var factorPostfixProduction = new ParserProduction(this, p => new LeftFactoringBinder(p), postfixEntries, parserProduction, parserProduction);
+						var factorPostfixProduction = new ParserProduction(this, p => new LeftFactoringBinder(p, LeftFactoringBinderKind.Postfix), postfixEntries, parserProduction, parserProduction);
 
 						if (factorPostfixProductions.Count == 0)
-							productions[tuple.Item1] = new ParserProduction(this, p => new LeftFactoringBinder(p), new[] { prefixEntry, factorPrefixRuleEntry }, parserProduction, null);
+							productions[tuple.Item1] = new ParserProduction(this, p => new LeftFactoringBinder(p, LeftFactoringBinderKind.Prefix), new[] { prefixEntry, factorPrefixSyntaxEntry }, parserProduction, null);
 						else
 							productions[tuple.Item1] = null;
 
@@ -67,9 +67,9 @@ namespace Zaaml.Text
 					}
 
 					foreach (var factorPostfixProduction in factorPostfixProductions)
-						factorPrefixRule.Productions.Add(factorPostfixProduction);
+						factorPrefixSyntax.Productions.Add(factorPostfixProduction);
 
-					EliminateLeftFactoring(factorPrefixRule);
+					EliminateLeftFactoring(factorPrefixSyntax);
 				}
 
 				for (var i = 0; i < productions.Count; i++)
@@ -82,13 +82,22 @@ namespace Zaaml.Text
 				}
 			}
 
+			private enum LeftFactoringBinderKind
+			{
+				Prefix,
+				Postfix,
+			}
+
 			private sealed class LeftFactoringBinder : ProductionBinder
 			{
 				private ParserProduction ParserProduction { get; }
 
-				public LeftFactoringBinder(ParserProduction parserProduction)
+				public LeftFactoringBinderKind Kind { get; }
+
+				public LeftFactoringBinder(ParserProduction parserProduction, LeftFactoringBinderKind kind)
 				{
 					ParserProduction = parserProduction;
+					Kind = kind;
 				}
 
 				protected override void BuildCore()
@@ -103,7 +112,7 @@ namespace Zaaml.Text
 				{
 					PrimitiveMatchEntry => true,
 					QuantifierEntry => true,
-					RuleEntry => true,
+					SyntaxEntry => true,
 					_ => false
 				};
 			}

@@ -29,6 +29,8 @@ namespace Zaaml.Text
 
 				public FragmentSyntax AddProduction(Production lexerProduction)
 				{
+					VerifyUnsealed();
+
 					AddProductionCore(lexerProduction);
 
 					return this;
@@ -62,6 +64,27 @@ namespace Zaaml.Text
 				public QuantifierSymbol ZeroOrOne(QuantifierMode mode = QuantifierMode.Greedy)
 				{
 					return new QuantifierSymbol(new FragmentSymbol(this), QuantifierKind.ZeroOrOne, mode);
+				}
+
+				protected override void AcceptVisitor<TVisitor>(TVisitor visitor)
+				{
+					visitor.Visit(this);
+
+					foreach (var production in Productions)
+					{
+						foreach (var symbol in production.Symbols)
+						{
+							switch (symbol)
+							{
+								case FragmentSymbol fragmentSymbol:
+									fragmentSymbol.Fragment.Visit(visitor);
+									break;
+								case TokenSymbol tokenSymbol:
+									tokenSymbol.Token.Visit(visitor);
+									break;
+							}
+						}
+					}
 				}
 			}
 		}

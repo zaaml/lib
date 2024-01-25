@@ -8,10 +8,6 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	internal interface IEventTriggerArgsSupport
 	{
-		#region  Methods
-
 		void SetArgs(EventArgs args);
-
-		#endregion
 	}
 }

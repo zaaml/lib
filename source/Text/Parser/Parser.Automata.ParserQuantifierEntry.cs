@@ -15,10 +15,10 @@ namespace Zaaml.Text
 				public ParserQuantifierEntry(Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol grammarEntry, PrimitiveEntry primitiveEntry, Interval<int> range, QuantifierMode mode)
 					: base(primitiveEntry, range, mode)
 				{
-					GrammarEntry = grammarEntry;
+					GrammarSymbol = grammarEntry;
 				}
 
-				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarEntry { get; }
+				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
 				public ProductionArgument ProductionArgument { get; set; }
 				
@@ -26,7 +26,7 @@ namespace Zaaml.Text
 				{
 					var primitiveEntryClone = PrimitiveEntry is IParserEntry pe ? (PrimitiveEntry)pe.Clone() : PrimitiveEntry;
 
-					return new ParserQuantifierEntry((Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol)GrammarEntry, primitiveEntryClone, Interval, Mode)
+					return new ParserQuantifierEntry((Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol)GrammarSymbol, primitiveEntryClone, Interval, Mode)
 					{
 						Source = this
 					};

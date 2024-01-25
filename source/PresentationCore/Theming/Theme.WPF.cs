@@ -11,7 +11,7 @@ namespace Zaaml.PresentationCore.Theming
 {
 	public partial class Theme
 	{
-		private readonly Dictionary<Type, ThemeKey> _themeKeys = new Dictionary<Type, ThemeKey>();
+		private readonly Dictionary<Type, ThemeKey> _themeKeys = new();
 
 		private ThemeKey CreateThemeKey(Type elementType)
 		{

@@ -10,116 +10,105 @@ using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  [DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
-  [DebuggerTypeProxy(typeof(DockItemCollectionDebugView))]
-  public class DockItemCollection : DependencyObjectCollectionBase<DockItem>
-  {
-    #region Fields
+	[DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
+	[DebuggerTypeProxy(typeof(DockItemCollectionDebugView))]
+	public class DockItemCollection : DependencyObjectCollectionBase<DockItem>
+	{
+		private readonly Dictionary<string, DockItem> _dictionary = new(StringComparer.Ordinal);
+		private readonly bool _locking;
+		private readonly Action<DockItem> _onItemAdded;
+		private readonly Action<DockItem> _onItemRemoved;
 
-    private readonly Dictionary<string, DockItem> _dictionary = new Dictionary<string, DockItem>(StringComparer.Ordinal);
-    private readonly bool _locking;
-    private readonly Action<DockItem> _onItemAdded;
-    private readonly Action<DockItem> _onItemRemoved;
+		internal DockItemCollection(Action<DockItem> onItemAdded, Action<DockItem> onItemRemoved, bool locking = false)
+		{
+			_onItemAdded = onItemAdded;
+			_onItemRemoved = onItemRemoved;
+			_locking = locking;
+		}
 
-    #endregion
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		internal string DebuggerDisplay
+		{
+			get { return $"[{string.Join(",", this.Select(w => w.DebuggerDisplay))}]"; }
+		}
 
-    #region Ctors
+		internal DockItem this[string name] => name != null ? _dictionary[name] : null;
 
-    internal DockItemCollection(Action<DockItem> onItemAdded, Action<DockItem> onItemRemoved, bool locking = false)
-    {
-      _onItemAdded = onItemAdded;
-      _onItemRemoved = onItemRemoved;
-      _locking = locking;
-    }
+		protected override void OnItemAdded(DockItem item)
+		{
+			base.OnItemAdded(item);
 
-    #endregion
+			VerifyName(item);
 
-    #region Properties
+			if (item.ItemCollections.Add(this) == false)
+				throw new InvalidOperationException();
 
-    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    internal string DebuggerDisplay
-    {
-      get { return $"[{string.Join(",", this.Select(w => w.DebuggerDisplay))}]"; }
-    }
+			if (string.IsNullOrEmpty(item.Name) == false)
+				_dictionary[item.Name] = item;
 
-    internal DockItem this[string name] => name != null ? _dictionary[name] : null;
+			_onItemAdded(item);
 
-    #endregion
+			if (_locking)
+				item.Lock();
+		}
 
-    #region  Methods
+		internal IEnumerable<DockItem> GetByDockState(DockItemState dockItemState)
+		{
+			return this.Where(d => d.DockState == dockItemState);
+		}
 
-    protected override void OnItemAdded(DockItem item)
-    {
-      base.OnItemAdded(item);
+		internal void OnItemNameChanged(DockItem dockItem, string prevName)
+		{
+			if (prevName != null)
+				_dictionary.Remove(prevName);
 
-      VerifyName(item);
+			if (dockItem.Name != null)
+				_dictionary[dockItem.Name] = dockItem;
+		}
 
-      if (item.ItemCollections.Add(this) == false)
-        throw new InvalidOperationException();
+		protected override void OnItemRemoved(DockItem item)
+		{
+			base.OnItemRemoved(item);
 
-      if (string.IsNullOrEmpty(item.Name) == false)
-        _dictionary[item.Name] = item;
+			if (item.Name != null)
+				_dictionary.Remove(item.Name);
 
-      _onItemAdded(item);
+			if (item.ItemCollections.Remove(this) == false)
+				throw new InvalidOperationException();
 
-      if (_locking)
-        item.Lock();
-    }
+			_onItemRemoved.Invoke(item);
 
-    internal void OnItemNameChanged(DockItem dockItem, string prevName)
-    {
-      if (prevName != null)
-        _dictionary.Remove(prevName);
+			if (_locking)
+				item.Unlock();
+		}
 
-      if (dockItem.Name != null)
-        _dictionary[dockItem.Name] = dockItem;
-    }
+		internal void Replace(DockItem oldItem, DockItem newItem)
+		{
+			var index = IndexOf(oldItem);
 
-    protected override void OnItemRemoved(DockItem item)
-    {
-      base.OnItemRemoved(item);
+			if (index == -1)
+				return;
 
-      if (item.Name != null)
-        _dictionary.Remove(item.Name);
+			this[index] = newItem;
+		}
 
-      if (item.ItemCollections.Remove(this) == false)
-        throw new InvalidOperationException();
+		internal bool TryGetDockItem(string key, out DockItem value)
+		{
+			if (key != null)
+				return _dictionary.TryGetValue(key, out value);
 
-      _onItemRemoved.Invoke(item);
+			value = null;
 
-      if (_locking)
-        item.Unlock();
-    }
+			return false;
+		}
 
-    internal void Replace(DockItem oldItem, DockItem newItem)
-    {
-      var index = IndexOf(oldItem);
+		private void VerifyName(DockItem dockItem)
+		{
+			if (string.IsNullOrEmpty(dockItem.Name))
+				return;
 
-      if (index == -1)
-        return;
-
-      this[index] = newItem;
-    }
-
-    internal bool TryGetDockItem(string key, out DockItem value)
-    {
-      if (key != null)
-        return _dictionary.TryGetValue(key, out value);
-
-      value = null;
-
-      return false;
-    }
-
-    private void VerifyName(DockItem dockItem)
-    {
-      if (string.IsNullOrEmpty(dockItem.Name))
-        return;
-
-      if (_dictionary.ContainsKey(dockItem.Name))
-        throw new InvalidOperationException("DockItem with the same Name already exists in this collection");
-    }
-
-    #endregion
-  }
+			if (_dictionary.ContainsKey(dockItem.Name))
+				throw new InvalidOperationException("DockItem with the same Name already exists in this collection");
+		}
+	}
 }

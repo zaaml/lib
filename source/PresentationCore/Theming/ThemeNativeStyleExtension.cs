@@ -8,23 +8,15 @@ using Binding = System.Windows.Data.Binding;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public sealed class ThemeNativeStyleExtension : BindingMarkupExtension
-  {
-    #region Properties
+	public sealed class ThemeNativeStyleExtension : BindingMarkupExtension
+	{
+		protected override bool SupportNativeSetter => true;
 
-    protected override bool SupportNativeSetter => true;
+		public Type TargetType { get; set; }
 
-    public Type TargetType { get; set; }
-
-    #endregion
-
-    #region  Methods
-
-    protected internal override Binding GetBinding(IServiceProvider serviceProvider)
-    {
-      return ThemeManager.GetThemeStyle(TargetType ?? GetSafeTarget(serviceProvider)?.GetType()).StyleService.NativeStyleBinding;
-    }
-
-    #endregion
-  }
+		protected internal override Binding GetBinding(IServiceProvider serviceProvider)
+		{
+			return ThemeManager.GetThemeStyle(TargetType ?? GetSafeTarget(serviceProvider)?.GetType()).StyleService.NativeStyleBinding;
+		}
+	}
 }

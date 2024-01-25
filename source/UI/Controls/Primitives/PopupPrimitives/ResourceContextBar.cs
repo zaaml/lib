@@ -3,13 +3,13 @@
 // </copyright>
 
 using System.Windows.Markup;
-using Zaaml.PresentationCore;
+using NameScope = Zaaml.PresentationCore.NameScope;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
 	public class ResourceContextBar : ContextBar, INameScope
 	{
-		private readonly NameScope _nameScope = new NameScope();
+		private readonly NameScope _nameScope = new();
 
 		internal override bool OwnerAttachSelector => false;
 

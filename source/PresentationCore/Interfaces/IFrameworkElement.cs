@@ -6,34 +6,29 @@ using System.Windows;
 
 namespace Zaaml.PresentationCore.Interfaces
 {
-  internal interface IFrameworkElement : IDependencyObject
-  {
-    #region Properties
+	internal interface IUIElement : IDependencyObject
+	{
+		void InvalidateArrange();
 
-    double Height { get; }
+		void InvalidateMeasure();
+	}
 
-    HorizontalAlignment HorizontalAlignment { get; }
+	internal interface IFrameworkElement : IUIElement
+	{
+		double Height { get; }
 
-    double MaxHeight { get; }
+		HorizontalAlignment HorizontalAlignment { get; }
 
-    double MaxWidth { get; }
+		double MaxHeight { get; }
 
-    double MinHeight { get; }
+		double MaxWidth { get; }
 
-    double MinWidth { get; }
+		double MinHeight { get; }
 
-    VerticalAlignment VerticalAlignment { get; }
+		double MinWidth { get; }
 
-    double Width { get; }
+		VerticalAlignment VerticalAlignment { get; }
 
-    #endregion
-
-    #region  Methods
-
-    void InvalidateArrange();
-
-    void InvalidateMeasure();
-
-    #endregion
-  }
+		double Width { get; }
+	}
 }

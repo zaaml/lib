@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
     protected override Rect ArrangeOverride(Size desiredSize)
     {
-      return Rectangle.Offset(TargetScreenBox.GetTopLeft());
+      return Rectangle.WithOffset(TargetScreenBox.GetTopLeft());
     }
 
     #endregion

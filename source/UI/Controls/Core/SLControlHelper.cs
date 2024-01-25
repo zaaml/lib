@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Extensions;
@@ -24,20 +25,20 @@ namespace Zaaml.UI.Controls.Core
 
     public static void InitFocusChangedState(System.Windows.Controls.Control control, DependencyPropertyKey isFocusedProperty)
     {
-      control.GotFocus += (sender, args) => control.SetValue(isFocusedProperty, KnownBoxes.BoolTrue);
-      control.LostFocus += (sender, args) => control.SetValue(isFocusedProperty, KnownBoxes.BoolFalse);
+      control.GotFocus += (sender, args) => control.SetValue(isFocusedProperty, BooleanBoxes.True);
+      control.LostFocus += (sender, args) => control.SetValue(isFocusedProperty, BooleanBoxes.False);
     }
 
     public static void InitIsMouseOverState(System.Windows.Controls.Control control, DependencyPropertyKey isMouseOverProperty)
     {
-      control.MouseEnter += (sender, args) => control.SetValue(isMouseOverProperty, KnownBoxes.BoolTrue);
-      control.MouseLeave += (sender, args) => control.SetValue(isMouseOverProperty, KnownBoxes.BoolFalse);
+      control.MouseEnter += (sender, args) => control.SetValue(isMouseOverProperty, BooleanBoxes.True);
+      control.MouseLeave += (sender, args) => control.SetValue(isMouseOverProperty, BooleanBoxes.False);
     }
 
     public static void InitLoadUnloadState(System.Windows.Controls.Control control, DependencyPropertyKey isLoadedProperty)
     {
-      control.Loaded += (sender, args) => control.SetValue(isLoadedProperty, KnownBoxes.BoolTrue);
-      control.Unloaded += (sender, args) => control.SetValue(isLoadedProperty, KnownBoxes.BoolFalse);
+      control.Loaded += (sender, args) => control.SetValue(isLoadedProperty, BooleanBoxes.True);
+      control.Unloaded += (sender, args) => control.SetValue(isLoadedProperty, BooleanBoxes.False);
     }
 
     public static DependencyPropertyKey RegisterCoreProperty<TProperty, TOwner>(CorePropertyKind propertyKind, Func<TOwner, Action> changedHandlerFactory) where TOwner : DependencyObject

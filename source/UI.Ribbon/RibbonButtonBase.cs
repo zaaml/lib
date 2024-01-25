@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -50,9 +50,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
     static RibbonButtonBase()
     {
-#if !SILVERLIGHT
-      KeyboardNavigation.AcceptsReturnProperty.OverrideMetadata(typeof(RibbonButtonBase), new FrameworkPropertyMetadata(KnownBoxes.BoolTrue));
-#endif
+      KeyboardNavigation.AcceptsReturnProperty.OverrideMetadata(typeof(RibbonButtonBase), new FrameworkPropertyMetadata(true.Box()));
     }
 
     protected RibbonButtonBase()

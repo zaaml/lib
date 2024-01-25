@@ -1,0 +1,46 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Tab Template  -->
+  <ControlTemplate x:Key="DocumentTabLayoutViewTemplate"
+                   TargetType="zm:DocumentLayoutView">
+    <zm:ControlTemplateRoot Background="Transparent">
+
+      <!--  TabViewControl  -->
+      <zm:DocumentTabViewControl x:Name="TabViewControl"
+                                 Padding="0"
+                                 Background="Transparent"
+                                 BorderBrush="{TemplateBinding BorderBrush}"
+                                 ItemsCloseButtonVisibility="Hidden"
+                                 TabStripPlacement="Top">
+        <zm:DocumentTabViewControl.ItemsFlexDefinition>
+          <zm:FlexDefinition Length="Auto"
+                             StretchDirection="None" />
+        </zm:DocumentTabViewControl.ItemsFlexDefinition>
+      </zm:DocumentTabViewControl>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Raw Template  -->
+  <ControlTemplate x:Key="DocumentRawLayoutViewTemplate"
+                   TargetType="zm:DocumentLayoutView">
+    <zm:ControlTemplateRoot x:Name="Host"  Background="Transparent" />
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="DocumentLayoutViewBaseStyle" TargetType="zm:DocumentLayoutView">
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=RawContent, Converter={zm:TernaryConverter TrueValue={StaticResource DocumentRawLayoutViewTemplate}, FalseValue={StaticResource DocumentTabLayoutViewTemplate}}}" />
+  </zm:Style>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="DocumentLayoutViewStyle" BasedOn="{StaticResource DocumentLayoutViewBaseStyle}" TargetType="zm:DocumentLayoutView" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="DocumentLayoutViewThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource DocumentLayoutViewStyle}" TargetType="zm:DocumentLayoutView" />
+
+</zm:ThemeResourceDictionary>

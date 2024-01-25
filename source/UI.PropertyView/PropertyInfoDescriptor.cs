@@ -15,6 +15,11 @@ namespace Zaaml.UI.Controls.PropertyView
 	{
 		public static PropertyDescriptor CreateDescriptor(Type propertyObjectType, PropertyInfo propertyInfo, PropertyDescriptorProvider provider)
 		{
+#if NET5_0_OR_GREATER
+			if (propertyInfo.PropertyType.IsByRefLike)
+				return new EmptyPropertyInfoDescriptor(propertyInfo, provider);
+#endif
+
 			var propertyType = propertyInfo.PropertyType;
 			var genericListType = propertyType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IList<>));
 

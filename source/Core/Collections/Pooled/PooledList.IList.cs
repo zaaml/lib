@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -9,6 +10,19 @@ namespace Zaaml.Core.Collections.Pooled
 {
 	internal partial class PooledList<T> : IList<T>, IList
 	{
+		public void Sort(IComparer<T> comparer)
+		{
+			Array.Sort(_items, 0, Count, comparer);
+		}
+
+		public void Sort(int start, int length, IComparer<T> comparer)
+		{
+			if (start < 0 || start >= Count || length < 0 || start + length > Count)
+				throw new ArgumentOutOfRangeException();
+
+			Array.Sort(_items, start, length, comparer);
+		}
+
 		int IList.Add(object value)
 		{
 			Add((T) value);

@@ -15,534 +15,469 @@ using Zaaml.UI.Extensions;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class DockLayoutView : BaseLayoutView<DockLayout>
-  {
-    #region Fields
+	public class DockLayoutView : BaseLayoutView<DockLayout>
+	{
+		private readonly Dictionary<UIElement, UIChildDefinition> _childrenDefinitions = new();
+		private readonly Dictionary<DockItem, Dock?> _itemSideDictionary = new();
+		private readonly Dictionary<DockItem, DockGridSplitter> _itemSplitterDictionary = new();
+		private readonly ConstraintGridSplitterDelta _splitterConstraintHelper;
+		private UIChildDefinition _contentDefinition = new(null, null);
+		private bool _isSizeChangeSuspended;
+		private Size _splitterSize;
 
-    private readonly Dictionary<UIElement, UIChildDefinition> _childrenDefinitions = new Dictionary<UIElement, UIChildDefinition>();
-    private readonly ConstraintGridSplitterDelta _splitterConstraintHelper;
-    private readonly Dictionary<DockItem, Dock?> _itemDockSideDictionary = new Dictionary<DockItem, Dock?>();
-    private readonly Dictionary<DockItem, DockGridSplitter> _itemSplitterDictionary = new Dictionary<DockItem, DockGridSplitter>();
-    private UIChildDefinition _contentDefinition = new UIChildDefinition(null, null);
-    private bool _isDockSizeChangeSuspended;
-    private Size _splitterSize;
+		static DockLayoutView()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<DockLayoutView>();
+		}
 
-    #endregion
+		public DockLayoutView()
+		{
+			this.OverrideStyleKey<DockLayoutView>();
 
-    #region Ctors
+			_splitterConstraintHelper = new ConstraintGridSplitterDelta(new Size(40, 40));
 
-    static DockLayoutView()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<DockLayoutView>();
-    }
+			SizeChanged += OnSizeChanged;
+		}
 
-    public DockLayoutView()
-    {
-      this.OverrideStyleKey<DockLayoutView>();
+		private ContentPresenter ContentPresenter => TemplateContract.ContentPresenter;
 
-      _splitterConstraintHelper = new ConstraintGridSplitterDelta(new Size(40, 40));
+		private Grid ItemsHost => TemplateContract.ItemsHost;
 
-      SizeChanged += OnSizeChanged;
-    }
+		private DockLayoutViewTemplateContract TemplateContract => (DockLayoutViewTemplateContract)TemplateContractInternal;
 
-    #endregion
+		private void AddGridDefinitions(DockItem item)
+		{
+			if (TemplateContract.IsAttached == false)
+				return;
 
-    #region Properties
+			var side = DockLayout.GetDock(item);
 
-    private ContentPresenter ContentPresenter => TemplateContract.ContentPresenter;
+			_itemSideDictionary[item] = side;
 
-    private DockLayoutViewTemplateContract TemplateContract => (DockLayoutViewTemplateContract) TemplateContractInternal;
+			switch (side)
+			{
+				case Dock.Left:
+				case Dock.Right:
 
-    private Grid ItemsHost => TemplateContract.ItemsHost;
+					ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
+					ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
 
-    #endregion
+					break;
 
-    #region  Methods
+				case Dock.Top:
+				case Dock.Bottom:
 
-    private void AddGridDefinitions(DockItem item)
-    {
-      if (TemplateContract.IsAttached == false)
-        return;
+					ItemsHost.RowDefinitions.Add(new RowDefinition());
+					ItemsHost.RowDefinitions.Add(new RowDefinition());
 
-      var dockSide = DockLayout.GetDockSide(item);
+					break;
+			}
+		}
 
-      _itemDockSideDictionary[item] = dockSide;
+		private void ArrangeContentPresenter(FrameworkElement element, ColumnDefinition contentColumn, RowDefinition contentRow)
+		{
+			element.ApplyGridPosition();
 
-      switch (dockSide)
-      {
-        case Dock.Left:
-        case Dock.Right:
+			Grid.SetColumn(element, ItemsHost.ColumnDefinitions.IndexOf(contentColumn));
+			Grid.SetRow(element, ItemsHost.RowDefinitions.IndexOf(contentRow));
 
-          ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
-          ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
+			if (ReferenceEquals(element, ContentPresenter))
+				_childrenDefinitions[element] = new UIChildDefinition(contentColumn, contentRow);
+		}
 
-          break;
+		protected internal override void ArrangeItems()
+		{
+			if (TemplateContract.IsAttached == false)
+				return;
 
-        case Dock.Top:
-        case Dock.Bottom:
+			_childrenDefinitions.Clear();
+			ItemsHost.Children.Clear();
+			ItemsHost.Children.Add(ContentPresenter);
 
-          ItemsHost.RowDefinitions.Add(new RowDefinition());
-          ItemsHost.RowDefinitions.Add(new RowDefinition());
+			var leftCol = 0;
+			var rightCol = ItemsHost.ColumnDefinitions.Count - 1;
+			var topRow = 0;
+			var bottomRow = ItemsHost.RowDefinitions.Count - 1;
 
-          break;
-      }
-    }
+			foreach (var item in ReverseOrderedItems)
+			{
+				var splitter = _itemSplitterDictionary[item];
 
-    private void ArrangeContentPresenter(FrameworkElement element, ColumnDefinition contentColumn, RowDefinition contentRow)
-    {
-      element.ApplyGridPosition();
+				ItemsHost.Children.Add(item);
+				ItemsHost.Children.Add(splitter);
 
-      Grid.SetColumn(element, ItemsHost.ColumnDefinitions.IndexOf(contentColumn));
-      Grid.SetRow(element, ItemsHost.RowDefinitions.IndexOf(contentRow));
+				var colIndex = leftCol;
+				var rowIndex = topRow;
+				var splitColIndex = leftCol;
+				var splitRowIndex = topRow;
+				var colSpan = 1;
+				var rowSpan = 1;
 
-      if (ReferenceEquals(element, ContentPresenter))
-        _childrenDefinitions[element] = new UIChildDefinition(contentColumn, contentRow);
-    }
+				switch (DockLayout.GetDock(item))
+				{
+					case Dock.Left:
 
-    protected internal override void ArrangeItems()
-    {
-      if (TemplateContract.IsAttached == false)
-        return;
+						colIndex = leftCol;
+						splitColIndex = leftCol + 1;
+						leftCol += 2;
 
-      _childrenDefinitions.Clear();
-      ItemsHost.Children.Clear();
-      ItemsHost.Children.Add(ContentPresenter);
+						break;
 
-      var leftCol = 0;
-      var rightCol = ItemsHost.ColumnDefinitions.Count - 1;
-      var topRow = 0;
-      var bottomRow = ItemsHost.RowDefinitions.Count - 1;
+					case Dock.Top:
 
-      foreach (var item in ReverseOrderedItems)
-      {
-        var splitter = _itemSplitterDictionary[item];
+						rowIndex = topRow;
+						splitRowIndex = topRow + 1;
+						topRow += 2;
 
-        ItemsHost.Children.Add(item);
-        ItemsHost.Children.Add(splitter);
+						break;
 
-        var colIndex = leftCol;
-        var rowIndex = topRow;
-        var splitColIndex = leftCol;
-        var splitRowIndex = topRow;
-        var colSpan = 1;
-        var rowSpan = 1;
+					case Dock.Right:
 
-        switch (DockLayout.GetDockSide(item))
-        {
-          case Dock.Left:
+						colIndex = rightCol;
+						splitColIndex = rightCol - 1;
+						rightCol -= 2;
 
-            colIndex = leftCol;
-            splitColIndex = leftCol + 1;
-            leftCol += 2;
+						break;
 
-            break;
+					case Dock.Bottom:
 
-          case Dock.Top:
+						rowIndex = bottomRow;
+						splitRowIndex = bottomRow - 1;
+						bottomRow -= 2;
 
-            rowIndex = topRow;
-            splitRowIndex = topRow + 1;
-            topRow += 2;
+						break;
+				}
 
-            break;
+				switch (GetOrientation(item))
+				{
+					case Orientation.Horizontal:
 
-          case Dock.Right:
+						rowSpan = bottomRow - topRow + 1;
+						SetResizeDirection(splitter, GridResizeDirection.Columns);
+						ItemsHost.ColumnDefinitions[splitColIndex].Width = GridLength.Auto;
 
-            colIndex = rightCol;
-            splitColIndex = rightCol - 1;
-            rightCol -= 2;
+						_childrenDefinitions[splitter] = new UIChildDefinition(ItemsHost.ColumnDefinitions[splitColIndex], null);
+						_childrenDefinitions[item] = new UIChildDefinition(ItemsHost.ColumnDefinitions[colIndex], null);
 
-            break;
+						break;
 
-          case Dock.Bottom:
+					case Orientation.Vertical:
 
-            rowIndex = bottomRow;
-            splitRowIndex = bottomRow - 1;
-            bottomRow -= 2;
+						colSpan = rightCol - leftCol + 1;
+						SetResizeDirection(splitter, GridResizeDirection.Rows);
+						ItemsHost.RowDefinitions[splitRowIndex].Height = GridLength.Auto;
 
-            break;
-        }
+						_childrenDefinitions[splitter] = new UIChildDefinition(null, ItemsHost.RowDefinitions[splitRowIndex]);
+						_childrenDefinitions[item] = new UIChildDefinition(null, ItemsHost.RowDefinitions[rowIndex]);
 
-        switch (GetOrientation(item))
-        {
-          case Orientation.Horizontal:
+						break;
+				}
 
-            rowSpan = bottomRow - topRow + 1;
-            SetResizeDirection(splitter, GridResizeDirection.Columns);
-            ItemsHost.ColumnDefinitions[splitColIndex].Width = GridLength.Auto;
+				SetDefinitionSize(item);
 
-            _childrenDefinitions[splitter] = new UIChildDefinition(ItemsHost.ColumnDefinitions[splitColIndex], null);
-            _childrenDefinitions[item] = new UIChildDefinition(ItemsHost.ColumnDefinitions[colIndex], null);
+				Grid.SetColumn(item, colIndex);
+				Grid.SetColumnSpan(item, colSpan);
+				Grid.SetRow(item, rowIndex);
+				Grid.SetRowSpan(item, rowSpan);
 
-            break;
+				Grid.SetColumn(splitter, splitColIndex);
+				Grid.SetColumnSpan(splitter, colSpan);
+				Grid.SetRow(splitter, splitRowIndex);
+				Grid.SetRowSpan(splitter, rowSpan);
+			}
 
-          case Orientation.Vertical:
+			var contentColumn = ItemsHost.ColumnDefinitions[leftCol];
+			var contentRow = ItemsHost.RowDefinitions[topRow];
 
-            colSpan = rightCol - leftCol + 1;
-            SetResizeDirection(splitter, GridResizeDirection.Rows);
-            ItemsHost.RowDefinitions[splitRowIndex].Height = GridLength.Auto;
+			_contentDefinition = new UIChildDefinition(contentColumn, contentRow);
 
-            _childrenDefinitions[splitter] = new UIChildDefinition(null, ItemsHost.RowDefinitions[splitRowIndex]);
-            _childrenDefinitions[item] = new UIChildDefinition(null, ItemsHost.RowDefinitions[rowIndex]);
+			ArrangeContentPresenter(ContentPresenter, contentColumn, contentRow);
 
-            break;
-        }
+			UpdateContentDefinitionsSize();
+		}
 
-        SetDefinitionSize(item);
+		protected override TemplateContract CreateTemplateContract()
+		{
+			return new DockLayoutViewTemplateContract();
+		}
 
-        Grid.SetColumn(item, colIndex);
-        Grid.SetColumnSpan(item, colSpan);
-        Grid.SetRow(item, rowIndex);
-        Grid.SetRowSpan(item, rowSpan);
+		private void FinalizeSplitting()
+		{
+			_isSizeChangeSuspended = true;
 
-        Grid.SetColumn(splitter, splitColIndex);
-        Grid.SetColumnSpan(splitter, colSpan);
-        Grid.SetRow(splitter, splitRowIndex);
-        Grid.SetRowSpan(splitter, rowSpan);
-      }
+			foreach (var item in Items)
+			{
+				var definition = _childrenDefinitions[item];
 
-      var contentColumn = ItemsHost.ColumnDefinitions[leftCol];
-      var contentRow = ItemsHost.RowDefinitions[topRow];
+				switch (GetOrientation(item))
+				{
+					case Orientation.Horizontal:
 
-      _contentDefinition = new UIChildDefinition(contentColumn, contentRow);
+						DockLayout.SetWidth(item, definition.Column.Width.Value);
 
-      ArrangeContentPresenter(ContentPresenter, contentColumn, contentRow);
+						break;
 
-      UpdateContentDefinitionsSize();
-    }
+					case Orientation.Vertical:
 
-    protected override TemplateContract CreateTemplateContract()
-    {
-      return new DockLayoutViewTemplateContract();
-    }
+						DockLayout.SetHeight(item, definition.Row.Height.Value);
 
-    private void FinalizeSplitting()
-    {
-      _isDockSizeChangeSuspended = true;
+						break;
+				}
+			}
 
-      foreach (var item in Items)
-      {
-        var definition = _childrenDefinitions[item];
+			_isSizeChangeSuspended = false;
+		}
 
-        switch (GetOrientation(item))
-        {
-          case Orientation.Horizontal:
+		private static Orientation GetOrientation(DockItem item)
+		{
+			return Util.GetOrientation(DockLayout.GetDock(item));
+		}
 
-            DockLayout.SetDockWidth(item, definition.Column.Width.Value);
+		internal static GridResizeDirection GetResizeDirection(GridSplitter gridSplitter)
+		{
+			return gridSplitter.ResizeDirection;
+		}
 
-            break;
+		protected override void OnItemAdded(DockItem item)
+		{
+			var splitter = new DockGridSplitter();
 
-          case Orientation.Vertical:
+			splitter.SetZIndex(short.MaxValue);
+			_itemSplitterDictionary[item] = splitter;
+			splitter.LostMouseCapture += OnSplitterLostMouseCapture;
+			_splitterConstraintHelper.AddSplitter(splitter);
 
-            DockLayout.SetDockHeight(item, definition.Row.Height.Value);
+			AddGridDefinitions(item);
 
-            break;
-        }
-      }
+			InvalidateItemsArrange();
+		}
 
-      _isDockSizeChangeSuspended = false;
-    }
+		internal void OnItemDockChanged(DockItem item)
+		{
+			RemoveGridDefinitions(item);
+			AddGridDefinitions(item);
 
-    internal static GridResizeDirection GetResizeDirection(GridSplitter gridSplitter)
-    {
-#if SILVERLIGHT
-      if (gridSplitter.VerticalAlignment == VerticalAlignment.Stretch)
-        return GridResizeDirection.Columns;
+			InvalidateItemsArrange();
+		}
 
-      if (gridSplitter.HorizontalAlignment == HorizontalAlignment.Stretch)
-        return GridResizeDirection.Rows;
+		internal void OnItemSizeChanged(DockItem item)
+		{
+			if (_isSizeChangeSuspended)
+				return;
 
-      return GridResizeDirection.Auto;
-#else
-      return gridSplitter.ResizeDirection;
-#endif
-    }
+			foreach (var w in Items)
+				SetDefinitionSize(w);
 
-    private static Orientation GetOrientation(DockItem item)
-    {
-      return Util.GetOrientation(DockLayout.GetDockSide(item));
-    }
+			UpdateContentDefinitionsSize();
+		}
 
-    protected override void OnItemAdded(DockItem item)
-    {
-	    var splitter = new DockGridSplitter();
-
-	    splitter.SetZIndex(short.MaxValue);
-	    _itemSplitterDictionary[item] = splitter;
-	    splitter.LostMouseCapture += OnSplitterLostMouseCapture;
-	    _splitterConstraintHelper.AddSplitter(splitter);
-
-	    AddGridDefinitions(item);
-
-      InvalidateItemsArrange();
-    }
-
-    internal void OnItemDockSideChanged(DockItem item)
-    {
-      RemoveGridDefinitions(item);
-      AddGridDefinitions(item);
-
-      InvalidateItemsArrange();
-    }
-
-    internal void OnItemDockSizeChanged(DockItem item)
-    {
-      if (_isDockSizeChangeSuspended)
-        return;
-
-      foreach (var w in Items)
-        SetDefinitionSize(w);
-
-      UpdateContentDefinitionsSize();
-    }
-
-    protected override void OnItemRemoved(DockItem item)
-    {
+		protected override void OnItemRemoved(DockItem item)
+		{
 			var splitter = _itemSplitterDictionary[item];
 
-	    _itemSplitterDictionary.Remove(item);
-	    splitter.LostMouseCapture -= OnSplitterLostMouseCapture;
+			_itemSplitterDictionary.Remove(item);
+			splitter.LostMouseCapture -= OnSplitterLostMouseCapture;
 
-	    _splitterConstraintHelper.RemoveSplitter(splitter);
+			_splitterConstraintHelper.RemoveSplitter(splitter);
 
-	    ItemsHost?.Children.Remove(item);
+			ItemsHost?.Children.Remove(item);
 
-      RemoveGridDefinitions(item);
+			RemoveGridDefinitions(item);
 
-      InvalidateItemsArrange();
-    }
+			InvalidateItemsArrange();
+		}
 
-    private void OnMeasureSplitterLoaded(object sender, RoutedEventArgs routedEventArgs)
-    {
-      var splitter = (GridSplitter) sender;
+		private void OnMeasureSplitterLoaded(object sender, RoutedEventArgs routedEventArgs)
+		{
+			var splitter = (GridSplitter)sender;
 
-      splitter.Loaded -= OnMeasureSplitterLoaded;
-      ItemsHost.Children.Remove(splitter);
+			splitter.Loaded -= OnMeasureSplitterLoaded;
+			ItemsHost.Children.Remove(splitter);
 
-      if (GetResizeDirection(splitter) == GridResizeDirection.Columns)
-        _splitterSize.Width = splitter.ActualWidth;
+			if (GetResizeDirection(splitter) == GridResizeDirection.Columns)
+				_splitterSize.Width = splitter.ActualWidth;
 
-      if (GetResizeDirection(splitter) == GridResizeDirection.Rows)
-        _splitterSize.Height = splitter.ActualHeight;
-    }
+			if (GetResizeDirection(splitter) == GridResizeDirection.Rows)
+				_splitterSize.Height = splitter.ActualHeight;
+		}
 
-    private void OnSizeChanged(object sender, SizeChangedEventArgs args)
-    {
-      UpdateContentDefinitionsSize();
-    }
+		private void OnSizeChanged(object sender, SizeChangedEventArgs args)
+		{
+			UpdateContentDefinitionsSize();
+		}
 
-    private void OnSplitterLostMouseCapture(object sender, MouseEventArgs e)
-    {
-      FinalizeSplitting();
-    }
+		private void OnSplitterLostMouseCapture(object sender, MouseEventArgs e)
+		{
+			FinalizeSplitting();
+		}
 
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-      ItemsHost.ColumnDefinitions.Clear();
-      ItemsHost.RowDefinitions.Clear();
-      ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
-      ItemsHost.RowDefinitions.Add(new RowDefinition());
+			ItemsHost.ColumnDefinitions.Clear();
+			ItemsHost.RowDefinitions.Clear();
+			ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
+			ItemsHost.RowDefinitions.Add(new RowDefinition());
 
-      foreach (var item in Items)
-        AddGridDefinitions(item);
+			foreach (var item in Items)
+				AddGridDefinitions(item);
 
-      _splitterConstraintHelper.Grid = ItemsHost;
+			_splitterConstraintHelper.Grid = ItemsHost;
 
-      // Enqueue splitter measurements
-      var columnSplitter = new DockGridSplitter {Opacity = 0, IsHitTestVisible = false};
-      var rowSplitter = new DockGridSplitter {Opacity = 0, IsHitTestVisible = false};
+			// Enqueue splitter measurements
+			var columnSplitter = new DockGridSplitter { Opacity = 0, IsHitTestVisible = false };
+			var rowSplitter = new DockGridSplitter { Opacity = 0, IsHitTestVisible = false };
 
-      SetResizeDirection(columnSplitter, GridResizeDirection.Columns);
-      SetResizeDirection(rowSplitter, GridResizeDirection.Rows);
+			SetResizeDirection(columnSplitter, GridResizeDirection.Columns);
+			SetResizeDirection(rowSplitter, GridResizeDirection.Rows);
 
-      ItemsHost.Children.Add(columnSplitter);
-      ItemsHost.Children.Add(rowSplitter);
+			ItemsHost.Children.Add(columnSplitter);
+			ItemsHost.Children.Add(rowSplitter);
 
-      columnSplitter.Loaded += OnMeasureSplitterLoaded;
-      rowSplitter.Loaded += OnMeasureSplitterLoaded;
+			columnSplitter.Loaded += OnMeasureSplitterLoaded;
+			rowSplitter.Loaded += OnMeasureSplitterLoaded;
 
-      InvalidateItemsArrange();
-    }
+			InvalidateItemsArrange();
+		}
 
-    protected override void OnTemplateContractDetaching()
-    {
-      foreach (var splitter in ItemsHost.Children.OfType<DockGridSplitter>())
-        splitter.Loaded -= OnMeasureSplitterLoaded;
+		protected override void OnTemplateContractDetaching()
+		{
+			foreach (var splitter in ItemsHost.Children.OfType<DockGridSplitter>())
+				splitter.Loaded -= OnMeasureSplitterLoaded;
 
-      ItemsHost.Children.Clear();
+			ItemsHost.Children.Clear();
 
-      _splitterConstraintHelper.Grid = null;
+			_splitterConstraintHelper.Grid = null;
 
-      base.OnTemplateContractDetaching();
-    }
+			base.OnTemplateContractDetaching();
+		}
 
-    private void RemoveGridDefinitions(DockItem item)
-    {
-      if (TemplateContract.IsAttached == false)
-        return;
+		private void RemoveGridDefinitions(DockItem item)
+		{
+			if (TemplateContract.IsAttached == false)
+				return;
 
-      var dockSide = _itemDockSideDictionary[item];
+			var side = _itemSideDictionary[item];
 
-      _itemDockSideDictionary.Remove(item);
+			_itemSideDictionary.Remove(item);
 
-      switch (dockSide)
-      {
-        case Dock.Left:
-        case Dock.Right:
+			switch (side)
+			{
+				case Dock.Left:
+				case Dock.Right:
 
-          ItemsHost.ColumnDefinitions.RemoveAt(0);
-          ItemsHost.ColumnDefinitions.RemoveAt(0);
+					ItemsHost.ColumnDefinitions.RemoveAt(0);
+					ItemsHost.ColumnDefinitions.RemoveAt(0);
 
-          break;
+					break;
 
-        case Dock.Top:
-        case Dock.Bottom:
+				case Dock.Top:
+				case Dock.Bottom:
 
-          ItemsHost.RowDefinitions.RemoveAt(0);
-          ItemsHost.RowDefinitions.RemoveAt(0);
+					ItemsHost.RowDefinitions.RemoveAt(0);
+					ItemsHost.RowDefinitions.RemoveAt(0);
 
-          break;
-      }
-    }
+					break;
+			}
+		}
 
-    private void SetDefinitionSize(DockItem item)
-    {
-	    if (_childrenDefinitions.TryGetValue(item, out var definition) == false)
-        return;
+		private void SetDefinitionSize(DockItem item)
+		{
+			if (_childrenDefinitions.TryGetValue(item, out var definition) == false)
+				return;
 
-      var dockSize = new Size(DockLayout.GetDockWidth(item), DockLayout.GetDockHeight(item));
+			var dockSize = new Size(DockLayout.GetWidth(item), DockLayout.GetHeight(item));
 
-      dockSize.Width = dockSize.Width > 0 ? dockSize.Width : 1;
-      dockSize.Height = dockSize.Height > 0 ? dockSize.Height : 1;
+			dockSize.Width = dockSize.Width > 0 ? dockSize.Width : 1;
+			dockSize.Height = dockSize.Height > 0 ? dockSize.Height : 1;
 
-      definition.SetSize(dockSize);
-    }
+			definition.SetSize(dockSize);
+		}
 
-    internal static void SetResizeDirection(GridSplitter gridSplitter, GridResizeDirection resizeDirection)
-    {
-      switch (resizeDirection)
-      {
-        case GridResizeDirection.Columns:
+		internal static void SetResizeDirection(GridSplitter gridSplitter, GridResizeDirection resizeDirection)
+		{
+			switch (resizeDirection)
+			{
+				case GridResizeDirection.Columns:
 
-          gridSplitter.VerticalAlignment = VerticalAlignment.Stretch;
-          gridSplitter.HorizontalAlignment = HorizontalAlignment.Center;
+					gridSplitter.VerticalAlignment = VerticalAlignment.Stretch;
+					gridSplitter.HorizontalAlignment = HorizontalAlignment.Center;
 
-          break;
+					break;
 
-        case GridResizeDirection.Rows:
+				case GridResizeDirection.Rows:
 
-          gridSplitter.VerticalAlignment = VerticalAlignment.Center;
-          gridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
+					gridSplitter.VerticalAlignment = VerticalAlignment.Center;
+					gridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
 
-          break;
-      }
-#if !SILVERLIGHT
-      gridSplitter.ResizeDirection = resizeDirection;
-#endif
-    }
+					break;
+			}
 
-    private void UpdateContentDefinitionsSize()
-    {
-      var contentWidth = ActualWidth;
-      var contentHeight = ActualHeight;
+			gridSplitter.ResizeDirection = resizeDirection;
+		}
 
-      foreach (var item in Items)
-      {
-        var dockSize = new Size(DockLayout.GetDockWidth(item), DockLayout.GetDockHeight(item));
+		private void UpdateContentDefinitionsSize()
+		{
+			var contentWidth = ActualWidth;
+			var contentHeight = ActualHeight;
 
-        dockSize.Width = dockSize.Width > 0 ? dockSize.Width : 1;
-        dockSize.Height = dockSize.Height > 0 ? dockSize.Height : 1;
+			foreach (var item in Items)
+			{
+				var dockSize = new Size(DockLayout.GetWidth(item), DockLayout.GetHeight(item));
 
-        switch (GetOrientation(item))
-        {
-          case Orientation.Horizontal:
+				dockSize.Width = dockSize.Width > 0 ? dockSize.Width : 1;
+				dockSize.Height = dockSize.Height > 0 ? dockSize.Height : 1;
 
-            contentWidth -= dockSize.Width + _splitterSize.Width;
+				switch (GetOrientation(item))
+				{
+					case Orientation.Horizontal:
 
-            break;
-          case Orientation.Vertical:
+						contentWidth -= dockSize.Width + _splitterSize.Width;
 
-            contentHeight -= dockSize.Height + _splitterSize.Height;
+						break;
+					case Orientation.Vertical:
 
-            break;
-        }
-      }
+						contentHeight -= dockSize.Height + _splitterSize.Height;
 
-      contentWidth = contentWidth > 1 ? contentWidth : 1;
-      contentHeight = contentHeight > 1 ? contentHeight : 1;
+						break;
+				}
+			}
 
-      _contentDefinition.SetSize(new Size(contentWidth, contentHeight));
-    }
+			contentWidth = contentWidth > 1 ? contentWidth : 1;
+			contentHeight = contentHeight > 1 ? contentHeight : 1;
 
-    #endregion
+			_contentDefinition.SetSize(new Size(contentWidth, contentHeight));
+		}
 
-    #region  Nested Types
+		internal readonly struct UIChildDefinition
+		{
+			private static readonly ColumnDefinition NullColumn = new();
+			private static readonly RowDefinition NullRow = new();
 
-    internal readonly struct UIChildDefinition
-    {
-      #region Static Fields
+			public readonly ColumnDefinition Column;
+			public readonly RowDefinition Row;
 
-      private static readonly ColumnDefinition NullColumn = new ColumnDefinition();
-      private static readonly RowDefinition NullRow = new RowDefinition();
+			public UIChildDefinition(ColumnDefinition column, RowDefinition row)
+			{
+				Column = column ?? NullColumn;
+				Row = row ?? NullRow;
+			}
 
-      #endregion
+			public void SetSize(Size size)
+			{
+				Column.Width = new GridLength(size.Width, GridUnitType.Star);
+				Row.Height = new GridLength(size.Height, GridUnitType.Star);
+			}
+		}
+	}
 
-      #region Fields
+	internal sealed class DockLayoutViewTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = true)]
+		public ContentPresenter ContentPresenter { get; [UsedImplicitly] private set; }
 
-      public readonly ColumnDefinition Column;
-      public readonly RowDefinition Row;
-
-      #endregion
-
-      #region Ctors
-
-      public UIChildDefinition(ColumnDefinition column, RowDefinition row)
-      {
-        Column = column ?? NullColumn;
-        Row = row ?? NullRow;
-      }
-
-      #endregion
-
-      #region Methods
-
-      public void SetSize(Size size)
-      {
-        Column.Width = new GridLength(size.Width, GridUnitType.Star);
-        Row.Height = new GridLength(size.Height, GridUnitType.Star);
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
-
-  internal sealed class DockLayoutViewTemplateContract : TemplateContract
-  {
-    #region Properties
-
-    [TemplateContractPart(Required = true)]
-    public ContentPresenter ContentPresenter { get; [UsedImplicitly] private set; }
-
-    [TemplateContractPart(Required = true)]
-    public Grid ItemsHost { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
-
-  public sealed class DocumentLayoutPresenter : ContentPresenter
-  {
-  }
-
-#if SILVERLIGHT
-  internal enum GridResizeDirection
-  {
-    Auto,
-    Columns,
-    Rows,
-  }
-
-#endif
+		[TemplateContractPart(Required = true)]
+		public Grid ItemsHost { get; [UsedImplicitly] private set; }
+	}
 }

@@ -1,0 +1,74 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="RibbonGroupTemplate"
+                   TargetType="zm:RibbonGroup">
+    <zm:ControlTemplateRoot MinHeight="66">
+      <Border Margin="0,2"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              Background="{TemplateBinding Background}"
+              BorderThickness="0,0,1,0">
+        <Grid Margin="4,0">
+          <zm:RibbonDropDownButton IsDropDownOpen="{zm:TemplateBinding Path=IsDropDownOpen,
+                                                                       Mode=TwoWay}"
+                                   SizeDefinition="Large"
+                                   LargeIcon="{TemplateBinding Icon}"
+                                   Text="{zm:TemplateBinding Path=Header}"
+                                   Visibility="{zm:TemplateBinding Path=IsCollapsed,
+                                                                   Converter={zm:VisibilityConverter}}">
+
+            <zm:RibbonDropDownButton.PopupControl>
+              <zm:PopupBar BorderStyle="Border">
+                <ContentPresenter x:Name="DropDownContentPresenter"
+                                  Margin="4" />
+              </zm:PopupBar>
+            </zm:RibbonDropDownButton.PopupControl>
+
+          </zm:RibbonDropDownButton>
+
+          <Grid Visibility="{zm:TemplateBinding Path=IsCollapsed, Converter={zm:InvertedVisibilityConverter}}">
+            <Grid.RowDefinitions>
+              <RowDefinition />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <ContentPresenter x:Name="MainContentPresenter"
+                              Grid.Row="0">
+              <ContentPresenter.Content>
+                <zm:RibbonItemsPresenter x:Name="ItemsPresenter" />
+              </ContentPresenter.Content>
+            </ContentPresenter>
+
+            <ContentPresenter Grid.Row="1"
+                              HorizontalAlignment="Center"
+                              Content="{zm:TemplateBinding Path=Header}" />
+          </Grid>
+
+        </Grid>
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="RibbonGroupBaseStyle" TargetType="zm:RibbonGroup">
+    <zm:Setter Property="Template" Value="{StaticResource RibbonGroupTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="RibbonGroupStyle" BasedOn="{StaticResource RibbonGroupBaseStyle}" TargetType="zm:RibbonGroup" Skin="Code.RibbonGroup">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Foreground" ValuePath="Foreground" />
+      <zm:Setter Property="Background" ValuePath="Background" />
+      <zm:Setter Property="BorderBrush" ValuePath="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="RibbonGroupThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource RibbonGroupStyle}" TargetType="zm:RibbonGroup" />
+
+</zm:ThemeResourceDictionary>

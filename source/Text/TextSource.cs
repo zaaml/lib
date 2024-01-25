@@ -34,5 +34,11 @@ namespace Zaaml.Text
 		public abstract TextSpan GetTextSpan(int start, int length);
 
 		public abstract void WriteTo(TextWriter textWriter);
+
+		public abstract int IndexOf(char c);
+
+		public abstract int IndexOf(char c, int startIndex);
+		
+		public abstract int IndexOf(char c, int startIndex, int count);
 	}
 }

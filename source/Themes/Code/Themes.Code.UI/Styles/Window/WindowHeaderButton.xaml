@@ -1,0 +1,27 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="../Button/Button.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  Button Style  -->
+  <zm:Style x:Key="WindowHeaderButtonStyle" BasedOn="{StaticResource ButtonStyle}" Skin="Code.Window.Header.Buttons" TargetType="zm:WindowHeaderButton">
+
+    <zm:Setter Property="Padding" Value="0" />
+    <zm:Setter Property="Focusable" Value="False" />
+    <zm:Setter Property="IsTabStop" Value="False" />
+    <zm:Setter Property="zm:PathIcon.Brush" Value="{zm:SelfBinding Path=Foreground}" />
+    <zm:Setter Property="zm:PathIcon.Stretch" Value="None" />
+    <zm:Setter Property="zm:PathIcon.BrushMode" Value="Fill" />
+    <zm:Setter ValuePath="Data" ValuePathSource="Skin" Property="zm:PathIcon.Data" />
+  </zm:Style>
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="WindowHeaderButtonThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource WindowHeaderButtonStyle}" TargetType="zm:WindowHeaderButton" />
+
+</zm:ThemeResourceDictionary>

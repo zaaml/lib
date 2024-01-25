@@ -80,7 +80,7 @@ namespace Zaaml.UI.Controls.Core
 				try
 				{
 					if (_focusedIndex != -1)
-						oldFocusedItem = GetItemFromIndex(_focusedIndex);
+						oldFocusedItem = IsValidIndex(_focusedIndex) ? GetItemFromIndex(_focusedIndex) : default;
 
 					_focusedIndex = CoerceIndex(value);
 

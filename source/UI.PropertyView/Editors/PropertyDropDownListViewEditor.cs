@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 
 		protected ListViewControl ListView => TemplateContract.ListView;
 
-		private PropertyDropDownListViewEditorTemplateContract TemplateContract => (PropertyDropDownListViewEditorTemplateContract) TemplateContractInternal;
+		private PropertyDropDownListViewEditorTemplateContract TemplateContract => (PropertyDropDownListViewEditorTemplateContract)TemplateContractCore;
 	}
 
 	public abstract class PropertyDropDownListViewEditor<T> : PropertyDropDownListViewEditor

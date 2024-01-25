@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
 
@@ -20,7 +21,7 @@ namespace Zaaml.UI.Controls.Artboard
 		public bool IsEnabled
 		{
 			get => (bool) GetValue(IsEnabledProperty);
-			set => SetValue(IsEnabledProperty, value);
+			set => SetValue(IsEnabledProperty, value.Box());
 		}
 
 		public double Strength

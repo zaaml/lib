@@ -51,7 +51,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
-			return this.ArrangeStackLine(Orientation.Vertical, new Range<int>(0, 2), 0, 0, null, null).Size;
+			return this.ArrangeStackLine(Orientation.Vertical, new Range<int>(0, 2), 0, 0, finalSize.Width, null).Size;
 		}
 
 		protected override Size MeasureOverrideCore(Size availableSize)
@@ -71,6 +71,8 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private sealed class PagesHost : Panel, IFlexPanel
 		{
+			private readonly UIElementSyncCollection _childrenSyncCollection = new();
+
 			public PagesHost(RibbonHeaderPanel headerPanel)
 			{
 				HeaderPanel = headerPanel;
@@ -94,13 +96,15 @@ namespace Zaaml.UI.Controls.Ribbon
 
 			protected override Size MeasureOverrideCore(Size availableSize)
 			{
-				Children.Clear();
+				_childrenSyncCollection.Clear();
 
 				if (Menu != null)
-					Children.Add(Menu);
+					_childrenSyncCollection.Add(Menu);
 
 				if (PagesPresenter != null)
-					Children.Add(PagesPresenter);
+					_childrenSyncCollection.Add(PagesPresenter);
+
+				_childrenSyncCollection.Sync(Children);
 
 				return Layout.Measure(availableSize);
 			}
@@ -123,7 +127,7 @@ namespace Zaaml.UI.Controls.Ribbon
 				if (ReferenceEquals(PagesPresenter, child))
 					return new FlexElement { StretchDirection = FlexStretchDirection.Shrink };
 
-				return child.GetFlexElement(this);
+				return child.GetFlexElement(this, Orientation.Horizontal);
 			}
 
 			bool IFlexPanel.GetIsHidden(UIElement child)
@@ -141,8 +145,8 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private sealed class CategoriesHost : Panel, IFlexPanel
 		{
+			private readonly UIElementSyncCollection _childrenSyncCollection = new();
 			private FlexLength _leftTitleLength;
-
 			private FlexLength _qatLength;
 
 			public CategoriesHost(RibbonHeaderPanel headerPanel)
@@ -161,7 +165,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 			private FlexPanelLayout Layout { get; }
 
-			private ContentPresenter LeftTitlePresenter { get; } = new ContentPresenter();
+			private ContentPresenter LeftTitlePresenter { get; } = new();
 
 			private RibbonPageCategoriesPresenter PageCategoriesPresenter => Presenter?.PageCategoriesPresenter;
 
@@ -171,7 +175,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 			private RibbonToolBar QuickAccessToolBar => Presenter?.QuickAccessToolBar;
 
-			private ContentPresenter RightTitlePresenter { get; } = new ContentPresenter();
+			private ContentPresenter RightTitlePresenter { get; } = new();
 
 			private double SelfOffset { get; set; }
 
@@ -195,26 +199,27 @@ namespace Zaaml.UI.Controls.Ribbon
 
 			protected override Size MeasureOverrideCore(Size availableSize)
 			{
-				Children.Clear();
+				_childrenSyncCollection.Clear();
 
 				if (HeaderElement != null)
-					Children.Add(HeaderElement);
+					_childrenSyncCollection.Add(HeaderElement);
 
 				if (QuickAccessToolBar != null)
-				{
-					Children.Add(QuickAccessToolBar);
-					QuickAccessToolBar.Measure(new Size(double.PositiveInfinity, availableSize.Height));
-				}
+					_childrenSyncCollection.Add(QuickAccessToolBar);
 
-				Children.Add(LeftTitlePresenter);
+				_childrenSyncCollection.Add(LeftTitlePresenter);
 
 				if (PageCategoriesPresenter != null)
-					Children.Add(PageCategoriesPresenter);
+					_childrenSyncCollection.Add(PageCategoriesPresenter);
 
-				Children.Add(RightTitlePresenter);
+				_childrenSyncCollection.Add(RightTitlePresenter);
 
 				if (FooterElement != null)
-					Children.Add(FooterElement);
+					_childrenSyncCollection.Add(FooterElement);
+
+				_childrenSyncCollection.Sync(Children);
+
+				QuickAccessToolBar?.Measure(new Size(double.PositiveInfinity, availableSize.Height));
 
 				LeftTitlePresenter.Content = null;
 				RightTitlePresenter.Content = TitleElement;
@@ -245,10 +250,15 @@ namespace Zaaml.UI.Controls.Ribbon
 
 				RightTitlePresenter.Content = null;
 				LeftTitlePresenter.Content = TitleElement;
+				RightTitlePresenter.Measure(new Size(0, 0));
 				LeftTitlePresenter.Measure(new Size(leftTitleElement.ActualLength, LeftTitlePresenter.DesiredSize.Height));
 
 				return measure;
 			}
+
+			//protected override void OnChildDesiredSizeChanged(UIElement child)
+			//{
+			//}
 
 			private void OnLayoutUpdated(object sender, EventArgs e)
 			{
@@ -337,7 +347,7 @@ namespace Zaaml.UI.Controls.Ribbon
 				if (ReferenceEquals(FooterElement, child))
 					return new FlexElement { StretchDirection = FlexStretchDirection.None };
 
-				return child.GetFlexElement(this);
+				return child.GetFlexElement(this, Orientation.Horizontal);
 			}
 
 			bool IFlexPanel.GetIsHidden(UIElement child)

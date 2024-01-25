@@ -6,17 +6,28 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using Zaaml.Core.Runtime;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.PropertyCore.Extensions;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.UI.Panels;
+
+//TODO Review ActualShow and Visibility updates logic
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
 	[ContentProperty(nameof(Content))]
 	public class IconContentPresenter : IconPresenterBase, IDockPanel
 	{
+		private static readonly DependencyPropertyKey ActualHasContentPropertyKey = DPM.RegisterReadOnly<bool, IconContentPresenter>
+			("ActualHasContent", false, c => c.OnActualHasContentPropertyChanged);
+
+		public static readonly DependencyProperty ActualHasContentProperty = ActualHasContentPropertyKey.DependencyProperty;
+
 		private static readonly DependencyPropertyKey ActualShowPropertyKey = DPM.RegisterReadOnly<bool, IconContentPresenter>
-			("ActualShow", true);
+			("ActualShow", false, c => c.OnActualShowPropertyChanged);
 
 		public static readonly DependencyProperty ActualShowProperty = ActualShowPropertyKey.DependencyProperty;
 
@@ -42,30 +53,38 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			("IconDock", Dock.Left, p => p.OnIconDockChanged);
 
 		public static readonly DependencyProperty ShowContentProperty = DPM.Register<bool, IconContentPresenter>
-			("ShowContent", true, p => p.ShowPartChanged);
+			("ShowContent", true, p => p.UpdateActualShow);
 
 		public static readonly DependencyProperty ShowIconProperty = DPM.Register<bool, IconContentPresenter>
-			("ShowIcon", true, p => p.ShowPartChanged);
+			("ShowIcon", true, p => p.UpdateActualShow);
 
 		public static readonly DependencyProperty VerticalContentAlignmentProperty = DPM.Register<VerticalAlignment, IconContentPresenter>
 			("VerticalContentAlignment", VerticalAlignment.Center, p => p.OnVerticalContentAlignmentChanged);
 
-		private readonly ContentPresenter _contentPresenter = new ContentPresenter
+		private readonly ContentPresenter _contentPresenter = new()
 		{
 			Visibility = Visibility.Collapsed,
 			VerticalAlignment = VerticalAlignment.Center,
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 
+		private FrameworkElement _actualVisualChild;
+
 		public IconContentPresenter()
 		{
 			Children.Add(_contentPresenter);
 		}
 
+		public bool ActualHasContent
+		{
+			get => (bool)GetValue(ActualHasContentProperty);
+			private set => this.SetReadOnlyValue(ActualHasContentPropertyKey, value.Box());
+		}
+
 		public bool ActualShow
 		{
-			get => (bool) GetValue(ActualShowProperty);
-			private set => this.SetReadOnlyValue(ActualShowPropertyKey, value);
+			get => (bool)GetValue(ActualShowProperty);
+			private set => this.SetReadOnlyValue(ActualShowPropertyKey, value.Box());
 		}
 
 		public object Content
@@ -76,56 +95,68 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 		public string ContentStringFormat
 		{
-			get => (string) GetValue(ContentStringFormatProperty);
+			get => (string)GetValue(ContentStringFormatProperty);
 			set => SetValue(ContentStringFormatProperty, value);
 		}
 
 		public DataTemplate ContentTemplate
 		{
-			get => (DataTemplate) GetValue(ContentTemplateProperty);
+			get => (DataTemplate)GetValue(ContentTemplateProperty);
 			set => SetValue(ContentTemplateProperty, value);
 		}
 
 		public DataTemplateSelector ContentTemplateSelector
 		{
-			get => (DataTemplateSelector) GetValue(ContentTemplateSelectorProperty);
+			get => (DataTemplateSelector)GetValue(ContentTemplateSelectorProperty);
 			set => SetValue(ContentTemplateSelectorProperty, value);
 		}
 
 		public HorizontalAlignment HorizontalContentAlignment
 		{
-			get => (HorizontalAlignment) GetValue(HorizontalContentAlignmentProperty);
-			set => SetValue(HorizontalContentAlignmentProperty, value);
+			get => (HorizontalAlignment)GetValue(HorizontalContentAlignmentProperty);
+			set => SetValue(HorizontalContentAlignmentProperty, value.Box());
 		}
 
 		public double IconDistance
 		{
-			get => (double) GetValue(IconDistanceProperty);
+			get => (double)GetValue(IconDistanceProperty);
 			set => SetValue(IconDistanceProperty, value);
 		}
 
 		public Dock IconDock
 		{
-			get => (Dock) GetValue(IconDockProperty);
+			get => (Dock)GetValue(IconDockProperty);
 			set => SetValue(IconDockProperty, value);
 		}
 
 		public bool ShowContent
 		{
-			get => (bool) GetValue(ShowContentProperty);
-			set => SetValue(ShowContentProperty, value);
+			get => (bool)GetValue(ShowContentProperty);
+			set => SetValue(ShowContentProperty, value.Box());
 		}
 
 		public bool ShowIcon
 		{
-			get => (bool) GetValue(ShowIconProperty);
-			set => SetValue(ShowIconProperty, value);
+			get => (bool)GetValue(ShowIconProperty);
+			set => SetValue(ShowIconProperty, value.Box());
 		}
 
 		public VerticalAlignment VerticalContentAlignment
 		{
-			get => (VerticalAlignment) GetValue(VerticalContentAlignmentProperty);
-			set => SetValue(VerticalContentAlignmentProperty, value);
+			get => (VerticalAlignment)GetValue(VerticalContentAlignmentProperty);
+			set => SetValue(VerticalContentAlignmentProperty, value.Box());
+		}
+
+		private FrameworkElement VisualChild
+		{
+			get => _actualVisualChild;
+			set
+			{
+				if (ReferenceEquals(_actualVisualChild, value))
+					return;
+
+				_actualVisualChild = value;
+			}
 		}
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
@@ -137,7 +168,17 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 		{
 			_contentPresenter.ContentTemplateSelector = newContentTemplateSelector;
 
-			UpdateContentPresenterVisibility();
+			UpdateActualHasContent();
+		}
+
+		private protected virtual Dock? GetDockCore(UIElement element)
+		{
+			return ReferenceEquals(element, _contentPresenter) ? null : (ShowContent ? IconDock : null);
+		}
+
+		private protected virtual double GetDockDistanceCore(UIElement element)
+		{
+			return 0;
 		}
 
 		private void InvalidateContentMargin()
@@ -150,36 +191,57 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 		{
 			UpdateItem(ActualIcon, ShowIcon);
 			UpdateItem(_contentPresenter, ShowContent);
+			UpdateVisibility();
 
 			return DockPanelLayout.Measure(this, availableSize);
+		}
+
+		private void OnActualHasContentPropertyChanged()
+		{
+			_contentPresenter.Visibility = ActualHasContent ? Visibility.Visible : Visibility.Collapsed;
+
+			UpdateActualShow();
+		}
+
+		private protected override void OnActualHasIconChanged()
+		{
+			base.OnActualHasIconChanged();
+
+			UpdateActualShow();
 		}
 
 		protected override void OnActualIconChanged()
 		{
 			base.OnActualIconChanged();
 
+			UpdateActualShow();
 			UpdateContentMargin();
+		}
+
+		private void OnActualShowPropertyChanged()
+		{
+			UpdateVisibility();
 		}
 
 		private void OnContentChanged(object oldContent, object newContent)
 		{
 			_contentPresenter.Content = newContent;
 
-			UpdateContentPresenterVisibility();
+			UpdateActualHasContent();
 		}
 
 		private void OnContentStringFormatChanged(string oldStringFormat, string newStringFormat)
 		{
 			_contentPresenter.ContentStringFormat = newStringFormat;
 
-			UpdateContentPresenterVisibility();
+			UpdateActualHasContent();
 		}
 
 		private void OnContentTemplateChanged(DataTemplate oldDataTemplate, DataTemplate newDataTemplate)
 		{
 			_contentPresenter.ContentTemplate = newDataTemplate;
 
-			UpdateContentPresenterVisibility();
+			UpdateActualHasContent();
 		}
 
 		private void OnHorizontalContentAlignmentChanged(HorizontalAlignment oldAlignment, HorizontalAlignment newAlignment)
@@ -202,11 +264,35 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			_contentPresenter.VerticalAlignment = newAlignment;
 		}
 
-		private void ShowPartChanged()
+		protected override void OnVisualChildrenChanged(DependencyObject visualAdded, DependencyObject visualRemoved)
+		{
+			base.OnVisualChildrenChanged(visualAdded, visualRemoved);
+
+			//if (ReferenceEquals(VisualChild, visualRemoved))
+			//	VisualChild = null;
+
+			//if (visualAdded != null)
+			//	VisualChild = visualAdded as FrameworkElement;
+
+			UpdateActualHasContent();
+		}
+
+		private void UpdateActualHasContent()
+		{
+			var actualHasContent = Content != null || ContentTemplate != null || ContentTemplateSelector != null || ContentStringFormat != null || VisualChild != null;
+
+			if (ActualHasContent != actualHasContent)
+				ActualHasContent = actualHasContent;
+
+			UpdateContentMargin();
+			UpdateActualShow();
+		}
+
+		private void UpdateActualShow()
 		{
 			InvalidateContentMargin();
 
-			ActualShow = ShowIcon | ShowContent;
+			ActualShow = (ActualHasIcon && ShowIcon) | (ActualHasContent && ShowContent);
 		}
 
 		private void UpdateContentMargin()
@@ -236,19 +322,8 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 				}
 			}
 
-			_contentPresenter.Margin = contentPresenterMargin;
-		}
-
-		private void UpdateContentPresenterVisibility()
-		{
-			var visibility = Content == null && ContentTemplate == null && ContentTemplateSelector == null ? Visibility.Collapsed : Visibility.Visible;
-
-			if (_contentPresenter.Visibility == visibility)
-				return;
-
-			_contentPresenter.Visibility = visibility;
-			
-			UpdateContentMargin();
+			if (_contentPresenter.Margin != contentPresenterMargin)
+				_contentPresenter.Margin = contentPresenterMargin;
 		}
 
 		private void UpdateItem(FrameworkElement item, bool show)
@@ -265,14 +340,12 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			}
 		}
 
-		private protected virtual Dock? GetDockCore(UIElement element)
+		private void UpdateVisibility()
 		{
-			return ReferenceEquals(element, _contentPresenter) ? null : (ShowContent ? IconDock : (Dock?)null);
-		}
+			if (this.GetDependencyPropertyValueInfo(VisibilityProperty).ValueSource != PropertyValueSource.Default)
+				return;
 
-		private protected virtual double GetDockDistanceCore(UIElement element)
-		{
-			return 0;
+			this.SetCurrentValueInternal(VisibilityProperty, ActualShow ? VisibilityBoxes.Visible : VisibilityBoxes.Collapsed);
 		}
 
 		Dock? IDockPanel.GetDock(UIElement element) => GetDockCore(element);

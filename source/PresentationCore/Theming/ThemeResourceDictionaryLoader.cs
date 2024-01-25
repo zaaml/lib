@@ -22,12 +22,12 @@ namespace Zaaml.PresentationCore.Theming
 {
 	internal class ThemeResourceDictionaryLoader
 	{
-		private static readonly Lazy<ThemeResourceDictionaryLoader> LazyInstance = new Lazy<ThemeResourceDictionaryLoader>(() => new ThemeResourceDictionaryLoader());
+		private static readonly Lazy<ThemeResourceDictionaryLoader> LazyInstance = new(() => new ThemeResourceDictionaryLoader());
 
 		private readonly AppDomainObserver _appDomainObserver;
-		private readonly Dictionary<string, ResourceDictionary> _dictionaryCache = new Dictionary<string, ResourceDictionary>(StringComparer.OrdinalIgnoreCase);
-		private readonly Dictionary<ResourceDictionary, Uri> _dictionaryUriCache = new Dictionary<ResourceDictionary, Uri>();
-		private readonly List<XamlResourceInfo> _xamlResources = new List<XamlResourceInfo>();
+		private readonly Dictionary<string, ResourceDictionary> _dictionaryCache = new(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<ResourceDictionary, Uri> _dictionaryUriCache = new();
+		private readonly List<XamlResourceInfo> _xamlResources = new();
 		internal event EventHandler<XamlResourceLoadingEventArgs> XamlResourceLoading;
 
 		private ThemeResourceDictionaryLoader()
@@ -49,7 +49,7 @@ namespace Zaaml.PresentationCore.Theming
 			}
 		}
 
-		private MultiMap<string, ThemePart> ThemeParts { get; } = new MultiMap<string, ThemePart>();
+		private MultiMap<string, ThemePart> ThemeParts { get; } = new();
 
 		internal List<XamlResourceInfo> XamlResources => _xamlResources;
 

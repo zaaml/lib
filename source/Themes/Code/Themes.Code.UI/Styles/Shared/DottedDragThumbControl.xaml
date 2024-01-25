@@ -1,0 +1,82 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <ControlTemplate x:Key="DottedVerticalDragHandleTemplate"
+                   TargetType="zm:Control">
+    <zm:Panel x:Name="HandlePanel"
+              Width="5"
+              Margin="3,2"
+              Background="Transparent"
+              UseLayoutRounding="True">
+
+      <zm:Extension.Behaviors>
+        <zm:ActualSizeBehavior x:Name="HandlePanelSizeTracker" />
+        <zm:ClipToBoundsBehavior />
+      </zm:Extension.Behaviors>
+
+      <Canvas>
+        <Line Canvas.Left="0.5"
+              Canvas.Top="0"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              Y1="0"
+              Y2="{Binding Path=ActualHeight, ElementName=HandlePanelSizeTracker}" />
+        <Line Canvas.Left="2.5"
+              Canvas.Top="-2"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              Y1="0"
+              Y2="{Binding Path=ActualHeight, ElementName=HandlePanelSizeTracker}" />
+        <Line Canvas.Left="4.5"
+              Canvas.Top="0"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              Y1="0"
+              Y2="{Binding Path=ActualHeight, ElementName=HandlePanelSizeTracker}" />
+      </Canvas>
+    </zm:Panel>
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="DottedHorizontalDragHandleTemplate"
+                   TargetType="zm:Control">
+    <zm:Panel x:Name="HandlePanel"
+              Height="5"
+              Margin="2,3"
+              Background="Transparent"
+              UseLayoutRounding="True">
+      <zm:Extension.Behaviors>
+        <zm:ActualSizeBehavior x:Name="HandlePanelSizeTracker" />
+        <zm:ClipToBoundsBehavior />
+      </zm:Extension.Behaviors>
+
+      <Canvas>
+        <Line Canvas.Left="0"
+              Canvas.Top="0.5"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              X1="0"
+              X2="{Binding Path=ActualWidth, ElementName=HandlePanelSizeTracker}" />
+        <Line Canvas.Left="-2"
+              Canvas.Top="2.5"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              X1="0"
+              X2="{Binding Path=ActualWidth, ElementName=HandlePanelSizeTracker}" />
+        <Line Canvas.Left="0"
+              Canvas.Top="4.5"
+              Stretch="None"
+              Stroke="Black"
+              StrokeDashArray="1,3"
+              X1="0"
+              X2="{Binding Path=ActualWidth, ElementName=HandlePanelSizeTracker}" />
+      </Canvas>
+    </zm:Panel>
+  </ControlTemplate>
+
+</ResourceDictionary>

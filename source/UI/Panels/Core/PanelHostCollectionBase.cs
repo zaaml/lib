@@ -18,7 +18,7 @@ namespace Zaaml.UI.Panels.Core
 			Panel = panel;
 		}
 
-		protected virtual UIElementCollectionSpan Children => new UIElementCollectionSpan(Panel.Children, 0, Panel.Children.Count);
+		protected virtual UIElementCollectionSpan Children => new(Panel.Children, 0, Panel.Children.Count);
 
 		protected TPanel Panel { get; }
 

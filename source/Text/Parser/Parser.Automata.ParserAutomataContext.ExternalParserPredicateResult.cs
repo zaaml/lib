@@ -29,7 +29,7 @@ namespace Zaaml.Text
 
 						_result = default;
 
-						_pool.Release(this);
+						_pool.Return(this);
 					}
 
 					protected override TResult GetResultCore()

@@ -1,0 +1,32 @@
+<zm:ThemeSkinResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:s="clr-namespace:System;assembly=mscorlib"
+    xmlns:zm="http://schemas.zaaml.com/xaml"
+    xmlns:zmb="http://schemas.zaaml.com/build"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    mc:Ignorable="zmb"
+    Name="Light">
+
+  <zm:SkinDictionary x:Key="Spy">
+
+    <!-- WindowDisplayModeToggleButton -->
+    <!-- BasedOn="Metro.ToolBarButton" -->
+    <zm:SkinDictionary x:Key="WindowDisplayModeToggleButton">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#83000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FF0072C6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Pressed" Color="#FF0072C6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Checked" Color="#FF0072C6" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <!--<zm:SkinDictionary x:Key="Background">
+          <SolidColorBrush x:Key="Normal" zm:SkinDictionary.PriorityIndex="10000"/>
+        </zm:SkinDictionary>-->
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+</zm:ThemeSkinResourceDictionary>  

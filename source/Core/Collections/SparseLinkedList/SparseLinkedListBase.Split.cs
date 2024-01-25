@@ -44,7 +44,7 @@ namespace Zaaml.Core.Collections
 
 				ref var cursor = ref NavigateTo(index);
 
-				if (targetList.Count == 0)
+				if (targetList.LongCount == 0)
 				{
 					var left = new LinkedListStruct(this);
 					var right = new LinkedListStruct(targetList);

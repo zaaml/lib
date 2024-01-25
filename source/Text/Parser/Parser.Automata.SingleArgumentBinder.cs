@@ -11,6 +11,29 @@ namespace Zaaml.Text
 	{
 		private sealed partial class ParserAutomata
 		{
+			private sealed class DefaultArgumentBinder : ProductionArgumentBinder
+			{
+				public DefaultArgumentBinder(Type argumentType) : base(argumentType)
+				{
+				}
+
+				public override bool ConsumeValue => true;
+
+				public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
+				{
+					if (ArgumentType.IsValueType)
+					{
+						var argumentLocal = ilBuilder.DeclareLocal(ArgumentType);
+
+						ilBuilder.Emit(OpCodes.Ldloca, argumentLocal);
+						ilBuilder.Emit(OpCodes.Initobj, ArgumentType);
+						ilBuilder.Emit(OpCodes.Ldloc, argumentLocal);
+					}
+					else
+						ilBuilder.Emit(OpCodes.Ldnull);
+				}
+			}
+
 			private sealed class SingleArgumentBinder : ProductionArgumentBinder
 			{
 				public SingleArgumentBinder(ProductionArgument productionArgument, Type argumentType) : base(argumentType)

@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Zaaml.Core.Utils;
 
 // ReSharper disable ConvertToAutoPropertyWhenPossible
@@ -13,7 +14,7 @@ namespace Zaaml.Core
 {
 	internal struct MemorySpan<T> : IDisposable
 	{
-		public static readonly MemorySpan<T> Empty = new(null, -1, -1, null);
+		public static readonly MemorySpan<T> Empty = new(null, 0, 0, null);
 
 		internal MemorySpan(T[] array, int start, int length, IMemorySpanAllocator<T> allocator)
 		{
@@ -31,14 +32,50 @@ namespace Zaaml.Core
 			_allocator = null;
 		}
 
+		internal MemorySpan(T[] array)
+		{
+			_array = array;
+			_start = 0;
+			_length = array.Length;
+			_allocator = null;
+		}
+
 		private readonly T[] _array;
 		private readonly int _start;
 		private readonly int _length;
 		private IMemorySpanAllocator<T> _allocator;
 
-		public int Length => _length;
+		public int Length
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _length; }
+		}
 
-		public readonly Span<T> Span => _array == null ? Span<T>.Empty : new Span<T>(_array, _start, _length);
+		public readonly Span<T> Span
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _array == null ? Span<T>.Empty : new Span<T>(_array, _start, _length); }
+		}
+
+		internal readonly Span<T> SpanSafe
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => new(_array, _start, _length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void CopyTo(MemorySpan<T> target)
+		{
+			SpanSafe.CopyTo(target.SpanSafe);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void CopyTo(MemorySpan<T> target, ref int position)
+		{
+			SpanSafe.CopyTo(target.SpanSafe.Slice(position));
+
+			position += _length;
+		}
 
 		public T this[int index]
 		{
@@ -67,18 +104,37 @@ namespace Zaaml.Core
 				throw new ArgumentOutOfRangeException(nameof(index));
 		}
 
-		internal readonly bool IsEmpty => _array == null;
-
-		internal readonly IMemorySpanAllocator<T> Allocator => _allocator;
-
-		internal readonly T[] Array => _array;
-
-		public void Dispose()
+		internal readonly bool IsEmpty
 		{
-			_allocator?.Deallocate(this);
-			_allocator = null;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _array == null; }
 		}
 
+		internal readonly IMemorySpanAllocator<T> Allocator
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _allocator; }
+		}
+
+		internal readonly T[] ArrayInternal
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _array; }
+		}
+
+		internal readonly int StartInternal
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _start; }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			Interlocked.Exchange(ref _allocator, null)?.Deallocate(this);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MemorySpan<T> DisposeExchange()
 		{
 			Dispose();
@@ -86,16 +142,32 @@ namespace Zaaml.Core
 			return default;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator Span<T>(MemorySpan<T> memorySpan)
 		{
 			return memorySpan.Span;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EnsureSizePower2Ceiling(int size)
 		{
 			if (size <= _length)
 				return;
 
+			ResizePower2Ceiling(size);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Add(T value, int index)
+		{
+			if (index + 1 >= _length)
+				ResizePower2Ceiling(index + 1);
+
+			_array[_start + index] = value;
+		}
+
+		private void ResizePower2Ceiling(int size)
+		{
 			Resize(BitUtils.Power2Ceiling(size), true);
 		}
 
@@ -135,6 +207,7 @@ namespace Zaaml.Core
 			return clone;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly MemorySpan<T> Slice(int start)
 		{
 			if (start < 0 || start > _length)
@@ -143,6 +216,7 @@ namespace Zaaml.Core
 			return new MemorySpan<T>(_array, _start + start, _length - start, null);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly MemorySpan<T> Slice(int start, int length)
 		{
 			if (start < 0 || start + length > _length)
@@ -151,7 +225,29 @@ namespace Zaaml.Core
 			return new MemorySpan<T>(_array, _start + start, length, null);
 		}
 
-		public readonly Span<T>.Enumerator GetEnumerator() => Span.GetEnumerator();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly MemorySpan<T> DetachAllocator()
+		{
+			return new MemorySpan<T>(_array, _start, _length, null);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal readonly MemorySpan<T> SliceSafe(int start)
+		{
+			return new MemorySpan<T>(_array, _start + start, _length - start, null);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal readonly MemorySpan<T> SliceSafe(int start, int length)
+		{
+			return new MemorySpan<T>(_array, _start + start, length, null);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly Span<T>.Enumerator GetEnumerator()
+		{
+			return Span.GetEnumerator();
+		}
 
 		public override readonly string ToString()
 		{

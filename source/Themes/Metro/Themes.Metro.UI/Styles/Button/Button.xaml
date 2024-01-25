@@ -19,7 +19,8 @@
       <Border Padding="{TemplateBinding Padding}"
               Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}">
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{TemplateBinding CornerRadius}">
 
         <!--  Content  -->
         <zm:IconContentPresenter HorizontalAlignment="Stretch"

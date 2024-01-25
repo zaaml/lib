@@ -2,25 +2,30 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
+
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
 		private protected abstract class AutomataContext
 		{
-			protected AutomataContext(Rule rule, Automata<TInstruction, TOperand> automata)
+			protected AutomataContext(Syntax rule, Automata<TInstruction, TOperand> automata, IServiceProvider serviceProvider)
 			{
 				Rule = rule;
 				Automata = automata;
+				ServiceProvider = serviceProvider;
 			}
 
 			public Automata<TInstruction, TOperand> Automata { get; }
+
+			public IServiceProvider ServiceProvider { get; }
 
 			internal AutomataContextState ContextStateInternal => Process.ContextState;
 
 			public abstract Process Process { get; }
 
-			public Rule Rule { get; }
+			public Syntax Rule { get; }
 
 			protected virtual AutomataContextState CloneContextState(AutomataContextState contextState)
 			{

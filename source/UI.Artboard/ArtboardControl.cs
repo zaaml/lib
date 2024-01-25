@@ -9,6 +9,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
+using Zaaml.Core.Runtime;
+using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -25,6 +27,9 @@ namespace Zaaml.UI.Controls.Artboard
 		public static readonly DependencyProperty ShowGridProperty = DPM.Register<bool, ArtboardControl>
 			("ShowGrid", true);
 
+		public static readonly DependencyProperty ShowRulersProperty = DPM.Register<bool, ArtboardControl>
+			("ShowRulers", true);
+
 		public static readonly DependencyProperty ZoomProperty = DPM.Register<double, ArtboardControl>
 			("Zoom", 1.0, a => a.OnZoomPropertyChangedPrivate);
 
@@ -37,11 +42,24 @@ namespace Zaaml.UI.Controls.Artboard
 		private static readonly DependencyPropertyKey SnapGuidesPropertyKey = DPM.RegisterReadOnly<ArtboardSnapGuideCollection, ArtboardControl>
 			("SnapGuidesPrivate");
 
+		public static readonly DependencyProperty ShowTransparentBackgroundProperty = DPM.Register<bool, ArtboardControl>
+			("ShowTransparentBackground", default, d => d.OnShowOpaquePatternPropertyChangedPrivate);
+
+		public bool ShowTransparentBackground
+		{
+			get => (bool)GetValue(ShowTransparentBackgroundProperty);
+			set => SetValue(ShowTransparentBackgroundProperty, value.Box());
+		}
+
+		private void OnShowOpaquePatternPropertyChangedPrivate(bool oldValue, bool newValue)
+		{
+		}
+
 		public static readonly DependencyProperty SnapGuidesProperty = SnapGuidesPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty AdornersProperty = AdornersPropertyKey.DependencyProperty;
 
-		private protected readonly CompositeTransform ScrollViewTransform = new CompositeTransform
+		private protected readonly CompositeTransform ScrollViewTransform = new()
 		{
 			ScaleX = 1.0,
 			ScaleY = 1.0
@@ -139,7 +157,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		private ArtboardSnapGuide PreviewSnapGuide { get; } = new ArtboardSnapGuide {IsHitTestVisible = false};
+		private ArtboardSnapGuide PreviewSnapGuide { get; } = new() { IsHitTestVisible = false };
 
 		internal double ScrollPanelOffsetX { get; set; }
 
@@ -151,19 +169,25 @@ namespace Zaaml.UI.Controls.Artboard
 
 		public bool ShowGrid
 		{
-			get => (bool) GetValue(ShowGridProperty);
-			set => SetValue(ShowGridProperty, value);
+			get => (bool)GetValue(ShowGridProperty);
+			set => SetValue(ShowGridProperty, value.Box());
+		}
+
+		public bool ShowRulers
+		{
+			get => (bool)GetValue(ShowRulersProperty);
+			set => SetValue(ShowRulersProperty, value.Box());
 		}
 
 		public ArtboardSnapEngine SnapEngine
 		{
-			get => (ArtboardSnapEngine) GetValue(SnapEngineProperty);
+			get => (ArtboardSnapEngine)GetValue(SnapEngineProperty);
 			set => SetValue(SnapEngineProperty, value);
 		}
 
 		public ArtboardSnapGuideCollection SnapGuides => this.GetValueOrCreate(SnapGuidesPropertyKey, CreateSnapGuidesCollection);
 
-		private ArtboardControlTemplateContract TemplateContract => (ArtboardControlTemplateContract) TemplateContractInternal;
+		private ArtboardControlTemplateContract TemplateContract => (ArtboardControlTemplateContract)TemplateContractCore;
 
 		protected Matrix ToCanvasMatrix
 		{
@@ -183,7 +207,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		public double Zoom
 		{
-			get => (double) GetValue(ZoomProperty);
+			get => (double)GetValue(ZoomProperty);
 			set => SetValue(ZoomProperty, value);
 		}
 
@@ -194,7 +218,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 			snapEngine.Artboard = this;
 		}
-		
+
 		protected override ArtboardItemCollection CreateItemCollection()
 		{
 			return new ArtboardItemCollection(this);
@@ -220,7 +244,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		public static ArtboardAdornerCollection GetAdornersInternal(UIElement element)
 		{
-			return (ArtboardAdornerCollection) element.GetValue(AdornersProperty);
+			return (ArtboardAdornerCollection)element.GetValue(AdornersProperty);
 		}
 
 		private ArtboardSnapGuidePresenter GetTargetSnapGuidePresenter(ArtboardSnapGuide snapGuide)
@@ -252,14 +276,14 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private void OnRulerGotMouseCapture(object sender, MouseEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 
 			ruler.Cursor = MouseSnapGuide.Cursor;
 		}
 
 		private void OnRulerLostMouseCapture(object sender, MouseEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 
 			ruler.Cursor = Cursors.Arrow;
 
@@ -274,7 +298,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private void OnRulerMouseEnter(object sender, MouseEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 
 			PreviewSnapGuide.Orientation = ruler.Orientation.Rotate();
 			GetTargetSnapGuidePresenter(PreviewSnapGuide).SnapGuides.Add(PreviewSnapGuide);
@@ -291,27 +315,34 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private void OnRulerMouseMove(object sender, MouseEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 			var designMatrix = ToCanvasMatrix;
 			var rulerPosition = e.GetPosition(ruler);
 			var designPosition = designMatrix.Transform(rulerPosition);
 
+			double location;
+			var round = Keyboard.IsKeyUp(Key.LeftAlt);
+
 			if (ReferenceEquals(MouseSnapGuide, PreviewSnapGuide))
-				MouseSnapGuide.Location = ruler.Orientation == Orientation.Horizontal ? designPosition.X : designPosition.Y;
+			{
+				location = ruler.Orientation == Orientation.Horizontal ? designPosition.X : designPosition.Y;
+			}
 			else
 			{
 				var designOriginPosition = designMatrix.Transform(_rulerOriginLocation);
 
 				if (ruler.Orientation == Orientation.Horizontal)
-					MouseSnapGuide.Location = _mouseSnapGuideOriginLocation + designPosition.X - designOriginPosition.X;
+					location = _mouseSnapGuideOriginLocation + designPosition.X - designOriginPosition.X;
 				else
-					MouseSnapGuide.Location = _mouseSnapGuideOriginLocation + designPosition.Y - designOriginPosition.Y;
+					location = _mouseSnapGuideOriginLocation + designPosition.Y - designOriginPosition.Y;
 			}
+
+			MouseSnapGuide.Location = round ? location.LayoutRound(ruler.Orientation, RoundingMode.MidPointFromZero) :  location;
 		}
 
 		private void OnRulerMouseUp(object sender, MouseButtonEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 
 			if (_movingSnapGuide == false)
 				return;

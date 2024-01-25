@@ -5,6 +5,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -29,13 +30,13 @@ namespace Zaaml.UI.Controls.ListView
 		public bool IsSelectable
 		{
 			get => (bool) GetValue(IsSelectableProperty);
-			set => SetValue(IsSelectableProperty, value);
+			set => SetValue(IsSelectableProperty, value.Box());
 		}
 
 		public bool IsSelected
 		{
 			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 
 		private object OnCoerceSelection(object arg)
@@ -43,7 +44,7 @@ namespace Zaaml.UI.Controls.ListView
 			var isSelected = (bool) arg;
 
 			if (isSelected && ActualCanSelect == false)
-				return KnownBoxes.BoolFalse;
+				return BooleanBoxes.False;
 
 			return arg;
 		}
@@ -88,7 +89,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal void SetIsSelectedInternal(bool value)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, value ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsSelectedProperty, value.Box());
 		}
 
 		internal void UnselectInternal()

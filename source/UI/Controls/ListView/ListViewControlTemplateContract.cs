@@ -7,6 +7,6 @@ namespace Zaaml.UI.Controls.ListView
 	public class ListViewControlTemplateContract : IndexedSelectorBaseTemplateContract<ListViewItemsPresenter>
 	{
 		[TemplateContractPart(Required = false)]
-		public ListViewItemGridColumnHeadersPresenter ColumnHeadersPresenter { get; [UsedImplicitly] private set; }
+		public ListGridViewHeadersPresenter GridViewHeadersPresenter { get; [UsedImplicitly] private set; }
 	}
 }

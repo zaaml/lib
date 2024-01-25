@@ -12,7 +12,7 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract partial class ItemCollectionBase<TItemsControl, TItem>
 	{
-		private readonly ItemHostProxyCollection<TItem> _itemHostCollection = new ItemHostProxyCollection<TItem>();
+		private readonly ItemHostProxyCollection<TItem> _itemHostCollection = new();
 		private IItemsHost<TItem> _itemsHost;
 
 		internal IItemsHost<TItem> ItemsHost
@@ -45,7 +45,7 @@ namespace Zaaml.UI.Controls.Core
 				}
 				else
 				{
-					var notifyCollectionChanged = _sourceCollection as INotifyCollectionChanged;
+					var notifyCollectionChanged = SourceCollectionInternal as INotifyCollectionChanged;
 
 					if (_sourceView != null)
 					{
@@ -59,20 +59,27 @@ namespace Zaaml.UI.Controls.Core
 					_itemsHost = value;
 					_itemHostCollection.ItemsHost = value;
 
-					if (_itemsHost == null)
-						return;
-
-					_sourceView = _itemsHost is IVirtualItemsHost<TItem> virtualItemsHost && virtualItemsHost.IsVirtualizing
-						? (ItemCollectionSourceBase<TItemsControl, TItem>) new VirtualItemCollectionSource<TItemsControl, TItem>(virtualItemsHost, this)
-						: new ItemCollectionSource<TItemsControl, TItem>(_itemsHost, this);
-
-					if (notifyCollectionChanged != null)
-						notifyCollectionChanged.CollectionChanged -= ObservableSourceOnCollectionChanged;
-
-					_sourceView.Source = _sourceCollection;
-					_sourceView.Generator = GeneratorCore ?? DefaultGenerator;
+					EnsureSourceView();
 				}
 			}
+		}
+
+		private void EnsureSourceView()
+		{
+			if (_itemsHost == null || _sourceView != null)
+				return;
+
+			var notifyCollectionChanged = _sourceCollection as INotifyCollectionChanged;
+
+			_sourceView = _itemsHost is IVirtualItemsHost<TItem> virtualItemsHost && virtualItemsHost.IsVirtualizing
+				? new VirtualItemCollectionSource<TItemsControl, TItem>(virtualItemsHost, this)
+				: new ItemCollectionSource<TItemsControl, TItem>(_itemsHost, this);
+
+			if (notifyCollectionChanged != null)
+				notifyCollectionChanged.CollectionChanged -= ObservableSourceOnCollectionChanged;
+
+			_sourceView.Source = _sourceCollection;
+			_sourceView.Generator = GeneratorCore ?? DefaultGenerator;
 		}
 
 		protected virtual void AttachLogicalCore(TItem item)

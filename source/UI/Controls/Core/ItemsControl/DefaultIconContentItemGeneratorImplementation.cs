@@ -15,11 +15,23 @@ namespace Zaaml.UI.Controls.Core
 		where TItem : FrameworkElement, IIconContentControl, new()
 		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
+		private IIconSelector _itemIconSelector;
 		private string _itemIconMember;
 
-		public DefaultIconContentItemGeneratorImplementation(string itemIconMember, string itemContentMember, DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector, string itemContentStringFormat)
-			: base(itemContentMember, itemContentTemplate, itemContentTemplateSelector, itemContentStringFormat)
+		public DefaultIconContentItemGeneratorImplementation(
+			string itemIconMember,
+			IIconSelector itemIconSelector,
+			string itemContentMember,
+			DataTemplate itemContentTemplate,
+			DataTemplateSelector itemContentTemplateSelector,
+			string itemContentStringFormat)
+			: base(
+				itemContentMember,
+				itemContentTemplate,
+				itemContentTemplateSelector,
+				itemContentStringFormat)
 		{
+			_itemIconSelector = itemIconSelector;
 			_itemIconMember = itemIconMember;
 
 			CreateItemIconMemberBinding();
@@ -42,6 +54,24 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
+		public IIconSelector ItemIconSelector
+		{
+			get => _itemIconSelector;
+			set
+			{
+				if (ReferenceEquals(_itemIconSelector, value))
+					return;
+
+
+				Generator.OnGeneratorChangingInt();
+
+				_itemIconSelector = value;
+				CreateItemIconMemberBinding();
+
+				Generator.OnGeneratorChangedInt();
+			}
+		}
+
 		private Binding ItemIconMemberBinding { get; set; }
 
 		internal Binding ItemIconMemberBindingInternal => ItemIconMemberBinding;
@@ -55,7 +85,12 @@ namespace Zaaml.UI.Controls.Core
 
 		private void CreateItemIconMemberBinding()
 		{
-			ItemIconMemberBinding = _itemIconMember != null ? new Binding(_itemIconMember) { Converter = IconConverter.Instance } : null;
+			ItemIconMemberBinding = _itemIconMember != null
+				? new Binding(_itemIconMember)
+				{
+					Converter = new IconSelectorConverter(_itemIconSelector)
+				}
+				: null;
 		}
 
 		public override void DetachItem(TItem item, object source)

@@ -4,7 +4,8 @@
 
 // ReSharper disable ForCanBeConvertedToForeach
 
-using Zaaml.Core;
+using System.Reflection;
+using System;
 
 namespace Zaaml.Text
 {
@@ -14,51 +15,51 @@ namespace Zaaml.Text
 		{
 			private struct ThreadFork
 			{
-				public static ThreadFork Empty = new(-1, default, default, default);
+				public static readonly Type Type = typeof(ThreadFork);
+				public static FieldInfo ThreadField = Type.GetField(nameof(Thread));
+				public static FieldInfo ContextField = Type.GetField(nameof(Context));
 
-				public int Count;
+				public static ThreadFork Empty = new(default, default, ResetForkNode.Empty);
+
 				public Thread Thread;
 				public ThreadContext Context;
-				public int ExecutionPathsHead;
-				public MemorySpan<int> ExecutionPaths;
+				public ExecutionRailList ExecutionRailList;
+				public ResetForkNode ResetForkNode;
 
-				public ThreadFork(Thread thread, ThreadContext context)
+				public ThreadFork(Thread thread, ThreadContext context, ResetForkNode resetForkNode)
 				{
-					Count = 1;
 					Thread = thread;
 					Context = context;
-					ExecutionPaths = MemorySpan<int>.Empty;
-					ExecutionPathsHead = 0;
+					ExecutionRailList = ExecutionRailList.Start;
+					ResetForkNode = resetForkNode;
 				}
 
-				public ThreadFork(int count, Thread thread, ThreadContext context, MemorySpan<int> executionPaths)
+				public ThreadFork(Thread thread, ThreadContext context, ExecutionRailList executionRailList, ResetForkNode resetForkNode)
 				{
-					Count = count;
 					Thread = thread;
 					Context = context;
-					ExecutionPaths = executionPaths;
-					ExecutionPathsHead = 0;
+					ExecutionRailList = executionRailList;
+					ResetForkNode = resetForkNode;
 				}
 
 				public void Dispose()
 				{
 					Thread.Dispose();
 					Context.Dispose();
-					ExecutionPaths.Dispose();
+					ExecutionRailList.Dispose();
+					ResetForkNode.Dispose();
 
-					Thread = default;
-					Context = default;
-					ExecutionPaths = default;
+					this = Empty;
 				}
 
-				public bool IsEmpty => Count < 0;
+				public bool IsEmpty => Thread.Node == null;
 
 				public override string ToString()
 				{
 					if (IsEmpty)
 						return "Empty";
 
-					return $"Node:{Thread.Node}, InstructionPointer:{Context.InstructionStreamPointer}, ForkCount:{Count}";
+					return $"Node:{Thread.Node}, InstructionPointer:{Context.InstructionStreamPointer}, ForkCount:{ExecutionRailList.Count}";
 				}
 			}
 		}

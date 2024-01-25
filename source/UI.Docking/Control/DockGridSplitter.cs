@@ -4,23 +4,21 @@
 
 using System.Windows.Controls;
 using Zaaml.PresentationCore.Theming;
+using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class DockGridSplitter : GridSplitter
-  {
-    #region Ctors
+	public class DockGridSplitter : GridSplitter
+	{
+		static DockGridSplitter()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<DockGridSplitter>();
+			UIElementUtils.OverrideFocusable<DockGridSplitter>(false);
+		}
 
-    static DockGridSplitter()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<DockGridSplitter>();
-    }
-
-    public DockGridSplitter()
-    {
-      this.OverrideStyleKey<DockGridSplitter>();
-    }
-
-    #endregion
-  }
+		public DockGridSplitter()
+		{
+			this.OverrideStyleKey<DockGridSplitter>();
+		}
+	}
 }

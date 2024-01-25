@@ -64,19 +64,19 @@ namespace Zaaml.UI.Controls.Artboard
 
 		public bool IsDragging
 		{
-			get => (bool) GetValue(IsDraggingProperty);
+			get => (bool)GetValue(IsDraggingProperty);
 			private set => this.SetReadOnlyValue(IsDraggingPropertyKey, value);
 		}
 
 		public bool IsResizing
 		{
-			get => (bool) GetValue(IsResizingProperty);
+			get => (bool)GetValue(IsResizingProperty);
 			private set => this.SetReadOnlyValue(IsResizingPropertyKey, value);
 		}
 
 		private ResizableBorderControl ResizableBorderHandle => TemplateContract.ResizableBorderHandle;
 
-		private ArtboardSelectionAdornerTemplateContract TemplateContract => (ArtboardSelectionAdornerTemplateContract) TemplateContractInternal;
+		private ArtboardSelectionAdornerTemplateContract TemplateContract => (ArtboardSelectionAdornerTemplateContract)TemplateContractCore;
 
 		protected override void AttachElement(FrameworkElement adornedElement)
 		{
@@ -122,14 +122,6 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 		}
 
-		protected override void OnMatrixChanged()
-		{
-			base.OnMatrixChanged();
-
-			_draggableBehavior.OnMatrixChanged();
-			_resizableBehavior.OnMatrixChanged();
-		}
-
 		private void OnDraggableBehaviorDragEnded(object sender, EventArgs e)
 		{
 			IsDragging = false;
@@ -144,6 +136,14 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			if (CanDragStart == false)
 				e.Cancel = true;
+		}
+
+		protected override void OnMatrixChanged()
+		{
+			base.OnMatrixChanged();
+
+			_draggableBehavior.OnMatrixChanged();
+			_resizableBehavior.OnMatrixChanged();
 		}
 
 		private void OnResizableBehaviorResizeEnded(object sender, EventArgs e)

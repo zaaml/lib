@@ -53,6 +53,10 @@ namespace Zaaml.PresentationCore
 		public static readonly DependencyProperty SkinProperty = DPM.RegisterAttached<SkinBase>
 			("Skin", typeof(Extension), OnSkinChanged);
 
+		[TypeConverter(typeof(ClassStyleTypeConverter))]
+		public static readonly DependencyProperty ClassProperty = DPM.RegisterAttached<ClassStyle>
+			("Class", typeof(Extension), OnClassChanged);
+
 		static Extension()
 		{
 			PlatformCtor();
@@ -60,7 +64,7 @@ namespace Zaaml.PresentationCore
 
 		public static SkinBase GetActualSkin(FrameworkElement element)
 		{
-			return (SkinBase) element.GetValue(ActualSkinProperty);
+			return (SkinBase)element.GetValue(ActualSkinProperty);
 		}
 
 		public static AnimationCollection GetAnimations(FrameworkElement element)
@@ -83,6 +87,11 @@ namespace Zaaml.PresentationCore
 			return element.GetValueOrCreateOrDefault(BehaviorsPropertyKey, create, () => new BehaviorCollection(element));
 		}
 
+		public static ClassStyle GetClass(DependencyObject dependencyObject)
+		{
+			return (ClassStyle)dependencyObject.GetValue(ClassProperty);
+		}
+
 		public static SetterCollection GetSetters(FrameworkElement element)
 		{
 			return element.GetValueOrCreate(SettersPropertyKey, () => new SetterCollection(element));
@@ -100,12 +109,12 @@ namespace Zaaml.PresentationCore
 
 		public static SkinBase GetSkin(DependencyObject dependencyObject)
 		{
-			return (SkinBase) dependencyObject.GetValue(SkinProperty);
+			return (SkinBase)dependencyObject.GetValue(SkinProperty);
 		}
 
 		private static SkinBase GetStyleSkin(DependencyObject dependencyObject)
 		{
-			return (SkinBase) dependencyObject.GetValue(StyleSkinProperty);
+			return (SkinBase)dependencyObject.GetValue(StyleSkinProperty);
 		}
 
 		public static TriggerCollection GetTriggers(FrameworkElement element)
@@ -125,7 +134,7 @@ namespace Zaaml.PresentationCore
 
 		private static void OnActualSkinChanged(DependencyObject dependencyObject, SkinBase oldSkin, SkinBase newSkin)
 		{
-			var frameworkElement = (FrameworkElement) dependencyObject;
+			var frameworkElement = (FrameworkElement)dependencyObject;
 			var interactivityService = frameworkElement.GetInteractivityService();
 
 			oldSkin?.OnDetachedInternal(frameworkElement);
@@ -139,6 +148,10 @@ namespace Zaaml.PresentationCore
 			dependencyObject.SetReadOnlyValue(ActualSkinPropertyKey, newSkin);
 		}
 
+		private static void OnClassChanged(DependencyObject depObj, ClassStyle oldClass, ClassStyle newClass)
+		{
+		}
+
 		private static void OnSettersPropertyChangedPrivate(DependencyObject dependencyObject, SetterCollection oldValue, SetterCollection newValue)
 		{
 			oldValue?.Unload();
@@ -147,7 +160,7 @@ namespace Zaaml.PresentationCore
 
 		private static void OnSettersSourceChanged(DependencyObject dependencyObject, SetterCollection oldSetters, SetterCollection newSetters)
 		{
-			SetSettersSource((FrameworkElement) dependencyObject, newSetters);
+			SetSettersSource((FrameworkElement)dependencyObject, newSetters);
 		}
 
 		private static void OnSkinChanged(DependencyObject dependencyObject, SkinBase oldSkin, SkinBase newSkin)
@@ -155,9 +168,9 @@ namespace Zaaml.PresentationCore
 			UpdateActualSkin(dependencyObject);
 		}
 
-		private static void OnStyleSkinChanged(DependencyObject depObj, SkinBase oldDynamicSkin, SkinBase newDynamicSkin)
+		private static void OnStyleSkinChanged(DependencyObject dependencyObject, SkinBase oldDynamicSkin, SkinBase newDynamicSkin)
 		{
-			UpdateActualSkin(depObj);
+			UpdateActualSkin(dependencyObject);
 		}
 
 		private static void OnTriggersPropertyChangedPrivate(DependencyObject dependencyObject, TriggerCollection oldValue, TriggerCollection newValue)
@@ -168,10 +181,16 @@ namespace Zaaml.PresentationCore
 
 		private static void OnTriggersSourceChanged(DependencyObject dependencyObject, TriggerCollection oldTriggers, TriggerCollection newTriggers)
 		{
-			SetTriggersSource((FrameworkElement) dependencyObject, newTriggers);
+			SetTriggersSource((FrameworkElement)dependencyObject, newTriggers);
 		}
 
 		static partial void PlatformCtor();
+
+		[TypeConverter(typeof(ClassStyleTypeConverter))]
+		public static void SetClass(DependencyObject dependencyObject, ClassStyle classStyle)
+		{
+			dependencyObject.SetValue(ClassProperty, classStyle);
+		}
 
 		public static void SetSettersSource(FrameworkElement element, SetterCollection setters)
 		{
@@ -191,11 +210,10 @@ namespace Zaaml.PresentationCore
 
 		private static void UpdateActualSkin(DependencyObject dependencyObject)
 		{
-			var skin = GetSkin(dependencyObject) ?? GetStyleSkin(dependencyObject);
-			var actualSkin = skin;
+			var actualSkin = GetSkin(dependencyObject) ?? GetStyleSkin(dependencyObject);
 
 			if (actualSkin is DeferSkin deferSkin)
-				dependencyObject.SetBinding(ActualSkinPrivateProperty, new ThemeResourceExtension {Key = deferSkin.Key}.GetBinding(dependencyObject, ActualSkinPrivateProperty));
+				dependencyObject.SetBinding(ActualSkinPrivateProperty, new ThemeResourceExtension { Key = deferSkin.Key }.GetBinding(dependencyObject, ActualSkinPrivateProperty));
 			else if (actualSkin != null)
 				dependencyObject.SetValue(ActualSkinPrivateProperty, actualSkin);
 		}

@@ -13,41 +13,41 @@ namespace Zaaml.Text
 		{
 			[UsedImplicitly] public static readonly SubGraph Empty = new();
 
-			public readonly EnterRuleNode EnterNode;
-			public readonly Graph Graph;
+			public readonly EnterSyntaxNode EnterNode;
+			public readonly SyntaxGraph SyntaxGraph;
 			public readonly int Id;
-			public readonly Graph InvokingGraph;
-			public readonly LeaveRuleNode LeaveNode;
-			public readonly Rule Rule;
-			public readonly RuleEntry RuleEntry;
+			public readonly SyntaxGraph InvokingSyntaxGraph;
+			public readonly LeaveSyntaxNode LeaveNode;
+			public readonly Syntax Syntax;
+			public readonly SyntaxEntry SyntaxEntry;
 			public int RId = -1;
 
 			private SubGraph()
 			{
-				Rule = null;
+				Syntax = null;
 			}
 
-			protected SubGraph(Automata<TInstruction, TOperand> automata, Rule rule, Graph invokingGraph)
+			protected SubGraph(Automata<TInstruction, TOperand> automata, Syntax syntax, SyntaxGraph invokingSyntaxGraph)
 			{
 				Automata = automata;
-				Rule = rule;
+				Syntax = syntax;
 				Id = automata.RegisterSubGraph(this);
-				Graph = automata.EnsureGraph(rule);
-				InvokingGraph = invokingGraph;
-				EnterNode = new EnterRuleNode(automata, invokingGraph, this);
-				LeaveNode = new LeaveRuleNode(automata, invokingGraph, this);
+				SyntaxGraph = automata.EnsureGraph(syntax);
+				InvokingSyntaxGraph = invokingSyntaxGraph;
+				EnterNode = new EnterSyntaxNode(automata, invokingSyntaxGraph, this);
+				LeaveNode = new LeaveSyntaxNode(automata, invokingSyntaxGraph, this);
 			}
 
-			public SubGraph(Automata<TInstruction, TOperand> automata, RuleEntry ruleEntry, Graph invokingGraph) : this(automata, ruleEntry.Rule, invokingGraph)
+			public SubGraph(Automata<TInstruction, TOperand> automata, SyntaxEntry syntaxEntry, SyntaxGraph invokingSyntaxGraph) : this(automata, syntaxEntry.Syntax, invokingSyntaxGraph)
 			{
-				RuleEntry = ruleEntry;
+				SyntaxEntry = syntaxEntry;
 			}
 
 			public Automata<TInstruction, TOperand> Automata { get; }
 			
 			public override string ToString()
 			{
-				return Rule.Name;
+				return Syntax.Name;
 			}
 
 			public bool Equals(SubGraph other)

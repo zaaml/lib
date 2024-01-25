@@ -7,23 +7,19 @@ using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-  public abstract partial class IconBase : Panel
-  {
-    #region  Methods
+	public abstract partial class IconBase : Panel
+	{
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			var icon = IconElement;
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      var icon = IconElement;
+			if ((Children.Count == 1 && ReferenceEquals(Children[0], icon)) == false)
+			{
+				Children.Clear();
+				Children.Add(icon);
+			}
 
-      if ((Children.Count == 1 && ReferenceEquals(Children[0], icon)) == false)
-      {
-        Children.Clear();
-        Children.Add(icon);
-      }
-
-      return base.MeasureOverrideCore(availableSize);
-    }
-
-    #endregion
-  }
+			return base.MeasureOverrideCore(availableSize);
+		}
+	}
 }

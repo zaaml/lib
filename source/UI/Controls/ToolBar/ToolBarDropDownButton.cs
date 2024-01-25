@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 
@@ -47,8 +48,8 @@ namespace Zaaml.UI.Controls.ToolBar
 
     public bool ShowDropDownGlyph
     {
-      get => (bool) GetValue(ShowDropDownGlyphProperty);
-      set => SetValue(ShowDropDownGlyphProperty, value);
+	    get => (bool)GetValue(ShowDropDownGlyphProperty);
+	    set => SetValue(ShowDropDownGlyphProperty, value.Box());
     }
 
     #endregion

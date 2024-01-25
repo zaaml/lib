@@ -35,7 +35,6 @@
     <zm:Case Key="Bottom" Value="Vertical" />
   </zm:SwitchConverter>
 
-
   <!--  ShadowSideConverter  -->
   <zm:SwitchConverter x:Key="ShadowSideConverter">
     <zm:Case Key="Left" Value="Right" />
@@ -44,14 +43,20 @@
     <zm:Case Key="Bottom" Value="Top" />
   </zm:SwitchConverter>
 
-  <!--  OpenTransition  -->
+  <!--  Transition  -->
   <zm:Transition x:Key="LengthAnimationTransition"
-                 Duration="0:0:0.3">
+                 Duration="0:0:0.25">
     <zm:Transition.EasingFunction>
       <ExponentialEase EasingMode="EaseOut"
                        Exponent="7" />
     </zm:Transition.EasingFunction>
   </zm:Transition>
+
+  <!-- Init AnimationCommand -->
+  <zm:CompositeAnimationCommand x:Key="InitCommand">
+    <zm:BeginAnimationCommand />
+    <zm:SeekAnimationCommand RelativeTime="1" />
+  </zm:CompositeAnimationCommand>
 
   <!--  Template  -->
   <ControlTemplate x:Key="SplitViewControlTemplate"
@@ -63,12 +68,14 @@
           <zm:DoubleAnimation x:Name="LengthAnimation"
                               Invert="{zm:TemplateBinding Path=IsPaneOpen, Converter={zm:NegateConverter}}"
                               Transition="{StaticResource LengthAnimationTransition}"
+                              InitCommand="{StaticResource InitCommand}"
                               From="0"
                               To="{zm:TemplateBinding Path=OpenPaneLength}" />
 
           <zm:DoubleAnimation x:Name="ShadowOpacityAnimation"
                               Invert="{zm:TemplateBinding Path=IsPaneOpen, Converter={zm:NegateConverter}}"
                               Transition="{StaticResource LengthAnimationTransition}"
+                              InitCommand="{StaticResource InitCommand}"
                               From="0"
                               To="0.33" />
         </zm:Extension.Animations>
@@ -104,9 +111,10 @@
                   Background="{TemplateBinding PaneBackground}">
 
           <!--  Shadow  -->
-          <zm:ShadowChrome Side="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource ShadowSideConverter}}"
-                           ShadowOpacity="{zm:ElementBinding ElementName=ShadowOpacityAnimation, Path=Current}"
-                           Visibility="{zm:TemplateBinding Path=ShowPaneShadow, Converter={zm:VisibilityConverter}}" />
+          <zm:ShadowChrome
+            Side="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource ShadowSideConverter}}"
+            ShadowOpacity="{zm:ElementBinding ElementName=ShadowOpacityAnimation, Path=Current}"
+            Visibility="{zm:TemplateBinding Path=ShowPaneShadow, Converter={zm:VisibilityConverter}}" />
 
           <!--  PanePresenter  -->
           <zm:SplitViewPanePresenter x:Name="PanePresenter"
@@ -121,7 +129,8 @@
 
               <!--  Inline  -->
               <zm:CaseTrigger Value="Inline">
-                <zm:Setter Property="zm:DockPanel.Dock" Value="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource DockConverter}}" />
+                <zm:Setter Property="zm:DockPanel.Dock"
+                           Value="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource DockConverter}}" />
               </zm:CaseTrigger>
 
               <!--  Overlay  -->
@@ -129,30 +138,28 @@
 
               <!--  CompactInline  -->
               <zm:CaseTrigger Value="CompactInline">
-                <zm:Setter Property="zm:DockPanel.Dock" Value="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource DockConverter}}" />
-                <zm:Setter TargetName="LengthAnimation" Property="From" Value="{zm:TemplateBinding Path=CompactPaneLength}" />
+                <zm:Setter Property="zm:DockPanel.Dock"
+                           Value="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource DockConverter}}" />
+                <zm:Setter TargetName="LengthAnimation" Property="From"
+                           Value="{zm:TemplateBinding Path=CompactPaneLength}" />
               </zm:CaseTrigger>
 
               <!--  CompactOverlay  -->
               <zm:CaseTrigger Value="CompactOverlay">
-                <zm:Setter TargetName="DockThickness" Property="ThicknessValue" Value="{zm:TemplateBinding Path=CompactPaneLength}" />
-                <zm:Setter TargetName="LengthAnimation" Property="From" Value="{zm:TemplateBinding Path=CompactPaneLength}" />
+                <zm:Setter TargetName="DockThickness" Property="ThicknessValue"
+                           Value="{zm:TemplateBinding Path=CompactPaneLength}" />
+                <zm:Setter TargetName="LengthAnimation" Property="From"
+                           Value="{zm:TemplateBinding Path=CompactPaneLength}" />
               </zm:CaseTrigger>
             </zm:SwitchDataTrigger>
 
-            <!--  IsPaneOpen Trigger  -->
-            <zm:DataTrigger Binding="{zm:TemplateBinding Path=IsPaneOpen}" Value="True">
-
-              <zm:DataTrigger.EnterActions>
-                <zm:InvokeCommand Command="{zm:ElementBinding ElementName=LengthAnimation, Path=BeginCommand}" />
-                <zm:InvokeCommand Command="{zm:ElementBinding ElementName=ShadowOpacityAnimation, Path=BeginCommand}" />
-              </zm:DataTrigger.EnterActions>
-
-              <zm:DataTrigger.ExitActions>
-                <zm:InvokeCommand Command="{zm:ElementBinding ElementName=LengthAnimation, Path=BeginCommand}" />
-                <zm:InvokeCommand Command="{zm:ElementBinding ElementName=ShadowOpacityAnimation, Path=BeginCommand}" />
-              </zm:DataTrigger.ExitActions>
-            </zm:DataTrigger>
+            <!-- Pane Animation -->
+            <zm:PropertyChangeTrigger Source="{zm:TemplateBinding}" Property="IsPaneOpen">
+              <zm:RunAnimationCommand Command="{zm:Static Member=zm:AnimationCommand.Begin}"
+                                      Animation="{zm:ElementBinding ElementName=LengthAnimation}" />
+              <zm:RunAnimationCommand Command="{zm:Static Member=zm:AnimationCommand.Begin}"
+                                      Animation="{zm:ElementBinding ElementName=ShadowOpacityAnimation}" />
+            </zm:PropertyChangeTrigger>
 
           </zm:Extension.Triggers>
         </zm:Panel>
@@ -167,9 +174,11 @@
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="SplitViewControlStyle" BasedOn="{StaticResource SplitViewControlBaseStyle}" Skin="Metro.SplitViewControl" TargetType="zm:SplitViewControl" />
+  <zm:Style x:Key="SplitViewControlStyle" BasedOn="{StaticResource SplitViewControlBaseStyle}"
+            Skin="Metro.SplitViewControl" TargetType="zm:SplitViewControl" />
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="SplitViewControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource SplitViewControlStyle}" TargetType="zm:SplitViewControl" />
+  <zm:ThemeStyle x:Key="SplitViewControlThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource SplitViewControlStyle}" TargetType="zm:SplitViewControl" />
 
 </zm:ThemeResourceDictionary>

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Zaaml.Text
 {
@@ -17,9 +18,10 @@ namespace Zaaml.Text
 				private readonly LexerDfaState _dfaInitialState;
 				private readonly LexerDfaState _noOpDfaInitialState;
 				private LexerDfaBuilder _dfaBuilder;
+				private DfaRunNode _dfaRunNodePool;
 				private bool _noOperandLexeme;
 
-				public SpanProcess(TextSpan textSourceSpan, Lexer<TGrammar, TToken> lexer, LexerContext<TToken> lexerContext) : base(textSourceSpan)
+				public SpanProcess(TextSpan textSourceSpan, Lexer<TGrammar, TToken> lexer) : base(textSourceSpan)
 				{
 					_charMemory = textSourceSpan.AsMemory();
 					_automata = lexer.Automata;
@@ -27,9 +29,7 @@ namespace Zaaml.Text
 					_dfaInitialState = _dfaBuilder.InitialState;
 					_noOpDfaInitialState = _dfaBuilder.NoOpInitialState;
 
-					Context = new LexerAutomataContext(_automata);
-
-					Context.Mount(textSourceSpan, lexerContext);
+					Context = new LexerAutomataContext(lexer, textSourceSpan, _automata);
 				}
 
 				private LexerAutomataContext Context { get; }
@@ -46,9 +46,7 @@ namespace Zaaml.Text
 						prevState.SetState(ch + 1, dfaState);
 					}
 					else
-					{
 						dfaState = dfaState.Builder.Build(1 + ch, dfaState);
-					}
 
 					return dfaState;
 				}
@@ -73,7 +71,9 @@ namespace Zaaml.Text
 						dfaState = dfaState.EndState ?? dfaState.Builder.Build(0, dfaState);
 
 						while (dfaState.Predicate != null)
-							dfaState = dfaState.EvalPredicates(Context);
+						{
+							dfaState = dfaState.EvalPredicates(Context, out var detachedState);
+						}
 
 						if (dfaState.Continue)
 							continue;
@@ -96,50 +96,137 @@ namespace Zaaml.Text
 					return iLexeme;
 				}
 
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				private static void FillLexeme(bool skipLexemes, LexerDfaState dfaState, int instructionPointer,
+					int lexemeStart, ref int iLexeme, ref Lexeme<TToken> lexeme, ref int operand)
+				{
+					if (skipLexemes && dfaState.Skip)
+						return;
+
+					if (instructionPointer <= lexeme.EndField && (instructionPointer != lexeme.EndField || dfaState.TokenCode >= operand))
+						return;
+
+					lexeme.TokenField = dfaState.Token;
+					lexeme.StartField = lexemeStart;
+					lexeme.EndField = instructionPointer;
+					operand = dfaState.TokenCode;
+					iLexeme++;
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				private DfaRunNode GetRunNode(LexerDfaState state, int instructionPointer)
+				{
+					var node = _dfaRunNodePool;
+
+					if (node == null)
+						node = new DfaRunNode();
+					else
+					{
+						_dfaRunNodePool = _dfaRunNodePool.Next;
+
+						node.Next = null;
+					}
+
+					node.State = state;
+					node.InstructionPointer = instructionPointer;
+
+					return node;
+				}
+
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				private void ReleaseRunNode(DfaRunNode node)
+				{
+					node.Next = _dfaRunNodePool;
+
+					_dfaRunNodePool = node;
+				}
+
 				public override int Run(ref int startInstructionPointer, Lexeme<TToken>[] lexemesBuffer, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
 				{
 					if (_noOperandLexeme)
 						_noOperandLexeme = startInstructionPointer >= _charMemory.Length;
 
-					if (_automata._dfaBuilder.FastLookup == false)
-						return RunSlow(ref startInstructionPointer, lexemesBuffer, operands, lexemesBufferOffset, lexemesBufferSize, skipLexemes);
-
-					//return _automata.HasPredicates ? RunFast(lexemesBuffer, operands, lexemesBufferOffset, lexemesBufferSize, skipLexemes) : RunFastNoPredicate(lexemesBuffer, operands, lexemesBufferOffset, lexemesBufferSize, skipLexemes);
-					return RunFast(ref startInstructionPointer, lexemesBuffer, operands, lexemesBufferOffset, lexemesBufferSize, skipLexemes);
+					return _automata.HasPredicates
+						? RunWithPredicates(ref startInstructionPointer, lexemesBuffer, operands, lexemesBufferOffset, lexemesBufferSize, skipLexemes)
+						: RunWithoutPredicates(ref startInstructionPointer, lexemesBuffer, operands, lexemesBufferOffset, lexemesBufferSize, skipLexemes);
 				}
 
-				private int RunFast(ref int startInstructionPointer, Lexeme<TToken>[] lexemesBuffer, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				private LexerDfaState RunDfaStateWithoutPredicate(ReadOnlySpan<char> span, LexerDfaState dfaState, ref int instructionPointer)
 				{
-					var iLexeme = lexemesBufferOffset;
-					var instructionPointer = startInstructionPointer;
-					var lexemeStart = instructionPointer;
-					var span = _charMemory.Span;
+					var slicedSpan = span.Slice(instructionPointer);
+					var successInstructionPointer = instructionPointer;
+					var index = -1;
 
-					while (iLexeme < lexemesBufferSize && instructionPointer < span.Length)
+					foreach (var ch in slicedSpan)
 					{
-						var dfaState = _dfaInitialState;
-						var successInstructionPointer = instructionPointer;
+						index++;
+
+						var operand = ch + 1;
+
+						dfaState = dfaState.TryGetState(operand) ?? BuildDfaState(dfaState, ch, slicedSpan, index);
+
+						if (dfaState.Continue)
+							continue;
+
+						if (dfaState.Break)
+							break;
+
+						successInstructionPointer = index;
+					}
+
+					if (dfaState.Break == false)
+					{
+						SyncTextPointer(instructionPointer + index + 1);
+
+						dfaState = dfaState.EndState ?? dfaState.Builder.Build(0, dfaState);
+					}
+
+					if (dfaState.SavePointer)
+						successInstructionPointer = index;
+
+					successInstructionPointer += instructionPointer + 1;
+
+					instructionPointer = successInstructionPointer;
+
+					return dfaState;
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				private LexerDfaState RunDfaStateWithPredicates(ReadOnlySpan<char> span, DfaRunNode dfaRunNode)
+				{
+					var instructionPointer = dfaRunNode.InstructionPointer;
+					var successInstructionPointer = instructionPointer;
+					var index = -1;
+					var dfaState = dfaRunNode.State;
+
+					if (dfaState.Continue)
+					{
 						var slicedSpan = span.Slice(instructionPointer);
-						var index = -1;
 
 						foreach (var ch in slicedSpan)
 						{
 							index++;
 
 							var operand = ch + 1;
-							var dfaIndex = DfaState.ArraySentinel + (((operand - DfaState.ArraySentinel) >> 31) & (operand - DfaState.ArraySentinel));
 
-							dfaState = dfaState.Array[dfaIndex];
+							dfaState = dfaState.TryGetState(operand) ?? BuildDfaState(dfaState, ch, slicedSpan, index);
 
 							if (dfaState.Continue)
 								continue;
 
 							if (dfaState.Predicate != null)
 							{
-								SyncTextPointer(index);
+								SyncTextPointer(instructionPointer + index);
 
 								while (dfaState.Predicate != null)
-									dfaState = dfaState.EvalPredicates(operand, Context);
+								{
+									dfaState = dfaState.EvalPredicates(operand, Context, out var detachedState);
+
+									if (detachedState.State != null)
+										dfaRunNode.Next = GetRunNode(detachedState.State, detachedState.Position);
+								}
 
 								if (dfaState.Continue)
 									continue;
@@ -157,54 +244,34 @@ namespace Zaaml.Text
 
 							successInstructionPointer = index;
 						}
-
-						if (dfaState.Break == false)
-						{
-							SyncTextPointer(index + 1);
-
-							dfaState = dfaState.EndState ?? dfaState.Builder.Build(0, dfaState);
-
-							while (dfaState.Predicate != null)
-								dfaState = dfaState.EvalPredicates(Context);
-						}
-
-						if (dfaState.SavePointer)
-							successInstructionPointer = index;
-
-						if (dfaState.SuccessSubGraph == null)
-						{
-							startInstructionPointer = instructionPointer;
-
-							return iLexeme - lexemesBufferOffset;
-						}
-
-						successInstructionPointer += instructionPointer + 1;
-
-						if (skipLexemes == false || dfaState.Skip == false)
-						{
-							ref var lexeme = ref lexemesBuffer[iLexeme];
-
-							lexeme.TokenField = dfaState.Token;
-							lexeme.StartField = lexemeStart;
-							lexeme.EndField = successInstructionPointer;
-
-							operands[iLexeme] = dfaState.TokenCode;
-							iLexeme++;
-						}
-
-						lexemeStart = successInstructionPointer;
-						instructionPointer = successInstructionPointer;
 					}
 
-					startInstructionPointer = instructionPointer;
+					if (dfaState.Break == false)
+					{
+						SyncTextPointer(instructionPointer + index + 1);
 
-					if (iLexeme < lexemesBufferSize && instructionPointer == span.Length && _noOperandLexeme == false)
-						iLexeme = EvalNoOperandLexeme(ref startInstructionPointer, lexemesBuffer, operands, skipLexemes, iLexeme);
+						dfaState = dfaState.EndState ?? dfaState.Builder.Build(0, dfaState);
 
-					return iLexeme - lexemesBufferOffset;
+						while (dfaState.Predicate != null)
+						{
+							dfaState = dfaState.EvalPredicates(Context, out var detachedState);
+
+							if (detachedState.State != null)
+								dfaRunNode.Next = GetRunNode(detachedState.State, detachedState.Position);
+						}
+					}
+
+					if (dfaState.SavePointer)
+						successInstructionPointer = index;
+
+					successInstructionPointer += instructionPointer + 1;
+
+					dfaRunNode.InstructionPointer = successInstructionPointer;
+
+					return dfaState;
 				}
 
-				private int RunFastNoPredicate(ref int startInstructionPointer, Lexeme<TToken>[] lexemesBuffer, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
+				private int RunFastNoPredicateExperimental(ref int startInstructionPointer, Lexeme<TToken>[] lexemesBuffer, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
 				{
 					var iLexeme = lexemesBufferOffset;
 					var instructionPointer = startInstructionPointer;
@@ -230,38 +297,38 @@ namespace Zaaml.Text
 
 							index++;
 
-							var d = ch - DfaState.ArraySentinel;
-							var dfaIndex = ((d >> 31) & d) + DfaState.ArraySentinel;
+							var d = ch - LexerDfaState.ArraySentinel;
+							var dfaIndex = ((d >> 31) & d) + LexerDfaState.ArraySentinel;
 
 							current = current.Array[dfaIndex];
 
 							switch (current.Switch)
 							{
-								case DfaState.SwitchSave:
+								case LexerDfaState.SwitchSave:
 
 									lexemeEnd = index;
 
 									break;
 
-								case DfaState.SwitchBreakTake:
+								case LexerDfaState.SwitchBreakTake:
 
 									lexemeEnd++;
 
 									goto switch_break_take;
 
-								case DfaState.SwitchBreakTakeSave:
+								case LexerDfaState.SwitchBreakTakeSave:
 
 									lexemeEnd = index + 1;
 
 									goto switch_break_take;
 
-								case DfaState.SwitchBreakSkip:
+								case LexerDfaState.SwitchBreakSkip:
 
 									instructionPointer = lexemeEnd + 1;
 
 									goto break_skip;
 
-								case DfaState.SwitchBreakSkipSave:
+								case LexerDfaState.SwitchBreakSkipSave:
 
 									instructionPointer = index + 1;
 
@@ -298,7 +365,7 @@ namespace Zaaml.Text
 					return iLexeme - lexemesBufferOffset;
 				}
 
-				private int RunSlow(ref int startInstructionPointer, Lexeme<TToken>[] lexemesBuffer, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
+				private int RunWithoutPredicates(ref int startInstructionPointer, Lexeme<TToken>[] lexemesBuffer, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
 				{
 					var iLexeme = lexemesBufferOffset;
 					var instructionPointer = startInstructionPointer;
@@ -307,75 +374,77 @@ namespace Zaaml.Text
 
 					while (iLexeme < lexemesBufferSize && instructionPointer < span.Length)
 					{
-						var dfaState = _dfaInitialState;
-						var successInstructionPointer = instructionPointer;
-						var slicedSpan = span.Slice(instructionPointer);
-						var index = -1;
+						ref var lexeme = ref lexemesBuffer[iLexeme];
+						ref var operand = ref operands[iLexeme];
 
-						foreach (var ch in slicedSpan)
-						{
-							index++;
+						lexeme = default;
+						operand = default;
 
-							var operand = ch + 1;
+						var dfaState = RunDfaStateWithoutPredicate(span, _dfaInitialState, ref instructionPointer);
 
-							dfaState = dfaState.Dictionary.TryGetValue(operand, out var result) ? result : BuildDfaState(dfaState, ch, slicedSpan, index);
-
-							if (dfaState.Continue)
-								continue;
-
-							if (dfaState.Predicate != null)
-							{
-								SyncTextPointer(instructionPointer + index);
-
-								while (dfaState.Predicate != null)
-									dfaState = dfaState.EvalPredicates(ch, Context);
-
-								if (dfaState.Continue)
-									continue;
-							}
-
-							if (dfaState.Break)
-								break;
-
-							successInstructionPointer = index;
-						}
-
-						if (dfaState.Break == false)
-						{
-							SyncTextPointer(index + 1);
-
-							dfaState = dfaState.EndState ?? dfaState.Builder.Build(0, dfaState);
-
-							while (dfaState.Predicate != null)
-								dfaState = dfaState.EvalPredicates(Context);
-						}
-
-						if (dfaState.SavePointer)
-							successInstructionPointer = index;
-
-						if (dfaState.SuccessSubGraph == null)
+						if (dfaState.SuccessSubGraph != null)
+							FillLexeme(skipLexemes, dfaState, instructionPointer, lexemeStart, ref iLexeme, ref lexeme, ref operand);
+						else
 						{
 							startInstructionPointer = instructionPointer;
 
 							return iLexeme - lexemesBufferOffset;
 						}
 
-						successInstructionPointer += instructionPointer + 1;
+						lexemeStart = instructionPointer;
+					}
 
-						if (skipLexemes == false || dfaState.Skip == false)
+					startInstructionPointer = instructionPointer;
+
+					if (iLexeme < lexemesBufferSize && instructionPointer == span.Length && _noOperandLexeme == false)
+						iLexeme = EvalNoOperandLexeme(ref startInstructionPointer, lexemesBuffer, operands, skipLexemes, iLexeme);
+
+					return iLexeme - lexemesBufferOffset;
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				private int RunWithPredicates(ref int startInstructionPointer, Lexeme<TToken>[] lexemesBuffer, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes)
+				{
+					var iLexeme = lexemesBufferOffset;
+					var instructionPointer = startInstructionPointer;
+					var lexemeStart = instructionPointer;
+					var span = _charMemory.Span;
+
+					while (iLexeme < lexemesBufferSize && instructionPointer < span.Length)
+					{
+						var dfaRunNode = GetRunNode(_dfaInitialState, instructionPointer);
+						ref var lexeme = ref lexemesBuffer[iLexeme];
+						ref var operand = ref operands[iLexeme];
+
+						lexeme = default;
+						operand = default;
+
+						var runNext = false;
+
+						while (dfaRunNode != null)
 						{
-							ref var lexeme = ref lexemesBuffer[iLexeme];
+							var dfaState = RunDfaStateWithPredicates(span, dfaRunNode);
 
-							lexeme.TokenField = dfaState.Token;
-							lexeme.StartField = lexemeStart;
-							lexeme.EndField = successInstructionPointer;
+							instructionPointer = dfaRunNode.InstructionPointer;
 
-							operands[iLexeme] = dfaState.TokenCode;
-							iLexeme++;
+							var currentRunNode = dfaRunNode;
+
+							dfaRunNode = dfaRunNode.Next;
+
+							ReleaseRunNode(currentRunNode);
+
+							if (dfaState.SuccessSubGraph == null)
+								continue;
+
+							FillLexeme(skipLexemes, dfaState, instructionPointer, lexemeStart, ref iLexeme, ref lexeme, ref operand);
+
+							runNext = true;
 						}
 
-						lexemeStart = successInstructionPointer;
-						instructionPointer = successInstructionPointer;
+						if (runNext == false)
+							return iLexeme - lexemesBufferOffset;
+
+						lexemeStart = instructionPointer;
 					}
 
 					startInstructionPointer = instructionPointer;
@@ -388,8 +457,14 @@ namespace Zaaml.Text
 
 				private void SyncTextPointer(int index)
 				{
-					if (Context.LexerContext != null)
-						Context.LexerContext.TextPointer = index;
+					Context.Position = index;
+				}
+
+				private sealed class DfaRunNode
+				{
+					public int InstructionPointer;
+					public DfaRunNode Next;
+					public LexerDfaState State;
 				}
 			}
 		}

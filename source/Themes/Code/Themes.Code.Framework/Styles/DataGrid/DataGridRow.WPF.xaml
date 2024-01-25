@@ -1,0 +1,105 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStateGroups">
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="Normal_AlternatingRow" />
+      <zm:VisualState Name="Normal_Selected" />
+      <zm:VisualState Name="Normal_Editing" />
+
+      <zm:VisualState Name="Unfocused_Selected" />
+      <zm:VisualState Name="Unfocused_Editing" />
+
+      <!--<zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="MouseOver_Selected" />
+      <zm:VisualState Name="MouseOver_Editing" />
+      <zm:VisualState Name="MouseOver_Unfocused_Selected" />
+      <zm:VisualState Name="MouseOver_Unfocused_Editing" />-->
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="DataGridRowTemplate" TargetType="DataGridRow">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStateGroups}">
+      <Border x:Name="DGR_Border" 
+              BorderBrush="{TemplateBinding BorderBrush}"
+              Background="{TemplateBinding Background}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              SnapsToDevicePixels="True">
+
+        <SelectiveScrollingGrid>
+          <SelectiveScrollingGrid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </SelectiveScrollingGrid.ColumnDefinitions>
+          <SelectiveScrollingGrid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </SelectiveScrollingGrid.RowDefinitions>
+
+          <DataGridCellsPresenter Grid.Column="1"
+                                  ItemsPanel="{TemplateBinding ItemsPanel}" 
+                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+
+          <DataGridDetailsPresenter Grid.Column="1" 
+                                    Grid.Row="1" 
+                                    Visibility="{TemplateBinding DetailsVisibility}"
+                                    SelectiveScrollingGrid.SelectiveScrollingOrientation="{Binding AreRowDetailsFrozen, ConverterParameter={x:Static SelectiveScrollingOrientation.Vertical}, Converter={x:Static DataGrid.RowDetailsScrollingConverter}, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+
+          <DataGridRowHeader Grid.Row="0" 
+                             Grid.RowSpan="2" 
+                             Grid.Column="0"
+                             SelectiveScrollingGrid.SelectiveScrollingOrientation="Vertical"
+                             Visibility="{Binding HeadersVisibility,  ConverterParameter={x:Static DataGridHeadersVisibility.Row}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+        </SelectiveScrollingGrid>
+
+
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+
+  <!-- Base Style -->
+  <zm:Style x:Key="DataGridRowBaseStyle" TargetType="DataGridRow">
+    <zm:Setter Property="MinHeight" Value="23" />
+    <zm:Setter Property="Template" Value="{StaticResource DataGridRowTemplate}" />
+  </zm:Style>
+  
+  <!-- Style -->
+  <zm:Style x:Key="DataGridRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource DataGridRowBaseStyle}" 
+            Skin="Code.StandardControls.DataGridRow">
+    
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!-- Background -->
+      <zm:SetterGroup Property="Background" ValuePathSource="Skin" ValuePath="Background">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="Normal_AlternatingRow" ValuePath="Alternating" />
+        <zm:Setter VisualState="Normal_Selected" ValuePath="NormalSelected" />
+        <zm:Setter VisualState="Normal_Editing" ValuePath="NormalEditing" />
+
+        <zm:Setter VisualState="Unfocused_Selected" ValuePath="UnfocusedSelected" />
+        <zm:Setter VisualState="Unfocused_Editing" ValuePath="UnfocusedEditing" />
+
+        <!--<zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="MouseOver_Editing" ValuePath="MouseOverEditing" />
+        <zm:Setter VisualState="MouseOver_Selected" ValuePath="MouseOverSelected" />
+        <zm:Setter VisualState="MouseOver_Unfocused_Selected" ValuePath="MouseOverUnfocusedSelected" />
+        <zm:Setter VisualState="MouseOver_Unfocused_Editing" ValuePath="MouseOverUnfocusedEditing" />-->
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+
+
+  </zm:Style>
+
+  <!-- Theme Styles -->
+  <zm:ThemeStyle x:Key="DataGridRowThemeStyle" TargetType="DataGridRow" BasedOn="{StaticResource DataGridRowStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

@@ -1,0 +1,36 @@
+<!--
+  <copyright file="AutoHideLayoutTemplate.xaml" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+    Copyright (c) zaaml. All rights reserved.
+  </copyright>-->
+
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="AutoHideLayoutViewTemplate"
+                   TargetType="zm:AutoHideLayoutView">
+    <zm:ControlTemplateRoot>
+
+      <zm:AutoHideTabViewControl x:Name="AutoHideTabViewControl"
+                                 DockContent="{TemplateBinding Content}" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+
+  <!--  Style  -->
+  <zm:Style x:Key="AutoHideLayoutViewBaseStyle" TargetType="zm:AutoHideLayoutView">
+    <zm:Setter Property="Template" Value="{StaticResource AutoHideLayoutViewTemplate}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="AutoHideLayoutViewStyle" BasedOn="{StaticResource AutoHideLayoutViewBaseStyle}" TargetType="zm:AutoHideLayoutView" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="AutoHideLayoutViewThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource AutoHideLayoutViewStyle}" TargetType="zm:AutoHideLayoutView" />
+
+</zm:ThemeResourceDictionary>

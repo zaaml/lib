@@ -5,6 +5,7 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.UI.Controls.Core;
@@ -102,7 +103,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			var boolIsEditing = (bool) isEditing;
 
-			return boolIsEditing;
+			return boolIsEditing.Box();
 		}
 
 		private static string CoerceEditorText(string text)

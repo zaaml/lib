@@ -134,14 +134,14 @@ namespace Zaaml.Core.Trees
 
 		public T Current => HasCurrentNode && IsEnumerationFinished == false ? CurrentNode : default;
 
-		public AncestorsEnumerator<T> CurrentAncestors => new AncestorsEnumerator<T>(this);
+		public AncestorsEnumerator<T> GetAncestorsEnumerator() => new(this);
 
 		private struct RootEnumerator
 		{
 			private IEnumerator<T> _enumerator;
 			private readonly T _root;
 			private static readonly IEnumerator<T> EmptyEnumerator = Enumerable.Empty<T>().GetEnumerator();
-			public static readonly RootEnumerator Empty = new RootEnumerator(EmptyEnumerator);
+			public static readonly RootEnumerator Empty = new(EmptyEnumerator);
 
 			public RootEnumerator(IEnumerator<T> enumerator) : this()
 			{
@@ -232,9 +232,9 @@ namespace Zaaml.Core.Trees
 		{
 			private const int DefaultCapacity = 16;
 
-			public static readonly TreeStack EnumerationFinished = new TreeStack(new NodeEnumerator[0]);
+			public static readonly TreeStack EnumerationFinished = new(Array.Empty<NodeEnumerator>());
 
-			private static readonly ThreadLocal<Stack<TreeStack>> ThreadLocalPool = new ThreadLocal<Stack<TreeStack>>(() => new Stack<TreeStack>());
+			private static readonly ThreadLocal<Stack<TreeStack>> ThreadLocalPool = new(() => new Stack<TreeStack>());
 
 			private NodeEnumerator[] _array;
 			private int _count;

@@ -3,6 +3,8 @@
 // </copyright>
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Zaaml.Text
 {
@@ -10,14 +12,14 @@ namespace Zaaml.Text
 	{
 		public partial class LexerGrammar
 		{
-			protected internal sealed class CharSetSymbol : MatchSymbol
+			protected internal sealed class CharSetSymbol : PrimitiveMatchSymbol
 			{
 				public CharSetSymbol(IEnumerable<PrimitiveMatchSymbol> matches)
 				{
-					Matches = matches;
+					Matches = new ReadOnlyCollection<PrimitiveMatchSymbol>(matches.ToList());
 				}
 
-				public IEnumerable<PrimitiveMatchSymbol> Matches { get; }
+				public IReadOnlyCollection<PrimitiveMatchSymbol> Matches { get; }
 			}
 		}
 	}

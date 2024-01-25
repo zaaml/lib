@@ -20,6 +20,7 @@ namespace Zaaml.PresentationCore.PropertyCore.Extensions
       return dependencyObject.GetDependencyPropertyValueInfo(dependencyProperty).ValueSource;
     }
 
+		// TODO: Review logic. Current isn't correct. It returns true when current value differs from default value, but value source is default (SetCurrentValue)
     public static bool HasLocalValue(this DependencyObject dependencyObject, DependencyProperty dependencyProperty)
     {
       return dependencyObject.GetDependencyPropertyValueInfo(dependencyProperty).HasLocalValue;

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
@@ -18,10 +19,10 @@ namespace Zaaml.PresentationCore.Interactivity
 		#region Static Fields and Constants
 
 		public static readonly DependencyProperty EnabledProperty = DependencyPropertyManager.RegisterAttached
-			("Enabled", typeof(bool), typeof(Interaction), new PropertyMetadata(KnownBoxes.BoolFalse, OnEnabledPropertyChanged));
+			("Enabled", typeof(bool), typeof(Interaction), new PropertyMetadata(BooleanBoxes.False, OnEnabledPropertyChanged));
 
 		public static readonly DependencyProperty IsMouseOverProperty = DependencyPropertyManager.RegisterAttached
-			("IsMouseOver", typeof(bool), typeof(Interaction), new PropertyMetadata(KnownBoxes.BoolFalse));
+			("IsMouseOver", typeof(bool), typeof(Interaction), new PropertyMetadata(BooleanBoxes.False));
 
 		public static readonly DependencyProperty PropertyProperty = DependencyPropertyManager.RegisterAttached
 			("Property", typeof(DependencyProperty), typeof(Interaction), new PropertyMetadata(null));
@@ -129,12 +130,12 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		public static void SetEnabled(UIElement element, bool value)
 		{
-			element.SetValue(EnabledProperty, value);
+			element.SetValue(EnabledProperty, value.Box());
 		}
 
 		public static void SetIsMouseOver(UIElement element, bool value)
 		{
-			element.SetValue(IsMouseOverProperty, value);
+			element.SetValue(IsMouseOverProperty, value.Box());
 		}
 
 		public static void SetProperty(DependencyObject element, DependencyProperty value)

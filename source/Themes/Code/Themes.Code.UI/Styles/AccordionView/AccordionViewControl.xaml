@@ -1,0 +1,38 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="AccordionViewControlTemplate"
+                   TargetType="zm:AccordionViewControl">
+    <zm:ControlTemplateRoot>
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+        <zm:AccordionViewItemsPresenter x:Name="ItemsPresenter"
+                                        UseLayoutRounding="True" />
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="AccordionViewControlBaseStyle" TargetType="zm:AccordionViewControl">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Template" Value="{StaticResource AccordionViewControlTemplate}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="AccordionViewControlStyle" BasedOn="{StaticResource AccordionViewControlBaseStyle}" Skin="Code.Accordion" TargetType="zm:AccordionViewControl">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="Background" Property="Background" />
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="AccordionViewControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource AccordionViewControlStyle}" TargetType="zm:AccordionViewControl" />
+
+</zm:ThemeResourceDictionary>

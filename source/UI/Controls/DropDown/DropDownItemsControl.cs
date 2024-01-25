@@ -5,6 +5,7 @@
 using System.Windows;
 using System.Windows.Input;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -69,10 +70,10 @@ namespace Zaaml.UI.Controls.DropDown
 		public bool ShowDropDownButton
 		{
 			get => (bool) GetValue(ShowDropDownButtonProperty);
-			set => SetValue(ShowDropDownButtonProperty, value);
+			set => SetValue(ShowDropDownButtonProperty, value.Box());
 		}
 
-		private DropDownItemsControlTemplateContract TemplateContract => (DropDownItemsControlTemplateContract) TemplateContractInternal;
+		private DropDownItemsControlTemplateContract TemplateContract => (DropDownItemsControlTemplateContract) TemplateContractCore;
 
 		private protected override void OnIsDropDownOpenChangedInternal()
 		{

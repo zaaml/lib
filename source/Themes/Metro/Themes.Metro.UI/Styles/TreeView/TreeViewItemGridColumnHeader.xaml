@@ -3,6 +3,7 @@
                             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                             xmlns:zm="http://schemas.zaaml.com/xaml"
                             xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:gridView="clr-namespace:Zaaml.UI.Controls.Core.GridView;assembly=Zaaml.UI"
                             mc:Ignorable="zmb">
 
   <!--  Visual States  -->
@@ -24,25 +25,23 @@
 
   <!--  Template  -->
   <ControlTemplate x:Key="TreeViewItemGridColumnHeaderTemplate"
-                   TargetType="zm:TreeViewItemGridColumnHeader">
+                   TargetType="zm:TreeGridViewHeader">
 
-    <zm:GridCellRoot VisualStateGroups="{StaticResource VisualStates}">
-      <Border x:Name="Border"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}" />
-    </zm:GridCellRoot>
+    <gridView:GridViewCellRoot VisualStateGroups="{StaticResource VisualStates}">
+      <gridView:GridViewCellPresenter x:Name="CellPresenter" />
+    </gridView:GridViewCellRoot>
 
   </ControlTemplate>
 
   <!--  Base Style  -->
-  <zm:Style x:Key="TreeViewItemGridColumnHeaderBaseStyle" TargetType="zm:TreeViewItemGridColumnHeader">
+  <zm:Style x:Key="TreeViewItemGridColumnHeaderBaseStyle" TargetType="zm:TreeGridViewHeader">
     <zm:Setter Property="Template" Value="{StaticResource TreeViewItemGridColumnHeaderTemplate}" />
     <zm:Setter Property="Padding" Value="4,2" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="TreeViewItemGridColumnHeaderStyle" BasedOn="{StaticResource TreeViewItemGridColumnHeaderBaseStyle}" Skin="Metro.TreeViewItemGridColumnHeader" TargetType="zm:TreeViewItemGridColumnHeader">
+  <zm:Style x:Key="TreeViewItemGridColumnHeaderStyle" BasedOn="{StaticResource TreeViewItemGridColumnHeaderBaseStyle}"
+            Skin="Metro.TreeViewItemGridColumnHeader" TargetType="zm:TreeGridViewHeader">
 
     <zm:SetterGroup ValuePathSource="Skin">
 
@@ -72,6 +71,8 @@
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="TreeViewItemGridColumnHeaderThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TreeViewItemGridColumnHeaderStyle}" TargetType="zm:TreeViewItemGridColumnHeader" />
+  <zm:ThemeStyle x:Key="TreeViewItemGridColumnHeaderThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource TreeViewItemGridColumnHeaderStyle}"
+                 TargetType="zm:TreeGridViewHeader" />
 
 </zm:ThemeResourceDictionary>

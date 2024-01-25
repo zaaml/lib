@@ -40,7 +40,7 @@ namespace Zaaml.Text
 				{
 					var parserFragment = new FragmentSyntax("Internal", true);
 
-					parserFragment.AddProduction(new Production(new Symbol[] { this }));
+					parserFragment.AddProduction(new Production(this));
 
 					return parserFragment;
 				}

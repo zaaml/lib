@@ -1,0 +1,67 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zmb="http://schemas.zaaml.com/build" 
+                            mc:Ignorable="d zmb">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="ReadOnly" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!-- CheckStates States -->
+    <zm:VisualStateGroup Name="CheckStates">
+      <zm:VisualState Name="Checked" />
+      <zm:VisualState Name="Unchecked" />
+      <zm:VisualState Name="Indeterminate" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <zm:SetterCollection x:Key="SkinSetters">
+
+    <!-- Foreground -->
+    <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
+      <zm:Setter VisualState="Normal" ValuePath="Normal" />
+      <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="3" />
+      <zm:Setter VisualState="Pressed" ValuePath="Pressed"  Priority="4" />
+      <zm:Setter VisualState="Checked" ValuePath="Checked" Priority="1"/>
+    </zm:SetterGroup>
+
+    <!-- Background -->
+    <zm:SetterGroup Property="Background" ValuePath="Background">
+      <zm:Setter VisualState="Normal" ValuePath="Normal" />
+      <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="3" />
+      <zm:Setter VisualState="Pressed" ValuePath="Pressed"  Priority="4" />
+      <zm:Setter VisualState="Checked" ValuePath="Checked" Priority="1"/>
+    </zm:SetterGroup>
+
+    <!-- BorderBrush -->
+    <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
+      <zm:Setter VisualState="Normal" ValuePath="Normal" />
+      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="3" />
+      <zm:Setter VisualState="Pressed" ValuePath="Pressed"  Priority="4" />
+      <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+      <zm:Setter VisualState="Checked" ValuePath="Checked"  Priority="1"/>
+      <zm:Setter VisualState="Focused" ValuePath="Focused" Priority="5" />
+    </zm:SetterGroup>
+
+    <!-- Glyph -->
+    <zm:SetterGroup ExpandoProperty="Glyph">
+      <zm:Setter VisualState="Checked"  ValuePath="CheckedGlyph" />
+      <zm:Setter VisualState="Unchecked" ValuePath="UncheckedGlyph" />
+      <zm:Setter VisualState="Indeterminate" ValuePath="IndeterminateGlyph" />
+    </zm:SetterGroup>
+  </zm:SetterCollection>
+
+</zm:ThemeResourceDictionary>

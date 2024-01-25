@@ -13,15 +13,10 @@ namespace Zaaml.PresentationCore
 {
 	public struct OrientedSize
 	{
-		#region Fields
-
 		private Orientation _orientation;
-	  private double _indirect;
-	  private double _direct;
+		private double _indirect;
+		private double _direct;
 
-	  #endregion
-
-		#region Ctors
 
 		public OrientedSize(Orientation orientation) : this()
 		{
@@ -33,18 +28,18 @@ namespace Zaaml.PresentationCore
 		{
 			_orientation = orientation;
 
-		  VerifySize(width, nameof(width));
-		  VerifySize(height, nameof(height));
+			VerifySize(width, nameof(width));
+			VerifySize(height, nameof(height));
 
-      Width = width;
+			Width = width;
 			Height = height;
 		}
 
-	  private static void VerifySize(double value, string argumentName)
-	  {
-	    if (value < 0)
-	      throw new ArgumentOutOfRangeException(argumentName);
-    }
+		private static void VerifySize(double value, string argumentName)
+		{
+			if (value < 0)
+				throw new ArgumentOutOfRangeException(argumentName);
+		}
 
 		public OrientedSize(Orientation orientation, Size size)
 			: this()
@@ -54,47 +49,44 @@ namespace Zaaml.PresentationCore
 			Height = size.Height;
 		}
 
-		#endregion
 
-		#region Properties
+		public double Direct
+		{
+			get => _direct;
+			set
+			{
+				VerifySize(value, nameof(value));
 
-	  public double Direct
-	  {
-	    get => _direct;
-	    set
-	    {
-	      VerifySize(value, nameof(value));
-
-        _direct = value;
-	    }
-	  }
+				_direct = value;
+			}
+		}
 
 		public double Height
 		{
 			get => _orientation == Vertical ? Direct : Indirect;
 			set
 			{
-			  VerifySize(value, nameof(value));
+				VerifySize(value, nameof(value));
 
-        if (_orientation == Vertical)
+				if (_orientation == Vertical)
 					_direct = value;
 				else
 					_indirect = value;
 			}
 		}
 
-	  public double Indirect
-	  {
-	    get => _indirect;
-	    set
-	    {
-	      VerifySize(value, nameof(value));
+		public double Indirect
+		{
+			get => _indirect;
+			set
+			{
+				VerifySize(value, nameof(value));
 
-        _indirect = value;
-	    }
-	  }
+				_indirect = value;
+			}
+		}
 
-	  public Orientation Orientation
+		public Orientation Orientation
 		{
 			get => _orientation;
 			set
@@ -108,18 +100,18 @@ namespace Zaaml.PresentationCore
 
 		public Size Size
 		{
-		  get => new Size(Width, Height);
-		  set => this = new OrientedSize(Orientation, value);
+			get => new Size(Width, Height);
+			set => this = new OrientedSize(Orientation, value);
 		}
 
-	  public double Width
+		public double Width
 		{
 			get => _orientation == Horizontal ? Direct : Indirect;
 			set
 			{
-			  VerifySize(value, nameof(value));
+				VerifySize(value, nameof(value));
 
-        if (_orientation == Horizontal)
+				if (_orientation == Horizontal)
 					_direct = value;
 				else
 					_indirect = value;
@@ -150,9 +142,6 @@ namespace Zaaml.PresentationCore
 			};
 		}
 
-		#endregion
-
-		#region Methods
 
 		public double GetDirect(Size size)
 		{
@@ -182,16 +171,14 @@ namespace Zaaml.PresentationCore
 
 		public void Rotate()
 		{
-			var t = Direct;
+			(Direct, Indirect) = (Indirect, Direct);
 
-			Direct = Indirect;
-			Indirect = t;
 			_orientation = _orientation.Rotate();
 		}
 
 		public static OrientedSize Create(Orientation orientation, double direct, double indirect)
 		{
-			return new OrientedSize(orientation) {Direct = direct, Indirect = indirect};
+			return new OrientedSize(orientation) { Direct = direct, Indirect = indirect };
 		}
 
 		public static double GetDirect(Size size, Orientation orientation)
@@ -208,7 +195,5 @@ namespace Zaaml.PresentationCore
 		{
 			return $"Direct={Direct}, Indirect={Indirect}, Size={Size}";
 		}
-
-		#endregion
 	}
 }

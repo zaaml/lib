@@ -9,102 +9,90 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  internal static class FullLayout
-  {
-    #region Ctors
+	internal static class FullLayout
+	{
+		static FullLayout()
+		{
+			LayoutTypes = new[]
+			{
+				typeof(FloatLayout),
+				typeof(DockLayout),
+				typeof(DocumentLayout),
+				typeof(AutoHideLayout),
+				typeof(TabLayout),
+				typeof(SplitLayout),
+				typeof(HiddenLayout)
+			};
 
-    static FullLayout()
-    {
-      LayoutTypes = new[]
-      {
-        typeof(FloatLayout),
-        typeof(DockLayout),
-        typeof(DocumentLayout),
-        typeof(AutoHideLayout),
-        typeof(TabLayout),
-        typeof(SplitLayout),
-        typeof(HiddenLayout)
-      };
+			foreach (var layoutType in LayoutTypes)
+				RuntimeHelpers.RunClassConstructor(layoutType.TypeHandle);
 
-      foreach (var layoutType in LayoutTypes)
-        RuntimeHelpers.RunClassConstructor(layoutType.TypeHandle);
+			LayoutProperties = new List<DependencyProperty>();
+			LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Float));
+			LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Dock));
+			LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Document));
+			LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.AutoHide));
+			LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Tab));
+			LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Split));
+			LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Hidden));
+		}
 
-      LayoutProperties = new List<DependencyProperty>();
-      LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Float));
-      LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Dock));
-      LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Document));
-      LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.AutoHide));
-      LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Tab));
-      LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Split));
-      LayoutProperties.AddRange(GetLayoutProperties(LayoutKind.Hidden));
-    }
+		public static List<DependencyProperty> LayoutProperties { get; }
 
-    #endregion
+		internal static Type[] LayoutTypes { get; }
 
-    #region Properties
+		internal static IEnumerable<LayoutKind> EnumerateLayoutKinds()
+		{
+			yield return LayoutKind.Float;
+			yield return LayoutKind.Dock;
+			yield return LayoutKind.Document;
+			yield return LayoutKind.AutoHide;
+			yield return LayoutKind.Tab;
+			yield return LayoutKind.Split;
+			yield return LayoutKind.Hidden;
+		}
 
-    public static List<DependencyProperty> LayoutProperties { get; }
+		public static IEnumerable<DependencyProperty> GetLayoutProperties(LayoutKind layoutKind)
+		{
+			return BaseLayout.GetLayoutProperties(GetLayoutType(layoutKind));
+		}
 
-    internal static Type[] LayoutTypes { get; }
+		internal static Type GetLayoutType(LayoutKind layoutKind)
+		{
+			switch (layoutKind)
+			{
+				case LayoutKind.Float:
 
-    #endregion
+					return typeof(FloatLayout);
 
-    #region  Methods
+				case LayoutKind.Dock:
 
-    internal static IEnumerable<LayoutKind> EnumerateLayoutKinds()
-    {
-      yield return LayoutKind.Float;
-      yield return LayoutKind.Dock;
-      yield return LayoutKind.Document;
-      yield return LayoutKind.AutoHide;
-      yield return LayoutKind.Tab;
-      yield return LayoutKind.Split;
-      yield return LayoutKind.Hidden;
-    }
+					return typeof(DockLayout);
 
-    public static IEnumerable<DependencyProperty> GetLayoutProperties(LayoutKind layoutKind)
-    {
-      return BaseLayout.GetLayoutProperties(GetLayoutType(layoutKind));
-    }
+				case LayoutKind.Tab:
 
-    internal static Type GetLayoutType(LayoutKind layoutKind)
-    {
-      switch (layoutKind)
-      {
-        case LayoutKind.Float:
+					return typeof(TabLayout);
 
-          return typeof(FloatLayout);
+				case LayoutKind.Split:
 
-        case LayoutKind.Dock:
+					return typeof(SplitLayout);
 
-          return typeof(DockLayout);
+				case LayoutKind.Document:
 
-        case LayoutKind.Tab:
+					return typeof(DocumentLayout);
 
-          return typeof(TabLayout);
+				case LayoutKind.AutoHide:
 
-        case LayoutKind.Split:
+					return typeof(AutoHideLayout);
 
-          return typeof(SplitLayout);
+				case LayoutKind.Hidden:
 
-        case LayoutKind.Document:
+					return typeof(HiddenLayout);
 
-          return typeof(DocumentLayout);
+				default:
 
-        case LayoutKind.AutoHide:
-
-          return typeof(AutoHideLayout);
-
-        case LayoutKind.Hidden:
-
-          return typeof(HiddenLayout);
-
-        default:
-
-          throw new ArgumentOutOfRangeException(nameof(layoutKind));
-      }
-    }
-
-    #endregion
-  }
+					throw new ArgumentOutOfRangeException(nameof(layoutKind));
+			}
+		}
+	}
 }

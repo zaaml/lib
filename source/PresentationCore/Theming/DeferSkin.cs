@@ -7,23 +7,15 @@ using System.Linq;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  internal sealed class DeferSkin : SkinBase
-  {
-    #region Properties
+	internal sealed class DeferSkin : SkinBase
+	{
+		public string Key { get; set; }
 
-    public string Key { get; set; }
+		internal override IEnumerable<KeyValuePair<string, object>> Resources => Enumerable.Empty<KeyValuePair<string, object>>();
 
-    internal override IEnumerable<KeyValuePair<string, object>> Resources => Enumerable.Empty<KeyValuePair<string, object>>();
-
-    #endregion
-
-    #region  Methods
-
-    protected override object GetValue(string key)
-    {
-      return null;
-    }
-
-    #endregion
-  }
+		protected override object GetValue(string key)
+		{
+			return null;
+		}
+	}
 }

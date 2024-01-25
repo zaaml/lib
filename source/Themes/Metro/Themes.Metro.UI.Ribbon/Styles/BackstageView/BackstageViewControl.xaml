@@ -31,7 +31,8 @@
     <zm:ControlTemplateRoot>
 
       <Border Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}">
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"
@@ -72,6 +73,7 @@
   <zm:Style x:Key="BackstageViewControlStyle" TargetType="zm:BackstageViewControl">
     <zm:Setter Property="OpenDelay" Value="0:0:0" />
     <zm:Setter Property="CloseDelay" Value="0:0:0" />
+    <zm:Setter Property="BorderThickness" Value="1" />
     <zm:Setter Property="Template" Value="{StaticResource BackstageViewControlTemplate}" />
   </zm:Style>
 

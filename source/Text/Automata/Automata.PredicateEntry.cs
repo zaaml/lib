@@ -10,6 +10,13 @@ namespace Zaaml.Text
 	{
 		private protected abstract class PredicateEntryBase : PrimitiveEntry
 		{
+			protected PredicateEntryBase(string predicateName = null)
+			{
+				PredicateName = predicateName;
+			}
+
+			public string PredicateName { get; }
+
 			internal abstract bool ConsumeResult { get; }
 
 			protected override string DebuggerDisplay => "Predicate";
@@ -28,7 +35,8 @@ namespace Zaaml.Text
 
 		private protected class PredicateEntry : PredicateEntryBase
 		{
-			public PredicateEntry(Func<AutomataContext, PredicateResult> predicate)
+			public PredicateEntry(Func<AutomataContext, PredicateResult> predicate, string predicateName = null) 
+				: base(predicateName)
 			{
 				Predicate = predicate;
 			}
@@ -67,7 +75,7 @@ namespace Zaaml.Text
 
 		protected class PredicateResult
 		{
-			internal static readonly PredicateResult True = new PredicateResult();
+			internal static readonly PredicateResult True = new();
 			internal static readonly PredicateResult False = null;
 
 			internal virtual Type ResultType => typeof(object);

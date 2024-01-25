@@ -4,7 +4,6 @@
 
 using System;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Markup;
@@ -103,7 +102,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override FrameworkElement SelectionPresenterCore => SelectionPresenter;
 
-		private DropDownListViewTemplateContract TemplateContract => (DropDownListViewTemplateContract) TemplateContractInternal;
+		private DropDownListViewTemplateContract TemplateContract => (DropDownListViewTemplateContract) TemplateContractCore;
 
 		private DropDownListViewSelectionPresenter CreteDefaultSelectionPresenter()
 		{
@@ -174,7 +173,7 @@ namespace Zaaml.UI.Controls.DropDown
 			{
 				oldListViewControl.ItemsDefaultFilter = DefaultFilter = null;
 				oldListViewControl.ItemMouseButtonUp -= OnListViewItemMouseButtonUp;
-				oldListViewControl.ItemClickMode = ClickMode.Release;
+				oldListViewControl.ItemClickMode = ItemClickMode.Release;
 				oldListViewControl.FocusItemOnMouseHover = false;
 				oldListViewControl.SelectItemOnFocus = true;
 				oldListViewControl.PreserveMinSize = false;
@@ -187,7 +186,7 @@ namespace Zaaml.UI.Controls.DropDown
 			{
 				newListViewControl.ItemsDefaultFilter = DefaultFilter = new ListViewItemTextFilter();
 				newListViewControl.ItemMouseButtonUp += OnListViewItemMouseButtonUp;
-				newListViewControl.ItemClickMode = ClickMode.Release;
+				newListViewControl.ItemClickMode = ItemClickMode.Release;
 				newListViewControl.FocusItemOnMouseHover = true;
 				newListViewControl.SelectItemOnFocus = false;
 				newListViewControl.PreserveMinSize = true;

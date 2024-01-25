@@ -2,14 +2,15 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Windows;
-using Zaaml.Core;
+using System.Windows.Controls;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
-using Zaaml.UI.Controls.TreeView;
 
 namespace Zaaml.UI.Controls.PropertyView
 {
@@ -17,15 +18,18 @@ namespace Zaaml.UI.Controls.PropertyView
 	public class PropertyViewControl : TemplateContractControl
 	{
 		public static readonly DependencyProperty SelectedObjectProperty = DPM.Register<object, PropertyViewControl>
-			("SelectedObject", default, d => d.OnSelectedObjectPropertyChangedPrivate);
-
-		public static readonly DependencyProperty SortingProperty = DPM.Register<PropertyViewSorting, PropertyViewControl>
-			("Sorting", default, d => d.OnSortingPropertyChangedPrivate);
+			("SelectedObject", d => d.OnSelectedObjectPropertyChangedPrivate);
 
 		public static readonly DependencyProperty FilterProperty = DPM.Register<string, PropertyViewControl>
-			("Filter", default, d => d.OnFilterPropertyChangedPrivate);
+			("Filter", d => d.OnFilterPropertyChangedPrivate);
 
-		private readonly PropertyViewItemGenerator _generator;
+		public static readonly DependencyProperty ViewProperty = DPM.Register<PropertyViewBase, PropertyViewControl>
+			("View", d => d.OnViewPropertyChangedPrivate);
+
+		private static readonly DependencyPropertyKey ActualViewTemplatePropertyKey = DPM.RegisterReadOnly<ControlTemplate, PropertyViewControl>
+			("ActualViewTemplate");
+
+		public static readonly DependencyProperty ActualViewTemplateProperty = ActualViewTemplatePropertyKey.DependencyProperty;
 
 		private PropertyViewController _controller;
 
@@ -39,10 +43,16 @@ namespace Zaaml.UI.Controls.PropertyView
 		{
 			this.OverrideStyleKey<PropertyViewControl>();
 
-			_generator = new PropertyViewItemGenerator(this);
-
-			ItemGridController = new PropertyViewItemGridController(this);
+			ViewController = new PropertyGridViewController(this);
 		}
+
+		public ControlTemplate ActualViewTemplate
+		{
+			get => (ControlTemplate)GetValue(ActualViewTemplateProperty);
+			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
+		}
+
+		internal PropertyGridViewController ViewController { get; }
 
 		protected PropertyViewController Controller => _controller ??= CreateController();
 
@@ -50,11 +60,9 @@ namespace Zaaml.UI.Controls.PropertyView
 
 		public string Filter
 		{
-			get => (string) GetValue(FilterProperty);
+			get => (string)GetValue(FilterProperty);
 			set => SetValue(FilterProperty, value);
 		}
-
-		internal PropertyViewItemGridController ItemGridController { get; }
 
 		public object SelectedObject
 		{
@@ -62,17 +70,17 @@ namespace Zaaml.UI.Controls.PropertyView
 			set => SetValue(SelectedObjectProperty, value);
 		}
 
-		public PropertyViewSorting Sorting
+		private PropertyViewControlTemplateContract TemplateContract => (PropertyViewControlTemplateContract)TemplateContractCore;
+
+		private PropertyTreeViewControl TreeView => TemplateContract.TreeView;
+
+		internal PropertyTreeViewControl TreeViewInternal => TreeView;
+
+		public PropertyViewBase View
 		{
-			get => (PropertyViewSorting) GetValue(SortingProperty);
-			set => SetValue(SortingProperty, value);
+			get => (PropertyViewBase)GetValue(ViewProperty);
+			set => SetValue(ViewProperty, value);
 		}
-
-		private PropertyViewControlTemplateContract TemplateContract => (PropertyViewControlTemplateContract) TemplateContractInternal;
-
-		private TreeViewControl TreeView => TemplateContract.TreeView;
-
-		internal Size TreeViewPanelAvailableSize { get; set; }
 
 		private void ApplyFilter()
 		{
@@ -93,25 +101,45 @@ namespace Zaaml.UI.Controls.PropertyView
 			Controller.SelectedObject = newValue;
 		}
 
-		private void OnSortingPropertyChangedPrivate(PropertyViewSorting oldValue, PropertyViewSorting newValue)
-		{
-			Controller.PropertyViewSorting = newValue;
-		}
-
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
 
-			TreeView.ItemGenerator = _generator;
-			TreeView.SourceCollection = Controller.PropertyCategories;
+			View?.OnTemplateContractAttachedInternal();
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
+			View?.OnTemplateContractDetachingInternal();
+
 			TreeView.SourceCollection = null;
 			TreeView.ItemGenerator = null;
 
 			base.OnTemplateContractDetaching();
+		}
+
+		private void OnViewPropertyChangedPrivate(PropertyViewBase oldValue, PropertyViewBase newValue)
+		{
+			if (ReferenceEquals(oldValue, newValue))
+				return;
+
+			if (oldValue != null)
+			{
+				if (ReferenceEquals(oldValue.PropertyViewControl, this) == false)
+					throw new InvalidOperationException();
+
+				oldValue.PropertyViewControl = null;
+			}
+
+			if (newValue != null)
+			{
+				if (newValue.PropertyViewControl != null)
+					throw new InvalidOperationException();
+
+				newValue.PropertyViewControl = this;
+			}
+
+			UpdateViewTemplate();
 		}
 
 		internal void UpdateProperties()
@@ -119,11 +147,13 @@ namespace Zaaml.UI.Controls.PropertyView
 			if (TreeView != null)
 				TreeView.SourceCollection = Controller.PropertyCategories;
 		}
-	}
 
-	public class PropertyViewControlTemplateContract : TemplateContract
-	{
-		[TemplateContractPart(Required = true)]
-		public TreeViewControl TreeView { get; [UsedImplicitly] private set; }
+		internal void UpdateViewTemplate()
+		{
+			var actualViewTemplate = View?.GetTemplateInternal(this);
+
+			if (ReferenceEquals(ActualViewTemplate, actualViewTemplate) == false)
+				ActualViewTemplate = actualViewTemplate;
+		}
 	}
 }

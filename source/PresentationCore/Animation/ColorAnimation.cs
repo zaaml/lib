@@ -3,16 +3,13 @@
 // </copyright>
 
 using System.Windows.Media;
-using Zaaml.PresentationCore.Animation.Interpolators;
 
 namespace Zaaml.PresentationCore.Animation
 {
-  public sealed class ColorAnimation : PrimitiveAnimationBase<Color>
-  {
-    #region Properties
-
-    private protected override IInterpolator<Color> Interpolator => ColorInterpolator.Instance;
-
-    #endregion
-  }
+	public sealed class ColorAnimation : PrimitiveAnimation<Color>
+	{
+		public ColorAnimation() : base(ColorInterpolator.Instance)
+		{
+		}
+	}
 }

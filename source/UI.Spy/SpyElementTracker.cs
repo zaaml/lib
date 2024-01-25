@@ -10,7 +10,7 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Spy
 {
-	public abstract class SpyElementTracker : InheritanceContextObject
+	public abstract class SpyElementTracker : InheritanceContextObject, IDisposable
 	{
 		private static readonly TimeSpan DefaultThrottleDelay = TimeSpan.FromMilliseconds(50);
 
@@ -40,7 +40,7 @@ namespace Zaaml.UI.Controls.Spy
 
 		public UIElement Element
 		{
-			get => (UIElement) GetValue(ElementProperty);
+			get => (UIElement)GetValue(ElementProperty);
 			set => SetValue(ElementProperty, value);
 		}
 
@@ -61,21 +61,21 @@ namespace Zaaml.UI.Controls.Spy
 
 		public bool IsTracking
 		{
-			get => (bool) GetValue(IsTrackingProperty);
+			get => (bool)GetValue(IsTrackingProperty);
 			private set => this.SetReadOnlyValue(IsTrackingPropertyKey, value);
 		}
 
-		private SpyElementAdorner SpyElementAdorner { get; } = new SpyElementAdorner();
+		private SpyElementAdorner SpyElementAdorner { get; } = new();
 
 		public TimeSpan Throttle
 		{
-			get => (TimeSpan) GetValue(ThrottleProperty);
+			get => (TimeSpan)GetValue(ThrottleProperty);
 			set => SetValue(ThrottleProperty, value);
 		}
 
 		public SpyTrigger Trigger
 		{
-			get => (SpyTrigger) GetValue(TriggerProperty);
+			get => (SpyTrigger)GetValue(TriggerProperty);
 			set => SetValue(TriggerProperty, value);
 		}
 
@@ -119,6 +119,11 @@ namespace Zaaml.UI.Controls.Spy
 
 		private void OnTriggerIsOpenChanged(object sender, EventArgs e)
 		{
+			UpdateTracking();
+		}
+
+		private void UpdateTracking()
+		{
 			IsTracking = Trigger?.IsOpen ?? false;
 		}
 
@@ -132,11 +137,19 @@ namespace Zaaml.UI.Controls.Spy
 
 			if (newValue != null)
 				newValue.IsOpenChanged += OnTriggerIsOpenChanged;
+
+			UpdateTracking();
 		}
 
 		private void PushElement(UIElement element)
 		{
 			Element = ElementCore;
+		}
+
+		public void Dispose()
+		{
+			Trigger = null;
+			Element = null;
 		}
 	}
 }

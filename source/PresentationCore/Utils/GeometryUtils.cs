@@ -4,14 +4,12 @@
 
 using System;
 using System.Windows;
-using System.Windows.Media;
-using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.Utils
 {
 	internal static class GeometryUtils
 	{
-		private static Point CalcCartesianPoint(double angle, double radius)
+		public static Point CalcCartesianPoint(double angle, double radius)
 		{
 			var angleRad = angle * Math.PI / 180.0;
 
@@ -21,8 +19,14 @@ namespace Zaaml.PresentationCore.Utils
 			return new Point(x, y);
 		}
 
-		private static double CalcCenterAngle(ref double startAngle, ref double endAngle)
+		public static double CalcCenterAngle(ref double startAngle, ref double endAngle)
 		{
+			if (startAngle > endAngle)
+				(startAngle, endAngle) = (endAngle, startAngle);
+
+			if (endAngle - startAngle >= 360.0)
+				return 360.0;
+
 			startAngle %= 360;
 			endAngle %= 360;
 
@@ -33,129 +37,82 @@ namespace Zaaml.PresentationCore.Utils
 				endAngle += 360;
 
 			if (startAngle > endAngle)
-			{
-				var t = startAngle;
-
-				startAngle = endAngle;
-				endAngle = t;
-			}
+				endAngle += 360.0;
 
 			return endAngle - startAngle;
 		}
 
-		private static Point CalcDisplayPoint(Point cartesianPoint, Size displaySize)
+		public static Point CalcDisplayPoint(Point cartesianPoint, Size displaySize)
 		{
-			return new(cartesianPoint.X + displaySize.Width / 2, displaySize.Height / 2 - cartesianPoint.Y);
+			return new Point(cartesianPoint.X + displaySize.Width / 2, displaySize.Height / 2 - cartesianPoint.Y);
 		}
 
-		public static Geometry CreateAnnularSectorGeometry(double radius1, double radius2, double startAngle, double endAngle)
+		public static Point GetBezierPoint(double t, Point p0, Point p1, Point p2, Point p3)
 		{
-			var outerRadius = Math.Max(radius1, radius2);
-			var innerRadius = Math.Min(radius1, radius2);
+			var x = ((1 - t) * (1 - t) * (1 - t) * p0.X) + (3 * (1 - t) * (1 - t) * t * p1.X) +
+			        (3 * (1 - t) * t * t * p2.X) + (t * t * t * p3.X);
+			var y = ((1 - t) * (1 - t) * (1 - t) * p0.Y) + (3 * (1 - t) * (1 - t) * t * p1.Y) +
+			        (3 * (1 - t) * t * t * p2.Y) + (t * t * t * p3.Y);
 
-			if (innerRadius.IsCloseTo(0))
-				return CreateCircularSectorGeometry(outerRadius, startAngle, endAngle);
-
-			var centerAngle = CalcCenterAngle(ref startAngle, ref endAngle);
-
-			if (centerAngle.IsCloseTo(360.0) || centerAngle.IsCloseTo(0.0))
-				return CreateAnnulusGeometry(radius1, radius2);
-
-			var size = new Size(2 * outerRadius, 2 * outerRadius);
-			var isLargeArc = Math.Abs(centerAngle) > 180.0;
-			var outerArcStartPoint = CalcDisplayPoint(CalcCartesianPoint(startAngle, outerRadius), size);
-			var outerArcEndPoint = CalcDisplayPoint(CalcCartesianPoint(startAngle + centerAngle, outerRadius), size);
-			var innerArtStartPoint = CalcDisplayPoint(CalcCartesianPoint(startAngle + centerAngle, innerRadius), size);
-			var innerArtEndPoint = CalcDisplayPoint(CalcCartesianPoint(startAngle, innerRadius), size);
-
-			var pathFigure = new PathFigure
-			{
-				StartPoint = outerArcStartPoint,
-				IsClosed = true
-			};
-
-			pathFigure.Segments.Add(new ArcSegment
-			{
-				Point = outerArcEndPoint,
-				IsLargeArc = isLargeArc,
-				Size = new Size(outerRadius, outerRadius),
-				SweepDirection = SweepDirection.Counterclockwise
-			});
-
-			pathFigure.Segments.Add(new LineSegment(innerArtStartPoint, true));
-
-			pathFigure.Segments.Add(new ArcSegment
-			{
-				Point = innerArtEndPoint,
-				IsLargeArc = isLargeArc,
-				Size = new Size(innerRadius, innerRadius),
-				SweepDirection = SweepDirection.Clockwise
-			});
-
-			pathFigure.Segments.Add(new LineSegment(outerArcStartPoint, true));
-
-			var pathGeometry = new PathGeometry();
-
-			pathGeometry.Figures.Add(pathFigure);
-
-			return pathGeometry;
+			return new Point(x, y);
 		}
 
-		public static Geometry CreateAnnulusGeometry(double radius1, double radius2)
+		public static void GetBezierPoints(Point beginPoint, Point endPoint, out Point p1, out Point p2, out Point p3, out Point p4)
 		{
-			var outerRadius = Math.Max(radius1, radius2);
-			var innerRadius = Math.Min(radius1, radius2);
-			var size = new Size(2 * outerRadius, 2 * outerRadius);
+			var sourcePoint = beginPoint;
+			var targetPoint = endPoint;
 
-			var innerCircle = new EllipseGeometry(CalcDisplayPoint(new Point(0, 0), size), innerRadius, innerRadius);
-			var outerCircle = new EllipseGeometry(CalcDisplayPoint(new Point(0, 0), size), outerRadius, outerRadius);
+			var calcArrangeRect = new Rect(sourcePoint, targetPoint);
+			var pathRect = new Rect(calcArrangeRect.Size);
 
-			return new CombinedGeometry(GeometryCombineMode.Exclude, outerCircle, innerCircle);
+			var t = sourcePoint.Y < targetPoint.Y ? pathRect.Top : pathRect.Bottom;
+			var b = sourcePoint.Y > targetPoint.Y ? pathRect.Top : pathRect.Bottom;
+			var l = sourcePoint.X < targetPoint.X ? pathRect.Left : pathRect.Right;
+			var r = sourcePoint.X > targetPoint.X ? pathRect.Left : pathRect.Right;
+
+			var tl = new Point(l, t);
+			var br = new Point(r, b);
+
+			p1 = tl;
+			p2 = new Point(tl.X + (pathRect.Width / 2), tl.Y);
+			p3 = new Point(br.X - (pathRect.Width / 2), br.Y);
+			p4 = br;
 		}
 
-		public static Geometry CreateCircleGeometry(double radius)
+		public static double GetClosestPointToCubicBezier(int iterations, double start, double end, int slices, Point f, Point p0, Point p1, Point p2, Point p3)
 		{
-			var size = new Size(2 * radius, 2 * radius);
-
-			return new EllipseGeometry(CalcDisplayPoint(new Point(0, 0), size), radius, radius);
-		}
-
-		public static Geometry CreateCircularSectorGeometry(double radius, double startAngle, double endAngle)
-		{
-			var centerAngle = CalcCenterAngle(ref startAngle, ref endAngle);
-
-			if (centerAngle.IsCloseTo(360.0) || centerAngle.IsCloseTo(0.0))
-				return CreateCircleGeometry(radius);
-
-			var size = new Size(2 * radius, 2 * radius);
-			var isLargeArc = Math.Abs(centerAngle) > 180.0;
-			var arcStartPoint = CalcDisplayPoint(CalcCartesianPoint(startAngle, radius), size);
-			var arcEndPoint = CalcDisplayPoint(CalcCartesianPoint(startAngle + centerAngle, radius), size);
-			var centerPoint = CalcDisplayPoint(new Point(0, 0), size);
-
-			var pathFigure = new PathFigure
+			while (true)
 			{
-				StartPoint = centerPoint,
-				IsClosed = true
-			};
+				if (iterations <= 0)
+					return (start + end) / 2;
 
-			pathFigure.Segments.Add(new LineSegment(arcStartPoint, true));
+				var tick = (end - start) / slices;
+				var best = 0.0;
+				var bestDistance = double.PositiveInfinity;
+				var t = start;
 
-			pathFigure.Segments.Add(new ArcSegment
-			{
-				Point = arcEndPoint,
-				IsLargeArc = isLargeArc,
-				Size = new Size(radius, radius),
-				SweepDirection = SweepDirection.Counterclockwise
-			});
+				while (t <= end)
+				{
+					var p = GetBezierPoint(t, p0, p1, p2, p3);
 
-			pathFigure.Segments.Add(new LineSegment(centerPoint, true));
+					var dx = p.X - f.X;
+					var dy = p.Y - f.Y;
+					dx *= dx;
+					dy *= dy;
+					var currentDistance = dx + dy;
+					if (currentDistance < bestDistance)
+					{
+						bestDistance = currentDistance;
+						best = t;
+					}
 
-			var pathGeometry = new PathGeometry();
+					t += tick;
+				}
 
-			pathGeometry.Figures.Add(pathFigure);
-
-			return pathGeometry;
+				iterations--;
+				start = Math.Max(best - tick, 0d);
+				end = Math.Min(best + tick, 1d);
+			}
 		}
 	}
 }

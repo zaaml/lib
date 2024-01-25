@@ -40,7 +40,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 			set => SetValue(ChannelProperty, value);
 		}
 
-		private ColorChannelTextBoxTemplateContract TemplateContract => (ColorChannelTextBoxTemplateContract) TemplateContractInternal;
+		private ColorChannelTextBoxTemplateContract TemplateContract => (ColorChannelTextBoxTemplateContract) TemplateContractCore;
 
 		protected override string CoerceText(string text)
 		{

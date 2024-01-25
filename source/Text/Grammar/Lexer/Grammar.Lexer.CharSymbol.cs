@@ -10,12 +10,12 @@ namespace Zaaml.Text
 		{
 			protected internal sealed class CharSymbol : PrimitiveMatchSymbol
 			{
-				public CharSymbol(char c)
+				public CharSymbol(int c)
 				{
 					Char = c;
 				}
 
-				public char Char { get; }
+				public int Char { get; }
 			}
 		}
 	}

@@ -8,7 +8,7 @@ namespace Zaaml.Text
 	{
 		private protected sealed class LazyNode : Node
 		{
-			public LazyNode(Automata<TInstruction, TOperand> automata, Graph graph) : base(automata, graph)
+			public LazyNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph) : base(automata, syntaxGraph)
 			{
 			}
 

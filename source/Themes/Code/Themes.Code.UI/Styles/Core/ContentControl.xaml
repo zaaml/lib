@@ -1,0 +1,30 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="ContentControlTemplate"
+                   TargetType="zm:ContentControl">
+
+    <zm:ContentPresenter x:Name="ContentPresenter" 
+                         HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                         VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                         Content="{TemplateBinding Content}"
+                         ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                         ContentTemplate="{TemplateBinding ContentTemplate}"
+                         ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"/>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ContentControlBase" TargetType="zm:ContentControl">
+    <zm:Setter Property="Template" Value="{StaticResource ContentControlTemplate}" />
+    <zm:Setter Property="IsTabStop" Value="False" />
+  </zm:Style>
+
+  <!--  ThemeStyle  -->
+  <zm:ThemeStyle x:Key="ContentControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ContentControlBase}" TargetType="zm:ContentControl" />
+
+</zm:ThemeResourceDictionary>

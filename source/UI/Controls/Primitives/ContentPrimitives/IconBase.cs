@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Weak.Collections;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
@@ -24,431 +25,353 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-  [TypeConverter(typeof(IconTypeConverter))]
-  public abstract partial class IconBase
-  {
-    #region Static Fields and Constants
+	[TypeConverter(typeof(IconTypeConverter))]
+	public abstract partial class IconBase
+	{
+		public static readonly DependencyProperty SharedResourceProperty = DPM.Register<bool, IconBase>
+			("SharedResource", false);
+
+		private static readonly DependencyPropertyKey PresenterPropertyKey = DPM.RegisterReadOnly<IconPresenterBase, IconBase>
+			("Presenter", i => i.OnPresenterChanged);
+
+		public static readonly DependencyProperty PresenterProperty = PresenterPropertyKey.DependencyProperty;
+
+		private static readonly List<DependencyProperty> BaseProperties = new()
+		{
+			VerticalAlignmentProperty,
+			HorizontalAlignmentProperty,
+			WidthProperty,
+			HeightProperty,
+			MinWidthProperty,
+			MinHeightProperty,
+			MaxWidthProperty,
+			MaxHeightProperty,
+			MarginProperty,
+			StyleProperty,
+			SharedResourceProperty
+		};
+
+		protected static readonly Dictionary<DependencyProperty, Func<IconBase>> Factories = new();
+
+		private WeakLinkedList<IconBase> _clones;
+		private byte _packedValue;
+
+		protected IconBase()
+		{
+			AttachedIcon = new AttachedIconObject(this);
+		}
+
+		private AttachedIconObject AttachedIcon { get; }
+
+		private WeakLinkedList<IconBase> Clones => _clones ??= new WeakLinkedList<IconBase>();
+
+		protected internal abstract FrameworkElement IconElement { get; }
+
+		private bool IsBusy
+		{
+			get => PackedDefinition.IsBusy.GetValue(_packedValue);
+			set => PackedDefinition.IsBusy.SetValue(ref _packedValue, value);
+		}
+
+		public IconPresenterBase Presenter
+		{
+			get => (IconPresenterBase)GetValue(PresenterProperty);
+			internal set => this.SetReadOnlyValue(PresenterPropertyKey, value);
+		}
+
+		protected abstract IEnumerable<DependencyProperty> PropertiesCore { get; }
+
+		public bool SharedResource
+		{
+			get => (bool)GetValue(SharedResourceProperty);
+			set => SetValue(SharedResourceProperty, value.Box());
+		}
+
+		internal IconBase Clone(bool asFrozen)
+		{
+			var clone = CloneImpl(SharedResource);
+
+			if (asFrozen == false)
+				Clones.Add(clone);
+
+			return clone;
+		}
+
+		private IconBase CloneImpl(bool cloneBindings)
+		{
+			var clone = CreateInstanceCore();
+
+			CopyCoreProperties(clone, cloneBindings);
+
+			return clone;
+		}
+
+		protected virtual void CopyAttachedProperties(DependencyObject dependencyObject)
+		{
+			foreach (var property in BaseProperties)
+				SetValue(property, CopyValue(dependencyObject.GetValue(property)));
+		}
+
+		protected virtual Binding CopyBinding(Binding binding)
+		{
+			return binding;
+		}
+
+		private void CopyCoreProperties(IconBase clone, bool cloneBindings)
+		{
+			CopyProperties(clone, BaseProperties, cloneBindings);
+			CopyProperties(clone, PropertiesCore, cloneBindings);
+		}
+
+		protected IconBase CopyProperties(IconBase clone, IEnumerable<DependencyProperty> properties, bool cloneBindings)
+		{
+			foreach (var property in properties)
+				CopyProperty(clone, property, cloneBindings);
 
-    private static readonly List<DependencyProperty> BaseProperties = new List<DependencyProperty>
-    {
-      VerticalAlignmentProperty,
-      HorizontalAlignmentProperty,
-      WidthProperty,
-      HeightProperty,
-      MinWidthProperty,
-      MinHeightProperty,
-      MaxWidthProperty,
-      MaxHeightProperty,
-      MarginProperty,
-      StyleProperty
-    };
+			return clone;
+		}
 
-    private static readonly DependencyPropertyKey PresenterPropertyKey = DPM.RegisterReadOnly<IconPresenterBase, IconBase>
-      ("Presenter", i => i.OnPresenterChanged);
+		private void CopyProperty(DependencyObject target, DependencyProperty property, bool cloneBindings)
+		{
+			if (this.IsDefaultValue(property))
+				return;
 
-    public static readonly DependencyProperty SharedResourceProperty = DPM.Register<bool, IconBase>
-      ("SharedResource", false);
+			var localValue = ReadLocalValue(property);
 
-    public static readonly DependencyProperty PresenterProperty = PresenterPropertyKey.DependencyProperty;
+			if (cloneBindings && localValue is BindingExpression localBindingExpression)
+				target.SetBinding(property, CopyBinding(localBindingExpression.ParentBinding));
+			else
+				target.SetValue(property, CopyValue(GetValue(property)));
+		}
 
-    protected static readonly Dictionary<DependencyProperty, Func<IconBase>> Factories = new Dictionary<DependencyProperty, Func<IconBase>>();
+		protected virtual object CopyValue(object value)
+		{
+			return value;
+		}
 
-    #endregion
+		protected abstract IconBase CreateInstanceCore();
+
+		private AttachedIconObject EnsureAttachedIcon(DependencyObject owner)
+		{
+			AttachedIcon.Owner = owner;
+
+			return AttachedIcon;
+		}
+
+		protected T GetActualValue<T>(DependencyProperty dependencyProperty)
+		{
+			if (this.IsDefaultValue(dependencyProperty) == false)
+				return (T)GetValue(dependencyProperty);
+
+			return (T)AttachedIcon.GetActualValue(dependencyProperty);
+		}
 
-    #region Fields
+		protected virtual void OnAttachedPropertyChanged(DependencyProperty dependencyProperty)
+		{
+		}
 
-    private WeakLinkedList<IconBase> _clones;
-    private byte _packedValue;
-#if SILVERLIGHT
-    private IconBase _treeDetachedIcon;
-#endif
+		protected virtual void OnIconPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+		}
 
-    #endregion
+		protected static void OnIconPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			if (d is AttachedIconObject attachedIcon)
+			{
+				attachedIcon.Icon.OnIconPropertyChanged(e);
 
-    #region Ctors
+				return;
+			}
 
-    protected IconBase()
-    {
-      AttachedIcon = new AttachedIconObject(this);
-    }
+			if (d is IconBase icon)
+				icon.OnIconPropertyChangedCore(e, false);
+			else
+			{
+				if (d is IconPresenterBase iconPresenter)
+				{
+					iconPresenter.ActualIconInternal?.AttachedIcon.UpdateActualValue(e.Property, e.NewValue);
 
-    #endregion
+					return;
+				}
 
-    #region Properties
+				if (d is IIconPresenter iiconPresenter)
+				{
+					iiconPresenter.Icon?.AttachedIcon.UpdateActualValue(e.Property, e.NewValue);
 
-    private AttachedIconObject AttachedIcon { get; }
+					return;
+				}
 
-    private WeakLinkedList<IconBase> Clones => _clones ??= new WeakLinkedList<IconBase>();
+				if (d is not IIconOwner iconOwner)
+					return;
 
-    protected internal abstract FrameworkElement IconElement { get; }
+				var ownerIcon = iconOwner.Icon;
 
-    private bool IsBusy
-    {
-      get => PackedDefinition.IsBusy.GetValue(_packedValue);
-      set => PackedDefinition.IsBusy.SetValue(ref _packedValue, value);
-    }
+				if (ownerIcon == null)
+				{
+					var factory = Factories.GetValueOrDefault(e.Property);
 
-    public IconPresenterBase Presenter
-    {
-      get => (IconPresenterBase) GetValue(PresenterProperty);
-      internal set => this.SetReadOnlyValue(PresenterPropertyKey, value);
-    }
+					if (factory == null)
+						return;
 
-    protected abstract IEnumerable<DependencyProperty> PropertiesCore { get; }
+					iconOwner.Icon = ownerIcon = factory();
 
-    public bool SharedResource
-    {
-      get => (bool) GetValue(SharedResourceProperty);
-      set => SetValue(SharedResourceProperty, value);
-    }
+					ownerIcon.EnsureAttachedIcon(d).UpdateActualValue(e.Property, e.NewValue);
+				}
+				else
+					ownerIcon.EnsureAttachedIcon(d).UpdateActualValue(e.Property, e.NewValue);
+			}
+		}
 
-#if SILVERLIGHT
-    internal IconBase TreeDetachedIcon => SharedResource == false ? this : _treeDetachedIcon ?? (_treeDetachedIcon = CloneImpl(true));
-#endif
+		private void OnIconPropertyChangedCore(DependencyPropertyChangedEventArgs e, bool isAttached)
+		{
+			OnIconPropertyChanged(e);
 
-    #endregion
+			if (_clones == null || isAttached)
+				return;
 
-    #region  Methods
+			foreach (var iconBase in _clones)
+				iconBase.OnIconPropertyChanged(e);
+		}
 
-    internal IconBase Clone(bool asFrozen)
-    {
-      var clone = CloneImpl(SharedResource);
+		private void OnPresenterChanged(IconPresenterBase oldPresenter, IconPresenterBase newPresenter)
+		{
+			AttachedIcon.Presenter = newPresenter;
+		}
 
-      if (asFrozen == false)
-        Clones.Add(clone);
+		public static implicit operator IconBase(ImageSource x)
+		{
+			return new BitmapIcon { Source = x };
+		}
 
-      return clone;
-    }
+		public static implicit operator IconBase(PathGeometry x)
+		{
+			return new PathIcon { Data = x };
+		}
 
-    private IconBase CloneImpl(bool cloneBindings)
-    {
-      var clone = CreateInstanceCore();
+		public static implicit operator IconBase(DataTemplate x)
+		{
+			return new TemplateIcon { Template = x };
+		}
 
-#if SILVERLIGHT
-      clone._treeDetachedIcon = _treeDetachedIcon ?? clone;
-#endif
-
-      CopyCoreProperties(clone, cloneBindings);
-
-      return clone;
-    }
-
-    protected virtual void CopyAttachedProperties(DependencyObject dependencyObject)
-    {
-      foreach (var property in BaseProperties)
-        SetValue(property, CopyValue(dependencyObject.GetValue(property)));
-    }
-
-    private void CopyCoreProperties(IconBase clone, bool cloneBindings)
-    {
-      CopyProperties(clone, BaseProperties, cloneBindings);
-      CopyProperties(clone, PropertiesCore, cloneBindings);
-    }
+		internal static void UseIcon(ref IconBase iconStore, IconBase icon, Panel panel)
+		{
+			if (ReferenceEquals(iconStore, icon))
+				return;
 
-    protected IconBase CopyProperties(IconBase clone, IEnumerable<DependencyProperty> properties, bool cloneBindings)
-    {
-      foreach (var property in properties)
-        CopyProperty(clone, property, cloneBindings);
-
-      return clone;
-    }
-
-    private void CopyProperty(DependencyObject target, DependencyProperty property, bool cloneBindings)
-    {
-      if (this.IsDefaultValue(property))
-	      return;
-
-      var localValue = ReadLocalValue(property);
-
-      if (cloneBindings && localValue is BindingExpression localBindingExpression)
-        target.SetBinding(property, CopyBinding(localBindingExpression.ParentBinding));
-      else
-        target.SetValue(property, CopyValue(GetValue(property)));
-    }
-
-    protected virtual object CopyValue(object value)
-    {
-      return value;
-    }
-
-    protected virtual Binding CopyBinding(Binding binding)
-    {
-      return binding;
-    }
-
-    protected abstract IconBase CreateInstanceCore();
-
-    private AttachedIconObject EnsureAttachedIcon(DependencyObject owner)
-    {
-      AttachedIcon.Owner = owner;
-
-      return AttachedIcon;
-    }
-
-    protected T GetActualValue<T>(DependencyProperty dependencyProperty)
-    {
-      if (this.IsDefaultValue(dependencyProperty) == false)
-        return (T) GetValue(dependencyProperty);
-
-      return (T) AttachedIcon.GetActualValue(dependencyProperty);
-    }
-
-    protected virtual void OnAttachedPropertyChanged(DependencyProperty dependencyProperty)
-    {
-    }
-
-    protected virtual void OnIconPropertyChanged(DependencyPropertyChangedEventArgs e)
-    {
-    }
-
-    protected static void OnIconPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-	    if (d is AttachedIconObject attachedIcon)
-      {
-        attachedIcon.Icon.OnIconPropertyChanged(e);
-
-        return;
-      }
-
-	    if (d is IconBase icon)
-        icon.OnIconPropertyChangedCore(e, false);
-      else
-      {
-	      if (d is IconPresenterBase iconPresenter)
-        {
-          iconPresenter.ActualIconInternal?.AttachedIcon.UpdateActualValue(e.Property, e.NewValue);
-
-          return;
-        }
-
-	      if (d is IIconPresenter iiconPresenter)
-	      {
-		      iiconPresenter.Icon?.AttachedIcon.UpdateActualValue(e.Property, e.NewValue);
-
-		      return;
-	      }
-
-	      if (!(d is IIconOwner iconOwner))
-          return;
-
-        var ownerIcon = iconOwner.Icon;
-
-        if (ownerIcon == null)
-        {
-          var factory = Factories.GetValueOrDefault(e.Property);
-
-          if (factory == null)
-            return;
-
-          iconOwner.Icon = ownerIcon = factory();
-
-#if SILVERLIGHT
-          ownerIcon._treeDetachedIcon = ownerIcon;
-#endif
-
-          ownerIcon.EnsureAttachedIcon(d).UpdateActualValue(e.Property, e.NewValue);
-        }
-        else
-          ownerIcon.EnsureAttachedIcon(d).UpdateActualValue(e.Property, e.NewValue);
-      }
-    }
-
-    private void OnIconPropertyChangedCore(DependencyPropertyChangedEventArgs e, bool isAttached)
-    {
-      OnIconPropertyChanged(e);
-
-      if (_clones == null || isAttached)
-        return;
-
-#if SILVERLIGHT
-      _treeDetachedIcon?.OnIconPropertyChanged(e);
-#endif
-
-      foreach (var iconBase in _clones)
-        iconBase.OnIconPropertyChanged(e);
-    }
-
-    private void OnPresenterChanged(IconPresenterBase oldPresenter, IconPresenterBase newPresenter)
-    {
-      AttachedIcon.Presenter = newPresenter;
-    }
-
-    public static implicit operator IconBase(ImageSource x)
-    {
-      return new BitmapIcon {Source = x};
-    }
-
-    public static implicit operator IconBase(PathGeometry x)
-    {
-      return new PathIcon {Data = x};
-    }
-
-    public static implicit operator IconBase(DataTemplate x)
-    {
-      return new TemplateIcon {Template = x};
-    }
-
-    internal static void UseIcon(ref IconBase iconStore, IconBase icon, Panel panel)
-    {
-      if (ReferenceEquals(iconStore, icon))
-        return;
-
-      if (iconStore != null)
-      {
-        iconStore.IsBusy = false;
-      
-        panel.Children.Remove(iconStore);
-
-				LogicalChildMentor.AttachLogical(iconStore);
-      }
-
-#if SILVERLIGHT
-      var treeDetached = icon?.TreeDetachedIcon;
-#else
-      var treeDetached = icon;
-#endif
-      if (treeDetached == null)
-        return;
-
-      iconStore = treeDetached.IsBusy ? icon.Clone(false) : treeDetached;
-
-      iconStore.IsBusy = true;
-
-      LogicalChildMentor.DetachLogical(iconStore);
+			if (iconStore != null)
+			{
+				iconStore.IsBusy = false;
+
+				panel.Children.Remove(iconStore);
+
+				if (iconStore.SharedResource == false)
+					LogicalChildMentor.AttachLogical(iconStore);
+			}
+
+			if (icon == null)
+				return;
+
+			if (icon.IsBusy && icon.SharedResource == false)
+					throw new InvalidOperationException("Icon is already in use. Use 'SharedResource' property if this Icon intended to be shared.");
+
+			iconStore = icon.SharedResource ? icon.Clone(false) : icon;
+
+			iconStore.IsBusy = true;
+
+			if (icon.SharedResource == false)
+				LogicalChildMentor.DetachLogical(iconStore);
 
 			panel.Children.Add(iconStore);
-    }
+		}
 
-    #endregion
+		private class AttachedIconObject : DependencyObject
+		{
+			private static readonly AttachedIconObject Default = new(null);
 
-    #region  Nested Types
+			private DependencyObject _owner;
+			private IconPresenterBase _presenter;
 
-    private class AttachedIconObject : DependencyObject
-    {
-      #region Static Fields and Constants
+			public AttachedIconObject(IconBase icon)
+			{
+				Icon = icon;
+			}
 
-      private static readonly AttachedIconObject Default = new AttachedIconObject(null);
+			public IconBase Icon { get; }
 
-      #endregion
+			public DependencyObject Owner
+			{
+				set
+				{
+					if (ReferenceEquals(_owner, value))
+						return;
 
-      #region Fields
+					_owner = value;
 
-      private DependencyObject _owner;
-      private IconPresenterBase _presenter;
+					UpdateAttachedProperties();
+				}
+			}
 
-      #endregion
+			public IconPresenterBase Presenter
+			{
+				set
+				{
+					if (ReferenceEquals(_presenter, value))
+						return;
 
-      #region Ctors
+					_presenter = value;
 
-      public AttachedIconObject(IconBase icon)
-      {
-        Icon = icon;
-      }
+					UpdateAttachedProperties();
+				}
+			}
 
-      #endregion
+			public object GetActualValue(DependencyProperty property)
+			{
+				return GetActualValueInt(property, null);
+			}
 
-      #region Properties
+			private object GetActualValueInt(DependencyProperty property, object value)
+			{
+				if (_presenter != null && _presenter.IsDefaultValue(property) == false)
+					return _presenter.GetValue(property);
 
-      public IconBase Icon { get; }
+				if (_owner != null && _owner.IsDefaultValue(property) == false)
+					return _owner.GetValue(property);
 
-      public DependencyObject Owner
-      {
-        set
-        {
-          if (ReferenceEquals(_owner, value))
-            return;
+				return value ?? GetValue(property);
+			}
 
-          _owner = value;
+			public void UpdateActualValue(DependencyProperty property, object value)
+			{
+				SetValue(property, GetActualValueInt(property, value));
+			}
 
-          UpdateAttachedProperties();
-        }
-      }
+			private void UpdateAttachedProperties()
+			{
+				foreach (var property in Icon.PropertiesCore)
+					SetValue(property, GetActualValue(property));
+			}
+		}
 
-      public IconPresenterBase Presenter
-      {
-        set
-        {
-          if (ReferenceEquals(_presenter, value))
-            return;
+		private static class PackedDefinition
+		{
+			public static readonly PackedBoolItemDefinition IsBusy;
 
-          _presenter = value;
+			static PackedDefinition()
+			{
+				var allocator = new PackedValueAllocator();
 
-          UpdateAttachedProperties();
-        }
-      }
+				IsBusy = allocator.AllocateBoolItem();
+			}
+		}
+	}
 
-      #endregion
+	internal interface IIconOwner
+	{
+		IconBase Icon { get; set; }
+	}
 
-      #region  Methods
-
-      public object GetActualValue(DependencyProperty property)
-      {
-        return GetActualValueInt(property, null);
-      }
-
-      private object GetActualValueInt(DependencyProperty property, object value)
-      {
-        if (_presenter != null && _presenter.IsDefaultValue(property) == false)
-          return _presenter.GetValue(property);
-
-        if (_owner != null && _owner.IsDefaultValue(property) == false)
-          return _owner.GetValue(property);
-
-        return value ?? GetValue(property);// Default.GetValue(property);
-      }
-
-      public void UpdateActualValue(DependencyProperty property, object value)
-      {
-        SetValue(property, GetActualValueInt(property, value));
-      }
-
-      private void UpdateAttachedProperties()
-      {
-        foreach (var property in Icon.PropertiesCore)
-          SetValue(property, GetActualValue(property));
-      }
-
-      #endregion
-    }
-
-    private static class PackedDefinition
-    {
-      #region Static Fields and Constants
-
-      public static readonly PackedBoolItemDefinition IsBusy;
-
-      #endregion
-
-      #region Ctors
-
-      static PackedDefinition()
-      {
-        var allocator = new PackedValueAllocator();
-
-        IsBusy = allocator.AllocateBoolItem();
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
-
-  internal interface IIconOwner
-  {
-    #region Properties
-
-    IconBase Icon { get; set; }
-
-    #endregion
-  }
-
-  public abstract class IconSelector
-  {
-    #region  Methods
-
-    protected abstract IconBase Select(object itemSource);
-
-    #endregion
-  }
+	public abstract class IconSelector
+	{
+		protected abstract IconBase Select(object itemSource);
+	}
 }

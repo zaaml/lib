@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -28,13 +29,13 @@ namespace Zaaml.UI.Controls.Editors.Core
 		public bool IsEditing
 		{
 			get => (bool) GetValue(IsEditingProperty);
-			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value);
+			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value.Box());
 		}
 
 		public bool IsReadOnly
 		{
 			get => (bool) GetValue(IsReadOnlyProperty);
-			set => SetValue(IsReadOnlyProperty, value);
+			set => SetValue(IsReadOnlyProperty, value.Box());
 		}
 
 		public bool BeginEdit()

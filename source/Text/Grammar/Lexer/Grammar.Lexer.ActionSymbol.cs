@@ -10,12 +10,14 @@ namespace Zaaml.Text
 		{
 			protected internal sealed class ActionSymbol : Symbol
 			{
-				public ActionSymbol(Lexer<TToken>.ActionEntry action)
+				public ActionSymbol(ActionSyntax actionSyntax)
 				{
-					Action = action;
+					ActionSyntax = actionSyntax;
 				}
 
-				public Lexer<TToken>.ActionEntry Action { get; }
+				public Lexer<TToken>.ActionEntry Action => ActionSyntax.ActionEntry;
+
+				public ActionSyntax ActionSyntax { get; }
 			}
 		}
 	}

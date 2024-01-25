@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Markup;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
@@ -92,7 +93,10 @@ namespace Zaaml.UI.Controls.ScrollView
 		private EventHandler _layoutUpdateHandler;
 		private object _logicalChild;
 		private byte _packedValue;
+		private ScrollInfo _scrollInfo;
 		private ScrollViewPanelBase _scrollViewPanel;
+
+		internal event EventHandler<ScrollInfoChangedEventArgs> ScrollInfoChangedInternal;
 
 		internal ScrollViewControlBase()
 		{
@@ -103,6 +107,8 @@ namespace Zaaml.UI.Controls.ScrollView
 			get => (Visibility) GetValue(ActualHorizontalScrollBarVisibilityProperty);
 			private set => this.SetReadOnlyValue(ActualHorizontalScrollBarVisibilityPropertyKey, value);
 		}
+
+		internal ScrollInfo ActualScrollInfoInternal => new(new Vector(HorizontalOffset, VerticalOffset), new Size(ViewportWidth, ViewportHeight), new Size(ExtentWidth, ExtentHeight));
 
 		private IScrollViewPanel ActualScrollViewPanel => ScrollViewPanel ?? DummyScrollViewPanel.Instance;
 
@@ -196,8 +202,8 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		public bool PreserveScrollBarVisibility
 		{
-			get => (bool) GetValue(PreserveScrollBarVisibilityProperty);
-			set => SetValue(PreserveScrollBarVisibilityProperty, value);
+			get => (bool)GetValue(PreserveScrollBarVisibilityProperty);
+			set => SetValue(PreserveScrollBarVisibilityProperty, value.Box());
 		}
 
 		public double ScrollableHeight
@@ -212,7 +218,21 @@ namespace Zaaml.UI.Controls.ScrollView
 			private set => this.SetReadOnlyValue(ScrollableWidthPropertyKey, value);
 		}
 
-		private ScrollInfo ScrollInfo { get; set; }
+		private ScrollInfo ScrollInfo
+		{
+			get => _scrollInfo;
+			set
+			{
+				if (_scrollInfo.Equals(value))
+					return;
+
+				var oldScrollInfo = _scrollInfo;
+
+				_scrollInfo = value;
+
+				OnScrollInfoChanged(oldScrollInfo, value);
+			}
+		}
 
 		protected ScrollViewPanelBase ScrollViewPanel
 		{
@@ -223,9 +243,7 @@ namespace Zaaml.UI.Controls.ScrollView
 					return;
 
 				if (_scrollViewPanel != null)
-				{
 					_scrollViewPanel.ScrollInfoChanged -= OnScrollInfoChanged;
-				}
 
 				_scrollViewPanel = value;
 
@@ -250,7 +268,7 @@ namespace Zaaml.UI.Controls.ScrollView
 			set => PackedDefinition.SuspendOffsetHandler.SetValue(ref _packedValue, value);
 		}
 
-		private ScrollViewControlBaseTemplateContract TemplateContract => (ScrollViewControlBaseTemplateContract) TemplateContractInternal;
+		private ScrollViewControlBaseTemplateContract TemplateContract => (ScrollViewControlBaseTemplateContract) TemplateContractCore;
 
 		public double VerticalOffset
 		{
@@ -533,10 +551,8 @@ namespace Zaaml.UI.Controls.ScrollView
 						remeasure = true;
 					}
 
-					if (remeasure)
-					{
+					if (remeasure) 
 						layoutContext.OnDescendantMeasureDirty(this);
-					}
 				}
 
 				return result;
@@ -632,6 +648,11 @@ namespace Zaaml.UI.Controls.ScrollView
 			ScrollViewPanel?.UpdateScrollInfoInternal();
 
 			OnScrollBarDragCompleted(scrollBar);
+		}
+
+		private void OnScrollInfoChanged(ScrollInfo oldScrollInfo, ScrollInfo newScrollInfo)
+		{
+			ScrollInfoChangedInternal?.Invoke(this, new ScrollInfoChangedEventArgs(oldScrollInfo, newScrollInfo));
 		}
 
 		private void OnScrollInfoChanged(object sender, ScrollInfoChangedEventArgs e)
@@ -948,7 +969,7 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		internal TScrollViewPresenter ScrollViewPresenterInternal => TemplateContract.ScrollViewPresenterInternal;
 
-		private ScrollViewControlBaseTemplateContract<TScrollViewPresenter, TScrollContentPanel> TemplateContract => (ScrollViewControlBaseTemplateContract<TScrollViewPresenter, TScrollContentPanel>) TemplateContractInternal;
+		private ScrollViewControlBaseTemplateContract<TScrollViewPresenter, TScrollContentPanel> TemplateContract => (ScrollViewControlBaseTemplateContract<TScrollViewPresenter, TScrollContentPanel>) TemplateContractCore;
 
 		internal override void OnChildChangedInternal(FrameworkElement oldChild, FrameworkElement newChild)
 		{

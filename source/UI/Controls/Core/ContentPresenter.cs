@@ -14,12 +14,8 @@ using TriggerCollection = Zaaml.PresentationCore.Interactivity.TriggerCollection
 
 namespace Zaaml.UI.Controls.Core
 {
-#if SILVERLIGHT
-  public partial class ContentPresenter : System.Windows.Controls.ContentPresenter
-#else
 	[ContentProperty(nameof(Content))]
 	public class ContentPresenter : System.Windows.Controls.ContentPresenter
-#endif
 	{
 		private static readonly DependencyPropertyKey ActualHasContentPropertyKey = DPM.RegisterReadOnly<bool, ContentPresenter>
 			("ActualHasContent", false, c => c.OnActualHasContentPropertyChanged);

@@ -2,8 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-#if true
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,7 +13,7 @@ namespace Zaaml.Text
 	{
 		private sealed partial class ParserAutomata
 		{
-			private IEnumerable<ParserProduction> DeriveLeftRecursionProductions(ParserRule parserRule, ParserProduction parserProduction, HashSet<Rule> hashSet)
+			private IEnumerable<ParserProduction> DeriveLeftRecursionProductions(ParserSyntax parserRule, ParserProduction parserProduction, HashSet<Syntax> hashSet)
 			{
 				if (IsLeftRecursion(parserRule, parserProduction, out var entryOffset))
 				{
@@ -29,10 +27,10 @@ namespace Zaaml.Text
 					yield break;
 				}
 
-				if (parserProduction.Entries[entryOffset] is not ParserRuleEntry derivedRuleEntry)
+				if (parserProduction.Entries[entryOffset] is not ParserSyntaxEntry derivedRuleEntry)
 					yield break;
 
-				var derivedRule = derivedRuleEntry.Rule;
+				var derivedRule = derivedRuleEntry.Syntax;
 
 				foreach (var production in derivedRule.Productions)
 				{
@@ -58,24 +56,24 @@ namespace Zaaml.Text
 				}
 			}
 
-			private void EliminateLeftRecursion(ParserRule parserRule)
+			private void EliminateLeftRecursion(ParserSyntax parserSyntax)
 			{
-				HandleIndirectLeftRecursion(parserRule);
+				HandleIndirectLeftRecursion(parserSyntax);
 
 				var hasLeftRecursion = false;
-				var productions = parserRule.Productions;
+				var productions = parserSyntax.Productions;
 
 				foreach (var parserProduction in productions.Cast<ParserProduction>())
-					hasLeftRecursion |= IsLeftRecursion(parserRule, parserProduction, out _);
+					hasLeftRecursion |= IsLeftRecursion(parserSyntax, parserProduction, out _);
 
 				if (hasLeftRecursion == false)
 					return;
 
-				var tailGrammarNode = new Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax($"{parserRule.Name}Tail", true);
+				var tailGrammarNode = new Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax($"{parserSyntax.Name}Tail", true);
 				var tailGrammarNodeEntry = new Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol(tailGrammarNode);
 				var tailGrammarQuantifierSymbol = new Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol(tailGrammarNodeEntry, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
-				var tailRule = new ParserRule(tailGrammarNode);
-				var tailRuleProductions = new List<ParserProduction>();
+				var tailSyntax = new ParserSyntax(tailGrammarNode);
+				var tailSyntaxProductions = new List<ParserProduction>();
 
 				var tailProductionAdded = false;
 
@@ -85,7 +83,7 @@ namespace Zaaml.Text
 
 					productions[index] = null;
 
-					if (IsLeftRecursion(parserRule, parserProduction, out var entryOffset))
+					if (IsLeftRecursion(parserSyntax, parserProduction, out var entryOffset))
 					{
 						var entries = new List<Entry>();
 
@@ -99,12 +97,12 @@ namespace Zaaml.Text
 
 						var recurseProduction = new ParserProduction(this, p => new LeftRecursionBinder(p, LeftRecursionBinderKind.Recurse), entries, parserProduction, parserProduction);
 
-						tailRuleProductions.Add(recurseProduction);
+						tailSyntaxProductions.Add(recurseProduction);
 					}
 					else
 					{
-						var tailRuleEntry = new ParserRuleEntry(tailGrammarNodeEntry, tailRule);
-						var tailQuantifier = new ParserQuantifierEntry(tailGrammarQuantifierSymbol, tailRuleEntry, QuantifierHelper.GetRange(QuantifierKind.ZeroOrMore), QuantifierMode.Greedy);
+						var tailSyntaxEntry = new ParserSyntaxEntry(tailGrammarNodeEntry, tailSyntax);
+						var tailQuantifier = new ParserQuantifierEntry(tailGrammarQuantifierSymbol, tailSyntaxEntry, QuantifierHelper.GetRange(QuantifierKind.ZeroOrMore), QuantifierMode.Greedy);
 						var tailProduction = new ParserProduction(this, p => new LeftRecursionBinder(p, LeftRecursionBinderKind.Tail), parserProduction.Entries.Append(tailQuantifier), parserProduction, parserProduction);
 
 						productions[index] = tailProduction;
@@ -113,10 +111,10 @@ namespace Zaaml.Text
 					}
 				}
 
-				foreach (var tailProduction in tailRuleProductions)
-					tailRule.Productions.Add(tailProduction);
+				foreach (var tailProduction in tailSyntaxProductions)
+					tailSyntax.Productions.Add(tailProduction);
 
-				EliminateLeftRecursion(tailRule);
+				EliminateLeftRecursion(tailSyntax);
 
 				for (var i = 0; i < productions.Count; i++)
 				{
@@ -129,17 +127,17 @@ namespace Zaaml.Text
 
 				if (tailProductionAdded == false)
 				{
-					var tailRuleEntry = new ParserRuleEntry(tailGrammarNodeEntry, tailRule);
-					var tailQuantifier = new ParserQuantifierEntry(tailGrammarQuantifierSymbol, tailRuleEntry, QuantifierHelper.GetRange(QuantifierKind.ZeroOrMore), QuantifierMode.Greedy);
-					var tailProduction = new ParserProduction(this, p => new LeftRecursionBinder(p, LeftRecursionBinderKind.Tail), new Entry[]{ tailQuantifier }, null, null);
+					var tailSyntaxEntry = new ParserSyntaxEntry(tailGrammarNodeEntry, tailSyntax);
+					var tailQuantifier = new ParserQuantifierEntry(tailGrammarQuantifierSymbol, tailSyntaxEntry, QuantifierHelper.GetRange(QuantifierKind.ZeroOrMore), QuantifierMode.Greedy);
+					var tailProduction = new ParserProduction(this, p => new LeftRecursionBinder(p, LeftRecursionBinderKind.Tail), new Entry[] { tailQuantifier }, null, null);
 
 					productions.Add(tailProduction);
 				}
 			}
 
-			private void HandleIndirectLeftRecursion(ParserRule parserRule)
+			private void HandleIndirectLeftRecursion(ParserSyntax parserRule)
 			{
-				var hashSet = new HashSet<Rule>();
+				var hashSet = new HashSet<Syntax>();
 
 				for (var index = 0; index < parserRule.Productions.Count; index++)
 				{
@@ -162,12 +160,12 @@ namespace Zaaml.Text
 				}
 			}
 
-			private static bool IsIndirectLeftRecursive(ParserRule parserRule, Rule derivedRule, HashSet<Rule> rules)
+			private static bool IsIndirectLeftRecursive(ParserSyntax parserRule, Syntax derivedRule, HashSet<Syntax> rules)
 			{
 				return ReferenceEquals(parserRule, derivedRule) || derivedRule.Productions.Cast<ParserProduction>().Any(p => IsIndirectLeftRecursive(parserRule, p, rules));
 			}
 
-			private static bool IsIndirectLeftRecursive(ParserRule parserRule, ParserProduction parserProduction, HashSet<Rule> rules)
+			private static bool IsIndirectLeftRecursive(ParserSyntax parserRule, ParserProduction parserProduction, HashSet<Syntax> rules)
 			{
 				if (parserProduction.Entries.Length == 0)
 					return false;
@@ -182,10 +180,10 @@ namespace Zaaml.Text
 
 				var entry = parserProduction.Entries[entryOffset];
 
-				if (entry is not ParserRuleEntry parserRuleEntry)
+				if (entry is not ParserSyntaxEntry parserRuleEntry)
 					return false;
 
-				var derivedRule = parserRuleEntry.Rule;
+				var derivedRule = parserRuleEntry.Syntax;
 
 				if (rules.Add(derivedRule) == false)
 					return false;
@@ -197,7 +195,7 @@ namespace Zaaml.Text
 				return isIndirectLeftRecursive;
 			}
 
-			private static bool IsLeftRecursion(ParserRule parserRule, ParserProduction parserProduction, out int entryOffset)
+			private static bool IsLeftRecursion(ParserSyntax parserRule, ParserProduction parserProduction, out int entryOffset)
 			{
 				entryOffset = 0;
 
@@ -222,9 +220,9 @@ namespace Zaaml.Text
 				};
 			}
 
-			private static bool IsRecursion(ParserRule rule, Entry entry)
+			private static bool IsRecursion(ParserSyntax rule, Entry entry)
 			{
-				return entry is ParserRuleEntry parserStateEntry && ReferenceEquals(parserStateEntry.Rule, rule);
+				return entry is ParserSyntaxEntry parserStateEntry && ReferenceEquals(parserStateEntry.Syntax, rule);
 			}
 
 			private enum LeftRecursionBinderKind
@@ -254,4 +252,3 @@ namespace Zaaml.Text
 		}
 	}
 }
-#endif

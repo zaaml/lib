@@ -8,73 +8,53 @@ using System.Windows;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public abstract class ResourceSkinBase : DependencyObject, IResourceValue
-  {
-    #region Fields
+	public abstract class ResourceSkinBase : DependencyObject, IResourceValue
+	{
+		private string _actualKey;
+		private SkinResourceManager _manager;
+		internal event EventHandler ResourceChanged;
 
-    private string _actualKey;
-    private SkinResourceManager _manager;
-    internal event EventHandler ResourceChanged;
+		internal string ActualKey
+		{
+			get => _actualKey;
+			set
+			{
+				if (string.Equals(_actualKey, value, StringComparison.OrdinalIgnoreCase))
+					return;
 
-    #endregion
+				_actualKey = value;
+			}
+		}
 
-    #region Properties
+		protected abstract object FrozenValue { get; }
 
-    internal string ActualKey
-    {
-      get => _actualKey;
-      set
-      {
-        if (string.Equals(_actualKey, value, StringComparison.OrdinalIgnoreCase))
-          return;
+		internal object FrozenValueInternal => FrozenValue;
 
-        _actualKey = value;
-      }
-    }
+		internal SkinResourceManager Manager
+		{
+			get => _manager;
+			set
+			{
+				if (ReferenceEquals(_manager, value))
+					return;
 
-    protected abstract object FrozenValue { get; }
+				_manager = value;
+			}
+		}
 
-    internal object FrozenValueInternal => FrozenValue;
+		protected abstract IEnumerable<DependencyProperty> Properties { get; }
 
-    internal SkinResourceManager Manager
-    {
-      get => _manager;
-      set
-      {
-        if (ReferenceEquals(_manager, value))
-          return;
+		protected abstract object Value { get; }
 
-        _manager = value;
-      }
-    }
+		protected virtual void OnResourceChanged()
+		{
+			ResourceChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    protected abstract IEnumerable<DependencyProperty> Properties { get; }
-
-    protected abstract object Value { get; }
-
-    #endregion
-
-    #region  Methods
-
-    protected virtual void OnResourceChanged()
-    {
-      ResourceChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IResourceValue
-
-    string IResourceValue.Key
-    {
-      get => ActualKey;
-      set => ActualKey = value;
-    }
-
-    #endregion
-
-    #endregion
-  }
+		string IResourceValue.Key
+		{
+			get => ActualKey;
+			set => ActualKey = value;
+		}
+	}
 }

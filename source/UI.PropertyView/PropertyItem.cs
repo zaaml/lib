@@ -11,7 +11,7 @@ namespace Zaaml.UI.Controls.PropertyView
 {
 	public abstract class PropertyItem : PropertyItemBase
 	{
-		protected static readonly ReadOnlyCollection<PropertyItem> EmptyChildPropertyItems = new ReadOnlyCollection<PropertyItem>(new List<PropertyItem>());
+		protected static readonly ReadOnlyCollection<PropertyItem> EmptyChildPropertyItems = new(new List<PropertyItem>());
 
 		private IReadOnlyCollection<PropertyItem> _childPropertyItems;
 		internal event EventHandler ValueChangedInternal;
@@ -22,28 +22,11 @@ namespace Zaaml.UI.Controls.PropertyView
 			ParentItem = parentItem;
 		}
 
-		public IReadOnlyCollection<PropertyItem> ChildPropertyItems => _childPropertyItems ??= IsComposite ? CreateChildPropertyItems() : EmptyChildPropertyItems;
+		public IReadOnlyCollection<PropertyItem> ChildPropertyItems => _childPropertyItems ??= CreateChildPropertyItems();
 
 		public override string Description => PropertyDescriptorBaseCore.Description;
 
 		public override string DisplayName => PropertyDescriptorBaseCore.DisplayName;
-
-		private bool IsComposite
-		{
-			get
-			{
-				var propertyType = PropertyDescriptorBaseCore.PropertyType;
-
-				//return propertyType.IsValueType &&
-				//       propertyType.IsPrimitive == false &&
-				//       propertyType.IsEnum == false;
-				
-				if (propertyType == typeof(string))
-					return false;
-
-				return true;
-			}
-		}
 
 		public abstract bool IsReadOnly { get; }
 
@@ -101,7 +84,7 @@ namespace Zaaml.UI.Controls.PropertyView
 		internal override object RawValueInternal
 		{
 			get => Value;
-			set => Value = (T) value;
+			set => Value = (T)value;
 		}
 
 		public abstract T Value { get; set; }
@@ -116,12 +99,13 @@ namespace Zaaml.UI.Controls.PropertyView
 			if (propertyDescriptors == null || propertyDescriptors.Count == 0)
 				return EmptyChildPropertyItems;
 
-			var propertyItems = new List<PropertyItem>();
+			List<PropertyItem> propertyItems = null;
 
 			foreach (var propertyDescriptor in propertyDescriptors)
 			{
-				if (propertyDescriptor is IPropertyItemFactory<T> itemFactory)
+				if (propertyDescriptor is IPropertyItemFactory itemFactory)
 				{
+					propertyItems ??= new();
 					propertyItems.Add(itemFactory.CreatePropertyItem(propertyObject, this));
 				}
 			}
@@ -129,10 +113,13 @@ namespace Zaaml.UI.Controls.PropertyView
 			if (PropertyDescriptorInternal is ICollectionPropertyItemFactory<T> collectionPropertyItemFactory)
 			{
 				foreach (var propertyItem in collectionPropertyItemFactory.CreatePropertyItems(propertyObject, this))
+				{
+					propertyItems ??= new();
 					propertyItems.Add(propertyItem);
+				}
 			}
 
-			return new ReadOnlyCollection<PropertyItem>(propertyItems);
+			return propertyItems != null ? new ReadOnlyCollection<PropertyItem>(propertyItems) : EmptyChildPropertyItems;
 		}
 
 		protected virtual void OnValueChanged(T oldValue, T newValue)

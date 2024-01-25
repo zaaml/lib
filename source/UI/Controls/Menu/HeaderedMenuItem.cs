@@ -110,7 +110,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		internal override TimeSpan OpenCloseDelay => ActualRole == MenuItemRole.TopLevelHeaderPopup ? TimeSpan.FromMilliseconds(10) : MenuController.HoverDelay;
 
-		private HeaderedMenuItemTemplateContract TemplateContract => (HeaderedMenuItemTemplateContract) TemplateContractInternal;
+		private HeaderedMenuItemTemplateContract TemplateContract => (HeaderedMenuItemTemplateContract) TemplateContractCore;
 
 		#endregion
 

@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -76,19 +77,19 @@ namespace Zaaml.UI.Controls.DropDown
 		public bool IsEditing
 		{
 			get => (bool) GetValue(IsEditingProperty);
-			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value);
+			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value.Box());
 		}
 
 		public bool IsTextEditable
 		{
 			get => (bool) GetValue(IsTextEditableProperty);
-			set => SetValue(IsTextEditableProperty, value);
+			set => SetValue(IsTextEditableProperty, value.Box());
 		}
 
 		public bool OpenDropDownOnEditing
 		{
 			get => (bool) GetValue(OpenDropDownOnEditingProperty);
-			set => SetValue(OpenDropDownOnEditingProperty, value);
+			set => SetValue(OpenDropDownOnEditingProperty, value.Box());
 		}
 
 		public TimeSpan PostEditorTextDelay
@@ -135,7 +136,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			UpdateActualDisplayMode();
 
-			this.SetCurrentValueInternal(IsTabStopProperty, newValue ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsTabStopProperty, newValue ? BooleanBoxes.True : BooleanBoxes.False);
 		}
 
 		protected override void OnTemplateContractAttached()

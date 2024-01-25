@@ -10,7 +10,7 @@ namespace Zaaml.Text
 		{
 			public readonly SubGraph SubGraph;
 
-			protected SubGraphNode(Automata<TInstruction, TOperand> automata, Graph graph, SubGraph subGraph, ThreadStatusKind threadStatusKind = ThreadStatusKind.Run) : base(automata, graph, threadStatusKind)
+			protected SubGraphNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, SubGraph subGraph, ThreadStatusKind threadStatusKind = ThreadStatusKind.Run) : base(automata, syntaxGraph, threadStatusKind)
 			{
 				SubGraph = subGraph;
 			}

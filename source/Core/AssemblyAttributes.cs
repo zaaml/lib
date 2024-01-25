@@ -47,6 +47,9 @@ using Zaaml.Core.Converters;
 [assembly: InternalsVisibleTo("Zaaml.Themes.Metro,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
+[assembly: InternalsVisibleTo("Zaaml.Themes.Code,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
 [assembly: InternalsVisibleTo("Zaaml.Platform,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 

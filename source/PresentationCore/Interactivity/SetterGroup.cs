@@ -10,167 +10,155 @@ using Zaaml.PresentationCore.Animation;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  [ContentProperty("Setters")]
-  public sealed class SetterGroup : PropertyValueSetter
-  {
-    #region Fields
+	[ContentProperty("Setters")]
+	public sealed class SetterGroup : PropertyValueSetter
+	{
+		private SetterCollection _setters;
 
-    private SetterCollection _setters;
+		internal IEnumerable<PropertyValueSetter> ActualPropertySetters => ActualSetters.Select(s => s.ActualSetter).OfType<PropertyValueSetter>();
 
-    #endregion
+		internal IEnumerable<SetterBase> ActualSetters => _setters ?? Enumerable.Empty<SetterBase>();
 
-    #region Properties
+		internal override IEnumerable<InteractivityObject> Children => _setters == null ? base.Children : base.Children.Concat(_setters);
 
-    internal IEnumerable<PropertyValueSetter> ActualPropertySetters => ActualSetters.Select(s => s.ActualSetter).OfType<PropertyValueSetter>();
+		public SetterCollection Setters => _setters ??= CreateSetterCollection();
 
-    internal IEnumerable<SetterBase> ActualSetters => _setters ?? Enumerable.Empty<SetterBase>();
+		public SetterCollection SettersSource
+		{
+			// TODO Inspect this
+			get => _setters?.CloneParent;
+			set
+			{
+				if (ReferenceEquals(_setters, value))
+					return;
 
-    internal override IEnumerable<InteractivityObject> Children => _setters == null ? base.Children : base.Children.Concat(_setters);
+				IInteractivityRoot root = null;
 
-    public SetterCollection Setters => _setters ??= CreateSetterCollection();
+				var isLoaded = IsLoaded;
 
-    public SetterCollection SettersSource
-    {
-      // TODO Inspect this
-      get => _setters?.CloneParent;
-      set
-      {
-        if (ReferenceEquals(_setters, value))
-          return;
+				if (_setters != null)
+					if (isLoaded)
+						_setters.Unload(root = Root);
 
-        IInteractivityRoot root = null;
+				_setters = value?.DeepCloneCollection<SetterCollection, SetterBase>(this);
 
-        var isLoaded = IsLoaded;
+				if (_setters != null)
+					if (isLoaded)
+						_setters.Load(root);
+			}
+		}
 
-        if (_setters != null)
-          if (isLoaded)
-            _setters.Unload(root = Root);
+		protected override bool ApplyCore()
+		{
+			foreach (var setter in ActualSetters)
+				setter.Apply();
 
-        _setters = value?.DeepCloneCollection<SetterCollection, SetterBase>(this);
+			return true;
+		}
 
-        if (_setters != null)
-          if (isLoaded)
-            _setters.Load(root);
-      }
-    }
+		protected internal override void CopyMembersOverride(InteractivityObject source)
+		{
+			base.CopyMembersOverride(source);
 
-    #endregion
+			var groupSetter = (SetterGroup)source;
 
-    #region  Methods
+			_setters = groupSetter._setters?.DeepCloneCollection<SetterCollection, SetterBase>(this);
 
-    protected override bool ApplyCore()
-    {
-      foreach (var setter in ActualSetters)
-        setter.Apply();
+			ValueResolver.CopyFrom(this, groupSetter);
+		}
 
-      return true;
-    }
+		protected override InteractivityObject CreateInstance()
+		{
+			return new SetterGroup();
+		}
 
-    protected internal override void CopyMembersOverride(InteractivityObject source)
-    {
-      base.CopyMembersOverride(source);
+		private SetterCollection CreateSetterCollection()
+		{
+			return new SetterCollection(this);
+		}
 
-      var groupSetter = (SetterGroup) source;
+		internal override void LoadCore(IInteractivityRoot root)
+		{
+			base.LoadCore(root);
 
-      _setters = groupSetter._setters?.DeepCloneCollection<SetterCollection, SetterBase>(this);
+			_setters?.Load(root);
+		}
 
-      ValueResolver.CopyFrom(this, groupSetter);
-    }
+		protected override void OnActualPriorityChanged(short oldPriority, short newPriority)
+		{
+			base.OnActualPriorityChanged(oldPriority, newPriority);
 
-    protected override InteractivityObject CreateInstance()
-    {
-      return new SetterGroup();
-    }
+			foreach (var setter in ActualPropertySetters)
+				setter.OnParentActualPriorityChanged(oldPriority, newPriority);
+		}
 
-    private SetterCollection CreateSetterCollection()
-    {
-      return new SetterCollection(this);
-    }
+		protected override void OnActualPropertyChanged(DependencyProperty oldProperty, DependencyProperty newProperty)
+		{
+			base.OnActualPropertyChanged(oldProperty, newProperty);
 
-    internal override void LoadCore(IInteractivityRoot root)
-    {
-      base.LoadCore(root);
+			foreach (var setter in ActualPropertySetters)
+				setter.OnParentActualPropertyChanged(oldProperty, newProperty);
+		}
 
-      _setters?.Load(root);
-    }
+		protected override void OnActualTargetChanged(DependencyObject oldTarget, DependencyObject newTarget)
+		{
+			base.OnActualTargetChanged(oldTarget, newTarget);
 
-    protected override void OnActualPriorityChanged(short oldPriority, short newPriority)
-    {
-      base.OnActualPriorityChanged(oldPriority, newPriority);
+			foreach (var setter in ActualPropertySetters)
+				setter.OnParentActualTargetChanged(oldTarget, newTarget);
+		}
 
-      foreach (var setter in ActualPropertySetters)
-        setter.OnParentActualPriorityChanged(oldPriority, newPriority);
-    }
+		protected override void OnActualTransitionChanged(Transition oldTransition, Transition newTransition)
+		{
+			base.OnActualTransitionChanged(oldTransition, newTransition);
 
-    protected override void OnActualPropertyChanged(DependencyProperty oldProperty, DependencyProperty newProperty)
-    {
-      base.OnActualPropertyChanged(oldProperty, newProperty);
+			foreach (var setter in ActualPropertySetters)
+				setter.OnParentActualTransitionChanged(oldTransition, newTransition);
+		}
 
-      foreach (var setter in ActualPropertySetters)
-        setter.OnParentActualPropertyChanged(oldProperty, newProperty);
-    }
+		protected override void OnActualValueChanged(object oldValue, object newValue)
+		{
+			base.OnActualValueChanged(oldValue, newValue);
 
-    protected override void OnActualTargetChanged(DependencyObject oldTarget, DependencyObject newTarget)
-    {
-      base.OnActualTargetChanged(oldTarget, newTarget);
+			foreach (var setter in ActualPropertySetters)
+				setter.OnParentActualValueChanged(oldValue, newValue);
+		}
 
-      foreach (var setter in ActualPropertySetters)
-        setter.OnParentActualTargetChanged(oldTarget, newTarget);
-    }
+		protected override void OnActualValuePathChanged(string oldValuePath, string newValuePath)
+		{
+			base.OnActualValuePathChanged(oldValuePath, newValuePath);
 
-    protected override void OnActualTransitionChanged(Transition oldTransition, Transition newTransition)
-    {
-      base.OnActualTransitionChanged(oldTransition, newTransition);
+			foreach (var setter in ActualPropertySetters)
+				setter.OnParentActualValuePathChanged(oldValuePath, newValuePath);
+		}
 
-      foreach (var setter in ActualPropertySetters)
-        setter.OnParentActualTransitionChanged(oldTransition, newTransition);
-    }
+		protected override void OnActualValuePathSourceChanged(ValuePathSource oldValuePathSource, ValuePathSource newValuePathSource)
+		{
+			base.OnActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
 
-    protected override void OnActualValueChanged(object oldValue, object newValue)
-    {
-      base.OnActualValueChanged(oldValue, newValue);
+			foreach (var setter in ActualPropertySetters)
+				setter.OnParentActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
+		}
 
-      foreach (var setter in ActualPropertySetters)
-        setter.OnParentActualValueChanged(oldValue, newValue);
-    }
+		protected override void OnActualVisualStateChanged(string oldVisualState, string newVisualState)
+		{
+			base.OnActualVisualStateChanged(oldVisualState, newVisualState);
 
-    protected override void OnActualValuePathChanged(string oldValuePath, string newValuePath)
-    {
-      base.OnActualValuePathChanged(oldValuePath, newValuePath);
+			foreach (var setter in ActualPropertySetters)
+				setter.OnParentActualVisualStateChanged(oldVisualState, newVisualState);
+		}
 
-      foreach (var setter in ActualPropertySetters)
-        setter.OnParentActualValuePathChanged(oldValuePath, newValuePath);
-    }
+		protected override void UndoCore()
+		{
+			foreach (var setter in ActualSetters)
+				setter.Undo();
+		}
 
-    protected override void OnActualValuePathSourceChanged(ValuePathSource oldValuePathSource, ValuePathSource newValuePathSource)
-    {
-      base.OnActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
+		internal override void UnloadCore(IInteractivityRoot root)
+		{
+			_setters?.Unload(root);
 
-      foreach (var setter in ActualPropertySetters)
-        setter.OnParentActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
-    }
-
-    protected override void OnActualVisualStateChanged(string oldVisualState, string newVisualState)
-    {
-      base.OnActualVisualStateChanged(oldVisualState, newVisualState);
-
-      foreach (var setter in ActualPropertySetters)
-        setter.OnParentActualVisualStateChanged(oldVisualState, newVisualState);
-    }
-
-    protected override void UndoCore()
-    {
-      foreach (var setter in ActualSetters)
-        setter.Undo();
-    }
-
-    internal override void UnloadCore(IInteractivityRoot root)
-    {
-      _setters?.Unload(root);
-
-      base.UnloadCore(root);
-    }
-
-    #endregion
-  }
+			base.UnloadCore(root);
+		}
+	}
 }

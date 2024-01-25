@@ -5,16 +5,14 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media.Animation;
-using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Data;
-using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Animation
 {
-	public abstract class AnimationTimeline : AssetBase, ITimeline
+	public abstract class AnimationTimeline : AssetBase, ITimelineClockCallback
 	{
 		public static readonly DependencyProperty BeginTimeProperty = DPM.Register<TimeSpan?, AnimationTimeline>
 			("BeginTime", null, mt => mt.OnBeginTimePropertyChangedPrivate);
@@ -34,7 +32,11 @@ namespace Zaaml.PresentationCore.Animation
 		public static readonly DependencyProperty DecelerationRatioProperty = DPM.Register<double, AnimationTimeline>
 			("DecelerationRatio", 0.0, mt => mt.OnDecelerationRatioPropertyChangedPrivate);
 
+		public static readonly DependencyProperty InitCommandProperty = DPM.Register<AnimationCommand, AnimationTimeline>
+			("InitCommand");
+
 		private readonly TimelineClock _clock;
+		private Commands _commands;
 		private double _relativeTime;
 
 		public event EventHandler Started;
@@ -45,22 +47,19 @@ namespace Zaaml.PresentationCore.Animation
 		internal AnimationTimeline()
 		{
 			_clock = new TimelineClock(this);
-
-			BeginCommand = new RelayCommand(Begin);
-			PauseCommand = new RelayCommand(Pause);
-			ResumeCommand = new RelayCommand(Resume);
-			StopCommand = new RelayCommand(Stop);
 		}
 
 		public double AccelerationRatio
 		{
-			get => (double) GetValue(AccelerationRatioProperty);
+			get => (double)GetValue(AccelerationRatioProperty);
 			set => SetValue(AccelerationRatioProperty, value);
 		}
 
 		protected virtual double ActualAccelerationRatio => AccelerationRatio;
 
 		protected virtual TimeSpan? ActualBeginTime => BeginTime;
+
+		private Commands ActualCommands => _commands ??= new Commands(this);
 
 		protected virtual double ActualDecelerationRatio => DecelerationRatio;
 
@@ -70,31 +69,37 @@ namespace Zaaml.PresentationCore.Animation
 
 		public bool AutoReverse
 		{
-			get => (bool) GetValue(AutoReverseProperty);
-			set => SetValue(AutoReverseProperty, value);
+			get => (bool)GetValue(AutoReverseProperty);
+			set => SetValue(AutoReverseProperty, value.Box());
 		}
 
-		public ICommand BeginCommand { get; }
+		public ICommand BeginCommand => ActualCommands.BeginCommand;
 
 		public TimeSpan? BeginTime
 		{
-			get => (TimeSpan?) GetValue(BeginTimeProperty);
+			get => (TimeSpan?)GetValue(BeginTimeProperty);
 			set => SetValue(BeginTimeProperty, value);
 		}
 
 		public double DecelerationRatio
 		{
-			get => (double) GetValue(DecelerationRatioProperty);
+			get => (double)GetValue(DecelerationRatioProperty);
 			set => SetValue(DecelerationRatioProperty, value);
 		}
 
 		public Duration Duration
 		{
-			get => (Duration) GetValue(DurationProperty);
+			get => (Duration)GetValue(DurationProperty);
 			set => SetValue(DurationProperty, value);
 		}
 
-		public ICommand PauseCommand { get; }
+		public AnimationCommand InitCommand
+		{
+			get => (AnimationCommand)GetValue(InitCommandProperty);
+			set => SetValue(InitCommandProperty, value);
+		}
+
+		public ICommand PauseCommand => ActualCommands.PauseCommand;
 
 		internal double RelativeTime
 		{
@@ -110,19 +115,30 @@ namespace Zaaml.PresentationCore.Animation
 			}
 		}
 
-		public ICommand ResumeCommand { get; }
+		public ICommand ResumeCommand => ActualCommands.ResumeCommand;
+
+		public ICommand SeekCommand => ActualCommands.SeekCommand;
 
 		public double SpeedRatio
 		{
-			get => (double) GetValue(SpeedRatioProperty);
+			get => (double)GetValue(SpeedRatioProperty);
 			set => SetValue(SpeedRatioProperty, value);
 		}
 
-		public ICommand StopCommand { get; }
+		public ICommand StopCommand => ActualCommands.StopCommand;
+
+		internal TimeSpan Time => _clock.Time;
 
 		public void Begin()
 		{
 			_clock.Begin();
+		}
+
+		protected override void EndInitCore()
+		{
+			base.EndInitCore();
+
+			InitCommand?.Run(this);
 		}
 
 		private void OnAccelerationRatioPropertyChangedPrivate()
@@ -139,6 +155,11 @@ namespace Zaaml.PresentationCore.Animation
 			_clock.AutoReverse = AutoReverse;
 
 			OnAutoReverseChanged();
+		}
+
+		private void OnBeginCommandExecuted(object commandParameter)
+		{
+			Begin();
 		}
 
 		private void OnBeginTimePropertyChangedPrivate()
@@ -161,6 +182,11 @@ namespace Zaaml.PresentationCore.Animation
 			UpdateDuration();
 		}
 
+		private void OnPauseCommandExecuted(object commandParameter)
+		{
+			Pause();
+		}
+
 		protected virtual void OnPaused()
 		{
 			Paused?.Invoke(this, EventArgs.Empty);
@@ -170,9 +196,31 @@ namespace Zaaml.PresentationCore.Animation
 		{
 		}
 
+		private void OnResumeCommandExecuted(object commandParameter)
+		{
+			Resume();
+		}
+
 		protected virtual void OnResumed()
 		{
 			Resumed?.Invoke(this, EventArgs.Empty);
+		}
+
+		private void OnSeekCommandExecuted(object commandParameter)
+		{
+			switch (commandParameter)
+			{
+				case TimeSpan timeSpan:
+					Seek(timeSpan);
+					break;
+				case Duration { HasTimeSpan: true } duration:
+					Seek(duration.TimeSpan);
+					break;
+				case string str:
+					if (TimeSpan.TryParse(str, out var strTimeSpan))
+						Seek(strTimeSpan);
+					break;
+			}
 		}
 
 		private void OnSpeedRatioPropertyChangedPrivate()
@@ -183,6 +231,11 @@ namespace Zaaml.PresentationCore.Animation
 		protected virtual void OnStarted()
 		{
 			Started?.Invoke(this, EventArgs.Empty);
+		}
+
+		private void OnStopCommandExecuted(object commandParameter)
+		{
+			Stop();
 		}
 
 		public void Pause()
@@ -203,6 +256,16 @@ namespace Zaaml.PresentationCore.Animation
 		public void SeekAlignedToLastTick(TimeSpan offset)
 		{
 			_clock.SeekAlignedToLastTick(offset);
+		}
+
+		public void SeekRelative(double relativeTime)
+		{
+			_clock.Seek(_clock.CalculateTime(relativeTime));
+		}
+
+		public void SeekRelativeAlignedToLastTick(double relativeTime)
+		{
+			_clock.SeekAlignedToLastTick(_clock.CalculateTime(relativeTime));
 		}
 
 		public void Stop()
@@ -235,164 +298,51 @@ namespace Zaaml.PresentationCore.Animation
 			_clock.SpeedRatio = ActualSpeedRatio;
 		}
 
-		public void OnRelativeTimeChanged(double time)
+		void ITimelineClockCallback.OnTimeChanged(TimelineClock clock)
 		{
-			RelativeTime = time;
+			RelativeTime = clock.RelativeTime;
 		}
 
-		void ITimeline.OnCompleted()
+		void ITimelineClockCallback.OnCompleted(TimelineClock clock)
 		{
 			OnCompleted();
 		}
 
-		void ITimeline.OnStarted()
+		void ITimelineClockCallback.OnStarted(TimelineClock clock)
 		{
 			OnStarted();
 		}
 
-		void ITimeline.OnPaused()
+		void ITimelineClockCallback.OnPaused(TimelineClock clock)
 		{
 			OnPaused();
 		}
 
-		void ITimeline.OnResumed()
+		void ITimelineClockCallback.OnResumed(TimelineClock clock)
 		{
 			OnResumed();
 		}
-	}
 
-	internal interface ITimeline
-	{
-		void OnCompleted();
-
-		void OnPaused();
-
-		void OnRelativeTimeChanged(double time);
-
-		void OnResumed();
-
-		void OnStarted();
-	}
-
-	internal class TimelineClock : DependencyObject
-	{
-		private static readonly DependencyProperty DoubleProperty = DPM.Register<double, TimelineClock>
-			("Double");
-
-		private static readonly DependencyProperty RelativeTimeProperty = DPM.Register<double, TimelineClock>
-			("RelativeTime", m => m.OnRelativeTimeChanged);
-
-		private readonly ITimeline _animationTimeline;
-
-		private readonly Storyboard _storyboard;
-
-		public TimelineClock(ITimeline animationTimeline)
+		private sealed class Commands
 		{
-			_animationTimeline = animationTimeline;
-
-			var doubleAnimation = new System.Windows.Media.Animation.DoubleAnimation(1, Duration.Automatic);
-
-			Storyboard.SetTargetProperty(doubleAnimation, new PropertyPath(DoubleProperty));
-			Storyboard.SetTarget(doubleAnimation, this);
-
-			_storyboard = new Storyboard
+			public Commands(AnimationTimeline timeline)
 			{
-				Children =
-				{
-					doubleAnimation
-				}
-			};
+				BeginCommand = new RelayCommand(timeline.OnBeginCommandExecuted);
+				PauseCommand = new RelayCommand(timeline.OnPauseCommandExecuted);
+				ResumeCommand = new RelayCommand(timeline.OnResumeCommandExecuted);
+				StopCommand = new RelayCommand(timeline.OnStopCommandExecuted);
+				SeekCommand = new RelayCommand(timeline.OnSeekCommandExecuted);
+			}
 
-			_storyboard.Completed += (sender, args) => _animationTimeline.OnCompleted();
-			_storyboard.CurrentTimeInvalidated += OnCurrentTimeInvalidated;
-		}
+			public ICommand BeginCommand { get; }
 
-		public double AccelerationRatio
-		{
-			get => _storyboard.AccelerationRatio;
-			set => _storyboard.AccelerationRatio = value;
-		}
+			public ICommand PauseCommand { get; }
 
-		public bool AutoReverse
-		{
-			get => _storyboard.AutoReverse;
-			set => _storyboard.AutoReverse = value;
-		}
+			public ICommand ResumeCommand { get; }
 
-		public TimeSpan? BeginTime
-		{
-			get => _storyboard.BeginTime;
-			set => _storyboard.BeginTime = value;
-		}
+			public ICommand SeekCommand { get; }
 
-		public double DecelerationRatio
-		{
-			get => _storyboard.DecelerationRatio;
-			set => _storyboard.DecelerationRatio = value;
-		}
-
-		public Duration Duration
-		{
-			get => _storyboard.Duration;
-			set => _storyboard.Duration = value;
-		}
-
-		public double RelativeTime
-		{
-			get => (double) GetValue(RelativeTimeProperty);
-			private set => SetValue(RelativeTimeProperty, value);
-		}
-
-		public double SpeedRatio
-		{
-			get => _storyboard.SpeedRatio;
-			set => _storyboard.SpeedRatio = value;
-		}
-
-		public void Begin()
-		{
-			_storyboard.Begin();
-			_animationTimeline.OnStarted();
-		}
-
-		private void OnCurrentTimeInvalidated(object sender, EventArgs e)
-		{
-			if (Duration.HasTimeSpan == false)
-				return;
-
-			RelativeTime = Duration.TimeSpan.TotalMilliseconds.IsZero() ? 1.0 : _storyboard.GetCurrentTime().TotalMilliseconds / Duration.TimeSpan.TotalMilliseconds;
-		}
-
-		private void OnRelativeTimeChanged()
-		{
-			_animationTimeline.OnRelativeTimeChanged(this.GetValue<double>(RelativeTimeProperty));
-		}
-
-		public void Pause()
-		{
-			_storyboard.Pause();
-			_animationTimeline.OnPaused();
-		}
-
-		public void Resume()
-		{
-			_storyboard.Resume();
-			_animationTimeline.OnResumed();
-		}
-
-		public void Seek(TimeSpan offset)
-		{
-			_storyboard.Seek(offset);
-		}
-
-		public void SeekAlignedToLastTick(TimeSpan offset)
-		{
-			_storyboard.SeekAlignedToLastTick(offset);
-		}
-
-		public void Stop()
-		{
-			_storyboard.Stop();
+			public ICommand StopCommand { get; }
 		}
 	}
 }

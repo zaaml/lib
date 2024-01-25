@@ -27,6 +27,8 @@
   <zm:Style x:Key="NavigationViewPageBaseStyle" TargetType="zm:NavigationViewPage">
     <zm:Setter Property="Template" Value="{StaticResource NavigationViewPageTemplate}" />
     <zm:Setter Property="Background" Value="#00FFFFFF" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
   </zm:Style>
 
   <!--  Style  -->

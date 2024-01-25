@@ -7,24 +7,14 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-	public sealed class VisualStateTrigger : DelayStateTriggerBase, IVisualStateListener
+	public sealed class VisualStateTrigger : StateTriggerBase, IVisualStateListener
 	{
-		#region Fields
-
 		private string _visualState;
-
-		#endregion
-
-		#region Ctors
 
 		static VisualStateTrigger()
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
 		}
-
-		#endregion
-
-		#region Properties
 
 		private bool IsCurrentState
 		{
@@ -57,10 +47,6 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		private void AttachVisualStateObserver()
 		{
 			if (VisualState == null)
@@ -74,7 +60,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (VisualStateTrigger) source;
+			var triggerSource = (VisualStateTrigger)source;
 
 			VisualState = triggerSource.VisualState;
 		}
@@ -87,13 +73,13 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void DeinitializeTrigger(IInteractivityRoot root)
 		{
 			DetachVisualStateObserver();
-			
+
 			base.DeinitializeTrigger(root);
 		}
 
 		private void DetachVisualStateObserver()
 		{
-			if (VisualState == null) 
+			if (VisualState == null)
 				return;
 
 			GetService<IVisualStateObserver>()?.DetachListener(this);
@@ -104,7 +90,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void InitializeTrigger(IInteractivityRoot root)
 		{
 			AttachVisualStateObserver();
-			
+
 			base.InitializeTrigger(root);
 		}
 
@@ -112,12 +98,6 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			return IsCurrentState ? TriggerState.Opened : TriggerState.Closed;
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IVisualStateListener
 
 		string IVisualStateListener.VisualStateName => VisualState;
 
@@ -131,21 +111,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			IsCurrentState = false;
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedBoolItemDefinition IsCurrentState;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -153,10 +121,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				IsCurrentState = allocator.AllocateBoolItem();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

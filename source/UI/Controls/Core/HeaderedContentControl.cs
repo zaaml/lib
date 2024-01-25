@@ -4,8 +4,10 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Interfaces;
 using ZaamlContentControl = Zaaml.UI.Controls.Core.ContentControl;
@@ -87,29 +89,28 @@ namespace Zaaml.UI.Controls.Core
       set => SetValue(HeaderDockProperty, value);
     }
 
-
     public HorizontalAlignment HorizontalHeaderAlignment
     {
       get => (HorizontalAlignment) GetValue(HorizontalHeaderAlignmentProperty);
-      set => SetValue(HorizontalHeaderAlignmentProperty, value);
+      set => SetValue(HorizontalHeaderAlignmentProperty, value.Box());
     }
 
     public bool ShowContent
     {
       get => (bool) GetValue(ShowContentProperty);
-      set => SetValue(ShowContentProperty, value);
+      set => SetValue(ShowContentProperty, value.Box());
     }
 
     public bool ShowHeader
     {
       get => (bool) GetValue(ShowHeaderProperty);
-      set => SetValue(ShowHeaderProperty, value);
+      set => SetValue(ShowHeaderProperty, value.Box());
     }
 
     public VerticalAlignment VerticalHeaderAlignment
     {
       get => (VerticalAlignment) GetValue(VerticalHeaderAlignmentProperty);
-      set => SetValue(VerticalHeaderAlignmentProperty, value);
+      set => SetValue(VerticalHeaderAlignmentProperty, value.Box());
     }
 
 		#endregion

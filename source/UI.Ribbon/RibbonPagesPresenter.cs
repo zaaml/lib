@@ -11,53 +11,37 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  [TemplateContractType(typeof(RibbonPagesPresenterTemplateContract))]
-  public class RibbonPagesPresenter : ItemsPresenterBase<RibbonPageCategory, RibbonPage, RibbonPageCollection, RibbonPagesPanel>
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(RibbonPagesPresenterTemplateContract))]
+	public class RibbonPagesPresenter : ItemsPresenterBase<RibbonPageCategory, RibbonPage, RibbonPageCollection, RibbonPagesPanel>
+	{
+		private static readonly DependencyPropertyKey RibbonPropertyKey = DPM.RegisterReadOnly<RibbonControl, RibbonPagesPresenter>
+			("Ribbon", c => c.OnRibbonControlChanged);
 
-    private static readonly DependencyPropertyKey RibbonPropertyKey = DPM.RegisterReadOnly<RibbonControl, RibbonPagesPresenter>
-      ("Ribbon", c => c.OnRibbonControlChanged);
+		public static readonly DependencyProperty RibbonProperty = RibbonPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty RibbonProperty = RibbonPropertyKey.DependencyProperty;
+		static RibbonPagesPresenter()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<RibbonPagesPresenter>();
+		}
 
-    #endregion
+		public RibbonPagesPresenter()
+		{
+			this.OverrideStyleKey<RibbonPagesPresenter>();
+		}
 
-    #region Ctors
+		public RibbonControl Ribbon
+		{
+			get => (RibbonControl)GetValue(RibbonProperty);
+			internal set => this.SetReadOnlyValue(RibbonPropertyKey, value);
+		}
 
-    static RibbonPagesPresenter()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<RibbonPagesPresenter>();
-    }
+		private void OnRibbonControlChanged(RibbonControl oldRibbon, RibbonControl newRibbon)
+		{
+			Items = newRibbon?.Pages;
+		}
+	}
 
-    public RibbonPagesPresenter()
-    {
-      this.OverrideStyleKey<RibbonPagesPresenter>();
-    }
-
-    #endregion
-
-    #region Properties
-
-    public RibbonControl Ribbon
-    {
-      get => (RibbonControl) GetValue(RibbonProperty);
-      internal set => this.SetReadOnlyValue(RibbonPropertyKey, value);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private void OnRibbonControlChanged(RibbonControl oldRibbon, RibbonControl newRibbon)
-    {
-      Items = newRibbon?.Pages;
-    }
-
-    #endregion
-  }
-
-  public class RibbonPagesPresenterTemplateContract : ItemsPresenterBaseTemplateContract<RibbonPagesPanel, RibbonPage>
-  {
-  }
+	public class RibbonPagesPresenterTemplateContract : ItemsPresenterBaseTemplateContract<RibbonPagesPanel, RibbonPage>
+	{
+	}
 }

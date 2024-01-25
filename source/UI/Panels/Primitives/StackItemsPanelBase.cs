@@ -13,14 +13,8 @@ namespace Zaaml.UI.Panels.Primitives
 	public class StackItemsPanelBase<TItem> : ItemsPanel<TItem>, IStackPanel
 		where TItem : Control
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, StackItemsPanelBase<TItem>>
 			("Orientation", Orientation.Vertical, s => s.OnOrientationChanged);
-
-		#endregion
-
-		#region Properties
 
 		protected override bool HasLogicalOrientation => true;
 
@@ -28,13 +22,9 @@ namespace Zaaml.UI.Panels.Primitives
 
 		public Orientation Orientation
 		{
-			get => (Orientation) GetValue(OrientationProperty);
+			get => (Orientation)GetValue(OrientationProperty);
 			set => SetValue(OrientationProperty, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
@@ -51,16 +41,6 @@ namespace Zaaml.UI.Panels.Primitives
 			InvalidateMeasure();
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IOrientedPanel
-
 		Orientation IOrientedPanel.Orientation => Orientation;
-
-		#endregion
-
-		#endregion
 	}
 }

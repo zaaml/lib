@@ -12,102 +12,87 @@ using Zaaml.UI.Controls.ToolBar;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  [TemplateContractType(typeof(RibbonToolBarTemplateContract))]
-  public class RibbonToolBar : ToolBarControlBase<Control, RibbonItem, RibbonItemCollection, RibbonToolBarItemsPresenter, RibbonToolBarItemsPanel>
-  {
-    #region Ctors
+	[TemplateContractType(typeof(RibbonToolBarTemplateContract))]
+	public class RibbonToolBar : ToolBarControlBase<Control, RibbonItem, RibbonItemCollection, RibbonToolBarItemsPresenter, RibbonToolBarItemsPanel>
+	{
+		static RibbonToolBar()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<RibbonToolBar>();
+		}
 
-    static RibbonToolBar()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<RibbonToolBar>();
-    }
+		public RibbonToolBar()
+		{
+			this.OverrideStyleKey<RibbonToolBar>();
+		}
 
-    public RibbonToolBar()
-    {
-      this.OverrideStyleKey<RibbonToolBar>();
-    }
+		private RibbonToolBarItemsPanel ItemsHost => ItemsPresenter?.ItemsHostInternal;
 
-    #endregion
+		protected RibbonToolBarOverflowItemsPresenter OverflowItemsPresenter => TemplateContract.OverflowItemsPresenter;
 
-    #region Properties
+		private RibbonToolBarTemplateContract TemplateContract => (RibbonToolBarTemplateContract)TemplateContractCore;
 
-    private RibbonToolBarItemsPanel ItemsHost => ItemsPresenter?.ItemsHostInternal;
+		protected override RibbonItemCollection CreateItemCollection()
+		{
+			return new RibbonItemCollection(this);
+		}
 
-    protected RibbonToolBarOverflowItemsPresenter OverflowItemsPresenter => TemplateContract.OverflowItemsPresenter;
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			var hasOverflowedItems = HasOverflowItems;
 
-    private RibbonToolBarTemplateContract TemplateContract => (RibbonToolBarTemplateContract) TemplateContractInternal;
+			HasOverflowItems = false;
 
-    #endregion
+			var measureOverride = base.MeasureOverride(availableSize);
 
-    #region  Methods
+			HasOverflowItems = ItemsHost?.HasOverflowChildren ?? false;
 
-    protected override RibbonItemCollection CreateItemCollection()
-    {
-      return new RibbonItemCollection(this);
-    }
+			if (HasOverflowItems == false && hasOverflowedItems == false)
+				return measureOverride;
 
-    protected override Size MeasureOverride(Size availableSize)
-    {
-      var hasOverflowedItems = HasOverflowItems;
-      HasOverflowItems = false;
+			if (ItemsHost != null)
+				PanelUtils.InvalidateAncestorsMeasure(ItemsHost, this);
 
-      var measureOverride = base.MeasureOverride(availableSize);
+			return base.MeasureOverride(availableSize);
+		}
 
-      HasOverflowItems = ItemsHost?.HasOverflowChildren ?? false;
+		internal override void OnItemAttachedInternal(RibbonItem item)
+		{
+			item.ToolBar = this;
+			item.ActualItemStyle = RibbonItemStyle.Small;
 
-      if (HasOverflowItems == false && hasOverflowedItems == false)
-        return measureOverride;
+			base.OnItemAttachedInternal(item);
+		}
 
-      if (ItemsHost != null)
-        PanelUtils.InvalidateAncestorsMeasure(ItemsHost, this);
+		internal override void OnItemDetachedInternal(RibbonItem item)
+		{
+			base.OnItemDetachedInternal(item);
 
-      return base.MeasureOverride(availableSize);
-    }
+			item.ActualItemStyle = RibbonItemStyle.Large;
+			item.ToolBar = null;
+		}
 
-    internal override void OnItemAttachedInternal(RibbonItem item)
-    {
-      item.ToolBar = this;
-      item.ActualItemStyle = RibbonItemStyle.Small;
+		protected override void OnTemplateContractAttached()
+		{
+			ItemsPresenter.ToolBar = this;
+			OverflowItemsPresenter.ToolBar = this;
+			OverflowItemsPresenter.OverflowItems.SourceCollectionInternal = ItemCollection;
 
-      base.OnItemAttachedInternal(item);
-    }
+			base.OnTemplateContractAttached();
+		}
 
-    internal override void OnItemDetachedInternal(RibbonItem item)
-    {
-      base.OnItemDetachedInternal(item);
+		protected override void OnTemplateContractDetaching()
+		{
+			base.OnTemplateContractDetaching();
 
-      item.ActualItemStyle = RibbonItemStyle.Large;
-      item.ToolBar = null;
-    }
+			OverflowItemsPresenter.OverflowItems.SourceCollectionInternal = null;
+			OverflowItemsPresenter.ToolBar = null;
+			ItemsPresenter.ToolBar = null;
+		}
+	}
 
-    protected override void OnTemplateContractAttached()
-    {
-      ItemsPresenter.ToolBar = this;
-      OverflowItemsPresenter.ToolBar = this;
-      OverflowItemsPresenter.OverflowItems.SourceCollectionInternal = ItemCollection;
-
-      base.OnTemplateContractAttached();
-    }
-
-    protected override void OnTemplateContractDetaching()
-    {
-      base.OnTemplateContractDetaching();
-
-      OverflowItemsPresenter.OverflowItems.SourceCollectionInternal = null;
-      OverflowItemsPresenter.ToolBar = null;
-      ItemsPresenter.ToolBar = null;
-    }
-
-    #endregion
-  }
-
-  public class RibbonToolBarTemplateContract : ToolBarControlBaseTemplateContract<Control, RibbonItem, RibbonItemCollection, RibbonToolBarItemsPresenter, RibbonToolBarItemsPanel>
-  {
-    #region Properties
-
-    [TemplateContractPart(Required = false)]
-    public RibbonToolBarOverflowItemsPresenter OverflowItemsPresenter { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
+	public class RibbonToolBarTemplateContract : ToolBarControlBaseTemplateContract<Control, RibbonItem, RibbonItemCollection, RibbonToolBarItemsPresenter, RibbonToolBarItemsPanel>
+	{
+		[TemplateContractPart(Required = false)]
+		public RibbonToolBarOverflowItemsPresenter OverflowItemsPresenter { get; [UsedImplicitly] private set; }
+	}
 }

@@ -14,7 +14,7 @@ namespace Zaaml.UI.Controls.TreeView
 		public TreeViewItemExpander Expander { get; [UsedImplicitly] private set; }
 
 		[TemplateContractPart(Required = false)]
-		public TreeViewItemGridCellsPresenter CellsPresenter { get; [UsedImplicitly] private set; }
+		public TreeGridViewCellsPresenter CellsPresenter { get; [UsedImplicitly] private set; }
 
 		[TemplateContractPart(Required = false)]
 		public TreeViewItemGlyphPresenter GlyphPresenter { get; [UsedImplicitly] private set; }

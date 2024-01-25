@@ -50,7 +50,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		FlexElement IFlexPanel.GetFlexElement(UIElement child)
 		{
-			return child.GetFlexElement(this).WithStretchDirection(FlexStretchDirection.Shrink);
+			return child.GetFlexElement(this, Orientation.Horizontal).WithStretchDirection(FlexStretchDirection.Shrink);
 		}
 
 		bool IFlexPanel.GetIsHidden(UIElement child)

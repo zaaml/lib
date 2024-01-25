@@ -9,7 +9,7 @@ using System.Windows.Controls;
 
 namespace Zaaml.PresentationCore
 {
-	public class UIElementCollectionBase<T> : DependencyObjectCollectionBase<T> where T : UIElement
+	public abstract class UIElementCollectionBase<T> : DependencyObjectCollectionBase<T> where T : UIElement
 	{
 		private Panel _elementsHost;
 		private ILogicalOwner _logicalHost;

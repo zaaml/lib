@@ -5,6 +5,7 @@
 using System;
 using System.Globalization;
 using System.Windows.Data;
+using Zaaml.Core.Runtime;
 
 namespace Zaaml.PresentationCore.Converters
 {
@@ -33,7 +34,7 @@ namespace Zaaml.PresentationCore.Converters
 		
     protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
     {
-      return value == null ? KnownBoxes.BoolFalse : KnownBoxes.BoolTrue;
+      return value == null ? BooleanBoxes.False : BooleanBoxes.True;
     }
 
     #endregion

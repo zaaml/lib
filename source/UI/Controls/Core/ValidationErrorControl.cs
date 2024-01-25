@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Weak;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
@@ -146,7 +147,7 @@ namespace Zaaml.UI.Controls.Core
 		public bool ShowValidationToolTip
 		{
 			get => (bool) GetValue(ShowValidationToolTipProperty);
-			set => SetValue(ShowValidationToolTipProperty, value);
+			set => SetValue(ShowValidationToolTipProperty, value.Box());
 		}
 
 		private bool TreeHasFocus

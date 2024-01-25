@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Behaviors.Draggable;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
@@ -17,23 +18,13 @@ namespace Zaaml.UI.Windows
 {
 	internal class PresentationWindowService : DependencyObject, IDisposable
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty IsDraggableProperty = DPM.Register<bool, PresentationWindowService>
 			("IsDraggable", true, p => p.OnIsDraggableChanged);
 
 		public static readonly DependencyProperty IsResizableProperty = DPM.Register<bool, PresentationWindowService>
 			("IsResizable", true, p => p.OnIsResizableChanged);
 
-		#endregion
-
-		#region Fields
-
 		private WindowPresenter _windowPresenterControl;
-
-		#endregion
-
-		#region Ctors
 
 		public PresentationWindowService(WindowBase window)
 		{
@@ -65,20 +56,16 @@ namespace Zaaml.UI.Windows
 			WindowChromeBehavior.IsResizable = IsResizable;
 		}
 
-		#endregion
-
-		#region Properties
-
 		public bool IsDraggable
 		{
-			get => (bool) GetValue(IsDraggableProperty);
-			set => SetValue(IsDraggableProperty, value);
+			get => (bool)GetValue(IsDraggableProperty);
+			set => SetValue(IsDraggableProperty, value.Box());
 		}
 
 		public bool IsResizable
 		{
-			get => (bool) GetValue(IsResizableProperty);
-			set => SetValue(IsResizableProperty, value);
+			get => (bool)GetValue(IsResizableProperty);
+			set => SetValue(IsResizableProperty, value.Box());
 		}
 
 		[UsedImplicitly]
@@ -106,10 +93,6 @@ namespace Zaaml.UI.Windows
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		internal void BeginDragMove(bool async)
 		{
 			if (Window.IsDraggable == false)
@@ -130,8 +113,8 @@ namespace Zaaml.UI.Windows
 			if (_windowPresenterControl == null)
 				return;
 
-			var actualWidth = (int) _windowPresenterControl.ActualWidth;
-			var actualHeight = (int) _windowPresenterControl.ActualHeight;
+			var actualWidth = (int)_windowPresenterControl.ActualWidth;
+			var actualHeight = (int)_windowPresenterControl.ActualHeight;
 
 			if (actualHeight <= 0 || actualWidth <= 0)
 				return;
@@ -160,23 +143,13 @@ namespace Zaaml.UI.Windows
 
 			var header = _windowPresenterControl.HeaderPresenter;
 
-			if (header != null && header.IsVisualAncestorOf((DependencyObject) e.OriginalSource) && DraggableBehavior.CanStartDragging(Window, e))
+			if (header != null && header.IsVisualAncestorOf((DependencyObject)e.OriginalSource) && DraggableBehavior.CanStartDragging(Window, e))
 				BeginDragMove(false);
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IDisposable
 
 		public void Dispose()
 		{
 			Window.RemoveBehavior(WindowChromeBehavior);
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

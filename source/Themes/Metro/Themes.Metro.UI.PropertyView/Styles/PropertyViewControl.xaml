@@ -8,20 +8,28 @@
   <!--  Template  -->
   <ControlTemplate x:Key="PropertyViewControlTemplate"
                    TargetType="zm:PropertyViewControl">
-    <zm:ControlTemplateRoot UseLayoutRounding="True">
+    <zm:ControlTemplateRoot>
 
-      <zm:TreeViewControl x:Name="TreeView"
-                          zm:ScrollViewControl.HorizontalScrollBarVisibility="Disabled" 
-                          zm:DisableVeilControl.EnableVeil="False"/>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  GridView Template  -->
+  <ControlTemplate x:Key="PropertyGridViewControlTemplate"
+                   TargetType="zm:PropertyViewControl">
+    <zm:ControlTemplateRoot Background="Transparent">
+
+      <zm:PropertyTreeViewControl x:Name="TreeView"
+                                  zm:ScrollViewControl.HorizontalScrollBarVisibility="Disabled" 
+                                  zm:DisableVeilControl.EnableVeil="False" />
 
       <zm:DisableVeilControl />
-
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
   <!--  Base Style  -->
   <zm:Style x:Key="PropertyViewControlBaseStyle" TargetType="zm:PropertyViewControl">
-    <zm:Setter Property="Template" Value="{StaticResource PropertyViewControlTemplate}" />
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualViewTemplate, TargetNullValue={StaticResource PropertyViewControlTemplate}}" />
+    <zm:Setter Property="zm:PropertyGridView.Template" Value="{StaticResource PropertyGridViewControlTemplate}" />
   </zm:Style>
 
   <!--  Style  -->

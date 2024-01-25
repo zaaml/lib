@@ -20,11 +20,11 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     private const BindingFlags DepPropFieldBindingFlags = BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
     private const BindingFlags NonPublicDepPropFieldBindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
-    private static readonly Dictionary<Type, List<DependencyPropertyInfo>> TypeToDPFieldCollection = new Dictionary<Type, List<DependencyPropertyInfo>>();
-    private static readonly Dictionary<DependencyProperty, DependencyPropertyInfo> DP2DPInfo = new Dictionary<DependencyProperty, DependencyPropertyInfo>();
+    private static readonly Dictionary<Type, List<DependencyPropertyInfo>> TypeToDPFieldCollection = new();
+    private static readonly Dictionary<DependencyProperty, DependencyPropertyInfo> DP2DPInfo = new();
     private static readonly AppDomainObserver AppDomainObserver;
 
-    private static readonly Dictionary<string, DependencyProperty> ExpandoProperties = new Dictionary<string, DependencyProperty>();
+    private static readonly Dictionary<string, DependencyProperty> ExpandoProperties = new();
 
     internal static readonly DependencyProperty UnresolvedDependencyProperty = RegisterAttached("Unresolved", typeof(object), typeof(DependencyPropertyManager), new PropertyMetadata(null));
 
@@ -380,7 +380,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 #else
       var dependencyPropertyKey = DependencyProperty.RegisterReadOnly(name, propertyType, ownerType, typeMetadata);
 
-      RegisterDependencyPropertyInfo(new DependencyPropertyInfo(dependencyPropertyKey.DependencyProperty, name, ownerType, propertyType, false, false));
+      RegisterDependencyPropertyInfo(new DependencyPropertyInfo(dependencyPropertyKey, dependencyPropertyKey.DependencyProperty, name, ownerType, propertyType, false, false));
 
       return dependencyPropertyKey;
 #endif

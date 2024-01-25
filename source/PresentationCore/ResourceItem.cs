@@ -4,6 +4,10 @@
 
 namespace Zaaml.PresentationCore
 {
+	public sealed class ResourceItem<T> : ResourceItemBase<T>
+	{
+	}
+
 	public sealed class ResourceItem : ResourceItemBase<object>
 	{
 	}

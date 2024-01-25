@@ -2,7 +2,9 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+#if NETCOREAPP3_1 || NET5_0_OR_GREATER
 using System;
+#endif
 
 namespace Zaaml.Text
 {
@@ -19,13 +21,13 @@ namespace Zaaml.Text
 
 				public static implicit operator PrimitiveMatchSymbol(int c)
 				{
-					return new CharSymbol((char)c);
+					return new CharSymbol(c);
 				}
 
 #if NETCOREAPP3_1 || NET5_0_OR_GREATER
 				public static implicit operator PrimitiveMatchSymbol(Range range)
 				{
-					return new CharRangeSymbol((char)range.Start.Value, (char)range.End.Value);
+					return new CharRangeSymbol(range.Start.Value, range.End.Value);
 				}
 #endif
 			}

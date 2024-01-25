@@ -10,22 +10,23 @@ namespace Zaaml.Text
 	{
 		private sealed class EntryPointSubGraph : SubGraph
 		{
-			public readonly EndRuleNode EndNode;
+			public readonly ExitSyntaxNode ExitNode;
 			public readonly ExecutionPath EndPath;
-			public readonly InitRuleNode InitNode;
+			public readonly InitSyntaxNode InitNode;
 			private bool _executionGraphBuilt;
 			public ExecutionPath EmptyPath = ExecutionPath.Invalid;
 
-			public EntryPointSubGraph(Automata<TInstruction, TOperand> automata, Rule rule) : base(automata, rule, null)
+			public EntryPointSubGraph(Automata<TInstruction, TOperand> automata, Syntax syntax) : base(automata, syntax, null)
 			{
-				InitNode = new InitRuleNode(automata, this);
-				EndNode = new EndRuleNode(automata, this);
+				InitNode = new InitSyntaxNode(automata, this);
+				ExitNode = new ExitSyntaxNode(automata, this);
 
 				InitNode.OutEdges.Add(new Edge(InitNode, EnterNode));
-				LeaveNode.OutEdges.Add(new Edge(LeaveNode, EndNode));
-				EndPath = new ExecutionPath(LeaveNode, new Node[] { EndNode }, 0);
-				Automata.RegisterExecutionPath(EndPath);
-
+				LeaveNode.OutEdges.Add(new Edge(LeaveNode, ExitNode));
+				
+				LeaveNode.EnsureSafe();
+				EndPath = LeaveNode.ExecutionPaths.Single();
+				
 				LeaveNode.EnsureSafe();
 			}
 
@@ -36,16 +37,15 @@ namespace Zaaml.Text
 
 				_executionGraphBuilt = true;
 
-				if (Graph.BeginNode.HasReturn == false)
+				if (SyntaxGraph.BeginNode.HasReturn == false)
 					return;
 
-				EmptyPath = new ExecutionPath(InitNode, new[]
+				EmptyPath = Automata.CreateExecutionPath(InitNode, new[]
 				{
 					EnterNode,
-					Graph.BeginNode,
-				}.Concat(Graph.BeginNode.ReturnPaths[0].Nodes).ToArray(), -1);
+					SyntaxGraph.BeginNode,
+				}.Concat(SyntaxGraph.BeginNode.ReturnPaths[0].Nodes).ToArray());
 
-				Automata.RegisterExecutionPath(EmptyPath);
 			}
 		}
 	}

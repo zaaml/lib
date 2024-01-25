@@ -62,7 +62,7 @@ namespace Zaaml.UI.Controls.NavigationView
 			set => IsPressedCore = value;
 		}
 
-		private NavigationViewHeaderedIconItemTemplateContract TemplateContract => (NavigationViewHeaderedIconItemTemplateContract) TemplateContractInternal;
+		private NavigationViewHeaderedIconItemTemplateContract TemplateContract => (NavigationViewHeaderedIconItemTemplateContract)TemplateContractCore;
 
 		private protected virtual void OnClickCore()
 		{

@@ -15,6 +15,7 @@ using Zaaml.Core;
 using Zaaml.Core.Collections;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Reflection;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
@@ -34,8 +35,6 @@ namespace Zaaml.UI.Controls.Editors.Text
 	[TemplateContractType(typeof(SearchTextBoxTemplateContract))]
 	public class SearchTextBox : DropDownControlBase, INotifyPropertyChanged
 	{
-		#region Static Fields and Constants
-
 		private static readonly DependencyPropertyKey ActualSelectedItemTextPropertyKey = DPM.RegisterReadOnly<string, SearchTextBox>
 			("ActualSelectedItemText");
 
@@ -144,10 +143,6 @@ namespace Zaaml.UI.Controls.Editors.Text
 		public static readonly DependencyProperty PreviewSelectedValueProperty = PreviewSelectedValuePropertyKey.DependencyProperty;
 		public static readonly DependencyProperty IsInEditStateProperty = IsInEditStatePropertyKey.DependencyProperty;
 
-		#endregion
-
-		#region Fields
-
 		private readonly DelayAction _delaySearch;
 		private readonly Dictionary<Type, ValueGetter> _displayGettersCache = new Dictionary<Type, ValueGetter>();
 
@@ -168,10 +163,6 @@ namespace Zaaml.UI.Controls.Editors.Text
 		public event EventHandler<SelectedIndexChangedEventArgs> SelectedIndexChanged;
 		public event EventHandler<SelectedValueChangedEventArgs> SelectedValueChanged;
 
-		#endregion
-
-		#region Ctors
-
 		static SearchTextBox()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<SearchTextBox>();
@@ -189,10 +180,6 @@ namespace Zaaml.UI.Controls.Editors.Text
 			UpdateActualDropDownISourceCollection();
 		}
 
-		#endregion
-
-		#region Properties
-
 		public IEnumerable ActualDropDownISourceCollection
 		{
 			get => (IEnumerable)GetValue(ActualDropDownISourceCollectionProperty);
@@ -201,14 +188,14 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public string ActualSelectedItemText
 		{
-			get => (string) GetValue(ActualSelectedItemTextProperty);
+			get => (string)GetValue(ActualSelectedItemTextProperty);
 			private set => this.SetReadOnlyValue(ActualSelectedItemTextPropertyKey, value);
 		}
 
 		public bool ActualShowWatermark
 		{
-			get => (bool) GetValue(ActualShowWatermarkProperty);
-			private set => this.SetReadOnlyValue(ActualShowWatermarkPropertyKey, value);
+			get => (bool)GetValue(ActualShowWatermarkProperty);
+			private set => this.SetReadOnlyValue(ActualShowWatermarkPropertyKey, value.Box());
 		}
 
 		public ISearchTextBoxAdvisor Advisor
@@ -227,13 +214,13 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public bool AutoComplete
 		{
-			get => (bool) GetValue(AutoCompleteProperty);
-			set => SetValue(AutoCompleteProperty, value);
+			get => (bool)GetValue(AutoCompleteProperty);
+			set => SetValue(AutoCompleteProperty, value.Box());
 		}
 
 		public string AutoCompleteText
 		{
-			get => (string) GetValue(AutoCompleteTextProperty);
+			get => (string)GetValue(AutoCompleteTextProperty);
 			private set => this.SetReadOnlyValue(AutoCompleteTextPropertyKey, value);
 		}
 
@@ -241,25 +228,25 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public TimeSpan Delay
 		{
-			get => (TimeSpan) GetValue(DelayProperty);
+			get => (TimeSpan)GetValue(DelayProperty);
 			set => SetValue(DelayProperty, value);
 		}
 
 		public string DisplayMember
 		{
-			get => (string) GetValue(DisplayMemberProperty);
+			get => (string)GetValue(DisplayMemberProperty);
 			set => SetValue(DisplayMemberProperty, value);
 		}
 
 		public SearchTextBoxDropDownItemsMode DropDownItemsMode
 		{
-			get => (SearchTextBoxDropDownItemsMode) GetValue(DropDownItemsModeProperty);
+			get => (SearchTextBoxDropDownItemsMode)GetValue(DropDownItemsModeProperty);
 			set => SetValue(DropDownItemsModeProperty, value);
 		}
 
 		private Control DummyFocus => TemplateContract.DummyFocus;
 
-		private IEnumerable<object> EnumerableSource => (SourceCollection as IEnumerable)?.Cast<object>() ?? Enumerable.Empty<object>();
+		private IEnumerable<object> EnumerableSource => SourceCollection?.Cast<object>() ?? Enumerable.Empty<object>();
 
 		public SearchResultCollection FilteredItemsSource { get; }
 
@@ -286,33 +273,27 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public DataTemplate HeadContentTemplate
 		{
-			get => (DataTemplate) GetValue(HeadContentTemplateProperty);
+			get => (DataTemplate)GetValue(HeadContentTemplateProperty);
 			set => SetValue(HeadContentTemplateProperty, value);
 		}
 
 		public bool IsCaseSensitive
 		{
-			get => (bool) GetValue(IsCaseSensitiveProperty);
-			set => SetValue(IsCaseSensitiveProperty, value);
+			get => (bool)GetValue(IsCaseSensitiveProperty);
+			set => SetValue(IsCaseSensitiveProperty, value.Box());
 		}
 
 		public bool IsInEditState
 		{
-			get => (bool) GetValue(IsInEditStateProperty);
-			private set => this.SetReadOnlyValue(IsInEditStatePropertyKey, value);
+			get => (bool)GetValue(IsInEditStateProperty);
+			private set => this.SetReadOnlyValue(IsInEditStatePropertyKey, value.Box());
 		}
 
 		private bool IsPopupOpen => PopupBar?.IsOpen == true;
 
-		public IEnumerable SourceCollection
-		{
-			get => (IEnumerable)GetValue(SourceCollectionProperty);
-			set => SetValue(SourceCollectionProperty, value);
-		}
-
 		public DataTemplate ItemTemplate
 		{
-			get => (DataTemplate) GetValue(ItemTemplateProperty);
+			get => (DataTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
 		}
 
@@ -320,7 +301,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public int MaxFilteredCount
 		{
-			get => (int) GetValue(MaxFilteredCountProperty);
+			get => (int)GetValue(MaxFilteredCountProperty);
 			set => SetValue(MaxFilteredCountProperty, value);
 		}
 
@@ -336,7 +317,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public DataTemplate PopupFooterTemplate
 		{
-			get => (DataTemplate) GetValue(PopupFooterTemplateProperty);
+			get => (DataTemplate)GetValue(PopupFooterTemplateProperty);
 			set => SetValue(PopupFooterTemplateProperty, value);
 		}
 
@@ -348,13 +329,13 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public DataTemplate PopupHeaderTemplate
 		{
-			get => (DataTemplate) GetValue(PopupHeaderTemplateProperty);
+			get => (DataTemplate)GetValue(PopupHeaderTemplateProperty);
 			set => SetValue(PopupHeaderTemplateProperty, value);
 		}
 
 		public int PreviewSelectedIndex
 		{
-			get => (int) GetValue(PreviewSelectedIndexProperty);
+			get => (int)GetValue(PreviewSelectedIndexProperty);
 			private set => this.SetReadOnlyValue(PreviewSelectedIndexPropertyKey, value);
 		}
 
@@ -372,13 +353,13 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public string SearchText
 		{
-			get => (string) GetValue(SearchTextProperty);
+			get => (string)GetValue(SearchTextProperty);
 			set => SetValue(SearchTextProperty, value);
 		}
 
 		public int SelectedIndex
 		{
-			get => (int) GetValue(SelectedIndexProperty);
+			get => (int)GetValue(SelectedIndexProperty);
 			set => SetValue(SelectedIndexProperty, value);
 		}
 
@@ -390,7 +371,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public DataTemplate SelectedItemTemplate
 		{
-			get => (DataTemplate) GetValue(SelectedItemTemplateProperty);
+			get => (DataTemplate)GetValue(SelectedItemTemplateProperty);
 			set => SetValue(SelectedItemTemplateProperty, value);
 		}
 
@@ -402,8 +383,14 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public bool ShowWatermark
 		{
-			get => (bool) GetValue(ShowWatermarkProperty);
-			set => SetValue(ShowWatermarkProperty, value);
+			get => (bool)GetValue(ShowWatermarkProperty);
+			set => SetValue(ShowWatermarkProperty, value.Box());
+		}
+
+		public IEnumerable SourceCollection
+		{
+			get => (IEnumerable)GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public object TailContent
@@ -414,33 +401,29 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		public DataTemplate TailContentTemplate
 		{
-			get => (DataTemplate) GetValue(TailContentTemplateProperty);
+			get => (DataTemplate)GetValue(TailContentTemplateProperty);
 			set => SetValue(TailContentTemplateProperty, value);
 		}
 
-		private SearchTextBoxTemplateContract TemplateContract => (SearchTextBoxTemplateContract) TemplateContractInternal;
+		private SearchTextBoxTemplateContract TemplateContract => (SearchTextBoxTemplateContract)TemplateContractCore;
 
 		public string ValueMember
 		{
-			get => (string) GetValue(ValueMemberProperty);
+			get => (string)GetValue(ValueMemberProperty);
 			set => SetValue(ValueMemberProperty, value);
 		}
 
 		public ImageSource WatermarkIcon
 		{
-			get => (ImageSource) GetValue(WatermarkIconProperty);
+			get => (ImageSource)GetValue(WatermarkIconProperty);
 			set => SetValue(WatermarkIconProperty, value);
 		}
 
 		public string WatermarkText
 		{
-			get => (string) GetValue(WatermarkTextProperty);
+			get => (string)GetValue(WatermarkTextProperty);
 			set => SetValue(WatermarkTextProperty, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		private void CancelEdit()
 		{
@@ -457,6 +440,14 @@ namespace Zaaml.UI.Controls.Editors.Text
 		{
 			if (item != null && EnumerableSource.Contains(item) == false)
 				throw new ArgumentOutOfRangeException(nameof(item));
+		}
+
+		private void ClearFocus()
+		{
+			if (DummyFocus != null)
+				DummyFocus.Focus();
+			else
+				Focus();
 		}
 
 		private void ClosePopup()
@@ -511,14 +502,6 @@ namespace Zaaml.UI.Controls.Editors.Text
 			ClosePopup();
 		}
 
-		private void ClearFocus()
-		{
-			if (DummyFocus != null)
-				DummyFocus.Focus();
-			else
-				Focus();
-		}
-
 		private string GetAutoCompleteText(object item)
 		{
 			var advisor = Advisor;
@@ -543,7 +526,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			if (getter == null)
 				return string.Empty;
 
-			return (string) getter(item) ?? string.Empty;
+			return (string)getter(item) ?? string.Empty;
 		}
 
 		private object GetItemValue(object item)
@@ -687,9 +670,9 @@ namespace Zaaml.UI.Controls.Editors.Text
 		private void OnAutoCompleteTextChanged()
 		{
 			_skipAutoCompleteTextChanged = true;
-			
+
 			AutoCompleteTextBox.AutoCompleteText = AutoCompleteText;
-			
+
 			_skipAutoCompleteTextChanged = false;
 		}
 
@@ -756,14 +739,6 @@ namespace Zaaml.UI.Controls.Editors.Text
 			UpdateVisualState(true);
 		}
 
-		private void OnSourceCollectionChanged()
-		{
-			_displayGettersCache.Clear();
-
-			UpdateActualDropDownISourceCollection();
-			UpdateSearchDictionary();
-		}
-
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
 			base.OnKeyDown(e);
@@ -784,8 +759,6 @@ namespace Zaaml.UI.Controls.Editors.Text
 			FilteredSelectedIndex = ListBox.SelectedIndex;
 		}
 
-#if !SILVERLIGHT
-
 		protected override void OnPreviewKeyDown(KeyEventArgs e)
 		{
 			e.Handled = HandleKey(e.Key);
@@ -793,8 +766,6 @@ namespace Zaaml.UI.Controls.Editors.Text
 			if (e.Handled == false)
 				base.OnPreviewKeyDown(e);
 		}
-
-#endif
 
 		protected virtual void OnPropertyChanged(string propertyName)
 		{
@@ -880,6 +851,14 @@ namespace Zaaml.UI.Controls.Editors.Text
 			UpdateWatermark();
 		}
 
+		private void OnSourceCollectionChanged()
+		{
+			_displayGettersCache.Clear();
+
+			UpdateActualDropDownISourceCollection();
+			UpdateSearchDictionary();
+		}
+
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
@@ -890,15 +869,10 @@ namespace Zaaml.UI.Controls.Editors.Text
 			AutoCompleteTextBox.AutoCompleteTextChanged += OnAutoCompleteTextBoxAutoCompleteTextChanged;
 			AutoCompleteTextBox.TextInput += OnAutoCompleteTextBoxPreviewTextInput;
 
-#if SILVERLIGHT
-      _autoCompleteTextBox.LostFocus += OnAutoCompleteTextBoxLostFocus;
-      _autoCompleteTextBox.GotFocus += OnAutoCompleteTextBoxGotFocus;
-#else
 			AutoCompleteTextBox.LostKeyboardFocus += OnAutoCompleteTextBoxLostFocus;
 			AutoCompleteTextBox.GotKeyboardFocus += OnAutoCompleteTextBoxGotFocus;
-#endif
 
-			ListBox.AddHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler) ListBoxOnMouseLeftButtonDown, true);
+			ListBox.AddHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler)ListBoxOnMouseLeftButtonDown, true);
 			ListBox.SelectionChanged += OnListBoxSelectionChanged;
 
 			UpdateAutoCompleteBoxSearchText(SearchText);
@@ -913,15 +887,10 @@ namespace Zaaml.UI.Controls.Editors.Text
 			AutoCompleteTextBox.AutoCompleteTextChanged -= OnAutoCompleteTextBoxAutoCompleteTextChanged;
 			AutoCompleteTextBox.TextInput -= OnAutoCompleteTextBoxPreviewTextInput;
 
-#if SILVERLIGHT
-      _autoCompleteTextBox.LostFocus -= OnAutoCompleteTextBoxLostFocus;
-      _autoCompleteTextBox.GotFocus -= OnAutoCompleteTextBoxGotFocus;
-#else
 			AutoCompleteTextBox.LostKeyboardFocus -= OnAutoCompleteTextBoxLostFocus;
 			AutoCompleteTextBox.GotKeyboardFocus -= OnAutoCompleteTextBoxGotFocus;
-#endif
 
-			ListBox.RemoveHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler) ListBoxOnMouseLeftButtonDown);
+			ListBox.RemoveHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler)ListBoxOnMouseLeftButtonDown);
 			ListBox.SelectionChanged -= OnListBoxSelectionChanged;
 
 			base.OnTemplateContractDetaching();
@@ -1099,13 +1068,8 @@ namespace Zaaml.UI.Controls.Editors.Text
 			if (AutoCompleteTextBox == null)
 				return;
 
-#if SILVERLIGHT
-      if (ReferenceEquals(this, FocusHelper.GetFocusedElement()))
-        _autoCompleteTextBox.Focus();
-#else
 			if (ReferenceEquals(this, Keyboard.FocusedElement))
 				Keyboard.Focus(AutoCompleteTextBox);
-#endif
 		}
 
 		private void UpdatePreviewSelectedItem(object previewSelectedItem)
@@ -1163,41 +1127,21 @@ namespace Zaaml.UI.Controls.Editors.Text
 			ActualShowWatermark = ShowWatermark && IsInEditState == false && SelectedItem == null;
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region INotifyPropertyChanged
-
 		public event PropertyChangedEventHandler PropertyChanged;
-
-		#endregion
-
-		#endregion
 	}
 
 	public interface ISearchTextBoxAdvisor
 	{
-		#region Properties
-
 		SearchTextBoxAdvisorFeature Features { get; }
-
-		#endregion
-
-		#region  Methods
 
 		bool AcceptItem(object item, string searchText);
 		string GetAutoCompleteText(object item, string searchText);
 		string GetDisplayValue(object item);
 		object GetValue(object item);
-
-		#endregion
 	}
 
 	internal static class SearchBoxAdvisorExtensions
 	{
-		#region  Methods
-
 		public static bool SupportAutoComplete(this ISearchTextBoxAdvisor advisor)
 		{
 			return (advisor.Features & SearchTextBoxAdvisorFeature.AutoComplete) != 0;
@@ -1212,27 +1156,17 @@ namespace Zaaml.UI.Controls.Editors.Text
 		{
 			return (advisor.Features & SearchTextBoxAdvisorFeature.Value) != 0;
 		}
-
-		#endregion
 	}
 
 	public class SearchTextBoxTemplateContract : TemplateContract
 	{
-		#region Properties
+		[TemplateContractPart] public AutoCompleteTextBox AutoCompleteTextBox { get; [UsedImplicitly] private set; }
 
-		[TemplateContractPart]
-		public AutoCompleteTextBox AutoCompleteTextBox { get; [UsedImplicitly] private set; }
+		[TemplateContractPart] public ListBox DropDownListBox { get; [UsedImplicitly] private set; }
 
-		[TemplateContractPart]
-		public Control DummyFocus { get; [UsedImplicitly] private set; }
+		[TemplateContractPart] public Control DummyFocus { get; [UsedImplicitly] private set; }
 
-		[TemplateContractPart]
-		public ListBox DropDownListBox { get; [UsedImplicitly] private set; }
-
-		[TemplateContractPart]
-		public PopupBar PopupBar { get; [UsedImplicitly] private set; }
-
-		#endregion
+		[TemplateContractPart] public PopupBar PopupBar { get; [UsedImplicitly] private set; }
 	}
 
 	[Flags]

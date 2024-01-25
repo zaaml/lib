@@ -5,6 +5,7 @@
 using System.Collections;
 using System.Windows;
 using System.Windows.Markup;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
@@ -48,14 +49,14 @@ namespace Zaaml.UI.Controls.Primitives.SharedSizePrimitives
 
     public bool ShareHeight
     {
-      get => (bool) GetValue(ShareHeightProperty);
-      set => SetValue(ShareHeightProperty, value);
+	    get => (bool)GetValue(ShareHeightProperty);
+	    set => SetValue(ShareHeightProperty, value.Box());
     }
 
     public bool ShareWidth
     {
-      get => (bool) GetValue(ShareWidthProperty);
-      set => SetValue(ShareWidthProperty, value);
+	    get => (bool)GetValue(ShareWidthProperty);
+	    set => SetValue(ShareWidthProperty, value.Box());
     }
 
     #endregion

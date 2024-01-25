@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Data;
 using Zaaml.Core;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Data;
@@ -108,7 +109,7 @@ namespace Zaaml.UI.Controls.Ribbon
     public bool IsApplicationMenuOpen
     {
       get => (bool) GetValue(IsApplicationMenuOpenProperty);
-      set => SetValue(IsApplicationMenuOpenProperty, value);
+      set => SetValue(IsApplicationMenuOpenProperty, value.Box());
     }
 
     internal bool IsInitializing
@@ -180,7 +181,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
     internal SelectorController<RibbonControl, RibbonPage> SelectorController { get; }
 
-    private RibbonControlTemplateContract TemplateContract => (RibbonControlTemplateContract) TemplateContractInternal;
+    private RibbonControlTemplateContract TemplateContract => (RibbonControlTemplateContract)TemplateContractCore;
 
     #endregion
 

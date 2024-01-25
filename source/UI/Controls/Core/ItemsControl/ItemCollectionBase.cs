@@ -230,6 +230,8 @@ namespace Zaaml.UI.Controls.Core
 
 				_sourceCollection = value;
 
+				EnsureSourceView();
+
 				if (_sourceView != null)
 					_sourceView.Source = value;
 

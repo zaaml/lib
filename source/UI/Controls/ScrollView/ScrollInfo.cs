@@ -109,13 +109,13 @@ namespace Zaaml.UI.Controls.ScrollView
 			}
 		}
 
-		internal OrientedScrollInfo AsOriented(Orientation orientation)
+		internal AxisScrollInfo Axis(Orientation orientation)
 		{
 			var directOffset = Offset.AsOriented(orientation).Direct;
 			var directViewport = Viewport.AsOriented(orientation).Direct;
 			var directExtent = Extent.AsOriented(orientation).Direct;
 
-			return new OrientedScrollInfo(orientation, directOffset, directViewport, directExtent);
+			return new AxisScrollInfo(orientation, directOffset, directViewport, directExtent);
 		}
 	}
 }

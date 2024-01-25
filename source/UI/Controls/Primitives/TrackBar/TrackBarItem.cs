@@ -5,6 +5,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Markup;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
@@ -28,8 +29,8 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		public bool CanDrag
 		{
-			get => (bool) GetValue(CanDragProperty);
-			set => SetValue(CanDragProperty, value);
+			get => (bool)GetValue(CanDragProperty);
+			set => SetValue(CanDragProperty, value.Box());
 		}
 
 		public object Content

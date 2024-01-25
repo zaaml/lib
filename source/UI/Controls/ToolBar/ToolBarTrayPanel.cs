@@ -199,7 +199,7 @@ namespace Zaaml.UI.Controls.ToolBar
 
     FlexElement IFlexPanel.GetFlexElement(UIElement child)
     {
-      return child.GetFlexElement(this).WithStretchDirection(FlexStretchDirection.Both).WithOverflowBehavior(FlexOverflowBehavior.Hide);
+      return child.GetFlexElement(this, ActualOrientation).WithStretchDirection(FlexStretchDirection.Both).WithOverflowBehavior(FlexOverflowBehavior.Hide);
     }
 
     bool IFlexPanel.GetIsHidden(UIElement child)

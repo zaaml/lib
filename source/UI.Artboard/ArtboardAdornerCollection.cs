@@ -153,7 +153,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private Rect GetElementRect()
 		{
-			if (ArtboardCanvas == null)
+			if (ArtboardCanvas == null || AdornedElement == null || AdornedElement.IsDescendantOf(ArtboardCanvas) == false)
 				return Rect.Empty;
 
 			var transform = AdornedElement.TransformToAncestor(ArtboardCanvas);

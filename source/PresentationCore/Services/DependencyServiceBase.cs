@@ -6,82 +6,62 @@ using System.Windows;
 
 namespace Zaaml.PresentationCore.Services
 {
-  internal abstract class DependencyServiceBase<T> : DependencyObject, IDependencyObjectService<T> where T : DependencyObject
-  {
-    #region Properties
+	internal abstract class DependencyServiceBase<T> : DependencyObject, IDependencyObjectService<T> where T : DependencyObject
+	{
+		public bool IsAttached => Target != null;
 
-    public bool IsAttached => Target != null;
+		public T Target { get; private set; }
 
-    public T Target { get; private set; }
+		private IDependencyObjectService<T> Attach(T target)
+		{
+			Target = target;
+			
+			OnAttach();
+			
+			return this;
+		}
 
-    #endregion
+		private IDependencyObjectService<T> Detach()
+		{
+			OnDetach();
 
-    #region  Methods
+			Target = null;
 
-    private IDependencyObjectService<T> Attach(T target)
-    {
-      Target = target;
-      OnAttach();
-      return this;
-    }
+			return this;
+		}
 
-    private IDependencyObjectService<T> Detach()
-    {
-      OnDetach();
-      Target = null;
-      return this;
-    }
+		protected virtual void OnAttach()
+		{
+		}
 
-    protected virtual void OnAttach()
-    {
-    }
+		protected virtual void OnDetach()
+		{
+		}
 
-    protected virtual void OnDetach()
-    {
-    }
+		IDependencyObjectService IDependencyObjectService.Attach(DependencyObject dependencyObject)
+		{
+			return Attach((T)dependencyObject);
+		}
 
-    #endregion
+		IDependencyObjectService IDependencyObjectService.Detach(DependencyObject dependencyObject)
+		{
+			return Detach();
+		}
 
-    #region Interface Implementations
+		IDependencyObjectService<T> IDependencyObjectService<T>.Attach(T dependencyObject)
+		{
+			return Attach(dependencyObject);
+		}
 
-    #region IDependencyObjectService
+		IDependencyObjectService<T> IDependencyObjectService<T>.Detach(T dependencyObject)
+		{
+			return Detach();
+		}
 
-    IDependencyObjectService IDependencyObjectService.Attach(DependencyObject dependencyObject)
-    {
-      return Attach((T) dependencyObject);
-    }
+		bool IDependencyObjectService<T>.IsAttached => IsAttached;
 
-    IDependencyObjectService IDependencyObjectService.Detach(DependencyObject dependencyObject)
-    {
-      return Detach();
-    }
-
-    #endregion
-
-    #region IDependencyObjectService<T>
-
-    IDependencyObjectService<T> IDependencyObjectService<T>.Attach(T dependencyObject)
-    {
-      return Attach(dependencyObject);
-    }
-
-    IDependencyObjectService<T> IDependencyObjectService<T>.Detach(T dependencyObject)
-    {
-      return Detach();
-    }
-
-    bool IDependencyObjectService<T>.IsAttached => IsAttached;
-
-    #endregion
-
-    #region IDisposable
-
-    public virtual void Dispose()
-    {
-    }
-
-    #endregion
-
-    #endregion
-  }
+		public virtual void Dispose()
+		{
+		}
+	}
 }

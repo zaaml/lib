@@ -10,8 +10,6 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	internal static class PropertyResolver
 	{
-		#region  Methods
-
 		public static void CopyFrom(IPropertySubject target, IPropertySubject source)
 		{
 			var propertyKind = source.PropertyKind & PropertyKind.Unspecified;
@@ -21,11 +19,11 @@ namespace Zaaml.PresentationCore.Interactivity
 				case PropertyKind.Expando:
 					SetExpandoProperty(target, GetExpandoProperty(source));
 					break;
-				
+
 				case PropertyKind.Explicit:
 					SetProperty(target, GetProperty(source));
 					break;
-				
+
 				case PropertyKind.Implicit:
 					SetProperty(target, GetProperty(source));
 					break;
@@ -36,13 +34,13 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			var propertyKind = interactivityObject.PropertyKind;
 			var isResolved = IsResolved(interactivityObject);
-			
+
 			propertyKind &= PropertyKind.Unspecified;
 
 			if (propertyKind == PropertyKind.Unspecified || propertyKind != PropertyKind.Expando)
 				return null;
 
-			return isResolved ? ((DependencyProperty) interactivityObject.PropertyStore).GetName() : (string) interactivityObject.PropertyStore;
+			return isResolved ? ((DependencyProperty)interactivityObject.PropertyStore).GetName() : (string)interactivityObject.PropertyStore;
 		}
 
 		public static object GetProperty(IPropertySubject interactivityObject)
@@ -58,9 +56,9 @@ namespace Zaaml.PresentationCore.Interactivity
 				case PropertyKind.Unspecified:
 					return null;
 				case PropertyKind.Explicit:
-					return (DependencyProperty) property;
+					return (DependencyProperty)property;
 				case PropertyKind.Implicit:
-					return property as string ?? ((DependencyProperty) property).GetName();
+					return property as string ?? ((DependencyProperty)property).GetName();
 			}
 
 			return null;
@@ -77,22 +75,22 @@ namespace Zaaml.PresentationCore.Interactivity
 				return null;
 
 			if (propertyKind == PropertyKind.Explicit)
-				return (DependencyProperty) interactivityObject.PropertyStore;
+				return (DependencyProperty)interactivityObject.PropertyStore;
 
 			if (propertyKind == PropertyKind.Expando)
 			{
 				if (isResolved)
-					return (DependencyProperty) interactivityObject.PropertyStore;
+					return (DependencyProperty)interactivityObject.PropertyStore;
 
-				var resolvedProperty = DependencyPropertyManager.GetExpandoProperty((string) interactivityObject.PropertyStore);
-				
+				var resolvedProperty = DependencyPropertyManager.GetExpandoProperty((string)interactivityObject.PropertyStore);
+
 				interactivityObject.PropertyStore = resolvedProperty;
 				interactivityObject.PropertyKind |= PropertyKind.Resolved;
-				
+
 				return resolvedProperty;
 			}
 
-			var propertyName = interactivityObject.PropertyStore as string ?? ((DependencyProperty) interactivityObject.PropertyStore).GetName();
+			var propertyName = interactivityObject.PropertyStore as string ?? ((DependencyProperty)interactivityObject.PropertyStore).GetName();
 			return DependencyPropertyProxyManager.GetDependencyProperty(propertyName);
 		}
 
@@ -113,7 +111,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			switch (propertyKind)
 			{
 				case PropertyKind.Explicit:
-					return (DependencyProperty) GetProperty(interactivityObject);
+					return (DependencyProperty)GetProperty(interactivityObject);
 				case PropertyKind.Implicit:
 					return DependencyPropertyManager.GetDependencyProperty(GetProperty(interactivityObject) as string, targetType);
 				case PropertyKind.Expando:
@@ -139,32 +137,32 @@ namespace Zaaml.PresentationCore.Interactivity
 				case PropertyKind.Explicit:
 					interactivityObject.PropertyKind |= PropertyKind.Resolved;
 					return (DependencyProperty)interactivityObject.PropertyStore;
-				
+
 				case PropertyKind.Implicit:
-					{
-						var subject = interactivityObject.ActualSubject;
-						
-						if (subject == null)
-							return null;
+				{
+					var subject = interactivityObject.ActualSubject;
 
-						var resolvedProperty = DependencyPropertyManager.GetDependencyProperty((string)interactivityObject.PropertyStore, subject.GetType());
-						
-						if (resolvedProperty != null)
-							interactivityObject.PropertyStore = resolvedProperty;
+					if (subject == null)
+						return null;
 
-						interactivityObject.PropertyKind |= PropertyKind.Resolved;
-						
-						return resolvedProperty;
-					}
-				case PropertyKind.Expando:
-					{
-						var resolvedProperty = DependencyPropertyManager.GetExpandoProperty((string)interactivityObject.PropertyStore);
-						
+					var resolvedProperty = DependencyPropertyManager.GetDependencyProperty((string)interactivityObject.PropertyStore, subject.GetType());
+
+					if (resolvedProperty != null)
 						interactivityObject.PropertyStore = resolvedProperty;
-						interactivityObject.PropertyKind |= PropertyKind.Resolved;
-						
-						return resolvedProperty;
-					}
+
+					interactivityObject.PropertyKind |= PropertyKind.Resolved;
+
+					return resolvedProperty;
+				}
+				case PropertyKind.Expando:
+				{
+					var resolvedProperty = DependencyPropertyManager.GetExpandoProperty((string)interactivityObject.PropertyStore);
+
+					interactivityObject.PropertyStore = resolvedProperty;
+					interactivityObject.PropertyKind |= PropertyKind.Resolved;
+
+					return resolvedProperty;
+				}
 			}
 
 			return null;
@@ -220,8 +218,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			interactivityObject.PropertyKind &= PropertyKind.Unspecified;
 		}
-
-		#endregion
 	}
 
 	[Flags]
@@ -238,19 +234,12 @@ namespace Zaaml.PresentationCore.Interactivity
 
 	internal interface IPropertySubject : IInteractivitySubject
 	{
-		#region Properties
-
 		DependencyObject ActualSubject { get; }
+
 		PropertyKind PropertyKind { get; set; }
 
 		object PropertyStore { get; set; }
 
-		#endregion
-
-		#region  Methods
-
 		void OnPropertyChanged(DependencyProperty oldProperty, DependencyProperty newProperty);
-
-		#endregion
 	}
 }

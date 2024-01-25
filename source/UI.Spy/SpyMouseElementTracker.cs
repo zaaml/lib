@@ -30,20 +30,6 @@ namespace Zaaml.UI.Controls.Spy
 			return visualHit?.GetVisualAncestorsAndSelf().OfType<UIElement>().FirstOrDefault();
 		}
 
-		private static DependencyObject HitTest(Window window, Point position)
-		{
-			DependencyObject visualHit = null;
-
-			VisualTreeHelper.HitTest(window, result => result.GetVisualAncestorsAndSelf().OfType<SpyElementAdorner>().Any() ? HitTestFilterBehavior.ContinueSkipSelfAndChildren : HitTestFilterBehavior.Continue, result =>
-			{
-				visualHit = result.VisualHit;
-
-				return HitTestResultBehavior.Stop;
-			}, new PointHitTestParameters(position));
-
-			return visualHit;
-		}
-
 		private void MouseInternalOnMouseMove(object sender, MouseEventArgsInt e)
 		{
 			UpdateElement();
@@ -57,7 +43,7 @@ namespace Zaaml.UI.Controls.Spy
 				return;
 
 			var position = Mouse.GetPosition(window);
-			var visualHit = HitTest(window, position);
+			var visualHit = SpyUtil.WindowHitTest(window, position);
 			var elementRenderer = visualHit?.GetVisualAncestorsAndSelf().OfType<SpyZoomControl.ElementRenderer>().FirstOrDefault();
 
 			if (elementRenderer != null)
@@ -74,7 +60,7 @@ namespace Zaaml.UI.Controls.Spy
 				if (rendererElementWindow == null)
 					return;
 
-				ElementCore = GetUIElement(HitTest(rendererElementWindow, rendererPosition)) ?? ElementCore;
+				ElementCore = GetUIElement(SpyUtil.WindowHitTest(rendererElementWindow, rendererPosition)) ?? ElementCore;
 
 				return;
 			}

@@ -3,9 +3,11 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
 using Zaaml.Core.Monads;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
@@ -31,6 +33,14 @@ namespace Zaaml.PresentationCore
 
 				return fre?.Name != null ? $"{typeName} [{fre.Name}]" : $"{typeName}";
 			}));
+		}
+
+		[Conditional("DEBUG")]
+		[DebuggerStepThrough]
+		public static void BreakIfCapslock(bool value)
+		{
+			if (Keyboard.IsKeyToggled(Key.CapsLock) == value)
+				Debugger.Break();
 		}
 
 		public static object EvaluateObjectValue(object input)

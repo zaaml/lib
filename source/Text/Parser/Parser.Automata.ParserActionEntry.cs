@@ -10,12 +10,12 @@ namespace Zaaml.Text
 		{
 			private sealed class ParserActionEntry : ActionEntry, IParserEntry
 			{
-				public ParserActionEntry(Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol grammarEntry) : base(CreateActionDelegate(grammarEntry.Action))
+				public ParserActionEntry(Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol grammarEntry) : base(CreateActionDelegate(grammarEntry.ActionEntry))
 				{
-					GrammarEntry = grammarEntry;
+					GrammarSymbol = grammarEntry;
 				}
 
-				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarEntry { get; }
+				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
 				public ProductionArgument ProductionArgument { get; set; }
 
@@ -23,7 +23,7 @@ namespace Zaaml.Text
 
 				public Entry Clone()
 				{
-					return new ParserActionEntry((Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol)GrammarEntry)
+					return new ParserActionEntry((Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol)GrammarSymbol)
 					{
 						Source = this
 					};

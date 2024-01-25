@@ -9,7 +9,7 @@ namespace Zaaml.MetroThemeImplementation
 {
 	public sealed class MetroOfficeTheme : SkinnedTheme
 	{
-		private static readonly Lazy<MetroOfficeTheme> LazyInstance = new Lazy<MetroOfficeTheme>(() => new MetroOfficeTheme());
+		private static readonly Lazy<MetroOfficeTheme> LazyInstance = new(() => new MetroOfficeTheme());
 
 		private MetroOfficeTheme()
 		{

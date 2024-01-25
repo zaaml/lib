@@ -11,24 +11,24 @@ namespace Zaaml.Text
 	{
 		private int _inlineStateCounter;
 
-		private HashSet<Rule> Rules { get; } = new();
+		private HashSet<Syntax> Syntaxes { get; } = new();
 
-		protected void AddRule(Rule rule, Production production)
+		protected void AddSyntax(Syntax rule, Production production)
 		{
 			rule.Productions.Add(production);
 
-			Rules.Add(rule);
+			Syntaxes.Add(rule);
 		}
 
-		protected void AddRule(Rule rule, params Production[] productions)
+		protected void AddSyntax(Syntax rule, params Production[] productions)
 		{
-			AddRule(rule, productions.AsEnumerable());
+			AddSyntax(rule, productions.AsEnumerable());
 		}
 
-		protected void AddRule(Rule rule, IEnumerable<Production> productions)
+		protected void AddSyntax(Syntax rule, IEnumerable<Production> productions)
 		{
 			foreach (var production in productions)
-				AddRule(rule, production);
+				AddSyntax(rule, production);
 		}
 
 		protected Production CreateProduction(params Entry[] entries)
@@ -36,16 +36,16 @@ namespace Zaaml.Text
 			return new Production(entries);
 		}
 
-		protected RuleEntry Inline(IEnumerable<Entry> entries)
+		protected SyntaxEntry Inline(IEnumerable<Entry> entries)
 		{
 			var internalState = new InternalState("Internal_" + _inlineStateCounter++);
 
-			AddRule(internalState, new Production(entries));
+			AddSyntax(internalState, new Production(entries));
 
-			return new RuleEntry(internalState);
+			return new SyntaxEntry(internalState);
 		}
 
-		protected RuleEntry Inline(params Entry[] entries)
+		protected SyntaxEntry Inline(params Entry[] entries)
 		{
 			return Inline(entries.AsEnumerable());
 		}
@@ -60,9 +60,9 @@ namespace Zaaml.Text
 			return new SetMatchEntry(primitiveMatches);
 		}
 
-		protected static SingleMatchEntry Single(TOperand operand)
+		protected static OperandMatchEntry Single(TOperand operand)
 		{
-			return new SingleMatchEntry(operand);
+			return new OperandMatchEntry(operand);
 		}
 	}
 }

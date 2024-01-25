@@ -41,20 +41,20 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			var orientation = Orientation;
 			var orientedViewPort = viewport.AsOriented(orientation);
 			var orientedOffset = scrollInfo.Offset.AsOriented(orientation);
-			var orientedScrollInfo = new OrientedScrollInfo(orientation, orientedOffset.Direct, orientedViewPort.Direct, Source.Count);
+			var axisScrollInfo = new AxisScrollInfo(orientation, orientedOffset.Direct, orientedViewPort.Direct, Source.Count);
 
-			if (mode == BringIntoViewMode.Auto && index >= orientedScrollInfo.Offset && index < orientedScrollInfo.Offset + orientedScrollInfo.Viewport)
+			if (mode == BringIntoViewMode.Auto && index >= axisScrollInfo.Offset && index < axisScrollInfo.Offset + axisScrollInfo.Viewport)
 			{
 				offset = orientedOffset.Vector;
 
 				return true;
 			}
 
-			orientedScrollInfo.Offset = orientedScrollInfo.Offset - index > 0.0 || mode == BringIntoViewMode.Begin
+			axisScrollInfo.Offset = axisScrollInfo.Offset - index > 0.0 || mode == BringIntoViewMode.Begin
 				? index
-				: index - orientedScrollInfo.Viewport + 1.0;
+				: index - axisScrollInfo.Viewport + 1.0;
 
-			orientedOffset.Direct = orientedScrollInfo.Offset;
+			orientedOffset.Direct = axisScrollInfo.Offset;
 
 			offset = orientedOffset.Vector;
 

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Zaaml.Core;
@@ -33,6 +34,8 @@ namespace Zaaml.Text
 		// ReSharper disable once StaticMemberInGenericType
 		protected static readonly Interval<int> InstructionsRange;
 
+		private readonly DfaBuilder _dfaBuilderInstance;
+
 		static Automata()
 		{
 			FromConverter = ConvertFromOperandPrivate;
@@ -48,9 +51,26 @@ namespace Zaaml.Text
 
 		protected Automata(AutomataManager manager) : base(manager)
 		{
+			_dfaBuilderInstance = new DfaBuilder(this);
+
 			RegisterNode(UnexpectedNode.Instance);
 			RegisterExecutionPath(ExecutionPath.Invalid);
 			RegisterExecutionPathGroup(ExecutionPathGroup.Empty);
+		}
+
+		private readonly List<ExecutionMethodBuilder> _executionMethodBuilders = new();
+		
+		private TExecutionMethodBuilder RegisterExecutionMethodBuilder<TExecutionMethodBuilder>(Func<int, TExecutionMethodBuilder> executionMethodBuilderFactory)
+			where TExecutionMethodBuilder: ExecutionMethodBuilder
+		{
+			var executionMethodBuilder = executionMethodBuilderFactory(_executionMethodBuilders.Count);
+
+			_executionMethodBuilders.Add(executionMethodBuilder);
+
+			foreach (var executionPath in _executionPathRegistry)
+				executionPath.BuildExecutionMethods(executionMethodBuilder);
+
+			return executionMethodBuilder;
 		}
 
 		protected virtual bool AllowParallelInstructionReader => false;
@@ -62,8 +82,6 @@ namespace Zaaml.Text
 		protected bool HasPredicates { get; private set; }
 
 		protected virtual bool LookAheadEnabled => false;
-
-		private int StackHashCodeDepthThreshold => 1;
 
 		private static int ConvertFromOperand(TOperand operand)
 		{
@@ -92,11 +110,88 @@ namespace Zaaml.Text
 			return operand;
 		}
 
+		internal void BuildFullDfa()
+		{
+			foreach (var subGraph in SubGraphDictionary.Values)
+			{
+				subGraph.BuildExecutionGraph();
+			}
+
+			foreach (var node in _nodeRegistry)
+			{
+				node.EnsureSafe();
+			}
+
+			//Build();
+
+			//var stackPool = new Process.AutomataStackPool(this, MemorySpanAllocator<int>.Shared);
+			//var dfaQueue = new Queue<DfaKeyLength>();
+
+			//foreach (var subGraph in SubGraphDictionary.Values)
+			//{
+			//	subGraph.BuildExecutionGraph();
+
+			//	var stack = stackPool.Rent();
+			//	var node = subGraph.InitNode;
+			//	var dfaKey = stack.CreateDfaKey(node);
+
+			//	if (TryGetDfa(dfaKey, out _) == false)
+			//	{
+			//		CreateDfa(dfaKey);
+
+			//		dfaQueue.Enqueue(new DfaKeyLength(dfaKey, 0));
+			//	}
+			//}
+
+			//while (dfaQueue.TryDequeue(out var dfaKeyLength))
+			//{
+			//	var dfaKey = dfaKeyLength.Key;
+			//	var dfaLength = dfaKeyLength.Length;
+			//	var dfa = GetDfa(dfaKey);
+
+			//	if (dfa.Closed == false)
+			//		continue;
+
+			//	dfa.Node.EnsureSafe();
+
+			//	foreach (var executionPath in dfa.Node.ExecutionPaths)
+			//	{
+			//		var stack = stackPool.Rent();
+
+			//		stack.Load(dfa.Stack);
+
+			//		//if (executionPath.Match != null && dfaLength >= 4)
+			//		//	continue;
+
+			//		var outNode = stack.EvalDfa(executionPath);
+			//		var outDfaKey = stack.CreateDfaKey(outNode);
+
+			//		if (TryGetDfa(outDfaKey, out _) == false)
+			//		{
+			//			CreateDfa(outDfaKey);
+
+			//			dfaQueue.Enqueue(new DfaKeyLength(outDfaKey, dfaLength + 1));
+			//		}
+			//	}
+			//}
+		}
+
+
 		private protected abstract class AutomataResult : IDisposable
 		{
 			private ReferenceCounter _referenceCounter;
 
 			protected Process Process { get; private set; }
+
+			public void Dispose()
+			{
+				Process.ReleaseReference();
+
+				if (_referenceCounter.ReleaseReference() == 0)
+				{
+					DisposeCore();
+				}
+			}
 
 			protected void AddReferenceInternal()
 			{
@@ -116,19 +211,9 @@ namespace Zaaml.Text
 				_referenceCounter.AddReference();
 			}
 
-			public void Dispose()
-			{
-				Process.ReleaseReference();
-
-				if (_referenceCounter.ReleaseReference() == 0)
-				{
-					DisposeCore();
-				}
-			}
-
 			internal AutomataResult Verify()
 			{
-				if (this is not ExceptionAutomataResult exceptionResult) 
+				if (this is not ExceptionAutomataResult exceptionResult)
 					return this;
 
 				var exception = exceptionResult.Exception;
@@ -152,7 +237,7 @@ namespace Zaaml.Text
 
 			protected override void DisposeCore()
 			{
-				_pool.Release(this);
+				_pool.Return(this);
 			}
 
 			public SuccessAutomataResult Mount(Process process)
@@ -178,7 +263,7 @@ namespace Zaaml.Text
 			{
 				Exception = null;
 
-				_pool.Release(this);
+				_pool.Return(this);
 			}
 
 			public ExceptionAutomataResult Mount(Exception exception, Process process)
@@ -211,7 +296,7 @@ namespace Zaaml.Text
 
 			protected override void DisposeCore()
 			{
-				_pool.Release(this);
+				_pool.Return(this);
 			}
 
 			public ForkAutomataResult Mount(Process process)

@@ -8,73 +8,58 @@ using System.Linq;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  internal sealed class PreviewDockController : DockControllerBase
-  {
-    #region Ctors
+	internal sealed class PreviewDockController : DockControllerBase
+	{
+		public PreviewDockController(PreviewDockControlView controlView) : base(controlView)
+		{
+		}
 
-    public PreviewDockController(PreviewDockControlView controlView) : base(controlView)
-    {
-    }
+		public bool IsEnabled { get; set; }
 
-    #endregion
+		protected override bool IsPreview => true;
 
-    #region Properties
+		private PreviewDockControlView PreviewControlView => (PreviewDockControlView)ControlView;
 
-    public bool IsEnabled { get; set; }
+		public override BaseLayout GetTargetLayout(DockItem item)
+		{
+			if (IsPreview == false || item.DockState != DockItemState.Float)
+				return GetLayout(item.DockState);
 
-    protected override bool IsPreview => true;
+			var dragMoveItem = DockControl?.DragMoveItem;
 
-    private PreviewDockControlView PreviewControlView => (PreviewDockControlView) ControlView;
+			if (dragMoveItem == null)
+				return null;
 
-    #endregion
+			var currentDropGuide = PreviewControlView.CurrentDropGuide;
 
-    #region  Methods
+			if (currentDropGuide == null)
+				return null;
 
-    public override BaseLayout GetTargetLayout(DockItem item, bool arrange)
-    {
-      if (arrange == false)
-        return GetLayout(item.DockState);
+			var dragMoveItems = new HashSet<string>(dragMoveItem.EnumerateItems().Select(w => w.Name), StringComparer.OrdinalIgnoreCase);
 
-      if (IsPreview == false || item.DockState != DockItemState.Float)
-        return GetLayout(item.DockState);
+			var currentTarget = (currentDropGuide.Compass.PlacementTarget as DockItem)?.Root;
 
-      var dragMoveItem = DockControl?.DragMoveItem;
+			if (currentTarget?.DockState != DockItemState.Float)
+				return null;
 
-      if (dragMoveItem == null)
-        return null;
+			if (item.IsRoot && item.EnumerateDescendants(true).Any(w => dragMoveItems.Contains(w.Name)))
+				return FloatLayout;
 
-      var currentDropGuide = PreviewControlView.CurrentDropGuide;
+			return null;
+		}
 
-      if (currentDropGuide == null)
-        return null;
+		internal override void OnItemArranged(DockItem dockItem)
+		{
+			base.OnItemArranged(dockItem);
 
-      var dragMoveItems = new HashSet<string>(dragMoveItem.EnumerateItems().Select(w => w.Name), StringComparer.OrdinalIgnoreCase);
+			PreviewControlView.OnItemArranged(dockItem);
+		}
 
-      var currentTarget = (currentDropGuide.Compass.PlacementTarget as DockItem)?.Root;
+		internal override void OnItemMeasured(DockItem dockItem)
+		{
+			base.OnItemMeasured(dockItem);
 
-      if (currentTarget?.DockState != DockItemState.Float)
-        return null;
-
-      if (item.IsRoot && item.EnumerateDescendants(true).Any(w => dragMoveItems.Contains(w.Name)))
-        return FloatLayout;
-
-      return null;
-    }
-
-    internal override void OnItemArranged(DockItem dockItem)
-    {
-      base.OnItemArranged(dockItem);
-
-      PreviewControlView.OnItemArranged(dockItem);
-    }
-
-    internal override void OnItemMeasured(DockItem dockItem)
-    {
-      base.OnItemMeasured(dockItem);
-
-      PreviewControlView.OnItemMeasured(dockItem);
-    }
-
-    #endregion
-  }
+			PreviewControlView.OnItemMeasured(dockItem);
+		}
+	}
 }

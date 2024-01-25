@@ -1,0 +1,66 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build" 
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="CalendarDayButton.xaml"/>
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="CalendarDayButtonTemplate" TargetType="CalendarDayButton">
+    <zm:ControlTemplateRoot Background="Transparent" 
+                            UseLayoutRounding="True"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <!-- Face -->
+      <Border BorderThickness="1" 
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"/>
+
+      <!-- Content -->
+      <ContentControl x:Name="Content" 
+                      IsTabStop="False" 
+                      Foreground="{TemplateBinding Foreground}"
+                      Content="{TemplateBinding Content}" 
+                      ContentTemplate="{TemplateBinding ContentTemplate}" 
+                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                      FontSize="{TemplateBinding FontSize}" 
+                      Margin="5,1,5,1" />
+
+      <!-- Blackout -->
+      <Path x:Name="BlackoutVisual" 
+            Opacity="0" 
+            Margin="3" 
+            Stretch="Fill" 
+            Style="{zm:TemplateSkinBinding SkinPath=BlackoutGlyph.Style}"
+            Data="{zm:TemplateSkinBinding SkinPath=BlackoutGlyph.Data}">
+        <zm:Extension.Setters>
+          <zm:Setter Property="Opacity" VisualState="BlackoutDay" Value="0.2"/>
+        </zm:Extension.Setters>
+      </Path>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="CalendarDayButtonBaseStyle" TargetType="CalendarDayButton">
+    <zm:Setter Property="Template" Value="{StaticResource CalendarDayButtonTemplate}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="CalendarDayButtonStyle" TargetType="CalendarDayButton" BasedOn="{StaticResource CalendarDayButtonBaseStyle}" 
+            Skin="Code.StandardControls.CalendarDayButton">
+
+    <zm:SetterGroup  ValuePathSource="Skin" SettersSource="{StaticResource SkinSetter}"/>
+    
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="CalendarDayButtonThemeStyle" TargetType="CalendarDayButton" BasedOn="{StaticResource CalendarDayButtonStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

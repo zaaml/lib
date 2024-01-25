@@ -5,6 +5,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Zaaml.Core.Runtime;
 
 namespace Zaaml.PresentationCore.Utils
 {
@@ -12,7 +13,7 @@ namespace Zaaml.PresentationCore.Utils
 	{
 		public static void OverrideIsTabStop<TControl>(bool isTabStop) where TControl : Control
 		{
-			KeyboardNavigation.IsTabStopProperty.OverrideMetadata(typeof(TControl), new FrameworkPropertyMetadata(isTabStop ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse));
+			KeyboardNavigation.IsTabStopProperty.OverrideMetadata(typeof(TControl), new FrameworkPropertyMetadata(isTabStop ? BooleanBoxes.True : BooleanBoxes.False));
 		}
 	}
 }

@@ -6,7 +6,7 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		private class InternalState : Rule
+		private class InternalState : Syntax
 		{
 			public InternalState(string name) : base(name)
 			{

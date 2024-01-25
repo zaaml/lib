@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -59,7 +60,7 @@ namespace Zaaml.UI.Controls.Ribbon
 		public bool IsContextual
 		{
 			get => (bool) GetValue(IsContextualProperty);
-			set => SetValue(IsContextualProperty, value);
+			set => SetValue(IsContextualProperty, value.Box());
 		}
 
 		internal Thickness PagesPadding
@@ -219,7 +220,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private class RibbonPagesHost : IItemsHost<RibbonPage>
 		{
-			private RibbonPagesItemCollection ItemCollection { get; } = new RibbonPagesItemCollection();
+			private RibbonPagesItemCollection ItemCollection { get; } = new();
 
 			public ItemHostCollection<RibbonPage> Items => ItemCollection;
 			

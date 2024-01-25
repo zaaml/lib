@@ -17,11 +17,8 @@ using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.PropertyCore.Extensions;
 using Zaaml.PresentationCore.Utils;
-#if !SILVERLIGHT
 using Zaaml.PresentationCore.Input;
 using System.Windows.Input;
-
-#endif
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
@@ -40,15 +37,9 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private readonly Binding _controllerSelectorBinding;
 
-#pragma warning disable 649
 		private bool _captureMouse;
-#pragma warning restore 649
-
 		private IDisposable _globalTreeDetacher;
-
-#if !SILVERLIGHT
 		private MouseCaptureListener _mouseCaptureListener;
-#endif
 		private byte _packedValue;
 		private Popup _popup;
 
@@ -61,7 +52,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		protected PopupControlController()
 		{
-			_controllerSelectorBinding = new Binding {Source = this, BindsDirectlyToSource = true, Mode = BindingMode.OneTime};
+			_controllerSelectorBinding = new Binding { Source = this, BindsDirectlyToSource = true, Mode = BindingMode.OneTime };
 		}
 
 		private bool ActualAttachToGlobalPopup
@@ -89,10 +80,9 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private bool CaptureMouse
 		{
-			get { return _captureMouse; }
+			get => _captureMouse;
 			set
 			{
-#if !SILVERLIGHT
 				if (_captureMouse == value)
 					return;
 
@@ -105,7 +95,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 				if (value)
 					_mouseCaptureListener = new MouseCaptureListener(Popup.TreeMode == PopupTreeMode.Visual ? FrameworkElement : Popup.Panel, CaptureMode.SubTree);
-#endif
 			}
 		}
 
@@ -172,7 +161,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			}
 		}
 
-		private bool ShouldAttachSelector => !(ControllablePopup is IContextPopupControlInternal ctx) || ctx.OwnerAttachSelector;
+		private bool ShouldAttachSelector => ControllablePopup is not IContextPopupControlInternal ctx || ctx.OwnerAttachSelector;
 
 		private bool ShouldCaptureMouse => IsModalMenu && Popup?.StaysOpen != true;
 
@@ -193,7 +182,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			popup.PopupSource.Opened += OnPopupSourceOpened;
 			popup.PopupSource.Closed += OnPopupSourceClosed;
 
-			popup.BindProperties(Popup.PlacementProperty, FrameworkElement, PlacementProperty, converter: PopupPlacementWrapperConverter.Instance);
+			popup.BindProperties(Popup.PlacementProperty, FrameworkElement, PlacementProperty);
 			popup.BindProperties(Popup.IsOpenProperty, FrameworkElement, IsOpenProperty, BindingMode.TwoWay);
 		}
 
@@ -203,6 +192,21 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			if (control != null && control.IsInLiveTree() == false)
 				_globalTreeDetacher = _globalTreeDetacher.DisposeExchange(DelegateDisposable.Create(() => GlobalPopup.Instance.Attach(control), () => GlobalPopup.Instance.Detach(control)));
+		}
+
+		public void CloseContextControl(FrameworkElement owner, DependencyObject target)
+		{
+			if (target != null && IsFrameworkElementAncestorOfTarget(target))
+				return;
+
+			if (ControllablePopup is not IContextPopupControlInternal contextControl)
+				return;
+
+			if (ReferenceEquals(contextControl.Owner, owner) &&
+			    ReferenceEquals(contextControl.Target, target))
+			{
+				ClosePopup();
+			}
 		}
 
 		private void ClosePopup()
@@ -256,6 +260,12 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		{
 			if (version == Version)
 				OpenPopup();
+		}
+
+		private bool IsFrameworkElementAncestorOfTarget(DependencyObject target)
+		{
+			return target.GetAncestors(MixedTreeEnumerationStrategy.DisconnectedThenVisualThenLogicalInstance)
+				.Any(a => ReferenceEquals(a, FrameworkElement));
 		}
 
 		private void OnClosed()
@@ -315,11 +325,11 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			// ResourceContextMenu & ResourceContextBar should not change popup selector on owner change.
 			if (ShouldAttachSelector)
 			{
-				if (oldOwner != null && ReferenceEquals(newOwner.ReadLocalBinding(PopupControlService.ControllerSelectorProperty), _controllerSelectorBinding))
-					PopupControlService.ClearControllerSelector(oldOwner);
+				if (oldOwner != null && ReferenceEquals(newOwner.ReadLocalBinding(ContextPopupControlService.ControllerSelectorProperty), _controllerSelectorBinding))
+					ContextPopupControlService.ClearControllerSelector(oldOwner);
 
-				if (newOwner != null && newOwner.HasLocalValue(PopupControlService.ControllerSelectorProperty) == false)
-					newOwner.SetBinding(PopupControlService.ControllerSelectorProperty, _controllerSelectorBinding);
+				if (newOwner != null && newOwner.HasLocalValue(ContextPopupControlService.ControllerSelectorProperty) == false)
+					newOwner.SetBinding(ContextPopupControlService.ControllerSelectorProperty, _controllerSelectorBinding);
 			}
 
 			ControllablePopup.OnOwnerChanged(oldOwner, newOwner);
@@ -371,14 +381,14 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public void OpenContextControl(FrameworkElement owner, DependencyObject target)
 		{
-			if (target != null && target.GetAncestors(MixedTreeEnumerationStrategy.DisconnectedThenVisualThenLogicalInstance).Any(a => ReferenceEquals(a, FrameworkElement)))
+			if (target != null && IsFrameworkElementAncestorOfTarget(target))
 				return;
 
-			if (ControllablePopup is not IContextPopupControlInternal ctxControl)
+			if (ControllablePopup is not IContextPopupControlInternal contextControl)
 				return;
 
-			ctxControl.Owner = owner;
-			ctxControl.Target = target;
+			contextControl.Owner = owner;
+			contextControl.Target = target;
 
 			var version = Version;
 
@@ -387,7 +397,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				EnsureContextOpen(version);
 
 				if (owner is IContextPopupTarget contextPopupTarget)
-					contextPopupTarget.OnContextPopupControlOpened(ctxControl);
+					contextPopupTarget.OnContextPopupControlOpened(contextControl);
 			});
 		}
 

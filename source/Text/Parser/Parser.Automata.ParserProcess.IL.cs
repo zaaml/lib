@@ -3,9 +3,7 @@
 // </copyright>
 
 using System;
-using System.Reflection;
 using System.Reflection.Emit;
-using static Zaaml.Core.Reflection.BF;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -17,49 +15,9 @@ namespace Zaaml.Text
 		{
 			private partial class ParserProcess
 			{
-				internal partial class ParserILGenerator : ProcessILGenerator
+				private partial class ParserILGenerator : ProcessILGenerator
 				{
-					private static readonly FieldInfo TextSourceSpanFieldInfo = ParserProcessType.GetField(nameof(_textSpan), IPNP);
-
-					private static readonly FieldInfo LexemeStartFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.StartField), IPNP);
-					private static readonly FieldInfo LexemeEndFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.EndField), IPNP);
-					private static readonly FieldInfo LexemeTokenFieldInfo = typeof(Lexeme<TToken>).GetField(nameof(Lexeme<TToken>.TokenField), IPNP);
-					private static readonly FieldInfo ProductionEntityArgumentsFieldInfo = typeof(ProductionEntity).GetField(nameof(ProductionEntity.Arguments), IPNP);
-
-					private static readonly FieldInfo ProductionEntityStackFieldInfo = ParserProcessType.GetField(nameof(_productionEntityStack), IPNP);
-					private static readonly FieldInfo ProductionEntityStackTailFieldInfo = ParserProcessType.GetField(nameof(_productionEntityStackTail), IPNP);
-
-
-					private static readonly FieldInfo ProductionEntityResultFieldInfo = typeof(ProductionEntity).GetField(nameof(ProductionEntity.Result), IPNP);
-
-					public static readonly FieldInfo SyntaxTreeFactoryFieldInfo = ParserProcessType.GetField(nameof(_syntaxTreeFactory), IPNP);
-
-
-					public static readonly FieldInfo LexemeStringConverterFieldInfo = ParserProcessType.GetField(nameof(LexemeStringConverter), IPNP);
-					public static readonly FieldInfo LexemeTokenConverterFieldInfo = ParserProcessType.GetField(nameof(LexemeTokenConverter), IPNP);
-
-					private static readonly MethodInfo GetInstructionReferenceMethodInfo = ParserProcessType.GetProperty(nameof(InstructionReference), IPNP)?.GetGetMethod();
-					private static readonly MethodInfo GetInstructionTextMethodInfo = ParserProcessType.GetMethod(nameof(GetInstructionText), IPNP);
-					private static readonly MethodInfo GetInstructionMethodInfo = ParserProcessType.GetProperty(nameof(Instruction), IPNP)?.GetGetMethod();
-					private static readonly MethodInfo EnsureProductionEntityStackDepthMethodInfo = ParserProcessType.GetMethod(nameof(EnsureProductionEntityStackDepth), IPNP);
-					private static readonly MethodInfo PeekProductionEntityMethodInfo = ParserProcessType.GetMethod(nameof(PeekProductionEntity), IPNP);
-					private static readonly MethodInfo PredicateResultGetResultMethodInfo = typeof(PredicateResult).GetMethod(nameof(PredicateResult.GetResult), IPNP);
-					private static readonly MethodInfo EnterProductionMethodInfo = ParserProcessType.GetMethod(nameof(EnterProduction), IPNP);
-					private static readonly MethodInfo ConsumeProductionEntityMethodInfo = ParserProcessType.GetMethod(nameof(ConsumeProductionEntity), IPNP);
-					private static readonly MethodInfo LeaveRuleEntryMethodInfo = ParserProcessType.GetMethod(nameof(LeaveRuleEntry), IPNP);
-
-					public static readonly MethodInfo GetLexemeTextMethodInfo = ParserProcessType.GetMethod(nameof(GetLexemeString), IPNP);
-
-					private static readonly MethodInfo ProductionEntityReturnMethodInfo = typeof(ProductionEntity).GetMethod(nameof(ProductionEntity.Return), IPNP);
-
-					private static readonly MethodInfo EnterLeftRecursionProductionMethodInfo = ParserProcessType.GetMethod(nameof(EnterLeftRecursionProduction), IPNP);
-					private static readonly MethodInfo EnterLeftFactoringProductionMethodInfo = ParserProcessType.GetMethod(nameof(EnterLeftFactoringProduction), IPNP);
-
-					private static readonly MethodInfo LeaveLeftFactoringProductionMethodInfo = ParserProcessType.GetMethod(nameof(LeaveLeftFactoringProduction), IPNP);
-					private static readonly MethodInfo LeaveLeftRecursionProductionMethodInfo = ParserProcessType.GetMethod(nameof(LeaveLeftRecursionProduction), IPNP);
-					private static readonly MethodInfo LeaveProductionMethodInfo = ParserProcessType.GetMethod(nameof(LeaveProduction), IPNP);
-
-					public ParserILGenerator()
+					public ParserILGenerator(Automata<Lexeme<TToken>, TToken> automata) : base(automata)
 					{
 					}
 
@@ -97,7 +55,7 @@ namespace Zaaml.Text
 						argument.EmitConsumeValue(argumentLocal, resultLocal, context);
 					}
 
-					private void EmitConsumeRuleEntryValue(ILContext context, ProductionArgument argument)
+					private void EmitConsumeSyntaxEntryValue(ILContext context, ProductionArgument argument)
 					{
 						if (argument is not { Binder: { ConsumeValue: true } })
 							return;
@@ -145,12 +103,12 @@ namespace Zaaml.Text
 						EmitDebugPostProductionEnter(context, parserProduction);
 					}
 
-					protected override void EmitEnterRuleEntry(ILContext context, RuleEntry ruleEntry)
+					protected override void EmitEnterSyntaxEntry(ILContext context, SyntaxEntry syntaxEntry)
 					{
-						if (ruleEntry is not ParserRuleEntry parserRuleEntry || parserRuleEntry.ProductionArgument?.Binder == null)
+						if (syntaxEntry is not ParserSyntaxEntry parserSyntaxEntry || parserSyntaxEntry.ProductionArgument?.Binder == null)
 							return;
 
-						EmitDebugPreRuleEnter(context, ruleEntry);
+						EmitDebugPreSyntaxEnter(context, syntaxEntry);
 
 						context.EmitLdProcess();
 						context.EmitLdProcess();
@@ -159,7 +117,7 @@ namespace Zaaml.Text
 						context.IL.Emit(OpCodes.Add);
 						context.IL.Emit(OpCodes.Stfld, ProductionEntityStackTailFieldInfo);
 
-						EmitDebugPostRuleEnter(context, ruleEntry);
+						EmitDebugPostSyntaxEnter(context, syntaxEntry);
 					}
 
 					private static void EmitGetInstruction(ILContext context)
@@ -182,14 +140,44 @@ namespace Zaaml.Text
 						context.IL.Emit(OpCodes.Ldfld, LexemeTokenFieldInfo);
 					}
 
-					protected override void EmitInvoke(ILContext context, MatchEntry matchEntry, bool main)
+					protected override void EmitValue(ILContext context, ValueEntry valueEntry)
 					{
-						if (main == false)
+						if (valueEntry is CompositeOperandEntry compositeOperandEntry)
+							EmitConsumeCompositeOperand(context, compositeOperandEntry);
+					}
+
+					private static void EmitConsumeCompositeOperand(ILContext context, CompositeOperandEntry compositeOperandEntry)
+					{
+						var argument = compositeOperandEntry.ProductionArgument;
+
+						if (argument is not LexerProductionArgument lexerArgument)
 							return;
 
+						if (argument.Binder == null)
+							return;
+
+						var argumentLocal = context.IL.DeclareLocal(typeof(ProductionEntityArgument));
+						var resultLocal = context.IL.DeclareLocal(typeof(Lexeme<TToken>));
+
+						EmitPushArgument(context, lexerArgument, 0);
+
+						context.IL.Emit(OpCodes.Stloc, argumentLocal);
+
+						context.EmitLdProcess();
+						context.IL.Emit(OpCodes.Ldc_I4, compositeOperandEntry.TokenCode);
+						context.IL.Emit(OpCodes.Ldc_I4, compositeOperandEntry.SimpleTokenCount);
+						context.IL.Emit(OpCodes.Call, GetCompositeTokenLexemeMethodInfo);
+
+						context.IL.Emit(OpCodes.Stloc, resultLocal);
+
+						lexerArgument.EmitConsumeValue(argumentLocal, resultLocal, context);
+					}
+
+					protected override void EmitInvoke(ILContext context, MatchEntry matchEntry)
+					{
 						var argument = matchEntry switch
 						{
-							ParserSingleMatchEntry s => s.ProductionArgument,
+							ParserOperandMatchEntry s => s.ProductionArgument,
 							ParserSetMatchEntry s => s.ProductionArgument,
 							_ => throw new ArgumentOutOfRangeException()
 						};
@@ -249,28 +237,29 @@ namespace Zaaml.Text
 						EmitDebugPostProductionLeave(context, parserProduction);
 					}
 
-					protected override void EmitLeaveRuleEntry(ILContext context, RuleEntry ruleEntry)
+					protected override void EmitLeaveSyntaxEntry(ILContext context, SyntaxEntry syntaxEntry)
 					{
-						if (ruleEntry is not ParserRuleEntry parserRuleEntry || parserRuleEntry.ProductionArgument?.Binder == null)
+						if (syntaxEntry is not ParserSyntaxEntry parserSyntaxEntry || parserSyntaxEntry.ProductionArgument?.Binder == null)
 							return;
 
-						EmitDebugPreRuleLeave(context, ruleEntry);
+						EmitDebugPreSyntaxLeave(context, syntaxEntry);
 
-						var argument = parserRuleEntry.ProductionArgument;
+						var argument = parserSyntaxEntry.ProductionArgument;
 
-#if EMIT_COMSUME_PARSER == false
-						EmitConsumeRuleEntryValue(context, argument);
+#if EMIT_CONSUME_PARSER == false
+						EmitConsumeSyntaxEntryValue(context, argument);
 #else
 						context.EmitLdContext();
 						context.IL.Emit(OpCodes.Ldc_I4, argument.ArgumentIndex);
 						context.IL.Emit(OpCodes.Call, ConsumeProductionEntityMethodInfo);
 #endif
-						EmitLeaveRuleEntry(context);
 
-						EmitDebugPostRuleLeave(context, ruleEntry);
+						EmitLeaveSyntaxEntry(context);
+
+						EmitDebugPostSyntaxLeave(context, syntaxEntry);
 					}
 
-					private static void EmitLeaveRuleEntry(ILContext context)
+					private static void EmitLeaveSyntaxEntry(ILContext context)
 					{
 						EmitPeekProductionEntity(context, 0);
 

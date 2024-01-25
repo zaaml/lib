@@ -3,7 +3,6 @@
 // </copyright>
 
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore.CommandCore;
@@ -18,12 +17,12 @@ namespace Zaaml.UI.Controls.Core
 		where TItem : System.Windows.Controls.Control, IManagedCommandItem
 	{
 		private TItem _currentItem;
-
 		private byte _packedValue;
 
 		public ItemCommandController(TItemsControl itemsControl)
 		{
 			ItemsControl = itemsControl;
+			ItemsControl.MouseLeftButtonUp += OnItemsControlMouseLeftButtonUp;
 		}
 
 		private bool AllowEnter => false;
@@ -127,7 +126,7 @@ namespace Zaaml.UI.Controls.Core
 
 					CaptureMouse();
 
-					if (item.ClickMode == ClickMode.Press)
+					if (item.ClickMode == ItemClickMode.Press)
 						item.OnClick();
 
 					e.Handled = true;
@@ -168,7 +167,7 @@ namespace Zaaml.UI.Controls.Core
 
 				if (IsLeftButtonPressed == false)
 				{
-					var shouldClick = item.IsPressed && item.ClickMode == ClickMode.Release;
+					var shouldClick = item.IsPressed && item.ClickMode == ItemClickMode.Release;
 
 					ReleaseMouseCapture();
 
@@ -207,6 +206,9 @@ namespace Zaaml.UI.Controls.Core
 
 			item.FocusControl();
 
+			if (item.ClickMode == ItemClickMode.DoubleClick)
+				return;
+
 			// MouseButton could be released during method calls. Check here and after to ensure it is still pressed.
 			if (IsLeftButtonPressed)
 			{
@@ -226,7 +228,7 @@ namespace Zaaml.UI.Controls.Core
 				item.IsPressed = true;
 			}
 
-			if (item.ClickMode != ClickMode.Press || item.CanClick == false)
+			if (item.ClickMode != ItemClickMode.Press || item.CanClick == false)
 				return;
 
 			var exceptionThrown = true;
@@ -250,6 +252,9 @@ namespace Zaaml.UI.Controls.Core
 
 		private void OnItemMouseLeftButtonUp(TItem item, MouseButtonEventArgs e)
 		{
+			if (item.ClickMode == ItemClickMode.DoubleClick)
+				return;
+
 			try
 			{
 				if (IsMouseCaptured == false)
@@ -262,7 +267,7 @@ namespace Zaaml.UI.Controls.Core
 
 				e.Handled = true;
 
-				var shouldClick = MouseButtonDownEventCanClick && item.CanClick && IsSpaceOrEnterKeyDown == false && item.IsPressed && item.ClickMode == ClickMode.Release;
+				var shouldClick = MouseButtonDownEventCanClick && item.CanClick && IsSpaceOrEnterKeyDown == false && item.IsPressed && item.ClickMode == ItemClickMode.Release;
 
 				if (shouldClick && e.IsWithin(item))
 					OnClick(item);
@@ -285,6 +290,12 @@ namespace Zaaml.UI.Controls.Core
 			UpdateIsPressed(item);
 
 			e.Handled = true;
+		}
+
+		private void OnItemsControlMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+		{
+			if (IsMouseCaptured)
+				ReleaseMouseCapture();
 		}
 
 		private void OnLostKeyboardFocus(RoutedEventArgs e)
@@ -325,6 +336,17 @@ namespace Zaaml.UI.Controls.Core
 			}
 			else if (item.IsPressed)
 				item.IsPressed = false;
+		}
+
+		public void OnItemMouseDoubleClick(TItem item, MouseButtonEventArgs e)
+		{
+			if (item.ClickMode == ItemClickMode.DoubleClick)
+			{
+				e.Handled = true;
+
+				if (item.CanClick)
+					OnClick(item);
+			}
 		}
 
 		public void RaiseOnClick(TItem item)
@@ -409,6 +431,8 @@ namespace Zaaml.UI.Controls.Core
 
 		void OnItemKeyUp(TItem item, KeyEventArgs e);
 
+		void OnItemMouseDoubleClick(TItem item, MouseButtonEventArgs e);
+
 		void OnItemMouseEnter(TItem item, MouseEventArgs e);
 
 		void OnItemMouseLeave(TItem item, MouseEventArgs e);
@@ -429,7 +453,8 @@ namespace Zaaml.UI.Controls.Core
 	internal interface IManagedCommandItem : ICommandControl
 	{
 		bool CanClick { get; }
-		ClickMode ClickMode { get; }
+
+		ItemClickMode ClickMode { get; }
 
 		bool InvokeCommandBeforeClick { get; }
 

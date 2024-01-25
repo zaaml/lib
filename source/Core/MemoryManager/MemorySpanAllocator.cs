@@ -9,38 +9,44 @@ namespace Zaaml.Core
 {
 	internal static class MemorySpanAllocator
 	{
-		public static MemorySpanAllocator<T> Create<T>(ArrayPool<T> arrayPool)
+		public static MemorySpanAllocator<T> Create<T>(ArrayPool<T> arrayPool, bool clearArray)
 		{
-			return new MemorySpanAllocator<T>(arrayPool);
+			return new MemorySpanAllocator<T>(arrayPool, clearArray);
 		}
 	}
 
-	internal sealed partial class MemorySpanAllocator<T> : IMemorySpanAllocator<T>
+	internal sealed class MemorySpanAllocator<T> : IMemorySpanAllocator<T>
 	{
-		private static readonly ThreadLocal<MemorySpanAllocator<T>> ThreadLocalInstance = new(() => new MemorySpanAllocator<T>(PageManagerCollection.Shared));
+		private static readonly ThreadLocal<MemorySpanAllocator<T>> ThreadLocalInstance = new(() => new MemorySpanAllocator<T>(PageMemorySpanAllocator<T>.Shared));
 
-		public MemorySpanAllocator(ArrayPool<T> arrayPool)
+		public MemorySpanAllocator(ArrayPool<T> arrayPool, bool clearArray)
 		{
-			ManagerCollection = new PageManagerCollection(arrayPool);
+			Allocator = new PageMemorySpanAllocator<T>(arrayPool, clearArray);
 		}
 
-		private MemorySpanAllocator(PageManagerCollection managerCollection)
+		private MemorySpanAllocator(IMemorySpanAllocator<T> allocator)
 		{
-			ManagerCollection = managerCollection;
+			Allocator = allocator;
 		}
 
-		private PageManagerCollection ManagerCollection { get; }
+		public long Allocated { get; private set; }
+
+		private IMemorySpanAllocator<T> Allocator { get; }
 
 		public static MemorySpanAllocator<T> Shared => ThreadLocalInstance.Value;
 
 		public MemorySpan<T> Allocate(int size)
 		{
-			return ManagerCollection.Allocate(size);
+			Allocated += size;
+
+			return Allocator.Allocate(size);
 		}
 
 		public void Deallocate(MemorySpan<T> memorySpan)
 		{
-			ManagerCollection.Deallocate(memorySpan);
+			Allocated -= memorySpan.Length;
+
+			Allocator.Deallocate(memorySpan);
 		}
 	}
 }

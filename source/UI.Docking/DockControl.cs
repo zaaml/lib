@@ -3,13 +3,18 @@
 // </copyright>
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Markup;
+using System.Xml.Linq;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.PropertyCore.Extensions;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
@@ -39,6 +44,8 @@ namespace Zaaml.UI.Controls.Docking
 		private DockController _controller;
 		private DropGuide _currentDropGuide;
 		private PreviewDockController _previewController;
+
+		public event EventHandler<DockItemStateChangedEventArgs> ItemDockStateChanged;
 
 		static DockControl()
 		{
@@ -107,15 +114,15 @@ namespace Zaaml.UI.Controls.Docking
 
 		public bool IsPreviewEnabled
 		{
-			get => (bool) GetValue(IsPreviewEnabledProperty);
-			set => SetValue(IsPreviewEnabledProperty, value);
+			get => (bool)GetValue(IsPreviewEnabledProperty);
+			set => SetValue(IsPreviewEnabledProperty, value.Box());
 		}
 
 		public DockItemCollection Items => this.GetValueOrCreate(ItemsPropertyKey, CreateDockItemCollection);
 
 		public DockControlLayout Layout
 		{
-			get => (DockControlLayout) GetValue(LayoutProperty);
+			get => (DockControlLayout)GetValue(LayoutProperty);
 			set => SetValue(LayoutProperty, value);
 		}
 
@@ -152,21 +159,46 @@ namespace Zaaml.UI.Controls.Docking
 
 		public DockItem SelectedItem
 		{
-			get => (DockItem) GetValue(SelectedItemProperty);
+			get => (DockItem)GetValue(SelectedItemProperty);
 			set => SetValue(SelectedItemProperty, value);
 		}
 
-		private DockControlTemplateContract TemplateContract => (DockControlTemplateContract) TemplateContractInternal;
+		private DockControlTemplateContract TemplateContract => (DockControlTemplateContract)TemplateContractCore;
+
+		internal DockControlTemplateContract TemplateContractInternal => TemplateContract;
 
 		private DockItemCollection CreateDockItemCollection()
 		{
 			return new DockItemCollection(OnItemAdded, OnItemRemoved);
 		}
 
-		private DockItem FindLocalCompassTarget(DockItem dragItem)
+		internal void EnsureFloatPositionInternal(DockItem item)
 		{
-			var screenPosition = MouseInternal.ScreenPosition;
-			var elementsUnderCursor = HitTestUtils.ScreenHitTest(screenPosition).ToList();
+			var defaultLeft = item.GetValueSource(FloatLayout.LeftProperty) == PropertyValueSource.Default;
+			var defaultTop = item.GetValueSource(FloatLayout.TopProperty) == PropertyValueSource.Default;
+
+			if (!defaultLeft || !defaultTop)
+				return;
+
+			var hostWindow = Window.GetWindow(this);
+
+			if (hostWindow is not { IsVisible: true })
+				return;
+
+			var dockItemSize = FloatLayout.GetSize(item);
+			var windowRect = new Rect(new Point(hostWindow.Left, hostWindow.Top), new Size(hostWindow.ActualWidth, hostWindow.ActualHeight));
+
+			if (hostWindow.WindowState == WindowState.Maximized)
+				windowRect.Location = Screen.FromElement(hostWindow).WorkingArea.Location;
+
+			var alignBox = RectUtils.CalcAlignBox(windowRect, new Rect(dockItemSize), HorizontalAlignment.Center, VerticalAlignment.Center);
+
+			FloatLayout.SetPosition(item, alignBox.Location);
+		}
+
+		private DockItem FindLocalCompassItem(DockItem dragItem)
+		{
+			var elementsUnderCursor = MouseInternal.HitTest().ToList();
 
 			if (LocalDropCompass?.PlacementTarget != null && elementsUnderCursor.Any(e => e.IsVisualDescendantOf(LocalDropCompass)))
 				return Controller?.GetItemIfDocumentLayout(LocalDropCompass.PlacementTarget);
@@ -176,6 +208,9 @@ namespace Zaaml.UI.Controls.Docking
 
 		internal DockItem GetPreviewItem(DockItem dockItem)
 		{
+			if (ReferenceEquals(dockItem, Controller.DocumentGroup))
+				return PreviewController.DocumentGroup;
+
 			return PreviewController.GetDockItem(dockItem.Name);
 		}
 
@@ -221,15 +256,16 @@ namespace Zaaml.UI.Controls.Docking
 			InvalidateMeasure();
 		}
 
+		public void LoadLayout(TextReader textReader)
+		{
+			Layout = DockControlLayout.FromXElement(XElement.Parse(textReader.ReadToEnd()));
+		}
+
 		protected override Size MeasureOverride(Size availableSize)
 		{
 			UpdateDockLayout();
 
-			Controller?.BeforeMeasure();
-
 			var result = base.MeasureOverride(availableSize);
-
-			Controller?.AfterMeasure();
 
 			return result;
 		}
@@ -268,10 +304,20 @@ namespace Zaaml.UI.Controls.Docking
 
 		private void OnItemAdded(DockItem item)
 		{
-			item.DockControl = this;
+			item.AttachDockControlInternal(this);
 
 			Controller?.Items.Add(item);
 			PreviewController?.Items.Add(item.PreviewItem);
+		}
+
+		protected virtual void OnItemDockStateChanged(DockItem item, DockItemState oldState, DockItemState newState)
+		{
+			ItemDockStateChanged?.Invoke(this, new DockItemStateChangedEventArgs(item, oldState, newState));
+		}
+
+		internal void OnItemDockStateChangedInternal(DockItem dockItem, DockItemState oldState, DockItemState newState)
+		{
+			OnItemDockStateChanged(dockItem, oldState, newState);
 		}
 
 		internal void OnItemDragMove(DockItem item)
@@ -288,7 +334,7 @@ namespace Zaaml.UI.Controls.Docking
 			Controller?.Items.Remove(item);
 			PreviewController?.Items.Remove(item.PreviewItem);
 
-			item.DockControl = null;
+			item.DetachDockControlInternal(this);
 		}
 
 		private void OnLayoutChanged(object sender, EventArgs e)
@@ -304,10 +350,24 @@ namespace Zaaml.UI.Controls.Docking
 				return;
 
 			if (oldValue != null)
+			{
+				if (ReferenceEquals(oldValue.DockControl, this) == false)
+					throw new InvalidOperationException();
+
+				oldValue.DockControl = null;
+
 				oldValue.LayoutChanged -= OnLayoutChanged;
+			}
 
 			if (newValue != null)
+			{
+				if (ReferenceEquals(newValue.DockControl, null) == false)
+					throw new InvalidOperationException("DockControlLayout is already attached to another DockControl.");
+
+				newValue.DockControl = this;
+
 				newValue.LayoutChanged += OnLayoutChanged;
+			}
 
 			InvalidateLayoutState();
 		}
@@ -345,68 +405,85 @@ namespace Zaaml.UI.Controls.Docking
 			base.OnTemplateContractDetaching();
 		}
 
-		private void ProcessDropCompassDragMove()
+		private void GetCompassTargets(
+			out FrameworkElement localCompassTarget, 
+			out DropGuideAction localCompassAction, 
+			out FrameworkElement globalCompassTarget,
+			out DropGuideAction globalCompassAction)
 		{
-			var compassTarget = FindLocalCompassTarget(DragMoveItem);
+			var compassTarget = FindLocalCompassItem(DragMoveItem);
+			var withinDockControl = MouseInternal.HitTest().Contains(this);
 
-			if (ReferenceEquals(compassTarget, Controller.GetItemIfDocumentLayout(LocalDropCompass.PlacementTarget)))
-				return;
+			globalCompassTarget = withinDockControl ? this : null;
+			globalCompassAction = DropGuideAction.DockAll | DropGuideAction.AutoHideAll;
+
+			localCompassTarget = compassTarget;
+			localCompassAction = DropGuideAction.None;
 
 			if (compassTarget == null)
-			{
-				LocalDropCompass.PlacementTarget = null;
-				GlobalDropCompass.PlacementTarget = HitTestUtils.ScreenHitTest(MouseInternal.ScreenPosition).Contains(this) ? this : null;
-
 				return;
-			}
+
+			if (compassTarget.DockState == DockItemState.Float) 
+				globalCompassTarget = null;
 
 			if (ReferenceEquals(compassTarget, Controller.DocumentGroup))
 			{
-				LocalDropCompass.PlacementTarget = Controller.DocumentLayout.View;
-				LocalDropCompass.AllowedActions = DropGuideAction.TabAll;
-				GlobalDropCompass.PlacementTarget = DragMoveItem is DocumentDockItem ? null : this;
-				GlobalDropCompass.AllowedActions = DropGuideAction.DockAll | DropGuideAction.AutoHideAll;
+				localCompassTarget = Controller.DocumentLayout.View;
+				localCompassAction = DropGuideAction.TabAll;
+				globalCompassTarget = DragMoveItem is DocumentDockItem ? null : this;
+				globalCompassAction = DropGuideAction.DockAll | DropGuideAction.AutoHideAll;
 
 				return;
 			}
 
 			if (DragMoveItem is DocumentDockItem)
 			{
-				LocalDropCompass.AllowedActions = DropGuideAction.TabAll;
-
-				LocalDropCompass.PlacementTarget = compassTarget;
-				GlobalDropCompass.PlacementTarget = null;
+				localCompassAction = DropGuideAction.TabAll;
+				globalCompassTarget = null;
 			}
 			else
 			{
-				LocalDropCompass.AllowedActions = DropGuideAction.SplitAll | DropGuideAction.TabAll;
-
-				LocalDropCompass.PlacementTarget = compassTarget;
-				GlobalDropCompass.PlacementTarget = this;
+				localCompassAction = DropGuideAction.SplitAll | DropGuideAction.TabAll;
+				localCompassTarget = compassTarget;
 			}
 
 			if (compassTarget.IsDocument())
 			{
 				var documentContainer = compassTarget.ParentDockGroup as DocumentDockItemGroup;
-				var splitDocumentContainer = documentContainer?.ParentDockGroup as SplitDockItemGroup;
 
-				if (AllowSplitDocumentsInAllDirections == false && splitDocumentContainer != null && splitDocumentContainer.Layout.Items.Count > 1)
-					LocalDropCompass.AllowedActions |= splitDocumentContainer.Orientation.IsHorizontal()
+				if (AllowSplitDocumentsInAllDirections == false && documentContainer?.ParentDockGroup is SplitDockItemGroup splitDocumentContainer && splitDocumentContainer.Layout.Items.Count > 1)
+					localCompassAction |= splitDocumentContainer.Orientation.IsHorizontal()
 						? DropGuideAction.SplitDocumentHorizontal
 						: DropGuideAction.SplitDocumentVertical;
 				else
-					LocalDropCompass.AllowedActions |= DropGuideAction.SplitDocumentAll;
+					localCompassAction |= DropGuideAction.SplitDocumentAll;
 			}
+		}
+
+		private void ProcessDropCompassDragMove()
+		{
+			GetCompassTargets(out var localCompassTarget, out var localCompassAction, out var globalCompassTarget, out var globalCompassAction);
+
+			LocalDropCompass.AllowedActions = localCompassAction;
+			LocalDropCompass.PlacementTarget = localCompassTarget;
+
+			GlobalDropCompass.AllowedActions = globalCompassAction;
+			GlobalDropCompass.PlacementTarget = globalCompassTarget;
 		}
 
 		private void ProcessDropGuideDragMove()
 		{
-			CurrentDropGuide = HitTestUtils.ScreenHitTest(MouseInternal.ScreenPosition).OfType<DropGuide>().FirstOrDefault(g => g.IsAllowed);
+			CurrentDropGuide = MouseInternal.HitTest().OfType<DropGuide>().FirstOrDefault(g => g.IsAllowed);
+		}
+
+		public void SaveLayout(TextWriter textWriter)
+		{
+			Controller.GetActualLayout().Save(textWriter);
 		}
 
 		internal void SyncPreviewLayout()
 		{
-			PreviewController.ApplyLayout(Controller.GetActualLayout(), true);
+			PreviewController.ApplyLayout(Controller.GetActualLayout());
 		}
 
 		private void UpdateDockLayout()
@@ -421,10 +498,10 @@ namespace Zaaml.UI.Controls.Docking
 				if (layout == null)
 					return;
 
-				Controller.ApplyLayout(layout, false);
+				Controller.ApplyLayout(layout);
 
 				if (PreviewController.IsEnabled)
-					PreviewController.ApplyLayout(layout, false);
+					PreviewController.ApplyLayout(layout);
 			}
 			finally
 			{

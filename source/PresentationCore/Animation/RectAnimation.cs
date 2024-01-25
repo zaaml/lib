@@ -3,16 +3,13 @@
 // </copyright>
 
 using System.Windows;
-using Zaaml.PresentationCore.Animation.Interpolators;
 
 namespace Zaaml.PresentationCore.Animation
 {
-  public sealed class RectAnimation : PrimitiveAnimationBase<Rect>
-  {
-    #region Properties
-
-    private protected override IInterpolator<Rect> Interpolator => RectInterpolator.Instance;
-
-    #endregion
-  }
+	public sealed class RectAnimation : PrimitiveAnimation<Rect>
+	{
+		public RectAnimation() : base(RectInterpolator.Instance)
+		{
+		}
+	}
 }

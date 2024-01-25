@@ -8,181 +8,157 @@ using System.Linq;
 using System.Windows;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Monads;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 
-#if SILVERLIGHT
-using RoutedEventArgs = System.Windows.RoutedEventArgsSL;
-using RoutedEventHandler = System.Windows.RoutedEventHandlerSL;
-using RoutedEvent = System.Windows.RoutedEventSL;
-#else
-
-#endif
-
 namespace Zaaml.UI.Controls.Docking
 {
-  public abstract class DropCompass : Control
-  {
-    #region Static Fields and Constants
+	public abstract class DropCompass : Control
+	{
+		public static readonly DependencyProperty AllowedActionsProperty = DPM.Register<DropGuideAction, DropCompass>
+			("AllowedActions", c => c.OnAllowedActionsPropertyChanged);
 
-    public static readonly DependencyProperty AllowedActionsProperty = DPM.Register<DropGuideAction, DropCompass>
-      ("AllowedActions", c => c.AllowDropGuides);
+		public static readonly DependencyProperty PlacementTargetProperty = DPM.Register<FrameworkElement, DropCompass>
+			("PlacementTarget", c => c.OnPlacementTargetPropertyChanged);
 
-    public static readonly DependencyProperty PlacementTargetProperty = DPM.Register<FrameworkElement, DropCompass>
-      ("PlacementTarget", c => c.OnPlacementTargetChangedInt);
+		private static readonly DependencyPropertyKey ActualPlacementTargetPropertyKey = DPM.RegisterReadOnly<FrameworkElement, DropCompass>
+			("ActualPlacementTarget");
 
-    public static readonly DependencyProperty IsDocumentBandEnabledProperty = DPM.Register<bool, DropCompass>
-      ("IsDocumentBandEnabled", true);
+		public static readonly DependencyProperty ActualPlacementTargetProperty = ActualPlacementTargetPropertyKey.DependencyProperty;
 
-    public static readonly RoutedEvent PlacementTargetChangedEvent = EventManager.RegisterRoutedEvent
-      ("PlacementTargetChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(DropCompass));
+		public static readonly DependencyProperty IsDocumentBandEnabledProperty = DPM.Register<bool, DropCompass>
+			("IsDocumentBandEnabled", true);
 
-    private static readonly List<string> DropGuideNames = new List<string>
-    {
-      "AutoHideLeftGuide",
-      "DockLeftGuide",
-      "AutoHideTopGuide",
-      "DockTopGuide",
-      "AutoHideRightGuide",
-      "DockRightGuide",
-      "AutoHideBottomGuide",
-      "DockBottomGuide",
-      "SplitLeftGuide",
-      "SplitDocumentLeftGuide",
-      "SplitTopGuide",
-      "SplitDocumentTopGuide",
-      "SplitRightGuide",
-      "SplitDocumentRightGuide",
-      "SplitBottomGuide",
-      "SplitDocumentBottomGuide",
-      "TabCenterGuide",
-      "TabLeftGuide",
-      "TabTopGuide",
-      "TabRightGuide",
-      "TabBottomGuide"
-    };
+		private static readonly List<string> DropGuideNames = new()
+		{
+			"AutoHideLeftGuide",
+			"DockLeftGuide",
+			"AutoHideTopGuide",
+			"DockTopGuide",
+			"AutoHideRightGuide",
+			"DockRightGuide",
+			"AutoHideBottomGuide",
+			"DockBottomGuide",
+			"SplitLeftGuide",
+			"SplitDocumentLeftGuide",
+			"SplitTopGuide",
+			"SplitDocumentTopGuide",
+			"SplitRightGuide",
+			"SplitDocumentRightGuide",
+			"SplitBottomGuide",
+			"SplitDocumentBottomGuide",
+			"TabCenterGuide",
+			"TabLeftGuide",
+			"TabTopGuide",
+			"TabRightGuide",
+			"TabBottomGuide"
+		};
 
-    #endregion
+		private List<DropGuide> _dropGuides;
 
-    #region Fields
+		static DropCompass()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<DropCompass>();
+		}
 
-    private List<DropGuide> _dropGuides;
+		protected DropCompass()
+		{
+			this.OverrideStyleKey<DropCompass>();
+		}
 
+		public FrameworkElement ActualPlacementTarget
+		{
+			get => (FrameworkElement) GetValue(ActualPlacementTargetProperty);
+			private set => this.SetReadOnlyValue(ActualPlacementTargetPropertyKey, value);
+		}
 
-    public event RoutedEventHandler PlacementTargetChanged
-    {
-      add => this.AddHandlerInt(PlacementTargetChangedEvent, value, false);
-      remove => this.RemoveHandlerInt(PlacementTargetChangedEvent, value);
-    }
+		public DropGuideAction AllowedActions
+		{
+			get => (DropGuideAction) GetValue(AllowedActionsProperty);
+			set => SetValue(AllowedActionsProperty, value);
+		}
 
-    #endregion
+		public IEnumerable<DropGuide> DropGuides => _dropGuides.AsEnumerable();
 
-    #region Ctors
+		public bool IsDocumentBandEnabled
+		{
+			get => (bool) GetValue(IsDocumentBandEnabledProperty);
+			set => SetValue(IsDocumentBandEnabledProperty, value.Box());
+		}
 
-    static DropCompass()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<DropCompass>();
-    }
+		public FrameworkElement PlacementTarget
+		{
+			get => (FrameworkElement) GetValue(PlacementTargetProperty);
+			set => SetValue(PlacementTargetProperty, value);
+		}
 
-    protected DropCompass()
-    {
-      this.OverrideStyleKey<DropCompass>();
-    }
+		private void AttachEvent(FrameworkElement newTarget)
+		{
+			newTarget.LayoutUpdated += OnPlacementTargetLayoutUpdated;
+		}
 
-    #endregion
+		private void DetachEvent(FrameworkElement oldTarget)
+		{
+			oldTarget.LayoutUpdated -= OnPlacementTargetLayoutUpdated;
+		}
 
-    #region Properties
+		private void OnAllowedActionsPropertyChanged(DropGuideAction oldActions, DropGuideAction newActions)
+		{
+			UpdateAllowedActions();
+		}
 
-    public DropGuideAction AllowedActions
-    {
-      get => (DropGuideAction) GetValue(AllowedActionsProperty);
-      set => SetValue(AllowedActionsProperty, value);
-    }
+		public override void OnApplyTemplate()
+		{
+			base.OnApplyTemplate();
 
-    public IEnumerable<DropGuide> DropGuides => _dropGuides.AsEnumerable();
+			if (_dropGuides != null)
+				foreach (var dropGuide in _dropGuides)
+					dropGuide.Compass = null;
 
-    public bool IsDocumentBandEnabled
-    {
-      get => (bool) GetValue(IsDocumentBandEnabledProperty);
-      set => SetValue(IsDocumentBandEnabledProperty, value);
-    }
+			_dropGuides = DropGuideNames.Select(GetTemplateChild).OfType<DropGuide>().SkipNull().ToList();
 
-    public FrameworkElement PlacementTarget
-    {
-      get => (FrameworkElement) GetValue(PlacementTargetProperty);
-      set => SetValue(PlacementTargetProperty, value);
-    }
+			foreach (var dropGuide in _dropGuides)
+				dropGuide.Compass = this;
 
-    #endregion
+			UpdateAllowedActions();
+		}
 
-    #region  Methods
+		protected virtual void OnPlacementTargetChanged()
+		{
+			IsDocumentBandEnabled = PlacementTarget.Return(p => p.GetVisualAncestors().Any(t => t is DocumentLayout));
+		}
 
-    private void AllowDropGuides()
-    {
-      if (_dropGuides == null)
-        return;
+		private void OnPlacementTargetLayoutUpdated(object sender, EventArgs e)
+		{
+		}
 
-      foreach (var dropGuide in _dropGuides)
-        dropGuide.IsAllowed = (AllowedActions & dropGuide.Action) != 0;
-    }
+		private void OnPlacementTargetPropertyChanged(FrameworkElement oldTarget, FrameworkElement newTarget)
+		{
+			if (oldTarget != null)
+				DetachEvent(oldTarget);
 
-    private void AttachEvent(FrameworkElement newTarget)
-    {
-      newTarget.LayoutUpdated += OnPlacementTargetLayoutUpdated;
-    }
+			if (newTarget != null)
+				AttachEvent(newTarget);
 
-    private void DetachEvent(FrameworkElement oldTarget)
-    {
-      oldTarget.LayoutUpdated -= OnPlacementTargetLayoutUpdated;
-    }
+			OnPlacementTargetChanged();
+			UpdatePlacement();
+		}
 
-    public override void OnApplyTemplate()
-    {
-      base.OnApplyTemplate();
+		private void UpdateAllowedActions()
+		{
+			if (_dropGuides == null)
+				return;
 
-      if (_dropGuides != null)
-        foreach (var dropGuide in _dropGuides)
-          dropGuide.Compass = null;
+			foreach (var dropGuide in _dropGuides)
+				dropGuide.IsAllowed = (AllowedActions & dropGuide.Action) != 0;
+		}
 
-      _dropGuides = DropGuideNames.Select(GetTemplateChild).OfType<DropGuide>().SkipNull().ToList();
-
-      foreach (var dropGuide in _dropGuides)
-        dropGuide.Compass = this;
-
-      AllowDropGuides();
-    }
-
-    protected virtual void OnPlacementTargetChanged()
-    {
-      this.RaiseEventInt(new RoutedEventArgs(PlacementTargetChangedEvent, this));
-
-      IsDocumentBandEnabled = PlacementTarget.Return(p => p.GetVisualAncestors().Any(t => t is DocumentLayout));
-
-      UpdatePlacement();
-    }
-
-    private void OnPlacementTargetChangedInt(FrameworkElement oldTarget, FrameworkElement newTarget)
-    {
-      if (oldTarget != null)
-        DetachEvent(oldTarget);
-
-      if (newTarget != null)
-        AttachEvent(newTarget);
-
-      OnPlacementTargetChanged();
-    }
-
-    private void OnPlacementTargetLayoutUpdated(object sender, EventArgs e)
-    {
-      UpdatePlacement();
-    }
-
-    public void UpdatePlacement()
-    {
-    }
-
-    #endregion
-  }
+		private void UpdatePlacement()
+		{
+			ActualPlacementTarget = PlacementTarget;
+		}
+	}
 }

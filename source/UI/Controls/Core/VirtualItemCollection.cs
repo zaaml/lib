@@ -32,6 +32,14 @@ namespace Zaaml.UI.Controls.Core
 			TempGeneratedItems = new GeneratedItemList(LinkedListManager);
 			NextGeneratedItems = new GeneratedItemList(LinkedListManager);
 			PrevGeneratedItems = new GeneratedItemList(LinkedListManager);
+
+			EnsureVoidRange();
+		}
+
+		private void EnsureVoidRange()
+		{
+			NextGeneratedItems.EnsureVoidRange();
+			PrevGeneratedItems.EnsureVoidRange();
 		}
 
 		private GeneratedIndexItemPair CurrentAttachDetachIndexItemPair { get; set; }
@@ -171,14 +179,6 @@ namespace Zaaml.UI.Controls.Core
 				CurrentOperation = AttachDetachOperation.None;
 				CurrentAttachDetachIndexItemPair = GeneratedIndexItemPair.Empty;
 			}
-		}
-
-		private void EnsureCount()
-		{
-			var count = IndexedSource.Count;
-
-			NextGeneratedItems.EnsureCount(count);
-			PrevGeneratedItems.EnsureCount(count);
 		}
 
 		private static IEnumerable<GeneratedIndexItemPair> EnumerateRealizedItems(GeneratedItemList generatedItems)
@@ -339,6 +339,8 @@ namespace Zaaml.UI.Controls.Core
 		{
 			SourceVersion++;
 
+			EnsureVoidRange();
+
 			switch (e.Action)
 			{
 				case NotifyCollectionChangedAction.Add:
@@ -379,7 +381,7 @@ namespace Zaaml.UI.Controls.Core
 					throw new ArgumentOutOfRangeException();
 			}
 
-			EnsureCount();
+			EnsureVoidRange();
 
 			OnSourceCollectionChanged(e);
 		}
@@ -409,6 +411,9 @@ namespace Zaaml.UI.Controls.Core
 		{
 			Debug.Assert(generatedItem != null);
 			Debug.Assert(generatedItem.IsInTemp == false);
+
+			if (generatedItem.IsLocked)
+				return;
 
 			if (generatedItem.IsInTemp)
 				return;
@@ -529,7 +534,7 @@ namespace Zaaml.UI.Controls.Core
 			PrevGeneratedItems.Clear();
 			NextGeneratedItems.Clear();
 
-			EnsureCount();
+			EnsureVoidRange();
 
 			SuspendReleaseGeneratedItems = false;
 		}
@@ -558,8 +563,6 @@ namespace Zaaml.UI.Controls.Core
 			TempGeneratedItems.Clear();
 
 			SuspendReleaseGeneratedItems = false;
-
-			EnsureCount();
 		}
 
 		private T VirtualGetCurrent(int index)
@@ -578,7 +581,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var generatedItems = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
 
-			return generatedItems.Where(g => g != null).Select(g => g.Item).Where(i => i != null);
+			return generatedItems.EnumerateRealizedValues().Select(i => i.Value).Where(g => g != null).Select(g => g.Item).Where(i => i != null);
 		}
 
 		private int VirtualGetIndexFromItem(T item)
@@ -595,7 +598,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var items = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
 
-			if (index < 0 || index >= items.Count)
+			if (index < 0 || index >= items.LongCount)
 				return null;
 
 			var generatedItem = items[index];
@@ -627,8 +630,7 @@ namespace Zaaml.UI.Controls.Core
 			NextGeneratedItems = items;
 
 			items.Clear();
-
-			EnsureCount();
+			EnsureVoidRange();
 
 			Version++;
 			IsGenerating = false;
@@ -642,6 +644,8 @@ namespace Zaaml.UI.Controls.Core
 
 				if (generatedItem == null)
 					return;
+
+				RemoveFromTemp(generatedItem);
 
 				generatedItem.Lock();
 				LockedItemDictionary.Add(item, generatedItem);
@@ -753,7 +757,7 @@ namespace Zaaml.UI.Controls.Core
 
 				RemoveLockedSource(generatedItem);
 
-				if (generatedItem.IsAttached && generatedItem.IsInTemp == false && generatedItem.IsInPool == false && FindGeneratedItem(generatedItem.Item).IsEmpty) 
+				if (generatedItem.IsAttached && generatedItem.IsInPool == false && FindGeneratedItem(generatedItem.Item).IsEmpty) 
 					PushIntoTempItems(generatedItem);
 			}
 		}

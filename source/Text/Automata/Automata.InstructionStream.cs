@@ -13,10 +13,7 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		private protected virtual Pool<InstructionStream> CreateInstructionStreamPool()
-		{
-			return new Pool<InstructionStream>(p => new InstructionStream(p));
-		}
+		private protected abstract Pool<InstructionStream> CreateInstructionStreamPool();
 
 		private protected partial class InstructionStream : PoolSharedObject<InstructionStream>
 		{
@@ -496,6 +493,16 @@ namespace Zaaml.Text
 				public readonly TInstruction[] InstructionsBuffer;
 				public readonly int[] OperandsBuffer;
 				public readonly int InstructionsCount;
+			}
+
+			public virtual string Dump(int position, int length)
+			{
+				return null;
+			}
+
+			public virtual string Dump(int position)
+			{
+				return null;
 			}
 		}
 	}

@@ -23,11 +23,11 @@ namespace Zaaml.Text
 
 				return (x, y) switch
 				{
-					(SingleMatchEntry sx, SingleMatchEntry sy) => SingleMatchEntry.EqualityComparer.Equals(sx, sy),
+					(OperandMatchEntry sx, OperandMatchEntry sy) => OperandMatchEntry.EqualityComparer.Equals(sx, sy),
 					(SetMatchEntry sx, SetMatchEntry sy) => SetMatchEntry.EqualityComparer.Equals(sx, sy),
 					(RangeMatchEntry rx, RangeMatchEntry ry) => RangeMatchEntry.EqualityComparer.Equals(rx, ry),
 					(QuantifierEntry qx, QuantifierEntry qy) => QuantifierEntry.EqualityComparer.Equals(qx, qy),
-					(RuleEntry rx, RuleEntry ry) => RuleEntry.EqualityComparer.Equals(rx, ry),
+					(SyntaxEntry rx, SyntaxEntry ry) => SyntaxEntry.EqualityComparer.Equals(rx, ry),
 					_ => false
 				};
 			}
@@ -36,11 +36,11 @@ namespace Zaaml.Text
 			{
 				return m switch
 				{
-					SingleMatchEntry s => SingleMatchEntry.EqualityComparer.GetHashCode(s),
+					OperandMatchEntry s => OperandMatchEntry.EqualityComparer.GetHashCode(s),
 					RangeMatchEntry r => RangeMatchEntry.EqualityComparer.GetHashCode(r),
 					SetMatchEntry s => SetMatchEntry.EqualityComparer.GetHashCode(s),
 					QuantifierEntry q => QuantifierEntry.EqualityComparer.GetHashCode(q),
-					RuleEntry r => RuleEntry.EqualityComparer.GetHashCode(r),
+					SyntaxEntry r => SyntaxEntry.EqualityComparer.GetHashCode(r),
 					_ => m.GetHashCode()
 				};
 			}

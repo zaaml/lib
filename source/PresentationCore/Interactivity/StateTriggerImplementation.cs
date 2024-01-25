@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using Zaaml.Core;
 using Zaaml.Core.Packed;
 
@@ -14,7 +15,6 @@ using Zaaml.Core.Packed;
 namespace Zaaml.PresentationCore.Interactivity
 {
 	//TODO implement Invert property for simple != conditions (also for conditions, condition groups, VisualStateTrigger, ...)
-	
 	internal class StateTriggerImplementation<TStateTrigger, TStateTriggerImplementation>
 		where TStateTrigger : TriggerBase, IStateTrigger<TStateTrigger, TStateTriggerImplementation>
 		where TStateTriggerImplementation : StateTriggerImplementation<TStateTrigger, TStateTriggerImplementation>
@@ -30,29 +30,41 @@ namespace Zaaml.PresentationCore.Interactivity
 		public event EventHandler Opened;
 		public event EventHandler Closed;
 
-		public static void InitPackedDefinition()
-		{
-			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
-
-			PackedDefinition.State.SetValue(ref DefaultPackedValue, TriggerState.Undefined);
-			PackedDefinition.Status.SetValue(ref DefaultPackedValue, StateTriggerStatus.Default);
-		}
-
 		protected StateTriggerImplementation(TStateTrigger stateTrigger)
 		{
 			StateTrigger = stateTrigger;
 			StateTrigger.PackedValue |= DefaultPackedValue;
 		}
 
+		protected TimeSpan ActualCloseDelay => DelayTrigger?.CloseDelay ?? TimeSpan.Zero;
+
+		public DelayStateTrigger ActualDelayTrigger => DelayTrigger ??= new DelayStateTrigger(OpenTriggerImpl, TimeSpan.Zero, CloseTriggerImpl, TimeSpan.Zero);
+
 		private IEnumerable<TriggerActionBase> ActualEnterActions => _enterActions ?? Enumerable.Empty<TriggerActionBase>();
 
 		private IEnumerable<TriggerActionBase> ActualExitActions => _exitActions ?? Enumerable.Empty<TriggerActionBase>();
+
+		protected TimeSpan ActualOpenDelay => DelayTrigger?.OpenDelay ?? TimeSpan.Zero;
 
 		private IEnumerable<SetterBase> ActualSetters => _setters ?? Enumerable.Empty<SetterBase>();
 
 		private IEnumerable<TriggerBase> ActualTriggers => _triggers ?? Enumerable.Empty<TriggerBase>();
 
 		public IEnumerable<InteractivityObject> Children => StateTrigger.BaseChildren.Concat(ActualEnterActions).Concat(ActualSetters).Concat(ActualExitActions).Concat(ActualTriggers);
+
+		public Duration CloseDelay
+		{
+			get => DelayTrigger?.CloseDelay ?? default(Duration);
+			set
+			{
+				if (CloseDelay == value)
+					return;
+
+				ActualDelayTrigger.CloseDelay = value.HasTimeSpan ? value.TimeSpan : TimeSpan.Zero;
+			}
+		}
+
+		private DelayStateTrigger DelayTrigger { get; set; }
 
 		private SetterGroup EnsureSourceSetterGroup
 		{
@@ -126,6 +138,18 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => PackedDefinition.IsOpening.SetValue(ref StateTrigger.PackedValue, value);
 		}
 
+		public Duration OpenDelay
+		{
+			get => DelayTrigger?.OpenDelay ?? default(Duration);
+			set
+			{
+				if (OpenDelay == value)
+					return;
+
+				ActualDelayTrigger.OpenDelay = value.HasTimeSpan ? value.TimeSpan : TimeSpan.Zero;
+			}
+		}
+
 		public SetterCollectionBase Setters => _setters ??= new InnerSetterCollection(this);
 
 		public SetterCollection SettersSource
@@ -182,13 +206,13 @@ namespace Zaaml.PresentationCore.Interactivity
 			{
 				case TriggerState.Undefined:
 					return TriggerState.Undefined;
-				
+
 				case TriggerState.Opened:
 					return TriggerState.Closed;
-				
+
 				case TriggerState.Closed:
 					return TriggerState.Opened;
-				
+
 				default:
 					throw new ArgumentOutOfRangeException(nameof(state));
 			}
@@ -199,16 +223,24 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (IsOpening)
 			{
 				IsOpening = false;
-				
+
 				return;
 			}
 
 			CloseTriggerCore();
 		}
 
-		public void CloseTriggerCore()
+		public virtual void CloseTriggerCore()
 		{
-			CloseTriggerImpl();
+			if (DelayTrigger != null)
+			{
+				if (IsActuallyOpen)
+					DelayTrigger.InvokeClose();
+				else
+					DelayTrigger.RevokeOpen();
+			}
+			else
+				CloseTriggerImpl();
 		}
 
 		private void CloseTriggerImpl()
@@ -230,7 +262,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (IsClosing == false && TriggerState == TriggerState.Opened)
 			{
 				CloseTrigger();
-				
+
 				return;
 			}
 
@@ -245,6 +277,12 @@ namespace Zaaml.PresentationCore.Interactivity
 			_setters = sourceTrigger._setters?.DeepCloneCollection<InnerSetterCollection, SetterBase>(StateTrigger);
 			_enterActions = sourceTrigger._enterActions?.DeepCloneCollection<TriggerActionCollection, TriggerActionBase>(StateTrigger);
 			_exitActions = sourceTrigger._exitActions?.DeepCloneCollection<TriggerActionCollection, TriggerActionBase>(StateTrigger);
+
+			if (sourceTrigger.DelayTrigger != null)
+			{
+				OpenDelay = sourceTrigger.OpenDelay;
+				CloseDelay = sourceTrigger.CloseDelay;
+			}
 
 			var settersSource = sourceTrigger.SettersSource;
 
@@ -267,6 +305,14 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal void InitializeTrigger(IInteractivityRoot root)
 		{
 			StateTrigger.InitializeTrigger(root);
+		}
+
+		public static void InitPackedDefinition()
+		{
+			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
+
+			PackedDefinition.State.SetValue(ref DefaultPackedValue, TriggerState.Undefined);
+			PackedDefinition.Status.SetValue(ref DefaultPackedValue, StateTriggerStatus.Default);
 		}
 
 		internal void LoadActions(IInteractivityRoot root)
@@ -297,7 +343,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		private void OnClosed()
 		{
 			Closed?.Invoke(this, EventArgs.Empty);
-			
+
 			OnClosedCore();
 		}
 
@@ -311,7 +357,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			UpdateTriggerState();
 
 			var isEnabled = StateTrigger.IsEnabled;
-			
+
 			if (TriggerState == TriggerState.Opened)
 				foreach (var trigger in ActualTriggers)
 					trigger.IsEnabled = isEnabled;
@@ -323,7 +369,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		private void OnOpened()
 		{
 			OnOpenedCore();
-			
+
 			Opened?.Invoke(this, EventArgs.Empty);
 		}
 
@@ -338,18 +384,18 @@ namespace Zaaml.PresentationCore.Interactivity
 			{
 				case TriggerState.Undefined:
 					throw new InvalidOperationException("Trigger can not go to undefined state");
-				
+
 				case TriggerState.Opened:
 					OpenTrigger();
-					
+
 					break;
-				
+
 				case TriggerState.Closed:
 					if (prevState == TriggerState.Opened)
 						CloseTrigger();
-					
+
 					break;
-				
+
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
@@ -374,7 +420,15 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		public void OpenTriggerCore()
 		{
-			OpenTriggerImpl();
+			if (DelayTrigger != null)
+			{
+				if (IsActuallyOpen == false)
+					DelayTrigger.InvokeOpen();
+				else
+					DelayTrigger.RevokeClose();
+			}
+			else
+				OpenTriggerImpl();
 		}
 
 		private void OpenTriggerImpl()
@@ -382,7 +436,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			foreach (var trigger in ActualTriggers)
 				trigger.IsEnabled = StateTrigger.IsEnabled;
 
-			if (StateTrigger.IsEnabled == false) 
+			if (StateTrigger.IsEnabled == false)
 				return;
 
 			IsOpening = true;
@@ -401,7 +455,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (IsOpening == false && TriggerState == TriggerState.Closed)
 			{
 				CloseTrigger();
-				
+
 				return;
 			}
 
@@ -436,7 +490,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		public void UpdateTriggerState()
 		{
 			var isReady = Status >= StateTriggerStatus.Initialized;
-			
+
 			if (isReady == false && TriggerState == TriggerState.Undefined)
 				return;
 
@@ -490,7 +544,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			internal override InteractivityCollection<SetterBase> CreateInstance(IInteractivityObject parent)
 			{
-				return new InnerSetterCollection(((TStateTrigger) parent).Implementation);
+				return new InnerSetterCollection(((TStateTrigger)parent).Implementation);
 			}
 		}
 
@@ -502,27 +556,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			internal override InteractivityCollection<TriggerBase> CreateInstance(IInteractivityObject parent)
 			{
-				return new InnerTriggerCollection(((TStateTrigger) parent).Implementation);
+				return new InnerTriggerCollection(((TStateTrigger)parent).Implementation);
 			}
 		}
-	}
-
-	internal interface IStateTrigger<TStateTrigger, out TStateTriggerImplementation>
-		where TStateTrigger : TriggerBase, IStateTrigger<TStateTrigger, TStateTriggerImplementation>
-		where TStateTriggerImplementation : StateTriggerImplementation<TStateTrigger, TStateTriggerImplementation>
-	{
-		TStateTriggerImplementation Implementation { get; }
-
-		IEnumerable<InteractivityObject> BaseChildren { get; }
-
-		void OnOpened();
-
-		void OnClosed();
-
-		TriggerState UpdateState();
-
-		void DeinitializeTrigger(IInteractivityRoot root);
-
-		void InitializeTrigger(IInteractivityRoot root);
 	}
 }

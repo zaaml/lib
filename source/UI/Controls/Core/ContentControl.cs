@@ -37,6 +37,9 @@ namespace Zaaml.UI.Controls.Core
 		private static readonly DependencyPropertyKey ContentTriggersPropertyKey = DPM.RegisterReadOnly<TriggerCollection, ContentControl>
 			("ContentTriggersPrivate");
 
+		public static readonly DependencyProperty CornerRadiusProperty = DPM.Register<CornerRadius, ContentControl>
+			("CornerRadius", d => d.OnCornerRadiusPropertyChangedPrivate);
+
 		public static readonly DependencyProperty ContentTriggersProperty = ContentTriggersPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty ContentBehaviorsProperty = ContentBehaviorsPropertyKey.DependencyProperty;
@@ -105,6 +108,12 @@ namespace Zaaml.UI.Controls.Core
 		private SetterCollection ContentSettersPrivate => (SetterCollection) GetValue(ContentSettersProperty);
 
 		public TriggerCollection ContentTriggers => this.GetValueOrCreate(ContentTriggersPropertyKey, CreateTriggerCollection);
+
+		public CornerRadius CornerRadius
+		{
+			get => (CornerRadius) GetValue(CornerRadiusProperty);
+			set => SetValue(CornerRadiusProperty, value);
+		}
 
 		public Visibility EmptyVisibility
 		{
@@ -189,6 +198,15 @@ namespace Zaaml.UI.Controls.Core
 			base.OnContentTemplateSelectorChanged(oldContentTemplateSelector, newContentTemplateSelector);
 
 			Update();
+		}
+
+		protected virtual void OnCornerRadiusChanged(CornerRadius oldValue, CornerRadius newValue)
+		{
+		}
+
+		private void OnCornerRadiusPropertyChangedPrivate(CornerRadius oldValue, CornerRadius newValue)
+		{
+			OnCornerRadiusChanged(oldValue, newValue);
 		}
 
 		private protected virtual void OnDependencyPropertyChangedInternal(DependencyPropertyChangedEventArgs args)

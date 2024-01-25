@@ -87,7 +87,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 			set => SetValue(OrientationProperty, value);
 		}
 
-		private ColorChannelSliderTemplateContract TemplateContract => (ColorChannelSliderTemplateContract) TemplateContractInternal;
+		private ColorChannelSliderTemplateContract TemplateContract => (ColorChannelSliderTemplateContract) TemplateContractCore;
 
 		private TrackBarControl TrackBarControl => TemplateContract.TrackBarControl;
 

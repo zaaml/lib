@@ -40,7 +40,7 @@
 
         <zm:DockPanel>
 
-          <zm:TreeViewItemGridColumnHeadersPresenter x:Name="ColumnHeadersPresenter"
+          <zm:TreeGridViewHeadersPresenter x:Name="ColumnHeadersPresenter"
                                                      zm:DockPanel.Dock="Top" />
 
           <zm:ScrollViewControl x:Name="ScrollView"

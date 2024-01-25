@@ -8,237 +8,218 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Behaviors
 {
-  public static class HoverableBehavior
-  {
-    #region Static Fields and Constants
+	public static class HoverableBehavior
+	{
+		private static readonly Dictionary<UIElement, HoverTimer> HoverTimers = new();
 
-    private static readonly Dictionary<UIElement, HoverTimer> HoverTimers = new Dictionary<UIElement, HoverTimer>();
+		public static readonly DependencyProperty IsEnabledProperty = DependencyPropertyManager.RegisterAttached
+		("IsEnabled", typeof(bool), typeof(HoverableBehavior),
+			new PropertyMetadata(BooleanBoxes.False, OnIsEnabledPropertyChanged));
 
-    public static readonly DependencyProperty IsEnabledProperty = DependencyPropertyManager.RegisterAttached
-    ("IsEnabled", typeof(bool), typeof(HoverableBehavior),
-      new PropertyMetadata(KnownBoxes.BoolFalse, OnIsEnabledPropertyChanged));
+		public static readonly DependencyProperty EnterDelayProperty = DependencyPropertyManager.RegisterAttached
+		("EnterDelay", typeof(double), typeof(HoverableBehavior),
+			new PropertyMetadata(0.0));
 
-    public static readonly DependencyProperty EnterDelayProperty = DependencyPropertyManager.RegisterAttached
-    ("EnterDelay", typeof(double), typeof(HoverableBehavior),
-      new PropertyMetadata(0.0));
+		public static readonly DependencyProperty LeaveDelayProperty = DependencyPropertyManager.RegisterAttached
+		("LeaveDelay", typeof(double), typeof(HoverableBehavior),
+			new PropertyMetadata(0.0));
 
-    public static readonly DependencyProperty LeaveDelayProperty = DependencyPropertyManager.RegisterAttached
-    ("LeaveDelay", typeof(double), typeof(HoverableBehavior),
-      new PropertyMetadata(0.0));
+		public static readonly DependencyProperty IsOpenProperty = DependencyPropertyManager.RegisterAttached
+		("IsOpen", typeof(bool), typeof(HoverableBehavior),
+			new PropertyMetadata(BooleanBoxes.False));
 
-    public static readonly DependencyProperty IsOpenProperty = DependencyPropertyManager.RegisterAttached
-    ("IsOpen", typeof(bool), typeof(HoverableBehavior),
-      new PropertyMetadata(KnownBoxes.BoolFalse));
+		public static readonly DependencyProperty PopupTargetProperty = DependencyPropertyManager.RegisterAttached
+		("PopupTarget", typeof(Popup), typeof(HoverableBehavior),
+			new PropertyMetadata(null));
 
-    public static readonly DependencyProperty PopupTargetProperty = DependencyPropertyManager.RegisterAttached
-    ("PopupTarget", typeof(Popup), typeof(HoverableBehavior),
-      new PropertyMetadata(null));
+		public static readonly DependencyProperty FrozenProperty = DependencyPropertyManager.RegisterAttached
+		("Frozen", typeof(bool), typeof(HoverableBehavior),
+			new PropertyMetadata(BooleanBoxes.False, OnFrozenPropertyChanged));
 
-    public static readonly DependencyProperty FrozenProperty = DependencyPropertyManager.RegisterAttached
-    ("Frozen", typeof(bool), typeof(HoverableBehavior),
-      new PropertyMetadata(KnownBoxes.BoolFalse, OnFrozenPropertyChanged));
+		private static readonly DependencyProperty IsMouseOverProperty = DependencyPropertyManager.RegisterAttached
+		("IsMouseOver", typeof(bool), typeof(HoverableBehavior),
+			new PropertyMetadata(BooleanBoxes.False));
 
-    private static readonly DependencyProperty IsMouseOverProperty = DependencyPropertyManager.RegisterAttached
-    ("IsMouseOver", typeof(bool), typeof(HoverableBehavior),
-      new PropertyMetadata(KnownBoxes.BoolFalse));
+		private static void Deinitialize(UIElement uie)
+		{
+			uie.MouseEnter -= OnElementMouseEnter;
+			uie.MouseLeave -= OnElementMouseLeave;
 
-    #endregion
+			var timer = HoverTimers[uie];
+			timer.Stop();
+			timer.Tick -= OnTimerTick;
 
-    #region  Methods
+			HoverTimers.Remove(uie);
+		}
 
-    private static void Deinitialize(UIElement uie)
-    {
-      uie.MouseEnter -= OnElementMouseEnter;
-      uie.MouseLeave -= OnElementMouseLeave;
+		public static double GetEnterDelay(UIElement element)
+		{
+			return (double)element.GetValue(EnterDelayProperty);
+		}
 
-      var timer = HoverTimers[uie];
-      timer.Stop();
-      timer.Tick -= OnTimerTick;
+		public static bool GetFrozen(UIElement element)
+		{
+			return (bool)element.GetValue(FrozenProperty);
+		}
 
-      HoverTimers.Remove(uie);
-    }
+		public static bool GetIsEnabled(UIElement element)
+		{
+			return (bool)element.GetValue(IsEnabledProperty);
+		}
 
-    public static double GetEnterDelay(UIElement element)
-    {
-      return (double) element.GetValue(EnterDelayProperty);
-    }
+		public static bool GetIsOpen(UIElement element)
+		{
+			return (bool)element.GetValue(IsOpenProperty);
+		}
 
-    public static bool GetFrozen(UIElement element)
-    {
-      return (bool) element.GetValue(FrozenProperty);
-    }
+		public static double GetLeaveDelay(UIElement element)
+		{
+			return (double)element.GetValue(LeaveDelayProperty);
+		}
 
-    public static bool GetIsEnabled(UIElement element)
-    {
-      return (bool) element.GetValue(IsEnabledProperty);
-    }
+		public static Popup GetPopupTarget(UIElement element)
+		{
+			return (Popup)element.GetValue(PopupTargetProperty);
+		}
 
-    public static bool GetIsOpen(UIElement element)
-    {
-      return (bool) element.GetValue(IsOpenProperty);
-    }
+		private static void Initialize(UIElement uie)
+		{
+			uie.MouseEnter += OnElementMouseEnter;
+			uie.MouseLeave += OnElementMouseLeave;
 
-    public static double GetLeaveDelay(UIElement element)
-    {
-      return (double) element.GetValue(LeaveDelayProperty);
-    }
+			var timer = new HoverTimer(uie);
+			timer.Tick += OnTimerTick;
 
-    public static Popup GetPopupTarget(UIElement element)
-    {
-      return (Popup) element.GetValue(PopupTargetProperty);
-    }
+			HoverTimers[uie] = timer;
+		}
 
-    private static void Initialize(UIElement uie)
-    {
-      uie.MouseEnter += OnElementMouseEnter;
-      uie.MouseLeave += OnElementMouseLeave;
+		private static void OnElementMouseEnter(object sender, MouseEventArgs mouseEventArgs)
+		{
+			var uie = (UIElement)sender;
+			uie.SetValue(IsMouseOverProperty, true);
 
-      var timer = new HoverTimer(uie);
-      timer.Tick += OnTimerTick;
+			var timer = HoverTimers[uie];
+			timer.Stop();
 
-      HoverTimers[uie] = timer;
-    }
+			if (GetIsOpen(uie))
+				return;
 
-    private static void OnElementMouseEnter(object sender, MouseEventArgs mouseEventArgs)
-    {
-      var uie = (UIElement) sender;
-      uie.SetValue(IsMouseOverProperty, true);
+			timer.Interval = TimeSpan.FromMilliseconds(GetEnterDelay(uie));
+			timer.Start();
+		}
 
-      var timer = HoverTimers[uie];
-      timer.Stop();
+		private static void OnElementMouseLeave(object sender, MouseEventArgs e)
+		{
+			var uie = (UIElement)sender;
+			uie.SetValue(IsMouseOverProperty, false);
 
-      if (GetIsOpen(uie))
-        return;
+			var timer = HoverTimers[uie];
+			timer.Stop();
 
-      timer.Interval = TimeSpan.FromMilliseconds(GetEnterDelay(uie));
-      timer.Start();
-    }
+			if (GetIsOpen(uie) == false)
+				return;
 
-    private static void OnElementMouseLeave(object sender, MouseEventArgs e)
-    {
-      var uie = (UIElement) sender;
-      uie.SetValue(IsMouseOverProperty, false);
+			timer.Interval = TimeSpan.FromMilliseconds(GetLeaveDelay(uie));
+			timer.Start();
+		}
 
-      var timer = HoverTimers[uie];
-      timer.Stop();
+		private static void OnFrozenPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var uie = (UIElement)d;
 
-      if (GetIsOpen(uie) == false)
-        return;
+			if ((bool)uie.GetValue(IsMouseOverProperty))
+				return;
 
-      timer.Interval = TimeSpan.FromMilliseconds(GetLeaveDelay(uie));
-      timer.Start();
-    }
+			HoverTimer timer;
 
-    private static void OnFrozenPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-      var uie = (UIElement) d;
+			if (HoverTimers.TryGetValue(uie, out timer))
+			{
+				timer.Stop();
+				timer.Start();
+			}
+		}
 
-      if ((bool) uie.GetValue(IsMouseOverProperty))
-        return;
+		private static void OnIsEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var uie = (UIElement)d;
 
-      HoverTimer timer;
+			if ((bool)e.OldValue)
+				Deinitialize(uie);
+			else
+				Initialize(uie);
+		}
 
-      if (HoverTimers.TryGetValue(uie, out timer))
-      {
-        timer.Stop();
-        timer.Start();
-      }
-    }
+		private static void OnTimerTick(object sender, EventArgs e)
+		{
+			var timer = (HoverTimer)sender;
+			timer.Stop();
 
-    private static void OnIsEnabledPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-      var uie = (UIElement) d;
+			var uie = timer.HoverSource;
 
-      if ((bool) e.OldValue)
-        Deinitialize(uie);
-      else
-        Initialize(uie);
-    }
+			if ((bool)uie.GetValue(IsMouseOverProperty) == false)
+			{
+				if (GetFrozen(uie))
+					return;
 
-    private static void OnTimerTick(object sender, EventArgs e)
-    {
-      var timer = (HoverTimer) sender;
-      timer.Stop();
+				SetIsOpen(uie, false);
 
-      var uie = timer.HoverSource;
+				var popup = GetPopupTarget(uie);
+				if (popup != null)
+					popup.IsOpen = false;
+			}
+			else
+			{
+				SetIsOpen(uie, true);
 
-      if ((bool) uie.GetValue(IsMouseOverProperty) == false)
-      {
-        if (GetFrozen(uie))
-          return;
+				var popup = GetPopupTarget(uie);
+				if (popup != null)
+					popup.IsOpen = true;
+			}
+		}
 
-        SetIsOpen(uie, false);
+		public static void SetEnterDelay(UIElement element, double value)
+		{
+			element.SetValue(EnterDelayProperty, value);
+		}
 
-        var popup = GetPopupTarget(uie);
-        if (popup != null)
-          popup.IsOpen = false;
-      }
-      else
-      {
-        SetIsOpen(uie, true);
+		public static void SetFrozen(UIElement element, bool value)
+		{
+			element.SetValue(FrozenProperty, value.Box());
+		}
 
-        var popup = GetPopupTarget(uie);
-        if (popup != null)
-          popup.IsOpen = true;
-      }
-    }
+		public static void SetIsEnabled(UIElement element, bool value)
+		{
+			element.SetValue(IsEnabledProperty, value.Box());
+		}
 
-    public static void SetEnterDelay(UIElement element, double value)
-    {
-      element.SetValue(EnterDelayProperty, value);
-    }
+		public static void SetIsOpen(UIElement element, bool value)
+		{
+			element.SetValue(IsOpenProperty, value.Box());
+		}
 
-    public static void SetFrozen(UIElement element, bool value)
-    {
-      element.SetValue(FrozenProperty, value);
-    }
+		public static void SetLeaveDelay(UIElement element, double value)
+		{
+			element.SetValue(LeaveDelayProperty, value);
+		}
 
-    public static void SetIsEnabled(UIElement element, bool value)
-    {
-      element.SetValue(IsEnabledProperty, value);
-    }
+		public static void SetPopupTarget(UIElement element, Popup value)
+		{
+			element.SetValue(PopupTargetProperty, value);
+		}
 
-    public static void SetIsOpen(UIElement element, bool value)
-    {
-      element.SetValue(IsOpenProperty, value);
-    }
+		internal class HoverTimer : DispatcherTimer
+		{
+			public HoverTimer(UIElement hoverSource)
+			{
+				HoverSource = hoverSource;
+			}
 
-    public static void SetLeaveDelay(UIElement element, double value)
-    {
-      element.SetValue(LeaveDelayProperty, value);
-    }
-
-    public static void SetPopupTarget(UIElement element, Popup value)
-    {
-      element.SetValue(PopupTargetProperty, value);
-    }
-
-    #endregion
-
-    #region  Nested Types
-
-    internal class HoverTimer : DispatcherTimer
-    {
-      #region Ctors
-
-      public HoverTimer(UIElement hoverSource)
-      {
-        HoverSource = hoverSource;
-      }
-
-      #endregion
-
-      #region Properties
-
-      public UIElement HoverSource { get; }
-
-      #endregion
-    }
-
-    #endregion
-  }
+			public UIElement HoverSource { get; }
+		}
+	}
 }

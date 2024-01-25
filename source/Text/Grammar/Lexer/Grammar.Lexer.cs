@@ -28,7 +28,7 @@ namespace Zaaml.Text
 
 			internal static IEnumerable<TriviaSyntax> TriviaSyntaxCollection => TriviaSyntaxDictionary.Values;
 
-			private static char GetMinChar(PrimitiveMatchSymbol entry)
+			private static int GetMinChar(PrimitiveMatchSymbol entry)
 			{
 				if (entry is CharRangeSymbol range)
 					return range.First;
@@ -58,6 +58,18 @@ namespace Zaaml.Text
 			private protected static void RegisterTriviaSyntax(TriviaSyntax triviaSyntax)
 			{
 				TriviaSyntaxDictionary.Add(triviaSyntax.Name, triviaSyntax);
+			}
+
+			public void Seal()
+			{
+				foreach (var fragmentSyntax in FragmentSyntaxCollection)
+					fragmentSyntax.Seal();
+
+				foreach (var tokenSyntax in TokenSyntaxCollection)
+					tokenSyntax.Seal();
+
+				foreach (var triviaSyntax in TriviaSyntaxCollection)
+					triviaSyntax.Seal();
 			}
 		}
 	}

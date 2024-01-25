@@ -13,18 +13,9 @@ using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 
 namespace Zaaml.UI.Controls.Menu
 {
-	public enum DataContextMode
-	{
-		Default,
-		Target,
-		Owner
-	}
-
 	[TemplateContractType(typeof(ContextMenuTemplateContract))]
 	public partial class ContextMenu : PopupMenu, IContextPopupControlInternal
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty DataContextModeProperty = DPM.Register<DataContextMode, ContextMenu>
 			("DataContextMode", DataContextMode.Default, c => c.OnDataContextSourceChanged);
 
@@ -33,15 +24,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		public static readonly DependencyProperty TargetProperty = TargetPropertyKey.DependencyProperty;
 
-		#endregion
-
-		#region Fields
-
 		private bool _isShared;
-
-		#endregion
-
-		#region Ctors
 
 		static ContextMenu()
 		{
@@ -55,13 +38,9 @@ namespace Zaaml.UI.Controls.Menu
 			this.OverrideStyleKey<ContextMenu>();
 		}
 
-		#endregion
-
-		#region Properties
-
 		public DataContextMode DataContextMode
 		{
-			get => (DataContextMode) GetValue(DataContextModeProperty);
+			get => (DataContextMode)GetValue(DataContextModeProperty);
 			set => SetValue(DataContextModeProperty, value);
 		}
 
@@ -79,17 +58,15 @@ namespace Zaaml.UI.Controls.Menu
 			}
 		}
 
+		internal virtual bool OwnerAttachSelector => true;
+
 		private SharedItemOwnerCollection Owners { get; }
 
 		public DependencyObject Target
 		{
-			get => (DependencyObject) GetValue(TargetProperty);
+			get => (DependencyObject)GetValue(TargetProperty);
 			private set => this.SetReadOnlyValue(TargetPropertyKey, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		private void OnDataContextSourceChanged()
 		{
@@ -125,14 +102,6 @@ namespace Zaaml.UI.Controls.Menu
 
 		partial void PlatformOnIsSharedChanged();
 
-		internal virtual bool OwnerAttachSelector => true;
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IContextPopupControlInternal
-
 		FrameworkElement IContextPopupControlInternal.Owner
 		{
 			get => Owner;
@@ -147,10 +116,6 @@ namespace Zaaml.UI.Controls.Menu
 
 		bool IContextPopupControlInternal.OwnerAttachSelector => OwnerAttachSelector;
 
-		#endregion
-
-		#region ISharedItem
-
 		bool ISharedItem.IsShared
 		{
 			get => IsShared;
@@ -159,17 +124,9 @@ namespace Zaaml.UI.Controls.Menu
 
 		SharedItemOwnerCollection ISharedItem.Owners => Owners;
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private class DataContextBinding : Binding
 		{
 		}
-
-		#endregion
 	}
 
 	public class ContextMenuTemplateContract : PopupMenuTemplateContract

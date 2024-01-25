@@ -29,8 +29,8 @@
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
-  <!--  Template  -->
-  <ControlTemplate x:Key="ListViewControlGridTemplate"
+  <!--  GridView Template  -->
+  <ControlTemplate x:Key="ListGridViewControlTemplate"
                    TargetType="zm:ListViewControl">
     <zm:ControlTemplateRoot Background="Transparent">
       <Border Background="{TemplateBinding Background}"
@@ -39,8 +39,8 @@
 
         <zm:DockPanel>
 
-          <zm:ListViewItemGridColumnHeadersPresenter x:Name="ColumnHeadersPresenter"
-                                                     zm:DockPanel.Dock="Top" />
+          <zm:ListGridViewHeadersPresenter x:Name="GridViewHeadersPresenter"
+                                           zm:DockPanel.Dock="Top" />
 
           <zm:ScrollViewControl x:Name="ScrollView"
                                 HorizontalContentAlignment="Stretch"
@@ -66,7 +66,7 @@
     <zm:Setter Property="zm:ScrollViewControl.VerticalScrollBarVisibility" Value="Auto" />
     <zm:Setter Property="Padding" Value="{zm:SelfSkinBinding SkinPath=ScrollViewerPadding}" />
     <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualViewTemplate, TargetNullValue={StaticResource ListViewControlTemplate}}" />
-    <zm:Setter Property="zm:ListGridView.Template" Value="{StaticResource ListViewControlGridTemplate}" />
+    <zm:Setter Property="zm:ListGridView.Template" Value="{StaticResource ListGridViewControlTemplate}" />
   </zm:Style>
 
   <!--  Style  -->

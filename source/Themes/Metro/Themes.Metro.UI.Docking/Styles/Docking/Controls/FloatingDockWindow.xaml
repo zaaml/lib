@@ -54,13 +54,13 @@
 
   <!--  FloatingDockWindowHeaderPresenterStyleConverter  -->
   <zm:SwitchConverter x:Key="FloatingDockWindowHeaderPresenterStyleConverter">
-    <zm:Case Key="SplitGroup" Value="{StaticResource SplitFloatingDockWindowHeaderPresenterStyle}" />
+    <zm:Case Key="SplitDockItemGroup" Value="{StaticResource SplitFloatingDockWindowHeaderPresenterStyle}" />
     <zm:Default Value="{StaticResource FloatingDockWindowHeaderPresenterStyle}" />
   </zm:SwitchConverter>
 
   <!--  FloatingDockWindowContentPresenterStyleConverter  -->
   <zm:SwitchConverter x:Key="FloatingDockWindowContentPresenterStyleConverter">
-    <zm:Case Key="SplitGroup" Value="{StaticResource FloatingDockWindowContentPresenterStyle}" />
+    <zm:Case Key="SplitDockItemGroup" Value="{StaticResource FloatingDockWindowContentPresenterStyle}" />
     <zm:Default Value="{x:Null}" />
   </zm:SwitchConverter>
 

@@ -5,13 +5,12 @@
 // ReSharper disable ForCanBeConvertedToForeach
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Zaaml.Core;
+using Zaaml.Core.Extensions;
 using Zaaml.Core.Reflection;
 
 namespace Zaaml.Text
@@ -20,182 +19,59 @@ namespace Zaaml.Text
 	{
 		partial class Process
 		{
-			internal partial struct Thread
+			private protected partial struct Thread
 			{
 				public static readonly FieldInfo StackField = typeof(Thread).GetField(nameof(Stack), BF.IPNP);
+
 				public Node Node;
+				public DfaState Dfa;
 				public AutomataStack Stack;
-				public PrecedenceContextStack Precedence;
-				public ReadOnlyMemorySpan<int> EntryExecution;
+				public PrecedenceContext Precedence;
+				public ExecutionRailNode ExecutionRailNode;
 
 				public Thread(Node node, AutomataStack stack)
 				{
+					Dfa = default;
 					Node = node;
-					Stack = stack.AddReference();
+					Stack = stack;
 					Precedence = null;
-					EntryExecution = MemorySpan<int>.Empty;
+					ExecutionRailNode = ExecutionRailNode.Empty;
 				}
 
-				public Thread(Node node, AutomataStack stack, PrecedenceContextStack precedence)
+				public Thread(Node node, AutomataStack stack, PrecedenceContext precedence)
 				{
+					Dfa = default;
+					node.EnsureSafe();
+
 					Node = node;
-					Stack = stack.AddReference();
-					Precedence = precedence.AddReference();
-					EntryExecution = MemorySpan<int>.Empty;
+					Stack = stack;
+					Precedence = precedence;
+					ExecutionRailNode = ExecutionRailNode.Empty;
 				}
 
-				public Thread(Node node, AutomataStack stack, ReadOnlyMemorySpan<int> entryExecution)
+				public Thread(Node node, AutomataStack stack, ExecutionRailNode executionRailNode)
 				{
+					Dfa = default;
 					Node = node;
-					Stack = stack.AddReference();
+					Stack = stack;
 					Precedence = null;
-					EntryExecution = entryExecution;
+					ExecutionRailNode = executionRailNode;
 				}
 
-				public Thread(Node node, AutomataStack stack, PrecedenceContextStack precedence, ReadOnlyMemorySpan<int> entryExecution)
+				public Thread(DfaState dfa, Node node, AutomataStack stack, PrecedenceContext precedence, ExecutionRailNode executionRailNode)
 				{
+					Dfa = dfa;
 					Node = node;
-					Stack = stack.AddReference();
-					Precedence = precedence.AddReference();
-					EntryExecution = entryExecution;
-				}
-
-				private int BuildExecutionPathNoReturn(int operand, ref ThreadContext context, ref MemorySpan<int> executionPathsMemorySpan, out int executionPathLength, out bool precedence, out bool predicate)
-				{
-					var executionPaths = executionPathsMemorySpan.Span;
-					var pathCount = 0;
-					var executionPathGroup = Node.GetExecutionPathsFastSafe(operand);
-
-					precedence = false;
-					predicate = false;
-
-					executionPathLength = 0;
-
-					for (var index = 0; index < executionPathGroup.Length; index++)
-					{
-						var executionPath = executionPathGroup[index];
-
-						precedence |= executionPath.HasPrecedenceNodes;
-						predicate |= executionPath.Predicate != null;
-
-						if (context.InstructionStream != null)
-						{
-							var lookAhead = executionPath.LookAheadPath;
-
-							if (lookAhead != null)
-							{
-								if (LookAhead(lookAhead, ref context) == false)
-									continue;
-
-								executionPath = lookAhead;
-							}
-
-							if (executionPath.OutputEnd && operand != 0 && context.Process._processKind != ProcessKind.SubProcess)
-								continue;
-						}
-
-						executionPaths[executionPathLength++] = executionPath.Id;
-						executionPaths[executionPathLength++] = 0;
-
-						pathCount++;
-					}
-
-					return pathCount;
-				}
-
-				private int BuildExecutionPathReturn(int operand, ref ThreadContext context, ref MemorySpan<int> executionPathsMemorySpan, out int executionPathLength, out bool precedence, out bool predicate)
-				{
-					var executionPaths = executionPathsMemorySpan.Span;
-					var currentNode = Node;
-					var pathCount = 0;
-					var returnDepth = 0;
-					var returnExecutionPathsHead = executionPaths.Length;
-					var executionPathsHead = 0;
-
-					precedence = false;
-					predicate = false;
-
-					while (true)
-					{
-						var executionPathGroup = currentNode.GetExecutionPathsFastSafe(operand);
-
-						for (var index = 0; index < executionPathGroup.Length; index++)
-						{
-							var executionPath = executionPathGroup[index];
-
-							precedence |= executionPath.HasPrecedenceNodes;
-							predicate |= executionPath.Predicate != null;
-
-							if (executionPath.OutputReturn)
-							{
-								executionPaths[--returnExecutionPathsHead] = returnDepth;
-								executionPaths[--returnExecutionPathsHead] = executionPath.Id;
-							}
-							else
-							{
-								if (context.InstructionStream != null)
-								{
-									var lookAhead = executionPath.LookAheadPath;
-
-									if (lookAhead != null)
-									{
-										if (LookAhead(lookAhead, ref context) == false)
-											continue;
-
-										executionPath = lookAhead;
-									}
-
-									if (executionPath.OutputEnd && operand != 0 && context.Process._processKind != ProcessKind.SubProcess)
-										continue;
-								}
-
-								for (var i = 0; i < returnDepth; i++)
-									executionPaths[executionPathsHead + returnDepth + i + 2] = executionPaths[executionPathsHead + i];
-
-								executionPaths[executionPathsHead + returnDepth] = executionPath.Id;
-								executionPathsHead += returnDepth + 1;
-
-								executionPaths[executionPathsHead++] = 0;
-
-								pathCount++;
-							}
-						}
-
-						if (returnExecutionPathsHead == executionPaths.Length)
-							break;
-
-						var path = executionPaths[returnExecutionPathsHead++];
-						var rd = executionPaths[returnExecutionPathsHead++];
-
-						if (context.InstructionStream == null && rd >= Stack.HashCodeDepth)
-						{
-							executionPathLength = 0;
-
-							return -1;
-						}
-
-						currentNode = Stack.PeekLeaveNode(rd);
-						currentNode.EnsureSafe();
-
-						executionPaths[executionPathsHead + rd] = path;
-
-						returnDepth = rd + 1;
-					}
-
-					executionPathLength = executionPathsHead;
-
-					return pathCount;
+					Stack = stack;
+					Precedence = precedence;
+					ExecutionRailNode = executionRailNode;
 				}
 
 				public void Dispose()
 				{
-					Stack.ReleaseReference();
-					Precedence.ReleaseReference();
-
-					EntryExecution = ReadOnlyMemorySpan<int>.Empty;
-					Precedence = null;
-					Stack = null;
-					Node = null;
+					Stack.Dispose();
+					Precedence.Dispose();
+					ExecutionRailNode.Dispose();
 				}
 
 				private ThreadStatusKind Run(ref ThreadContext context, ReadOnlySpan<int> executionPaths)
@@ -206,7 +82,7 @@ namespace Zaaml.Text
 					{
 						var executionPath = executionPaths[index];
 
-						Node = context.Execute(executionPath, ref this);
+						Node = context.Execute(executionPath);
 
 						switch (Node.ThreadStatusKind)
 						{
@@ -217,7 +93,7 @@ namespace Zaaml.Text
 
 								context.InstructionStream.LockPointer(context.InstructionStreamPointer);
 
-								return ForkThreadNode((ForkNode)Node, executionPaths.Slice(index+1), ref context);
+								return ForkThreadNode((ForkNode)Node, executionPaths.Slice(index + 1), ref context);
 
 							default:
 
@@ -239,6 +115,16 @@ namespace Zaaml.Text
 					return Precedence.TryEnter(precedenceEnterNode.Precedence);
 				}
 
+				private bool TryEnterPrecedenceCode(int precedenceCode)
+				{
+					return Precedence.TryEnterCode(precedenceCode);
+				}
+
+				private void LeavePrecedenceCode(int precedenceCode)
+				{
+					Precedence.LeaveCode(precedenceCode);
+				}
+
 				private void LeavePrecedence(int precedenceEnterNodeId)
 				{
 					var precedenceLeaveNode = (PrecedenceLeaveNode)Node.Automata._nodeRegistry[precedenceEnterNodeId];
@@ -248,253 +134,214 @@ namespace Zaaml.Text
 
 				private ThreadStatusKind ForkThreadNode(ForkNode forkNode, ReadOnlySpan<int> executionPaths, ref ThreadContext context)
 				{
-					var forkPredicateResult = (IForkPredicateResult)forkNode.PredicateResult;
-					var startNode = forkNode.PredicateNode;
-					var processResources = context.Process._processResources;
-					var forkPaths = processResources.DynamicMemorySpanAllocator.Allocate(executionPaths.Length * 2 + 2 + 2);
-					var forkPathsSpan = forkPaths.Span;
-					var forkPathsHead = 0;
+					throw Error.Refactoring;
 
-					for (var i = 0; i <= 1; i++)
-					{
-						var predicateEntry = i == 0 ? forkPredicateResult.First : forkPredicateResult.Second;
-						var predicateNode = processResources.ForkPredicateNodePool.Get().Mount(predicateEntry);
-						var predicateExecutionPath = processResources.ForkExecutionPathPool.Get().Mount(startNode, predicateNode);
+					//var forkPredicateResult = (IForkPredicateResult)forkNode.PredicateResult;
+					//var startNode = forkNode.PredicateNode;
+					//var processResources = context.Process._processResources;
+					//var forkPaths = processResources.ExecutionPathSpanAllocator.Allocate(executionPaths.Length * 2 + 2);
+					//var forkPathsSpan = forkPaths.Span;
+					//var forkPathsHead = 0;
 
-						predicateNode.CopyLookup(forkNode);
+					//for (var i = 0; i <= 1; i++)
+					//{
+					//	var predicateEntry = i == 0 ? forkPredicateResult.First : forkPredicateResult.Second;
+					//	var predicateNode = processResources.ForkPredicateNodePool.Rent().Mount(predicateEntry);
+					//	var predicateExecutionPath = processResources.ForkExecutionPathPool.Rent().Mount(startNode, predicateNode);
 
-						forkPathsSpan[forkPathsHead++] = predicateExecutionPath.Id;
+					//	predicateNode.CopyLookup(forkNode);
 
-						foreach (var executionPath in executionPaths)
-							forkPathsSpan[forkPathsHead++] = executionPath;
+					//	forkPathsSpan[forkPathsHead++] = predicateExecutionPath.Id;
 
-						forkPathsSpan[forkPathsHead++] = 0;
-					}
+					//	foreach (var executionPath in executionPaths)
+					//		forkPathsSpan[forkPathsHead++] = executionPath;
+					//}
 
-					forkNode.Release();
+					//forkNode.Release();
 
-					return context.Process.ForkThread(ref this, ref context, forkPaths.Span);
-				}
-
-				private static bool LookAhead(ExecutionPath executionPath, ref ThreadContext context)
-				{
-					const int aheadLength = 4;
-
-					var instructionPointer = context.InstructionStreamPointer;
-					var operandSpan = context.InstructionStream.PrefetchReadOperandSpan(context.InstructionStreamPointer, aheadLength);
-					var lookAheadMatch = executionPath.LookAheadMatch;
-					var localIndex = 1;
-
-					for (var i = 1; i < lookAheadMatch.Length; i++)
-					{
-						if (localIndex >= operandSpan.Length)
-						{
-							operandSpan = context.InstructionStream.PrefetchReadOperandSpan(instructionPointer + i, aheadLength);
-							localIndex = 0;
-						}
-
-						var operand = operandSpan[localIndex++];
-
-						if (lookAheadMatch[i].Match(operand) == false)
-							return false;
-					}
-
-					return true;
+					//return context.Process.ForkThread(ref this, ref context, forkPaths, forkPathsHead);
 				}
 
 				public ThreadStatusKind Run(ref ThreadContext context)
 				{
-					Debug.Assert(ReferenceEquals(Stack, context.Process._stack));
+					var startExecutionRailNode = ExecutionRailNode;
+					var startExecutionRail = startExecutionRailNode.ExecutionRail;
+					var pointer = context.InstructionStreamPointer;
+					var position = context.InstructionStreamPosition;
+					var startNode = Node;
+					
+					ExecutionRailNodeStat runStat = default;
 
-					if (EntryExecution.IsEmpty == false)
+					if (startExecutionRail.IsEmpty == false)
 					{
-						var entryStatus = Run(ref context, EntryExecution);
+						try
+						{
+							var entryStatus = Run(ref context, startExecutionRail.SpanSafe);
 
-						if (entryStatus != ThreadStatusKind.Run)
-							return entryStatus;
+							Dfa = startExecutionRailNode.Dfa;
+
+							runStat = startExecutionRailNode.RunStat;
+							
+							if (entryStatus != ThreadStatusKind.Run)
+							{
+								if (entryStatus == ThreadStatusKind.Block)
+									return ThreadStatusKind.Block;
+
+								if (entryStatus == ThreadStatusKind.Finished && context.Process._processKind == ProcessKind.SubProcess)
+									return entryStatus;
+
+								return context.FetchInstructionOperand == 0 ? entryStatus : ThreadStatusKind.Unexpected;
+							}
+						}
+						finally
+						{
+							ExecutionRailNode = ExecutionRailNode.DisposeExchange(ExecutionRailNode.Empty);
+						}
 					}
 
-					var executionPaths = context.Process._executionPathBuilder;
+					var process = context.Process;
+					var transitionBuilder = process._nfaTransitionBuilder;
+					var executionRailBuilder = process._executionRailBuilder;
+
+					runStat?.Run();
 
 					while (true)
 					{
-						var executionPathCount = BuildExecutionPaths(ref context, ref executionPaths, out var executionPathLength);
-						
-						switch (executionPathCount)
+						if (context.IsCompleteBlock)
+							return ThreadStatusKind.Block;
+
+						switch (executionRailBuilder.Build(ref this, ref context, transitionBuilder))
 						{
 							case 0:
+#if false
+								var executionTrace = DumpTrace(ref this, ref context);
+								context.InstructionStream.Dump(position, context.InstructionStreamPosition - position)
+#endif
+								var backtrackingLength = context.InstructionStreamPointer - pointer;
+
+								runStat?.Fail(backtrackingLength);
+
+#if false
+								DumpTrace(ref this, ref context);
+#endif
+
+								Dfa = default;
+
+								process._telemetry?.Backtracking(backtrackingLength);
 
 								return Node.ThreadStatusKind == ThreadStatusKind.Finished ? ThreadStatusKind.Finished : ThreadStatusKind.Unexpected;
 
 							case 1:
+#if false
+								var fp = DumpPath(ref this, ref context, executionPaths.ExecutionRail);
+#endif
 
-								if (Run(ref context, executionPaths.Span.Slice(0, executionPathLength - 1)) == ThreadStatusKind.Run)
+								Dfa = executionRailBuilder.Dfa;
+
+								var executionPaths = executionRailBuilder.ExecutionRail.SpanSafe;
+								
+								if (Run(ref context, executionPaths) == ThreadStatusKind.Run)
 									continue;
 
-								return Node.ThreadStatusKind;
+								if (Node.ThreadStatusKind == ThreadStatusKind.Finished && context.Process._processKind == ProcessKind.SubProcess)
+									return ThreadStatusKind.Finished;
+
+								return context.FetchInstructionOperand == 0 ? Node.ThreadStatusKind : ThreadStatusKind.Unexpected;
 
 							default:
-								var forkPaths = executionPaths.Span.Slice(0, executionPathLength);
+
+								process._telemetry?.Fork();
+
+								var executionRailList = executionRailBuilder.DetachRailList();
+
+								Dfa = default;
+
 #if false
-								var fp = DumpForkPaths(ref this, ref context, forkPaths);
+								var fp = DumpForkPaths(ref this, ref context, executionRailList);
 #endif
-								return context.Process.ForkThread(ref this, ref context, forkPaths);
+								return process.ForkThread(ref this, ref context, executionRailList);
 						}
 					}
 				}
 
+				private int GetBacktrackingLength(ref ThreadContext context)
+				{
+					if (context.Index == 0)
+						return context.InstructionStreamPointer;
+
+					ref var prevContext = ref context.Process._threads.PrevContext();
+
+					return context.InstructionStreamPointer - prevContext.InstructionStreamPointer;
+				}
+
 				[UsedImplicitly]
-				private static string DumpForkPaths(ref Thread thread, ref ThreadContext context, ReadOnlySpan<int> executionPaths)
+				private static string DumpTrace(ref Thread thread, ref ThreadContext context)
+				{
+					if (context.Index > 0)
+					{
+						ref var prevContext = ref context.Process._threads.PrevContext();
+						ref var prevThread = ref context.Process._threads.PrevThread();
+						var prevPosition = prevContext.InstructionStreamPosition;
+						var currPosition = context.InstructionStreamPosition;
+						var prevPointer = prevContext.InstructionStreamPointer;
+						var currPointer = context.InstructionStreamPointer;
+
+						var text = context.InstructionStream.Dump(prevPosition, currPosition - prevPosition);
+					}
+
+					var prevInstructionPointer = context.Index == 0 ? 0 : context.Process._threads.PrevContext().ExecutionStreamPointer;
+					var executionTrace = context.ExecutionStream.GetSpan(prevInstructionPointer, context.ExecutionStreamPointer - prevInstructionPointer);
+					var contextExecutionPathRegistry = context.ExecutionPathRegistry;
+
+					return string.Join("\r\n", executionTrace.ToArray().SelectMany(e => contextExecutionPathRegistry[e].Nodes).Select(n => n.ToString()));
+				}
+
+				[UsedImplicitly]
+				private static string DumpForkPaths(ref Thread thread, ref ThreadContext context, ExecutionRailList executionPaths)
 				{
 					var stringBuilder = new StringBuilder();
-					var forkPath = 1;
-					var executionPath = new List<ExecutionPath>();
+					var count = executionPaths.Count;
 
-					for (var i = 0; i < executionPaths.Length; i++)
+					for (var i = 0; i < count; i++)
 					{
-						var executionPathId = executionPaths[i];
+						executionPaths = executionPaths.MoveNext(out var railNode);
 
-						if (executionPathId == 0)
-						{
-							stringBuilder.Append($"ForkPath: {forkPath}\r\n");
-							stringBuilder.Append(string.Join("\r\n", executionPath.SelectMany(e => e.Nodes).Select(n => n.ToString())));
-							stringBuilder.Append("\r\n--------------------------------------------------------------\r\n");
-
-							executionPath.Clear();
-							forkPath++;
-						}
-						else
-							executionPath.Add(context.Process._automata._executionPathRegistry[executionPathId]);
+						stringBuilder.Append($"ForkPath: {i + 1}\r\n");
+						stringBuilder.Append(DumpPath(ref thread, ref context, railNode.ExecutionRail));
+						stringBuilder.Append("\r\n--------------------------------------------------------------\r\n");
 					}
 
 					return stringBuilder.ToString();
 				}
 
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				private int BuildExecutionPaths(ref ThreadContext context, ref MemorySpan<int> executionPathsMemorySpan, out int executionPathLength)
+				[UsedImplicitly]
+				private static string DumpPath(ref Thread thread, ref ThreadContext context, MemorySpan<int> executionPath)
 				{
-#if false
-					Node.EnsureSafe();
+					var contextExecutionPathRegistry = context.ExecutionPathRegistry;
 
-					var operand = context.InstructionStream.FetchPeekOperand(context.InstructionStreamPointer);
-					var executionPathCount = Node.HasReturnPathSafe
-						? BuildExecutionPathReturn(operand, ref context, ref executionPathsMemorySpan, out executionPathLength, out var precedence, out _)
-						: BuildExecutionPathNoReturn(operand, ref context, ref executionPathsMemorySpan, out executionPathLength, out precedence, out _);
-
-					if (precedence == false)
-						return executionPathCount > 1 ? BuildExecutionPathsDfa(ref context, ref executionPathsMemorySpan, out executionPathLength) : executionPathCount;
-
-					executionPathCount = BuildExecutionPathsPrecedence(ref context, ref executionPathsMemorySpan, ref executionPathLength);
-
-					return executionPathCount > 1 ? BuildExecutionPathsDfa(ref context, ref executionPathsMemorySpan, out executionPathLength) : executionPathCount;
-#else
-					Node.EnsureSafe();
-
-					var operand = context.InstructionStream.FetchPeekOperand(context.InstructionStreamPointer);
-					
-					var executionPathCount = Node.HasReturnPathSafe
-						? BuildExecutionPathReturn(operand, ref context, ref executionPathsMemorySpan, out executionPathLength, out var precedence, out _)
-						: BuildExecutionPathNoReturn(operand, ref context, ref executionPathsMemorySpan, out executionPathLength, out precedence, out _);
-
-					//if (precedence == false)
-					//	return executionPathCount;
-
-					//executionPathCount = BuildExecutionPathsPrecedence(ref context, ref executionPathsMemorySpan, ref executionPathLength);
-
-					return executionPathCount;
-#endif
-				}
-
-				private int BuildExecutionPathsPrecedence(ref ThreadContext threadContext, ref MemorySpan<int> executionPathsMemorySpan, ref int executionPathLength)
-				{
-					var executionPathRegistry = threadContext.Process._automata._executionPathRegistry;
-					var executionPathSpan = executionPathsMemorySpan.Span.Slice(0, executionPathLength);
-					var targetSpan = executionPathsMemorySpan.Span;
-					var executionPathCount = 0;
-					executionPathLength = 0;
-
-					var precedenceContext = threadContext.Process._precedenceContext;
-					var skipPath = false;
-					var prevExecutionPathLength = 0;
-
-					precedenceContext.CopyFrom(Precedence);
-
-					for (var i = 0; i < executionPathSpan.Length; i++)
-					{
-						var executionPathId = executionPathSpan[i];
-
-						if (executionPathId == 0)
-						{
-							if (skipPath == false)
-							{
-								executionPathCount++;
-								targetSpan[executionPathLength++] = 0;
-								prevExecutionPathLength = executionPathLength;
-							}
-							else
-							{
-								executionPathLength = prevExecutionPathLength;
-								skipPath = false;
-							}
-
-							precedenceContext.CopyFrom(Precedence);
-
-							continue;
-						}
-
-						if (skipPath)
-							continue;
-
-						targetSpan[executionPathLength++] = executionPathId;
-
-						var executionPath = executionPathRegistry[executionPathId];
-
-						if (executionPath.HasPrecedenceNodes == false)
-							continue;
-
-						foreach (var precedenceNode in executionPath.PrecedenceNodes)
-						{
-							if (precedenceNode is PrecedenceLeaveNode)
-								precedenceContext.Leave(precedenceNode.Precedence);
-							else if (precedenceContext.TryEnter(precedenceNode.Precedence) == false)
-							{
-								skipPath = true;
-
-								break;
-							}
-						}
-					}
-
-					return executionPathCount;
+					return string.Join("\r\n", executionPath.SpanSafe.ToArray().SelectMany(e => contextExecutionPathRegistry[e].Nodes).Select(n => n.ToString()));
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				private int BuildExecutionPathsDfa(int operand, ref MemorySpan<int> executionPathsMemorySpan, out int executionPathLength, out bool precedence, out bool predicate)
+				public void StackForkExchange(ref Thread threadSource)
 				{
-					Node.EnsureSafe();
+					Stack.Unfork(threadSource.Stack);
+					Precedence.Unfork(threadSource.Precedence);
 
-					return Node.HasReturnPathSafe
-						? BuildExecutionPathReturn(operand, ref ThreadContext.Empty, ref executionPathsMemorySpan, out executionPathLength, out precedence, out predicate)
-						: BuildExecutionPathNoReturn(operand, ref ThreadContext.Empty, ref executionPathsMemorySpan, out executionPathLength, out precedence, out predicate);
-				}
-
-				public void StackExchange(ref Thread threadSource)
-				{
-					threadSource.Stack.CopyFrom(Stack);
 					(Stack, threadSource.Stack) = (threadSource.Stack, Stack);
+					(Precedence, threadSource.Precedence) = (threadSource.Precedence, Precedence);
 				}
 
-				public Thread Fork(ReadOnlyMemorySpan<int> entryPath)
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public Thread Fork(ExecutionRailNode executionRailNode)
 				{
 					var stack = Stack;
+					var precedence = Precedence;
 
-					Stack = Stack.Fork().AddReference();
+					Stack = stack.Fork();
+					Precedence = precedence.Fork();
 
-					var forkThread = new Thread(Node, stack, Precedence.Clone(), entryPath);
-
-					stack.ReleaseReference();
-
-					return forkThread;
+					return new Thread(Dfa, Node, stack, precedence, executionRailNode);
 				}
 			}
 		}

@@ -75,7 +75,7 @@ namespace Zaaml.Text
 
 				protected override void BuildCore()
 				{
-					var node = (Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax)ParserProduction.ParserSyntax;
+					var node = (Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax)ParserProduction.GrammarParserSyntax;
 					var productionArgument = ParserProduction.Arguments.Single(a => node.NodeType.IsAssignableFrom(a.ArgumentType));
 
 					ArgumentBinder = new SingleArgumentBinder(productionArgument, productionArgument.ArgumentType);
@@ -88,16 +88,22 @@ namespace Zaaml.Text
 
 				protected FactoryBinder(ParserProduction parserProduction) : base(parserProduction)
 				{
+					_createInstanceDelegate = DeferCreateInstanceDelegate;
+				}
+
+				private object DeferCreateInstanceDelegate(ProductionEntity productionEntity, ParserProcess parserProcess)
+				{
+					_createInstanceDelegate = BuildCreateInstanceDelegate();
+
+					return _createInstanceDelegate(productionEntity, parserProcess);
 				}
 
 				private ProductionArgumentBinder[] ArgumentBinders { get; set; }
 
-				private Func<ProductionEntity, ParserProcess, object> CreateInstanceDelegate => _createInstanceDelegate ??= BuildCreateInstanceDelegate();
-
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public sealed override object Bind(ProductionEntity productionEntity, ParserProcess process)
 				{
-					return CreateInstanceDelegate(productionEntity, process);
+					return _createInstanceDelegate(productionEntity, process);
 				}
 
 				protected override void BuildCore()

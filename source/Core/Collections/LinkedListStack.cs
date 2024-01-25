@@ -28,7 +28,7 @@ namespace Zaaml.Core.Collections
 		{
 			return ref _tail.Array[_tail.Count - 1];
 		}
-		
+
 		public T Pop()
 		{
 			if (Count == 0)
@@ -44,7 +44,7 @@ namespace Zaaml.Core.Collections
 
 				Array.Clear(releaseNode.Array, 0, releaseNode.Array.Length);
 
-				_nodePool.Release(releaseNode);
+				_nodePool.Return(releaseNode);
 
 				_tail = prev;
 			}
@@ -58,7 +58,7 @@ namespace Zaaml.Core.Collections
 		{
 			if (_tail == null || _tail.Count == NodeSize)
 			{
-				var node = _nodePool.Get();
+				var node = _nodePool.Rent();
 
 				node.Prev = _tail;
 				_tail = node;
@@ -73,7 +73,7 @@ namespace Zaaml.Core.Collections
 		{
 			if (_tail == null || _tail.Count == NodeSize)
 			{
-				var node = _nodePool.Get();
+				var node = _nodePool.Rent();
 
 				node.Prev = _tail;
 				_tail = node;
@@ -99,7 +99,7 @@ namespace Zaaml.Core.Collections
 
 	internal sealed class LinkedListStackNodePool<T> : IPool<LinkedListStackNode<T>>
 	{
-		private readonly Stack<LinkedListStackNode<T>> _stackPool = new Stack<LinkedListStackNode<T>>();
+		private readonly Stack<LinkedListStackNode<T>> _stackPool = new();
 
 		public LinkedListStackNodePool(int nodeSize)
 		{
@@ -108,12 +108,12 @@ namespace Zaaml.Core.Collections
 
 		public int NodeSize { get; }
 
-		public LinkedListStackNode<T> Get()
+		public LinkedListStackNode<T> Rent()
 		{
 			return _stackPool.Count > 0 ? _stackPool.Pop() : new LinkedListStackNode<T>(NodeSize);
 		}
 
-		public void Release(LinkedListStackNode<T> item)
+		public void Return(LinkedListStackNode<T> item)
 		{
 			if (NodeSize != item.Array.Length)
 				throw new InvalidOperationException();

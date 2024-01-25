@@ -8,7 +8,7 @@ namespace Zaaml.Text
 	{
 		private protected sealed class InnerNode : Node
 		{
-			public InnerNode(Automata<TInstruction, TOperand> automata, Graph graph) : base(automata, graph)
+			public InnerNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph) : base(automata, syntaxGraph)
 			{
 			}
 

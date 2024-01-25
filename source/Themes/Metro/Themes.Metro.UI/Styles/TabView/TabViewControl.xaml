@@ -76,9 +76,7 @@
                                     Style="{zm:TemplateBinding Path=ContentPresenterStyle,
                                                                TargetNullValue={StaticResource TabViewControlContentPresenterNativeStyle}}" />
 
-
         <!--  ItemsPresenter  -->
-        <!-- ReSharper disable once Xaml.MissingGridIndex -->
         <zm:TabViewItemsPresenter x:Name="ItemsPresenter"
                                   Footer="{TemplateBinding ItemsPresenterFooter}"
                                   FooterTemplate="{TemplateBinding ItemsPresenterFooterTemplate}"

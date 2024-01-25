@@ -25,7 +25,7 @@ namespace Zaaml.Text
 					{
 						base.Dispose();
 
-						_pool.Release(this);
+						_pool.Return(this);
 					}
 
 					public ExternalParserForkPredicateResult Mount(PredicateEntryBase first, PredicateEntryBase second)
@@ -50,7 +50,7 @@ namespace Zaaml.Text
 					{
 						base.Dispose();
 
-						_pool.Release(this);
+						_pool.Return(this);
 					}
 
 					public ExternalParserForkPredicateResult<TResult> Mount(PredicateEntryBase first, PredicateEntryBase second)

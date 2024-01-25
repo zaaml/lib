@@ -47,7 +47,7 @@ namespace Zaaml.Text
 
 			public void Release()
 			{
-				_pool.Release(this);
+				_pool.Return(this);
 			}
 		}
 	}

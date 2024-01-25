@@ -19,7 +19,7 @@ namespace Zaaml.UI.Controls.Spy
 			("Tracker", d => d.OnTrackerPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ElementProperty = DPM.Register<UIElement, SpyControl>
-			("Element");
+			("Element", d => d.OnElementPropertyChanged);
 
 		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<SpyControlDisplayMode, SpyControl>
 			("DisplayMode", SpyControlDisplayMode.PropertyView);
@@ -36,29 +36,33 @@ namespace Zaaml.UI.Controls.Spy
 
 		public SpyControlDisplayMode DisplayMode
 		{
-			get => (SpyControlDisplayMode) GetValue(DisplayModeProperty);
+			get => (SpyControlDisplayMode)GetValue(DisplayModeProperty);
 			set => SetValue(DisplayModeProperty, value);
 		}
 
 		public UIElement Element
 		{
-			get => (UIElement) GetValue(ElementProperty);
+			get => (UIElement)GetValue(ElementProperty);
 			set => SetValue(ElementProperty, value);
 		}
 
 		private SpyPropertyViewControl PropertyView => TemplateContract.PropertyView;
 
-		private SpyControlTemplateContract TemplateContract => (SpyControlTemplateContract) TemplateContractInternal;
+		private SpyControlTemplateContract TemplateContract => (SpyControlTemplateContract)TemplateContractCore;
 
 		public SpyElementTracker Tracker
 		{
-			get => (SpyElementTracker) GetValue(TrackerProperty);
+			get => (SpyElementTracker)GetValue(TrackerProperty);
 			set => SetValue(TrackerProperty, value);
 		}
 
 		private SpyVisualTreeViewControl VisualTree => TemplateContract.VisualTree;
 
 		private SpyZoomControl ZoomControl => TemplateContract.ZoomControl;
+
+		private void OnElementPropertyChanged(UIElement oldElement, UIElement newElement)
+		{
+		}
 
 		private void OnTrackerPropertyChangedPrivate(SpyElementTracker oldValue, SpyElementTracker newValue)
 		{
@@ -69,7 +73,7 @@ namespace Zaaml.UI.Controls.Spy
 				ClearValue(ElementProperty);
 
 			if (newValue != null)
-				SetBinding(ElementProperty, new Binding {Path = new PropertyPath(SpyElementTracker.ElementProperty), Source = newValue, Mode = BindingMode.TwoWay});
+				SetBinding(ElementProperty, new Binding { Path = new PropertyPath(SpyElementTracker.ElementProperty), Source = newValue, Mode = BindingMode.TwoWay });
 		}
 	}
 

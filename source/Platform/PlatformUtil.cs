@@ -90,7 +90,7 @@ namespace Zaaml.Platform
 			if (dwStyle == dwNewStyle)
 				return false;
 
-			NativeMethods.SetWindowLongPtr(hwnd, GWL.EXSTYLE, new IntPtr((int) dwNewStyle));
+			var result = NativeMethods.SetWindowLongPtr(hwnd, GWL.EXSTYLE, new IntPtr((int) dwNewStyle));
 
 			return true;
 		}

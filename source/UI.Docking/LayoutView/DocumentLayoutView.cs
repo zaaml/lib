@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 
@@ -36,7 +37,7 @@ namespace Zaaml.UI.Controls.Docking
     public bool RawContent
     {
       get => (bool) GetValue(RawContentProperty);
-      internal set => SetValue(RawContentProperty, value);
+      internal set => SetValue(RawContentProperty, value.Box());
     }
 
     #endregion

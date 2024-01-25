@@ -75,8 +75,18 @@ namespace Zaaml.PresentationCore.PropertyCore
 
 					if (Equals(args.NewValue, coercedValue) == false)
 					{
-						o.SetValue(args.Property, args.OldValue);
-						o.SetValue(args.Property, coercedValue);
+						if (args.Property.ReadOnly)
+						{
+							var propertyKey = args.Property.GetDependencyPropertyInfo().DependencyPropertyKey;
+
+							o.SetValue(propertyKey, args.OldValue);
+							o.SetValue(propertyKey, coercedValue);
+						}
+						else
+						{
+							o.SetValue(args.Property, args.OldValue);
+							o.SetValue(args.Property, coercedValue);
+						}
 					}
 				}
 				catch (Exception ex)

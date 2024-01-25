@@ -133,14 +133,13 @@ namespace Zaaml.PresentationCore.Utils
 #else
 
 
-    internal static Rect TransformRectToClient(this FrameworkElement element, Rect screenRect)
+    internal static Rect TransformScreenDeviceRectToClient(this FrameworkElement element, Rect screenDeviceRect)
     {
-      var topLeft = element.PointFromScreen(screenRect.GetTopLeft().FromLogicalToDevice());
-      var bottomRight = element.PointFromScreen(screenRect.GetBottomRight());
+      var topLeft = element.PointFromScreen(screenDeviceRect.GetTopLeft());
+      var bottomRight = element.PointFromScreen(screenDeviceRect.GetBottomRight());
 
-      return new Rect(topLeft, bottomRight).FromDeviceToLogical();
+      return new Rect(topLeft, bottomRight);
     }
-
 
     private class ElementScreenTransform : GeneralTransform
     {

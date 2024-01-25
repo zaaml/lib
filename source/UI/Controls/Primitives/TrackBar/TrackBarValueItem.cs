@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		public double Value
 		{
-			get => (double) GetValue(ValueProperty);
+			get => (double)GetValue(ValueProperty);
 			set => SetValue(ValueProperty, value);
 		}
 
@@ -61,7 +61,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			{
 				SuspendValueHandler = true;
 
-				Value = ClampValue(PreserveValue ? _valueCache : Value);
+				this.SetCurrentValueInternal(ValueProperty, ClampValue(PreserveValue ? _valueCache : Value));
 			}
 			finally
 			{

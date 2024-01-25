@@ -19,23 +19,23 @@
 
   <!--  Template  -->
   <ControlTemplate x:Key="ListViewItemGridCellElementTemplate"
-                   TargetType="zm:ListViewItemGridCellElement">
+                   TargetType="zm:ListGridViewCellElement">
 
     <zm:ControlTemplateRoot VisualStateGroups="{StaticResource VisualStates}">
       <Border Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="0, 1, 1, 1" />
+              BorderThickness="{TemplateBinding BorderThickness}" />
     </zm:ControlTemplateRoot>
 
   </ControlTemplate>
 
   <!--  Base Style  -->
-  <zm:Style x:Key="ListViewItemGridCellElementBaseStyle" TargetType="zm:ListViewItemGridCellElement">
+  <zm:Style x:Key="ListViewItemGridCellElementBaseStyle" TargetType="zm:ListGridViewCellElement">
     <zm:Setter Property="Template" Value="{StaticResource ListViewItemGridCellElementTemplate}" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="ListViewItemGridCellElementStyle" BasedOn="{StaticResource ListViewItemGridCellElementBaseStyle}" Skin="Metro.ListViewItemGridCellElement" TargetType="zm:ListViewItemGridCellElement">
+  <zm:Style x:Key="ListViewItemGridCellElementStyle" BasedOn="{StaticResource ListViewItemGridCellElementBaseStyle}" Skin="Metro.ListViewItemGridCellElement" TargetType="zm:ListGridViewCellElement">
 
     <zm:SetterGroup ValuePathSource="Skin">
 
@@ -57,6 +57,6 @@
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="ListViewItemGridCellElementThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ListViewItemGridCellElementStyle}" TargetType="zm:ListViewItemGridCellElement" />
+  <zm:ThemeStyle x:Key="ListViewItemGridCellElementThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ListViewItemGridCellElementStyle}" TargetType="zm:ListGridViewCellElement" />
 
 </zm:ThemeResourceDictionary>

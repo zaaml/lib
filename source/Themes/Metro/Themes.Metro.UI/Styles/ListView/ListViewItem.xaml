@@ -65,8 +65,10 @@
                 BorderThickness="0">
 
           <!--  Content  -->
-          <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+          <zm:IconContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                   VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch"
                                    zm:PathIcon.Brush="{TemplateBinding Foreground}"
                                    Content="{TemplateBinding Content}"
                                    ContentTemplate="{TemplateBinding ContentTemplate}"
@@ -91,11 +93,12 @@
       <!--  CommonStatesBorder  -->
       <Border Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="0,1" />
+              BorderThickness="{TemplateBinding BorderThickness}">
 
-      <!--  CellsPresenter  -->
-      <zm:ListViewItemGridCellsPresenter x:Name="CellsPresenter"
-                                         BorderBrush="{TemplateBinding BorderBrush}" />
+        <!--  CellsPresenter  -->
+        <zm:ListGridViewCellsPresenter x:Name="GridViewCellsPresenter"
+                                       BorderBrush="{TemplateBinding BorderBrush}" />
+      </Border>
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -103,6 +106,7 @@
   <!--  Base Style  -->
   <zm:Style x:Key="ListViewItemBaseStyle" TargetType="zm:ListViewItem">
     <zm:Setter Property="Padding" Value="3,2" />
+    <zm:Setter Property="BorderThickness" Value="0" />
     <zm:Setter Property="HorizontalAlignment" Value="Stretch" />
     <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
     <zm:Setter Property="VerticalContentAlignment" Value="Top" />

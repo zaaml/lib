@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Zaaml.Text
 {
@@ -11,7 +12,7 @@ namespace Zaaml.Text
 	{
 		internal IEnumerable<ParserGrammar.NodeSyntax> NodeCollection => ParserGrammar.NodeCollection;
 
-		internal IEnumerable<ParserGrammar.FragmentSyntax> ParserSyntaxFragmentCollection => ParserGrammar.ParserSyntaxFragmentCollection;
+		internal IEnumerable<ParserGrammar.FragmentSyntax> ParserSyntaxFragmentCollection => ParserGrammar.FragmentCollection;
 
 		public partial class ParserGrammar
 		{
@@ -21,7 +22,13 @@ namespace Zaaml.Text
 
 			internal static IEnumerable<NodeSyntax> NodeCollection => NodeDictionary.Values;
 
-			internal static IEnumerable<FragmentSyntax> ParserSyntaxFragmentCollection => FragmentDictionary.Values;
+			internal static IEnumerable<FragmentSyntax> FragmentCollection => FragmentDictionary.Values;
+
+			internal static IEnumerable<Production> ProductionCollection => ProductionDictionary.Values;
+
+			public void Seal()
+			{
+			}
 
 			protected static ExternalTokenSymbol<TExternalGrammar, TExternalToken> ExternalLexer<TExternalGrammar, TExternalToken>(Grammar<TExternalGrammar, TExternalToken>.LexerGrammar.TokenSyntax externalToken)
 				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>

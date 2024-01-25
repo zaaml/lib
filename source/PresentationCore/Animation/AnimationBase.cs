@@ -3,11 +3,9 @@
 // </copyright>
 
 using System;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media.Animation;
-using Zaaml.Core.Extensions;
-using Zaaml.PresentationCore.Animation.Animators;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
@@ -17,7 +15,7 @@ namespace Zaaml.PresentationCore.Animation
 	{
 	}
 
-	public abstract class AnimationBase<T> : AnimationBase, ISupportInitialize
+	public abstract class AnimationBase<T> : AnimationBase
 	{
 		public static readonly DependencyProperty FromProperty = DPM.Register<T, AnimationBase<T>>
 			("From", mt => mt.OnFromChanged);
@@ -37,16 +35,22 @@ namespace Zaaml.PresentationCore.Animation
 		public static readonly DependencyProperty TransitionProperty = DPM.Register<Transition, AnimationBase<T>>
 			("Transition", null, d => d.OnTransitionPropertyChangedPrivate);
 
-		private IAnimator<T> _animator;
-		private bool _initializing;
+		private readonly IAnimationValue<T> _animationValue;
+
+		protected AnimationBase(Interpolator<T> interpolator)
+		{
+			_animationValue = new AnimationValue<T>(interpolator);
+		}
 
 		protected override double ActualAccelerationRatio => Transition?.AccelerationRatio ?? base.ActualAccelerationRatio;
 
-		protected override TimeSpan? ActualBeginTime => Transition != null ? Transition?.BeginTime : base.ActualBeginTime;
+		protected override TimeSpan? ActualBeginTime => Transition?.BeginTime ?? base.ActualBeginTime;
 
 		protected override double ActualDecelerationRatio => Transition?.DecelerationRatio ?? base.ActualDecelerationRatio;
 
 		protected override Duration ActualDuration => Transition?.Duration ?? base.ActualDuration;
+
+		protected IEasingFunction ActualEasingFunction => Transition?.EasingFunction ?? EasingFunction;
 
 		protected override double ActualSpeedRatio => Transition?.SpeedRatio ?? base.ActualSpeedRatio;
 
@@ -58,43 +62,48 @@ namespace Zaaml.PresentationCore.Animation
 
 		public IEasingFunction EasingFunction
 		{
-			get => (IEasingFunction) GetValue(EasingFunctionProperty);
+			get => (IEasingFunction)GetValue(EasingFunctionProperty);
 			set => SetValue(EasingFunctionProperty, value);
 		}
 
 		public T From
 		{
-			get => (T) GetValue(FromProperty);
+			get => (T)GetValue(FromProperty);
 			set => SetValue(FromProperty, value);
 		}
 
 		public bool Invert
 		{
-			get => (bool) GetValue(InvertProperty);
-			set => SetValue(InvertProperty, value);
+			get => (bool)GetValue(InvertProperty);
+			set => SetValue(InvertProperty, value.Box());
 		}
 
 		public T To
 		{
-			get => (T) GetValue(ToProperty);
+			get => (T)GetValue(ToProperty);
 			set => SetValue(ToProperty, value);
 		}
 
 		public Transition Transition
 		{
-			get => (Transition) GetValue(TransitionProperty);
+			get => (Transition)GetValue(TransitionProperty);
 			set => SetValue(TransitionProperty, value);
 		}
 
-		internal abstract IAnimator<T> CreateAnimator();
+		protected override void EndInitCore()
+		{
+			base.EndInitCore();
+
+			EnsureTimeline();
+			UpdateCurrent();
+		}
 
 		private void EnsureTimeline()
 		{
-			if (_initializing || _animator != null)
+			if (Initializing)
 				return;
 
-			_animator = CreateAnimator();
-			_animator.RelativeTime = RelativeTime;
+			_animationValue.RelativeTime = RelativeTime;
 
 			UpdateCurrent();
 		}
@@ -104,24 +113,11 @@ namespace Zaaml.PresentationCore.Animation
 			UpdateEasingFunction();
 		}
 
-		private void UpdateEasingFunction()
-		{
-			EnsureTimeline();
-
-			if (_animator != null)
-				_animator.EasingFunction = ActualEasingFunction;
-
-			UpdateCurrent();
-		}
-
-		protected IEasingFunction ActualEasingFunction => Transition != null ? Transition.EasingFunction : EasingFunction;
-
 		private void OnFromChanged()
 		{
 			EnsureTimeline();
 
-			if (_animator != null)
-				_animator.Start = From;
+			_animationValue.Start = From;
 
 			UpdateCurrent();
 		}
@@ -130,8 +126,7 @@ namespace Zaaml.PresentationCore.Animation
 		{
 			EnsureTimeline();
 
-			if (_animator != null)
-				_animator.Invert = Invert;
+			_animationValue.Invert = Invert;
 
 			UpdateCurrent();
 		}
@@ -140,8 +135,7 @@ namespace Zaaml.PresentationCore.Animation
 		{
 			EnsureTimeline();
 
-			if (_animator != null)
-				_animator.RelativeTime = RelativeTime;
+			_animationValue.RelativeTime = RelativeTime;
 
 			UpdateCurrent();
 		}
@@ -150,8 +144,7 @@ namespace Zaaml.PresentationCore.Animation
 		{
 			EnsureTimeline();
 
-			if (_animator != null)
-				_animator.End = To;
+			_animationValue.End = To;
 
 			UpdateCurrent();
 		}
@@ -167,7 +160,7 @@ namespace Zaaml.PresentationCore.Animation
 			else if (e.Property == Transition.BeginTimeProperty)
 				UpdateBeginTime();
 			else if (e.Property == Transition.DurationProperty)
-				UpdateDuration();		
+				UpdateDuration();
 			else if (e.Property == Transition.EasingFunctionProperty)
 				UpdateEasingFunction();
 		}
@@ -193,103 +186,16 @@ namespace Zaaml.PresentationCore.Animation
 
 		private void UpdateCurrent()
 		{
-			Current = _animator != null ? _animator.Current : From;
+			Current = _animationValue.Current;
 		}
 
-		void ISupportInitialize.BeginInit()
+		private void UpdateEasingFunction()
 		{
-			_initializing = true;
-		}
-
-		void ISupportInitialize.EndInit()
-		{
-			_initializing = false;
-
 			EnsureTimeline();
+
+			_animationValue.EasingFunction = ActualEasingFunction;
+
 			UpdateCurrent();
-		}
-	}
-
-	public struct AccelerationDecelerationRatio
-	{
-		public double AccelerationRatio { get; set; }
-		public double DecelerationRatio { get; set; }
-
-		public double CalcProgress(double progress)
-		{
-			if (progress.IsLessThanOrClose(0.0))
-				return 0.0;
-
-			if (progress.IsGreaterThanOrClose(1.0))
-				return 1.0;
-
-			var isAccelerationZero = AccelerationRatio.IsZero();
-			var isDecelerationZero = DecelerationRatio.IsZero();
-
-			if (isAccelerationZero && isDecelerationZero)
-				return progress;
-
-			if (isAccelerationZero)
-				return CalcDeceleration(progress);
-
-			if (isDecelerationZero)
-				return CalcAcceleration(progress);
-
-			return CalcAccelerationDeceleration(progress);
-		}
-
-		private double CalcDeceleration(double progress)
-		{
-			var speed = 1 / (1 / (2 * DecelerationRatio) + 1 - AccelerationRatio - 1 / (2 * AccelerationRatio));
-
-			var acceleration = speed / AccelerationRatio;
-
-			if (progress.IsLessThan(AccelerationRatio))
-				return acceleration * progress * progress / 2;
-
-			if (progress.IsLessThan(1 - DecelerationRatio))
-				return acceleration * AccelerationRatio * AccelerationRatio / 2 + speed * (progress - AccelerationRatio);
-
-			var t = DecelerationRatio - (1 - progress);
-			var deceleration = -speed / DecelerationRatio;
-
-			return acceleration * AccelerationRatio * AccelerationRatio / 2 + speed * (1 - DecelerationRatio - AccelerationRatio) + speed * t + deceleration * t * t / 2;
-		}
-
-		private double CalcAcceleration(double progress)
-		{
-			var speed = 1 / (1 / (2 * DecelerationRatio) + 1 - AccelerationRatio - 1 / (2 * AccelerationRatio));
-
-			var acceleration = speed / AccelerationRatio;
-
-			if (progress.IsLessThan(AccelerationRatio))
-				return acceleration * progress * progress / 2;
-
-			if (progress.IsLessThan(1 - DecelerationRatio))
-				return acceleration * AccelerationRatio * AccelerationRatio / 2 + speed * (progress - AccelerationRatio);
-
-			var t = DecelerationRatio - (1 - progress);
-			var deceleration = -speed / DecelerationRatio;
-
-			return acceleration * AccelerationRatio * AccelerationRatio / 2 + speed * (1 - DecelerationRatio - AccelerationRatio) + speed * t + deceleration * t * t / 2;
-		}
-
-		private double CalcAccelerationDeceleration(double progress)
-		{
-			var speed = 1 / (1 / (2 * DecelerationRatio) + 1 - AccelerationRatio - 1 / (2 * AccelerationRatio));
-
-			var acceleration = speed / AccelerationRatio;
-
-			if (progress.IsLessThan(AccelerationRatio))
-				return acceleration * progress * progress / 2;
-
-			if (progress.IsLessThan(1 - DecelerationRatio))
-				return acceleration * AccelerationRatio * AccelerationRatio / 2 + speed * (progress - AccelerationRatio);
-
-			var t = DecelerationRatio - (1 - progress);
-			var deceleration = -speed / DecelerationRatio;
-
-			return acceleration * AccelerationRatio * AccelerationRatio / 2 + speed * (1 - DecelerationRatio - AccelerationRatio) + speed * t + deceleration * t * t / 2;
 		}
 	}
 }

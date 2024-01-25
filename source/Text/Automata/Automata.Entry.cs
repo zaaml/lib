@@ -15,12 +15,12 @@ namespace Zaaml.Text
 
 			public static implicit operator Entry(TOperand operand)
 			{
-				return new SingleMatchEntry(operand);
+				return new OperandMatchEntry(operand);
 			}
 
-			public static implicit operator Entry(Rule state)
+			public static implicit operator Entry(Syntax state)
 			{
-				return new RuleEntry(state);
+				return new SyntaxEntry(state);
 			}
 
 			public override string ToString()

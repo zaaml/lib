@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>library</OutputType>
 		<RootNamespace>Zaaml.Theming</RootNamespace>
@@ -8,18 +8,21 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFramework>net5.0-windows</TargetFramework>
+		<TargetFramework>net8.0-windows</TargetFramework>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="$(Publish) == 'true'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFrameworks>net8.0-windows;net7.0-windows;net6.0-windows;net5.0-windows;net48</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
 	
 	<PropertyGroup>
 		<TargetFrameworkDir>$(TargetFramework)</TargetFrameworkDir>
-		<TargetFrameworkDir Condition="$(TargetFramework) == 'net5.0-windows'">net5.0</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net8.0-windows'">net8.0</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net7.0-windows'">net7.0</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net6.0-windows'">net6.0</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net5.0-windows'">net5.0</TargetFrameworkDir>		
 	</PropertyGroup>
 	
 	<ItemGroup>

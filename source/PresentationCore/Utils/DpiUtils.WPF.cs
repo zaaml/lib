@@ -1,111 +1,168 @@
-// <copyright file="DpiUtils.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="DpiUtils.WPF.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
+using Zaaml.Platform;
 using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore.Utils
 {
-  internal static class DpiUtils
-  {
-    #region Static Fields and Constants
+	internal static class DpiUtils
+	{
+		private const BindingFlags DpiBindingFlags = BindingFlags.NonPublic | BindingFlags.Static;
+		private static Matrix _toDeviceMatrix;
+		private static Matrix _toLogicalMatrix;
 
-    private const BindingFlags DpiBindingFlags = BindingFlags.NonPublic | BindingFlags.Static;
-    private static Matrix _toDeviceMatrix;
-    private static Matrix _toLogicalMatrix;
+		public static readonly int DpiX =
+			(int) typeof(SystemParameters).GetProperty("DpiX", DpiBindingFlags).GetValue(null, null);
 
-    public static readonly int DpiX =
-      (int) typeof(SystemParameters).GetProperty("DpiX", DpiBindingFlags).GetValue(null, null);
+		public static readonly int DpiY =
+			(int) typeof(SystemParameters).GetProperty("Dpi", DpiBindingFlags).GetValue(null, null);
 
-    public static readonly int DpiY =
-      (int) typeof(SystemParameters).GetProperty("Dpi", DpiBindingFlags).GetValue(null, null);
+		public static readonly double DpiScaleX = CalcDpiScale(DpiX);
+		public static readonly double DpiScaleY = CalcDpiScale(DpiY);
 
-    public static readonly double DpiScaleX = CalcDpiScale(DpiX);
-    public static readonly double DpiScaleY = CalcDpiScale(DpiY);
+		static DpiUtils()
+		{
+			_toLogicalMatrix = Matrix.Identity;
+			_toLogicalMatrix.Scale(96d / DpiX, 96d / DpiY);
+			_toDeviceMatrix = Matrix.Identity;
+			_toDeviceMatrix.Scale(DpiX / 96d, DpiY / 96d);
+		}
 
-    #endregion
+		private static double CalcDpiScale(int dpi)
+		{
+			if (dpi != 96)
+				return dpi / 96.0;
+			return 1.0;
+		}
 
-    #region Ctors
+		public static CornerRadius DeviceCornerRadiusToLogical(CornerRadius deviceCornerRadius)
+		{
+			return _toLogicalMatrix.TransformCornerRadius(deviceCornerRadius);
+		}
 
-    static DpiUtils()
-    {
-      _toLogicalMatrix = Matrix.Identity;
-      _toLogicalMatrix.Scale(96d / DpiX, 96d / DpiY);
-      _toDeviceMatrix = Matrix.Identity;
-      _toDeviceMatrix.Scale(DpiX / 96d, DpiY / 96d);
-    }
+		public static Point DevicePixelsToLogical(Point devicePoint)
+		{
+			return _toLogicalMatrix.TransformPoint(devicePoint);
+		}
 
-    #endregion
+		public static Rect DeviceRectToLogical(Rect deviceRectangle)
+		{
+			return _toLogicalMatrix.TransformRect(deviceRectangle);
+		}
 
-    #region  Methods
+		public static Size DeviceSizeToLogical(Size deviceSize)
+		{
+			return _toLogicalMatrix.TransformSize(deviceSize);
+		}
 
-    private static double CalcDpiScale(int dpi)
-    {
-      if (dpi != 96)
-        return dpi / 96.0;
-      return 1.0;
-    }
+		public static Thickness DeviceThicknessToLogical(Thickness deviceThickness)
+		{
+			return _toLogicalMatrix.TransformThickness(deviceThickness);
+		}
 
-    public static CornerRadius DeviceCornerRadiusToLogical(CornerRadius deviceCornerRadius)
-    {
-      return _toLogicalMatrix.TransformCornerRadius(deviceCornerRadius);
-    }
+		// CornerRadius
+		public static CornerRadius LogicalCornerRadiusToDevice(CornerRadius cornerRadius)
+		{
+			return _toDeviceMatrix.TransformCornerRadius(cornerRadius);
+		}
 
-    public static Point DevicePixelsToLogical(Point devicePoint)
-    {
-      return _toLogicalMatrix.TransformPoint(devicePoint);
-    }
+		// Point
+		public static Point LogicalPixelsToDevice(Point logicalPoint)
+		{
+			return _toDeviceMatrix.TransformPoint(logicalPoint);
+		}
 
-    public static Rect DeviceRectToLogical(Rect deviceRectangle)
-    {
-      return _toLogicalMatrix.TransformRect(deviceRectangle);
-    }
+		// Rect
+		public static Rect LogicalRectToDevice(Rect logicalRectangle)
+		{
+			return _toDeviceMatrix.TransformRect(logicalRectangle);
+		}
 
-    public static Size DeviceSizeToLogical(Size deviceSize)
-    {
-      return _toLogicalMatrix.TransformSize(deviceSize);
-    }
+		// Size
 
-    public static Thickness DeviceThicknessToLogical(Thickness deviceThickness)
-    {
-      return _toLogicalMatrix.TransformThickness(deviceThickness);
-    }
+		public static Size LogicalSizeToDevice(Size logicalSize)
+		{
+			return _toDeviceMatrix.TransformSize(logicalSize);
+		}
 
-    // CornerRadius
-    public static CornerRadius LogicalCornerRadiusToDevice(CornerRadius cornerRadius)
-    {
-      return _toDeviceMatrix.TransformCornerRadius(cornerRadius);
-    }
+		// Thickness
 
-    // Point
-    public static Point LogicalPixelsToDevice(Point logicalPoint)
-    {
-      return _toDeviceMatrix.TransformPoint(logicalPoint);
-    }
+		public static Thickness LogicalThicknessToDevice(Thickness logicalThickness)
+		{
+			return _toDeviceMatrix.TransformThickness(logicalThickness);
+		}
 
-    // Rect
-    public static Rect LogicalRectToDevice(Rect logicalRectangle)
-    {
-      return _toDeviceMatrix.TransformRect(logicalRectangle);
-    }
+		public static bool IsPerMonitorDpiScalingActive
+		{
+			get
+			{
+				if (IsProcessPerMonitorDpiAware.HasValue)
+					return IsProcessPerMonitorDpiAware.Value;
 
-    // Size
+				var proc = Process.GetCurrentProcess();
 
-    public static Size LogicalSizeToDevice(Size logicalSize)
-    {
-      return _toDeviceMatrix.TransformSize(logicalSize);
-    }
+				if (NativeMethods.GetProcessDpiAwareness(proc.Handle, out var value) == 0)
+				{
+					IsProcessPerMonitorDpiAware = value == PROCESS_DPI_AWARENESS.PROCESS_PER_MONITOR_DPI_AWARE;
 
-    // Thickness
+					return IsProcessPerMonitorDpiAware.Value;
+				}
 
-    public static Thickness LogicalThicknessToDevice(Thickness logicalThickness)
-    {
-      return _toDeviceMatrix.TransformThickness(logicalThickness);
-    }
+				return false;
+			}
+		}
 
-    #endregion
-  }
+		public static bool SetPerMonitorDPIAware()
+		{
+			return NativeMethods.SetProcessDpiAwareness(PROCESS_DPI_AWARENESS.PROCESS_PER_MONITOR_DPI_AWARE) == 0;
+		}
+		
+		private static bool? IsProcessPerMonitorDpiAware { get; set; }
+		
+		internal static DpiValue GetMonitorDpi(IntPtr hMonitor)
+		{
+			if (NativeMethods.GetDpiForMonitor(hMonitor, MonitorDpiTypes.EffectiveDPI, out var dpiX, out var dpiY) != 0)
+				return GetSystemDpi();
+
+			return new DpiValue(dpiX, dpiY);
+		}
+		
+		internal static DpiValue GetSystemDpi()
+		{
+			var dc = NativeMethods.GetDC(IntPtr.Zero);
+			
+			try
+			{
+				
+				var dpiX = NativeMethods.GetDeviceCaps(dc, DeviceCap.LOGPIXELSX);
+				var dpiY = NativeMethods.GetDeviceCaps(dc, DeviceCap.LOGPIXELSY);
+
+				return new DpiValue(dpiX, dpiY);
+			}
+			finally
+			{
+				NativeMethods.ReleaseDC(IntPtr.Zero, dc);				
+			}
+		}
+	}
+
+	internal readonly struct DpiValue
+	{
+		public DpiValue(int dpiX, int dpiY)
+		{
+			DpiX = dpiX;
+			DpiY = dpiY;
+		}
+
+		public int DpiX { get; }
+		
+		public int DpiY { get; }
+	}
 }

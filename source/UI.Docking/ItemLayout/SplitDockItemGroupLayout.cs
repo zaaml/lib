@@ -3,9 +3,9 @@
 // </copyright>
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Docking
@@ -15,10 +15,7 @@ namespace Zaaml.UI.Controls.Docking
 		public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, SplitDockItemGroupLayout>
 			("Orientation", s => s.OnOrientationPropertyChangedPrivate);
 
-		private static readonly DependencyProperty[] Properties =
-		{
-			OrientationProperty
-		};
+		private static readonly IReadOnlyList<DependencyProperty> SplitBasePropertiesList = BasePropertiesList.Append(OrientationProperty).ToList().AsReadOnly();
 
 		public SplitDockItemGroupLayout(SplitDockItemGroup groupItem)
 			: base(groupItem)
@@ -36,13 +33,13 @@ namespace Zaaml.UI.Controls.Docking
 				Orientation = groupLayout.Orientation;
 		}
 
-		internal override IEnumerable<DependencyProperty> FullLayoutProperties => base.FullLayoutProperties.Concat(OrientationProperty);
+		protected override IReadOnlyList<DependencyProperty> BaseProperties => SplitBasePropertiesList;
 
 		internal override DockItemGroupKind GroupKind => DockItemGroupKind.Split;
 
 		public Orientation Orientation
 		{
-			get => (Orientation) GetValue(OrientationProperty);
+			get => (Orientation)GetValue(OrientationProperty);
 			set => SetValue(OrientationProperty, value);
 		}
 
@@ -51,14 +48,9 @@ namespace Zaaml.UI.Controls.Docking
 			return new SplitDockItemGroupLayout(this, mode);
 		}
 
-		internal override IEnumerable<DependencyProperty> GetProperties()
-		{
-			return base.GetProperties().Concat(Properties);
-		}
-
 		internal override void InitGroup(DockItemGroup dockItemGroup)
 		{
-			((SplitDockItemGroup) dockItemGroup).Orientation = Orientation;
+			((SplitDockItemGroup)dockItemGroup).Orientation = Orientation;
 		}
 
 		private void OnOrientationPropertyChangedPrivate()

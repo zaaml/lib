@@ -2,8 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-#pragma warning disable 414
-
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -28,15 +26,14 @@ namespace Zaaml.PresentationCore.Data
 			get => _binding;
 			set
 			{
-				if (value == null)
-					throw new InvalidOperationException("Binding can not be null");
-
-				_binding = value;
+				_binding = value ?? throw new InvalidOperationException("Binding can not be null");
 
 				if (_binding.RelativeSource != null)
 					throw new Exception();
+
 				if (_binding.Source != null)
 					throw new Exception();
+
 				if (_binding.Source != null)
 					throw new Exception();
 
@@ -65,6 +62,7 @@ namespace Zaaml.PresentationCore.Data
 						Path = _binding.Path,
 						Source = _source
 					};
+
 					_commonBindingProperties.InitBinding(binding);
 
 					this.SetBinding(ValueProperty, binding);
@@ -76,7 +74,7 @@ namespace Zaaml.PresentationCore.Data
 	}
 
 	[ContentProperty("ChainElements")]
-	public class BindingChain : AssetBase, ISupportInitialize
+	public class BindingChain : AssetBase
 	{
 		public static readonly DependencyProperty SourceProperty = DPM.Register<object, BindingChain>
 			("Source", c => c.OnSourceChanged);
@@ -84,10 +82,7 @@ namespace Zaaml.PresentationCore.Data
 		private static readonly DependencyProperty ValueProperty = DPM.Register<object, BindingChain>
 			("Value", c => c.OnValueChanged);
 
-		private readonly DependencyObjectCollectionBase<BindingChainElement> _bindingChainElements = new DependencyObjectCollectionBase<BindingChainElement>();
-
-		private bool _isInitialized;
-		private bool _isInitializing;
+		private readonly DependencyObjectCollectionBase<BindingChainElement> _bindingChainElements = new();
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -104,6 +99,7 @@ namespace Zaaml.PresentationCore.Data
 		private void InitChain()
 		{
 			var currentSource = Source;
+
 			foreach (var element in _bindingChainElements)
 			{
 				element.Source = currentSource;
@@ -111,13 +107,14 @@ namespace Zaaml.PresentationCore.Data
 			}
 
 			var lastChainElement = _bindingChainElements.LastOrDefault();
+
 			if (lastChainElement != null)
 				this.SetBinding(ValueProperty, new Binding {Path = new PropertyPath(ValueAsset.ValueProperty), Source = lastChainElement});
 		}
 
 		private void OnSourceChanged()
 		{
-			if (_isInitialized)
+			if (Initializing)
 				InitChain();
 		}
 
@@ -126,120 +123,12 @@ namespace Zaaml.PresentationCore.Data
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ActualValue"));
 		}
 
-		public void BeginInit()
+		protected override void EndInitCore()
 		{
-			_isInitializing = true;
-		}
-
-		public void EndInit()
-		{
-			var src = ReadLocalValue(SourceProperty);
-			_isInitializing = false;
-			_isInitialized = true;
-
+			base.EndInitCore();
+			
 			if (Source != null)
 				InitChain();
-		}
-	}
-
-	internal interface IInheritanceContext
-	{
-		DependencyObject Owner { get; set; }
-
-		void Attach(DependencyObject depObj);
-		void Detach(DependencyObject depObj);
-	}
-
-	internal class InheritanceContext : IInheritanceContext
-	{
-		private static readonly DependencyProperty ContextProperty = DPM.RegisterAttached<DependencyObject, InheritanceContext>
-			("Context");
-
-		private readonly DependencyObjectCollectionBase<DependencyObject> _contextObjects = new DependencyObjectCollectionBase<DependencyObject>();
-		private DependencyObject _owner;
-
-		public DependencyObject Owner
-		{
-			get => _owner;
-			set
-			{
-				if (ReferenceEquals(_owner, value))
-					return;
-
-				_owner?.ClearValue(ContextProperty);
-
-				_owner = value;
-
-				_owner?.SetValue(ContextProperty, _contextObjects);
-			}
-		}
-
-		public void Attach(DependencyObject depObj)
-		{
-			_contextObjects.Add(depObj);
-		}
-
-		public void Detach(DependencyObject depObj)
-		{
-			_contextObjects.Remove(depObj);
-		}
-	}
-
-	internal interface IInheritanceContextOwner
-	{
-		IInheritanceContext InheritanceContext { get; }
-	}
-
-
-	public class AssetCollection : InheritanceContextDependencyObjectCollection<InheritanceContextObject>
-	{
-		internal AssetCollection(FrameworkElement frameworkElement)
-		{
-			Owner = frameworkElement;
-		}
-	}
-
-	public class AssetBase : InheritanceContextObject, ISupportInitialize
-	{
-#if INTERACTIVITY_DEBUG
-		public bool Debug { get; set; }
-#endif
-
-		protected bool Initializing { get; private set; }
-
-		protected virtual void BeginInitCore()
-		{
-		}
-
-		protected virtual void EndInitCore()
-		{
-		}
-
-		void ISupportInitialize.BeginInit()
-		{
-			Initializing = true;
-
-			BeginInitCore();
-		}
-
-		void ISupportInitialize.EndInit()
-		{
-			Initializing = false;
-
-			EndInitCore();
-		}
-	}
-
-	[ContentProperty("Value")]
-	public class ValueAsset : AssetBase
-	{
-		public static readonly DependencyProperty ValueProperty = DPM.Register<object, ValueAsset>
-			("Value");
-
-		public object Value
-		{
-			get => GetValue(ValueProperty);
-			set => SetValue(ValueProperty, value);
 		}
 	}
 }

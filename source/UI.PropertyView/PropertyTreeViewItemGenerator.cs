@@ -11,27 +11,26 @@ namespace Zaaml.UI.Controls.PropertyView
 {
 	public sealed class PropertyViewItemGenerator : TreeViewItemGeneratorBase
 	{
-		private readonly Stack<PropertyViewCategory> _categories = new Stack<PropertyViewCategory>();
-		private readonly Stack<PropertyViewItem> _items = new Stack<PropertyViewItem>();
+		private readonly Stack<PropertyGridViewCategory> _categories = new();
+		private readonly Stack<PropertyGridViewItem> _items = new();
 
-		internal PropertyViewItemGenerator(PropertyViewControl propertyView)
+		internal PropertyViewItemGenerator()
 		{
-			PropertyView = propertyView;
 		}
 
-		public PropertyViewControl PropertyView { get; }
+		public PropertyViewControl PropertyViewControl { get; set; }
 
 		protected override void AttachItem(TreeViewItem item, object source)
 		{
 			switch (item, source)
 			{
-				case (PropertyViewItem viewItem, PropertyItem dataItem):
+				case (PropertyGridViewItem viewItem, PropertyItem dataItem):
 
 					viewItem.PropertyItem = dataItem;
 
 					return;
 
-				case (PropertyViewCategory viewItem, PropertyCategory dataItem):
+				case (PropertyGridViewCategory viewItem, PropertyCategory dataItem):
 
 					viewItem.Category = dataItem;
 
@@ -45,8 +44,8 @@ namespace Zaaml.UI.Controls.PropertyView
 		{
 			return source switch
 			{
-				PropertyCategory _ => _categories.Count > 0 ? _categories.Pop() : new PropertyViewCategory(PropertyView),
-				PropertyItem _ => _items.Count > 0 ? _items.Pop() : new PropertyViewItem(PropertyView),
+				PropertyCategory _ => _categories.Count > 0 ? _categories.Pop() : new PropertyGridViewCategory(PropertyViewControl),
+				PropertyItem _ => _items.Count > 0 ? _items.Pop() : new PropertyGridViewItem(PropertyViewControl),
 				_ => throw new InvalidOperationException()
 			};
 		}
@@ -55,13 +54,13 @@ namespace Zaaml.UI.Controls.PropertyView
 		{
 			switch (item, source)
 			{
-				case (PropertyViewItem viewItem, PropertyItem _):
+				case (PropertyGridViewItem viewItem, PropertyItem _):
 
 					viewItem.PropertyItem = null;
 
 					return;
 
-				case (PropertyViewCategory viewItem, PropertyCategory _):
+				case (PropertyGridViewCategory viewItem, PropertyCategory _):
 
 					viewItem.Category = null;
 
@@ -75,10 +74,10 @@ namespace Zaaml.UI.Controls.PropertyView
 		{
 			switch (item)
 			{
-				case PropertyViewCategory propertyViewCategory:
+				case PropertyGridViewCategory propertyViewCategory:
 					_categories.Push(propertyViewCategory);
 					break;
-				case PropertyViewItem propertyViewItem:
+				case PropertyGridViewItem propertyViewItem:
 					_items.Push(propertyViewItem);
 					break;
 				default:

@@ -13,7 +13,7 @@ namespace Zaaml.Text
 		{
 			private readonly IPool<PredicateNode> _pool;
 
-			public PredicateNode(Automata<TInstruction, TOperand> automata, Graph graph, PredicateEntryBase predicateEntry) : base(automata, graph)
+			public PredicateNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, PredicateEntryBase predicateEntry) : base(automata, syntaxGraph)
 			{
 				PredicateEntry = predicateEntry;
 			}
@@ -39,7 +39,7 @@ namespace Zaaml.Text
 			{
 				PredicateEntry = null;
 
-				_pool.Release(this);
+				_pool.Return(this);
 			}
 		}
 	}

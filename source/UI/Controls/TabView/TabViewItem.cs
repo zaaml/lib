@@ -7,12 +7,14 @@ using System.Collections;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
@@ -105,7 +107,7 @@ namespace Zaaml.UI.Controls.TabView
 		public Visibility ActualCloseButtonVisibility
 		{
 			get => (Visibility) GetValue(ActualCloseButtonVisibilityProperty);
-			private set => this.SetReadOnlyValue(ActualCloseButtonVisibilityPropertyKey, value);
+			private set => this.SetReadOnlyValue(ActualCloseButtonVisibilityPropertyKey, value.Box());
 		}
 
 		public ICommand ActualCloseCommand
@@ -123,19 +125,19 @@ namespace Zaaml.UI.Controls.TabView
 		public Visibility ActualPinButtonVisibility
 		{
 			get => (Visibility) GetValue(ActualPinButtonVisibilityProperty);
-			private set => this.SetReadOnlyValue(ActualPinButtonVisibilityPropertyKey, value);
+			private set => this.SetReadOnlyValue(ActualPinButtonVisibilityPropertyKey, value.Box());
 		}
 
 		public Visibility CloseButtonAutoVisibility
 		{
 			get => (Visibility) GetValue(CloseButtonAutoVisibilityProperty);
-			set => SetValue(CloseButtonAutoVisibilityProperty, value);
+			set => SetValue(CloseButtonAutoVisibilityProperty, value.Box());
 		}
 
 		public ElementVisibility CloseButtonVisibility
 		{
 			get => (ElementVisibility) GetValue(CloseButtonVisibilityProperty);
-			set => SetValue(CloseButtonVisibilityProperty, value);
+			set => SetValue(CloseButtonVisibilityProperty, value.Box());
 		}
 
 		public ICommand CloseCommand
@@ -161,13 +163,13 @@ namespace Zaaml.UI.Controls.TabView
 		public bool IsPinned
 		{
 			get => (bool) GetValue(IsPinnedProperty);
-			set => SetValue(IsPinnedProperty, value);
+			set => SetValue(IsPinnedProperty, value.Box());
 		}
 
 		public bool IsSelected
 		{
 			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 
 		protected override IEnumerator LogicalChildren => Content != null ? EnumeratorUtils.Concat(Content, base.LogicalChildren) : base.LogicalChildren;
@@ -175,13 +177,13 @@ namespace Zaaml.UI.Controls.TabView
 		public Visibility PinButtonAutoVisibility
 		{
 			get => (Visibility) GetValue(PinButtonAutoVisibilityProperty);
-			set => SetValue(PinButtonAutoVisibilityProperty, value);
+			set => SetValue(PinButtonAutoVisibilityProperty, value.Box());
 		}
 
 		public ElementVisibility PinButtonVisibility
 		{
 			get => (ElementVisibility) GetValue(PinButtonVisibilityProperty);
-			set => SetValue(PinButtonVisibilityProperty, value);
+			set => SetValue(PinButtonVisibilityProperty, value.Box());
 		}
 
 		public ICommand SelectCommand { get; }
@@ -370,7 +372,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		private void SetIsSelectedPrivate(bool isSelected)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, isSelected ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsSelectedProperty, isSelected.Box());
 		}
 
 		protected virtual void UpdateActualCloseCommand()

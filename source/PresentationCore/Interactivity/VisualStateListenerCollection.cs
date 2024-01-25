@@ -38,7 +38,7 @@ namespace Zaaml.PresentationCore.Interactivity
       }
     }
 
-    public List<IVisualStateListener> Listeners { get; } = new List<IVisualStateListener>();
+    public List<IVisualStateListener> Listeners { get; } = new();
 
     public string StateName { get; }
 

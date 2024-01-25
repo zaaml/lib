@@ -7,51 +7,39 @@ using System.Windows.Input;
 
 namespace Zaaml.PresentationCore.Input
 {
-  internal interface IMouseService
-  {
-    #region Fields
+	internal interface IMouseService
+	{
+		event MouseEventHandlerInt MouseMove;
 
-    event MouseEventHandlerInt MouseMove;
-
-    event MouseButtonEventHandlerInt MouseLeftButtonDown;
-    event MouseButtonEventHandlerInt MouseLeftButtonUp;
-    event MouseButtonEventHandlerInt MouseRightButtonDown;
-    event MouseButtonEventHandlerInt MouseRightButtonUp;
+		event MouseButtonEventHandlerInt MouseLeftButtonDown;
+		event MouseButtonEventHandlerInt MouseLeftButtonUp;
+		event MouseButtonEventHandlerInt MouseRightButtonDown;
+		event MouseButtonEventHandlerInt MouseRightButtonUp;
 
 
-    event MouseButtonEventHandlerInt PreviewMouseLeftButtonDown;
-    event MouseButtonEventHandlerInt PreviewMouseLeftButtonUp;
-    event MouseButtonEventHandlerInt PreviewMouseRightButtonDown;
-    event MouseButtonEventHandlerInt PreviewMouseRightButtonUp;
+		event MouseButtonEventHandlerInt PreviewMouseLeftButtonDown;
+		event MouseButtonEventHandlerInt PreviewMouseLeftButtonUp;
+		event MouseButtonEventHandlerInt PreviewMouseRightButtonDown;
+		event MouseButtonEventHandlerInt PreviewMouseRightButtonUp;
 
-    #endregion
+		UIElement DirectlyOver { get; }
 
-    #region Properties
+		bool IsMouseCaptured { get; }
 
-    UIElement DirectlyOver { get; }
+		UIElement LastElement { get; }
 
-    bool IsMouseCaptured { get; }
+		MouseButtonState LeftButtonState { get; }
 
-    UIElement LastElement { get; }
+		UIElement MouseCaptureElement { get; }
 
-    MouseButtonState LeftButtonState { get; }
+		MouseButtonState RightButtonState { get; }
 
-    UIElement MouseCaptureElement { get; }
+		Point ScreenPosition { get; set; }
 
-    MouseButtonState RightButtonState { get; }
+		bool CaptureMouse(UIElement uie);
 
-    Point ScreenPosition { get; }
+		Point GetPosition(UIElement relativeTo);
 
-    #endregion
-
-    #region  Methods
-
-    bool CaptureMouse(UIElement uie);
-
-    Point GetPosition(UIElement relativeTo);
-
-    void ReleaseMouseCapture();
-
-    #endregion
-  }
+		void ReleaseMouseCapture();
+	}
 }

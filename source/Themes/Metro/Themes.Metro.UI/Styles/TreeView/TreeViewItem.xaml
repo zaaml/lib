@@ -14,7 +14,8 @@
     <zm:ControlTemplateRoot Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
 
-      <zm:DockPanel Margin="{zm:TemplateBinding Path=ActualLevelIndent, Converter={StaticResource LevelIndentConverter}}">
+      <zm:DockPanel
+        Margin="{zm:TemplateBinding Path=ActualLevelIndent, Converter={StaticResource LevelIndentConverter}}">
 
         <!--  Expander  -->
         <zm:TreeViewItemExpander x:Name="Expander"
@@ -31,8 +32,10 @@
                 BorderThickness="0">
 
           <!--  Content  -->
-          <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+          <zm:IconContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                   VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch"
                                    zm:PathIcon.Brush="{TemplateBinding Foreground}"
                                    Content="{TemplateBinding Content}"
                                    ContentTemplate="{TemplateBinding ContentTemplate}"
@@ -58,9 +61,9 @@
               BorderThickness="0,1" />
 
       <!--  CellsPresenter  -->
-      <zm:TreeViewItemGridCellsPresenter x:Name="CellsPresenter"
-                                         Margin="0,0,-1,0"
-                                         BorderBrush="{TemplateBinding BorderBrush}" />
+      <zm:TreeGridViewCellsPresenter x:Name="CellsPresenter"
+                                     Margin="0,0,-1,0"
+                                     BorderBrush="{TemplateBinding BorderBrush}" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -71,13 +74,15 @@
     <zm:Setter Property="HorizontalAlignment" Value="Stretch" />
     <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
     <zm:Setter Property="VerticalContentAlignment" Value="Top" />
-    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualViewTemplate, TargetNullValue={StaticResource TreeViewItemTemplate}}" />
+    <zm:Setter Property="Template"
+               Value="{zm:SelfBinding Path=ActualViewTemplate, TargetNullValue={StaticResource TreeViewItemTemplate}}" />
     <zm:Setter Property="zm:TreeGridView.Template" Value="{StaticResource TreeViewGridItemTemplate}" />
     <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="TreeViewItemStyle" BasedOn="{StaticResource TreeViewItemBaseStyle}" Skin="Metro.TreeViewItem" TargetType="zm:TreeViewItem">
+  <zm:Style x:Key="TreeViewItemStyle" BasedOn="{StaticResource TreeViewItemBaseStyle}" Skin="Metro.TreeViewItem"
+            TargetType="zm:TreeViewItem">
 
     <zm:SetterGroup ValuePathSource="Skin">
 
@@ -94,6 +99,7 @@
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="TreeViewItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TreeViewItemStyle}" TargetType="zm:TreeViewItem" />
+  <zm:ThemeStyle x:Key="TreeViewItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TreeViewItemStyle}"
+                 TargetType="zm:TreeViewItem" />
 
 </zm:ThemeResourceDictionary>

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Runtime.CompilerServices;
 
 // ReSharper disable ReplaceSliceWithRangeIndexer
 
@@ -19,34 +20,58 @@ namespace Zaaml.Core
 			_memorySpan = memorySpan;
 		}
 
-		public ReadOnlySpan<T> Span => _memorySpan.Span;
+		public ReadOnlySpan<T> Span
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _memorySpan.Span; }
+		}
 
-		internal bool IsEmpty => _memorySpan.IsEmpty;
+		internal bool IsEmpty
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _memorySpan.IsEmpty; }
+		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ReadOnlyMemorySpan<T>(MemorySpan<T> memorySpan)
 		{
 			return new ReadOnlyMemorySpan<T>(memorySpan);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator ReadOnlySpan<T>(ReadOnlyMemorySpan<T> memorySpan)
 		{
 			return memorySpan.Span;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ReadOnlyMemorySpan<T> Slice(int start)
 		{
 			return _memorySpan.Slice(start);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ReadOnlyMemorySpan<T> Slice(int start, int length)
 		{
 			return _memorySpan.Slice(start, length);
 		}
 
-		public int Length => _memorySpan.Length;
+		public int Length
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _memorySpan.Length; }
+		}
 
-		public T this[int index] => _memorySpan[index];
+		public T this[int index]
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get { return _memorySpan[index]; }
+		}
 
-		public ReadOnlySpan<T>.Enumerator GetEnumerator() => Span.GetEnumerator();
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ReadOnlySpan<T>.Enumerator GetEnumerator()
+		{
+			return Span.GetEnumerator();
+		}
 	}
 }

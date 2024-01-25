@@ -4,7 +4,6 @@
 
 using System.Windows;
 using System.Windows.Controls.Primitives;
-using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.PresentationCore.Theming

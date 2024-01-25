@@ -8,7 +8,7 @@ namespace Zaaml.Text
 	{
 		private protected sealed class UnexpectedNode : Node
 		{
-			public static readonly UnexpectedNode Instance = new UnexpectedNode();
+			public static readonly UnexpectedNode Instance = new();
 
 			private UnexpectedNode() : base(ThreadStatusKind.Unexpected)
 			{

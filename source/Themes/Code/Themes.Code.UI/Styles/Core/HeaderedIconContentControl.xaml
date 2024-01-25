@@ -1,0 +1,54 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="HeaderedIconContentControlTemplate"
+                   TargetType="zm:HeaderedIconContentControl">
+    <zm:DockPanel>
+
+      <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalHeaderAlignment}"
+                               VerticalAlignment="{TemplateBinding VerticalHeaderAlignment}"
+                               HorizontalIconAlignment="{TemplateBinding HorizontalIconAlignment}"
+                               VerticalIconAlignment="{TemplateBinding VerticalIconAlignment}"
+                               zm:DockPanel.Dock="{TemplateBinding HeaderDock}"
+                               zm:DockPanel.DockDistance="{TemplateBinding HeaderDistance}"
+                               Content="{TemplateBinding Header}"
+                               ContentStringFormat="{TemplateBinding HeaderStringFormat}"
+                               ContentTemplate="{TemplateBinding HeaderTemplate}"
+                               ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                               Icon="{TemplateBinding Icon}"
+                               IconDistance="{TemplateBinding IconDistance}"
+                               IconDock="{TemplateBinding IconDock}"
+                               ShowIcon="{TemplateBinding ShowIcon}"
+                               Visibility="{zm:TemplateBinding Path=ShowHeader,
+                                                               Converter={zm:VisibilityConverter}}" />
+
+      <zm:ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                           Content="{TemplateBinding Content}"
+                           ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                           ContentTemplate="{TemplateBinding ContentTemplate}"
+                           ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+                           Visibility="{zm:TemplateBinding Path=ShowContent,
+                                                           Converter={zm:VisibilityConverter}}" />
+
+    </zm:DockPanel>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="HeaderedIconContentControlBase" TargetType="zm:HeaderedIconContentControl">
+    <zm:Setter Property="Foreground" Value="{zm:ThemeResource Keyword=ControlForegroundBrush}" />
+    <zm:Setter Property="Template" Value="{StaticResource HeaderedIconContentControlTemplate}" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="IsTabStop" Value="False" />
+  </zm:Style>
+
+  <!--  ThemeStyle  -->
+  <zm:ThemeStyle x:Key="HeaderedIconContentControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource HeaderedIconContentControlBase}" TargetType="zm:HeaderedIconContentControl" />
+
+</zm:ThemeResourceDictionary>

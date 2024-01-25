@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Media;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
@@ -40,7 +41,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 		public bool ShowTransparentPattern
 		{
 			get => (bool) GetValue(ShowTransparentPatternProperty);
-			set => SetValue(ShowTransparentPatternProperty, value);
+			set => SetValue(ShowTransparentPatternProperty, value.Box());
 		}
 	}
 }

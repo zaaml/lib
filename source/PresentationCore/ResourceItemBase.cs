@@ -7,23 +7,15 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore
 {
-  public abstract class ResourceItemBase<TValue> : InheritanceContextObject
-  {
-    #region Static Fields and Constants
+	public abstract class ResourceItemBase<TValue> : InheritanceContextObject
+	{
+		public static readonly DependencyProperty ValueProperty = DPM.Register<object, ResourceItemBase<TValue>>
+			("Value");
 
-    public static readonly DependencyProperty ValueProperty = DPM.Register<object, ResourceItemBase<TValue>>
-      ("Value");
-
-    #endregion
-
-    #region Properties
-
-    public TValue Value
-    {
-      get => (TValue) GetValue(ValueProperty);
-      set => SetValue(ValueProperty, value);
-    }
-
-    #endregion
-  }
+		public TValue Value
+		{
+			get => (TValue)GetValue(ValueProperty);
+			set => SetValue(ValueProperty, value);
+		}
+	}
 }

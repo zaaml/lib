@@ -354,7 +354,8 @@ namespace Zaaml.UI.Data.Hierarchy
 			var visibleFlatCount = VisibleFlatCount;
 			var count = oldItems.Count;
 			var index = oldIndex;
-
+			var raiseIndex = FindIndex(Nodes[index]);
+			
 			for (var i = index; i < index + count; i++)
 			{
 				var node = Nodes[i];
@@ -363,13 +364,13 @@ namespace Zaaml.UI.Data.Hierarchy
 				VisibleFlatCount -= node.VisibleFlatCount + 1;
 			}
 
-			var raiseIndex = FindIndex(Nodes[index]);
-
 			Nodes.HandleRemove(oldIndex, oldItems);
 
 			SuspendCollectionChange = false;
 
-			RaiseChange(raiseIndex, VisibleFlatCount - visibleFlatCount);
+			var raiseCount = visibleFlatCount - VisibleFlatCount;
+
+			RaiseChange(raiseIndex, raiseCount);
 		}
 
 		private void HandleReset()
@@ -550,20 +551,6 @@ namespace Zaaml.UI.Data.Hierarchy
 
 			RaiseReset();
 		}
-
-		//private void DebugCount()
-		//{
-		//	var flatVis = VisibleFlatCount;
-
-		//	Rebuild();
-
-		//	var flatVis1 = VisibleFlatCount;
-
-		//	ResetCursor();
-
-		//	var flatVis2 = Cursor.CalculateCount();
-		//	var flatVis3 = Cursor.CalculateBackCount();
-		//}
 
 		internal void ResetCursor()
 		{

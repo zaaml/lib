@@ -24,16 +24,6 @@ namespace Zaaml.Text
 				{
 					return new TokenSymbol(tokenSyntax);
 				}
-
-				public static implicit operator Symbol(Parser<TToken>.PredicateEntry parserPredicateEntry)
-				{
-					return new PredicateSymbol(parserPredicateEntry);
-				}
-
-				public static implicit operator Symbol(Parser<TToken>.ActionEntry parserActionEntry)
-				{
-					return new ActionSymbol(parserActionEntry);
-				}
 			}
 		}
 	}

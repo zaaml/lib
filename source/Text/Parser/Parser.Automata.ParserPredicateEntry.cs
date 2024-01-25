@@ -12,23 +12,24 @@ namespace Zaaml.Text
 		{
 			private sealed class ParserPredicateEntry : PredicateEntry, IParserEntry, IParserPredicate
 			{
-				public ParserPredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.PredicateSymbol grammarEntry) : base(CreatePredicateDelegate(grammarEntry.Predicate))
+				public ParserPredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.PredicateSymbol grammarEntry) 
+					: base(CreatePredicateDelegate(grammarEntry.PredicateEntry), grammarEntry.PredicateEntry.PredicateName)
 				{
-					GrammarEntry = grammarEntry;
+					GrammarSymbol = grammarEntry;
 				}
 
 				public ParserPredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol grammarEntry, Func<AutomataContext, PredicateResult> predicate) : base(predicate)
 				{
-					GrammarEntry = grammarEntry;
+					GrammarSymbol = grammarEntry;
 				}
 
-				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarEntry { get; }
+				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
 				public ProductionArgument ProductionArgument { get; set; }
 				
 				public Entry Clone()
 				{
-					return new ParserPredicateEntry(GrammarEntry, Predicate)
+					return new ParserPredicateEntry(GrammarSymbol, Predicate)
 					{
 						Source = this
 					};
@@ -43,19 +44,20 @@ namespace Zaaml.Text
 
 			private sealed class ParserPredicateEntry<TResult> : PredicateEntry<TResult>, IParserEntry, IParserPredicate
 			{
-				public ParserPredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol grammarEntry, Func<AutomataContext, PredicateResult<TResult>> predicate, ParserPredicateKind predicateKind) : base(predicate)
+				public ParserPredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol grammarEntry, Func<AutomataContext, PredicateResult<TResult>> predicate, ParserPredicateKind predicateKind) 
+					: base(predicate)
 				{
-					GrammarEntry = grammarEntry;
+					GrammarSymbol = grammarEntry;
 					PredicateKind = predicateKind;
 				}
 
-				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarEntry { get; }
+				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
 				public ProductionArgument ProductionArgument { get; set; }
 				
 				public Entry Clone()
 				{
-					return new ParserPredicateEntry<TResult>(GrammarEntry, Predicate, PredicateKind)
+					return new ParserPredicateEntry<TResult>(GrammarSymbol, Predicate, PredicateKind)
 					{
 						Source = this
 					};

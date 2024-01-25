@@ -17,6 +17,16 @@ namespace Zaaml.Text
 
 				public FragmentSyntax Fragment { get; }
 			}
+
+			protected internal sealed class TokenSymbol : PrimitiveSymbol
+			{
+				public TokenSymbol(TokenSyntax token)
+				{
+					Token = token;
+				}
+
+				public TokenSyntax Token { get; }
+			}
 		}
 	}
 }

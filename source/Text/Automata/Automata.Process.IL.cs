@@ -12,35 +12,63 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		private Process.ProcessILGenerator ILGenerator { get; } = new();
+		private protected abstract class ExecutionMethodBuilder
+		{
+			protected ExecutionMethodBuilder(int builderIndex)
+			{
+				BuilderIndex = builderIndex;
+			}
+
+			public int BuilderIndex { get; }
+
+			public abstract void BuildExecutionMethods(ExecutionPath executionPath);
+		}
 
 		partial class Process
 		{
-			internal partial class ProcessILGenerator
+			private static ProcessILGenerator StaticILGenerator { get; set; }
+
+			private protected partial class ProcessILGenerator
 			{
-				private static readonly FieldInfo ContextFieldInfo = ProcessType.GetField(nameof(_context), IPNP | GF);
 				private static readonly MethodInfo ExecuteThreadQueueMethodInfo = ProcessType.GetMethod(nameof(GetExecuteThreadQueue), IPNP);
-				private static readonly MethodInfo MoveNextMethodInfo = ProcessType.GetMethod(nameof(MoveInstructionPointer), IPNP);
-				private static readonly MethodInfo GetAutomataStackMethodInfo = ProcessType.GetMethod(nameof(GetAutomataStack), IPNP);
 				private static readonly MethodInfo ProcessEnqueuePredicateResultMethodInfo = ProcessType.GetMethod(nameof(EnqueuePredicateResult), IPNP);
 				private static readonly MethodInfo ProcessDequePredicateResultMethodInfo = ProcessType.GetMethod(nameof(DequeuePredicateResult), IPNP);
-				private static readonly MethodInfo GetUnexpectedNodeMethodInfo = ProcessType.GetMethod(nameof(GetUnexpectedNode), IPNP);
+
+				private static readonly FieldInfo UnexpectedNodeFieldInfo = typeof(UnexpectedNode).GetField(nameof(UnexpectedNode.Instance), SPNP);
+
 				private static readonly MethodInfo BuildForkNodeMethodInfo = ProcessType.GetMethod(nameof(BuildForkNode), IPNP);
-				private static readonly MethodInfo EnqueueParallelPathMethodInfo = ProcessType.GetMethod(nameof(EnqueueParallelPath), IPNP);
+				private static readonly MethodInfo EnqueueParallelPathMethodInfo = ThreadContextType.GetMethod(nameof(ThreadContext.EnqueueParallelPath), IPNP);
 
-				public readonly ExecutionPathMethodCollection MainExecutionMethods;
-				public readonly ExecutionPathMethodCollection ParallelExecutionMethods;
+				public static readonly FieldInfo ProcessThreadsFieldInfo = ProcessType.GetField(nameof(_threads), IPNP);
 
-				public ProcessILGenerator()
+				private static readonly MethodInfo EnterForkFrameMethodInfo = ProcessType.GetMethod(nameof(EnterForkFrame), IPNP);
+				private static readonly MethodInfo LeaveForkFrameMethodInfo = ProcessType.GetMethod(nameof(LeaveForkFrame), IPNP);
+
+				public readonly int MainExecutionMethodIndex;
+				public readonly int ParallelExecutionMethodIndex;
+
+				public ProcessILGenerator(Automata<TInstruction, TOperand> automata)
 				{
-					MainExecutionMethods = new ExecutionPathMethodCollection(ExecutionPathMethodKind.Main, this);
-					ParallelExecutionMethods = new ExecutionPathMethodCollection(ExecutionPathMethodKind.Parallel, this);
+					Automata = automata;
+					ExecutionMethodBuilder = Automata.RegisterExecutionMethodBuilder(i => new GeneratorExecutionMethodBuilder(i, this));
+					MainExecutionMethodIndex = ExecutionMethodBuilder.BuilderIndex;
+					ParallelExecutionMethodIndex = ExecutionMethodBuilder.BuilderIndex + 1;
 				}
 
-				public void Emit(ILContext context)
+				private GeneratorExecutionMethodBuilder ExecutionMethodBuilder { get; }
+
+				private Automata<TInstruction, TOperand> Automata { get; }
+
+				public void EmitEnterForkFrame(ILContext context)
 				{
 					context.EmitLdProcess();
-					context.IL.Emit(OpCodes.Call, ProcessDequePredicateResultMethodInfo);
+					context.IL.Emit(OpCodes.Call, EnterForkFrameMethodInfo);
+				}
+
+				public void EmitLeaveForkFrame(ILContext context)
+				{
+					context.EmitLdProcess();
+					context.IL.Emit(OpCodes.Call, LeaveForkFrameMethodInfo);
 				}
 
 				public void EmitBuildForkNode(ILContext context, int nodeIndex, LocalBuilder resultLocal)
@@ -60,7 +88,7 @@ namespace Zaaml.Text
 
 				public void EmitEnqueueParallelPath(ILContext context)
 				{
-					context.EmitLdProcess();
+					context.EmitLdThreadContext();
 					context.EmitExecutionPath();
 					context.IL.Emit(OpCodes.Call, EnqueueParallelPathMethodInfo);
 				}
@@ -74,14 +102,7 @@ namespace Zaaml.Text
 
 				public void EmitGetUnexpectedNode(ILContext context)
 				{
-					context.EmitLdProcess();
-					context.IL.Emit(OpCodes.Call, GetUnexpectedNodeMethodInfo);
-				}
-
-				public void EmitLdContext(ILContext context)
-				{
-					context.EmitLdProcess();
-					context.IL.Emit(OpCodes.Ldfld, ContextFieldInfo);
+					context.IL.Emit(OpCodes.Ldsfld, UnexpectedNodeFieldInfo);
 				}
 
 				public void EmitLdExecuteThreadQueue(ILContext context)
@@ -90,16 +111,50 @@ namespace Zaaml.Text
 					context.IL.Emit(OpCodes.Call, ExecuteThreadQueueMethodInfo);
 				}
 
-				public void EmitLdStack(ILContext context)
+				private sealed class GeneratorExecutionMethodBuilder : ExecutionMethodBuilder
 				{
-					context.EmitLdProcess();
-					context.IL.Emit(OpCodes.Call, GetAutomataStackMethodInfo);
-				}
+					private readonly ProcessILGenerator _ilGenerator;
 
-				public void EmitMoveNext(ILContext context)
-				{
-					context.EmitLdProcess();
-					context.IL.Emit(OpCodes.Call, MoveNextMethodInfo);
+					public GeneratorExecutionMethodBuilder(int builderIndex, ProcessILGenerator ilGenerator) : base(builderIndex)
+					{
+						_ilGenerator = ilGenerator;
+						LazyMainExecutionMethodDelegate = LazyMainExecutionMethod;
+						LazyParallelExecutionMethodDelegate = LazyParallelExecutionMethod;
+					}
+
+					private ExecutionPathMethodDelegate LazyMainExecutionMethodDelegate { get; }
+
+					private ExecutionPathMethodDelegate LazyParallelExecutionMethodDelegate { get; }
+
+					private int MainIndex => BuilderIndex * 2;
+
+					private int ParallelIndex => MainIndex + 1;
+
+					private Node LazyMainExecutionMethod(ExecutionPath executionPath, Process process)
+					{
+						var method = executionPath.IsForkExecutionPath ? ExecuteForkPathMainDelegate : _ilGenerator.Build(ExecutionPathMethodKind.Main, executionPath);
+						var node = method(executionPath, process);
+
+						executionPath.BindExecutionMethod(MainIndex, method);
+
+						return node;
+					}
+
+					private Node LazyParallelExecutionMethod(ExecutionPath executionPath, Process process)
+					{
+						var method = executionPath.IsForkExecutionPath ? ExecuteForkPathParallelDelegate : _ilGenerator.Build(ExecutionPathMethodKind.Parallel, executionPath);
+						var node = method(executionPath, process);
+
+						executionPath.BindExecutionMethod(ParallelIndex, method);
+
+						return node;
+					}
+
+					public override void BuildExecutionMethods(ExecutionPath executionPath)
+					{
+						executionPath.BindExecutionMethod(MainIndex, LazyMainExecutionMethodDelegate);
+						executionPath.BindExecutionMethod(ParallelIndex, LazyParallelExecutionMethodDelegate);
+					}
 				}
 			}
 		}

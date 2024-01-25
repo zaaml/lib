@@ -14,6 +14,16 @@ namespace Zaaml.Text
 				{
 					return new FragmentSymbol(fragment);
 				}
+
+				public static implicit operator Symbol(TokenSyntax token)
+				{
+					return new TokenSymbol(token);
+				}
+
+				public static implicit operator Symbol(PredicateSyntax predicateSyntax)
+				{
+					return new PredicateSymbol(predicateSyntax);
+				}
 			}
 		}
 	}

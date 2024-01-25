@@ -4,8 +4,10 @@
 
 using System.Windows;
 using System.Windows.Data;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 
@@ -40,13 +42,13 @@ namespace Zaaml.UI.Controls.TreeView
 		public Visibility ActualVisibility
 		{
 			get => (Visibility) GetValue(ActualVisibilityProperty);
-			private set => this.SetReadOnlyValue(ActualVisibilityPropertyKey, value);
+			private set => this.SetReadOnlyValue(ActualVisibilityPropertyKey, value.Box());
 		}
 
 		public bool IsExpanded
 		{
 			get => (bool) GetValue(IsExpandedProperty);
-			set => SetValue(IsExpandedProperty, value);
+			set => SetValue(IsExpandedProperty, value.Box());
 		}
 
 		public TreeViewItem TreeViewItem
@@ -82,7 +84,10 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private void UpdateVisibility()
 		{
-			ActualVisibility = TreeViewItem?.HasItems == false ? Visibility.Collapsed : Visibility.Visible;
+			var actualVisibility = TreeViewItem?.HasItems == false ? Visibility.Collapsed : Visibility.Visible;
+
+			if (ActualVisibility != actualVisibility)
+				ActualVisibility = actualVisibility;
 		}
 	}
 }

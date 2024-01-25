@@ -77,7 +77,7 @@ namespace Zaaml.UI.Controls.Primitives
 			set => SetValue(MinimumYProperty, value);
 		}
 
-		private XYControllerTemplateContract TemplateContract => (XYControllerTemplateContract) TemplateContractInternal;
+		private XYControllerTemplateContract TemplateContract => (XYControllerTemplateContract) TemplateContractCore;
 
 		private XYControllerPanel XYControllerPanel => TemplateContract.XYControllerPanel;
 

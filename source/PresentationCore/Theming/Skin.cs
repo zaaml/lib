@@ -2,58 +2,104 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections.Generic;
-using System.Linq;
-
-#if !NETCOREAPP
+using System.Windows;
+using System.Windows.Markup;
 using Zaaml.Core.Extensions;
-#endif
+using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Theming
 {
-	public sealed class Skin : SkinBase
+	[ContentProperty(nameof(SkinDictionary))]
+	public abstract class ThemeSkinBase : SkinBase
 	{
-		private readonly Dictionary<string, object> _dictionary = new();
+		private static readonly SkinDictionary NullDictionary = new();
 
-		internal Skin()
+		public static readonly DependencyProperty SkinDictionaryProperty = DPM.Register<SkinDictionary, ThemeSkinBase>
+			("SkinDictionary", default, d => d.OnDictionaryPropertyChangedPrivate, d => d.CoerceDictionary);
+
+		private SkinDictionary _frozenDictionary = NullDictionary;
+
+		protected ThemeSkinBase()
 		{
 		}
 
-		internal string ActualKey { get; set; }
-
-		internal override IEnumerable<KeyValuePair<string, object>> Resources => _dictionary;
-
-		internal void AddValueInternal(string key, object value)
+		internal ThemeSkinBase(SkinDictionary frozenDictionary)
 		{
-			_dictionary[key] = value;
+			_frozenDictionary = frozenDictionary;
 		}
 
-		internal void Flatten()
+		public SkinDictionary SkinDictionary
 		{
-			foreach (var kv in Resources.Where(r => r.Value is Skin).ToList())
-			{
-				var key = kv.Key;
-				var childSkin = (Skin) kv.Value;
+			get => (SkinDictionary)GetValue(SkinDictionaryProperty);
+			set => SetValue(SkinDictionaryProperty, value);
+		}
 
-				childSkin.Flatten();
+		private bool IsFrozenDictionary => ReferenceEquals(_frozenDictionary, NullDictionary) == false;
 
-				foreach (var keyValuePair in childSkin.Resources)
-				{
-					var actual = keyValuePair.WithParentKey(key).Key;
+		internal override IEnumerable<KeyValuePair<string, object>> Resources => _frozenDictionary.ShallowResources;
 
-					_dictionary[actual] = keyValuePair.Value;
-				}
-			}
+		protected abstract Theme Theme { get; }
+
+		internal Theme ThemeInternal => Theme;
+
+		private SkinDictionary CoerceDictionary(SkinDictionary dictionary)
+		{
+			VerifyChange();
+
+			return dictionary;
 		}
 
 		protected override object GetValue(string key)
 		{
-			return _dictionary.GetValueOrDefault(key);
+			return _frozenDictionary.GetValueOrDefault(key);
 		}
 
-		public override string ToString()
+		protected override void OnAttached(FrameworkElement frameworkElement)
 		{
-			return ActualKey;
+			base.OnAttached(frameworkElement);
+
+			if (IsFrozenDictionary)
+				return;
+
+			var dictionary = SkinDictionary ?? NullDictionary;
+
+			_frozenDictionary = Theme?.Freeze(dictionary) ?? dictionary.AsFrozen();
 		}
+
+		private void OnDictionaryPropertyChangedPrivate(SkinDictionary oldValue, SkinDictionary newValue)
+		{
+		}
+
+		private void VerifyChange()
+		{
+			if (IsFrozenDictionary)
+				throw new InvalidOperationException("Skin is frozen and can not be modified");
+		}
+	}
+
+	public abstract class ThemeSkin<TTheme> : ThemeSkinBase
+		where TTheme : Theme
+	{
+		protected ThemeSkin(TTheme theme)
+		{
+			Theme = theme;
+		}
+
+		protected override Theme Theme { get; }
+	}
+
+	public sealed class GenericThemeSkin : ThemeSkinBase
+	{
+		public GenericThemeSkin()
+		{
+		}
+
+		public GenericThemeSkin(SkinDictionary frozenDictionary) : base(frozenDictionary)
+		{
+		}
+
+		protected override Theme Theme => null;
 	}
 }

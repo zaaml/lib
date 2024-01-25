@@ -2,33 +2,29 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Runtime.CompilerServices;
 #if DEBUG
 using System;
 #endif
 
 namespace Zaaml.Core
 {
+#if DEBUG
 	internal struct ReferenceCounter
 	{
 		private int _referenceCount;
 
 		public int AddReference()
 		{
-			_referenceCount++;
-
-			return _referenceCount;
+			return ++_referenceCount;
 		}
 
 		public int ReleaseReference()
 		{
-#if DEBUG
 			if (_referenceCount == 0)
 				throw new InvalidOperationException();
-#endif
 
-			_referenceCount--;
-
-			return _referenceCount;
+			return --_referenceCount;
 		}
 
 		public int ReferenceCount => _referenceCount;
@@ -38,4 +34,22 @@ namespace Zaaml.Core
 			return _referenceCount.ToString();
 		}
 	}
+#else
+	internal struct ReferenceCounter
+	{
+		public int ReferenceCount;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int AddReference()
+		{
+			return ++ReferenceCount;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int ReleaseReference()
+		{
+			return --ReferenceCount;
+		}
+	}
+#endif
 }

@@ -32,7 +32,7 @@ namespace Zaaml.Core
 			if (ReferenceEquals(memorySpan.Allocator, this) == false)
 				throw new InvalidOperationException("Allocator");
 
-			_arrayPool.Return(memorySpan.Array, _clearArray);
+			_arrayPool.Return(memorySpan.ArrayInternal, _clearArray);
 		}
 	}
 }

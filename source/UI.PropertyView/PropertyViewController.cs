@@ -29,7 +29,6 @@ namespace Zaaml.UI.Controls.PropertyView
 		};
 
 		private PropertyDescriptorProvider _propertyDescriptorProvider;
-		private PropertyViewSorting _propertyViewSorting;
 		private object _selectedObject;
 
 		static PropertyViewController()
@@ -50,21 +49,6 @@ namespace Zaaml.UI.Controls.PropertyView
 		public IReadOnlyCollection<PropertyItem> PropertyItems { get; private set; }
 
 		public PropertyViewControl PropertyView { get; }
-
-		public PropertyViewSorting PropertyViewSorting
-		{
-			get => _propertyViewSorting;
-
-			internal set
-			{
-				if (_propertyViewSorting == value)
-					return;
-
-				_propertyViewSorting = value;
-
-				Update();
-			}
-		}
 
 		public object SelectedObject
 		{

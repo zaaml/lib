@@ -19,7 +19,9 @@ using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.ListView.Data;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 using Zaaml.UI.Controls.ScrollView;
+using Zaaml.UI.Controls.TreeView;
 using ScrollUnit = Zaaml.UI.Controls.ScrollView.ScrollUnit;
 
 namespace Zaaml.UI.Controls.ListView
@@ -57,6 +59,9 @@ namespace Zaaml.UI.Controls.ListView
 		public static readonly DependencyProperty ItemContentMemberProperty = DPM.Register<string, ListViewControl>
 			("ItemContentMember", l => l.DefaultGeneratorImplementation.OnItemContentMemberChanged);
 
+		public static readonly DependencyProperty ItemIconSelectorProperty = DPM.Register<IIconSelector, ListViewControl>
+			("ItemIconSelector", d => d.DefaultGeneratorImplementation.OnItemIconSelectorChanged);
+
 		public static readonly DependencyProperty ItemValueMemberProperty = DPM.Register<string, ListViewControl>
 			("ItemValueMember", l => l.OnItemValueMemberPropertyChangedPrivate);
 
@@ -68,6 +73,9 @@ namespace Zaaml.UI.Controls.ListView
 
 		public static readonly DependencyProperty ItemCommandProperty = DPM.Register<ICommand, ListViewControl>
 			("ItemCommand");
+
+		public static readonly DependencyProperty ItemCommandParameterSelectorProperty = DPM.Register<ListViewItemCommandParameterSelector, ListViewControl>
+			("ItemCommandParameterSelector");
 
 		public static readonly DependencyProperty ItemCommandTargetProperty = DPM.Register<DependencyObject, ListViewControl>
 			("ItemCommandTarget");
@@ -93,6 +101,8 @@ namespace Zaaml.UI.Controls.ListView
 		public event EventHandler<ListViewItemMouseButtonEventArgs> ItemMouseButtonDown;
 
 		public event EventHandler<ListViewItemMouseButtonEventArgs> ItemMouseButtonUp;
+
+		public event EventHandler<ListViewItemMouseButtonEventArgs> ItemMouseDoubleClick;
 
 		public event EventHandler<ListViewItemClickEventArgs> ItemClick;
 
@@ -135,13 +145,9 @@ namespace Zaaml.UI.Controls.ListView
 
 		public ControlTemplate ActualViewTemplate
 		{
-			get => (ControlTemplate) GetValue(ActualViewTemplateProperty);
+			get => (ControlTemplate)GetValue(ActualViewTemplateProperty);
 			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
 		}
-
-		private ListViewItemGridColumnHeadersPresenter ColumnHeadersPresenter => TemplateContract.ColumnHeadersPresenter;
-
-		internal ListViewItemGridColumnHeadersPresenter ColumnHeadersPresenterInternal => ColumnHeadersPresenter;
 
 		private ListViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImplementation.Generator;
 
@@ -157,41 +163,53 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal bool FocusItemOnSelect { get; set; } = true;
 
+		private ListGridViewHeadersPresenter GridViewHeadersPresenter => TemplateContract.GridViewHeadersPresenter;
+
+		internal ListGridViewHeadersPresenter GridViewHeadersPresenterInternal => GridViewHeadersPresenter;
+
+		protected override bool HasLogicalOrientation => true;
+
 		private bool IsFocusOnMouseEventLocked { get; set; }
 
-		internal ClickMode ItemClickMode { get; set; } = ClickMode.Release;
+		internal ItemClickMode ItemClickMode { get; set; } = ItemClickMode.DoubleClick;
 
 		internal override IItemCollection<ListViewItem> ItemCollectionOverride => VirtualItemCollection;
 
 		public ICommand ItemCommand
 		{
-			get => (ICommand) GetValue(ItemCommandProperty);
+			get => (ICommand)GetValue(ItemCommandProperty);
 			set => SetValue(ItemCommandProperty, value);
 		}
 
 		internal IItemCommandController<ListViewItem> ItemCommandController { get; }
 
+		public ListViewItemCommandParameterSelector ItemCommandParameterSelector
+		{
+			get => (ListViewItemCommandParameterSelector)GetValue(ItemCommandParameterSelectorProperty);
+			set => SetValue(ItemCommandParameterSelectorProperty, value);
+		}
+
 		public DependencyObject ItemCommandTarget
 		{
-			get => (DependencyObject) GetValue(ItemCommandTargetProperty);
+			get => (DependencyObject)GetValue(ItemCommandTargetProperty);
 			set => SetValue(ItemCommandTargetProperty, value);
 		}
 
 		public ListViewItemGeneratorBase ItemGenerator
 		{
-			get => (ListViewItemGeneratorBase) GetValue(ItemGeneratorProperty);
+			get => (ListViewItemGeneratorBase)GetValue(ItemGeneratorProperty);
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
 		public ListViewGlyphKind ItemGlyphKind
 		{
-			get => (ListViewGlyphKind) GetValue(ItemGlyphKindProperty);
+			get => (ListViewGlyphKind)GetValue(ItemGlyphKindProperty);
 			set => SetValue(ItemGlyphKindProperty, value);
 		}
 
 		public DataTemplate ItemGlyphTemplate
 		{
-			get => (DataTemplate) GetValue(ItemGlyphTemplateProperty);
+			get => (DataTemplate)GetValue(ItemGlyphTemplateProperty);
 			set => SetValue(ItemGlyphTemplateProperty, value);
 		}
 
@@ -211,7 +229,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		public IListViewItemFilter ItemsFilter
 		{
-			get => (IListViewItemFilter) GetValue(ItemsFilterProperty);
+			get => (IListViewItemFilter)GetValue(ItemsFilterProperty);
 			set => SetValue(ItemsFilterProperty, value);
 		}
 
@@ -233,37 +251,39 @@ namespace Zaaml.UI.Controls.ListView
 			}
 		}
 
-		private ListViewFocusNavigator ListViewFocusNavigator => (ListViewFocusNavigator) FocusNavigator;
+		private ListViewFocusNavigator ListViewFocusNavigator => (ListViewFocusNavigator)FocusNavigator;
+
+		protected override Orientation LogicalOrientation => Orientation.Vertical;
 
 		public ScrollUnit ScrollUnit
 		{
-			get => (ScrollUnit) GetValue(ScrollUnitProperty);
+			get => (ScrollUnit)GetValue(ScrollUnitProperty);
 			set => SetValue(ScrollUnitProperty, value);
 		}
 
 		internal ScrollViewControl ScrollViewInternal => ScrollView;
 
-		public ListViewSelectionCollection SelectionCollection => this.GetValueOrCreate(SelectionCollectionPropertyKey, () => new ListViewSelectionCollection((ListViewSelectorController) SelectorController));
+		public ListViewSelectionCollection SelectionCollection => this.GetValueOrCreate(SelectionCollectionPropertyKey, () => new ListViewSelectionCollection((ListViewSelectorController)SelectorController));
 
 		public static DependencyProperty SelectionCollectionProperty => SelectionCollectionPropertyKey.DependencyProperty;
 
 		public ListViewSelectionMode SelectionMode
 		{
-			get => (ListViewSelectionMode) GetValue(SelectionModeProperty);
+			get => (ListViewSelectionMode)GetValue(SelectionModeProperty);
 			set => SetValue(SelectionModeProperty, value);
 		}
 
 		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			get => (IEnumerable)GetValue(SourceCollectionProperty);
 			set => SetValue(SourceCollectionProperty, value);
 		}
 
-		private ListViewControlTemplateContract TemplateContract => (ListViewControlTemplateContract) TemplateContractInternal;
+		private ListViewControlTemplateContract TemplateContract => (ListViewControlTemplateContract)TemplateContractCore;
 
 		public ListViewBase View
 		{
-			get => (ListViewBase) GetValue(ViewProperty);
+			get => (ListViewBase)GetValue(ViewProperty);
 			set => SetValue(ViewProperty, value);
 		}
 
@@ -369,9 +389,10 @@ namespace Zaaml.UI.Controls.ListView
 
 			var itemCommand = ItemCommand;
 			var itemCommandTarget = ItemCommandTarget;
+			var itemCommandParameter = ItemCommandParameterSelector?.SelectCommandParameter(listViewItem) ?? listViewItem.Value ?? listViewItem;
 
-			if (CommandHelper.CanExecute(itemCommand, listViewItem, itemCommandTarget ?? this))
-				CommandHelper.Execute(itemCommand, listViewItem, itemCommandTarget ?? this);
+			if (CommandHelper.CanExecute(itemCommand, itemCommandParameter, itemCommandTarget ?? this))
+				CommandHelper.Execute(itemCommand, itemCommandParameter, itemCommandTarget ?? this);
 		}
 
 		internal void OnItemDetachedCollection(ListViewItem item)
@@ -411,14 +432,6 @@ namespace Zaaml.UI.Controls.ListView
 			ItemCommandController.OnItemKeyUp(listViewItem, keyEventArgs);
 		}
 
-		internal void UpdateViewTemplate()
-		{
-			var actualViewTemplate = View?.GetTemplateInternal(this);
-
-			if (ReferenceEquals(ActualViewTemplate, actualViewTemplate) == false)
-				ActualViewTemplate = actualViewTemplate;
-		}
-
 		internal void OnItemMouseButton(ListViewItem listViewItem, MouseButtonEventArgs e)
 		{
 			if (e.ChangedButton == MouseButton.Left)
@@ -433,6 +446,13 @@ namespace Zaaml.UI.Controls.ListView
 				ItemMouseButtonUp?.Invoke(this, new ListViewItemMouseButtonEventArgs(listViewItem, e));
 			else
 				ItemMouseButtonDown?.Invoke(this, new ListViewItemMouseButtonEventArgs(listViewItem, e));
+		}
+
+		public void OnItemMouseDoubleClick(ListViewItem listViewItem, MouseButtonEventArgs e)
+		{
+			ItemCommandController.OnItemMouseDoubleClick(listViewItem, e);
+
+			ItemMouseDoubleClick?.Invoke(this, new ListViewItemMouseButtonEventArgs(listViewItem, e));
 		}
 
 		internal void OnItemMouseEnter(ListViewItem listViewItem, MouseEventArgs e)
@@ -563,19 +583,19 @@ namespace Zaaml.UI.Controls.ListView
 			if (ScrollView != null)
 				ScrollView.PreserveScrollBarVisibility = true;
 
-			if (ColumnHeadersPresenter != null)
+			if (GridViewHeadersPresenter != null)
 			{
-				ColumnHeadersPresenter.ListViewControl = this;
-				ColumnHeadersPresenter.ScrollViewControl = ScrollView;
+				GridViewHeadersPresenter.ListViewControl = this;
+				GridViewHeadersPresenter.ScrollViewControl = ScrollView;
 			}
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
-			if (ColumnHeadersPresenter != null)
+			if (GridViewHeadersPresenter != null)
 			{
-				ColumnHeadersPresenter.ListViewControl = null;
-				ColumnHeadersPresenter.ScrollViewControl = null;
+				GridViewHeadersPresenter.ListViewControl = null;
+				GridViewHeadersPresenter.ScrollViewControl = null;
 			}
 
 			ItemsPresenter.ListViewControl = null;
@@ -636,45 +656,59 @@ namespace Zaaml.UI.Controls.ListView
 			InvalidateMeasure();
 		}
 
+		internal void UpdateViewTemplate()
+		{
+			var actualViewTemplate = View?.GetTemplateInternal(this);
+
+			if (ReferenceEquals(ActualViewTemplate, actualViewTemplate) == false)
+				ActualViewTemplate = actualViewTemplate;
+		}
+
 		public string ItemContentMember
 		{
-			get => (string) GetValue(ItemContentMemberProperty);
+			get => (string)GetValue(ItemContentMemberProperty);
 			set => SetValue(ItemContentMemberProperty, value);
 		}
 
 		public string ItemIconMember
 		{
-			get => (string) GetValue(ItemIconMemberProperty);
+			get => (string)GetValue(ItemIconMemberProperty);
 			set => SetValue(ItemIconMemberProperty, value);
+		}
+		
+		public IIconSelector ItemIconSelector
+		{
+			get => (IIconSelector)GetValue(ItemIconSelectorProperty);
+			set => SetValue(ItemIconSelectorProperty, value);
 		}
 
 		public string ItemSelectionMember
 		{
-			get => (string) GetValue(ItemSelectionMemberProperty);
+			get => (string)GetValue(ItemSelectionMemberProperty);
 			set => SetValue(ItemSelectionMemberProperty, value);
 		}
 
 		public string ItemValueMember
 		{
-			get => (string) GetValue(ItemValueMemberProperty);
+			get => (string)GetValue(ItemValueMemberProperty);
 			set => SetValue(ItemValueMemberProperty, value);
 		}
 
 		public string ItemContentStringFormat
 		{
-			get => (string) GetValue(ItemContentStringFormatProperty);
+			get => (string)GetValue(ItemContentStringFormatProperty);
 			set => SetValue(ItemContentStringFormatProperty, value);
 		}
 
 		public DataTemplate ItemContentTemplate
 		{
-			get => (DataTemplate) GetValue(ItemContentTemplateProperty);
+			get => (DataTemplate)GetValue(ItemContentTemplateProperty);
 			set => SetValue(ItemContentTemplateProperty, value);
 		}
 
 		public DataTemplateSelector ItemContentTemplateSelector
 		{
-			get => (DataTemplateSelector) GetValue(ItemContentTemplateSelectorProperty);
+			get => (DataTemplateSelector)GetValue(ItemContentTemplateSelectorProperty);
 			set => SetValue(ItemContentTemplateSelectorProperty, value);
 		}
 

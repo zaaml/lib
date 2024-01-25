@@ -10,55 +10,98 @@ namespace Zaaml.Text
 {
 	internal abstract class Lexer<TToken> where TToken : unmanaged, Enum
 	{
+		protected Lexer(IServiceProvider serviceProvider)
+		{
+			ServiceProvider = serviceProvider;
+		}
+
+		private ILexerContext Context { get; set; }
+
+		protected TextPoint Position
+		{
+			get { return Context.Position; }
+			set { Context.Position = value; }
+		}
+
+		public IServiceProvider ServiceProvider { get; }
+
+		protected TextSpan Text => Context.Text;
+
+		internal void AttachContext(ILexerContext context)
+		{
+			if (ReferenceEquals(Context, null) == false)
+				throw new InvalidOperationException();
+
+			Context = context;
+		}
+
+		internal void DetachContext(ILexerContext context)
+		{
+			if (ReferenceEquals(Context, context) == false)
+				throw new InvalidOperationException();
+
+			Context = null;
+		}
+
 		internal int GetIntValue(TToken token)
 		{
 			return (int)EnumConverter<TToken>.Convert(token);
 		}
 
-		public LexemeSource<TToken> GetLexemeSource(string text, IServiceProvider serviceProvider = null)
+		public LexemeSource<TToken> GetLexemeSource(TextSpan textSourceSpan, LexemeSourceOptions options = default)
 		{
-			return GetLexemeSourceCore(new StringTextSource(text).GetTextSpan(), serviceProvider);
+			return GetLexemeSourceCore(textSourceSpan, options);
 		}
 
-		public LexemeSource<TToken> GetLexemeSource(TextSpan textSourceSpan, IServiceProvider serviceProvider = null)
+		protected abstract LexemeSource<TToken> GetLexemeSourceCore(TextSpan textSourceSpan, LexemeSourceOptions options);
+
+		protected abstract class LexerContext
 		{
-			return GetLexemeSourceCore(textSourceSpan, serviceProvider);
+			public abstract TextPoint Position { get; }
+
+			public abstract TextSpan Text { get; }
+
+			public abstract TToken Token { get; }
 		}
 
-		protected abstract LexemeSource<TToken> GetLexemeSourceCore(TextSpan textSourceSpan, IServiceProvider serviceProvider);
+		internal interface ILexerContext
+		{
+			TextPoint Position { get; set; }
+
+			TextSpan Text { get; }
+		}
 
 		public class PredicateEntry
 		{
-			public PredicateEntry(Func<LexerContext<TToken>, bool> predicate)
+			public PredicateEntry(Func<Lexer<TToken>, bool> predicate)
 			{
 				Predicate = predicate;
 			}
 
-			public Func<LexerContext<TToken>, bool> Predicate { get; }
+			public Func<Lexer<TToken>, bool> Predicate { get; }
 		}
 
 		public class ActionEntry
 		{
-			public ActionEntry(Action<LexerContext<TToken>> action)
+			public ActionEntry(Action<Lexer<TToken>> action)
 			{
 				Action = action;
 			}
 
-			public Action<LexerContext<TToken>> Action { get; }
+			public Action<Lexer<TToken>> Action { get; }
 		}
 	}
 
-	internal partial class Lexer<TGrammar, TToken> 
-		: Lexer<TToken> where TGrammar : Grammar<TGrammar,TToken> where TToken : unmanaged, Enum
+	internal partial class Lexer<TGrammar, TToken>
+		: Lexer<TToken> where TGrammar : Grammar<TGrammar, TToken> where TToken : unmanaged, Enum
 	{
-		protected virtual LexerContext<TToken> CreateContext(LexemeSource<TToken> lexemeSource)
+		public Lexer(IServiceProvider serviceProvider) : base(serviceProvider)
 		{
-			return null;
 		}
 
-		protected override LexemeSource<TToken> GetLexemeSourceCore(TextSpan textSourceSpan, IServiceProvider serviceProvider)
+		protected override LexemeSource<TToken> GetLexemeSourceCore(TextSpan textSourceSpan, LexemeSourceOptions options)
 		{
-			return new LexemeSourceImpl(this, textSourceSpan, serviceProvider);
+			return new LexemeSourceImpl(this, textSourceSpan, options);
 		}
 
 		internal static void RentLexemeBuffers(int bufferLength, out Lexeme<TToken>[] lexemesBuffer, out int[] operandsBuffer)
@@ -77,7 +120,7 @@ namespace Zaaml.Text
 		{
 			private readonly LexerProcess _lexerProcess;
 
-			public LexemeSourceImpl(Lexer<TGrammar, TToken> lexer, TextSpan textSourceSpan, IServiceProvider serviceProvider) : base(textSourceSpan, serviceProvider)
+			public LexemeSourceImpl(Lexer<TGrammar, TToken> lexer, TextSpan textSourceSpan, LexemeSourceOptions options) : base(textSourceSpan, options)
 			{
 				_lexerProcess = new LexerProcess(lexer, this);
 			}
@@ -87,9 +130,9 @@ namespace Zaaml.Text
 				_lexerProcess.Dispose();
 			}
 
-			protected override int ReadCore(ref int position, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes)
+			protected override int ReadCore(ref int position, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength)
 			{
-				return _lexerProcess.RunLexer(ref position, lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, skipLexemes);
+				return _lexerProcess.RunLexer(ref position, lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, Options.SkipTrivia);
 			}
 		}
 
@@ -99,15 +142,7 @@ namespace Zaaml.Text
 
 			public LexerProcess(Lexer<TGrammar, TToken> lexer, LexemeSource<TToken> lexemeSource)
 			{
-				var textSourceSpan = lexemeSource.TextSourceSpan;
-				var lexerContext = lexer.CreateContext(lexemeSource);
-
-				_process = new LexerAutomata.SpanProcess(textSourceSpan, lexer, lexerContext);
-
-				//if (textSourceSpan.TextSource is StringTextSource stringTextSource)
-				//	_process = new LexerAutomata.SpanProcess(textSourceSpan, lexer, lexerContext);
-				//else
-				//	_process = new LexerAutomata.ReaderProcess(textSource, lexer, lexerContext);
+				_process = new LexerAutomata.SpanProcess(lexemeSource.TextSourceSpan, lexer);
 			}
 
 			public TextSpan TextSourceSpan => _process.TextSourceSpan;
@@ -122,5 +157,13 @@ namespace Zaaml.Text
 				_process.Dispose();
 			}
 		}
+
+		internal delegate bool LexerPredicate();
+
+		internal delegate bool LexerPredicate<TValue>(out TValue value);
+
+		internal delegate void LexerAction();
+
+		internal delegate void LexerAction<TValue>(out TValue value);
 	}
 }

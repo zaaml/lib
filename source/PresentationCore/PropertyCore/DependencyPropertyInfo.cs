@@ -26,6 +26,17 @@ namespace Zaaml.PresentationCore.PropertyCore
       IsExpando = isExpando;
     }
 
+    internal DependencyPropertyInfo(DependencyPropertyKey dependencyPropertyKey, DependencyProperty dependencyProperty, string name, Type declaringType, Type propertyType, bool isAttached, bool isExpando)
+    {
+	    DependencyPropertyKey = dependencyPropertyKey;
+	    DependencyProperty = dependencyProperty;
+      Name = name;
+      DeclaringType = declaringType;
+      PropertyType = propertyType;
+      IsAttached = isAttached;
+      IsExpando = isExpando;
+    }
+
     internal DependencyPropertyInfo(FieldInfo fieldInfo)
     {
       try
@@ -65,6 +76,7 @@ namespace Zaaml.PresentationCore.PropertyCore
     // ReSharper disable once UnusedMember.Local
     private string DeclaringTypeName => DeclaringType.Name;
 
+    public DependencyPropertyKey DependencyPropertyKey { get; }
     public DependencyProperty DependencyProperty { get; }
     internal bool IsAttached { get; private set; }
     public bool IsExpando { get; set; }

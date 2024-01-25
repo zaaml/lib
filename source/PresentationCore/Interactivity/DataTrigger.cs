@@ -6,28 +6,18 @@ using System.Windows.Data;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-	public sealed class DataTrigger : DelayStateTriggerBase
+	public sealed class DataTrigger : StateTriggerBase
 	{
-		#region Static Fields and Constants
-
 		private static readonly InteractivityProperty TargetValueProperty = RegisterInteractivityProperty(OnValueChanged);
 		private static readonly InteractivityProperty SourceValueProperty = RegisterInteractivityProperty(OnValueChanged);
-
-		#endregion
-
-		#region Fields
 
 		private ITriggerValueComparer _comparer;
 		private object _sourceValue;
 		private object _targetValue;
 
-		#endregion
-
-		#region Properties
-
 		public Binding Binding
 		{
-			get => (Binding) GetOriginalValue(SourceValueProperty, _sourceValue);
+			get => (Binding)GetOriginalValue(SourceValueProperty, _sourceValue);
 			set => SetValue(SourceValueProperty, ref _sourceValue, value);
 		}
 
@@ -57,15 +47,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => SetValue(TargetValueProperty, ref _targetValue, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (DataTrigger) source;
+			var triggerSource = (DataTrigger)source;
 
 			Value = triggerSource.Value;
 			Binding = triggerSource.Binding;
@@ -100,14 +86,12 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		private static void OnValueChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
-			((DataTrigger) interactivityObject).OnValueChanged();
+			((DataTrigger)interactivityObject).OnValueChanged();
 		}
 
 		protected override TriggerState UpdateTriggerStateCore()
 		{
 			return TriggerCompareUtil.UpdateState(this, SourceValueProperty, ref _sourceValue, TargetValueProperty, ref _targetValue, Comparer);
 		}
-
-		#endregion
 	}
 }

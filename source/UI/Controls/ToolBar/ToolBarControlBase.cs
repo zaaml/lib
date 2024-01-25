@@ -4,9 +4,11 @@
 
 using System.Windows;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
@@ -49,13 +51,13 @@ namespace Zaaml.UI.Controls.ToolBar
     public Visibility ActualMenuButtonVisibility
     {
       get => (Visibility) GetValue(ActualMenuButtonVisibilityProperty);
-      protected set => this.SetReadOnlyValue(ActualMenuButtonVisibilityPropertyKey, value);
+      protected set => this.SetReadOnlyValue(ActualMenuButtonVisibilityPropertyKey, value.Box());
     }
 
     public bool HasOverflowItems
     {
       get => (bool) GetValue(HasOverflowItemsProperty);
-      internal set => this.SetReadOnlyValue(HasOverflowItemsPropertyKey, value);
+      internal set => this.SetReadOnlyValue(HasOverflowItemsPropertyKey, value.Box());
     }
 
     private DropDownButton MenuButton => TemplateContract.MenuButton;
@@ -63,10 +65,10 @@ namespace Zaaml.UI.Controls.ToolBar
     public ElementVisibility MenuButtonVisibility
     {
       get => (ElementVisibility) GetValue(MenuButtonVisibilityProperty);
-      set => SetValue(MenuButtonVisibilityProperty, value);
+      set => SetValue(MenuButtonVisibilityProperty, value.Box());
     }
 
-    private ToolBarControlBaseTemplateContract<TToolBarControl, TItem, TCollection, TPresenter, TPanel> TemplateContract => (ToolBarControlBaseTemplateContract<TToolBarControl, TItem, TCollection, TPresenter, TPanel>) TemplateContractInternal;
+    private ToolBarControlBaseTemplateContract<TToolBarControl, TItem, TCollection, TPresenter, TPanel> TemplateContract => (ToolBarControlBaseTemplateContract<TToolBarControl, TItem, TCollection, TPresenter, TPanel>) TemplateContractCore;
 
     #endregion
 

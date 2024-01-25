@@ -1,0 +1,80 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <!--  DropDown Glyph Angle Converter  -->
+  <zm:SwitchConverter x:Key="GlyphTransformConverter">
+    <zm:Case Key="True" Value="0" />
+    <zm:Default Value="-90" />
+  </zm:SwitchConverter>
+
+  <!--  MenuItemGenerator  -->
+  <zm:MenuItemGenerator x:Key="MenuItemGenerator">
+    <zm:MenuItemGenerator.ItemTemplate>
+      <zm:MenuItemTemplate>
+        <zm:MenuItem d:DataContext="{d:DesignInstance zm:BreadCrumbItem}"
+                     Command="{Binding SelectCommand}"
+                     Header="{Binding Header}"
+                     HeaderStringFormat="{Binding HeaderStringFormat}"
+                     HeaderTemplate="{Binding HeaderTemplate}"
+                     HeaderTemplateSelector="{Binding HeaderTemplateSelector}"
+                     Icon="{Binding Icon}" />
+      </zm:MenuItemTemplate>
+    </zm:MenuItemGenerator.ItemTemplate>
+  </zm:MenuItemGenerator>
+
+  <!--  BreadCrumbItem ControlTemplate  -->
+  <ControlTemplate x:Key="BreadCrumbItemTemplate"
+                   TargetType="zm:BreadCrumbItem">
+    <zm:ControlTemplateRoot>
+
+      <zm:ControlTemplateRoot.Resources>
+        <RotateTransform x:Key="RotateTransform" Angle="{Binding Path=IsDropDownOpen, ElementName=SplitButton, Converter={StaticResource GlyphTransformConverter}}" />
+      </zm:ControlTemplateRoot.Resources>
+
+      <zm:SplitButton x:Name="SplitButton"
+                      zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=SplitButton}"
+                      BorderThickness="0"
+                      Content="{TemplateBinding Header}"
+                      ContentTemplate="{TemplateBinding HeaderTemplate}"
+                      PopupPlacementTarget="DropDownButton"
+                      Icon="{TemplateBinding Icon}"
+                      IsDropDownOpen="{zm:TemplateBinding Path=IsMenuOpen,
+                                                          Mode=TwoWay}"
+                      ShowDropDownButton="{TemplateBinding HasItems}"
+                      ShowIcon="{TemplateBinding ActualShowIcon}"
+                      ShowSeparator="False">
+
+        <zm:SplitButton.DropDownGlyph>
+          <zm:PathIcon Margin="4,0"
+                       VerticalAlignment="Center"
+                       Data="{zm:TemplateSkinBinding SkinPath=DropDownGlyph.Data}"
+                       RenderTransform="{StaticResource RotateTransform}"
+                       RenderTransformOrigin="0.5, 0.5"
+                       Style="{zm:TemplateSkinBinding SkinPath=DropDownGlyph.Style}" />
+        </zm:SplitButton.DropDownGlyph>
+
+        <zm:SplitButton.PopupControl>
+          <zm:PopupMenu ItemGenerator="{StaticResource MenuItemGenerator}"
+                        SourceCollection="{zm:TemplateBinding Path=ItemCollection}" />
+        </zm:SplitButton.PopupControl>
+      </zm:SplitButton>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="BreadCrumbItemBaseStyle" TargetType="zm:BreadCrumbItem">
+    <zm:Setter Property="Template" Value="{StaticResource BreadCrumbItemTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="BreadCrumbItemStyle" BasedOn="{StaticResource BreadCrumbItemBaseStyle}" Skin="Code.BreadCrumbItemControl" TargetType="zm:BreadCrumbItem" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="BreadCrumbItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource BreadCrumbItemStyle}" TargetType="zm:BreadCrumbItem" />
+
+</zm:ThemeResourceDictionary>

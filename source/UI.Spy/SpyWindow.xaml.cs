@@ -6,6 +6,8 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
 
@@ -16,6 +18,9 @@ namespace Zaaml.UI.Controls.Spy
 		public static readonly DependencyProperty TrackerProperty = DPM.Register<SpyElementTracker, SpyWindow>
 			("Tracker", d => d.OnTrackerPropertyChangedPrivate);
 
+		public static readonly DependencyProperty SpyProperty = DPM.Register<bool, SpyWindow>
+			("Spy", false, d => d.OnSpyPropertyChangedPrivate);
+
 		private bool _ignoreClosing;
 
 		private SpyWindow()
@@ -25,36 +30,30 @@ namespace Zaaml.UI.Controls.Spy
 			RenderingObserver = new CompositionRenderingObserver(UnloadWindow);
 
 			ShowInTaskbar = false;
+			Topmost = true;
 		}
 
-		protected override void OnStateChanged(EventArgs e)
-		{
-			base.OnStateChanged(e);
-
-			if (WindowState == WindowState.Minimized)
-				Hide();
-		}
-
-		private static SpyWindow Instance => LazyInstance.Value;
+		public static SpyWindow Instance => LazyInstance.Value;
 
 		private static Lazy<SpyWindow> LazyInstance { get; } = new(() => new SpyWindow());
 
 		private CompositionRenderingObserver RenderingObserver { get; }
 
+		public bool Spy
+		{
+			get => (bool)GetValue(SpyProperty);
+			set => SetValue(SpyProperty, value.Box());
+		}
+
 		public SpyElementTracker Tracker
 		{
-			get => (SpyElementTracker) GetValue(TrackerProperty);
+			get => (SpyElementTracker)GetValue(TrackerProperty);
 			set => SetValue(TrackerProperty, value);
 		}
 
-		internal static void Enable(SpyMouseElementTracker spyMouseElementTracker)
+		private static SpyElementTracker CreateDefaultTracker()
 		{
-			Instance.Tracker = spyMouseElementTracker;
-		}
-
-		public static void Enable()
-		{
-			Instance.Tracker = new SpyMouseElementTracker {Trigger = new SpyKeyboardTrigger {Key = Key.RightCtrl}};
+			return new SpyMouseElementTracker { Trigger = new SpyKeyboardTrigger { Key = Key.RightCtrl } };
 		}
 
 		protected override void OnClosing(CancelEventArgs e)
@@ -72,6 +71,22 @@ namespace Zaaml.UI.Controls.Spy
 		private void OnElementChanged(object sender, EventArgs e)
 		{
 			ShowSpyWindow();
+		}
+
+		private void OnSpyPropertyChangedPrivate(bool oldValue, bool newValue)
+		{
+			Instance.Tracker = Instance.Tracker.DisposeExchange(newValue ? CreateDefaultTracker() : null);
+
+			if (oldValue)
+				Close();
+		}
+
+		protected override void OnStateChanged(EventArgs e)
+		{
+			base.OnStateChanged(e);
+
+			if (WindowState == WindowState.Minimized)
+				Hide();
 		}
 
 		private void OnTrackerPropertyChangedPrivate(SpyElementTracker oldValue, SpyElementTracker newValue)

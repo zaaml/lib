@@ -16,7 +16,7 @@ namespace Zaaml.PresentationCore.Animation
 {
 	[TypeConverter(typeof(TransitionTypeConverter))]
 	[ContentProperty(nameof(EasingFunction))]
-	public class Transition : AssetBase
+	public sealed class Transition : AssetBase
 	{
 		public static readonly DependencyProperty BeginTimeProperty = DPM.Register<TimeSpan?, Transition>
 			("BeginTime", TimeSpan.Zero);
@@ -38,37 +38,37 @@ namespace Zaaml.PresentationCore.Animation
 
 		public double AccelerationRatio
 		{
-			get => (double) GetValue(AccelerationRatioProperty);
+			get => (double)GetValue(AccelerationRatioProperty);
 			set => SetValue(AccelerationRatioProperty, value);
 		}
 
 		public TimeSpan? BeginTime
 		{
-			get => (TimeSpan?) GetValue(BeginTimeProperty);
+			get => (TimeSpan?)GetValue(BeginTimeProperty);
 			set => SetValue(BeginTimeProperty, value);
 		}
 
 		public double DecelerationRatio
 		{
-			get => (double) GetValue(DecelerationRatioProperty);
+			get => (double)GetValue(DecelerationRatioProperty);
 			set => SetValue(DecelerationRatioProperty, value);
 		}
 
 		public Duration Duration
 		{
-			get => (Duration) GetValue(DurationProperty);
+			get => (Duration)GetValue(DurationProperty);
 			set => SetValue(DurationProperty, value);
 		}
 
 		public IEasingFunction EasingFunction
 		{
-			get => (IEasingFunction) GetValue(EasingFunctionProperty);
+			get => (IEasingFunction)GetValue(EasingFunctionProperty);
 			set => SetValue(EasingFunctionProperty, value);
 		}
 
 		public double SpeedRatio
 		{
-			get => (double) GetValue(SpeedRatioProperty);
+			get => (double)GetValue(SpeedRatioProperty);
 			set => SetValue(SpeedRatioProperty, value);
 		}
 
@@ -76,17 +76,15 @@ namespace Zaaml.PresentationCore.Animation
 		{
 			transition = null;
 
-			if (TimeSpan.TryParse(strValue, CultureInfo.InvariantCulture, out var timeSpan))
+			if (TimeSpan.TryParse(strValue, CultureInfo.InvariantCulture, out var timeSpan) == false)
+				return false;
+
+			transition = new Transition
 			{
-				transition = new Transition
-				{
-					Duration = timeSpan
-				};
+				Duration = timeSpan
+			};
 
-				return true;
-			}
-
-			return false;
+			return true;
 		}
 	}
 
@@ -105,7 +103,6 @@ namespace Zaaml.PresentationCore.Animation
 		public Duration Duration
 		{
 			get => _transition?.Duration ?? default(Duration);
-
 			set => ActualTransition.Duration = value;
 		}
 
@@ -130,15 +127,10 @@ namespace Zaaml.PresentationCore.Animation
 
 		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
-			var strValue = value as string;
-
-			if (strValue == null)
+			if (value is not string strValue)
 				return base.ConvertFrom(context, culture, value);
 
-			if (Transition.TryParse(strValue, out var transition))
-				return transition;
-
-			return base.ConvertFrom(context, culture, value);
+			return Transition.TryParse(strValue, out var transition) ? transition : base.ConvertFrom(context, culture, value);
 		}
 	}
 }

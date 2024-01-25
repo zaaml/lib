@@ -20,14 +20,14 @@ namespace Zaaml.PresentationCore.Theming
 {
 	internal class ThemeStyleBinder
 	{
-		private static readonly Lazy<ThemeStyleBinder> LazyInstance = new Lazy<ThemeStyleBinder>(() => new ThemeStyleBinder());
+		private static readonly Lazy<ThemeStyleBinder> LazyInstance = new(() => new ThemeStyleBinder());
 		private static readonly Type FrameworkElementType = typeof(FrameworkElement);
 
 		private readonly AppDomainObserver _appDomainObserver;
-		private readonly HashSet<Type> _attachedTypes = new HashSet<Type>();
-		private readonly HashSet<Type> _themeBoundTypes = new HashSet<Type>();
-		private readonly Dictionary<Type, ThemeManagerStyle> _themeManagerStyles = new Dictionary<Type, ThemeManagerStyle>();
-		private readonly WeakLinkedList<ResourceDictionary> _themeResourceDictionaries = new WeakLinkedList<ResourceDictionary>();
+		private readonly HashSet<Type> _attachedTypes = new();
+		private readonly HashSet<Type> _themeBoundTypes = new();
+		private readonly Dictionary<Type, ThemeManagerStyle> _themeManagerStyles = new();
+		private readonly WeakLinkedList<ResourceDictionary> _themeResourceDictionaries = new();
 
 		private ThemeStyleBinder()
 		{
@@ -269,7 +269,7 @@ namespace Zaaml.PresentationCore.Theming
 			_appDomainObserver.Update();
 		}
 #if !SILVERLIGHT
-		private static readonly AssemblyName FrameworkElementAssembly = new AssemblyName(FrameworkElementType.Assembly.FullName);
+		private static readonly AssemblyName FrameworkElementAssembly = new(FrameworkElementType.Assembly.FullName);
 		private static readonly Type FrameworkContentElementType = typeof(FrameworkContentElement);
 #endif
 	}

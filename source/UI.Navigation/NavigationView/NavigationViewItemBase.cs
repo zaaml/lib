@@ -15,7 +15,7 @@ namespace Zaaml.UI.Controls.NavigationView
 	public abstract class NavigationViewItemBase : TemplateContractControl
 	{
 		private static readonly DependencyPropertyKey DisplayModePropertyKey = DPM.RegisterReadOnly<NavigationViewItemDisplayMode, NavigationViewItemBase>
-			("DisplayMode", NavigationViewItemDisplayMode.Expanded);
+			("DisplayMode", NavigationViewItemDisplayMode.Compact);
 
 		public static readonly DependencyProperty DisplayModeProperty = DisplayModePropertyKey.DependencyProperty;
 
@@ -115,6 +115,8 @@ namespace Zaaml.UI.Controls.NavigationView
 				newNavigationView.DisplayModeChanged += OnDisplayModeChanged;
 				newNavigationView.IsPaneOpenChanged += OnIsPaneExpandedChanged;
 			}
+
+			UpdateDisplayMode();
 		}
 
 		private void UpdateDisplayMode()

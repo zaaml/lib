@@ -12,7 +12,7 @@ namespace Zaaml.Core.Collections
 		{
 			NodeCapacity = nodeCapacity;
 
-			SpanAllocator = MemorySpanAllocator.Create(ArrayPool<T>.Create());
+			SpanAllocator = MemorySpanAllocator.Create(ArrayPool<T>.Create(), true);
 		}
 
 		private MemorySpanAllocator<T> SpanAllocator { get; }

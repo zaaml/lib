@@ -8,7 +8,7 @@ namespace Zaaml.Text
 	{
 		private protected sealed class OperandNode : Node
 		{
-			public OperandNode(Automata<TInstruction, TOperand> automata, Graph graph, MatchEntry matchEntry) : base(automata, graph)
+			public OperandNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, MatchEntry matchEntry) : base(automata, syntaxGraph)
 			{
 				MatchEntry = matchEntry;
 			}

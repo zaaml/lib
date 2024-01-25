@@ -5,6 +5,7 @@
 using System;
 using System.Windows;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -48,7 +49,7 @@ namespace Zaaml.UI.Controls.Core
 		public bool IsEnabled
 		{
 			get => (bool) GetValue(IsEnabledProperty);
-			set => SetValue(IsEnabledProperty, value);
+			set => SetValue(IsEnabledProperty, value.Box());
 		}
 
 		private protected bool IsEnabledCache { get; private set; }

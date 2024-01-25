@@ -11,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
@@ -47,8 +48,8 @@ namespace Zaaml.UI.Controls.ValidationSummary
 		public static readonly DependencyProperty FilterProperty = DPM.Register<ValidationSummaryFilter, ValidationSummaryControl>
 			("Filter", null, v => v.OnFilterPropertyChanged);
 
-		public static readonly DependencyProperty FocusControlsOnClickProperty = DPM.Register<bool, ValidationSummaryControl>
-			("FocusControlsOnClick", true);
+		public static readonly DependencyProperty FocusControlOnClickProperty = DPM.Register<bool, ValidationSummaryControl>
+			("FocusControlOnClick", true);
 
 		private static readonly DependencyPropertyKey HasDisplayedErrorsPropertyKey = DPM.RegisterReadOnly<bool, ValidationSummaryControl>
 			("HasDisplayedErrors", false);
@@ -126,22 +127,22 @@ namespace Zaaml.UI.Controls.ValidationSummary
 			set => SetValue(FilterProperty, value);
 		}
 
-		public bool FocusControlsOnClick
+		public bool FocusControlOnClick
 		{
-			get => (bool) GetValue(FocusControlsOnClickProperty);
-			set => SetValue(FocusControlsOnClickProperty, value);
+			get => (bool) GetValue(FocusControlOnClickProperty);
+			set => SetValue(FocusControlOnClickProperty, value.Box());
 		}
 
 		public bool HasDisplayedErrors
 		{
 			get => (bool) GetValue(HasDisplayedErrorsProperty);
-			private set => this.SetReadOnlyValue(HasDisplayedErrorsPropertyKey, value);
+			private set => this.SetReadOnlyValue(HasDisplayedErrorsPropertyKey, value.Box());
 		}
 
 		public bool HasErrors
 		{
 			get => (bool) GetValue(HasErrorsProperty);
-			private set => this.SetReadOnlyValue(HasErrorsPropertyKey, value);
+			private set => this.SetReadOnlyValue(HasErrorsPropertyKey, value.Box());
 		}
 
 		public object Header
@@ -267,7 +268,7 @@ namespace Zaaml.UI.Controls.ValidationSummary
 			var listBox = sender as ListBox;
 			var selectedItem = listBox?.SelectedItem as ValidationSummaryItem;
 
-			if (selectedItem == null || !FocusControlsOnClick)
+			if (selectedItem == null || !FocusControlOnClick)
 				return;
 
 			_currentValidationSummarySource = selectedItem.Source;

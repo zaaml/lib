@@ -6,6 +6,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Panels;
@@ -55,10 +56,10 @@ namespace Zaaml.UI.Controls.Primitives
 
     public bool IsExpanded
     {
-      get => (bool) GetValue(IsExpandedProperty);
-      set => SetValue(IsExpandedProperty, value);
+	    get => (bool)GetValue(IsExpandedProperty);
+	    set => SetValue(IsExpandedProperty, value.Box());
     }
-		
+
     public Orientation Orientation
     {
       get => (Orientation) GetValue(OrientationProperty);

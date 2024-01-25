@@ -4,33 +4,24 @@
 
 using System.Windows;
 
-namespace Zaaml.PresentationCore.Animation.Interpolators
+namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class SizeInterpolator : InterpolatorBase<Size>
-  {
-    #region Static Fields and Constants
+	public sealed class SizeInterpolator : PrimitiveInterpolator<Size>
+	{
+		public static readonly SizeInterpolator Instance = new();
 
-    public static SizeInterpolator Instance = new SizeInterpolator();
+		private SizeInterpolator()
+		{
+		}
 
-    #endregion
+		protected internal override Size EvaluateCore(Size start, Size end, double progress)
+		{
+			var doubleInterpolator = DoubleInterpolator.Instance;
 
-    #region Ctors
+			var mw = doubleInterpolator.EvaluateCore(start.Width, end.Width, progress);
+			var mh = doubleInterpolator.EvaluateCore(start.Height, end.Height, progress);
 
-    private SizeInterpolator()
-    {
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected internal override Size EvaluateCore(Size start, Size end, double progress)
-    {
-      var mw = DoubleInterpolator.Instance.EvaluateCore(start.Width, end.Width, progress);
-      var mh = DoubleInterpolator.Instance.EvaluateCore(start.Height, end.Height, progress);
-      return new Size(mw, mh);
-    }
-
-    #endregion
-  }
+			return new Size(mw, mh);
+		}
+	}
 }

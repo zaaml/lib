@@ -7,16 +7,12 @@ using Zaaml.PresentationCore.TemplateCore;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class DockItemTemplateContract : TemplateContract
-  {
-    #region Properties
+	public class DockItemTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = false)]
+		public DockItemContentPresenter ContentPresenter { get; [UsedImplicitly] private set; }
 
-    [TemplateContractPart(Required = false)]
-    public DockItemContentPresenter ContentPresenter { get; [UsedImplicitly] private set; }
-
-    [TemplateContractPart(Required = false)]
-    public DockItemHeaderPresenter HeaderPresenter { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
+		[TemplateContractPart(Required = false)]
+		public DockItemHeaderPresenter HeaderPresenter { get; [UsedImplicitly] private set; }
+	}
 }

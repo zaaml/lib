@@ -4,7 +4,9 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Interfaces;
@@ -49,7 +51,7 @@ namespace Zaaml.UI.Controls.Core
 		public HorizontalAlignment HorizontalIconAlignment
 		{
 			get => (HorizontalAlignment) GetValue(HorizontalIconAlignmentProperty);
-			set => SetValue(HorizontalIconAlignmentProperty, value);
+			set => SetValue(HorizontalIconAlignmentProperty, value.Box());
 		}
 
 		public double IconDistance
@@ -67,19 +69,19 @@ namespace Zaaml.UI.Controls.Core
 		public bool ShowContent
 		{
 			get => (bool) GetValue(ShowContentProperty);
-			set => SetValue(ShowContentProperty, value);
+			set => SetValue(ShowContentProperty, value.Box());
 		}
 
 		public bool ShowIcon
 		{
 			get => (bool) GetValue(ShowIconProperty);
-			set => SetValue(ShowIconProperty, value);
+			set => SetValue(ShowIconProperty, value.Box());
 		}
 
 		public VerticalAlignment VerticalIconAlignment
 		{
 			get => (VerticalAlignment) GetValue(VerticalIconAlignmentProperty);
-			set => SetValue(VerticalIconAlignmentProperty, value);
+			set => SetValue(VerticalIconAlignmentProperty, value.Box());
 		}
 
 		IconBase IIconContentControl.Icon

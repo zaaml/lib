@@ -26,6 +26,8 @@ namespace Zaaml.Text
 
 				protected void AddProductionCore(TToken token, Production production)
 				{
+					VerifyUnsealed();
+
 					production.Bind(token);
 
 					AddProductionCore(production);
@@ -40,6 +42,27 @@ namespace Zaaml.Text
 					TokenGroupList.Add(tokenGroup);
 
 					return tokenGroup;
+				}
+
+				protected override void AcceptVisitor<TVisitor>(TVisitor visitor)
+				{
+					visitor.Visit(this);
+
+					foreach (var production in Productions)
+					{
+						foreach (var symbol in production.Symbols)
+						{
+							switch (symbol)
+							{
+								case FragmentSymbol fragmentSymbol:
+									fragmentSymbol.Fragment.Visit(visitor);
+									break;
+								case TokenSymbol tokenSymbol:
+									tokenSymbol.Token.Visit(visitor);
+									break;
+							}
+						}
+					}
 				}
 			}
 		}

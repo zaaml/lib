@@ -17,6 +17,27 @@ namespace Zaaml.Text
 					RegisterTriviaSyntax(this);
 				}
 
+				protected override void AcceptVisitor<TVisitor>(TVisitor visitor)
+				{
+					visitor.Visit(this);
+
+					foreach (var production in Productions)
+					{
+						foreach (var symbol in production.Symbols)
+						{
+							switch (symbol)
+							{
+								case FragmentSymbol fragmentSymbol:
+									fragmentSymbol.Fragment.Visit(visitor);
+									break;
+								case TokenSymbol tokenSymbol:
+									tokenSymbol.Token.Visit(visitor);
+									break;
+							}
+						}
+					}
+				}
+
 				public TriviaSyntax AddProduction(TToken token, Production production)
 				{
 					AddProductionCore(token, production);

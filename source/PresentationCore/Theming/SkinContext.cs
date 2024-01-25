@@ -6,69 +6,71 @@ using System;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  internal struct SkinContext
-  {
-    #region Fields
+	internal struct SkinContext
+	{
+		#region Fields
 
-    private readonly SkinResourceManager _skinResourceManager;
-    private readonly string _themeResourceKey;
+		private readonly SkinResourceManager _skinResourceManager;
+		private readonly string _themeResourceKey;
 
-    #endregion
+		#endregion
 
-    #region Ctors
+		#region Ctors
 
-    public static readonly SkinContext Empty = new SkinContext(null, null);
-    public static readonly object EmptyBoxed = Empty;
+		public static readonly SkinContext Empty = new(null, null);
+		public static readonly object EmptyBoxed = Empty;
 
-    public bool IsEmpty => _skinResourceManager == null;
+		public bool IsEmpty => _skinResourceManager == null;
 
-    public SkinContext(SkinResourceManager skinResourceManager, string themeResourceKey)
-    {
-      _skinResourceManager = skinResourceManager;
-      _themeResourceKey = themeResourceKey;
-    }
+		public SkinContext(SkinResourceManager skinResourceManager, string themeResourceKey)
+		{
+			_skinResourceManager = skinResourceManager;
+			_themeResourceKey = themeResourceKey;
+		}
 
-    #endregion
+		#endregion
 
-    #region  Methods
+		#region Methods
 
-    public object GetValue(string skinKey)
-    {
-      if (IsEmpty)
-        return null;
+		public object GetValue(string skinKey)
+		{
+			if (IsEmpty)
+				return null;
 
-      Uri resultUri;
-      var baseUri = new Uri($"skin://host/{_themeResourceKey.Replace('.', '/')}");
-      var relativeUri = new Uri(skinKey.Replace("../", "$").Replace('.', '/').Replace("$", "../").Trim('/').ToLowerInvariant(), UriKind.Relative);
-      if (Uri.TryCreate(baseUri, relativeUri, out resultUri))
-      {
-        var actualKey = resultUri.AbsolutePath.Trim('/').Replace('/', '.');
-        var themeResource = _skinResourceManager.GetResource(actualKey);
-        return themeResource?.Value;
-      }
+			var baseUri = new Uri($"skin://host/{_themeResourceKey.Replace('.', '/')}");
+			var relativeUri = new Uri(skinKey.Replace("../", "$").Replace('.', '/').Replace("$", "../").Trim('/').ToLowerInvariant(), UriKind.Relative);
+			
+			if (Uri.TryCreate(baseUri, relativeUri, out var resultUri))
+			{
+				var actualKey = resultUri.AbsolutePath.Trim('/').Replace('/', '.');
+				var themeResource = _skinResourceManager.GetResource(actualKey);
+			
+				return themeResource?.Value;
+			}
 
-      return null;
-    }
+			return null;
+		}
 
-    #endregion
+		#endregion
 
-    public bool Equals(SkinContext other)
-    {
-      return Equals(_skinResourceManager, other._skinResourceManager) && string.Equals(_themeResourceKey, other._themeResourceKey);
-    }
+		public bool Equals(SkinContext other)
+		{
+			return Equals(_skinResourceManager, other._skinResourceManager) && string.Equals(_themeResourceKey, other._themeResourceKey);
+		}
 
-    public override bool Equals(object obj)
-    {
-      if (ReferenceEquals(null, obj)) return false;
-      return obj is SkinContext && Equals((SkinContext) obj);
-    }
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			
+			return obj is SkinContext context && Equals(context);
+		}
 
-    public override int GetHashCode()
-    {
-      unchecked
-      {
-        return ((_skinResourceManager != null ? _skinResourceManager.GetHashCode() : 0) * 397) ^ (_themeResourceKey != null ? _themeResourceKey.GetHashCode() : 0);
-      }
-    }
-  }
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return ((_skinResourceManager != null ? _skinResourceManager.GetHashCode() : 0) * 397) ^ (_themeResourceKey != null ? _themeResourceKey.GetHashCode() : 0);
+			}
+		}
+	}
 }

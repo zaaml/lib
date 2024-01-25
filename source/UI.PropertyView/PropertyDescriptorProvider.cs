@@ -15,13 +15,25 @@ namespace Zaaml.UI.Controls.PropertyView
 	{
 		private const BindingFlags DefaultBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty;
 
-		public static readonly PropertyDescriptorProvider Instance = new PropertyDescriptorProvider();
+		public static readonly PropertyDescriptorProvider Instance = new();
 		private static readonly MethodInfo GetPropertiesGenericMethodInfo = typeof(PropertyDescriptorProvider).GetMethod(nameof(GetPropertyDescriptors), BindingFlags.Instance | BindingFlags.Public);
 
 		private static readonly Dictionary<Type, Func<object, PropertyDescriptorProvider, PropertyDescriptorCollection>>
-			PropertiesGetterDictionary = new Dictionary<Type, Func<object, PropertyDescriptorProvider, PropertyDescriptorCollection>>();
+			PropertiesGetterDictionary = new();
 
-		private readonly Dictionary<Type, PropertyDescriptorCollection> _propertyDescriptorsDictionary = new Dictionary<Type, PropertyDescriptorCollection>();
+		private readonly Dictionary<Type, PropertyDescriptorCollection> _propertyDescriptorsDictionary = new();
+
+		private static readonly HashSet<Type> NoPropertyTypes;
+
+		static PropertyDescriptorProvider()
+		{
+			NoPropertyTypes = new HashSet<Type>
+			{
+				typeof(Type).Assembly.GetType("System.RuntimeType"),
+				typeof(Type),
+				typeof(string)
+			};
+		}
 
 		protected PropertyDescriptorProvider()
 		{
@@ -38,12 +50,25 @@ namespace Zaaml.UI.Controls.PropertyView
 			return Expression.Lambda<Func<object, PropertyDescriptorProvider, PropertyDescriptorCollection>>(propertiesExp, targetExp, providerExp).Compile();
 		}
 
+		protected virtual BindingFlags BindingFlags => DefaultBindingFlags; 
+		
 		private PropertyDescriptorCollection CreatePropertyDescriptorCollection(Type propertyObjectType)
 		{
-			var propertyDescriptors = propertyObjectType.GetProperties(DefaultBindingFlags).Select(pi => pi).Where(pi => pi.GetIndexParameters().Length == 0).OrderBy(p => p.Name)
+			var bindingFlags = BindingFlags;
+
+			var propertyDescriptors = propertyObjectType.GetProperties(bindingFlags)
+				.Select(pi => pi)
+				.Where(ProvideDescriptor)
+				.Where(pi => pi.GetIndexParameters().Length == 0)
+				.OrderBy(p => p.Name)
 				.Select(propertyInfo => PropertyInfoDescriptor.CreateDescriptor(propertyObjectType, propertyInfo, this)).ToList();
 
 			return new PropertyDescriptorCollection(propertyDescriptors);
+		}
+
+		protected virtual bool ProvideDescriptor(PropertyInfo propertyInfo)
+		{
+			return true;
 		}
 
 		internal PropertyDescriptorCollection GetPropertiesInternal(object propertyObject)
@@ -56,9 +81,22 @@ namespace Zaaml.UI.Controls.PropertyView
 			return propertiesGetter(propertyObject, this);
 		}
 
+		protected virtual bool ProvidePropertiesForType(Type type)
+		{
+			return NoPropertyTypes.Contains(type) == false;
+		}
+
 		public virtual PropertyDescriptorCollection GetPropertyDescriptors<T>(T propertyObject)
 		{
-			return propertyObject == null ? null : _propertyDescriptorsDictionary.GetValueOrCreate(propertyObject.GetType(), CreatePropertyDescriptorCollection);
+			if (propertyObject == null)
+				return PropertyDescriptorCollection.Empty;
+			
+			var type = propertyObject.GetType();
+
+			if (ProvidePropertiesForType(type) == false)
+				return PropertyDescriptorCollection.Empty;
+
+			return _propertyDescriptorsDictionary.GetValueOrCreate(type, CreatePropertyDescriptorCollection);
 		}
 	}
 }

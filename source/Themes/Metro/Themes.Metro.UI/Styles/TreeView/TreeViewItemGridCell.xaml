@@ -3,6 +3,7 @@
                             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                             xmlns:zm="http://schemas.zaaml.com/xaml"
                             xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:gridView="clr-namespace:Zaaml.UI.Controls.Core.GridView;assembly=Zaaml.UI"
                             mc:Ignorable="zmb">
 
   <zm:ThemeResourceDictionary.MergedDictionaries>
@@ -21,46 +22,41 @@
 
   <!--  Template  -->
   <ControlTemplate x:Key="TreeViewItemGridCellTemplate"
-                   TargetType="zm:TreeViewItemGridCell">
+                   TargetType="zm:TreeGridViewCell">
 
-    <zm:GridCellRoot VisualStateGroups="{StaticResource VisualStates}">
-      <Border x:Name="Border"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}" />
-    </zm:GridCellRoot>
+    <gridView:GridViewCellRoot VisualStateGroups="{StaticResource VisualStates}">
+      <gridView:GridViewCellPresenter x:Name="CellPresenter" />
+    </gridView:GridViewCellRoot>
 
   </ControlTemplate>
 
   <!--  Expander Template  -->
   <ControlTemplate x:Key="TreeViewItemGridExpanderCellTemplate"
-                   TargetType="zm:TreeViewItemGridCell">
+                   TargetType="zm:TreeGridViewCell">
 
-    <zm:GridCellRoot VisualStateGroups="{StaticResource VisualStates}">
-      <zm:DockPanel  Margin="{zm:TemplateBinding Path=TreeViewItem.ActualLevelIndent, Converter={StaticResource LevelIndentConverter}, FallbackValue=0}">
+    <gridView:GridViewCellRoot VisualStateGroups="{StaticResource VisualStates}">
+      <zm:DockPanel
+        Margin="{zm:TemplateBinding Path=TreeViewItem.ActualLevelIndent, Converter={StaticResource LevelIndentConverter}, FallbackValue=0}">
 
         <!--  Expander  -->
         <zm:TreeViewItemExpander x:Name="Expander"
                                  zm:DockPanel.Dock="Left" />
 
-        <Border x:Name="Border"
-                Background="{TemplateBinding Background}"
-                BorderBrush="{TemplateBinding BorderBrush}"
-                BorderThickness="{TemplateBinding BorderThickness}" />
+        <gridView:GridViewCellPresenter x:Name="CellPresenter" />
       </zm:DockPanel>
-
-    </zm:GridCellRoot>
-
+    </gridView:GridViewCellRoot>
   </ControlTemplate>
 
   <!--  Base Style  -->
-  <zm:Style x:Key="TreeViewItemGridCellBaseStyle" TargetType="zm:TreeViewItemGridCell">
+  <zm:Style x:Key="TreeViewItemGridCellBaseStyle" TargetType="zm:TreeGridViewCell">
     <zm:Setter Property="Template" Value="{zm:SelfBinding Path=IsExpanderCell, Converter={zm:TernaryConverter TrueValue={StaticResource TreeViewItemGridExpanderCellTemplate}, FalseValue={StaticResource TreeViewItemGridCellTemplate}}}" />
-    <zm:Setter Property="Padding" Value="4,2" />
+    <zm:Setter Property="DisplayPadding" Value="5,2" />
+    <zm:Setter Property="Padding" Value="0" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="TreeViewItemGridCellStyle" BasedOn="{StaticResource TreeViewItemGridCellBaseStyle}" Skin="Metro.TreeViewItemGridCell" TargetType="zm:TreeViewItemGridCell">
+  <zm:Style x:Key="TreeViewItemGridCellStyle" BasedOn="{StaticResource TreeViewItemGridCellBaseStyle}"
+            Skin="Metro.TreeViewItemGridCell" TargetType="zm:TreeGridViewCell">
 
     <zm:SetterGroup ValuePathSource="Skin">
 
@@ -83,6 +79,7 @@
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="TreeViewItemGridCellThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TreeViewItemGridCellStyle}" TargetType="zm:TreeViewItemGridCell" />
+  <zm:ThemeStyle x:Key="TreeViewItemGridCellThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource TreeViewItemGridCellStyle}" TargetType="zm:TreeGridViewCell" />
 
 </zm:ThemeResourceDictionary>

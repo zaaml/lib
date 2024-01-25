@@ -1,0 +1,34 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <!--  Control Template  -->
+  <ControlTemplate x:Key="AutoHideTabViewItemsPresenterTemplate"
+                   TargetType="zm:AutoHideTabViewItemsPresenter">
+
+    <zm:ControlTemplateRoot UseLayoutRounding="True">
+
+      <!--  ItemsHost  -->
+      <zm:FlexItemsPanel x:Name="ItemsHost"
+                         Orientation="{TemplateBinding Orientation}"
+                         Spacing="8" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Styles  -->
+  <zm:Style x:Key="AutoHideTabViewItemsPresenterBaseStyle" TargetType="zm:AutoHideTabViewItemsPresenter">
+    <zm:Setter Property="Template" Value="{StaticResource AutoHideTabViewItemsPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Styles  -->
+  <zm:Style x:Key="AutoHideTabViewItemsPresenterStyle" BasedOn="{StaticResource AutoHideTabViewItemsPresenterBaseStyle}" Skin="Code.AutoHideTabViewItemsPresenter" TargetType="zm:AutoHideTabViewItemsPresenter" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="AutoHideTabViewItemsPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource AutoHideTabViewItemsPresenterStyle}" TargetType="zm:AutoHideTabViewItemsPresenter" />
+
+</zm:ThemeResourceDictionary>

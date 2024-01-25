@@ -5,12 +5,14 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
+using Zaaml.Platform;
+using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Decorators;
 using Zaaml.UI.Panels.Core;
-using DispatcherPriority = System.Windows.Threading.DispatcherPriority;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
@@ -33,7 +35,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				ShadowOpacity = 1.0
 			};
 
-			ShadowWindow.Child = ShadowChrome;
+			ShadowWindow = new DecoratorWindow
+			{
+				Title = "PopupShadowDecorator",
+				Child = ShadowChrome
+			};
+
+			ShadowChrome.BindProperties(CornerRadiusProperty, this, CornerRadiusProperty);
 		}
 
 		private bool IsOpen
@@ -47,24 +55,17 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				_isOpen = value;
 
 				if (_isOpen)
+				{
 					ParentPopup?.Panel?.InvalidateArrange();
+
+					CompositionTarget.Rendering += CompositionTargetOnRendering;
+				}
 				else
+				{
 					Close();
-			}
-		}
 
-		private void Close()
-		{
-			ShadowWindow.IsOpen = false;
-		}
-
-		private void Open()
-		{
-			if (IsOpen)
-			{
-				UpdatePosition();
-
-				ShadowWindow.IsOpen = true;
+					CompositionTarget.Rendering -= CompositionTargetOnRendering;
+				}
 			}
 		}
 
@@ -94,17 +95,17 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public double ShadowOpacity
 		{
-			get => (double) GetValue(ShadowOpacityProperty);
+			get => (double)GetValue(ShadowOpacityProperty);
 			set => SetValue(ShadowOpacityProperty, value);
 		}
 
 		public double ShadowSize
 		{
-			get => (double) GetValue(ShadowSizeProperty);
+			get => (double)GetValue(ShadowSizeProperty);
 			set => SetValue(ShadowSizeProperty, value);
 		}
 
-		private DecoratorWindow ShadowWindow { get; } = new DecoratorWindow();
+		private DecoratorWindow ShadowWindow { get; }
 
 		private void AttachParentPopup(Popup parentPopup)
 		{
@@ -112,10 +113,32 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			parentPopup.Panel.ArrangedInternal += OnArranged;
 		}
 
+		private void Close()
+		{
+			ShadowWindow.IsOpen = false;
+		}
+
+		private void CompositionTargetOnRendering(object sender, EventArgs e)
+		{
+			EnsureZOrder();
+		}
+
 		private void DetachParentPopup(Popup parentPopup)
 		{
 			parentPopup.IsOpenChanged -= ParentPopupOnIsOpenChanged;
 			parentPopup.Panel.ArrangedInternal -= OnArranged;
+		}
+
+		private void EnsureZOrder()
+		{
+			var popupHwndSource = ParentPopup?.HwndSource;
+			var decoratorHwndSource = ShadowWindow.HwndSource;
+
+			if (popupHwndSource != null && decoratorHwndSource != null)
+			{
+				if (NativeMethods.GetWindow(popupHwndSource.Handle, GetWindowCommand.HwndNext) != decoratorHwndSource.Handle)
+					ShadowWindow.SetZOrder(popupHwndSource.Handle);
+			}
 		}
 
 		private void OnArranged(object sender, EventArgs e)
@@ -150,6 +173,16 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			ParentPopup = null;
 
 			base.OnUnloaded();
+		}
+
+		private void Open()
+		{
+			if (IsOpen)
+			{
+				UpdatePosition();
+
+				ShadowWindow.IsOpen = true;
+			}
 		}
 
 		private void ParentPopupOnIsOpenChanged(object sender, EventArgs e)

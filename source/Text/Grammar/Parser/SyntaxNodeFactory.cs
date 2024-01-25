@@ -8,18 +8,6 @@ namespace Zaaml.Text
 {
 	internal abstract class SyntaxNodeFactory : IDisposable
 	{
-		protected ParserContext Context { get; private set; }
-
-		internal void AttachParserContextInternal(ParserContext parserContext)
-		{
-			Context = parserContext;
-		}
-
-		internal void DetachParserContextInternal(ParserContext parserContext)
-		{
-			Context = null;
-		}
-
 		protected virtual void DisposeCore()
 		{
 		}

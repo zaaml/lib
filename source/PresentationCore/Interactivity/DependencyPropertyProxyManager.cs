@@ -6,27 +6,22 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using Zaaml.Core.Extensions;
-using Zaaml.Core.Monads;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
 	internal static class DependencyPropertyProxyManager
 	{
-		#region Static Fields and Constants
-
-		private static readonly Dictionary<string, DependencyProperty> Name2Property = new Dictionary<string, DependencyProperty>();
-		private static readonly Dictionary<DependencyProperty, string> Property2Name = new Dictionary<DependencyProperty, string>();
-
-		#endregion
-
-		#region  Methods
+		private static readonly Dictionary<string, DependencyProperty> Name2Property = new();
+		private static readonly Dictionary<DependencyProperty, string> Property2Name = new();
 
 		private static DependencyProperty CreateProxyProperty(string propertyName, PropertyChangedCallback changedCallback)
 		{
-			var property = DependencyPropertyManager.RegisterAttached
-				(propertyName, typeof(object), typeof(DependencyPropertyProxyManager), new ProxyPropertyMetadata(propertyName, null, changedCallback));
+			var property = DependencyPropertyManager.RegisterAttached(propertyName, typeof(object), typeof(DependencyPropertyProxyManager),
+				new ProxyPropertyMetadata(propertyName, null, changedCallback));
+
 			Property2Name[property] = propertyName;
+
 			return property;
 		}
 
@@ -42,34 +37,23 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		public static string GetPropertyName(DependencyProperty property, Type targetType = null)
 		{
-			return targetType != null
-				? property.GetMetadata(targetType).As<ProxyPropertyMetadata>().Return(p => p.PropertyName, Property2Name.GetValueOrDefault(property))
+			if (targetType == null)
+				return Property2Name.GetValueOrDefault(property);
+
+			return property.GetMetadata(targetType) is ProxyPropertyMetadata proxyPropertyMetadata
+				? proxyPropertyMetadata.PropertyName
 				: Property2Name.GetValueOrDefault(property);
 		}
 
-		#endregion
-
-		#region  Nested Types
-
 		private class ProxyPropertyMetadata : PropertyMetadata
 		{
-			#region Fields
-
 			public readonly string PropertyName;
-
-			#endregion
-
-			#region Ctors
 
 			public ProxyPropertyMetadata(string propertyName, object defaultValue, PropertyChangedCallback propertyChangedCallback)
 				: base(defaultValue, propertyChangedCallback)
 			{
 				PropertyName = propertyName;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

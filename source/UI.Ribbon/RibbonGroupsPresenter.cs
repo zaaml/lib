@@ -60,7 +60,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
     internal RibbonPage Page { get; set; }
 
-    private RibbonGroupsPresenterTemplateContract TemplateContract => (RibbonGroupsPresenterTemplateContract) TemplateContractInternal;
+    private RibbonGroupsPresenterTemplateContract TemplateContract => (RibbonGroupsPresenterTemplateContract)TemplateContractCore;
 
     internal RibbonGroupsPresenterHost VisualHost
     {

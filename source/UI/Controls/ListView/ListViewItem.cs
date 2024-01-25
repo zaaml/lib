@@ -75,9 +75,9 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal Rect ArrangeRect { get; private set; }
 
-		private ListViewItemGridCellsPresenter CellsPresenter => TemplateContract.CellsPresenter;
+		private ListGridViewCellsPresenter GridViewCellsPresenter => TemplateContract.GridViewCellsPresenter;
 
-		internal ListViewItemGridCellsPresenter CellsPresenterInternal => CellsPresenter;
+		internal ListGridViewCellsPresenter CellsPresenterInternal => GridViewCellsPresenter;
 
 		public object CommandParameter
 		{
@@ -289,6 +289,14 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
+		protected override void OnMouseDoubleClick(MouseButtonEventArgs e)
+		{
+			if (e.Handled)
+				return;
+
+			ListViewControl?.OnItemMouseDoubleClick(this, e);
+		}
+
 		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
 		{
 			base.OnPropertyChanged(e);
@@ -303,14 +311,14 @@ namespace Zaaml.UI.Controls.ListView
 
 			UpdateGlyphPresenter();
 
-			if (CellsPresenter != null)
-				CellsPresenter.ListViewItem = this;
+			if (GridViewCellsPresenter != null)
+				GridViewCellsPresenter.ListViewItem = this;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
-			if (CellsPresenter != null)
-				CellsPresenter.ListViewItem = null;
+			if (GridViewCellsPresenter != null)
+				GridViewCellsPresenter.ListViewItem = null;
 
 			CleanGlyphPresenter();
 

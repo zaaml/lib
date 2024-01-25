@@ -14,347 +14,326 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore.Input
 {
-  internal sealed class MouseService : IMouseService
-  {
-    #region Static Fields and Constants
+	internal sealed class MouseService : IMouseService
+	{
+		private static readonly Lazy<MouseService> LazyInstance = new Lazy<MouseService>(() => new MouseService());
 
-    private static readonly Lazy<MouseService> LazyInstance = new Lazy<MouseService>(() => new MouseService());
+		private WeakReference _lastElementWeak;
+		private WeakReference _lastEventArgsWeak;
 
-    #endregion
+		private DelegateDisposable _mouseCaptureDisposer;
 
-    #region Fields
+		private MouseService()
+		{
+			RuntimeHelpers.RunClassConstructor(typeof(MouseInternal).TypeHandle);
 
-    private WeakReference _lastElementWeak;
-    private WeakReference _lastEventArgsWeak;
+			EventManager.RegisterClassHandler(typeof(UIElement), Mouse.MouseDownEvent, new MouseButtonEventHandler(OnGlobalMouseDown), true);
+			EventManager.RegisterClassHandler(typeof(UIElement), Mouse.MouseUpEvent, new MouseButtonEventHandler(OnGlobalMouseUp), true);
 
-    private DelegateDisposable _mouseCaptureDisposer;
+			EventManager.RegisterClassHandler(typeof(UIElement), Mouse.PreviewMouseDownEvent, new MouseButtonEventHandler(OnGlobalPreviewMouseDown), true);
+			EventManager.RegisterClassHandler(typeof(UIElement), Mouse.PreviewMouseUpEvent, new MouseButtonEventHandler(OnGlobalPreviewMouseUp), true);
 
-    #endregion
+			EventManager.RegisterClassHandler(typeof(UIElement), Mouse.MouseMoveEvent, new MouseEventHandler(OnGlobalMouseMove), true);
+		}
 
-    #region Ctors
+		public static MouseService Instance => LazyInstance.Value;
 
-    private MouseService()
-    {
-      RuntimeHelpers.RunClassConstructor(typeof(MouseInternal).TypeHandle);
+		private MouseEventArgs LastEventArgs
+		{
+			get => _lastEventArgsWeak.GetTarget<MouseEventArgs>();
+			set
+			{
+				if (ReferenceEquals(LastEventArgs, value))
+					return;
 
-      EventManager.RegisterClassHandler(typeof(UIElement), Mouse.MouseDownEvent, new MouseButtonEventHandler(OnGlobalMouseDown), true);
-      EventManager.RegisterClassHandler(typeof(UIElement), Mouse.MouseUpEvent, new MouseButtonEventHandler(OnGlobalMouseUp), true);
+				_lastEventArgsWeak = value != null ? new WeakReference(value) : null;
+			}
+		}
 
-      EventManager.RegisterClassHandler(typeof(UIElement), Mouse.PreviewMouseDownEvent, new MouseButtonEventHandler(OnGlobalPreviewMouseDown), true);
-      EventManager.RegisterClassHandler(typeof(UIElement), Mouse.PreviewMouseUpEvent, new MouseButtonEventHandler(OnGlobalPreviewMouseUp), true);
+		private void MouseCaptureElementOnLostMouseCapture(object sender, MouseEventArgs e)
+		{
+			_mouseCaptureDisposer = _mouseCaptureDisposer.DisposeExchange();
+			MouseCaptureElement = null;
+		}
 
-      EventManager.RegisterClassHandler(typeof(UIElement), Mouse.MouseMoveEvent, new MouseEventHandler(OnGlobalMouseMove), true);
-    }
+		private void OnGlobalMouseDown(object sender, MouseButtonEventArgs e)
+		{
+			if (ReferenceEquals(e, LastEventArgs))
+				return;
 
-    #endregion
+			LastEventArgs = e;
 
-    #region Properties
+			switch (e.ChangedButton)
+			{
+				case MouseButton.Left:
 
-    public static MouseService Instance => LazyInstance.Value;
+					OnMouseLeftButtonDown(e);
 
-    private MouseEventArgs LastEventArgs
-    {
-      get => _lastEventArgsWeak.GetTarget<MouseEventArgs>();
-      set
-      {
-        if (ReferenceEquals(LastEventArgs, value))
-          return;
+					break;
 
-        _lastEventArgsWeak = value != null ? new WeakReference(value) : null;
-      }
-    }
+				case MouseButton.Middle:
+					break;
 
-    #endregion
+				case MouseButton.Right:
 
-    #region  Methods
+					OnMouseRightButtonDown(e);
 
-    private void MouseCaptureElementOnLostMouseCapture(object sender, MouseEventArgs e)
-    {
-      _mouseCaptureDisposer = _mouseCaptureDisposer.DisposeExchange();
-      MouseCaptureElement = null;
-    }
+					break;
 
-    private void OnGlobalMouseDown(object sender, MouseButtonEventArgs e)
-    {
-      if (ReferenceEquals(e, LastEventArgs))
-        return;
+				case MouseButton.XButton1:
+					break;
 
-      LastEventArgs = e;
+				case MouseButton.XButton2:
+					break;
 
-      switch (e.ChangedButton)
-      {
-        case MouseButton.Left:
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
 
-          OnMouseLeftButtonDown(e);
+		private void OnGlobalMouseMove(object sender, MouseEventArgs e)
+		{
+			if (ReferenceEquals(e, LastEventArgs))
+				return;
 
-          break;
+			LastEventArgs = e;
 
-        case MouseButton.Middle:
-          break;
+			var visualSource = e.Source as UIElement;
 
-        case MouseButton.Right:
+			if (visualSource == null || PresentationSource.FromVisual(visualSource) == null)
+				return;
 
-          OnMouseRightButtonDown(e);
+			LastElement = visualSource;
 
-          break;
+			OnMouseMove(e);
+		}
 
-        case MouseButton.XButton1:
-          break;
+		private void OnGlobalMouseUp(object sender, MouseButtonEventArgs e)
+		{
+			if (ReferenceEquals(e, LastEventArgs))
+				return;
 
-        case MouseButton.XButton2:
-          break;
+			LastEventArgs = e;
 
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+			switch (e.ChangedButton)
+			{
+				case MouseButton.Left:
 
-    private void OnGlobalMouseMove(object sender, MouseEventArgs e)
-    {
-      if (ReferenceEquals(e, LastEventArgs))
-        return;
+					OnMouseLeftButtonUp(e);
 
-      LastEventArgs = e;
+					break;
 
-      var visualSource = e.Source as UIElement;
+				case MouseButton.Middle:
+					break;
 
-      if (visualSource == null || PresentationSource.FromVisual(visualSource) == null)
-        return;
+				case MouseButton.Right:
 
-      LastElement = visualSource;
+					OnMouseRightButtonUp(e);
 
-      OnMouseMove(e);
-    }
+					break;
 
-    private void OnGlobalMouseUp(object sender, MouseButtonEventArgs e)
-    {
-      if (ReferenceEquals(e, LastEventArgs))
-        return;
+				case MouseButton.XButton1:
+					break;
 
-      LastEventArgs = e;
+				case MouseButton.XButton2:
+					break;
 
-      switch (e.ChangedButton)
-      {
-        case MouseButton.Left:
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
 
-          OnMouseLeftButtonUp(e);
+		private void OnGlobalPreviewMouseDown(object sender, MouseButtonEventArgs e)
+		{
+			if (ReferenceEquals(e, LastEventArgs))
+				return;
 
-          break;
+			LastEventArgs = e;
 
-        case MouseButton.Middle:
-          break;
+			switch (e.ChangedButton)
+			{
+				case MouseButton.Left:
 
-        case MouseButton.Right:
+					OnPreviewMouseLeftButtonDown(e);
 
-          OnMouseRightButtonUp(e);
+					break;
 
-          break;
+				case MouseButton.Middle:
+					break;
 
-        case MouseButton.XButton1:
-          break;
+				case MouseButton.Right:
 
-        case MouseButton.XButton2:
-          break;
+					OnPreviewMouseRightButtonDown(e);
 
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+					break;
 
-    private void OnGlobalPreviewMouseDown(object sender, MouseButtonEventArgs e)
-    {
-      if (ReferenceEquals(e, LastEventArgs))
-        return;
+				case MouseButton.XButton1:
+					break;
 
-      LastEventArgs = e;
+				case MouseButton.XButton2:
+					break;
 
-      switch (e.ChangedButton)
-      {
-        case MouseButton.Left:
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
 
-          OnPreviewMouseLeftButtonDown(e);
+		private void OnGlobalPreviewMouseUp(object sender, MouseButtonEventArgs e)
+		{
+			if (ReferenceEquals(e, LastEventArgs))
+				return;
 
-          break;
+			LastEventArgs = e;
 
-        case MouseButton.Middle:
-          break;
+			switch (e.ChangedButton)
+			{
+				case MouseButton.Left:
 
-        case MouseButton.Right:
+					OnPreviewMouseLeftButtonUp(e);
 
-          OnPreviewMouseRightButtonDown(e);
+					break;
 
-          break;
+				case MouseButton.Middle:
+					break;
 
-        case MouseButton.XButton1:
-          break;
+				case MouseButton.Right:
 
-        case MouseButton.XButton2:
-          break;
+					OnPreviewMouseRightButtonUp(e);
 
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+					break;
 
-    private void OnGlobalPreviewMouseUp(object sender, MouseButtonEventArgs e)
-    {
-      if (ReferenceEquals(e, LastEventArgs))
-        return;
+				case MouseButton.XButton1:
+					break;
 
-      LastEventArgs = e;
+				case MouseButton.XButton2:
+					break;
 
-      switch (e.ChangedButton)
-      {
-        case MouseButton.Left:
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
 
-          OnPreviewMouseLeftButtonUp(e);
+		private void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			MouseLeftButtonDown?.Invoke(this, e.ToMouseButtonEventArgsInt());
+		}
 
-          break;
+		private void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+		{
+			MouseLeftButtonUp?.Invoke(this, e.ToMouseButtonEventArgsInt());
+		}
 
-        case MouseButton.Middle:
-          break;
+		private void OnMouseMove(MouseEventArgs e)
+		{
+			MouseMove?.Invoke(this, e.ToMouseEventArgsInt());
+		}
 
-        case MouseButton.Right:
+		private void OnMouseRightButtonDown(MouseButtonEventArgs e)
+		{
+			MouseRightButtonDown?.Invoke(this, e.ToMouseButtonEventArgsInt());
+		}
 
-          OnPreviewMouseRightButtonUp(e);
+		private void OnMouseRightButtonUp(MouseButtonEventArgs e)
+		{
+			MouseRightButtonUp?.Invoke(this, e.ToMouseButtonEventArgsInt());
+		}
 
-          break;
+		private void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			PreviewMouseLeftButtonDown?.Invoke(this, e.ToMouseButtonEventArgsInt());
+		}
 
-        case MouseButton.XButton1:
-          break;
+		private void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
+		{
+			PreviewMouseLeftButtonUp?.Invoke(this, e.ToMouseButtonEventArgsInt());
+		}
 
-        case MouseButton.XButton2:
-          break;
+		private void OnPreviewMouseRightButtonDown(MouseButtonEventArgs e)
+		{
+			PreviewMouseRightButtonDown?.Invoke(this, e.ToMouseButtonEventArgsInt());
+		}
 
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+		private void OnPreviewMouseRightButtonUp(MouseButtonEventArgs e)
+		{
+			PreviewMouseRightButtonUp?.Invoke(this, e.ToMouseButtonEventArgsInt());
+		}
 
-    private void OnMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-      MouseLeftButtonDown?.Invoke(this, e.ToMouseButtonEventArgsInt());
-    }
+		public bool CaptureMouse(UIElement element)
+		{
+			MouseCaptureElement = element.CaptureMouse() ? element : null;
 
-    private void OnMouseLeftButtonUp(MouseButtonEventArgs e)
-    {
-      MouseLeftButtonUp?.Invoke(this, e.ToMouseButtonEventArgsInt());
-    }
+			if (MouseCaptureElement != null)
+			{
+				MouseCaptureElement.LostMouseCapture += MouseCaptureElementOnLostMouseCapture;
+				//MouseCaptureElement.AddHandler(Mouse.MouseDownEvent, (MouseButtonEventHandler)OnGlobaMouseDown, true);
+				//MouseCaptureElement.AddHandler(Mouse.MouseUpEvent, (MouseButtonEventHandler)OnGlobaMouseUp, true);
+				//MouseCaptureElement.AddHandler(Mouse.MouseMoveEvent, (MouseEventHandler)OnGlobaMouseMove, true);
 
-    private void OnMouseMove(MouseEventArgs e)
-    {
-      MouseMove?.Invoke(this, e.ToMouseEventArgsInt());
-    }
+				_mouseCaptureDisposer = new DelegateDisposable
+				(delegate
+				{
+					MouseCaptureElement.LostMouseCapture -= MouseCaptureElementOnLostMouseCapture;
+					//MouseCaptureElement.RemoveHandler(Mouse.MouseDownEvent, (MouseButtonEventHandler)OnGlobaMouseDown);
+					//MouseCaptureElement.RemoveHandler(Mouse.MouseUpEvent, (MouseButtonEventHandler)OnGlobaMouseUp);
+					//MouseCaptureElement.RemoveHandler(Mouse.MouseMoveEvent, (MouseEventHandler)OnGlobaMouseMove);
+				});
+			}
 
-    private void OnMouseRightButtonDown(MouseButtonEventArgs e)
-    {
-      MouseRightButtonDown?.Invoke(this, e.ToMouseButtonEventArgsInt());
-    }
+			return IsMouseCaptured;
+		}
 
-    private void OnMouseRightButtonUp(MouseButtonEventArgs e)
-    {
-      MouseRightButtonUp?.Invoke(this, e.ToMouseButtonEventArgsInt());
-    }
+		public Point GetPosition(UIElement relativeTo)
+		{
+			return Mouse.GetPosition(relativeTo);
+		}
 
-    private void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-      PreviewMouseLeftButtonDown?.Invoke(this, e.ToMouseButtonEventArgsInt());
-    }
+		public UIElement DirectlyOver => Mouse.DirectlyOver as UIElement;
 
-    private void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
-    {
-      PreviewMouseLeftButtonUp?.Invoke(this, e.ToMouseButtonEventArgsInt());
-    }
+		/// <summary>
+		/// Get/Set Mouse cursor position in Device Screen coordinates
+		/// </summary>
+		public Point ScreenPosition
+		{
+			get => NativeMethodsSafe.GetCursorPos().ToPresentationPoint();
+			set => NativeMethodsSafe.SetCursorPos(value.ToPlatformPoint());
+		}
 
-    private void OnPreviewMouseRightButtonDown(MouseButtonEventArgs e)
-    {
-      PreviewMouseRightButtonDown?.Invoke(this, e.ToMouseButtonEventArgsInt());
-    }
+		public bool IsMouseCaptured => MouseCaptureElement != null || Mouse.Captured != null;
 
-    private void OnPreviewMouseRightButtonUp(MouseButtonEventArgs e)
-    {
-      PreviewMouseRightButtonUp?.Invoke(this, e.ToMouseButtonEventArgsInt());
-    }
+		public UIElement LastElement
+		{
+			get => _lastElementWeak.GetTarget<UIElement>();
+			private set
+			{
+				if (ReferenceEquals(LastElement, value))
+					return;
 
-    #endregion
+				_lastElementWeak = value != null ? new WeakReference(value) : null;
+			}
+		}
 
-    #region Interface Implementations
+		public MouseButtonState LeftButtonState => Mouse.LeftButton == MouseButtonState.Pressed ? MouseButtonState.Pressed : MouseButtonState.Released;
 
-    #region IMouseService
+		public UIElement MouseCaptureElement { get; private set; }
 
-    public bool CaptureMouse(UIElement element)
-    {
-      MouseCaptureElement = element.CaptureMouse() ? element : null;
+		public event MouseButtonEventHandlerInt MouseLeftButtonDown;
+		public event MouseButtonEventHandlerInt MouseLeftButtonUp;
+		public event MouseButtonEventHandlerInt MouseRightButtonDown;
+		public event MouseButtonEventHandlerInt MouseRightButtonUp;
 
-      if (MouseCaptureElement != null)
-      {
-        MouseCaptureElement.LostMouseCapture += MouseCaptureElementOnLostMouseCapture;
-        //MouseCaptureElement.AddHandler(Mouse.MouseDownEvent, (MouseButtonEventHandler)OnGlobaMouseDown, true);
-        //MouseCaptureElement.AddHandler(Mouse.MouseUpEvent, (MouseButtonEventHandler)OnGlobaMouseUp, true);
-        //MouseCaptureElement.AddHandler(Mouse.MouseMoveEvent, (MouseEventHandler)OnGlobaMouseMove, true);
+		public event MouseButtonEventHandlerInt PreviewMouseLeftButtonDown;
+		public event MouseButtonEventHandlerInt PreviewMouseLeftButtonUp;
+		public event MouseButtonEventHandlerInt PreviewMouseRightButtonDown;
+		public event MouseButtonEventHandlerInt PreviewMouseRightButtonUp;
 
-        _mouseCaptureDisposer = new DelegateDisposable
-        (delegate
-        {
-          MouseCaptureElement.LostMouseCapture -= MouseCaptureElementOnLostMouseCapture;
-          //MouseCaptureElement.RemoveHandler(Mouse.MouseDownEvent, (MouseButtonEventHandler)OnGlobaMouseDown);
-          //MouseCaptureElement.RemoveHandler(Mouse.MouseUpEvent, (MouseButtonEventHandler)OnGlobaMouseUp);
-          //MouseCaptureElement.RemoveHandler(Mouse.MouseMoveEvent, (MouseEventHandler)OnGlobaMouseMove);
-        });
-      }
+		public event MouseEventHandlerInt MouseMove;
 
-      return IsMouseCaptured;
-    }
+		public void ReleaseMouseCapture()
+		{
+			MouseCaptureElement.Do(m => m.ReleaseMouseCapture());
+			MouseCaptureElement = null;
+		}
 
-    public Point GetPosition(UIElement relativeTo)
-    {
-      return Mouse.GetPosition(relativeTo);
-    }
-
-    public UIElement DirectlyOver => Mouse.DirectlyOver as UIElement;
-
-    public Point ScreenPosition => NativeMethodsSafe.GetCursorPos().ToPresentationPoint().FromDeviceToLogical();
-
-    public bool IsMouseCaptured => MouseCaptureElement != null || Mouse.Captured != null;
-
-    public UIElement LastElement
-    {
-      get => _lastElementWeak.GetTarget<UIElement>();
-      private set
-      {
-        if (ReferenceEquals(LastElement, value))
-          return;
-
-        _lastElementWeak = value != null ? new WeakReference(value) : null;
-      }
-    }
-
-    public MouseButtonState LeftButtonState => Mouse.LeftButton == MouseButtonState.Pressed ? MouseButtonState.Pressed : MouseButtonState.Released;
-
-    public UIElement MouseCaptureElement { get; private set; }
-
-    public event MouseButtonEventHandlerInt MouseLeftButtonDown;
-    public event MouseButtonEventHandlerInt MouseLeftButtonUp;
-    public event MouseButtonEventHandlerInt MouseRightButtonDown;
-    public event MouseButtonEventHandlerInt MouseRightButtonUp;
-
-    public event MouseButtonEventHandlerInt PreviewMouseLeftButtonDown;
-    public event MouseButtonEventHandlerInt PreviewMouseLeftButtonUp;
-    public event MouseButtonEventHandlerInt PreviewMouseRightButtonDown;
-    public event MouseButtonEventHandlerInt PreviewMouseRightButtonUp;
-
-    public event MouseEventHandlerInt MouseMove;
-
-    public void ReleaseMouseCapture()
-    {
-      MouseCaptureElement.Do(m => m.ReleaseMouseCapture());
-      MouseCaptureElement = null;
-    }
-
-    public MouseButtonState RightButtonState => Mouse.RightButton == MouseButtonState.Pressed ? MouseButtonState.Pressed : MouseButtonState.Released;
-
-    #endregion
-
-    #endregion
-  }
+		public MouseButtonState RightButtonState => Mouse.RightButton == MouseButtonState.Pressed ? MouseButtonState.Pressed : MouseButtonState.Released;
+	}
 }

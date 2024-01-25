@@ -69,7 +69,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		bool IManagedCommandItem.CanClick => IsEnabled;
 
-		ClickMode IManagedCommandItem.ClickMode => TreeViewControl?.ItemClickMode ?? ClickMode.Release;
+		ItemClickMode IManagedCommandItem.ClickMode => TreeViewControl?.ItemClickMode ?? ItemClickMode.DoubleClick;
 
 		bool IManagedCommandItem.IsMouseOver => IsMouseOver;
 

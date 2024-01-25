@@ -128,7 +128,7 @@ namespace Zaaml.UI.Controls.Core
 
 			public readonly int Index;
 
-			public static readonly GeneratedIndexItemPair Empty = new GeneratedIndexItemPair(-1, null);
+			public static readonly GeneratedIndexItemPair Empty = new(-1, null);
 
 			public bool IsEmpty => Index == -1;
 
@@ -160,21 +160,14 @@ namespace Zaaml.UI.Controls.Core
 			{
 			}
 
-			public GeneratedItem this[int index]
+			public void EnsureVoidRange()
 			{
-				get => index >= Count ? null : base[index];
-				set
-				{
-					EnsureCount(index + 1);
+				var voidDelta = int.MaxValue - LongCount;
 
-					base[index] = value;
-				}
-			}
-
-			public void EnsureCount(int count)
-			{
-				if (count > Count)
-					AddVoidRange(count - Count);
+				if (voidDelta > 0)
+					AddVoidRange(voidDelta);
+				else if (voidDelta < 0) 
+					RemoveRange(LongCount + voidDelta, -voidDelta);
 			}
 		}
 

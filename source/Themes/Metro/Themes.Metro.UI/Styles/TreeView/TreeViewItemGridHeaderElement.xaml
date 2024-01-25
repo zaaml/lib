@@ -19,7 +19,7 @@
 
   <!--  Template  -->
   <ControlTemplate x:Key="TreeViewItemGridHeaderElementTemplate"
-                   TargetType="zm:TreeViewItemGridHeaderElement">
+                   TargetType="zm:TreeGridViewHeaderElement">
 
     <zm:ControlTemplateRoot VisualStateGroups="{StaticResource VisualStates}">
       <Border Background="{TemplateBinding Background}"
@@ -30,12 +30,12 @@
   </ControlTemplate>
 
   <!--  Base Style  -->
-  <zm:Style x:Key="TreeViewItemGridHeaderElementBaseStyle" TargetType="zm:TreeViewItemGridHeaderElement">
+  <zm:Style x:Key="TreeViewItemGridHeaderElementBaseStyle" TargetType="zm:TreeGridViewHeaderElement">
     <zm:Setter Property="Template" Value="{StaticResource TreeViewItemGridHeaderElementTemplate}" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="TreeViewItemGridHeaderElementStyle" BasedOn="{StaticResource TreeViewItemGridHeaderElementBaseStyle}" Skin="Metro.TreeViewItemGridHeaderElement" TargetType="zm:TreeViewItemGridHeaderElement">
+  <zm:Style x:Key="TreeViewItemGridHeaderElementStyle" BasedOn="{StaticResource TreeViewItemGridHeaderElementBaseStyle}" Skin="Metro.TreeViewItemGridHeaderElement" TargetType="zm:TreeGridViewHeaderElement">
 
     <zm:SetterGroup ValuePathSource="Skin">
 
@@ -63,6 +63,6 @@
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="TreeViewItemGridHeaderElementThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TreeViewItemGridHeaderElementStyle}" TargetType="zm:TreeViewItemGridHeaderElement" />
+  <zm:ThemeStyle x:Key="TreeViewItemGridHeaderElementThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TreeViewItemGridHeaderElementStyle}" TargetType="zm:TreeGridViewHeaderElement" />
 
 </zm:ThemeResourceDictionary>

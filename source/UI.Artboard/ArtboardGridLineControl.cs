@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Markup;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
@@ -67,13 +68,13 @@ namespace Zaaml.UI.Controls.Artboard
 		public bool ShowHorizontalLines
 		{
 			get => (bool) GetValue(ShowHorizontalLinesProperty);
-			set => SetValue(ShowHorizontalLinesProperty, value);
+			set => SetValue(ShowHorizontalLinesProperty, value.Box());
 		}
 
 		public bool ShowVerticalLines
 		{
 			get => (bool) GetValue(ShowVerticalLinesProperty);
-			set => SetValue(ShowVerticalLinesProperty, value);
+			set => SetValue(ShowVerticalLinesProperty, value.Box());
 		}
 
 		public double SyncGridStep

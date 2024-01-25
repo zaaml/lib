@@ -22,7 +22,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private static void ElementOnLoaded(object sender, RoutedEventArgs routedEventArgs)
 		{
-			var element = (FrameworkElement) sender;
+			var element = (FrameworkElement)sender;
 
 			FrameworkElement current = null;
 
@@ -36,19 +36,19 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			if (current != null)
 			{
-				current.GetServiceOrCreate(() => new PopupHierarchyService()).AddPopup((IPopup) element);
+				current.GetServiceOrCreate(() => new PopupHierarchyService()).AddPopup((IPopup)element);
 				SetPopupHierarchyParent(element, current);
 			}
 		}
 
 		private static void ElementOnUnloaded(object sender, RoutedEventArgs routedEventArgs)
 		{
-			var element = (FrameworkElement) sender;
+			var element = (FrameworkElement)sender;
 			var hierarchyParent = GetPopupHierarchyParent(element);
 
 			if (hierarchyParent != null && hierarchyParent.IsVisualAncestorOf(element) == false)
 			{
-				hierarchyParent.GetService<PopupHierarchyService>().RemovePopup((IPopup) element);
+				hierarchyParent.GetService<PopupHierarchyService>().RemovePopup((IPopup)element);
 				SetPopupHierarchyParent(element, null);
 			}
 		}
@@ -63,12 +63,12 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private static bool GetIsHierarchyItem(DependencyObject element)
 		{
-			return (bool) element.GetValue(IsHierarchyItemProperty);
+			return (bool)element.GetValue(IsHierarchyItemProperty);
 		}
 
 		public static FrameworkElement GetPopupHierarchyParent(DependencyObject element)
 		{
-			return (FrameworkElement) element.GetValue(PopupHierarchyParentProperty);
+			return (FrameworkElement)element.GetValue(PopupHierarchyParentProperty);
 		}
 
 		private static void SetIsHierarchyItem(DependencyObject element, bool value)
@@ -84,7 +84,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 	internal class PopupHierarchyService : ServiceBase<FrameworkElement>
 	{
-		private readonly List<IPopup> _popupItems = new List<IPopup>();
+		private readonly List<IPopup> _popupItems = new();
 		private IPopup _currentOpenedPopup;
 		private bool _skipEvent;
 
@@ -106,6 +106,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		public void AddPopup(IPopup popup)
 		{
 			popup.IsOpenChanged += OnPopupIsOpenChanged;
+
 			_popupItems.Add(popup);
 
 			if (popup.IsOpen)
@@ -114,10 +115,12 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private void OnPopupIsOpenChanged(object sender, EventArgs eventArgs)
 		{
-			if (_skipEvent) return;
+			if (_skipEvent)
+				return;
+
 			_skipEvent = true;
 
-			var popup = (IPopup) sender;
+			var popup = (IPopup)sender;
 
 			if (popup.IsOpen)
 				CurrentOpenedPopup = popup;

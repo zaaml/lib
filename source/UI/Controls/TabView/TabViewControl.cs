@@ -11,18 +11,21 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Behaviors.Draggable;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.Menu;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 using Zaaml.UI.Data;
 using Zaaml.UI.Panels;
 using Zaaml.UI.Panels.Flexible;
@@ -140,7 +143,7 @@ namespace Zaaml.UI.Controls.TabView
 			("ItemsPresenterVisibility", ElementVisibility.Auto, t => t.OnTabContainerVisibilityChanged);
 
 		public static readonly DependencyProperty ItemsFlexDefinitionProperty = DPM.Register<FlexDefinition, TabViewControl>
-			("ItemsFlexDefinition", new FlexDefinition {StretchDirection = FlexStretchDirection.Shrink, Length = FlexLength.Auto});
+			("ItemsFlexDefinition", new FlexDefinition { StretchDirection = FlexStretchDirection.Shrink, Length = FlexLength.Auto });
 
 		public static readonly DependencyProperty MenuItemGeneratorProperty = DPM.Register<MenuItemGeneratorBase, TabViewControl>
 			("MenuItemGenerator", t => t.OnMenuItemGeneratorChanged);
@@ -171,7 +174,7 @@ namespace Zaaml.UI.Controls.TabView
 		public static readonly DependencyProperty ItemSelectionMemberProperty = DPM.Register<string, TabViewControl>
 			("ItemSelectionMember", d => d.DefaultGeneratorImpl.SelectableGeneratorImplementation.OnItemSelectionMemberChanged);
 
-		private readonly CollectionViewSource _menuItemsCollectionViewSource = new CollectionViewSource {IsLiveSortingRequested = true};
+		private readonly CollectionViewSource _menuItemsCollectionViewSource = new CollectionViewSource { IsLiveSortingRequested = true };
 		private DefaultItemTemplateTabViewItemGenerator _defaultGeneratorImpl;
 
 		public event EventHandler<CanCloseTabViewItemEventArgs> QueryCanCloseTab;
@@ -189,24 +192,24 @@ namespace Zaaml.UI.Controls.TabView
 		{
 			this.OverrideStyleKey<TabViewControl>();
 
-			SetBinding(InternalMenuSourceProperty, new Binding {Source = _menuItemsCollectionViewSource});
+			SetBinding(InternalMenuSourceProperty, new Binding { Source = _menuItemsCollectionViewSource });
 
 			DefaultMenuItemGenerator = new TabViewControlMenuItemGenerator(this);
 			ActualMenuItemGenerator = DefaultMenuItemGenerator;
 
-			CloseTabCommand = new RelayCommand(p => OnQueryCloseTab((TabViewItem) p), p => OnQueryCanCloseTab((TabViewItem) p));
+			CloseTabCommand = new RelayCommand(p => OnQueryCloseTab((TabViewItem)p), p => OnQueryCanCloseTab((TabViewItem)p));
 			CreateTabCommand = new RelayCommand(OnQueryCreateTab, OnQueryCanCreateTab);
 		}
 
 		public Visibility ActualCreateTabButtonVisibility
 		{
-			get => (Visibility) GetValue(ActualCreateTabButtonVisibilityProperty);
+			get => (Visibility)GetValue(ActualCreateTabButtonVisibilityProperty);
 			private set => this.SetReadOnlyValue(ActualCreateTabButtonVisibilityPropertyKey, value);
 		}
 
 		public bool ActualIsBackContentVisible
 		{
-			get => (bool) GetValue(ActualIsBackContentVisibleProperty);
+			get => (bool)GetValue(ActualIsBackContentVisibleProperty);
 			private set => this.SetReadOnlyValue(ActualIsBackContentVisiblePropertyKey, value);
 		}
 
@@ -214,25 +217,25 @@ namespace Zaaml.UI.Controls.TabView
 
 		public Visibility ActualItemsMenuButtonVisibility
 		{
-			get => (Visibility) GetValue(ActualItemsMenuButtonVisibilityProperty);
+			get => (Visibility)GetValue(ActualItemsMenuButtonVisibilityProperty);
 			private set => this.SetReadOnlyValue(ActualItemsMenuButtonVisibilityPropertyKey, value);
 		}
 
 		public Visibility ActualItemsPresenterVisibility
 		{
-			get => (Visibility) GetValue(ActualItemsPresenterVisibilityProperty);
+			get => (Visibility)GetValue(ActualItemsPresenterVisibilityProperty);
 			private set => this.SetReadOnlyValue(ActualItemsPresenterVisibilityPropertyKey, value);
 		}
 
 		public MenuItemGeneratorBase ActualMenuItemGenerator
 		{
-			get => (MenuItemGeneratorBase) GetValue(ActualMenuItemGeneratorProperty);
+			get => (MenuItemGeneratorBase)GetValue(ActualMenuItemGeneratorProperty);
 			private set => this.SetReadOnlyValue(ActualMenuItemGeneratorPropertyKey, value);
 		}
 
 		public IEnumerable ActualMenuSourceCollection
 		{
-			get => (IEnumerable) GetValue(ActualMenuSourceCollectionProperty);
+			get => (IEnumerable)GetValue(ActualMenuSourceCollectionProperty);
 			private set => this.SetReadOnlyValue(ActualMenuSourceCollectionPropertyKey, value);
 		}
 
@@ -246,7 +249,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		public DataTemplate BackContentTemplate
 		{
-			get => (DataTemplate) GetValue(BackContentTemplateProperty);
+			get => (DataTemplate)GetValue(BackContentTemplateProperty);
 			set => SetValue(BackContentTemplateProperty, value);
 		}
 
@@ -256,7 +259,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		public Style ContentPresenterStyle
 		{
-			get => (Style) GetValue(ContentPresenterStyleProperty);
+			get => (Style)GetValue(ContentPresenterStyleProperty);
 			set => SetValue(ContentPresenterStyleProperty, value);
 		}
 
@@ -268,14 +271,14 @@ namespace Zaaml.UI.Controls.TabView
 
 		public DataTemplate CreateTabButtonContentTemplate
 		{
-			get => (DataTemplate) GetValue(CreateTabButtonContentTemplateProperty);
+			get => (DataTemplate)GetValue(CreateTabButtonContentTemplateProperty);
 			set => SetValue(CreateTabButtonContentTemplateProperty, value);
 		}
 
 		public ElementVisibility CreateTabButtonVisibility
 		{
-			get => (ElementVisibility) GetValue(CreateTabButtonVisibilityProperty);
-			set => SetValue(CreateTabButtonVisibilityProperty, value);
+			get => (ElementVisibility)GetValue(CreateTabButtonVisibilityProperty);
+			set => SetValue(CreateTabButtonVisibilityProperty, value.Box());
 		}
 
 		public ICommand CreateTabCommand { get; }
@@ -293,44 +296,44 @@ namespace Zaaml.UI.Controls.TabView
 
 		public double DragOutDistance
 		{
-			get => (double) GetValue(DragOutDistanceProperty);
+			get => (double)GetValue(DragOutDistanceProperty);
 			set => SetValue(DragOutDistanceProperty, value);
 		}
 
 		public bool IsBackContentVisible
 		{
-			get => (bool) GetValue(IsBackContentVisibleProperty);
-			set => SetValue(IsBackContentVisibleProperty, value);
+			get => (bool)GetValue(IsBackContentVisibleProperty);
+			set => SetValue(IsBackContentVisibleProperty, value.Box());
 		}
 
 		public TabViewItemGeneratorBase ItemGenerator
 		{
-			get => (TabViewItemGeneratorBase) GetValue(ItemGeneratorProperty);
+			get => (TabViewItemGeneratorBase)GetValue(ItemGeneratorProperty);
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
 		public ElementVisibility ItemsCloseButtonVisibility
 		{
-			get => (ElementVisibility) GetValue(ItemsCloseButtonVisibilityProperty);
-			set => SetValue(ItemsCloseButtonVisibilityProperty, value);
+			get => (ElementVisibility)GetValue(ItemsCloseButtonVisibilityProperty);
+			set => SetValue(ItemsCloseButtonVisibilityProperty, value.Box());
 		}
 
 		public FlexDefinition ItemsFlexDefinition
 		{
-			get => (FlexDefinition) GetValue(ItemsFlexDefinitionProperty);
+			get => (FlexDefinition)GetValue(ItemsFlexDefinitionProperty);
 			set => SetValue(ItemsFlexDefinitionProperty, value);
 		}
 
 		public ElementVisibility ItemsMenuButtonVisibility
 		{
-			get => (ElementVisibility) GetValue(ItemsMenuButtonVisibilityProperty);
-			set => SetValue(ItemsMenuButtonVisibilityProperty, value);
+			get => (ElementVisibility)GetValue(ItemsMenuButtonVisibilityProperty);
+			set => SetValue(ItemsMenuButtonVisibilityProperty, value.Box());
 		}
 
 		public ElementVisibility ItemsPinButtonVisibility
 		{
-			get => (ElementVisibility) GetValue(ItemsPinButtonVisibilityProperty);
-			set => SetValue(ItemsPinButtonVisibilityProperty, value);
+			get => (ElementVisibility)GetValue(ItemsPinButtonVisibilityProperty);
+			set => SetValue(ItemsPinButtonVisibilityProperty, value.Box());
 		}
 
 		public object ItemsPresenterFooter
@@ -341,7 +344,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		public DataTemplate ItemsPresenterFooterTemplate
 		{
-			get => (DataTemplate) GetValue(ItemsPresenterFooterTemplateProperty);
+			get => (DataTemplate)GetValue(ItemsPresenterFooterTemplateProperty);
 			set => SetValue(ItemsPresenterFooterTemplateProperty, value);
 		}
 
@@ -353,25 +356,25 @@ namespace Zaaml.UI.Controls.TabView
 
 		public DataTemplate ItemsPresenterHeaderTemplate
 		{
-			get => (DataTemplate) GetValue(ItemsPresenterHeaderTemplateProperty);
+			get => (DataTemplate)GetValue(ItemsPresenterHeaderTemplateProperty);
 			set => SetValue(ItemsPresenterHeaderTemplateProperty, value);
 		}
 
 		public Style ItemsPresenterStyle
 		{
-			get => (Style) GetValue(ItemsPresenterStyleProperty);
+			get => (Style)GetValue(ItemsPresenterStyleProperty);
 			set => SetValue(ItemsPresenterStyleProperty, value);
 		}
 
 		public ElementVisibility ItemsPresenterVisibility
 		{
-			get => (ElementVisibility) GetValue(ItemsPresenterVisibilityProperty);
-			set => SetValue(ItemsPresenterVisibilityProperty, value);
+			get => (ElementVisibility)GetValue(ItemsPresenterVisibilityProperty);
+			set => SetValue(ItemsPresenterVisibilityProperty, value.Box());
 		}
 
 		public MenuItemGeneratorBase MenuItemGenerator
 		{
-			get => (MenuItemGeneratorBase) GetValue(MenuItemGeneratorProperty);
+			get => (MenuItemGeneratorBase)GetValue(MenuItemGeneratorProperty);
 			set => SetValue(MenuItemGeneratorProperty, value);
 		}
 
@@ -383,17 +386,17 @@ namespace Zaaml.UI.Controls.TabView
 
 		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			get => (IEnumerable)GetValue(SourceCollectionProperty);
 			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public Dock TabStripPlacement
 		{
-			get => (Dock) GetValue(TabStripPlacementProperty);
+			get => (Dock)GetValue(TabStripPlacementProperty);
 			set => SetValue(TabStripPlacementProperty, value);
 		}
 
-		private TabViewControlTemplateContract TemplateContract => (TabViewControlTemplateContract) TemplateContractInternal;
+		private TabViewControlTemplateContract TemplateContract => (TabViewControlTemplateContract)TemplateContractCore;
 
 		internal void Activate(TabViewItem tabViewItem)
 		{
@@ -465,16 +468,16 @@ namespace Zaaml.UI.Controls.TabView
 
 		private void HideBackContent()
 		{
-			this.SetCurrentValueInternal(IsBackContentVisibleProperty, KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsBackContentVisibleProperty, BooleanBoxes.False);
 		}
 
 		private void OnDragMove(object sender, DragMoveRoutedEventArgs e)
 		{
-			var tabItem = (TabViewItem) sender;
+			var tabItem = (TabViewItem)sender;
 			var dragOutDistance = DragOutDistance;
-			var box = tabItem.GetScreenBox().GetInflated(dragOutDistance, dragOutDistance);
+			var box = tabItem.GetScreenLogicalBox().GetInflated(dragOutDistance, dragOutDistance);
 
-			if (box.Contains(MouseInternal.ScreenPosition) == false)
+			if (box.Contains(MouseInternal.ScreenLogicalPosition) == false)
 				OnDragOutTabItem(tabItem);
 		}
 
@@ -499,7 +502,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		private void OnInternalMenuSourceChanged()
 		{
-			ActualMenuSourceCollection = (IEnumerable) GetValue(InternalMenuSourceProperty);
+			ActualMenuSourceCollection = (IEnumerable)GetValue(InternalMenuSourceProperty);
 		}
 
 		private void OnIsBackContentVisibleChanged()
@@ -595,7 +598,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		protected virtual bool OnQueryCanCloseTab(TabViewItem tabViewItem)
 		{
-			var canCloseTabItemEventArgs = new CanCloseTabViewItemEventArgs(tabViewItem) {CanClose = true};
+			var canCloseTabItemEventArgs = new CanCloseTabViewItemEventArgs(tabViewItem) { CanClose = true };
 
 			QueryCanCloseTab?.Invoke(this, canCloseTabItemEventArgs);
 
@@ -682,14 +685,14 @@ namespace Zaaml.UI.Controls.TabView
 			SelectorController.SelectItem(tabViewItem);
 		}
 
-		internal void Unselect(TabViewItem tabViewItem)
-		{
-			SelectorController.UnselectItem(tabViewItem);
-		}
-
 		protected override void SetIsSelected(TabViewItem item, bool value)
 		{
 			item.SetIsSelectedInternal(value);
+		}
+
+		internal void Unselect(TabViewItem tabViewItem)
+		{
+			SelectorController.UnselectItem(tabViewItem);
 		}
 
 		private void UpdateActualIsBackContentVisible()
@@ -735,68 +738,70 @@ namespace Zaaml.UI.Controls.TabView
 
 		public string ItemSelectionMember
 		{
-			get => (string) GetValue(ItemSelectionMemberProperty);
+			get => (string)GetValue(ItemSelectionMemberProperty);
 			set => SetValue(ItemSelectionMemberProperty, value);
 		}
 
 		public string ItemValueMember
 		{
-			get => (string) GetValue(ItemValueMemberProperty);
+			get => (string)GetValue(ItemValueMemberProperty);
 			set => SetValue(ItemValueMemberProperty, value);
 		}
 
 		public string ItemIconMember
 		{
-			get => (string) GetValue(ItemIconMemberProperty);
+			get => (string)GetValue(ItemIconMemberProperty);
 			set => SetValue(ItemIconMemberProperty, value);
 		}
 
 		public string ItemHeaderMember
 		{
-			get => (string) GetValue(ItemHeaderMemberProperty);
+			get => (string)GetValue(ItemHeaderMemberProperty);
 			set => SetValue(ItemHeaderMemberProperty, value);
 		}
 
 		public string ItemContentMember
 		{
-			get => (string) GetValue(ItemContentMemberProperty);
+			get => (string)GetValue(ItemContentMemberProperty);
 			set => SetValue(ItemContentMemberProperty, value);
 		}
 
 		public string ItemContentStringFormat
 		{
-			get => (string) GetValue(ItemContentStringFormatProperty);
+			get => (string)GetValue(ItemContentStringFormatProperty);
 			set => SetValue(ItemContentStringFormatProperty, value);
 		}
 
 		public DataTemplateSelector ItemContentTemplateSelector
 		{
-			get => (DataTemplateSelector) GetValue(ItemContentTemplateSelectorProperty);
+			get => (DataTemplateSelector)GetValue(ItemContentTemplateSelectorProperty);
 			set => SetValue(ItemContentTemplateSelectorProperty, value);
 		}
 
 		public DataTemplate ItemContentTemplate
 		{
-			get => (DataTemplate) GetValue(ItemContentTemplateProperty);
+			get => (DataTemplate)GetValue(ItemContentTemplateProperty);
 			set => SetValue(ItemContentTemplateProperty, value);
 		}
 
 		public string ItemHeaderStringFormat
 		{
-			get => (string) GetValue(ItemHeaderStringFormatProperty);
+			get => (string)GetValue(ItemHeaderStringFormatProperty);
 			set => SetValue(ItemHeaderStringFormatProperty, value);
 		}
 
 		public DataTemplateSelector ItemHeaderTemplateSelector
 		{
-			get => (DataTemplateSelector) GetValue(ItemHeaderTemplateSelectorProperty);
+			get => (DataTemplateSelector)GetValue(ItemHeaderTemplateSelectorProperty);
 			set => SetValue(ItemHeaderTemplateSelectorProperty, value);
 		}
 
 		public DataTemplate ItemHeaderTemplate
 		{
-			get => (DataTemplate) GetValue(ItemHeaderTemplateProperty);
+			get => (DataTemplate)GetValue(ItemHeaderTemplateProperty);
 			set => SetValue(ItemHeaderTemplateProperty, value);
 		}
+
+		IIconSelector IIconContentItemsControl.ItemIconSelector => null;
 	}
 }

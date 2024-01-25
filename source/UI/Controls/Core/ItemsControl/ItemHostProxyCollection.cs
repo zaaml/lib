@@ -10,14 +10,8 @@ namespace Zaaml.UI.Controls.Core
 {
 	internal sealed class ItemHostProxyCollection<TItem> : IEnumerable<TItem> where TItem : FrameworkElement
 	{
-		#region Fields
-
-		private readonly List<TItem> _items = new List<TItem>();
+		private readonly List<TItem> _items = new();
 		private IItemsHost<TItem> _itemsHost;
-
-		#endregion
-
-		#region Properties
 
 		public int Count => _items.Count;
 
@@ -38,10 +32,6 @@ namespace Zaaml.UI.Controls.Core
 				InitItemsHost();
 			}
 		}
-
-		#endregion
-
-		#region  Methods
 
 		private void ClearItemsHost()
 		{
@@ -67,28 +57,14 @@ namespace Zaaml.UI.Controls.Core
 			_itemsHost?.Items.RemoveAtInternal(index);
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IEnumerable
-
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			return ((IEnumerable) _items).GetEnumerator();
+			return ((IEnumerable)_items).GetEnumerator();
 		}
-
-		#endregion
-
-		#region IEnumerable<TItem>
 
 		public IEnumerator<TItem> GetEnumerator()
 		{
 			return _items.GetEnumerator();
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

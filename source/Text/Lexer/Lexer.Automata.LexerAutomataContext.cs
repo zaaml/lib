@@ -3,7 +3,6 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
 
 namespace Zaaml.Text
 {
@@ -11,46 +10,39 @@ namespace Zaaml.Text
 	{
 		private protected partial class LexerAutomata
 		{
-			private sealed class LexerAutomataContext : AutomataContext, ILexerAutomataContextInterface, IDisposable
+			private sealed class LexerAutomataContext : AutomataContext, ILexerContext, IDisposable
 			{
-				private readonly Stack<LexerAutomataContextState> _lexerAutomataContextStatesPool = new();
-				private LexerContext<TToken> _lexerContext;
-				private TextSpan _textSourceSpan;
-
-				public LexerAutomataContext(LexerAutomata automata) : base(null, automata)
+				public LexerAutomataContext(Lexer<TGrammar, TToken> lexer, TextSpan text, LexerAutomata automata) 
+					: base(null, automata, lexer.ServiceProvider)
 				{
+					Lexer = lexer;
+					Text = text;
+
+					Lexer.AttachContext(this);
 				}
 
-				public LexerContext<TToken> LexerContext => _lexerContext;
+				public Lexer<TGrammar, TToken> Lexer { get; }
+
+				public TextSpan Text { get; }
 
 				public override Process Process => null;
 
-				protected override AutomataContextState CreateContextState()
-				{
-					if (_lexerContext == null)
-						return null;
-
-					var contextState = _lexerAutomataContextStatesPool.Count > 0 ? _lexerAutomataContextStatesPool.Pop() : new LexerAutomataContextState();
-
-					contextState.LexerContext = _lexerContext;
-
-					return contextState;
-				}
-
 				public override ProcessKind ProcessKind => ProcessKind.Process;
 
-				public void Mount(TextSpan textSourceSpan, LexerContext<TToken> parserContext)
-				{
-					_textSourceSpan = textSourceSpan;
-					_lexerContext = parserContext;
-
-					if (_lexerContext != null)
-						_lexerContext.LexerAutomataContext = this;
-				}
+				public int Position { get; set; }
 
 				public void Dispose()
 				{
+					Lexer.DetachContext(this);
 				}
+
+				TextPoint ILexerContext.Position
+				{
+					get => Text.At(Position);
+					set => Position = value.Index;
+				}
+
+				TextSpan ILexerContext.Text => Text;
 			}
 		}
 	}

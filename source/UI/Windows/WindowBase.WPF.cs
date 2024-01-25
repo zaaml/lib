@@ -14,23 +14,13 @@ namespace Zaaml.UI.Windows
 {
 	public partial class WindowBase : Window
 	{
-		#region Static Fields and Constants
-
 		private const string AdornedContentControlTemplateString =
 			@"<ControlTemplate xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"" TargetType=""ContentControl""><AdornerDecorator><ContentPresenter /></AdornerDecorator></ControlTemplate>";
 
 		private static readonly Lazy<ControlTemplate> LazyAdornedContentControlTemplate;
 
-		#endregion
-
-		#region Fields
-
 		private ContentControl _adornedContentControl;
 		private PresentationWindowService _presentationWindowService;
-
-		#endregion
-
-		#region Ctors
 
 		static WindowBase()
 		{
@@ -38,17 +28,9 @@ namespace Zaaml.UI.Windows
 			LazyAdornedContentControlTemplate = new Lazy<ControlTemplate>(() => XamlUtils.Load<ControlTemplate>(AdornedContentControlTemplateString));
 		}
 
-		#endregion
-
-		#region Properties
-
 		private static ControlTemplate AdornedContentControlTemplateInstance => LazyAdornedContentControlTemplate.Value;
 
 		internal bool IsContentRendered { get; set; }
-
-		#endregion
-
-		#region  Methods
 
 		partial void BeginDragMoveImpl(bool async)
 		{
@@ -103,7 +85,7 @@ namespace Zaaml.UI.Windows
 
 		partial void OnPlatformBeforeApplyTemplate()
 		{
-			_adornedContentControl = (ContentControl) GetTemplateChild("AdornedContentControl");
+			_adornedContentControl = (ContentControl)GetTemplateChild("AdornedContentControl");
 
 			if (_adornedContentControl != null)
 				_adornedContentControl.Template = AdornedContentControlTemplateInstance;
@@ -118,12 +100,12 @@ namespace Zaaml.UI.Windows
 
 		partial void OnWindowPresenterTemplateContractAttachedPartial()
 		{
-			WindowPresenter.HeaderPresenter.AddHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler) OnHeaderMouseLeftButtonDown, true);
+			WindowPresenter.HeaderPresenter.AddHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler)OnHeaderMouseLeftButtonDown, true);
 		}
 
 		partial void OnWindowPresenterTemplateContractDetachingPartial()
 		{
-			WindowPresenter.HeaderPresenter.RemoveHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler) OnHeaderMouseLeftButtonDown);
+			WindowPresenter.HeaderPresenter.RemoveHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler)OnHeaderMouseLeftButtonDown);
 		}
 
 		partial void PlatformCtor()
@@ -142,7 +124,5 @@ namespace Zaaml.UI.Windows
 		partial void UpdateResizableBehavior()
 		{
 		}
-
-		#endregion
 	}
 }

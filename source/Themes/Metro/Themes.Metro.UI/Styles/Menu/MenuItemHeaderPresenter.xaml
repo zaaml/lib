@@ -74,6 +74,7 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="30" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
 
@@ -142,7 +143,7 @@
           </zm:SharedSizeContentControl>
 
           <!--  SubMenu Glyph  -->
-          <zm:SharedSizeContentControl Grid.Column="3"
+          <zm:SharedSizeContentControl Grid.Column="4"
                                        ShareHeight="False"
                                        SharedSizeKey="SubMenuGlyphSharedColumn">
             <ContentControl Margin="4,0"

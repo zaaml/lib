@@ -15,30 +15,21 @@ namespace Zaaml.Text
 	{
 		private sealed partial class ParserAutomata
 		{
-			private sealed class ParserAutomataContextState : AutomataContextState
-			{
-				public ParserContext ParserContext;
-			}
-
 			private abstract partial class ParserAutomataContext : AutomataContext, IParserAutomataContextInterface, IDisposable
 			{
 				private readonly ThreadLocal<Dictionary<Type, ExternalParserResources>> _threadLocalExternalParserResourcesDictionary = new(() => new Dictionary<Type, ExternalParserResources>());
 
 				private Dictionary<Type, ExternalParserResources> _externalParserResourcesDictionary;
 
-				protected ParserAutomataContext(ParserRule rule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind, Parser<TGrammar, TToken> parser, ParserAutomata parserAutomata) : base(rule, parserAutomata)
+				protected ParserAutomataContext(ParserSyntax rule, LexemeSource<TToken> lexemeSource, ProcessKind processKind, Parser<TGrammar, TToken> parser, ParserAutomata parserAutomata) 
+					: base(rule, parserAutomata, parser.ServiceProvider)
 				{
 					_externalParserResourcesDictionary = _threadLocalExternalParserResourcesDictionary.Value;
 
 					LexemeSource = lexemeSource;
 					TextSourceSpan = lexemeSource.TextSourceSpan;
-					ParserContext = parserContext;
 					ProcessKind = processKind;
 					Parser = parser;
-
-					if (ParserContext != null)
-						ParserContext.ParserAutomataContext = this;
-
 					Process = new ParserProcess(this);
 				}
 
@@ -47,8 +38,6 @@ namespace Zaaml.Text
 				public LexemeSource<TToken> LexemeSource { get; }
 
 				public Parser<TGrammar, TToken> Parser { get; }
-
-				public ParserContext ParserContext { get; }
 
 				public override Process Process { get; }
 
@@ -65,7 +54,7 @@ namespace Zaaml.Text
 					var offset = TextPosition;
 					var textSource = LexemeSource.TextSourceSpan.Slice(offset);
 					var lexer = invokeInfo.Lexer;
-					var lexemeSource = lexer.GetLexemeSource(textSource);
+					var lexemeSource = lexer.GetLexemeSource(textSource, new LexemeSourceOptions(true));
 					var enumerator = lexemeSource.GetEnumerator();
 
 					result = default;
@@ -100,19 +89,21 @@ namespace Zaaml.Text
 					}
 				}
 
-				public PredicateResult CallExternalParser<TExternalGrammar, TExternalToken>(ExternalParserInvokeInfo<TExternalGrammar, TExternalToken> invokeInfo)
+				public PredicateResult CallExternalParser<TExternalGrammar, TExternalToken>(ExternalParserDelegate<TExternalGrammar, TExternalToken> parserDelegate)
 					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
 					where TExternalToken : unmanaged, Enum
 				{
 					var offset = TextPosition;
 					var textSource = LexemeSource.TextSourceSpan.Slice(offset);
-					var externalAutomata = invokeInfo.Parser.Automata;
-					var lexemeSource = invokeInfo.Lexer.GetLexemeSource(textSource);
-					var externalContext = invokeInfo.Parser.CreateContext(lexemeSource);
-					var externalAutomataContext = externalAutomata.CreateProcessContext(invokeInfo.SyntaxNode, lexemeSource, externalContext, ProcessKind.SubProcess, invokeInfo.Parser);
-					var externalResult = externalAutomataContext.Process.Run();
+					var grammar = parserDelegate.Symbol.ExternalParserNode.Grammar;
+					var lexer = grammar.GetLexerFactory()(ServiceProvider);
+					var parser = grammar.GetParserFactory()(ServiceProvider);
+					var externalAutomata = parser.Automata;
+					var lexemeSource = lexer.GetLexemeSource(textSource, new LexemeSourceOptions(true));
+					var externalAutomataContext = externalAutomata.CreateProcessContext(parserDelegate.Symbol.ExternalParserNode, lexemeSource, ProcessKind.SubProcess, parser);
+					var externalResult = externalAutomataContext.Process.Run(Process.CancellationToken);
 					var poolCollection = GetExternalParserResources<TExternalGrammar, TExternalToken>();
-					var callSubParserContext = poolCollection.ExternalParserContextPool.Get().Mount(this, invokeInfo, lexemeSource, offset, externalContext, externalAutomataContext, externalResult);
+					var callSubParserContext = poolCollection.ExternalParserContextPool.Rent().Mount(this, parserDelegate, lexemeSource, offset, externalAutomataContext, externalResult);
 
 					try
 					{
@@ -120,7 +111,7 @@ namespace Zaaml.Text
 						{
 							Process.AdvanceInstructionPosition(offset + successAutomataResult.InstructionPosition);
 
-							return poolCollection.ExternalParserPredicateResultPool.Get().Mount(null);
+							return poolCollection.ExternalParserPredicateResultPool.Rent().Mount(null);
 						}
 
 						if (externalResult is Automata<Lexeme<TExternalToken>, TExternalToken>.ExceptionAutomataResult exceptionAutomataResult)
@@ -128,10 +119,10 @@ namespace Zaaml.Text
 
 						if (externalResult is Automata<Lexeme<TExternalToken>, TExternalToken>.ForkAutomataResult forkResult)
 						{
-							var firstBranch = poolCollection.ExternalParserForkBranchPool.Get().Mount(callSubParserContext, forkResult, true);
-							var secondBranch = poolCollection.ExternalParserForkBranchPool.Get().Mount(callSubParserContext, forkResult, false);
+							var firstBranch = poolCollection.ExternalParserForkBranchPool.Rent().Mount(callSubParserContext, forkResult, true);
+							var secondBranch = poolCollection.ExternalParserForkBranchPool.Rent().Mount(callSubParserContext, forkResult, false);
 
-							return poolCollection.ExternalParserForkPredicateResultPool.Get().Mount(firstBranch, secondBranch);
+							return poolCollection.ExternalParserForkPredicateResultPool.Rent().Mount(firstBranch, secondBranch);
 						}
 
 						throw new InvalidOperationException();
@@ -143,20 +134,22 @@ namespace Zaaml.Text
 				}
 
 				public PredicateResult<TExternalNode> CallValueExternalParser<TExternalGrammar, TExternalToken, TExternalNode>(
-					ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode> invokeInfo)
-					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> 
-					where TExternalToken : unmanaged, Enum 
-					where TExternalNode :  class
+					ExternalParserDelegate<TExternalGrammar, TExternalToken, TExternalNode> parserDelegate)
+					where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+					where TExternalToken : unmanaged, Enum
+					where TExternalNode : class
 				{
 					var offset = TextPosition;
 					var textSource = TextSourceSpan.Slice(offset);
-					var subAutomata = invokeInfo.Parser.Automata;
-					var lexemeSource = invokeInfo.Lexer.GetLexemeSource(textSource);
-					var externalContext = invokeInfo.Parser.CreateContext(lexemeSource);
-					var externalAutomataContext = subAutomata.CreateSyntaxTreeContext(invokeInfo.SyntaxNode, lexemeSource, externalContext, ProcessKind.SubProcess, invokeInfo.Parser);
-					var externalResult = externalAutomataContext.Process.Run();
+					var grammar = parserDelegate.Symbol.ExternalParserNode.Grammar;
+					var lexer = grammar.GetLexerFactory()(ServiceProvider);
+					var parser = grammar.GetParserFactory()(ServiceProvider);
+					var automata = parser.Automata;
+					var lexemeSource = lexer.GetLexemeSource(textSource, new LexemeSourceOptions(true));
+					var externalAutomataContext = automata.CreateSyntaxTreeContext(parserDelegate.Symbol.ExternalParserNode, lexemeSource, ProcessKind.SubProcess, parser);
+					var externalResult = externalAutomataContext.Process.Run(Process.CancellationToken);
 					var poolCollection = GetExternalParserResources<TExternalGrammar, TExternalToken, TExternalNode>();
-					var externalParserContext = poolCollection.ExternalParserContextPool.Get().Mount(this, invokeInfo, lexemeSource, offset, externalContext, externalAutomataContext, externalResult);
+					var externalParserContext = poolCollection.ExternalParserContextPool.Rent().Mount(this, parserDelegate, lexemeSource, offset, externalAutomataContext, externalResult);
 
 					try
 					{
@@ -164,7 +157,7 @@ namespace Zaaml.Text
 						{
 							Process.AdvanceInstructionPosition(offset + successAutomataResult.InstructionPosition);
 
-							return poolCollection.ExternalParserPredicateResultPool.Get().Mount(externalAutomataContext.GetResult<TExternalNode>());
+							return poolCollection.ExternalParserPredicateResultPool.Rent().Mount(externalAutomataContext.GetResult<TExternalNode>());
 						}
 
 						if (externalResult is Automata<Lexeme<TExternalToken>, TExternalToken>.ExceptionAutomataResult exceptionAutomataResult)
@@ -173,10 +166,10 @@ namespace Zaaml.Text
 						if (externalResult is Automata<Lexeme<TExternalToken>, TExternalToken>.ForkAutomataResult forkResult)
 						{
 							var popResult = Process.IsMainThread;
-							var firstBranch = poolCollection.ExternalParserForkBranchPool.Get().Mount(externalParserContext, forkResult, true, popResult);
-							var secondBranch = poolCollection.ExternalParserForkBranchPool.Get().Mount(externalParserContext, forkResult, false, popResult);
+							var firstBranch = poolCollection.ExternalParserForkBranchPool.Rent().Mount(externalParserContext, forkResult, true, popResult);
+							var secondBranch = poolCollection.ExternalParserForkBranchPool.Rent().Mount(externalParserContext, forkResult, false, popResult);
 
-							return poolCollection.ExternalParserForkPredicateResultPool.Get().Mount(firstBranch, secondBranch);
+							return poolCollection.ExternalParserForkPredicateResultPool.Rent().Mount(firstBranch, secondBranch);
 						}
 
 						throw new InvalidOperationException();
@@ -222,12 +215,6 @@ namespace Zaaml.Text
 				public virtual void Dispose()
 				{
 					_externalParserResourcesDictionary = null;
-
-					if (ParserContext == null)
-						return;
-
-					ParserContext.Dispose();
-					ParserContext.ParserAutomataContext = null;
 				}
 
 				int IParserAutomataContextInterface.TextPosition

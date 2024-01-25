@@ -6,6 +6,7 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
@@ -48,7 +49,7 @@ namespace Zaaml.UI.Controls.DropDown
 		public bool IsDropDownOpen
 		{
 			get => (bool) GetValue(IsDropDownOpenProperty);
-			set => SetValue(IsDropDownOpenProperty, value);
+			set => SetValue(IsDropDownOpenProperty, value.Box());
 		}
 
 		public Dock Placement

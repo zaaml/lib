@@ -6,229 +6,281 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.Behaviors;
+using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.PresentationCore.Extensions
 {
-  public static class FrameworkElementExtensions
-  {
-    #region  Methods
+	public static class FrameworkElementExtensions
+	{
+		public static void AddBehavior(this FrameworkElement fre, BehaviorBase behavior)
+		{
+			Extension.GetBehaviors(fre).Add(behavior);
+		}
 
-    public static void AddBehavior(this FrameworkElement fre, BehaviorBase behavior)
-    {
-      Extension.GetBehaviors(fre).Add(behavior);
-    }
+		public static void ClearValidationError(this FrameworkElement frameworkElement)
+		{
+			ValidationUtils.ClearValidationError(frameworkElement);
+		}
 
-    public static void ClearValidationError(this FrameworkElement frameworkElement)
-    {
-      ValidationUtils.ClearValidationError(frameworkElement);
-    }
+		public static void ConstraintSize(this FrameworkElement fre, Size size)
+		{
+			fre.MaxWidth = size.Width;
+			fre.MaxHeight = size.Height;
+		}
 
-    public static bool HasValidationError(this FrameworkElement frameworkElement)
-    {
-      return ValidationUtils.HasValidationError(frameworkElement);
-    }
+		internal static void DetachFromLogicalParent(this FrameworkElement frameworkElement)
+		{
+			var logicalParent = frameworkElement?.GetLogicalParent<FrameworkElement>();
 
-    public static void ConstraintSize(this FrameworkElement fre, Size size)
-    {
-      fre.MaxWidth = size.Width;
-      fre.MaxHeight = size.Height;
-    }
+			if (logicalParent == null)
+				return;
 
-    internal static void DetachFromLogicalParent(this FrameworkElement frameworkElement)
-    {
-      var logicalParent = frameworkElement?.GetLogicalParent<FrameworkElement>();
-      
-      if (logicalParent == null)
-        return;
+			if (logicalParent is Panel panel)
+			{
+				panel.Children.Remove(frameworkElement);
 
-      if (logicalParent is Panel panel)
-      {
-        panel.Children.Remove(frameworkElement);
+				return;
+			}
 
-        return;
-      }
+			if (logicalParent is ContentControl contentControl)
+			{
+				contentControl.Content = null;
 
-      if (logicalParent is ContentControl contentControl)
-      {
-        contentControl.Content = null;
+				return;
+			}
 
-        return;
-      }
+			if (logicalParent is ContentPresenter contentPresenter)
+			{
+				contentPresenter.Content = null;
 
-      if (logicalParent is ContentPresenter contentPresenter)
-      {
-        contentPresenter.Content = null;
-      
-        return;
-      }
+				return;
+			}
 
-      if (logicalParent is Border border)
-        border.Child = null;
-    }
+			if (logicalParent is Border border)
+				border.Child = null;
+		}
 
-    public static Size GetActualSize(this FrameworkElement fre)
-    {
-      return new Size(fre.ActualWidth, fre.ActualHeight);
-    }
+		public static Size GetActualSize(this FrameworkElement fre)
+		{
+			return new Size(fre.ActualWidth, fre.ActualHeight);
+		}
 
-    public static Size GetMinSize(this FrameworkElement fre)
-    {
-      return new Size(fre.MinWidth, fre.MinHeight);
-    }
+		public static TBehavior GetBehavior<TBehavior>(this FrameworkElement element) where TBehavior : BehaviorBase
+		{
+			return element.GetBehaviors().OfType<TBehavior>().FirstOrDefault();
+		}
 
-    public static Size GetMaxSize(this FrameworkElement fre)
-    {
-      return new Size(fre.MaxWidth, fre.MaxHeight);
-    }
+		public static BehaviorCollection GetBehaviors(this FrameworkElement element)
+		{
+			return Extension.GetBehaviors(element);
+		}
 
-    public static BehaviorCollection GetBehaviors(this FrameworkElement element)
-    {
-      return Extension.GetBehaviors(element);
-    }
+		internal static Rect GetBoundingBox(this FrameworkElement element, FrameworkElement relativeTo)
+		{
+			if (element.IsVisualDescendantOf(relativeTo) == false)
+				throw new InvalidOperationException("Specified elements are not relatives");
 
-    public static Rect GetClientBox(this FrameworkElement fre)
-    {
-      return new Rect(0, 0, fre.ActualWidth, fre.ActualHeight);
-    }
+			return element.TransformToVisual(relativeTo).TransformBounds(element.GetClientBox());
+		}
 
-    internal static Size GetCurrentSize(this FrameworkElement fre)
-    {
-      return new Size(fre.Width.IsNaN() ? fre.ActualWidth : fre.Width, fre.Height.IsNaN() ? fre.ActualHeight : fre.Height);
-    }
+		public static Rect GetClientBox(this FrameworkElement fre)
+		{
+			return new Rect(0, 0, fre.ActualWidth, fre.ActualHeight);
+		}
 
-    public static void InvokeOnLayoutUpdate<T>(this T fre, Action<T> action) where T : FrameworkElement
-    {
-	    void Handler(object sender, EventArgs e)
-	    {
-		    fre.LayoutUpdated -= Handler;
+		internal static Size GetCurrentSize(this FrameworkElement fre)
+		{
+			return new Size(fre.Width.IsNaN() ? fre.ActualWidth : fre.Width, fre.Height.IsNaN() ? fre.ActualHeight : fre.Height);
+		}
 
-		    action(fre);
-	    }
+		public static Size GetMaxSize(this FrameworkElement fre)
+		{
+			return new Size(fre.MaxWidth, fre.MaxHeight);
+		}
 
-	    fre.LayoutUpdated += Handler;
-    }
+		public static Size GetMinSize(this FrameworkElement fre)
+		{
+			return new Size(fre.MinWidth, fre.MinHeight);
+		}
 
-    public static void InvokeOnLayoutUpdate(this FrameworkElement fre, Action action)
-    {
-	    void Handler(object sender, EventArgs e)
-	    {
-		    fre.LayoutUpdated -= Handler;
+		public static Rect GetScreenDeviceBox(this FrameworkElement element)
+		{
+			return element.GetScreenLogicalBox().FromLogicalToDevice();
+		}
 
-		    action();
-	    }
+		public static Point GetScreenDeviceLocation(this FrameworkElement element)
+		{
+			return element.GetScreenLogicalLocation().FromLogicalToDevice();
+		}
 
-	    fre.LayoutUpdated += Handler;
-    }
+		public static Rect GetScreenLogicalBox(this FrameworkElement element)
+		{
+			return UIElementTransformUtils.TransformToScreen(element).TransformBounds(element.GetClientBox());
+		}
 
-    internal static void InvokeOnLayoutUpdateUntil(this FrameworkElement fre, Func<bool> action)
-    {
-	    void Handler(object sender, EventArgs e)
-	    {
-		    fre.LayoutUpdated -= Handler;
+		public static Point GetScreenLogicalLocation(this FrameworkElement element)
+		{
+			return UIElementTransformUtils.TransformToScreen(element).Transform(new Point());
+		}
 
-		    if (action() == false) 
-			    fre.LayoutUpdated += Handler;
-	    }
+		public static Rect GetVisualRootBox(this FrameworkElement element)
+		{
+			var visualRoot = element.GetVisualRoot<Visual>();
+			var clientBox = element.GetClientBox();
 
-	    fre.LayoutUpdated += Handler;
-    }
+			return ReferenceEquals(visualRoot, element) ? clientBox : element.TransformToAncestor(visualRoot).TransformBounds(clientBox);
+		}
 
-    public static void InvokeOnLoaded(this FrameworkElement fre, Action action)
-    {
-	    void Handler(object sender, RoutedEventArgs e)
-	    {
-		    fre.Loaded -= Handler;
+		public static Rect GetTemplateRootBox(this FrameworkElement element)
+		{
+			var templateRoot = element.GetTemplateRoot();
+			var clientBox = element.GetClientBox();
 
-		    action();
-	    }
+			return ReferenceEquals(templateRoot, element) ? clientBox : element.TransformToAncestor(templateRoot).TransformBounds(clientBox);
+		}
 
-	    fre.Loaded += Handler;
-    }
+		public static bool HasValidationError(this FrameworkElement frameworkElement)
+		{
+			return ValidationUtils.HasValidationError(frameworkElement);
+		}
 
-    public static void InvokeOnUnloaded(this FrameworkElement fre, Action action)
-    {
-	    void Handler(object sender, RoutedEventArgs e)
-	    {
-		    fre.Unloaded -= Handler;
+		public static void InvokeOnDeltaFrame(this FrameworkElement fre, int deltaFrame, Action action)
+		{
+			fre.InvokeOnFrame(FrameCounter.Frame + deltaFrame, action);
+		}
 
-		    action();
-	    }
+		public static void InvokeOnFrame(this FrameworkElement fre, long frame, Action action)
+		{
+			void Handler(object sender, EventArgs e)
+			{
+				if (FrameCounter.Frame < frame)
+					return;
 
-	    fre.Unloaded += Handler;
-    }
+				CompositionTarget.Rendering -= Handler;
 
-    internal static bool IsInLiveTree(this FrameworkElement fre)
-    {
-      return PresentationTreeUtils.EnumerateVisualRoots().Where(e => e.Dispatcher.CheckAccess()).Any(vr => ReferenceEquals(vr, fre) || vr?.IsVisualAncestorOf(fre) == true);
-    }
+				action();
+			}
 
-    public static Size MaxSize(this FrameworkElement fre)
-    {
-      return new Size(fre.MaxWidth, fre.MaxHeight);
-    }
+			if (frame <= FrameCounter.Frame)
+				return;
 
-    public static Size MinSize(this FrameworkElement fre)
-    {
-      return new Size(fre.MinWidth, fre.MinHeight);
-    }
+			CompositionTarget.Rendering += Handler;
+		}
 
-    internal static Size OnMeasureOverride(this FrameworkElement fre, Func<Size, Size> measureImpl, Size availableSize)
-    {
-      try
-      {
-        return measureImpl(availableSize);
-      }
-      catch (Exception e)
-      {
-        LogService.LogError(e);
-      }
+		public static void InvokeOnLayoutUpdate<T>(this T fre, Action<T> action) where T : FrameworkElement
+		{
+			void Handler(object sender, EventArgs e)
+			{
+				fre.LayoutUpdated -= Handler;
 
-      return XamlConstants.ZeroSize;
-    }
+				action(fre);
+			}
 
-    public static void RemoveBehavior(this FrameworkElement fre, BehaviorBase behavior)
-    {
-      Extension.GetBehaviors(fre).Remove(behavior);
-    }
+			fre.LayoutUpdated += Handler;
+		}
 
-    public static void SetNaNSize(this FrameworkElement fre)
-    {
-      SetSize(fre, XamlConstants.NanSize);
-    }
+		public static void InvokeOnLayoutUpdate(this FrameworkElement fre, Action action)
+		{
+			void Handler(object sender, EventArgs e)
+			{
+				fre.LayoutUpdated -= Handler;
 
-    public static void SetSize(this FrameworkElement fre, Size size)
-    {
-      fre.Width = size.Width;
-      fre.Height = size.Height;
-    }
+				action();
+			}
 
-    public static void SetValidationError(this FrameworkElement frameworkElement, string message)
-    {
-      ValidationUtils.SetValidationError(frameworkElement, message);
-    }
+			fre.LayoutUpdated += Handler;
+		}
 
-    internal static Rect GetBoundingBox(this FrameworkElement element, FrameworkElement relativeTo)
-    {
-      if (element.IsVisualDescendantOf(relativeTo) == false)
-        throw new InvalidOperationException("Specified elements are not relatives");
+		internal static void InvokeOnLayoutUpdateUntil(this FrameworkElement fre, Func<bool> action)
+		{
+			void Handler(object sender, EventArgs e)
+			{
+				fre.LayoutUpdated -= Handler;
 
-      return element.TransformToVisual(relativeTo).TransformBounds(element.GetClientBox());
-    }
+				if (action() == false)
+					fre.LayoutUpdated += Handler;
+			}
 
-    public static Rect GetScreenBox(this FrameworkElement element)
-    {
-      return UIElementTransformUtils.TransformToScreen(element).TransformBounds(element.GetClientBox());
-    }
+			fre.LayoutUpdated += Handler;
+		}
 
-    public static Point GetScreenLocation(this FrameworkElement element)
-    {
-      return UIElementTransformUtils.TransformToScreen(element).Transform(new Point());
-    }
+		public static void InvokeOnLoaded(this FrameworkElement fre, Action action)
+		{
+			void Handler(object sender, RoutedEventArgs e)
+			{
+				fre.Loaded -= Handler;
 
-    #endregion
-  }
+				action();
+			}
+
+			fre.Loaded += Handler;
+		}
+
+		public static void InvokeOnUnloaded(this FrameworkElement fre, Action action)
+		{
+			void Handler(object sender, RoutedEventArgs e)
+			{
+				fre.Unloaded -= Handler;
+
+				action();
+			}
+
+			fre.Unloaded += Handler;
+		}
+
+		internal static bool IsInLiveTree(this FrameworkElement fre)
+		{
+			return PresentationTreeUtils.EnumerateVisualRoots().Where(e => e.Dispatcher.CheckAccess()).Any(vr => ReferenceEquals(vr, fre) || vr?.IsVisualAncestorOf(fre) == true);
+		}
+
+		public static Size MaxSize(this FrameworkElement fre)
+		{
+			return new Size(fre.MaxWidth, fre.MaxHeight);
+		}
+
+		public static Size MinSize(this FrameworkElement fre)
+		{
+			return new Size(fre.MinWidth, fre.MinHeight);
+		}
+
+		internal static Size OnMeasureOverride(this FrameworkElement fre, Func<Size, Size> measureImpl, Size availableSize)
+		{
+			try
+			{
+				return measureImpl(availableSize);
+			}
+			catch (Exception e)
+			{
+				LogService.LogError(e);
+			}
+
+			return XamlConstants.ZeroSize;
+		}
+
+		public static void RemoveBehavior(this FrameworkElement fre, BehaviorBase behavior)
+		{
+			Extension.GetBehaviors(fre).Remove(behavior);
+		}
+
+		public static void SetNaNSize(this FrameworkElement fre)
+		{
+			SetSize(fre, XamlConstants.NanSize);
+		}
+
+		public static void SetSize(this FrameworkElement fre, Size size)
+		{
+			fre.Width = size.Width;
+			fre.Height = size.Height;
+		}
+
+		public static void SetValidationError(this FrameworkElement frameworkElement, string message)
+		{
+			ValidationUtils.SetValidationError(frameworkElement, message);
+		}
+	}
 }

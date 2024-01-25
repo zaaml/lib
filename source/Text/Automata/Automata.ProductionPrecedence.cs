@@ -10,18 +10,11 @@ namespace Zaaml.Text
 	{
 		private List<PrecedenceDefinition> PrecedenceDefinitions { get; } = new();
 
-		protected int CreatePrecedencePredicateId(int precedenceCount)
+		protected int CreatePrecedencePredicateId()
 		{
-			var id = 0;
+			var id = PrecedenceDefinitions.Count;
 
-			if (PrecedenceDefinitions.Count > 0)
-			{
-				var prevDefinition = PrecedenceDefinitions[PrecedenceDefinitions.Count - 1];
-
-				id = prevDefinition.Id + prevDefinition.PrecedenceCount + 1;
-			}
-
-			var precedenceDefinition = new PrecedenceDefinition(id, precedenceCount);
+			var precedenceDefinition = new PrecedenceDefinition(id);
 
 			PrecedenceDefinitions.Add(precedenceDefinition);
 
@@ -30,31 +23,26 @@ namespace Zaaml.Text
 
 		private readonly struct PrecedenceDefinition
 		{
-
-			public PrecedenceDefinition(int id, int precedenceCount)
+			public PrecedenceDefinition(int id)
 			{
 				Id = id;
-				PrecedenceCount = precedenceCount;
 			}
 
 			public readonly int Id;
-			public readonly int PrecedenceCount;
 		}
 
 		protected sealed class PrecedencePredicate
 		{
+			public readonly int Id;
+			public readonly bool Level;
+			public readonly int Precedence;
+
 			public PrecedencePredicate(int id, int precedence, bool level)
 			{
 				Id = id;
 				Precedence = precedence;
 				Level = level;
 			}
-
-			public int Id { get; }
-
-			public int Precedence { get; }
-
-			public bool Level { get; }
 		}
 	}
 }

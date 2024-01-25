@@ -20,229 +20,214 @@ using SetterBase = Zaaml.PresentationCore.Interactivity.SetterBase;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  internal sealed partial class StyleService
-  {
-    #region Static Fields and Constants
+	internal sealed partial class StyleService
+	{
+		private static readonly DependencyProperty InstanceProperty = DPM.RegisterAttached<StyleService, StyleService>
+			("Instance", OnInstanceChanged);
 
-    private static readonly DependencyProperty InstanceProperty = DPM.RegisterAttached<StyleService, StyleService>
-      ("Instance", OnInstanceChanged);
+		private static readonly Dictionary<DependencyProperty, DependencyProperty> DynamicProperties = new();
+		private static readonly Dictionary<string, int> DynamicPropertyNames = new();
 
-    private static readonly Dictionary<DependencyProperty, DependencyProperty> DynamicProperties = new Dictionary<DependencyProperty, DependencyProperty>();
-    private static readonly Dictionary<string, int> DynamicPropertyNames = new Dictionary<string, int>();
+		private readonly NativeStyleSource _nativeStyleSource;
+		private readonly WeakLinkedList<Runtime> _services = new();
+		private NativeStyle _nativeStyle;
 
-    #endregion
+		public event EventHandler NativeStyleChanged;
 
-    #region Fields
+		public StyleService(StyleBase style)
+		{
+			Style = style;
+			Setters = new StyleServiceSetterCollection(this);
+			Triggers = new StyleServiceTriggerCollection(this);
 
-    private readonly NativeStyleSource _nativeStyleSource;
-    private readonly WeakLinkedList<Runtime> _services = new WeakLinkedList<Runtime>();
-    private NativeStyle _nativeStyle;
+			Update();
 
-    public event EventHandler NativeStyleChanged;
-
-    #endregion
-
-    #region Ctors
-
-    public StyleService(StyleBase style)
-    {
-      Style = style;
-      Setters = new StyleServiceSetterCollection(this);
-      Triggers = new StyleServiceTriggerCollection(this);
-
-      Update();
-
-      _nativeStyleSource = new NativeStyleSource(this);
-    }
-
-    #endregion
-
-    #region Properties
+			_nativeStyleSource = new NativeStyleSource(this);
+		}
 
 #if INTERACTIVITY_DEBUG
-    public bool Debug { get; set; }
+		public bool Debug { get; set; }
 #endif
 
-    public NativeStyle NativeStyle => _nativeStyle ??= BuildNativeStyle();
+		public NativeStyle NativeStyle => _nativeStyle ??= BuildNativeStyle();
 
-    public Binding NativeStyleBinding => _nativeStyleSource.StyleBinding;
+		public Binding NativeStyleBinding => _nativeStyleSource.StyleBinding;
 
-    public StyleBase Style { get; }
+		public StyleServiceSetterCollection Setters { get; }
 
-    public StyleServiceSetterCollection Setters { get; }
+		public StyleBase Style { get; }
 
-    public StyleServiceTriggerCollection Triggers { get; }
+		public StyleServiceTriggerCollection Triggers { get; }
 
-    #endregion
+		private NativeStyle BuildNativeStyle()
+		{
+			var targetType = Style.TargetType ?? typeof(FrameworkElement);
 
-    #region  Methods
-
-    private NativeStyle BuildNativeStyle()
-    {
-      var targetType = Style.TargetType ?? typeof(FrameworkElement);
-
-      var nativeStyle = new NativeStyle
-      {
-        TargetType = targetType
-      };
+			var nativeStyle = new NativeStyle
+			{
+				TargetType = targetType
+			};
 
 #if !SILVERLIGHT
-      foreach (var baseStyle in Style.EnumerateBaseStylesAndSelf().OfType<Style>())
-      {
-        if (baseStyle.Resources.Count == 0)
-          continue;
+			foreach (var baseStyle in Style.EnumerateBaseStylesAndSelf().OfType<Style>())
+			{
+				if (baseStyle.Resources.Count == 0)
+					continue;
 
-        foreach (var resourceKey in baseStyle.Resources.Keys)
-        {
-          if (nativeStyle.Resources.Contains(resourceKey) == false)
-            nativeStyle.Resources.Add(resourceKey, baseStyle.Resources[resourceKey]);
-        }
-      }
+				foreach (var resourceKey in baseStyle.Resources.Keys)
+				{
+					if (nativeStyle.Resources.Contains(resourceKey) == false)
+						nativeStyle.Resources.Add(resourceKey, baseStyle.Resources[resourceKey]);
+				}
+			}
 #endif
 
-      Triggers.AddRange(Style.ActualTriggers);
+			Triggers.AddRange(Style.ActualTriggers);
 
-      var flatSetters = Style.ActualSetters.OfType<Setter>().Select(s => s.DeepClone<Setter>()).ToList();
+			var flatSetters = Style.ActualSetters.OfType<Setter>().Select(s => s.DeepClone<Setter>()).ToList();
 
-      Dictionary<DependencyProperty, DependencyProperty> dynamicProperties = null;
+			Dictionary<DependencyProperty, DependencyProperty> dynamicProperties = null;
 
-      foreach (var setter in flatSetters)
-      {
-        if (string.IsNullOrEmpty(setter.ExpandoProperty) == false || string.IsNullOrEmpty(setter.VisualState))
-          continue;
+			foreach (var setter in flatSetters)
+			{
+				if (string.IsNullOrEmpty(setter.ExpandoProperty) == false || string.IsNullOrEmpty(setter.VisualState))
+					continue;
 
-        var property = setter.ResolveProperty(targetType);
+				var property = setter.ResolveProperty(targetType);
 
-        if (property == null)
-        {
-          LogService.LogWarning($"Unable resolve property for setter: {setter}");
-          continue;
-        }
+				if (property == null)
+				{
+					LogService.LogWarning($"Unable resolve property for setter: {setter}");
 
-        dynamicProperties ??= new Dictionary<DependencyProperty, DependencyProperty>();
+					continue;
+				}
 
-        dynamicProperties.GetValueOrCreate(property, GetDynamicProperty);
-      }
+				dynamicProperties ??= new Dictionary<DependencyProperty, DependencyProperty>();
 
-      if (dynamicProperties != null)
-        foreach (var kv in dynamicProperties)
-          nativeStyle.Setters.Add(new NativeSetter {Property = kv.Key, Value = new Binding {Path = new PropertyPath(kv.Value), RelativeSource = XamlConstants.Self}});
+				dynamicProperties.GetValueOrCreate(property, GetDynamicProperty);
+			}
 
-      foreach (var setter in flatSetters)
-      {
-        if (string.IsNullOrEmpty(setter.ExpandoProperty) == false)
-        {
-          Setters.Add(setter.Optimize());
-          continue;
-        }
+			if (dynamicProperties != null)
+				foreach (var kv in dynamicProperties)
+					nativeStyle.Setters.Add(new NativeSetter {Property = kv.Key, Value = new Binding {Path = new PropertyPath(kv.Value), RelativeSource = XamlConstants.Self}});
 
-        var dependencyProperty = setter.ResolveProperty(targetType);
-        var dynamicProperty = dependencyProperty != null ? dynamicProperties?.GetValueOrDefault(dependencyProperty) : null;
-        if (dynamicProperty != null)
-        {
-          setter.Property = dynamicProperty;
-          Setters.Add(setter.Optimize());
-          continue;
-        }
+			foreach (var setter in flatSetters)
+			{
+				if (string.IsNullOrEmpty(setter.ExpandoProperty) == false)
+				{
+					Setters.Add(setter.Optimize());
 
-        var nativeSetter = setter.CreateNativeStyleSetter(targetType);
+					continue;
+				}
 
-        if (nativeSetter != null)
-          nativeStyle.Setters.Add(nativeSetter);
-        else
-          Setters.Add(setter.Optimize());
-      }
+				var dependencyProperty = setter.ResolveProperty(targetType);
+				var dynamicProperty = dependencyProperty != null ? dynamicProperties?.GetValueOrDefault(dependencyProperty) : null;
+				
+				if (dynamicProperty != null)
+				{
+					setter.Property = dynamicProperty;
+					Setters.Add(setter.Optimize());
 
-      nativeStyle.Setters.Add(new NativeSetter(InstanceProperty, this));
+					continue;
+				}
 
-      return nativeStyle;
-    }
+				var nativeSetter = setter.CreateNativeStyleSetter(targetType);
 
-    private void EnsureNativeStyle()
-    {
-	    _nativeStyle ??= BuildNativeStyle();
-    }
+				if (nativeSetter != null)
+					nativeStyle.Setters.Add(nativeSetter);
+				else
+					Setters.Add(setter.Optimize());
+			}
 
-    public void ExternalLoadSetter(FrameworkElement element, SetterBase setter)
-    {
-      element.GetService<Runtime>()?.ExternalLoadSetter(setter);
-    }
+			nativeStyle.Setters.Add(new NativeSetter(InstanceProperty, this));
 
-    private static DependencyProperty GetDynamicProperty(DependencyProperty property)
-    {
-      return DynamicProperties.GetValueOrCreate(property, RegisterDynamicProperty);
-    }
+			return nativeStyle;
+		}
 
-    private static string GetDynamicPropertyName(DependencyProperty property)
-    {
-      var propertyName = property.GetName();
-      var count = DynamicPropertyNames.GetValueOrDefault(propertyName);
+		private void EnsureNativeStyle()
+		{
+			_nativeStyle ??= BuildNativeStyle();
+		}
+
+		public void ExternalLoadSetter(FrameworkElement element, SetterBase setter)
+		{
+			element.GetService<Runtime>()?.ExternalLoadSetter(setter);
+		}
+
+		private static DependencyProperty GetDynamicProperty(DependencyProperty property)
+		{
+			return DynamicProperties.GetValueOrCreate(property, RegisterDynamicProperty);
+		}
+
+		private static string GetDynamicPropertyName(DependencyProperty property)
+		{
+			var propertyName = property.GetName();
+			var count = DynamicPropertyNames.GetValueOrDefault(propertyName);
 			var dynamicPropertyName = $"{propertyName}_dyn{count}";
 
-      DynamicPropertyNames[propertyName] = count + 1;
+			DynamicPropertyNames[propertyName] = count + 1;
 
-      return dynamicPropertyName;
-    }
+			return dynamicPropertyName;
+		}
 
-    public static StyleService GetFromNativeStyle(NativeStyle nativeStyle)
-    {
-      return nativeStyle.FindSetter<StyleService>(InstanceProperty);
-    }
+		public static StyleService GetFromNativeStyle(NativeStyle nativeStyle)
+		{
+			return nativeStyle.FindSetter<StyleService>(InstanceProperty);
+		}
 
-    public static StyleService GetInstance(DependencyObject element)
-    {
-      return (StyleService) element.GetValue(InstanceProperty);
-    }
+		public static StyleService GetInstance(DependencyObject element)
+		{
+			return (StyleService) element.GetValue(InstanceProperty);
+		}
 
-    public static IRuntimeStyleService GetRuntimeService(FrameworkElement target) => target.GetService<Runtime>();
+		public static IRuntimeStyleService GetRuntimeService(FrameworkElement target) => target.GetService<Runtime>();
 
-    private static void OnInstanceChanged(DependencyObject fre, StyleService oldStyleService, StyleService newStyleService)
-    {
-      if (oldStyleService != null)
-        fre.RemoveService<Runtime>();
+		private static void OnInstanceChanged(DependencyObject fre, StyleService oldStyleService, StyleService newStyleService)
+		{
+			if (oldStyleService != null)
+				fre.RemoveService<Runtime>();
 
-      if (newStyleService != null)
-        fre.SetService(new Runtime(newStyleService));
-    }
+			if (newStyleService != null)
+				fre.SetService(new Runtime(newStyleService));
+		}
 
-    private void OnStyleChanged()
-    {
-      foreach (var service in _services)
-        service.OnStyleServiceStyleChanged();
-    }
+		private void OnStyleChanged()
+		{
+			foreach (var service in _services)
+				service.OnStyleServiceStyleChanged();
+		}
 
-    internal void OnStyleInheritanceChanged()
-    {
-      Update();
+		internal void OnStyleInheritanceChanged()
+		{
+			Update();
 
-      _nativeStyle = null;
+			_nativeStyle = null;
 
-      NativeStyleChanged?.Invoke(this, EventArgs.Empty);
+			NativeStyleChanged?.Invoke(this, EventArgs.Empty);
 
-      _nativeStyleSource.RaiseStyleChanged();
-    }
+			_nativeStyleSource.RaiseStyleChanged();
+		}
 
-    private static DependencyProperty RegisterDynamicProperty(DependencyProperty property)
-    {
-      var propertyType = property.GetPropertyType();
-      return DependencyPropertyManager.RegisterAttached(GetDynamicPropertyName(property), propertyType, typeof(StyleService), new PropertyMetadata(propertyType.CreateDefaultValue()));
-    }
+		private static DependencyProperty RegisterDynamicProperty(DependencyProperty property)
+		{
+			var propertyType = property.GetPropertyType();
 
-    public static void SetInstance(DependencyObject element, StyleService value)
-    {
-      element.SetValue(InstanceProperty, value);
-    }
+			return DependencyPropertyManager.RegisterAttached(GetDynamicPropertyName(property), propertyType, typeof(StyleService), new PropertyMetadata(propertyType.CreateDefaultValue()));
+		}
 
-    public void Update()
-    {
-      Setters.Clear();
-      Triggers.Clear();
+		public static void SetInstance(DependencyObject element, StyleService value)
+		{
+			element.SetValue(InstanceProperty, value);
+		}
 
-      _nativeStyle = null;
+		public void Update()
+		{
+			Setters.Clear();
+			Triggers.Clear();
 
-      OnStyleChanged();
-    }
+			_nativeStyle = null;
 
-    #endregion
-  }
+			OnStyleChanged();
+		}
+	}
 }

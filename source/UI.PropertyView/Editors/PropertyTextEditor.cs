@@ -42,7 +42,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 
 		protected PropertyStringConverter StringConverter { get; private set; }
 
-		private PropertyTextEditorTemplateContract TemplateContract => (PropertyTextEditorTemplateContract) TemplateContractInternal;
+		private PropertyTextEditorTemplateContract TemplateContract => (PropertyTextEditorTemplateContract)TemplateContractCore;
 
 		public string TextValue
 		{
@@ -157,7 +157,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 
 		private void UpdateAfterEdit()
 		{
-			if (PropertyViewItem != null && PropertyViewItem.HasValidationError() == false)
+			if (PropertyViewItemBase != null && PropertyViewItemBase.HasValidationError() == false)
 				UpdateTextValue();
 		}
 

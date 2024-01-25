@@ -14,89 +14,61 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Assets
 {
-  [ContentProperty("ColorRangeCollection")]
-  public class RangeBrush : RangeValueAsset
-  {
-    #region Static Fields and Constants
+	[ContentProperty("ColorRangeCollection")]
+	public class RangeBrush : RangeValueAsset
+	{
+		private static readonly DependencyPropertyKey ActualBrushPropertyKey = DPM.RegisterReadOnly<Brush, RangeBrush>
+			("ActualBrush");
 
-    private static readonly DependencyPropertyKey ActualBrushPropertyKey = DPM.RegisterReadOnly<Brush, RangeBrush>
-      ("ActualBrush");
+		public static readonly DependencyProperty ActualBrushProperty = ActualBrushPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty ActualBrushProperty = ActualBrushPropertyKey.DependencyProperty;
+		private readonly SolidColorBrush _brush = new SolidColorBrush();
+		private readonly ColorRangeCollection _colorRangeCollection;
 
-    #endregion
+		public RangeBrush()
+		{
+			_colorRangeCollection = new ColorRangeCollection();
+			_colorRangeCollection.CollectionChanged += (sender, args) => UpdateActualBrush();
+			ActualBrush = _brush;
+		}
 
-    #region Fields
+		public Brush ActualBrush
+		{
+			get => (Brush)GetValue(ActualBrushProperty);
+			private set => this.SetReadOnlyValue(ActualBrushPropertyKey, value);
+		}
 
-    private readonly SolidColorBrush _brush = new SolidColorBrush();
-    private readonly ColorRangeCollection _colorRangeCollection;
+		public ColorRangeCollection ColorRangeCollection => _colorRangeCollection;
 
-    #endregion
+		protected override void OnRelativeValueChanged()
+		{
+			UpdateActualBrush();
+		}
 
-    #region Ctors
+		private void UpdateActualBrush()
+		{
+			var doubleValue = CoercedPercentageValue;
+			var colorRange = DoubleUtils.GreaterThanOrClose(Value, Maximum) ? ColorRangeCollection.LastOrDefault() : ColorRangeCollection.FirstOrDefault(c => c.Contains(doubleValue));
 
-    public RangeBrush()
-    {
-      _colorRangeCollection = new ColorRangeCollection();
-      _colorRangeCollection.CollectionChanged += (sender, args) => UpdateActualBrush();
-      ActualBrush = _brush;
-    }
+			_brush.Color = colorRange.Return(c => c.Color, Colors.Transparent);
+		}
+	}
 
-    #endregion
+	public class ColorRange
+	{
+		public Color Color { get; set; }
 
-    #region Properties
+		public double From { get; set; }
 
-    public Brush ActualBrush
-    {
-      get => (Brush) GetValue(ActualBrushProperty);
-      private set => this.SetReadOnlyValue(ActualBrushPropertyKey, value);
-    }
+		public double To { get; set; }
 
-    public ColorRangeCollection ColorRangeCollection => _colorRangeCollection;
+		public bool Contains(double doubleValue)
+		{
+			return doubleValue >= From && doubleValue < To;
+		}
+	}
 
-    #endregion
-
-    #region  Methods
-
-    protected override void OnRelativeValueChanged()
-    {
-      UpdateActualBrush();
-    }
-
-    private void UpdateActualBrush()
-    {
-      var doubleValue = CoercedPercentageValue;
-      var colorRange = DoubleUtils.GreaterThanOrClose(Value, Maximum) ? ColorRangeCollection.LastOrDefault() : ColorRangeCollection.FirstOrDefault(c => c.Contains(doubleValue));
-
-      _brush.Color = colorRange.Return(c => c.Color, Colors.Transparent);
-    }
-
-    #endregion
-  }
-
-  public class ColorRange
-  {
-    #region Properties
-
-    public Color Color { get; set; }
-
-    public double From { get; set; }
-
-    public double To { get; set; }
-
-    #endregion
-
-    #region  Methods
-
-    public bool Contains(double doubleValue)
-    {
-      return doubleValue >= From && doubleValue < To;
-    }
-
-    #endregion
-  }
-
-  public class ColorRangeCollection : ObservableCollection<ColorRange>
-  {
-  }
+	public class ColorRangeCollection : ObservableCollection<ColorRange>
+	{
+	}
 }

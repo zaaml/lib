@@ -14,6 +14,7 @@ Zaaml provides the following list of controls and components:
 * Editors
 * ListView
 * Menus/Bars
+* Navigation
 * PropertyView
 * Ribbon
 * TabView
@@ -29,8 +30,10 @@ For a quick start, refer to the [Getting Started Tutorial](https://github.com/za
 [Zaaml Examples](https://github.com/zaaml/examples) repository contains Zaaml UI components usage examples.
 
 ### Supported frameworks:
+* .Net 8.0
+* .Net 7.0
+* .Net 6.0
 * .Net 5.0
-* .NetCore 3.1
 * .NetFramework 4.8
 
 ### License:

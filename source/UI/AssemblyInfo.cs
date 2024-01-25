@@ -1,13 +1,10 @@
 // <copyright file="AssemblyInfo.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-//   Copyright (c) zaaml. All rights reserved.
+//   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System.Runtime.CompilerServices;
-using System.Windows.Markup;
 using Zaaml.Core;
 using Zaaml.PresentationCore.Theming;
-using DefaultMasterTheme = Zaaml.PresentationCore.Theming.DefaultMasterTheme;
-
 
 [assembly: ThemeManagerBehavior]
 
@@ -21,6 +18,9 @@ using DefaultMasterTheme = Zaaml.PresentationCore.Theming.DefaultMasterTheme;
                               ZaamlInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Zaaml.UI.Docking,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Zaaml.UI.Docking.Test,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Zaaml.UI.Navigation,PublicKey=" +

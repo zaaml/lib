@@ -579,13 +579,11 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		private sealed class EffectiveValueService : ServiceBase<DependencyObject>
 		{
-#if !SILVERLIGHT
 			// Workaround for issue:
 			//https://connect.microsoft.com/VisualStudio/feedback/details/3136551/setcurrentvalue-does-not-work-on-property-with-inherited-value-wpf
 			private static readonly DependencyProperty PreventInheritsAllProperty = DependencyProperty.RegisterAttached
 			("PreventInheritsAll", typeof(bool), typeof(EffectiveValueService),
 				new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
-#endif
 
 			private readonly Dictionary<DependencyProperty, EffectiveValue> _attachedEffectiveValues = new Dictionary<DependencyProperty, EffectiveValue>();
 			private MicroPool3<EffectiveValue> _detachedEffectiveValues;
@@ -626,14 +624,12 @@ namespace Zaaml.PresentationCore.Interactivity
 				return freeEffectiveValue;
 			}
 
-#if !SILVERLIGHT
 			protected override void OnAttach()
 			{
 				base.OnAttach();
 
 				Target.SetValue(PreventInheritsAllProperty, true);
 			}
-#endif
 
 			public void RemoveEffectiveValue(EffectiveValue effectiveValue)
 			{

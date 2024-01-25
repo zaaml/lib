@@ -410,9 +410,6 @@ namespace Zaaml.UI.Data.Hierarchy
 
 			var flatIndex = Hierarchy.FindIndex((TNode)this, true);
 
-			//HandleAncestorsCount(flatCountChange, visibleFlatCountChange);
-			//Hierarchy.ResetNode((TNode) this, flatCountChange, visibleFlatCountChange);
-
 			HandleCount(flatIndex + 1, FlatCount - flatCount, VisibleFlatCount - visibleFlatCount);
 		}
 

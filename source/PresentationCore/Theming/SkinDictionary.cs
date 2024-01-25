@@ -4,18 +4,17 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Zaaml.Core.Extensions;
-#if INTERACTIVITY_DEBUG
-
-#endif
+using Zaaml.Core.Trees;
 
 namespace Zaaml.PresentationCore.Theming
 {
 	[TypeConverter(typeof(SkinDictionaryTypeConverter))]
-	public sealed partial class SkinDictionary : SkinBase
+	public sealed partial class SkinDictionary : ISkinResourceProvider
 	{
 		// Thread unsafe builder
-		private static readonly List<string> Builder = new List<string>();
+		private static readonly List<string> Builder = new();
 
 		private SkinDictionaryCollection _basedOn;
 
@@ -50,7 +49,7 @@ namespace Zaaml.PresentationCore.Theming
 		[TypeConverter(typeof(SkinDictionaryCollectionTypeConverter))]
 		public SkinDictionaryCollection BasedOn
 		{
-			get => _basedOn ??= new SkinDictionaryCollection {Owner = this};
+			get => _basedOn ??= new SkinDictionaryCollection { Owner = this };
 			set
 			{
 				if (ReferenceEquals(_basedOn, value))
@@ -74,8 +73,6 @@ namespace Zaaml.PresentationCore.Theming
 
 		internal SkinDictionary Parent { get; private set; }
 
-		internal override IEnumerable<KeyValuePair<string, object>> Resources => ShallowResources;
-
 		internal SkinDictionary Root
 		{
 			get
@@ -89,9 +86,46 @@ namespace Zaaml.PresentationCore.Theming
 			}
 		}
 
-		protected override object GetValue(string key)
+		internal bool ResolveDependencies(ISkinResourceProvider skinResourceValueProvider)
 		{
-			return this.GetValueOrDefault(key);
+			var result = true;
+
+			TreeEnumerator.Visit(this, SkinDictionaryTreeAdvisor, s =>
+			{
+				if (s.BasedOnInternal == null || s.BasedOnInternal.Count == 0)
+					return;
+
+				for (var index = 0; index < s.BasedOn.Count; index++)
+				{
+					var basedOn = s.BasedOn[index];
+
+					if (basedOn.IsDeferred == false || basedOn.IsAbsoluteKey == false)
+						continue;
+
+					if (skinResourceValueProvider.TryGetValue(basedOn.DeferredKey, out var resolved) == false)
+					{
+						result = false;
+
+						continue;
+					}
+
+					if (resolved is SkinDictionary resolvedSkin)
+						s.BasedOn[index] = resolvedSkin;
+					else
+						result = false;
+				}
+			});
+
+			return result;
+		}
+
+		internal IEnumerable<string> EnumerateDependencies()
+		{
+			return TreeEnumerator
+				.GetEnumerable(this, SkinDictionaryTreeAdvisor)
+				.SelectMany(s => s.BasedOn)
+				.Where(s => s.IsDeferred && s.IsAbsoluteKey)
+				.Select(s => s.DeferredKey);
 		}
 
 		public override string ToString()
@@ -100,6 +134,23 @@ namespace Zaaml.PresentationCore.Theming
 				return $"Deferred: {DeferredKey}";
 
 			return ActualKey ?? "$";
+		}
+
+		private sealed class SkinImpl : SkinBase
+		{
+			private readonly SkinDictionary _skinDictionary;
+
+			public SkinImpl(SkinDictionary skinDictionary)
+			{
+				_skinDictionary = skinDictionary;
+			}
+
+			internal override IEnumerable<KeyValuePair<string, object>> Resources => _skinDictionary.ShallowResources;
+
+			protected override object GetValue(string key)
+			{
+				return _skinDictionary.GetValueOrDefault(key);
+			}
 		}
 
 #if INTERACTIVITY_DEBUG
@@ -113,10 +164,5 @@ namespace Zaaml.PresentationCore.Theming
 			//System.Diagnostics.Debug.WriteLine("Debug");
 		}
 #endif
-	}
-
-	public enum BasedOnFlags
-	{
-		Inherit
 	}
 }

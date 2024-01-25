@@ -10,45 +10,30 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class DockItemPreviewElement : Control
-  {
-    #region Static Fields and Constants
+	public sealed class DockItemPreviewElement : Control
+	{
+		public static readonly DependencyProperty GeometryProperty = DPM.Register<Geometry, DockItemPreviewElement>
+			("Geometry", e => e.OnGeometryChanged);
 
-    public static readonly DependencyProperty GeometryProperty = DPM.Register<Geometry, DockItemPreviewElement>
-      ("Geometry", e => e.OnGeometryChanged);
+		static DockItemPreviewElement()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<DockItemPreviewElement>();
+		}
 
-    #endregion
+		public DockItemPreviewElement()
+		{
+			this.OverrideStyleKey<DockItemPreviewElement>();
+		}
 
-    #region Ctors
+		public Geometry Geometry
+		{
+			get => (Geometry) GetValue(GeometryProperty);
+			set => SetValue(GeometryProperty, value);
+		}
 
-    static DockItemPreviewElement()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<DockItemPreviewElement>();
-    }
-
-    public DockItemPreviewElement()
-    {
-      this.OverrideStyleKey<DockItemPreviewElement>();
-    }
-
-    #endregion
-
-    #region Properties
-
-    public Geometry Geometry
-    {
-      get => (Geometry) GetValue(GeometryProperty);
-      set => SetValue(GeometryProperty, value);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private void OnGeometryChanged(Geometry oldGeometry, Geometry newGeometry)
-    {
-    }
-
-    #endregion
-  }
+		private void OnGeometryChanged(Geometry oldGeometry, Geometry newGeometry)
+		{
+			InvalidateVisual();
+		}
+	}
 }

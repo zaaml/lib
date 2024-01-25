@@ -6,11 +6,16 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Zaaml.Core.Reflection;
 
 // ReSharper disable ForCanBeConvertedToForeach
 
 namespace Zaaml.Text
 {
+	public sealed class SyntaxNodeConstructorAttribute : Attribute
+	{
+	}
+
 	internal partial class Parser<TGrammar, TToken>
 	{
 		private partial class ParserAutomata
@@ -26,7 +31,9 @@ namespace Zaaml.Text
 					if (nodeType == null)
 						throw new ArgumentNullException(nameof(nodeType));
 
-					ConstructorInfo = nodeType.GetConstructors().SingleOrDefault();
+					var constructorInfos = nodeType.GetConstructors();
+
+					ConstructorInfo = constructorInfos.Length == 1 ? constructorInfos[0] : constructorInfos.FirstOrDefault(ci => ci.HasAttribute<SyntaxNodeConstructorAttribute>(false));
 
 					if (ConstructorInfo == null)
 						throw new InvalidOperationException();
@@ -52,9 +59,15 @@ namespace Zaaml.Text
 						var productionArguments = ParserProduction.GetArguments(parameterInfo.Name);
 
 						if (productionArguments.Length == 0)
-							throw new InvalidOperationException($"GrammarProduction '{ParserProduction.GrammarParserProduction}' node type '{nodeType.Name}' ctor has argument '{parameterInfo.Name}' without corresponding production symbol.");
-
-						argumentBinders[index] = CreateArgumentBinder(parameterInfo.ParameterType, productionArguments);
+						{
+							//throw new InvalidOperationException($"GrammarProduction '{ParserProduction.GrammarParserProduction}' node type '{nodeType.Name}' ctor has argument '{parameterInfo.Name}' without corresponding production symbol.");
+							argumentBinders[index] = new DefaultArgumentBinder(parameterInfo.ParameterType);
+						}
+						else
+						{
+							argumentBinders[index] = CreateArgumentBinder(parameterInfo.ParameterType, productionArguments);
+						}
+						
 					}
 
 					return argumentBinders;

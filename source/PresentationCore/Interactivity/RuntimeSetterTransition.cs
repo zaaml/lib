@@ -10,7 +10,6 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Zaaml.Core.Pools;
 using Zaaml.PresentationCore.Animation;
-using Zaaml.PresentationCore.Animation.Animators;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -28,20 +27,20 @@ namespace Zaaml.PresentationCore.Interactivity
 		public static readonly DependencyProperty ProgressProperty = DPM.Register<double, RuntimeSetterTransition>
 			("Progress", e => e.OnProgressChanged);
 
-		private static readonly Dictionary<Type, RuntimeTransitionPool> TransitionPools = new Dictionary<Type, RuntimeTransitionPool>();
+		private static readonly Dictionary<Type, RuntimeSetterTransitionPool> TransitionPools = new();
 
-		private readonly IAnimator _animator;
-		private readonly RuntimeTransitionPool _pool;
+		private readonly IAnimationValue _animationValue;
+		private readonly RuntimeSetterTransitionPool _pool;
 		private readonly Action _releaseAction;
 		private readonly Storyboard _storyboard;
 		private object _fromValue;
 		private RuntimeSetter _setter;
 		private object _toValue;
 
-		private RuntimeSetterTransition(IAnimator animator, RuntimeTransitionPool pool)
+		private RuntimeSetterTransition(IAnimationValue animationValue, RuntimeSetterTransitionPool pool)
 		{
 			_releaseAction = Release;
-			_animator = animator;
+			_animationValue = animationValue;
 			_pool = pool;
 
 			var doubleAnimation = new DoubleAnimation
@@ -55,16 +54,23 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			_storyboard = new Storyboard
 			{
-				Children = {doubleAnimation}
+				Children = { doubleAnimation }
 			};
 
 			_storyboard.Begin();
 			_storyboard.Stop();
 
-			_storyboard.Completed += (sender, args) => OnCompleted(true);
+			void OnStoryboardCompleted(object sender, EventArgs args)
+			{
+				_storyboard.Completed -= OnStoryboardCompleted;
+
+				OnCompleted(true);
+			}
+
+			_storyboard.Completed += OnStoryboardCompleted;
 		}
 
-		public object CurrentValue => _animator.Current;
+		public object CurrentValue => _animationValue.Current;
 
 		public bool IsAnimating => _storyboard.GetCurrentState() != ClockState.Stopped && _setter != null;
 
@@ -128,7 +134,7 @@ namespace Zaaml.PresentationCore.Interactivity
 				return;
 
 			if (timeLineFinished)
-				_animator.RelativeTime = 1.0;
+				_animationValue.RelativeTime = 1.0;
 
 			var setter = _setter;
 
@@ -139,11 +145,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			setter.OnTransitionCompleted();
 
-#if SILVERLIGHT
-      setter.EffectiveValue.Target.Dispatcher.BeginInvoke(_releaseAction);
-#else
 			setter.EffectiveValue.Target.Dispatcher.BeginInvoke(_releaseAction, DispatcherPriority.Background);
-#endif
 		}
 
 		private void OnProgressChanged(double oldValue, double newValue)
@@ -151,9 +153,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (IsAnimating == false)
 				return;
 
-			_animator.RelativeTime = newValue;
+			_animationValue.RelativeTime = newValue;
 
-			if (_setter.SetAnimatedValue(_animator.Current) == false)
+			if (_setter.SetAnimatedValue(_animationValue.Current) == false)
 				StopImpl();
 		}
 
@@ -189,12 +191,12 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			if (pool == null)
 			{
-				var animatorFactory = AnimatorFactoryProvider.GetAnimatorFactory(type);
+				var interpolator = Interpolator.GetInterpolator(type);
 
-				if (animatorFactory == null)
+				if (interpolator == null)
 					return null;
 
-				TransitionPools[type] = pool = new RuntimeTransitionPool(animatorFactory);
+				TransitionPools[type] = pool = new RuntimeSetterTransitionPool(interpolator);
 			}
 
 			var runtimeTransition = pool.GeTransition();
@@ -209,12 +211,12 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			var transition = setter.Transition;
 
-			_animator.Start = GetActualValue(setter, from, ref _fromValue);
-			_animator.End = GetActualValue(setter, to, ref _toValue);
-			_animator.EasingFunction = transition.EasingFunction;
-			_animator.RelativeTime = 0;
+			_animationValue.Start = GetActualValue(setter, from, ref _fromValue);
+			_animationValue.End = GetActualValue(setter, to, ref _toValue);
+			_animationValue.EasingFunction = transition.EasingFunction;
+			_animationValue.RelativeTime = 0;
 
-			var doubleAnimation = (DoubleAnimation) _storyboard.Children[0];
+			var doubleAnimation = (DoubleAnimation)_storyboard.Children[0];
 
 			doubleAnimation.BeginTime = transition.BeginTime;
 			doubleAnimation.Duration = transition.Duration;
@@ -236,13 +238,13 @@ namespace Zaaml.PresentationCore.Interactivity
 			_storyboard.Stop();
 		}
 
-		private class RuntimeTransitionPool
+		private sealed class RuntimeSetterTransitionPool
 		{
 			private readonly LightObjectPool<RuntimeSetterTransition> _transitionsPool;
 
-			public RuntimeTransitionPool(Func<IAnimator> animatorFactory)
+			public RuntimeSetterTransitionPool(IInterpolator interpolator)
 			{
-				_transitionsPool = new LightObjectPool<RuntimeSetterTransition>(() => new RuntimeSetterTransition(animatorFactory(), this));
+				_transitionsPool = new LightObjectPool<RuntimeSetterTransition>(() => new RuntimeSetterTransition(interpolator.CreateAnimationValue(), this));
 			}
 
 			public RuntimeSetterTransition GeTransition()

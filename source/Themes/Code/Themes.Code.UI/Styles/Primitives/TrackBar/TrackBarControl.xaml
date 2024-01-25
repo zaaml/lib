@@ -1,0 +1,33 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="Template"
+                   TargetType="zm:TrackBarControl">
+    <zm:ControlTemplateRoot>
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{TemplateBinding CornerRadius}">
+        <zm:TrackBarPanel x:Name="TrackBarPanel" />
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="TrackBarControlStyle" TargetType="zm:TrackBarControl">
+    <zm:Setter Property="Template" Value="{StaticResource Template}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="TrackBarControlSkinnedStyle" BasedOn="{StaticResource TrackBarControlStyle}" Skin="Code.TrackBar" TargetType="zm:TrackBarControl"/>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="TrackBarControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TrackBarControlSkinnedStyle}" TargetType="zm:TrackBarControl" />
+
+</zm:ThemeResourceDictionary>

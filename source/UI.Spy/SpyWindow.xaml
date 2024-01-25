@@ -8,6 +8,7 @@
               Title="Zaaml UI Spy"
               Width="1000"
               Height="800"
+              UseLayoutRounding="True"
               mc:Ignorable="d">
 
   <zm:AppWindow.Resources />
@@ -16,7 +17,7 @@
 
     <zm:StackPanel Orientation="Horizontal">
 
-      <zm:ToolBarToggleButton zm:Extension.Skin="Metro.Spy.WindowDisplayModeToggleButton"
+      <zm:ToolBarToggleButton zm:Extension.Skin="Spy.WindowDisplayModeToggleButton"
                               Content="Zoom"
                               FontWeight="Bold"
                               IsChecked="{Binding ElementName=SpyControl, Path=DisplayMode, Converter={zm:EnumBoolConverter TrueEnumValue=ZoomView, FalseEnumValue=PropertyView}, Mode=TwoWay}" />
@@ -26,7 +27,7 @@
               BorderBrush="DarkGray"
               BorderThickness="2,0,0,0" />
 
-      <zm:ToolBarToggleButton zm:Extension.Skin="Metro.Spy.WindowDisplayModeToggleButton"
+      <zm:ToolBarToggleButton zm:Extension.Skin="Spy.WindowDisplayModeToggleButton"
                               Content="Property"
                               FontWeight="Bold"
                               IsChecked="{Binding ElementName=SpyControl, Path=DisplayMode, Converter={zm:EnumBoolConverter TrueEnumValue=PropertyView, FalseEnumValue=ZoomView}, Mode=TwoWay}" />

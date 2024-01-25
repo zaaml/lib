@@ -45,9 +45,7 @@ namespace Zaaml.Text
 
 					private Parser<TExternalGrammar, TExternalToken>.ParserAutomata.ProcessAutomataContext ExternalAutomataContext { get; set; }
 
-					private ParserContext ExternalContext { get; set; }
-
-					public ExternalParserInvokeInfo<TExternalGrammar, TExternalToken> ExternalParserInvokeInfo { get; private set; }
+					public ExternalParserDelegate<TExternalGrammar, TExternalToken> ExternalParserDelegate { get; private set; }
 
 					private Automata<Lexeme<TExternalToken>, TExternalToken>.AutomataResult ExternalResult { get; set; }
 
@@ -67,22 +65,20 @@ namespace Zaaml.Text
 					public override void Dispose()
 					{
 						LexemeSource = LexemeSource.DisposeExchange();
-						ExternalContext = ExternalContext.DisposeExchange();
 						ExternalAutomataContext = ExternalAutomataContext.DisposeExchange();
 						ExternalResult = ExternalResult.DisposeExchange();
 
-						_resources.ExternalParserContextPool.Release(this);
+						_resources.ExternalParserContextPool.Return(this);
 					}
 
-					public ExternalParserContext<TExternalGrammar, TExternalToken> Mount(ParserAutomataContext parserAutomataContext, ExternalParserInvokeInfo<TExternalGrammar, TExternalToken> externalParserInvokeInfo,
+					public ExternalParserContext<TExternalGrammar, TExternalToken> Mount(ParserAutomataContext parserAutomataContext, ExternalParserDelegate<TExternalGrammar, TExternalToken> externalParserDelegate,
 						LexemeSource<TExternalToken> lexemeSource, int offset,
-						ParserContext externalContext, Parser<TExternalGrammar, TExternalToken>.ParserAutomata.ProcessAutomataContext externalAutomataContext, Automata<Lexeme<TExternalToken>, TExternalToken>.AutomataResult externalResult)
+						Parser<TExternalGrammar, TExternalToken>.ParserAutomata.ProcessAutomataContext externalAutomataContext, Automata<Lexeme<TExternalToken>, TExternalToken>.AutomataResult externalResult)
 					{
 						Offset = offset;
 						LexemeSource = lexemeSource;
 						ExternalResult = externalResult;
-						ExternalContext = externalContext;
-						ExternalParserInvokeInfo = externalParserInvokeInfo;
+						ExternalParserDelegate = externalParserDelegate;
 						InternalAutomataContext = parserAutomataContext;
 						ExternalAutomataContext = externalAutomataContext;
 
@@ -109,9 +105,7 @@ namespace Zaaml.Text
 
 					public Parser<TExternalGrammar, TExternalToken>.ParserAutomata.SyntaxTreeAutomataContext ExternalAutomataContext { get; private set; }
 
-					private ParserContext ExternalContext { get; set; }
-
-					public ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode> ExternalParserInvokeInfo { get; private set; }
+					public ExternalParserDelegate<TExternalGrammar, TExternalToken, TExternalNode> ExternalParserDelegate { get; private set; }
 
 					private Automata<Lexeme<TExternalToken>, TExternalToken>.AutomataResult ExternalResult { get; set; }
 
@@ -131,23 +125,20 @@ namespace Zaaml.Text
 					public override void Dispose()
 					{
 						LexemeSource = LexemeSource.DisposeExchange();
-						ExternalContext = ExternalContext.DisposeExchange();
 						ExternalAutomataContext = ExternalAutomataContext.DisposeExchange();
 						ExternalResult = ExternalResult.DisposeExchange();
-						_resources.ExternalParserContextPool.Release(this);
+						_resources.ExternalParserContextPool.Return(this);
 					}
 
 					public ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode> Mount(ParserAutomataContext parserAutomataContext,
-						ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode> externalParserInvokeInfo,
+						ExternalParserDelegate<TExternalGrammar, TExternalToken, TExternalNode> externalParserDelegate,
 						LexemeSource<TExternalToken> lexemeSource, int offset,
-						ParserContext externalContext,
 						Parser<TExternalGrammar, TExternalToken>.ParserAutomata.SyntaxTreeAutomataContext externalAutomataContext, Automata<Lexeme<TExternalToken>, TExternalToken>.AutomataResult externalResult)
 					{
 						Offset = offset;
 						LexemeSource = lexemeSource;
 						ExternalResult = externalResult;
-						ExternalContext = externalContext;
-						ExternalParserInvokeInfo = externalParserInvokeInfo;
+						ExternalParserDelegate = externalParserDelegate;
 						InternalAutomataContext = parserAutomataContext;
 						ExternalAutomataContext = externalAutomataContext;
 

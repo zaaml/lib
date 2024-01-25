@@ -96,7 +96,7 @@ namespace Zaaml.UI.Controls.Core
 			set => SetValue(SelectedValueSourceProperty, value);
 		}
 
-		public Selection<TItem> Selection => new Selection<TItem>(SelectedIndexInternal, SelectedItem, SelectedSource, SelectedValue);
+		public Selection<TItem> Selection => new(SelectedIndexInternal, SelectedItem, SelectedSource, SelectedValue);
 
 		internal bool SelectItemOnFocus { get; set; } = true;
 
@@ -211,8 +211,14 @@ namespace Zaaml.UI.Controls.Core
 
 			var layoutInformation = ItemCollection.GetItemLayoutInformation(item);
 
-			if (layoutInformation.IsEmpty == false && layoutInformation.Visibility == ItemLayoutInformationVisibility.Visible)
-				return;
+			if (layoutInformation.IsEmpty == false)
+			{
+				if (layoutInformation.Visibility.IsInvisible() == false)
+					return;
+
+				if (HasLogicalOrientation && layoutInformation.GetVisibility(LogicalOrientation).IsInvisible() == false)
+					return;
+			}
 
 			ItemCollection.EnqueueBringIntoViewInternal(new BringIntoViewRequest<TItem>(item, DefaultBringIntoViewMode, 0));
 		}

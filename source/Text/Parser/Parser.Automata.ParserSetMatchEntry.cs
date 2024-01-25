@@ -15,42 +15,42 @@ namespace Zaaml.Text
 				public ParserSetMatchEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol grammarEntry)
 					: base(CreateMatches(grammarEntry.Token))
 				{
-					GrammarEntry = grammarEntry;
+					GrammarSymbol = grammarEntry;
 				}
 
 
 				public ParserSetMatchEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol grammarEntry)
 					: base(CreateMatches(grammarEntry.Tokens))
 				{
-					GrammarEntry = grammarEntry;
+					GrammarSymbol = grammarEntry;
 				}
 
 				private static IEnumerable<PrimitiveMatchEntry> CreateMatches(Grammar<TGrammar, TToken>.LexerGrammar.TokenSyntax tokenSyntax)
 				{
 					foreach (var tokenGroup in tokenSyntax.TokenGroups)
-						yield return new SingleMatchEntry(tokenGroup.Token);
+						yield return new OperandMatchEntry(tokenGroup.Token);
 				}
 
 				private static IEnumerable<PrimitiveMatchEntry> CreateMatches(Grammar<TGrammar, TToken>.LexerGrammar.TokenSyntax[] tokenSyntaxCollection)
 				{
 					foreach (var tokenSyntax in tokenSyntaxCollection)
 					foreach (var tokenGroup in tokenSyntax.TokenGroups)
-						yield return new SingleMatchEntry(tokenGroup.Token);
+						yield return new OperandMatchEntry(tokenGroup.Token);
 				}
 
-				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarEntry { get; }
+				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
 				public ProductionArgument ProductionArgument { get; set; }
 				
 				public Entry Clone()
 				{
-					if (GrammarEntry is Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol symbol)
+					if (GrammarSymbol is Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol symbol)
 						return new ParserSetMatchEntry(symbol)
 						{
 							Source = this
 						};
 
-					return new ParserSetMatchEntry((Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol)GrammarEntry)
+					return new ParserSetMatchEntry((Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol)GrammarSymbol)
 					{
 						Source = this
 					};

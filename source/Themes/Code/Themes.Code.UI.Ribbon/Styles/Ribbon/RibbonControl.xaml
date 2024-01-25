@@ -1,0 +1,81 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="RibbonControlTemplate"
+                   TargetType="zm:RibbonControl">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  HeaderPresenter  -->
+        <zm:RibbonHeaderPresenter x:Name="HeaderPresenter"
+                                  Grid.Row="0"
+                                  Background="#FFE6E6E6"
+                                  Canvas.ZIndex="1"
+                                  QuickAccessToolBar="{TemplateBinding QuickAccessToolBar}">
+
+          <!--  Categories Presenter  -->
+          <zm:RibbonHeaderPresenter.PageCategoriesPresenter>
+            <zm:RibbonPageCategoriesPresenter x:Name="ItemsPresenter" />
+          </zm:RibbonHeaderPresenter.PageCategoriesPresenter>
+
+          <!--  ApplicationMenuButton  -->
+          <zm:RibbonHeaderPresenter.Menu>
+            <zm:ToggleButton x:Name="ApplicationMenuButton"
+                             Padding="15,2"
+                             zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=AppButton}"
+                             BorderThickness="0"
+                             Content="Menu"
+                             IsChecked="{zm:TemplateBinding Path=IsApplicationMenuOpen, Mode=TwoWay}" />
+          </zm:RibbonHeaderPresenter.Menu>
+
+          <!--  PagesPresenter  -->
+          <zm:RibbonHeaderPresenter.PagesPresenter>
+            <zm:RibbonPagesPresenter x:Name="PagesPresenter"
+                                     Grid.Column="1"
+                                     Margin="0" />
+          </zm:RibbonHeaderPresenter.PagesPresenter>
+
+        </zm:RibbonHeaderPresenter>
+
+        <!--  GroupsPresenterHost  -->
+        <Border Grid.Row="1"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="0,1,0,1">
+          <zm:RibbonGroupsPresenterHost x:Name="GroupsPresenterHost" />
+
+        </Border>
+      </Grid>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="RibbonControlBaseStyle" TargetType="zm:RibbonControl">
+    <zm:Setter Property="UseLayoutRounding" Value="True" />
+    <zm:Setter Property="Template" Value="{StaticResource RibbonControlTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="RibbonControlStyle" BasedOn="{StaticResource RibbonControlBaseStyle}" Skin="Code.Ribbon.RibbonControl" TargetType="zm:RibbonControl">
+
+    <!--  SkinSetters  -->
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="QuickAccessToolBarControl" Property="zm:RibbonControlStyling.QuickAccessToolBarSkin" />
+      <zm:Setter ValuePath="Background" Property="Background" />
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="RibbonControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource RibbonControlStyle}" TargetType="zm:RibbonControl" />
+
+</zm:ThemeResourceDictionary>

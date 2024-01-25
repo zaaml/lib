@@ -73,9 +73,10 @@ namespace Zaaml.PresentationCore.Interactivity
 
       interactivityTarget.SetBinding(TemplatedParentProperty, TemplatedParentBinding);
 
-      if (RealObserver != null) return;
+      if (RealVisualStateObserver != null) 
+	      return;
 
-      RealObserver = XamlElementRoot?.GetInteractivityService();
+      RealVisualStateObserver = XamlElementRoot?.GetInteractivityService();
     }
 
     protected override void EnsureVisualStateObserver()
@@ -136,7 +137,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
     private void UpdateVisualStateObserver()
     {
-      RealObserver = TemplatedParent?.GetInteractivityService();
+      RealVisualStateObserver = TemplatedParent?.GetInteractivityService();
     }
 
     #endregion

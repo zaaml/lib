@@ -118,7 +118,7 @@ namespace Zaaml.UI.Controls.Menu
 
 			Close();
 
-			PopupService.ClosePopupAncestors(menuItem);
+			PopupService.ClosePopupAncestors(menuItem, Menu.PopupController.Popup);
 		}
 
 		private static HierarchicalMenuItem EnsureHierarchical(MenuItemBase menuItem)

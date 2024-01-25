@@ -10,10 +10,10 @@ namespace Zaaml.Text
 		{
 			private interface IParserEntry
 			{
-				Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarEntry { get; }
+				Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
 				ProductionArgument ProductionArgument { get; set; }
-				
+
 				IParserEntry Source { get; }
 
 				Entry Clone();

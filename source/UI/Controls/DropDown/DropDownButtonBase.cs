@@ -4,7 +4,7 @@
 
 using System.Windows;
 using System.Windows.Input;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.UI.Controls.Primitives;
 
 namespace Zaaml.UI.Controls.DropDown
@@ -14,7 +14,7 @@ namespace Zaaml.UI.Controls.DropDown
 		static DropDownButtonBase()
 		{
 #if !SILVERLIGHT
-			KeyboardNavigation.AcceptsReturnProperty.OverrideMetadata(typeof(DropDownButtonBase), new FrameworkPropertyMetadata(KnownBoxes.BoolTrue));
+			KeyboardNavigation.AcceptsReturnProperty.OverrideMetadata(typeof(DropDownButtonBase), new FrameworkPropertyMetadata(BooleanBoxes.True));
 #endif
 		}
 

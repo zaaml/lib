@@ -13,6 +13,10 @@ namespace Zaaml.Text
 		{
 			private abstract class ProductionArgument
 			{
+				protected ProductionArgument()
+				{
+				}
+
 				protected ProductionArgument(string name, Entry parserEntry, int argumentIndex, Type argumentType, ParserProduction parserProduction)
 				{
 					Name = name;
@@ -21,10 +25,10 @@ namespace Zaaml.Text
 					ArgumentIndex = argumentIndex;
 					ParserProduction = parserProduction;
 
-					if (((IParserEntry)parserEntry).ProductionArgument != null)
-					{
+					//if (((IParserEntry)parserEntry).ProductionArgument != null)
+					//{
 
-					}
+					//}
 
 					((IParserEntry)parserEntry).ProductionArgument = this;
 				}
@@ -38,10 +42,10 @@ namespace Zaaml.Text
 					ParserProduction = parserProduction;
 					OriginalArgument = originalArgument;
 
-					if (((IParserEntry)parserEntry).ProductionArgument != null)
-					{
+					//if (((IParserEntry)parserEntry).ProductionArgument != null)
+					//{
 
-					}
+					//}
 
 					((IParserEntry)parserEntry).ProductionArgument = this;
 
@@ -100,6 +104,12 @@ namespace Zaaml.Text
 
 			private sealed class NullArgument : ProductionArgument
 			{
+				public static readonly NullArgument Instance = new();
+
+				private NullArgument()
+				{
+				}
+
 				public NullArgument(string name, Entry parserEntry, int argumentIndex, ParserProduction parserProduction) : base(name, parserEntry, argumentIndex, null, parserProduction)
 				{
 					Bind(NullArgumentBinder.Instance);
@@ -124,7 +134,7 @@ namespace Zaaml.Text
 
 				public override ProductionArgument MapArgument(int index, Entry parserEntry, ParserProduction parserProduction)
 				{
-					return new NullArgument(Name, ParserEntry, index, parserProduction);
+					return new NullArgument(Name, parserEntry, index, parserProduction);
 				}
 
 				private sealed class NullEntityArgument : ProductionEntityArgument
@@ -312,14 +322,20 @@ namespace Zaaml.Text
 						if (targetType == typeof(string[]))
 						{
 							il.Emit(processLdArg);
-							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeStringConverterFieldInfo);
+							il.Emit(OpCodes.Ldfld, ParserProcess.LexemeStringConverterFieldInfo);
 							il.Emit(OpCodes.Call, Argument<Lexeme<TToken>>.CopyToArrayConvertMethodInfo.MakeGenericMethod(typeof(string)));
 						}
 						else if (targetType == typeof(TToken[]))
 						{
 							il.Emit(processLdArg);
-							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeTokenConverterFieldInfo);
+							il.Emit(OpCodes.Ldfld, ParserProcess.LexemeTokenConverterFieldInfo);
 							il.Emit(OpCodes.Call, Argument<Lexeme<TToken>>.CopyToArrayConvertMethodInfo.MakeGenericMethod(typeof(TToken)));
+						}
+						else if (targetType == typeof(SyntaxToken<TToken>[]))
+						{
+							il.Emit(processLdArg);
+							il.Emit(OpCodes.Ldfld, ParserProcess.SyntaxTokenConverterFieldInfo);
+							il.Emit(OpCodes.Call, Argument<Lexeme<TToken>>.CopyToArrayConvertMethodInfo.MakeGenericMethod(typeof(SyntaxToken<TToken>)));
 						}
 						else
 							throw new InvalidOperationException("Invalid target type.");
@@ -338,15 +354,31 @@ namespace Zaaml.Text
 							il.Emit(OpCodes.Ldloc, argumentLocal);
 							il.Emit(OpCodes.Ldflda, Argument<Lexeme<TToken>>.ValueFieldInfo);
 
-							il.Emit(OpCodes.Call, ParserProcess.ParserILGenerator.GetLexemeTextMethodInfo);
+							il.Emit(OpCodes.Call, ParserProcess.GetLexemeTextMethodInfo);
 						}
 						else if (targetType == typeof(TToken))
 						{
 							il.Emit(OpCodes.Ldloc, argumentLocal);
 
 							il.Emit(processLdArg);
-							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeTokenConverterFieldInfo);
+							il.Emit(OpCodes.Ldfld, ParserProcess.LexemeTokenConverterFieldInfo);
 							il.Emit(OpCodes.Call, Argument<Lexeme<TToken>>.ConvertValueMethodInfo.MakeGenericMethod(typeof(TToken)));
+						}
+						else if (targetType == typeof(SyntaxToken<TToken>))
+						{
+							il.Emit(OpCodes.Ldloc, argumentLocal);
+
+							il.Emit(processLdArg);
+							il.Emit(OpCodes.Ldfld, ParserProcess.SyntaxTokenConverterFieldInfo);
+							il.Emit(OpCodes.Call, Argument<Lexeme<TToken>>.ConvertValueMethodInfo.MakeGenericMethod(typeof(SyntaxToken<TToken>)));
+						}
+						else if (targetType == typeof(SyntaxToken<TToken>?))
+						{
+							il.Emit(OpCodes.Ldloc, argumentLocal);
+
+							il.Emit(processLdArg);
+							il.Emit(OpCodes.Ldfld, ParserProcess.NullableSyntaxTokenConverterFieldInfo);
+							il.Emit(OpCodes.Call, Argument<Lexeme<TToken>>.ConvertValueMethodInfo.MakeGenericMethod(typeof(SyntaxToken<TToken>?)));
 						}
 						else
 							throw new InvalidOperationException("Invalid target type.");
@@ -409,14 +441,20 @@ namespace Zaaml.Text
 						if (targetType == typeof(string[]))
 						{
 							il.Emit(processLdArg);
-							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeStringConverterFieldInfo);
+							il.Emit(OpCodes.Ldfld, ParserProcess.LexemeStringConverterFieldInfo);
 							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.CopyToArrayConvertMethodInfo.MakeGenericMethod(typeof(string)));
 						}
 						else if (targetType == typeof(TToken[]))
 						{
 							il.Emit(processLdArg);
-							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeTokenConverterFieldInfo);
+							il.Emit(OpCodes.Ldfld, ParserProcess.LexemeTokenConverterFieldInfo);
 							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.CopyToArrayConvertMethodInfo.MakeGenericMethod(typeof(TToken)));
+						}						
+						else if (targetType == typeof(SyntaxToken<TToken>[]))
+						{
+							il.Emit(processLdArg);
+							il.Emit(OpCodes.Ldfld, ParserProcess.SyntaxTokenConverterFieldInfo);
+							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.CopyToArrayConvertMethodInfo.MakeGenericMethod(typeof(SyntaxToken<TToken>)));
 						}
 						else
 							throw new InvalidOperationException("Invalid target type.");
@@ -434,14 +472,20 @@ namespace Zaaml.Text
 						if (targetType == typeof(string[]))
 						{
 							il.Emit(processLdArg);
-							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeStringConverterFieldInfo);
+							il.Emit(OpCodes.Ldfld, ParserProcess.LexemeStringConverterFieldInfo);
 							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.ToArrayConvertMethodInfo.MakeGenericMethod(typeof(string)));
 						}
 						else if (targetType == typeof(TToken[]))
 						{
 							il.Emit(processLdArg);
-							il.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.LexemeTokenConverterFieldInfo);
+							il.Emit(OpCodes.Ldfld, ParserProcess.LexemeTokenConverterFieldInfo);
 							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.ToArrayConvertMethodInfo.MakeGenericMethod(typeof(TToken)));
+						}						
+						else if (targetType == typeof(SyntaxToken<TToken>[]))
+						{
+							il.Emit(processLdArg);
+							il.Emit(OpCodes.Ldfld, ParserProcess.SyntaxTokenConverterFieldInfo);
+							il.Emit(OpCodes.Call, ArrayArgument<Lexeme<TToken>>.ToArrayConvertMethodInfo.MakeGenericMethod(typeof(SyntaxToken<TToken>)));
 						}
 						else
 							throw new InvalidOperationException("Invalid target type.");

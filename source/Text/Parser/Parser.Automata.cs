@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Zaaml.Core.Converters;
 
 namespace Zaaml.Text
@@ -15,12 +16,14 @@ namespace Zaaml.Text
 		private sealed partial class ParserAutomata : Automata<Lexeme<TToken>, TToken>
 		{
 			private readonly Dictionary<Grammar<TGrammar, TToken>.ParserGrammar.Syntax, int> _precedenceDictionary = new();
-
 			private int _generateProductionNameCount;
 
 			public ParserAutomata(AutomataManager manager) : base(manager)
 			{
 				var grammar = Grammar.Get<TGrammar, TToken>();
+
+				grammar.ParserGrammarInstance.Seal();
+
 				var undefinedTokenName = Enum.GetName(typeof(TToken), grammar.UndefinedToken);
 
 				foreach (TToken token in Enum.GetValues(typeof(TToken)))
@@ -40,47 +43,173 @@ namespace Zaaml.Text
 				}
 
 				foreach (var parserSyntax in grammar.ParserSyntaxFragmentCollection)
-					RegisterParserRule(parserSyntax);
+					RegisterParserSyntax(parserSyntax);
 
 				foreach (var parserSyntax in grammar.NodeCollection)
-					RegisterParserRule(parserSyntax);
+					RegisterParserSyntax(parserSyntax);
 
-				foreach (var parserRule in ParserRuleDictionary.Values)
+				foreach (var parserSyntax in ParserSyntaxDictionary.Values)
 				{
-					EliminateLeftRecursion(parserRule);
-					EliminateLeftFactoring(parserRule);
+					EliminateLeftRecursion(parserSyntax);
+					EliminateLeftFactoring(parserSyntax);
 				}
 
 				foreach (var parserProduction in Productions)
 					parserProduction.EnsureBinder();
 
+				ProductionsArray = Productions.ToArray();
+
 				Build();
 			}
-			
+
 			protected override bool AllowParallelInstructionReader => false; //_parser.AllowParallel;
 
 			protected override bool LookAheadEnabled => true;
 
-			private Dictionary<Grammar<TGrammar, TToken>.ParserGrammar.Syntax, ParserRule> ParserRuleDictionary { get; } = new();
+			private Dictionary<Grammar<TGrammar, TToken>.ParserGrammar.Syntax, ParserSyntax> ParserSyntaxDictionary { get; } = new();
 
 			private List<ParserProduction> Productions { get; } = new();
 
+			private ParserProduction[] ProductionsArray { get; }
+
 			private static Action<AutomataContext> CreateActionDelegate(Parser<TToken>.ActionEntry actionEntry)
 			{
-				void ActionDelegate(AutomataContext c)
-				{
-					var parserAutomataContext = (ParserAutomataContext)c;
-					var parserAutomataContextState = (ParserAutomataContextState)parserAutomataContext.ContextStateInternal;
-
-					actionEntry.Action(parserAutomataContextState?.ParserContext);
-				}
-
-				return ActionDelegate;
+				return c => actionEntry.Action(((ParserAutomataContext)c).Parser);
 			}
 
 			private static ParserActionEntry CreateActionEntry(Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol actionSymbol)
 			{
 				return new ParserActionEntry(actionSymbol);
+			}
+
+			private static IEnumerable<Entry> CreateCompositeTokenEntries(Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol tokenSymbol)
+			{
+				var grammarSyntax = tokenSymbol.Token;
+
+				if (grammarSyntax.Productions.Count > 1)
+					throw new InvalidOperationException("Composite tokens can not have multiple productions.");
+
+				var production = grammarSyntax.Productions.Single();
+
+				foreach (var lexerSymbol in production.Symbols)
+				{
+					if (lexerSymbol is not Grammar<TGrammar, TToken>.LexerGrammar.TokenSymbol simpleTokenSymbol)
+						throw new InvalidOperationException("Composite token can consist of simple token array.");
+
+					var parserSymbol = new Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol(simpleTokenSymbol.Token);
+
+					yield return new ParserOperandMatchEntry(parserSymbol)
+					{
+						ProductionArgument = NullArgument.Instance
+					};
+				}
+
+				var compositeOperandPredicate = new CompositeOperandPredicate(tokenSymbol);
+
+				yield return new PredicateEntry(compositeOperandPredicate.Predicate);
+				yield return new CompositeOperandEntry(tokenSymbol);
+			}
+
+			private Entry CreateEnterPrecedenceEntry(Grammar<TGrammar, TToken>.ParserGrammar.EnterPrecedenceSymbol enterPrecedenceSymbol)
+			{
+				var productionPrecedence = CreateProductionPrecedence(enterPrecedenceSymbol.Syntax, enterPrecedenceSymbol.Value, enterPrecedenceSymbol.Level);
+				var precedenceEntry = new EnterPrecedenceEntry(productionPrecedence);
+
+				return precedenceEntry;
+			}
+
+			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Symbol> RenameFragmentSymbols(Grammar<TGrammar, TToken>.ParserGrammar.Production production, string name)
+			{
+				foreach (var childSymbol in production.Symbols)
+				{
+					switch (childSymbol)
+					{
+						case Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol childTokenSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol(childTokenSymbol.Token)
+							{
+								ArgumentName = name
+							};
+							break;
+						case Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol childTokenSetSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol(childTokenSetSymbol.Tokens)
+							{
+								ArgumentName = name
+							};
+							break;
+						case Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol nodeSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol(nodeSymbol.Node)
+							{
+								ArgumentName = name
+							};
+							break;
+						default:
+							yield return childSymbol;
+							break;
+					}
+				}
+			}
+
+			private IEnumerable<Entry> CreateParserEntries(Grammar<TGrammar, TToken>.ParserGrammar.Symbol symbol)
+			{
+				switch (symbol)
+				{
+					case Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol fragmentSymbol:
+
+						if (fragmentSymbol.Fragment.Productions.Count == 1)
+						{
+							var production = fragmentSymbol.Fragment.Productions[0];
+
+							if (production.Symbols.Any(s => s is Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol recursiveFragmentSymbol && ReferenceEquals(recursiveFragmentSymbol.Fragment, fragmentSymbol.Fragment)))
+								yield return CreateParserEntry(symbol);
+							else
+							{
+								if (fragmentSymbol.ArgumentName != null)
+									foreach (var entry in RenameFragmentSymbols(production, fragmentSymbol.ArgumentName).SelectMany(CreateParserEntries))
+										yield return entry;
+								else
+									foreach (var entry in production.Symbols.SelectMany(CreateParserEntries))
+										yield return entry;
+							}
+						}
+						else
+							yield return CreateParserEntry(symbol);
+
+						break;
+
+					case Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol { Node.Precedences.Count: > 0 } nodeSymbol:
+
+						foreach (var entry in CreatePrecedenceNode(nodeSymbol))
+							yield return entry;
+
+						break;
+					case Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol { Token.Composite: true } tokenSymbol:
+						foreach (var entry in CreateCompositeTokenEntries(tokenSymbol))
+							yield return entry;
+
+						break;
+
+					default:
+
+						yield return CreateParserEntry(symbol);
+
+						break;
+				}
+			}
+
+			private IEnumerable<Entry> CreatePrecedenceNode(Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol nodeSymbol)
+			{
+				if (nodeSymbol.Node.Precedences.Count > 1)
+					throw new NotImplementedException();
+
+				var precedence = nodeSymbol.Node.Precedences[0];
+
+				var productionPrecedence = CreateProductionPrecedence(precedence.Syntax, precedence.Level, false);
+				var enterPrecedenceEntry = new EnterPrecedenceEntry(productionPrecedence);
+				var leavePrecedenceEntry = new LeavePrecedenceEntry(productionPrecedence);
+
+				yield return enterPrecedenceEntry;
+				yield return CreateParserEntry(nodeSymbol);
+				yield return leavePrecedenceEntry;
 			}
 
 			private Entry CreateExternalLexerEntry(Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol externalTokenSymbol)
@@ -122,129 +251,79 @@ namespace Zaaml.Text
 				where TExternalToken : unmanaged, Enum
 				where TExternalNode : class
 			{
-				return new ExternalParserInvokeInfo<TExternalGrammar, TExternalToken, TExternalNode>(externalNodeSymbol).PredicateEntry;
+				return new ExternalParserDelegate<TExternalGrammar, TExternalToken, TExternalNode>(externalNodeSymbol).PredicateEntry;
 			}
 
 			private Entry CreateExternalParserEntry<TExternalGrammar, TExternalToken>(Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol<TExternalGrammar, TExternalToken> externalNodeSymbol)
 				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> where TExternalToken : unmanaged, Enum
 			{
-				return new ExternalParserInvokeInfo<TExternalGrammar, TExternalToken>(externalNodeSymbol).PredicateEntry;
+				return new ExternalParserDelegate<TExternalGrammar, TExternalToken>(externalNodeSymbol).PredicateEntry;
 			}
 
 			private protected override Pool<InstructionStream> CreateInstructionStreamPool()
 			{
-				return new Pool<InstructionStream>(p => new LexemeStream(p));
-			}
-
-			private Entry CreateParserEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol grammarParserEntry)
-			{
-				return grammarParserEntry switch
-				{
-					Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol quantifierEntry => CreateQuantifierEntry(quantifierEntry),
-					Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol syntaxTokenEntry => CreateTokenEntry(syntaxTokenEntry),
-					Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol syntaxSetTokenEntry => CreateTokenSetEntry(syntaxSetTokenEntry),
-					Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol syntaxNodeEntry => CreateParserRuleEntry(syntaxNodeEntry),
-					Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol syntaxFragmentEntry => CreateParserRuleEntry(syntaxFragmentEntry),
-					Grammar<TGrammar, TToken>.ParserGrammar.PredicateSymbol parserPredicate => CreatePredicateEntry(parserPredicate),
-					Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol parserAction => CreateActionEntry(parserAction),
-					Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol externalParserEntry => CreateExternalParserEntry(externalParserEntry),
-					Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol externalLexerEntry => CreateExternalLexerEntry(externalLexerEntry),
-					Grammar<TGrammar, TToken>.ParserGrammar.EnterPrecedenceSymbol enterPrecedenceSymbol => CreateEnterPrecedenceEntry(enterPrecedenceSymbol),
-					Grammar<TGrammar, TToken>.ParserGrammar.LeavePrecedenceSymbol leavePrecedenceSymbol => CreateLeavePrecedenceEntry(leavePrecedenceSymbol),
-					_ => throw new ArgumentOutOfRangeException(nameof(grammarParserEntry))
-				};
+				return new Pool<InstructionStream>(p => new LexemeInstructionStream(p));
 			}
 
 			private Entry CreateLeavePrecedenceEntry(Grammar<TGrammar, TToken>.ParserGrammar.LeavePrecedenceSymbol leavePrecedenceSymbol)
 			{
-				var productionPrecedence = CreateProductionPrecedence(leavePrecedenceSymbol.Syntax, leavePrecedenceSymbol.Value, leavePrecedenceSymbol.Syntax.MaxPrecedenceValue + 1, leavePrecedenceSymbol.Level);
+				var productionPrecedence = CreateProductionPrecedence(leavePrecedenceSymbol.Syntax, leavePrecedenceSymbol.Value, leavePrecedenceSymbol.Level);
 				var precedenceEntry = new LeavePrecedenceEntry(productionPrecedence);
 
 				return precedenceEntry;
 			}
 
-			private Entry CreateEnterPrecedenceEntry(Grammar<TGrammar, TToken>.ParserGrammar.EnterPrecedenceSymbol enterPrecedenceSymbol)
+			private Entry CreateParserEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol symbol)
 			{
-				var productionPrecedence = CreateProductionPrecedence(enterPrecedenceSymbol.Syntax, enterPrecedenceSymbol.Value, enterPrecedenceSymbol.Syntax.MaxPrecedenceValue + 1, enterPrecedenceSymbol.Level);
-				var precedenceEntry = new EnterPrecedenceEntry(productionPrecedence);
-
-				return precedenceEntry;
-			}
-
-			private ParserRule CreateParserRule(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
-			{
-				var parserRule = new ParserRule(parserSyntax);
-
-				ParserRuleDictionary.Add(parserSyntax, parserRule);
-				AddRule(parserRule, GetSyntaxProductions(parserSyntax).Select(t => new ParserProduction(this, parserRule, parserSyntax, t)).ToList());
-
-				return parserRule;
-			}
-
-			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Production> GetSyntaxProductions(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
-			{
-#if true
-				return parserSyntax.InlineReturnProductions ? GetProductions(parserSyntax) : parserSyntax.Productions;
-#else
-				return parserSyntax.Productions;
-#endif
-			}
-
-			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Production> GetProductions(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
-			{
-				foreach (var production in parserSyntax.Productions)
+				return symbol switch
 				{
-					if (production.ProductionBinding is Grammar<TGrammar, TToken>.ParserGrammar.ReturnNodeBinding)
-					{
-						var nodeSymbolIndex = 0;
+					Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol quantifierEntry => CreateQuantifierEntry(quantifierEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol syntaxTokenEntry => CreateTokenEntry(syntaxTokenEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol syntaxSetTokenEntry => CreateTokenSetEntry(syntaxSetTokenEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol syntaxNodeEntry => CreateParserSyntaxEntry(syntaxNodeEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol syntaxFragmentEntry => CreateParserSyntaxEntry(syntaxFragmentEntry),
 
-						while (production.Symbols[nodeSymbolIndex] is not Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol) 
-							nodeSymbolIndex++;
+					Grammar<TGrammar, TToken>.ParserGrammar.PredicateSymbol parserPredicate => CreatePredicateEntry(parserPredicate),
+					Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol parserAction => CreateActionEntry(parserAction),
 
-						var nodeSymbol = (Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol)production.Symbols[nodeSymbolIndex];
+					Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol externalParserEntry => CreateExternalParserEntry(externalParserEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol externalLexerEntry => CreateExternalLexerEntry(externalLexerEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.EnterPrecedenceSymbol enterPrecedenceSymbol => CreateEnterPrecedenceEntry(enterPrecedenceSymbol),
+					Grammar<TGrammar, TToken>.ParserGrammar.LeavePrecedenceSymbol leavePrecedenceSymbol => CreateLeavePrecedenceEntry(leavePrecedenceSymbol),
 
-						foreach (var replaceProduction in GetSyntaxProductions(nodeSymbol.Node))
-						{
-							var symbols = new List<Grammar<TGrammar, TToken>.ParserGrammar.Symbol>();
-
-							for (var i = 0; i < production.Symbols.Count; i++)
-							{
-								if (i == nodeSymbolIndex)
-									symbols.AddRange(replaceProduction.Symbols);
-								else
-									symbols.Add(production.Symbols[i]);
-							}
-
-							var replaceProductionCopy = replaceProduction.Clone(symbols);
-
-							yield return replaceProductionCopy;
-						}
-
-					}
-					else
-						yield return production;
-				}
+					_ => throw new ArgumentOutOfRangeException(nameof(symbol))
+				};
 			}
 
-			private ParserRuleEntry CreateParserRuleEntry(Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol fragmentEntry)
+			private ParserSyntax CreateParserSyntax(Grammar<TGrammar, TToken>.ParserGrammar.Syntax grammarParserSyntax)
 			{
-				var originalFragment = fragmentEntry.Fragment;
+				var parserSyntax = new ParserSyntax(grammarParserSyntax);
+
+				ParserSyntaxDictionary.Add(grammarParserSyntax, parserSyntax);
+				AddSyntax(parserSyntax, GetSyntaxProductions(grammarParserSyntax).Select(t => new ParserProduction(this, parserSyntax, grammarParserSyntax, t)).ToList());
+
+				return parserSyntax;
+			}
+
+			private ParserSyntaxEntry CreateParserSyntaxEntry(Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol fragmentSymbol)
+			{
+				var originalFragment = fragmentSymbol.Fragment;
 				var fragment = new Grammar<TGrammar, TToken>.ParserGrammar.FragmentSyntax(originalFragment.Name, true);
 
-				foreach (var parserSyntaxProduction in originalFragment.Productions)
-					fragment.AddProduction(new Grammar<TGrammar, TToken>.ParserGrammar.Production(parserSyntaxProduction.Symbols));
+				foreach (var production in originalFragment.Productions)
+					fragment.AddProduction(new Grammar<TGrammar, TToken>.ParserGrammar.Production(production.Symbols));
 
-				return new ParserRuleEntry(fragmentEntry, GetParserRule(fragment));
+				return new ParserSyntaxEntry(fragmentSymbol, GetParserSyntax(fragment));
 			}
 
-			private ParserRuleEntry CreateParserRuleEntry(Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol syntaxNode)
+			private ParserSyntaxEntry CreateParserSyntaxEntry(Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol syntaxNode)
 			{
-				return new ParserRuleEntry(syntaxNode, GetParserRule(syntaxNode.Node));
+				return new ParserSyntaxEntry(syntaxNode, GetParserSyntax(syntaxNode.Node));
 			}
 
 			private static Func<AutomataContext, PredicateResult> CreatePredicateDelegate(Parser<TToken>.PredicateEntry predicateEntry)
 			{
-				return c => predicateEntry.Predicate(((ParserAutomataContextState)((ParserAutomataContext)c).ContextStateInternal).ParserContext) ? PredicateResult.True : PredicateResult.False;
+				return c => predicateEntry.Predicate(((ParserAutomataContext)c).Parser) ? PredicateResult.True : PredicateResult.False;
 			}
 
 			private static ParserPredicateEntry CreatePredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.PredicateSymbol predicateSymbol)
@@ -252,17 +331,17 @@ namespace Zaaml.Text
 				return new ParserPredicateEntry(predicateSymbol);
 			}
 
-			private ProcessAutomataContext CreateProcessContext(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind,
+			private ProcessAutomataContext CreateProcessContext(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ProcessKind processKind,
 				Parser<TGrammar, TToken> parser)
 			{
-				return new ProcessAutomataContext(GetParserRule(parserRule), lexemeSource, parserContext, processKind, parser, this);
+				return new ProcessAutomataContext(GetParserSyntax(parserRule), lexemeSource, processKind, parser, this);
 			}
 
-			private PrecedencePredicate CreateProductionPrecedence(Grammar<TGrammar, TToken>.ParserGrammar.Syntax syntax, int precedence, int precedenceCount, bool level)
+			private PrecedencePredicate CreateProductionPrecedence(Grammar<TGrammar, TToken>.ParserGrammar.Syntax syntax, int precedence, bool level)
 			{
 				if (_precedenceDictionary.TryGetValue(syntax, out var precedenceId) == false)
 				{
-					precedenceId = CreatePrecedencePredicateId(precedenceCount);
+					precedenceId = CreatePrecedencePredicateId();
 
 					_precedenceDictionary.Add(syntax, precedenceId);
 				}
@@ -277,32 +356,60 @@ namespace Zaaml.Text
 				return new ParserQuantifierEntry(quantifierEntry, primitiveEntry, quantifierEntry.Range, quantifierEntry.Mode);
 			}
 
-			private SyntaxTreeAutomataContext CreateSyntaxTreeContext(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind,
+			private SyntaxTreeAutomataContext CreateSyntaxTreeContext(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ProcessKind processKind,
 				Parser<TGrammar, TToken> parser)
 			{
-				return new SyntaxTreeAutomataContext(GetParserRule(parserRule), lexemeSource, parserContext, processKind, parser, this);
+				return new SyntaxTreeAutomataContext(GetParserSyntax(parserRule), lexemeSource, processKind, parser, this);
 			}
 
 			private static Entry CreateTokenEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol tokenSymbol)
 			{
-				var syntaxToken = tokenSymbol.Token;
+				var grammarSyntax = tokenSymbol.Token;
 
-				if (syntaxToken.TokenGroups.Count == 1)
-					return new ParserSingleMatchEntry(tokenSymbol);
+				if (grammarSyntax.Composite)
+					throw new InvalidOperationException();
+
+				if (grammarSyntax.TokenGroups.Count == 1)
+					return new ParserOperandMatchEntry(tokenSymbol);
 
 				return new ParserSetMatchEntry(tokenSymbol);
 			}
 
-			private static Entry CreateTokenSetEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol tokenSetSymbol)
+			private Entry CreateTokenSetEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol tokenSetSymbol)
 			{
-				return new ParserSetMatchEntry(tokenSetSymbol);
+				if (tokenSetSymbol.Tokens.Any(t => t.Composite) == false)
+					return new ParserSetMatchEntry(tokenSetSymbol);
+
+				var tokens = tokenSetSymbol.Tokens;
+
+				tokenSetSymbol = new Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol(tokens.Where(t => t.Composite == false).ToArray())
+				{
+					ArgumentName = tokenSetSymbol.ArgumentName
+				};
+
+				var fragmentSyntax = new Grammar<TGrammar, TToken>.ParserGrammar.FragmentSyntax("Internal", true);
+
+				fragmentSyntax.AddProduction(new Grammar<TGrammar, TToken>.ParserGrammar.Production(tokenSetSymbol));
+
+				foreach (var tokenSyntax in tokens.Where(t => t.Composite))
+				{
+					var compositeTokenSymbol = new Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol(tokenSyntax)
+					{
+						ArgumentName = tokenSetSymbol.ArgumentName
+					};
+
+					fragmentSyntax.AddProduction(new Grammar<TGrammar, TToken>.ParserGrammar.Production(compositeTokenSymbol));
+				}
+
+				var fragment = new Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol(fragmentSyntax);
+
+				return CreateParserSyntaxEntry(fragment);
 			}
 
-			private VisitorAutomataContext CreateVisitorContext<TResult>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext,
-				ProcessKind processKind,
+			private VisitorAutomataContext CreateVisitorContext<TResult>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax nodeSyntax, LexemeSource<TToken> lexemeSource, ProcessKind processKind,
 				Parser<TGrammar, TToken> parser)
 			{
-				return new VisitorAutomataContext(visitor, GetParserRule(parserRule), lexemeSource, parserContext, processKind, parser, this);
+				return new VisitorAutomataContext(visitor, GetParserSyntax(nodeSyntax), lexemeSource, processKind, parser, this);
 			}
 
 			private static string EnsureName(Grammar<TGrammar, TToken>.ParserGrammar.Symbol parserEntry)
@@ -326,39 +433,118 @@ namespace Zaaml.Text
 
 			private string GenerateProductionName()
 			{
-				return $"GeneratedTransition{_generateProductionNameCount++}";
+				return $"GeneratedProduction{_generateProductionNameCount++}";
 			}
 
-			private ParserRule GetParserRule(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
+			private ExternalParseResult<TResult> GetForkResult<TResult>(ForkAutomataResult forkAutomataResult, SyntaxTreeAutomataContext context)
 			{
-				return ParserRuleDictionary.TryGetValue(parserSyntax, out var parserRule) == false ? CreateParserRule(parserSyntax) : parserRule;
+				var firstResult = (SuccessAutomataResult)forkAutomataResult.RunFirst();
+				//var secondResult = forkAutomataResult.RunSecond();
+				var result = context.GetResult<TResult>();
+
+				return new SuccessExternalParseResult<TResult>(result, firstResult.InstructionPosition);
 			}
 
-			public TResult Parse<TResult>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
+			private ParserSyntax GetParserSyntax(Grammar<TGrammar, TToken>.ParserGrammar.Syntax syntax)
 			{
-				using var context = CreateSyntaxTreeContext(parserRule, lexemeSource, parserContext, ProcessKind.Process, parser);
-				using var result = context.Process.Run().Verify();
+				return ParserSyntaxDictionary.TryGetValue(syntax, out var parserSyntax) == false ? CreateParserSyntax(syntax) : parserSyntax;
+			}
+
+			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Production> GetProductions(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
+			{
+				foreach (var production in parserSyntax.Productions)
+				{
+					if (production.ProductionBinding is Grammar<TGrammar, TToken>.ParserGrammar.ReturnNodeBinding)
+					{
+						var nodeSymbolIndex = 0;
+
+						while (production.Symbols[nodeSymbolIndex] is not Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol)
+							nodeSymbolIndex++;
+
+						var nodeSymbol = (Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol)production.Symbols[nodeSymbolIndex];
+
+						foreach (var replaceProduction in GetSyntaxProductions(nodeSymbol.Node))
+						{
+							var symbols = new List<Grammar<TGrammar, TToken>.ParserGrammar.Symbol>();
+
+							for (var i = 0; i < production.Symbols.Count; i++)
+							{
+								if (i == nodeSymbolIndex)
+									symbols.AddRange(replaceProduction.Symbols);
+								else
+									symbols.Add(production.Symbols[i]);
+							}
+
+							var replaceProductionCopy = replaceProduction.Clone(symbols);
+
+							yield return replaceProductionCopy;
+						}
+					}
+					else
+						yield return production;
+				}
+			}
+
+			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Production> GetSyntaxProductions(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
+			{
+#if true
+				if (parserSyntax.Productions.All(p => p.ProductionBinding is Grammar<TGrammar, TToken>.ParserGrammar.ReturnNodeBinding))
+				{
+					return GetProductions(parserSyntax);
+				}
+#endif
+
+				return parserSyntax.Productions;
+			}
+
+			public TResult Parse<TResult>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser, CancellationToken cancellationToken = default)
+			{
+				using var context = CreateSyntaxTreeContext(syntax, lexemeSource, ProcessKind.Process, parser);
+				using var result = context.Process.Run(cancellationToken).Verify();
+
+				return context.GetResult<TResult>();
+			}
+			
+			public void Parse(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser, CancellationToken cancellationToken = default)
+			{
+				using var context = CreateProcessContext(syntax, lexemeSource, ProcessKind.Process, parser);
+				using var result = context.Process.Run(cancellationToken).Verify();
+			}
+
+			public TResult Parse<TResult>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser, CancellationToken cancellationToken = default)
+			{
+				using var context = CreateVisitorContext(visitor, syntax, lexemeSource, ProcessKind.Process, parser);
+				using var result = context.Process.Run(cancellationToken).Verify();
 
 				return context.GetResult<TResult>();
 			}
 
-			public void Parse(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
+			public ExternalParseResult<TResult> ParseExternal<TResult>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TResult> syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser,
+				CancellationToken cancellationToken = default)
+				where TResult : class
 			{
-				using var context = CreateProcessContext(parserRule, lexemeSource, parserContext, ProcessKind.Process, parser);
-				using var result = context.Process.Run().Verify();
+				using var context = CreateSyntaxTreeContext(syntax, lexemeSource, ProcessKind.SubProcess, parser);
+				var externalResult = context.Process.Run(cancellationToken);
+
+				try
+				{
+					return externalResult switch
+					{
+						SuccessAutomataResult successAutomataResult => new SuccessExternalParseResult<TResult>(context.GetResult<TResult>(), successAutomataResult.InstructionPosition),
+						ExceptionAutomataResult exceptionAutomataResult => new ExceptionExternalParseResult<TResult>(exceptionAutomataResult.Exception),
+						ForkAutomataResult forkAutomataResult => GetForkResult<TResult>(forkAutomataResult, context),
+						_ => throw new ArgumentOutOfRangeException()
+					};
+				}
+				finally
+				{
+					externalResult.Dispose();
+				}
 			}
 
-			public TResult Parse<TResult>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
+			private void RegisterParserSyntax(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
 			{
-				using var context = CreateVisitorContext(visitor, parserRule, lexemeSource, parserContext, ProcessKind.Process, parser);
-				using var result = context.Process.Run().Verify();
-
-				return context.GetResult<TResult>();
-			}
-
-			private void RegisterParserRule(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
-			{
-				GetParserRule(parserSyntax);
+				GetParserSyntax(parserSyntax);
 			}
 
 			private int RegisterProduction(ParserProduction parserProduction)
@@ -368,117 +554,6 @@ namespace Zaaml.Text
 				Productions.Add(parserProduction);
 
 				return productionIndex;
-			}
-
-			private sealed class LexemeStream : InstructionStream
-			{
-				public LexemeStream(Pool<InstructionStream> pool) : base(pool)
-				{
-				}
-
-				public override InstructionStream Advance(int position, int instructionPointer, Automata<Lexeme<TToken>, TToken> automata)
-				{
-					var copy = (LexemeStream)Pool.Get().Mount(InstructionReader, automata);
-
-					copy.AdvanceInstructionPosition(this, position, instructionPointer);
-
-					return copy;
-				}
-
-				private void AdvanceInstructionPosition(LexemeStream lexemeStream, int textPosition, int instructionPointer)
-				{
-					Position = textPosition;
-					StartPosition = textPosition;
-					StartInstructionPointer = instructionPointer;
-
-					var lexemeIndex = instructionPointer & LocalIndexMask;
-					var lexemePageIndex = instructionPointer >> PageIndexShift;
-
-					EnsurePagesCapacity(lexemePageIndex + 1);
-
-					for (var iPage = lexemeStream.HeadPage; iPage <= lexemePageIndex; iPage++)
-					{
-						InstructionReader.RentBuffers(PageSize, out var instructionsBuffer, out var operandsBuffer);
-
-						var pageSource = lexemeStream.Pages[iPage];
-						var pageCopy = new InstructionPage(instructionsBuffer, operandsBuffer, pageSource.PageIndex, pageSource.PageLength);
-
-						Array.Copy(pageSource.InstructionsBuffer, 0, pageCopy.InstructionsBuffer, 0, pageCopy.PageLength);
-						Array.Copy(pageSource.OperandsBuffer, 0, pageCopy.OperandsBuffer, 0, pageCopy.PageLength);
-
-						pageCopy.ReferenceCount = pageSource.ReferenceCount;
-
-						Pages[pageCopy.PageIndex] = pageCopy;
-					}
-
-					var lexemePage = Pages[lexemePageIndex];
-
-					lexemePage.PageLength = lexemeIndex;
-
-					for (var i = lexemeIndex; i < PageSize; i++)
-					{
-						lexemePage.OperandsBuffer[i] = int.MinValue;
-						lexemePage.InstructionsBuffer[i] = default;
-					}
-
-					HeadPage = lexemeStream.HeadPage;
-					PageCount = lexemePageIndex + 1;
-
-					FetchReadOperand(ref instructionPointer);
-				}
-
-				public override int GetPosition(int instructionPointer)
-				{
-					if (instructionPointer == 0 || instructionPointer == StartInstructionPointer)
-						return StartPosition;
-
-					instructionPointer--;
-
-					var localInstructionPointer = instructionPointer;
-
-					FetchReadOperand(ref instructionPointer);
-
-					return PeekInstructionRef(localInstructionPointer).End;
-				}
-			}
-
-			private sealed class LexemeStreamInstructionReader : IInstructionReader
-			{
-				private readonly LexemeSource<TToken> _lexemeSource;
-
-				public LexemeStreamInstructionReader(LexemeSource<TToken> lexemeSource)
-				{
-					_lexemeSource = lexemeSource;
-				}
-
-				public int ReadPage(ref int position, int bufferLength, out Lexeme<TToken>[] lexemesBuffer, out int[] operandsBuffer)
-				{
-					RentBuffers(bufferLength, out var localLexemesBuffer, out var localOperandsBuffer);
-
-					lexemesBuffer = localLexemesBuffer;
-					operandsBuffer = localOperandsBuffer;
-
-					return _lexemeSource.Read(ref position, localLexemesBuffer, localOperandsBuffer, 0, bufferLength, true);
-				}
-
-				public int ReadPage(ref int position, int bufferOffset, int bufferLength, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer)
-				{
-					return _lexemeSource.Read(ref position, lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, true);
-				}
-
-				public void ReleaseBuffers(Lexeme<TToken>[] instructionsBuffer, int[] operandsBuffer)
-				{
-					Lexer<TGrammar, TToken>.ReturnLexemeBuffers(instructionsBuffer, operandsBuffer);
-				}
-
-				public void RentBuffers(int bufferLength, out Lexeme<TToken>[] instructionsBuffer, out int[] operandsBuffer)
-				{
-					Lexer<TGrammar, TToken>.RentLexemeBuffers(bufferLength, out instructionsBuffer, out operandsBuffer);
-				}
-
-				public void Dispose()
-				{
-				}
 			}
 		}
 	}

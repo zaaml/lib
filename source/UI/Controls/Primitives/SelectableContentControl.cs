@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
@@ -22,8 +23,8 @@ namespace Zaaml.UI.Controls.Primitives
 
     public bool IsSelected
     {
-      get => (bool) GetValue(IsSelectedProperty);
-      set => SetValue(IsSelectedProperty, value);
+	    get => (bool)GetValue(IsSelectedProperty);
+	    set => SetValue(IsSelectedProperty, value.Box());
     }
 
     #endregion

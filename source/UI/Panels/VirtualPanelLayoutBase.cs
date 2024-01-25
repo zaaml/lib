@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.PresentationCore.Interfaces;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
@@ -35,9 +36,27 @@ namespace Zaaml.UI.Panels
 		PartiallyVisible
 	}
 
+	internal static class ItemLayoutInformationVisibilityExtensions
+	{
+		public static bool IsVisible(this ItemLayoutInformationVisibility visibility)
+		{
+			return visibility == ItemLayoutInformationVisibility.Visible;
+		}
+
+		public static bool IsInvisible(this ItemLayoutInformationVisibility visibility)
+		{
+			return visibility == ItemLayoutInformationVisibility.Invisible;
+		}
+
+		public static bool IsPartiallyVisible(this ItemLayoutInformationVisibility visibility)
+		{
+			return visibility == ItemLayoutInformationVisibility.PartiallyVisible;
+		}
+	}
+
 	internal readonly struct ItemLayoutInformation
 	{
-		public static readonly ItemLayoutInformation Empty = new ItemLayoutInformation(null, Rect.Empty, Rect.Empty);
+		public static readonly ItemLayoutInformation Empty = new(null, Rect.Empty, Rect.Empty);
 
 		public ItemLayoutInformation(FrameworkElement item, Rect boundingBox, Rect panelBox)
 		{
@@ -70,6 +89,11 @@ namespace Zaaml.UI.Panels
 
 				return ItemLayoutInformationVisibility.PartiallyVisible;
 			}
+		}
+
+		public ItemLayoutInformationVisibility GetVisibility(Orientation orientation)
+		{
+			return orientation == Orientation.Vertical ? VerticalVisibility : HorizontalVisibility;
 		}
 
 		public ItemLayoutInformationVisibility VerticalVisibility

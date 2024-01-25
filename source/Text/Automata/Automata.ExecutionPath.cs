@@ -10,12 +10,14 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Zaaml.Core;
 using Zaaml.Core.Pools;
+using Zaaml.Core.Utils;
 
 namespace Zaaml.Text
 {
 	[SuppressMessage("ReSharper", "MemberCanBePrivate.Local")]
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
+		private readonly Dictionary<ExecutionPathKey, Node[]> _executionRouteDictionary = new();
 		private readonly List<ExecutionPath> _executionPathRegistry = new();
 
 		private void RegisterExecutionPath(ExecutionPath executionPath)
@@ -26,8 +28,122 @@ namespace Zaaml.Text
 
 				_executionPathRegistry.Add(executionPath);
 
+				foreach (var executionMethodBuilder in _executionMethodBuilders) 
+					executionPath.BuildExecutionMethods(executionMethodBuilder);
+
 				if (ExecutionPathLookAheadLength < executionPath.LookAheadMatch.Length)
 					ExecutionPathLookAheadLength = executionPath.LookAheadMatch.Length;
+			}
+		}
+
+		private ExecutionPath CreateExecutionPath(Node pathSourceNode, Node[] route, PredicateEntryBase predicate)
+		{
+			lock (_executionPathRegistry)
+			{
+				var key = new ExecutionPathKey(pathSourceNode, route, predicate);
+
+				if (_executionRouteDictionary.TryGetValue(key, out _) == false) 
+					_executionRouteDictionary.Add(key, route);
+
+				var executionPath = new ExecutionPath(pathSourceNode, route, predicate);
+
+				RegisterExecutionPath(executionPath);
+
+				return executionPath;
+			}
+		}
+
+		private ExecutionPath CreateExecutionPath(Node pathSourceNode, Node[] route, params MatchEntry[] match)
+		{
+			lock (_executionPathRegistry)
+			{
+				var key = new ExecutionPathKey(pathSourceNode, route, match);
+
+				if (_executionRouteDictionary.TryGetValue(key, out _) == false)
+					_executionRouteDictionary.Add(key, route);
+
+				var executionPath = new ExecutionPath(pathSourceNode, route, match);
+
+				RegisterExecutionPath(executionPath);
+
+				return executionPath;
+			}
+		}
+
+		private sealed class ExecutionPathKey
+		{
+			private readonly int _hashCode;
+			private readonly MatchEntry[] _match;
+			private readonly Node _pathSourceNode;
+			private readonly PredicateEntryBase _predicate;
+			private readonly Node[] _route;
+
+			public ExecutionPathKey(Node pathSourceNode, Node[] route, PredicateEntryBase predicate)
+			{
+				_pathSourceNode = pathSourceNode;
+				_route = route;
+				_predicate = predicate;
+				_hashCode = CalcHashCode();
+			}
+
+			public ExecutionPathKey(Node pathSourceNode, Node[] route, params MatchEntry[] match)
+			{
+				_pathSourceNode = pathSourceNode;
+				_route = route;
+				_match = match;
+				_hashCode = CalcHashCode();
+			}
+
+			private bool Equals(ExecutionPathKey other)
+			{
+				//if (Equals(_pathSourceNode, other._pathSourceNode) == false)
+				//	return false;
+
+				if (_route.SequenceEqual(other._route) == false)
+					return false;
+
+				//if (Equals(_predicate, other._predicate) == false)
+				//	return false;
+
+				//if (_match == null || other._match == null)
+				//	return _match == null && other._match == null;
+
+				//return _match.SequenceEqual(other._match);
+
+				return true;
+			}
+
+			public override bool Equals(object obj)
+			{
+				return ReferenceEquals(this, obj) || obj is ExecutionPathKey other && Equals(other);
+			}
+
+			public override int GetHashCode()
+			{
+				return _hashCode;
+			}
+
+			private int CalcHashCode()
+			{
+				unchecked
+				{
+					var hashCode = 0;
+
+					//hashCode = _pathSourceNode?.GetHashCode() ?? 0;
+
+					foreach (var node in _route)
+						hashCode = (hashCode * 397) ^ node.GetHashCode();
+
+					//hashCode = (hashCode * 397) ^ (_predicate?.GetHashCode() ?? 0);
+
+					//if (_match != null)
+					//{
+					//	foreach (var matchEntry in _match)
+					//		hashCode = (hashCode * 397) ^ matchEntry.GetHashCode();
+					//}
+
+					return hashCode;
+				}
 			}
 		}
 
@@ -38,7 +154,7 @@ namespace Zaaml.Text
 		[DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
 		private protected sealed class ExecutionPath : ExecutionPathBase
 		{
-			public static readonly ExecutionPath Invalid = new(null, Array.Empty<Node>(), -1);
+			public static readonly ExecutionPath Invalid = new(null, Array.Empty<Node>());
 
 			private readonly IPool<ExecutionPath> _forkExecutionPathPool;
 			public readonly bool ContextEval;
@@ -55,7 +171,7 @@ namespace Zaaml.Text
 			public readonly PrecedenceNode[] PrecedenceNodes;
 			public readonly int StackDelta;
 			public readonly int StackDepth;
-			public readonly int Weight;
+			private ExecutionPathMethodDelegate[] _executionMethods = Array.Empty<ExecutionPathMethodDelegate>();
 			public int Id;
 			public ExecutionPath LookAheadPath;
 			public Node Output;
@@ -64,31 +180,27 @@ namespace Zaaml.Text
 			public ReferenceCounter ReferenceCount;
 			public bool Safe;
 
-			public ExecutionPath(Node pathSourceNode, Node[] route, int weight, params MatchEntry[] match)
+			public ExecutionPath(Node pathSourceNode, Node[] route, params MatchEntry[] match)
 			{
 				PathSourceNode = pathSourceNode;
 				Nodes = route;
 				IsInvalid = Nodes == null || Nodes.Length == 0;
 				Output = IsInvalid ? null : Nodes[Nodes.Length - 1];
-				OutputReturn = Output is ReturnRuleNode;
-				OutputEnd = Output is EndRuleNode;
+				OutputReturn = Output is ReturnSyntaxNode;
+				OutputEnd = Output is ExitSyntaxNode;
 
 				if (match == null || match.Length == 0)
-				{
 					LookAheadMatch = Array.Empty<MatchEntry>();
-				}
 				else
 				{
 					Match = match[0];
 					LookAheadMatch = match;
 				}
 
-				Weight = weight;
-
-				CalcInfo(ref Weight, out PassLazyNode, out EnterReturnSubGraphs, out PrecedenceNodes, out HasPrecedenceNodes, out StackDepth, out StackDelta, out ContextEval);
+				CalcInfo(out PassLazyNode, out EnterReturnSubGraphs, out PrecedenceNodes, out HasPrecedenceNodes, out StackDepth, out StackDelta, out ContextEval);
 			}
 
-			public ExecutionPath(Node pathSourceNode, Node[] route, int weight, PredicateEntryBase predicate)
+			public ExecutionPath(Node pathSourceNode, Node[] route, PredicateEntryBase predicate)
 			{
 				PathSourceNode = pathSourceNode;
 				Nodes = route;
@@ -100,9 +212,8 @@ namespace Zaaml.Text
 				OutputReturn = false;
 				Predicate = predicate;
 				LookAheadMatch = Array.Empty<MatchEntry>();
-				Weight = weight;
 
-				CalcInfo(ref Weight, out PassLazyNode, out EnterReturnSubGraphs, out PrecedenceNodes, out HasPrecedenceNodes, out StackDepth, out StackDelta, out ContextEval);
+				CalcInfo(out PassLazyNode, out EnterReturnSubGraphs, out PrecedenceNodes, out HasPrecedenceNodes, out StackDepth, out StackDelta, out ContextEval);
 			}
 
 			public ExecutionPath(Automata<TInstruction, TOperand> automata, IPool<ExecutionPath> forkExecutionPathPool)
@@ -112,14 +223,13 @@ namespace Zaaml.Text
 				Nodes = new Node[1];
 				IsInvalid = false;
 				Output = IsInvalid ? null : Nodes[Nodes.Length - 1];
-				OutputReturn = Output is ReturnRuleNode;
-				OutputEnd = Output is EndRuleNode;
+				OutputReturn = Output is ReturnSyntaxNode;
+				OutputEnd = Output is ExitSyntaxNode;
 				EnterReturnSubGraphs = Array.Empty<int>();
 				PrecedenceNodes = Array.Empty<PrecedenceNode>();
 				ForkPredicatePath = true;
 				ContextEval = false;
 				LookAheadMatch = Array.Empty<MatchEntry>();
-				Weight = 0;
 
 				automata.RegisterExecutionPath(this);
 			}
@@ -146,6 +256,8 @@ namespace Zaaml.Text
 
 			public bool IsPredicate => Predicate != null;
 
+			public bool IsEpsilon => OutputReturn || OutputEnd || IsPredicate;
+
 			public int PriorityIndex { get; set; }
 
 			private Node SourceNode => IsInvalid ? null : Nodes[0];
@@ -157,7 +269,7 @@ namespace Zaaml.Text
 				return this;
 			}
 
-			private void CalcInfo(ref int weight, out bool passLazyNode, out int[] enterReturnSubGraphs, out PrecedenceNode[] precedenceNodes, out bool hasPrecedenceNodes, out int stackDepth, out int stackDelta, out bool contextEval)
+			private void CalcInfo(out bool passLazyNode, out int[] enterReturnSubGraphs, out PrecedenceNode[] precedenceNodes, out bool hasPrecedenceNodes, out int stackDepth, out int stackDelta, out bool contextEval)
 			{
 				contextEval = Predicate == null;
 				passLazyNode = false;
@@ -166,9 +278,6 @@ namespace Zaaml.Text
 
 				if (Nodes == null || Nodes.Length == 0)
 				{
-					if (weight == -1)
-						weight = 0;
-
 					enterReturnSubGraphs = Array.Empty<int>();
 					precedenceNodes = Array.Empty<PrecedenceNode>();
 					hasPrecedenceNodes = false;
@@ -180,74 +289,29 @@ namespace Zaaml.Text
 				List<int> enterReturnSubGraphList = null;
 				List<PrecedenceNode> precedenceNodeList = null;
 
-				if (weight == -1)
+				foreach (var node in Nodes)
 				{
-					weight = 0;
-					var firstNode = Nodes[0];
-					var current = firstNode;
-
-					foreach (var node in Nodes)
+					if (node is EnterSyntaxNode enterRuleNode)
 					{
-						flags |= node.Flags;
+						stackDepth++;
+						stackDelta++;
 
-						if (node is EnterRuleNode enterRuleNode)
-						{
-							stackDepth++;
-							stackDelta++;
+						var rid = enterRuleNode.SubGraph.RId == -1 ? enterRuleNode.SubGraph.Id : enterRuleNode.SubGraph.RId;
 
-							var rid = enterRuleNode.SubGraph.RId == -1 ? enterRuleNode.SubGraph.Id : enterRuleNode.SubGraph.RId;
-
-							(enterReturnSubGraphList ??= new List<int>()).Add(rid);
-						}
-						else if (node is ReturnRuleNode)
-						{
-							stackDelta--;
-							(enterReturnSubGraphList ??= new List<int>()).Add(-1);
-						}
-						else if (node is PrecedenceNode precedenceNode)
-						{
-							precedenceNodeList ??= new List<PrecedenceNode>();
-							precedenceNodeList.Add(precedenceNode);
-						}
-
-						if (ReferenceEquals(node, firstNode))
-							continue;
-
-						var edge = current.GetTargetNodeEdge(node);
-
-						if (edge != null)
-							weight = Math.Max(weight, edge.Weight);
-
-						current = node;
+						(enterReturnSubGraphList ??= new List<int>()).Add(rid);
 					}
-				}
-				else
-				{
-					// ReSharper disable once LoopCanBeConvertedToQuery
-					foreach (var node in Nodes)
+					else if (node is ReturnSyntaxNode)
 					{
-						if (node is EnterRuleNode enterRuleNode)
-						{
-							stackDepth++;
-							stackDelta++;
-
-							var rid = enterRuleNode.SubGraph.RId == -1 ? enterRuleNode.SubGraph.Id : enterRuleNode.SubGraph.RId;
-
-							(enterReturnSubGraphList ??= new List<int>()).Add(rid);
-						}
-						else if (node is ReturnRuleNode)
-						{
-							stackDelta--;
-							(enterReturnSubGraphList ??= new List<int>()).Add(-1);
-						}
-						else if (node is PrecedenceNode precedenceNode)
-						{
-							precedenceNodeList ??= new List<PrecedenceNode>();
-							precedenceNodeList.Add(precedenceNode);
-						}
-
-						flags |= node.Flags;
+						stackDelta--;
+						(enterReturnSubGraphList ??= new List<int>()).Add(-1);
 					}
+					else if (node is PrecedenceNode precedenceNode)
+					{
+						precedenceNodeList ??= new List<PrecedenceNode>();
+						precedenceNodeList.Add(precedenceNode);
+					}
+
+					flags |= node.Flags;
 				}
 
 				precedenceNodes = precedenceNodeList != null ? precedenceNodeList.ToArray() : Array.Empty<PrecedenceNode>();
@@ -278,10 +342,6 @@ namespace Zaaml.Text
 				}
 			}
 
-			public static ExecutionPath JoinPaths(IReadOnlyList<ExecutionPath> executionPaths)
-			{
-				return new ExecutionPath(executionPaths[0].PathSourceNode, executionPaths.SelectMany(p => p.Nodes).ToArray(), executionPaths.Max(p => p.Weight), executionPaths.SelectMany(p => p.LookAheadMatch).Where(m => m != null).ToArray());
-			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void MakeSafe()
@@ -298,7 +358,7 @@ namespace Zaaml.Text
 
 					foreach (var node in Nodes)
 					{
-						if (node is EnterRuleNode enterStateNode)
+						if (node is EnterSyntaxNode enterStateNode)
 						{
 							var subGraph = enterStateNode.SubGraph;
 							var leaveStateNode = subGraph.LeaveNode;
@@ -308,7 +368,7 @@ namespace Zaaml.Text
 						}
 					}
 
-					if (Output is LeaveRuleNode == false)
+					if (Output is LeaveSyntaxNode == false)
 					{
 						if (Output.Safe == false)
 							Output.MakeSafe();
@@ -366,12 +426,40 @@ namespace Zaaml.Text
 				Nodes[0] = null;
 				Predicate = null;
 
-				_forkExecutionPathPool.Release(this);
+				_forkExecutionPathPool.Return(this);
 			}
 
 			public override string ToString()
 			{
 				return DebuggerDisplay;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public Node Execute(int index, Process process)
+			{
+				return _executionMethods[index](this, process);
+			}
+
+			internal void BindExecutionMethod(int index, ExecutionPathMethodDelegate method)
+			{
+				_executionMethods[index] = method;
+			}
+
+			internal void BuildExecutionMethods(ExecutionMethodBuilder executionMethodBuilder)
+			{
+				var capacity = BitUtils.Power2Ceiling(Math.Max(2, executionMethodBuilder.BuilderIndex * 2));
+
+				if (_executionMethods.Length < capacity)
+				{
+					var executionMethods = new ExecutionPathMethodDelegate[capacity];
+
+					for (var i = 0; i < _executionMethods.Length; i++) 
+						executionMethods[i] = _executionMethods[i];
+
+					_executionMethods = executionMethods;
+				}
+
+				executionMethodBuilder.BuildExecutionMethods(this);
 			}
 		}
 	}

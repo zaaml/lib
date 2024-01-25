@@ -25,6 +25,9 @@ using Zaaml.Core.Converters;
 [assembly: InternalsVisibleTo("Zaaml.UI.Docking,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
+[assembly: InternalsVisibleTo("Zaaml.UI.Docking.Test,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
 [assembly: InternalsVisibleTo("Zaaml.UI.Navigation,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
@@ -44,6 +47,15 @@ using Zaaml.Core.Converters;
                               ZaamlInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Zaaml.Themes.Ribbon.Metro,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Zaaml.Themes.Code,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Zaaml.Themes.Docking.Code,PublicKey=" +
+                              ZaamlInfo.PublicKey)]
+
+[assembly: InternalsVisibleTo("Zaaml.Themes.Ribbon.Code,PublicKey=" +
                               ZaamlInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Zaaml.Themes.Default,PublicKey=" +

@@ -188,7 +188,7 @@ namespace Zaaml.PresentationCore.Snapping
 			var sideOffsetModifier = SideInfos[(int) side];
 			var sideOffsetPoint = new Point(sideOffsetModifier.X * sideOffset, sideOffsetModifier.Y * sideOffset);
 
-			return source.Offset(targetPointPosition).Offset(sourcePointPosition.Negate()).Offset(sideOffsetPoint);
+			return source.WithOffset(targetPointPosition).WithOffset(sourcePointPosition.Negate()).WithOffset(sideOffsetPoint);
 		}
 
 		private readonly struct SnapPointInfo
@@ -210,9 +210,9 @@ namespace Zaaml.PresentationCore.Snapping
 			public Point GetPointPosition(Rect rect, double offset)
 			{
 				var clientOffset = new Point(RelativeOffset.X * offset, RelativeOffset.Y * offset);
-				var clientPosition = new Point(rect.Width * RelativePoint.X, rect.Height * RelativePoint.Y).Offset(clientOffset);
+				var clientPosition = new Point(rect.Width * RelativePoint.X, rect.Height * RelativePoint.Y).WithOffset(clientOffset);
 
-				return clientPosition.Offset(rect.GetTopLeft());
+				return clientPosition.WithOffset(rect.GetTopLeft());
 			}
 		}
 	}

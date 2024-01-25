@@ -22,7 +22,7 @@ namespace Zaaml.PresentationCore.Input
 			get => base.Gesture;
 			set
 			{
-				if (value is { } and not KeyChordGesture)
+				if (value is not null and not KeyChordGesture)
 					throw new InvalidOperationException();
 
 				base.Gesture = value;

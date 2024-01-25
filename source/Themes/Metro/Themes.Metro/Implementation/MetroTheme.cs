@@ -11,7 +11,7 @@ namespace Zaaml.MetroThemeImplementation
 {
 	public sealed class MetroTheme : Theme
 	{
-		private static readonly Lazy<MetroTheme> LazyInstance = new Lazy<MetroTheme>(() => new MetroTheme());
+		private static readonly Lazy<MetroTheme> LazyInstance = new(() => new MetroTheme());
 
 		private MetroTheme()
 		{

@@ -8,27 +8,27 @@ namespace Zaaml.Text
 	{
 		private protected partial class LexerAutomata
 		{
-			private sealed class LexerRule : Rule
+			private sealed class LexerSyntax : Syntax
 			{
-				public LexerRule(Grammar<TGrammar, TToken>.LexerGrammar.Syntax syntax) : base(syntax.Name)
+				public LexerSyntax(Grammar<TGrammar, TToken>.LexerGrammar.Syntax grammarSyntax) : base(grammarSyntax.Name)
 				{
-					Syntax = syntax;
+					GrammarSyntax = grammarSyntax;
 				}
 
-				public LexerRule(Grammar<TGrammar, TToken>.LexerGrammar.Syntax syntax, Grammar<TGrammar, TToken>.LexerGrammar.Production production) : base(syntax.Name)
+				public LexerSyntax(Grammar<TGrammar, TToken>.LexerGrammar.Syntax grammarSyntax, Grammar<TGrammar, TToken>.LexerGrammar.Production production) : base(grammarSyntax.Name)
 				{
-					Syntax = syntax;
+					GrammarSyntax = grammarSyntax;
 					Token = production.Token;
 					TokenCode = production.TokenCode;
 				}
 
-				public bool IsTrivia => Syntax is Grammar<TGrammar, TToken>.LexerGrammar.TriviaSyntax;
-				
-				public bool IsToken => Syntax is Grammar<TGrammar, TToken>.LexerGrammar.TokenSyntax;
+				private Grammar<TGrammar, TToken>.LexerGrammar.Syntax GrammarSyntax { get; }
 
-				public bool IsFragment => Syntax is Grammar<TGrammar, TToken>.LexerGrammar.FragmentSyntax;
-				
-				private Grammar<TGrammar, TToken>.LexerGrammar.Syntax Syntax { get; }
+				public bool IsFragment => GrammarSyntax is Grammar<TGrammar, TToken>.LexerGrammar.FragmentSyntax;
+
+				public bool IsToken => GrammarSyntax is Grammar<TGrammar, TToken>.LexerGrammar.TokenSyntax;
+
+				public bool IsTrivia => GrammarSyntax is Grammar<TGrammar, TToken>.LexerGrammar.TriviaSyntax;
 
 				public TToken Token { get; }
 

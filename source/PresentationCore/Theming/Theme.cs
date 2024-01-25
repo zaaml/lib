@@ -15,395 +15,398 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public abstract partial class Theme
-  {
-    #region Static Fields and Constants
+	public abstract partial class Theme : ISkinResourceProvider
+	{
+		private static readonly Dictionary<Type, Theme> Themes = new();
 
-    private static readonly Dictionary<Type, Theme> Themes = new Dictionary<Type, Theme>();
+		private static readonly MultiMap<Type, GenericResourceDictionary> ThemeGenericDictionaries = new();
 
-    private static readonly MultiMap<Type, GenericResourceDictionary> ThemeGenericDictionaries = new MultiMap<Type, GenericResourceDictionary>();
+		private readonly Dictionary<string, XamlResourceInfo> _deferredResources = new(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<ThemeStyle, XamlResourceInfo> _deferredStylesDictionary = new();
+		private readonly Dictionary<SkinDictionary, SkinDictionary> _frozenSkinDictionaries = new();
+		private readonly List<GenericResourceDictionary> _genericDictionaries = new();
+		private readonly Dictionary<Type, ThemeStyle> _themeStyles = new();
+		private readonly List<XamlResourceInfo> _unprocessedResources = new();
+		protected readonly HashSet<ResourceDictionary> ProcessedResourceDictionaries = new();
+		internal readonly WeakLinkedList<ThemeResourceDictionary> ThemeResourceDictionaries = new();
 
-    #endregion
+		private bool _isApplied;
+		private bool _suspendThemeBinding;
 
-    #region Fields
+		internal bool UseDeferredProcessing = false;
 
-    private readonly Dictionary<string, XamlResourceInfo> _deferredResources = new Dictionary<string, XamlResourceInfo>(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<ThemeStyle, XamlResourceInfo> _deferredStylesDictionary = new Dictionary<ThemeStyle, XamlResourceInfo>();
-    private readonly List<GenericResourceDictionary> _genericDictionaries = new List<GenericResourceDictionary>();
-    private readonly Dictionary<Type, ThemeStyle> _themeStyles = new Dictionary<Type, ThemeStyle>();
-    private readonly List<XamlResourceInfo> _unprocessedResources = new List<XamlResourceInfo>();
-    protected readonly HashSet<ResourceDictionary> ProcessedResourceDictionaries = new HashSet<ResourceDictionary>();
-    internal readonly WeakLinkedList<ThemeResourceDictionary> ThemeResourceDictionaries = new WeakLinkedList<ThemeResourceDictionary>();
+		protected Theme()
+		{
+			var themeType = GetType();
 
-    private bool _isApplied;
-    private bool _suspendThemeBinding;
+			if (Themes.ContainsKey(themeType))
+				throw new Exception("Theme must be a Singleton");
 
-    internal bool UseDeferredProcessing = false;
+			var genericDictionaries = ThemeGenericDictionaries.GetValueOrDefault(themeType);
 
-    #endregion
+			if (genericDictionaries != null)
+				_genericDictionaries.AddRange(genericDictionaries);
 
-    #region Ctors
+			Themes[themeType] = this;
 
-    protected Theme()
-    {
-      var themeType = GetType();
+			var themeResourceDictionaryLoader = ThemeResourceDictionaryLoader.Instance;
 
-      if (Themes.ContainsKey(themeType))
-        throw new Exception("Theme must be a Singleton");
+			themeResourceDictionaryLoader.XamlResourceLoading += OnXamlResourceLoading;
+		}
 
-      var genericDictionaries = ThemeGenericDictionaries.GetValueOrDefault(themeType);
+		protected internal bool IsApplied
+		{
+			get => _isApplied;
+			set
+			{
+				if (_isApplied == value)
+					return;
 
-      if (genericDictionaries != null)
-        _genericDictionaries.AddRange(genericDictionaries);
+				_isApplied = value;
 
-      Themes[themeType] = this;
+				if (_isApplied)
+					OnApplied();
+				else
+					OnUnapplied();
+			}
+		}
 
-      var themeResourceDictionaryLoader = ThemeResourceDictionaryLoader.Instance;
+		public bool IsStatic => this is StaticTheme;
 
-      themeResourceDictionaryLoader.XamlResourceLoading += OnXamlResourceLoading;
-    }
+		public virtual Theme MasterTheme => this;
 
-    #endregion
+		public abstract string Name { get; }
 
-    #region Properties
+		protected internal virtual ThemeResourceDictionary ThemeResourceDictionary { get; } = new();
 
-    protected internal bool IsApplied
-    {
-      get => _isApplied;
-      set
-      {
-        if (_isApplied == value)
-          return;
+		protected internal virtual void BindThemeResource(ThemeResourceReference themeResourceReference)
+		{
+		}
 
-        _isApplied = value;
+		protected internal ThemeResourceDictionary CreateThemeResourceDictionary()
+		{
+			var resourceDictionary = new ThemeResourceDictionary();
 
-        if (_isApplied)
-          OnApplied();
-        else
-          OnUnapplied();
-      }
-    }
+			ThemeStyleBinder.Instance.AttachResourceDictionary(resourceDictionary);
 
-    public bool IsStatic => this is StaticTheme;
+			return resourceDictionary;
+		}
 
-    public virtual Theme MasterTheme => this;
+		internal void EnsureDeferredStylesLoaded(ThemeStyle themeStyle)
+		{
+			if (themeStyle.IsDeferred == false)
+				return;
 
-    public abstract string Name { get; }
+			try
+			{
+				var xamlResourceInfo = _deferredStylesDictionary[themeStyle];
 
-    protected internal virtual ThemeResourceDictionary ThemeResourceDictionary { get; } = new ThemeResourceDictionary();
+				_deferredStylesDictionary.Remove(themeStyle);
 
-    #endregion
+				if (_deferredResources.Remove(xamlResourceInfo.Uri.OriginalString) == false)
+					return;
 
-    #region  Methods
+				ProcessXamlResourceInt(xamlResourceInfo, (ThemeResourceDictionary)xamlResourceInfo.DeferredResourceDictionary);
+			}
+			finally
+			{
+				themeStyle.IsDeferred = false;
+			}
+		}
 
-    protected internal virtual void BindThemeResource(ThemeResourceReference themeResourceReference)
-    {
-    }
+		protected internal virtual IEnumerable<ThemeResource> EnumerateResources()
+		{
+			return Enumerable.Empty<ThemeResource>();
+		}
 
-    protected internal ThemeResourceDictionary CreateThemeResourceDictionary()
-    {
-      var resourceDictionary = new ThemeResourceDictionary();
+		internal SkinDictionary Freeze(SkinDictionary dictionary)
+		{
+			if (_frozenSkinDictionaries.TryGetValue(dictionary, out var frozen) == false)
+				_frozenSkinDictionaries[dictionary] = frozen = dictionary.AsFrozen(this);
 
-      ThemeStyleBinder.Instance.AttachResourceDictionary(resourceDictionary);
+			return frozen;
+		}
 
-      return resourceDictionary;
-    }
-
-    internal void EnsureDeferredStylesLoaded(ThemeStyle themeStyle)
-    {
-      if (themeStyle.IsDeferred == false)
-        return;
-
-      try
-      {
-        var xamlResourceInfo = _deferredStylesDictionary[themeStyle];
-
-        _deferredStylesDictionary.Remove(themeStyle);
-
-        if (_deferredResources.Remove(xamlResourceInfo.Uri.OriginalString) == false)
-          return;
-
-        ProcessXamlResourceInt(xamlResourceInfo, (ThemeResourceDictionary) xamlResourceInfo.DeferredResourceDictionary);
-      }
-      finally
-      {
-        themeStyle.IsDeferred = false;
-      }
-    }
-
-    protected internal virtual IEnumerable<ThemeResource> EnumerateResources()
-    {
-      return Enumerable.Empty<ThemeResource>();
-    }
-
-    private static void FreezeResourceDictionary(ResourceDictionary themeResourceDictionary)
-    {
+		private static void FreezeResourceDictionary(ResourceDictionary themeResourceDictionary)
+		{
 #if !SILVERLIGHT
-      foreach (var resourceDictionary in themeResourceDictionary.EnumerateDictionaries())
-      {
-        foreach (var freezable in resourceDictionary.Values.OfType<Freezable>())
-        {
-          if (freezable.IsFrozen)
-            continue;
+			foreach (var resourceDictionary in themeResourceDictionary.EnumerateDictionaries())
+			{
+				foreach (var freezable in resourceDictionary.Values.OfType<Freezable>())
+				{
+					if (freezable.IsFrozen)
+						continue;
 
-          if (freezable.CanFreeze)
-            freezable.Freeze();
-        }
-      }
+					if (freezable.CanFreeze)
+						freezable.Freeze();
+				}
+			}
 #endif
-    }
+		}
 
-    protected internal virtual ThemeResource GetResource(string key)
-    {
-      return null;
-    }
+		protected internal virtual ThemeResource GetResource(string key)
+		{
+			return null;
+		}
 
-    internal virtual bool IsThemeResource(XamlResourceInfo resource)
-    {
-      return resource.ThemeType == GetType();
-    }
+		internal virtual bool IsThemeResource(XamlResourceInfo resource)
+		{
+			return resource.ThemeType == GetType();
+		}
 
-    internal void LoadXamlResources(IEnumerable<XamlResourceInfo> resources, bool isApplied)
-    {
-      var filteredResource = resources.Where(ShouldProcessXamlResource);
+		internal void LoadXamlResources(IEnumerable<XamlResourceInfo> resources, bool isApplied)
+		{
+			var filteredResource = resources.Where(ShouldProcessXamlResource);
 
-      if (isApplied == false)
-        _unprocessedResources.AddRange(filteredResource);
-      else
-        ProcessXamlResources(filteredResource);
-    }
+			if (isApplied == false)
+				_unprocessedResources.AddRange(filteredResource);
+			else
+				ProcessXamlResources(filteredResource);
+		}
 
-    protected virtual void OnApplied()
-    {
-      _suspendThemeBinding = true;
+		protected virtual void OnApplied()
+		{
+			_suspendThemeBinding = true;
 
-      LoadXamlResources(ThemeResourceDictionaryLoader.Instance.XamlResources, false);
+			LoadXamlResources(ThemeResourceDictionaryLoader.Instance.XamlResources, false);
 
-      ProcessPendingResources();
+			ProcessPendingResources();
 
-      var themeStyleBinder = ThemeStyleBinder.Instance;
+			var themeStyleBinder = ThemeStyleBinder.Instance;
 
-      themeStyleBinder.BindThemeStyles(_themeStyles.Values);
+			themeStyleBinder.BindThemeStyles(_themeStyles.Values);
 
-      themeStyleBinder.AttachResourceDictionary(ThemeResourceDictionary);
+			themeStyleBinder.AttachResourceDictionary(ThemeResourceDictionary);
 
-      foreach (var themeResourceDictionary in ThemeResourceDictionaries)
-        themeStyleBinder.AttachResourceDictionary(themeResourceDictionary);
+			foreach (var themeResourceDictionary in ThemeResourceDictionaries)
+				themeStyleBinder.AttachResourceDictionary(themeResourceDictionary);
 
-      _suspendThemeBinding = false;
-    }
+			_suspendThemeBinding = false;
+		}
 
-    private void OnGenericDictionaryRegistered(GenericResourceDictionary genericDictionary)
-    {
-      _genericDictionaries.Add(genericDictionary);
-      PlatformOnGenericDictionaryRegistered(genericDictionary);
-      RegisterGenericDictionaryCore(genericDictionary);
-    }
+		private void OnGenericDictionaryRegistered(GenericResourceDictionary genericDictionary)
+		{
+			_genericDictionaries.Add(genericDictionary);
+			PlatformOnGenericDictionaryRegistered(genericDictionary);
+			RegisterGenericDictionaryCore(genericDictionary);
+		}
 
 
-    protected virtual void OnUnapplied()
-    {
-      var themeStyleBinder = ThemeStyleBinder.Instance;
+		protected virtual void OnUnapplied()
+		{
+			var themeStyleBinder = ThemeStyleBinder.Instance;
 
-      themeStyleBinder.DetachResourceDictionary(ThemeResourceDictionary);
+			themeStyleBinder.DetachResourceDictionary(ThemeResourceDictionary);
 
-      foreach (var themeResourceDictionary in ThemeResourceDictionaries)
-        themeStyleBinder.DetachResourceDictionary(themeResourceDictionary);
+			foreach (var themeResourceDictionary in ThemeResourceDictionaries)
+				themeStyleBinder.DetachResourceDictionary(themeResourceDictionary);
 
-      themeStyleBinder.UnbindThemeStyles(_themeStyles.Values);
-    }
+			themeStyleBinder.UnbindThemeStyles(_themeStyles.Values);
+		}
 
-    private void OnXamlResourceLoading(object sender, XamlResourceLoadingEventArgs xamlResourceLoadingEventArgs)
-    {
-      LoadXamlResources(xamlResourceLoadingEventArgs.NewXamlResources, IsApplied);
-    }
+		private void OnXamlResourceLoading(object sender, XamlResourceLoadingEventArgs xamlResourceLoadingEventArgs)
+		{
+			LoadXamlResources(xamlResourceLoadingEventArgs.NewXamlResources, IsApplied);
+		}
 
-    partial void PlatformOnGenericDictionaryRegistered(GenericResourceDictionary genericDictionary);
+		partial void PlatformOnGenericDictionaryRegistered(GenericResourceDictionary genericDictionary);
 
-    protected void ProcessPendingResources()
-    {
-      ProcessXamlResources(_unprocessedResources);
+		protected void ProcessPendingResources()
+		{
+			ProcessXamlResources(_unprocessedResources);
 
-      _unprocessedResources.Clear();
-    }
+			_unprocessedResources.Clear();
+		}
 
-    private void ProcessThemeResourceDictionaryInt(XamlResourceInfo xamlResourceInfo, ResourceDictionary themeResourceDictionary, ThemeResourceDictionary deferredDictionary)
-    {
-      FreezeResourceDictionary(themeResourceDictionary);
+		private void ProcessThemeResourceDictionaryInt(XamlResourceInfo xamlResourceInfo, ResourceDictionary themeResourceDictionary, ThemeResourceDictionary deferredDictionary)
+		{
+			FreezeResourceDictionary(themeResourceDictionary);
 
-      if (deferredDictionary != null)
-      {
-        var binder = ThemeStyleBinder.Instance;
+			if (deferredDictionary != null)
+			{
+				var binder = ThemeStyleBinder.Instance;
 				var list = new List<ThemeStyle>();
 
-        foreach (var kv in themeResourceDictionary.Cast<DictionaryEntry>().Where(kv => kv.Value is ThemeStyle))
-        {
-          var deferredStyle = (ThemeStyle) deferredDictionary[kv.Key];
-					var actualStyle = (ThemeStyle) kv.Value;
+				foreach (var kv in themeResourceDictionary.Cast<DictionaryEntry>().Where(kv => kv.Value is ThemeStyle))
+				{
+					var deferredStyle = (ThemeStyle)deferredDictionary[kv.Key];
+					var actualStyle = (ThemeStyle)kv.Value;
 
-          actualStyle.Owner = this;
-          actualStyle.Source = xamlResourceInfo.Uri;
-          actualStyle.Assembly = xamlResourceInfo.Assembly;
+					actualStyle.Owner = this;
+					actualStyle.Source = xamlResourceInfo.Uri;
+					actualStyle.Assembly = xamlResourceInfo.Assembly;
 
-          if (deferredStyle != null)
-            _themeStyles.Remove(deferredStyle.TargetType);
+					if (deferredStyle != null)
+						_themeStyles.Remove(deferredStyle.TargetType);
 
-          _themeStyles.Add(actualStyle.TargetType, actualStyle);
+					_themeStyles.Add(actualStyle.TargetType, actualStyle);
 
-          list.Add(actualStyle);
-        }
+					list.Add(actualStyle);
+				}
 
-        binder.RebindThemeStyles(list);
+				binder.RebindThemeStyles(list);
 
-        UpdateStyleKeys(themeResourceDictionary);
-      }
-      else
-      {
-        var themeStyleTypes = new Dictionary<Type, ThemeStyle>();
+				UpdateStyleKeys(themeResourceDictionary);
+			}
+			else
+			{
+				var themeStyleTypes = new Dictionary<Type, ThemeStyle>();
 				var resourceDictionary = themeResourceDictionary;
 
-        try
-        {
-          foreach (var kv in resourceDictionary.Cast<DictionaryEntry>().Where(kv => kv.Value is ThemeStyle))
-          {
-            var themeStyle = (ThemeStyle) kv.Value;
+				try
+				{
+					foreach (var kv in resourceDictionary.Cast<DictionaryEntry>().Where(kv => kv.Value is ThemeStyle))
+					{
+						var themeStyle = (ThemeStyle)kv.Value;
 
-            themeStyle.Owner = this;
-            themeStyle.Source = xamlResourceInfo.Uri;
-            themeStyle.Assembly = xamlResourceInfo.Assembly;
+						themeStyle.Owner = this;
+						themeStyle.Source = xamlResourceInfo.Uri;
+						themeStyle.Assembly = xamlResourceInfo.Assembly;
 
-            if (themeStyle.BasedOn == null && themeStyle.IsDeferred == false)
-            {
-              LogService.LogWarning($"ThemeStyle for target type '{themeStyle.TargetType?.Name}' without base style is detected in ResourceDictionary '{xamlResourceInfo.Uri}'");
+						if (themeStyle.BasedOn == null && themeStyle.IsDeferred == false)
+						{
+							LogService.LogWarning($"ThemeStyle for target type '{themeStyle.TargetType?.Name}' without base style is detected in ResourceDictionary '{xamlResourceInfo.Uri}'");
 
-              continue;
-            }
+							continue;
+						}
 
-            _themeStyles[themeStyle.TargetType] = themeStyle;
+						_themeStyles[themeStyle.TargetType] = themeStyle;
 
-            themeStyleTypes[themeStyle.TargetType] = themeStyle;
-          }
+						themeStyleTypes[themeStyle.TargetType] = themeStyle;
+					}
 
-          UpdateStyleKeys(resourceDictionary);
-        }
-        catch (Exception ex)
-        {
-          LogService.LogError(ex);
-        }
+					UpdateStyleKeys(resourceDictionary);
+				}
+				catch (Exception ex)
+				{
+					LogService.LogError(ex);
+				}
 
-        if (IsApplied == false || _suspendThemeBinding) return;
+				if (IsApplied == false || _suspendThemeBinding) return;
 
-        ThemeStyleBinder.Instance.BindThemeStyles(themeStyleTypes.Values);
-      }
-    }
+				ThemeStyleBinder.Instance.BindThemeStyles(themeStyleTypes.Values);
+			}
+		}
 
-    internal virtual void ProcessXamlResource(XamlResourceInfo resource)
-    {
-      if (UseDeferredProcessing)
-        ProcessXamlResourceDeferred(resource);
-      else
-        ProcessXamlResourceInt(resource, null);
-    }
+		internal virtual void ProcessXamlResource(XamlResourceInfo resource)
+		{
+			if (UseDeferredProcessing)
+				ProcessXamlResourceDeferred(resource);
+			else
+				ProcessXamlResourceInt(resource, null);
+		}
 
-    private void ProcessXamlResourceDeferred(XamlResourceInfo xamlResourceInfo)
-    {
-      if (xamlResourceInfo.IsDeferred && xamlResourceInfo.IsResourceDictionaryLoaded == false)
-      {
-        try
-        {
-	        if (xamlResourceInfo.DeferredResourceDictionary is ThemeResourceDictionary deferredDictionary)
-          {
-            var styles = deferredDictionary.Values.OfType<ThemeStyle>().ToList();
+		private void ProcessXamlResourceDeferred(XamlResourceInfo xamlResourceInfo)
+		{
+			if (xamlResourceInfo.IsDeferred && xamlResourceInfo.IsResourceDictionaryLoaded == false)
+			{
+				try
+				{
+					if (xamlResourceInfo.DeferredResourceDictionary is ThemeResourceDictionary deferredDictionary)
+					{
+						var styles = deferredDictionary.Values.OfType<ThemeStyle>().ToList();
 
-            foreach (var themeStyle in styles)
-            {
-              themeStyle.Owner = this;
-              themeStyle.IsDeferred = true;
+						foreach (var themeStyle in styles)
+						{
+							themeStyle.Owner = this;
+							themeStyle.IsDeferred = true;
 
-              _deferredStylesDictionary[themeStyle] = xamlResourceInfo;
-              _themeStyles[themeStyle.TargetType] = themeStyle;
-            }
+							_deferredStylesDictionary[themeStyle] = xamlResourceInfo;
+							_themeStyles[themeStyle.TargetType] = themeStyle;
+						}
 
-            _deferredResources.Add(xamlResourceInfo.Uri.OriginalString, xamlResourceInfo);
+						_deferredResources.Add(xamlResourceInfo.Uri.OriginalString, xamlResourceInfo);
 
-            ProcessThemeResourceDictionaryInt(xamlResourceInfo, deferredDictionary, null);
+						ProcessThemeResourceDictionaryInt(xamlResourceInfo, deferredDictionary, null);
+					}
+				}
+				catch (Exception ex)
+				{
+					LogService.LogError(ex);
+				}
+			}
 
-            return;
-          }
-        }
-        catch (Exception ex)
-        {
-          LogService.LogError(ex);
-        }
-      }
+			//ProcessXamlResourceInt(xamlResourceInfo, null);
+		}
 
-      //ProcessXamlResourceInt(xamlResourceInfo, null);
-    }
+		private void ProcessXamlResourceInt(XamlResourceInfo xamlResourceInfo, ThemeResourceDictionary deferredDictionary)
+		{
+			var resourceDictionary = xamlResourceInfo.EnsureResourceDictionary();
 
-    private void ProcessXamlResourceInt(XamlResourceInfo xamlResourceInfo, ThemeResourceDictionary deferredDictionary)
-    {
-      var resourceDictionary = xamlResourceInfo.EnsureResourceDictionary();
-
-      if (resourceDictionary == null)
-        return;
+			if (resourceDictionary == null)
+				return;
 
 #if DEBUG
-      // XamlResource contains references to dictionaries which are pending for deferred load
-      // Review Theme to exclude references to Deferred ThemeResourceDictionaries
-      var mergedDictionaries = resourceDictionary.EnumerateReferencedDictionaries(xamlResourceInfo.Uri).Select(s => _deferredResources.GetValueOrDefault(s.OriginalString)).SkipNull().ToList();
+			// XamlResource contains references to dictionaries which are pending for deferred load
+			// Review Theme to exclude references to Deferred ThemeResourceDictionaries
+			var mergedDictionaries = resourceDictionary.EnumerateReferencedDictionaries(xamlResourceInfo.Uri).Select(s => _deferredResources.GetValueOrDefault(s.OriginalString)).SkipNull().ToList();
 
-      foreach (var mergedDictionary in mergedDictionaries)
-        LogService.LogInfo($"{xamlResourceInfo.Uri} contains reference to {mergedDictionary} which supposed to be loaded deferred");
+			foreach (var mergedDictionary in mergedDictionaries)
+				LogService.LogInfo($"{xamlResourceInfo.Uri} contains reference to {mergedDictionary} which supposed to be loaded deferred");
 #endif
 
-      ProcessThemeResourceDictionaryInt(xamlResourceInfo, resourceDictionary, deferredDictionary);
-    }
+			ProcessThemeResourceDictionaryInt(xamlResourceInfo, resourceDictionary, deferredDictionary);
+		}
 
-    private void ProcessXamlResources(IEnumerable<XamlResourceInfo> resources)
-    {
-      foreach (var xamlResourceInfo in resources.OrderBy(r => r.Priority))
-      {
-        ProcessXamlResource(xamlResourceInfo);
+		private void ProcessXamlResources(IEnumerable<XamlResourceInfo> resources)
+		{
+			foreach (var xamlResourceInfo in resources.OrderBy(r => r.Priority))
+			{
+				ProcessXamlResource(xamlResourceInfo);
 
-        if (xamlResourceInfo.IsResourceDictionaryLoaded && xamlResourceInfo.ResourceDictionary != null)
-          ProcessedResourceDictionaries.Add(xamlResourceInfo.ResourceDictionary);
-      }
-    }
+				if (xamlResourceInfo.IsResourceDictionaryLoaded && xamlResourceInfo.ResourceDictionary != null)
+					ProcessedResourceDictionaries.Add(xamlResourceInfo.ResourceDictionary);
+			}
+		}
 
-    internal static void RegisterGenericDictionary(Type themeType, GenericResourceDictionary genericDictionary)
-    {
-      ThemeGenericDictionaries.AddValue(themeType, genericDictionary);
+		internal static void RegisterGenericDictionary(Type themeType, GenericResourceDictionary genericDictionary)
+		{
+			ThemeGenericDictionaries.AddValue(themeType, genericDictionary);
 
-      Themes.GetValueOrDefault(themeType)?.OnGenericDictionaryRegistered(genericDictionary);
-    }
+			Themes.GetValueOrDefault(themeType)?.OnGenericDictionaryRegistered(genericDictionary);
+		}
 
-    protected virtual void RegisterGenericDictionaryCore(GenericResourceDictionary genericDictionary)
-    {
-    }
+		protected virtual void RegisterGenericDictionaryCore(GenericResourceDictionary genericDictionary)
+		{
+		}
 
-    protected internal void ReleaseDesignTimeThemeResourceDictionary(ThemeResourceDictionary themeResourceDictionary)
-    {
-      ThemeStyleBinder.Instance.DetachResourceDictionary(themeResourceDictionary);
-    }
+		protected internal void ReleaseDesignTimeThemeResourceDictionary(ThemeResourceDictionary themeResourceDictionary)
+		{
+			ThemeStyleBinder.Instance.DetachResourceDictionary(themeResourceDictionary);
+		}
 
-    internal virtual bool ShouldProcessXamlResource(XamlResourceInfo resource)
-    {
-      return GetType().IsAssignableFrom(resource.ThemeType);
-    }
+		internal virtual bool ShouldProcessXamlResource(XamlResourceInfo resource)
+		{
+			return GetType().IsAssignableFrom(resource.ThemeType);
+		}
 
-    private static void UpdateStyleKeys(ResourceDictionary themeResourceDictionary)
-    {
-      foreach (var resourceDictionary in themeResourceDictionary.EnumerateDictionaries())
-      {
-        foreach (var kv in resourceDictionary.Cast<DictionaryEntry>().Where(kv => kv.Value is StyleBase))
-        {
-          var style = (StyleBase) kv.Value;
+		private static void UpdateStyleKeys(ResourceDictionary themeResourceDictionary)
+		{
+			foreach (var resourceDictionary in themeResourceDictionary.EnumerateDictionaries())
+			{
+				foreach (var kv in resourceDictionary.Cast<DictionaryEntry>().Where(kv => kv.Value is StyleBase))
+				{
+					var style = (StyleBase)kv.Value;
 
-          style.ResourceKey = kv.Key?.ToString();
-        }
-      }
-    }
+					style.ResourceKey = kv.Key?.ToString();
+				}
+			}
+		}
 
-    #endregion
-  }
+		bool ISkinResourceProvider.TryGetValue(string key, out object value)
+		{
+			var themeResource = GetResource(key);
+
+			if (themeResource == null)
+			{
+				value = default;
+
+				return false;
+			}
+
+			value = themeResource.Value;
+
+			return true;
+		}
+	}
 }

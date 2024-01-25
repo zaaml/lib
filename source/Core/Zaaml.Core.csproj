@@ -3,7 +3,8 @@
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
-		<Configurations>Debug;Release;Test;ReleaseSourceGenerator</Configurations>
+		<Configurations>Debug;Release;Test;NGDebug;NGRelease</Configurations>
+		<IsNGDev Condition="$(Configuration) == 'NGDebug' OR $(Configuration) == 'NGRelease'">True</IsNGDev>
 	</PropertyGroup>
 
 	<!-- COLLECTION_VERIFY_STRUCTURE -->
@@ -11,22 +12,30 @@
 		<DefineConstants>$(DefineConstants);COLLECTION_VERIFY_STRUCTURE</DefineConstants>
 	</PropertyGroup>-->
 
-	<PropertyGroup>
-		<TargetFramework>net5.0</TargetFramework>
+  <PropertyGroup Condition="$(Configuration) == 'NGRelease'">
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+	<PropertyGroup Condition="$(IsNGDev) != True">
+		<TargetFramework>net8.0</TargetFramework>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$(Publish) == 'true'">
+	<PropertyGroup Condition="$(IsNGDev) == True">
+		<TargetFramework>netstandard2.0</TargetFramework>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(Publish) == True AND $(IsNGDev) != True">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0;netcoreapp3.1;net48;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net7.0;net6.0;net5.0;net48;netstandard2.0</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.5.1">
+		<PackageReference Include="GitVersion.MsBuild" Version="5.12.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="System.Memory" Version="4.5.4" />
+		<PackageReference Include="System.Memory" Version="4.5.5" />
 	</ItemGroup>
 
 	<ItemGroup>

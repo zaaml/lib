@@ -15,328 +15,304 @@ using Zaaml.UI.Extensions;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class SplitLayoutView : BaseLayoutView<SplitLayout>
-  {
-    #region Static Fields and Constants
+	public sealed class SplitLayoutView : BaseLayoutView<SplitLayout>
+	{
+		public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, SplitLayoutView>
+			("Orientation", s => s.OnOrientationChanged);
 
-    public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, SplitLayoutView>
-      ("Orientation", s => s.OnOrientationChanged);
+		private readonly ConstraintGridSplitterDelta _splitterConstraintHelper;
+		private readonly Dictionary<DockItem, DockGridSplitter> _splitters = new Dictionary<DockItem, DockGridSplitter>();
+		private bool _arrangeValid;
 
-    #endregion
+		static SplitLayoutView()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<SplitLayoutView>();
+		}
 
-    #region Fields
+		public SplitLayoutView()
+		{
+			this.OverrideStyleKey<SplitLayoutView>();
 
-    private readonly ConstraintGridSplitterDelta _splitterConstraintHelper;
-    private readonly Dictionary<DockItem, DockGridSplitter> _splitters = new Dictionary<DockItem, DockGridSplitter>();
-    private bool _arrangeValid;
+			_splitterConstraintHelper = new ConstraintGridSplitterDelta(new Size(40, 40));
 
-    #endregion
+			SizeChanged += OnSizeChanged;
+		}
 
-    #region Ctors
+		private Grid ItemsHost => TemplateContract.ItemsHost;
 
-    static SplitLayoutView()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<SplitLayoutView>();
-    }
+		public Orientation Orientation
+		{
+			get => (Orientation)GetValue(OrientationProperty);
+			set => SetValue(OrientationProperty, value);
+		}
 
-    public SplitLayoutView()
-    {
-      this.OverrideStyleKey<SplitLayoutView>();
+		private SplitLayoutTemplateContract TemplateContract => (SplitLayoutTemplateContract)TemplateContractInternal;
 
-      _splitterConstraintHelper = new ConstraintGridSplitterDelta(new Size(40, 40));
+		private void AddGridDefinitions()
+		{
+			if (TemplateContract.IsAttached == false)
+				return;
 
-      SizeChanged += OnSizeChanged;
-    }
+			switch (Orientation)
+			{
+				case Orientation.Horizontal:
 
-    #endregion
+					ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
+					ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
 
-    #region Properties
+					break;
 
-    private Grid ItemsHost => TemplateContract.ItemsHost;
+				case Orientation.Vertical:
 
-    public Orientation Orientation
-    {
-      get => (Orientation) GetValue(OrientationProperty);
-      set => SetValue(OrientationProperty, value);
-    }
+					ItemsHost.RowDefinitions.Add(new RowDefinition());
+					ItemsHost.RowDefinitions.Add(new RowDefinition());
 
-    private SplitLayoutTemplateContract TemplateContract => (SplitLayoutTemplateContract) TemplateContractInternal;
+					break;
+			}
+		}
 
-    #endregion
+		private void ApplySize(Size size, bool equalizeSize = false)
+		{
+			if (_arrangeValid == false || Items.Count == 0)
+				return;
 
-    #region  Methods
+			var equalSize = new Size(size.Width / Items.Count, size.Height / Items.Count);
 
-    private void AddGridDefinitions()
-    {
-      if (TemplateContract.IsAttached == false)
-        return;
+			foreach (var item in Items)
+			{
+				var resSize = equalizeSize ? equalSize : new Size(SplitLayout.GetWidth(item), SplitLayout.GetHeight(item));
 
-      switch (Orientation)
-      {
-        case Orientation.Horizontal:
+				switch (Orientation)
+				{
+					case Orientation.Horizontal:
 
-          ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
-          ItemsHost.ColumnDefinitions.Add(new ColumnDefinition());
+						var columnDefinition = ItemsHost.ColumnDefinitions[Grid.GetColumn(item)];
 
-          break;
+						columnDefinition.Width = new GridLength(resSize.Width, GridUnitType.Star);
 
-        case Orientation.Vertical:
+						break;
 
-          ItemsHost.RowDefinitions.Add(new RowDefinition());
-          ItemsHost.RowDefinitions.Add(new RowDefinition());
+					case Orientation.Vertical:
 
-          break;
-      }
-    }
+						var rowDefinition = ItemsHost.RowDefinitions[Grid.GetRow(item)];
 
-    private void ApplySize(Size size, bool equalizeSize = false)
-    {
-      if (_arrangeValid == false || Items.Count == 0)
-        return;
+						rowDefinition.Height = new GridLength(resSize.Height, GridUnitType.Star);
 
-      var equalSize = new Size(size.Width / Items.Count, size.Height / Items.Count);
+						break;
+				}
+			}
+		}
 
-      foreach (var item in Items)
-      {
-	      var resSize = equalizeSize ? equalSize : new Size(SplitLayout.GetSplitWidth(item), SplitLayout.GetSplitHeight(item));
+		protected internal override void ArrangeItems()
+		{
+			if (TemplateContract.IsAttached == false)
+				return;
 
-	      switch (Orientation)
-	      {
-		      case Orientation.Horizontal:
+			var iDefinition = 0;
 
-			      var columnDefinition = ItemsHost.ColumnDefinitions[Grid.GetColumn(item)];
+			ItemsHost.Children.Clear();
 
-			      columnDefinition.Width = new GridLength(resSize.Width, GridUnitType.Star);
+			DockGridSplitter splitter = null;
 
-			      break;
+			foreach (var item in OrderedItems)
+			{
+				splitter = _splitters[item];
+				splitter.Visibility = Visibility.Visible;
 
-		      case Orientation.Vertical:
+				ItemsHost.Children.Add(item);
+				ItemsHost.Children.Add(splitter);
 
-			      var rowDefinition = ItemsHost.RowDefinitions[Grid.GetRow(item)];
+				item.ApplyGridPosition();
+				splitter.ApplyGridPosition();
 
-			      rowDefinition.Height = new GridLength(resSize.Height, GridUnitType.Star);
+				switch (Orientation)
+				{
+					case Orientation.Horizontal:
 
-			      break;
-	      }
-      }
-    }
+						Grid.SetColumn(item, iDefinition);
+						Grid.SetColumn(splitter, iDefinition + 1);
+						ItemsHost.ColumnDefinitions[iDefinition + 1].Width = GridLength.Auto;
+						DockLayoutView.SetResizeDirection(splitter, GridResizeDirection.Columns);
 
-    protected internal override void ArrangeItems()
-    {
-      if (TemplateContract.IsAttached == false)
-        return;
+						break;
 
-      var iDefinition = 0;
+					case Orientation.Vertical:
 
-      ItemsHost.Children.Clear();
+						Grid.SetRow(item, iDefinition);
+						Grid.SetRow(splitter, iDefinition + 1);
+						ItemsHost.RowDefinitions[iDefinition + 1].Height = GridLength.Auto;
+						DockLayoutView.SetResizeDirection(splitter, GridResizeDirection.Rows);
 
-      DockGridSplitter splitter = null;
+						break;
+				}
 
-      foreach (var item in OrderedItems)
-      {
-        splitter = _splitters[item];
-        splitter.Visibility = Visibility.Visible;
+				iDefinition += 2;
+			}
 
-        ItemsHost.Children.Add(item);
-        ItemsHost.Children.Add(splitter);
+			if (splitter != null)
+				splitter.Visibility = Visibility.Collapsed;
 
-        item.ApplyGridPosition();
-        splitter.ApplyGridPosition();
+			_arrangeValid = true;
 
-        switch (Orientation)
-        {
-          case Orientation.Horizontal:
+			ApplySize(RenderSize);
+		}
 
-            Grid.SetColumn(item, iDefinition);
-            Grid.SetColumn(splitter, iDefinition + 1);
-            ItemsHost.ColumnDefinitions[iDefinition + 1].Width = GridLength.Auto;
-            DockLayoutView.SetResizeDirection(splitter, GridResizeDirection.Columns);
+		protected override TemplateContract CreateTemplateContract()
+		{
+			return new SplitLayoutTemplateContract();
+		}
 
-            break;
+		private void FinalizeSplitting()
+		{
+			foreach (var item in Items)
+			{
+				switch (Orientation)
+				{
+					case Orientation.Horizontal:
+						SplitLayout.SetWidth(item, GetColumnWidth(item));
+						break;
+					case Orientation.Vertical:
+						SplitLayout.SetHeight(item, GetRowHeight(item));
+						break;
+				}
+			}
+		}
 
-          case Orientation.Vertical:
+		private double GetColumnWidth(DockItem item)
+		{
+			return ItemsHost.ColumnDefinitions[Grid.GetColumn(item)].Width.Value;
+		}
 
-            Grid.SetRow(item, iDefinition);
-            Grid.SetRow(splitter, iDefinition + 1);
-            ItemsHost.RowDefinitions[iDefinition + 1].Height = GridLength.Auto;
-            DockLayoutView.SetResizeDirection(splitter, GridResizeDirection.Rows);
+		private double GetRowHeight(DockItem item)
+		{
+			return ItemsHost.RowDefinitions[Grid.GetRow(item)].Height.Value;
+		}
 
-            break;
-        }
+		protected override void OnItemAdded(DockItem item)
+		{
+			var splitter = new DockGridSplitter();
 
-        iDefinition += 2;
-      }
+			splitter.LostMouseCapture += OnSplitterLostMouseCapture;
+			splitter.MouseLeftButtonDown += OnSplitterMouseLeftButtonDown;
 
-      if (splitter != null)
-        splitter.Visibility = Visibility.Collapsed;
+			splitter.AddHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler)OnSplitterMouseLeftButtonDown, true);
 
-      _arrangeValid = true;
+			_splitterConstraintHelper.AddSplitter(splitter);
+			_splitters[item] = splitter;
 
-      ApplySize(RenderSize);
-    }
+			AddGridDefinitions();
 
-    protected override TemplateContract CreateTemplateContract()
-    {
-      return new SplitLayoutTemplateContract();
-    }
+			InvalidateItemsArrange();
+		}
 
-    private void FinalizeSplitting()
-    {
-      foreach (var item in Items)
-      {
-        switch (Orientation)
-        {
-          case Orientation.Horizontal:
-            SplitLayout.SetSplitWidth(item, GetColumnWidth(item));
-            break;
-          case Orientation.Vertical:
-            SplitLayout.SetSplitHeight(item, GetRowHeight(item));
-            break;
-        }
-      }
-    }
+		protected override void OnItemRemoved(DockItem item)
+		{
+			var splitter = _splitters[item];
 
-    private double GetColumnWidth(DockItem item)
-    {
-      return ItemsHost.ColumnDefinitions[Grid.GetColumn(item)].Width.Value;
-    }
+			splitter.LostMouseCapture -= OnSplitterLostMouseCapture;
+			splitter.RemoveHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler)OnSplitterMouseLeftButtonDown);
 
-    private double GetRowHeight(DockItem item)
-    {
-      return ItemsHost.RowDefinitions[Grid.GetRow(item)].Height.Value;
-    }
+			_splitterConstraintHelper.RemoveSplitter(splitter);
 
-    protected override void OnItemAdded(DockItem item)
-    {
-      var splitter = new DockGridSplitter();
+			RemoveGridDefinitions();
 
-      splitter.LostMouseCapture += OnSplitterLostMouseCapture;
-      splitter.MouseLeftButtonDown += OnSplitterMouseLeftButtonDown;
+			ItemsHost?.Children.Remove(item);
 
-      splitter.AddHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler) OnSplitterMouseLeftButtonDown, true);
+			InvalidateItemsArrange();
+		}
 
-      _splitterConstraintHelper.AddSplitter(splitter);
-      _splitters[item] = splitter;
+		protected override void OnLayoutAttached()
+		{
+			base.OnLayoutAttached();
 
-      AddGridDefinitions();
+			SetBinding(OrientationProperty, new Binding { Path = new PropertyPath(SplitLayout.OrientationProperty), Source = Layout });
+		}
 
-      InvalidateItemsArrange();
-    }
+		protected override void OnLayoutDetaching()
+		{
+			ClearValue(OrientationProperty);
 
-    protected override void OnItemRemoved(DockItem item)
-    {
-      var splitter = _splitters[item];
+			base.OnLayoutDetaching();
+		}
 
-      splitter.LostMouseCapture -= OnSplitterLostMouseCapture;
-      splitter.RemoveHandler(MouseLeftButtonDownEvent, (MouseButtonEventHandler) OnSplitterMouseLeftButtonDown);
+		private void OnOrientationChanged()
+		{
+			if (ItemsHost == null)
+				return;
 
-      _splitterConstraintHelper.RemoveSplitter(splitter);
+			ItemsHost.ColumnDefinitions.Clear();
+			ItemsHost.RowDefinitions.Clear();
 
-      RemoveGridDefinitions();
+			for (var index = 0; index < Items.Count; index++)
+				AddGridDefinitions();
 
-      ItemsHost?.Children.Remove(item);
+			InvalidateItemsArrange();
+		}
 
-      InvalidateItemsArrange();
-    }
+		private void OnSizeChanged(object sender, SizeChangedEventArgs args)
+		{
+			ApplySize(args.NewSize);
+		}
 
-    protected override void OnLayoutAttached()
-    {
-      base.OnLayoutAttached();
+		private void OnSplitterLostMouseCapture(object sender, MouseEventArgs mouseEventArgs)
+		{
+			FinalizeSplitting();
+		}
 
-      SetBinding(OrientationProperty, new Binding {Path = new PropertyPath(SplitLayout.OrientationProperty), Source = Layout});
-    }
+		private void OnSplitterMouseLeftButtonDown(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+		{
+			if (_arrangeValid && mouseButtonEventArgs.ClickCount == 2)
+				ApplySize(RenderSize, true);
+		}
 
-    protected override void OnLayoutDetaching()
-    {
-      ClearValue(OrientationProperty);
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-      base.OnLayoutDetaching();
-    }
+			_splitterConstraintHelper.Grid = ItemsHost;
 
-    private void OnOrientationChanged()
-    {
-      if (ItemsHost == null)
-        return;
+			for (var index = 0; index < Items.Count; index++)
+				AddGridDefinitions();
+		}
 
-      ItemsHost.ColumnDefinitions.Clear();
-      ItemsHost.RowDefinitions.Clear();
+		protected override void OnTemplateContractDetaching()
+		{
+			ItemsHost.ColumnDefinitions.Clear();
+			ItemsHost.RowDefinitions.Clear();
 
-      for (var index = 0; index < Items.Count; index++)
-        AddGridDefinitions();
+			ItemsHost.Children.Clear();
+			_splitterConstraintHelper.Grid = null;
 
-      InvalidateItemsArrange();
-    }
+			base.OnTemplateContractDetaching();
+		}
 
-    private void OnSizeChanged(object sender, SizeChangedEventArgs args)
-    {
-      ApplySize(args.NewSize);
-    }
+		private void RemoveGridDefinitions()
+		{
+			if (TemplateContract.IsAttached == false)
+				return;
 
-    private void OnSplitterLostMouseCapture(object sender, MouseEventArgs mouseEventArgs)
-    {
-      FinalizeSplitting();
-    }
+			switch (Orientation)
+			{
+				case Orientation.Horizontal:
 
-    private void OnSplitterMouseLeftButtonDown(object sender, MouseButtonEventArgs mouseButtonEventArgs)
-    {
-      if (_arrangeValid && mouseButtonEventArgs.ClickCount == 2)
-        ApplySize(RenderSize, true);
-    }
+					ItemsHost.ColumnDefinitions.RemoveAt(0);
+					ItemsHost.ColumnDefinitions.RemoveAt(0);
 
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
+					break;
 
-      _splitterConstraintHelper.Grid = ItemsHost;
+				case Orientation.Vertical:
 
-      for (var index = 0; index < Items.Count; index++)
-        AddGridDefinitions();
-    }
+					ItemsHost.RowDefinitions.RemoveAt(0);
+					ItemsHost.RowDefinitions.RemoveAt(0);
 
-    protected override void OnTemplateContractDetaching()
-    {
-      ItemsHost.ColumnDefinitions.Clear();
-      ItemsHost.RowDefinitions.Clear();
+					break;
+			}
+		}
+	}
 
-      ItemsHost.Children.Clear();
-      _splitterConstraintHelper.Grid = null;
-
-      base.OnTemplateContractDetaching();
-    }
-
-    private void RemoveGridDefinitions()
-    {
-      if (TemplateContract.IsAttached == false)
-        return;
-
-      switch (Orientation)
-      {
-        case Orientation.Horizontal:
-
-          ItemsHost.ColumnDefinitions.RemoveAt(0);
-          ItemsHost.ColumnDefinitions.RemoveAt(0);
-
-          break;
-
-        case Orientation.Vertical:
-
-          ItemsHost.RowDefinitions.RemoveAt(0);
-          ItemsHost.RowDefinitions.RemoveAt(0);
-
-          break;
-      }
-    }
-
-    #endregion
-  }
-
-  internal sealed class SplitLayoutTemplateContract : TemplateContract
-  {
-    #region Properties
-
-    [TemplateContractPart(Required = true)]
-    public Grid ItemsHost { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
+	internal sealed class SplitLayoutTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = true)]
+		public Grid ItemsHost { get; [UsedImplicitly] private set; }
+	}
 }

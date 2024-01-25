@@ -1,0 +1,100 @@
+<!--
+  <copyright file="Glyphs.xaml" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+    Copyright (c) zaaml. All rights reserved.
+  </copyright>
+-->
+
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <ControlTemplate x:Key="SplitBottomIcon" TargetType="ContentControl" >
+    <Grid>
+      <Path Fill="Transparent" Data="F1 M 0,0L 24,0L 24,24L 0,24L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 0,11L 24,11L 24,24L 0,24L 0,11 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,14L 23,14L 23,23L 1,23L 1,14 Z " />
+      <Path Stroke="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" StrokeStartLineCap="Square" StrokeEndLineCap="Square" StrokeMiterLimit="2.75" StrokeThickness="1" Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 7,1L 11,5L 15,1L 7,1 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="SplitLeftIcon" >
+    <Grid>
+      <Path Fill="Transparent" Data="F1 M 0,0L 24,0L 24,24L 0,24L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 0,0L 12,0L 12,24L 0,24L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,3L 11,3L 11,23L 1,23L 1,3 Z " />
+      <Path Stroke="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" StrokeStartLineCap="Square" StrokeEndLineCap="Square" StrokeMiterLimit="2.75" StrokeThickness="1" Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 22,8L 18,12L 22,16L 22,8 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="SplitRightIcon" >
+    <Grid>
+      <Path Fill="Transparent" Data="F1 M 24,0L 0,0L 0,24L 24,24L 24,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 24,0L 12,0L 12,24L 24,24L 24,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 23,3L 13,3L 13,23L 23,23L 23,3 Z " />
+      <Path Stroke="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" StrokeStartLineCap="Square" StrokeEndLineCap="Square" StrokeMiterLimit="2.75" StrokeThickness="1" Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 2,8L 6,12L 2,16L 2,8 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="SplitTopIcon" >
+    <Grid>
+      <Path Fill="Transparent" Data="F1 M 0,0L 24,0L 24,24L 0,24L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 0,0L 24,0L 24,13L 0,13L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,3L 23,3L 23,12L 1,12L 1,3 Z " />
+      <Path Stroke="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" StrokeStartLineCap="Square" StrokeEndLineCap="Square" StrokeMiterLimit="2.75" StrokeThickness="1" Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 8,21L 12,17L 16,21L 8,21 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="SplitDocumentLeftIcon" >
+    <Grid>
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 0,0L 24,0L 24,24L 0,24L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,3L 12,3L 12,23L 1,23L 1,3 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 12,3L 23,3L 23,23L 12,23L 12,3 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 12,8L 12,10L 11,10L 11,8L 12,8 Z M 12,12L 12,14L 11,14L 11,12L 12,12 Z M 12,16L 12,18L 11,18L 11,16L 12,16 Z M 12,20L 12,22L 11,22L 11,20L 12,20 Z M 12,4L 12,6L 11,6L 11,4L 12,4 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="SplitDocumentTopIcon" >
+    <Grid>
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 0,0L 24,0L 24,24L 0,24L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,3L 23,3L 23,12L 1,12L 1,3 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,12L 23,12L 23,23L 1,23L 1,12 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 19,12L 17,12L 17,11L 19,11L 19,12 Z M 15,12L 13,12L 13,11L 15,11L 15,12 Z M 11,12L 9,12L 9,11L 11,11L 11,12 Z M 7,12L 5,12L 5,11L 7,11L 7,12 Z M 3,12L 1,12L 1,11L 3,11L 3,12 Z M 23,12L 21,12L 21,11L 23,11L 23,12 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="SplitDocumentRightIcon" >
+    <Grid>
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 24,0L 0,0L 0,24L 24,24L 24,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 23,3L 12,3L 12,23L 23,23L 23,3 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 12,3L 1,3L 1,23L 12,23L 12,3 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 13,8L 13,10L 12,10L 12,8L 13,8 Z M 13,12L 13,14L 12,14L 12,12L 13,12 Z M 13,16L 13,18L 12,18L 12,16L 13,16 Z M 13,20L 13,22L 12,22L 12,20L 13,20 Z M 13,4L 13,6L 12,6L 12,4L 13,4 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="SplitDocumentBottomIcon" >
+    <Grid>
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 0,0L 24,0L 24,24L 0,24L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,13L 23,13L 23,23L 1,23L 1,13 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,3L 23,3L 23,13L 1,13L 1,3 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 19,14L 17,14L 17,13L 19,13L 19,14 Z M 15,14L 13,14L 13,13L 15,13L 15,14 Z M 11,14L 9,14L 9,13L 11,13L 11,14 Z M 7,14L 5,14L 5,13L 7,13L 7,14 Z M 3,14L 1,14L 1,13L 3,13L 3,14 Z M 23,14L 21,14L 21,13L 23,13L 23,14 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="TabCenterIcon" >
+    <Grid>
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 0,0L 24,0L 24,24L 0,24L 0,0 Z " />
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconFill}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 1,3L 23,3L 23,23L 1,23L 1,3 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="TabHorizontalIcon" >
+    <Grid>
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 0,0L 24,0L 24,3L 0,3L 0,0 Z " />
+    </Grid>
+  </ControlTemplate>
+  
+  <ControlTemplate x:Key="TabVerticalIcon" >
+    <Grid>
+      <Path Fill="{Binding Path={zm:ExpandoPath Property=IconStroke}, RelativeSource={RelativeSource TemplatedParent}}" Data="F1 M 3,0L 3,24L 0,24L 0,0L 3,0 Z " />
+    </Grid>
+  </ControlTemplate>
+</ResourceDictionary>

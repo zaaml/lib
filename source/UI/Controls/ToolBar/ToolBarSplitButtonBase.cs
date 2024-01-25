@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -73,10 +74,10 @@ namespace Zaaml.UI.Controls.ToolBar
 		public bool ShowSeparator
 		{
 			get => (bool) GetValue(ShowSeparatorProperty);
-			set => SetValue(ShowSeparatorProperty, value);
+			set => SetValue(ShowSeparatorProperty, value.Box());
 		}
 
-		private ToolBarSplitButtonBaseTemplateContract TemplateContract => (ToolBarSplitButtonBaseTemplateContract) TemplateContractInternal;
+		private ToolBarSplitButtonBaseTemplateContract TemplateContract => (ToolBarSplitButtonBaseTemplateContract) TemplateContractCore;
 
 		#endregion
 

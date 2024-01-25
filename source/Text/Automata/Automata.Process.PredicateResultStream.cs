@@ -34,8 +34,7 @@ namespace Zaaml.Text
 
 				public void Enqueue(PredicateResult predicateResult, ref int streamPointer)
 				{
-					_predicateResultMemorySpan.EnsureSizePower2Ceiling(streamPointer + 1);
-					_predicateResultMemorySpan.Span[streamPointer++] = predicateResult;
+					_predicateResultMemorySpan.Add(predicateResult, streamPointer++);
 				}
 
 				protected override void OnMount()

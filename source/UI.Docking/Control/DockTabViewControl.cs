@@ -7,28 +7,24 @@ using Zaaml.UI.Controls.TabView;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class DockTabViewControl : TabViewControl
-  {
-    #region Ctors
-
-    static DockTabViewControl()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<DockTabViewControl>();
-    }
-
-    private protected override bool DefaultAllowNullSelection => true;
-
-    private protected override bool DefaultPreferSelection => true;
+	public class DockTabViewControl : TabViewControl
+	{
+		static DockTabViewControl()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<DockTabViewControl>();
+		}
 
 		public DockTabViewControl()
-    {
-      this.OverrideStyleKey<DockTabViewControl>();
-    }
+		{
+			this.OverrideStyleKey<DockTabViewControl>();
+		}
 
-    #endregion
-  }
+		private protected override bool DefaultAllowNullSelection => true;
 
-  public class DocumentTabViewControl : DockTabViewControl
-  {
-  }
+		private protected override bool DefaultPreferSelection => true;
+	}
+
+	public class DocumentTabViewControl : DockTabViewControl
+	{
+	}
 }

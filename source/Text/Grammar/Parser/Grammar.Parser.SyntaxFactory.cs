@@ -98,6 +98,16 @@ namespace Zaaml.Text
 				{
 					return new TokenSetSymbol(tokens);
 				}
+
+				public static ActionSymbol Action(ActionSyntax actionSyntax)
+				{
+					return new ActionSymbol(actionSyntax);
+				}
+
+				public static PredicateSymbol Predicate(PredicateSyntax predicateSyntax)
+				{
+					return new PredicateSymbol(predicateSyntax);
+				}
 			}
 		}
 	}

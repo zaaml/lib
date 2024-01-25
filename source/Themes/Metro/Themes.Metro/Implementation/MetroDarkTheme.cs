@@ -9,7 +9,7 @@ namespace Zaaml.MetroThemeImplementation
 {
 	public sealed class MetroDarkTheme : SkinnedTheme
 	{
-		private static readonly Lazy<MetroDarkTheme> LazyInstance = new Lazy<MetroDarkTheme>(() => new MetroDarkTheme());
+		private static readonly Lazy<MetroDarkTheme> LazyInstance = new(() => new MetroDarkTheme());
 
 		private MetroDarkTheme()
 		{

@@ -11,6 +11,7 @@ using System.Windows.Markup;
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Windows")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Decorators")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls")]
+[assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Shapes")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.AccordionView")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.BreadCrumb")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.BackstageView")]

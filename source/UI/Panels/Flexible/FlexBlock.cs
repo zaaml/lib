@@ -120,7 +120,7 @@ namespace Zaaml.UI.Panels.Flexible
 
     private FlexElement GetFlexElement(UIElement child)
     {
-      return child.GetFlexElement(this, ActualDefinition.Definitions.ElementAtOrDefault(Children.IndexOf(child)));
+      return child.GetFlexElement(this, ActualOrientation, ActualDefinition.Definitions.ElementAtOrDefault(Children.IndexOf(child)));
     }
 
     bool IFlexPanel.GetIsHidden(UIElement child)
@@ -135,9 +135,11 @@ namespace Zaaml.UI.Panels.Flexible
 
     #endregion
 
-    #region IOrientedPanel
+		private Orientation ActualOrientation => (this.GetVisualParent() as IFlexPanel)?.Orientation.Rotate() ?? Orientation.Horizontal;
 
-    Orientation IOrientedPanel.Orientation => (this.GetVisualParent() as IFlexPanel)?.Orientation.Rotate() ?? Orientation.Horizontal;
+		#region IOrientedPanel
+
+		Orientation IOrientedPanel.Orientation => ActualOrientation;
 
     #endregion
 

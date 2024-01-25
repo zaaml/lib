@@ -3,43 +3,16 @@
 // </copyright>
 
 using System;
+using System.Runtime.CompilerServices;
 using Zaaml.Core.Pools;
 
 namespace Zaaml.Core
 {
-	internal abstract class SharedObject<T> : IDisposable where T : SharedObject<T>
+	internal abstract class SharedObject : IDisposable
 	{
 		#region Properties
 
-		private ReferenceCounter _referenceCount = new();
-
-		#endregion
-
-		private protected int ReferenceCount => _referenceCount.ReferenceCount;
-
-		#region Methods
-
-		public T AddReference()
-		{
-			if (_referenceCount.AddReference() == 1) 
-				OnMount();
-
-			return (T) this;
-		}
-
-		protected virtual void OnReleased()
-		{
-		}
-
-		protected virtual void OnMount()
-		{
-		}
-
-		public void ReleaseReference()
-		{
-			if (_referenceCount.ReleaseReference() == 0) 
-				OnReleased();
-		}
+		private ReferenceCounter _referenceCount;
 
 		#endregion
 
@@ -55,15 +28,41 @@ namespace Zaaml.Core
 		#endregion
 
 		#endregion
+
+		#region Methods
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddReference()
+		{
+			if (_referenceCount.AddReference() == 1)
+				OnMount();
+		}
+
+		protected virtual void OnReleased()
+		{
+		}
+
+		protected virtual void OnMount()
+		{
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ReleaseReference()
+		{
+			if (_referenceCount.ReleaseReference() == 0)
+				OnReleased();
+		}
+
+		#endregion
 	}
 
-	internal abstract class PoolSharedObject<T> : SharedObject<T> where T : PoolSharedObject<T>
+	internal abstract class PoolSharedObject<T> : SharedObject where T : PoolSharedObject<T>
 	{
 		#region Ctors
 
 		protected PoolSharedObject(IPool<T> pool)
 		{
-			Pool = pool;
+			Pool = pool ?? DummyPool<T>.Instance;
 		}
 
 		#endregion
@@ -78,9 +77,7 @@ namespace Zaaml.Core
 
 		protected override void OnReleased()
 		{
-			base.OnReleased();
-
-			Pool?.Release((T) this);
+			Pool.Return((T)this);
 		}
 
 		#endregion

@@ -9,7 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
 using Zaaml.Core.Packed;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -17,6 +17,7 @@ using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
+using Zaaml.UI.Controls.ListView;
 using Zaaml.UI.Controls.Primitives;
 using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 using Zaaml.UI.Controls.TreeView.Data;
@@ -109,7 +110,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public ICommand Command
 		{
-			get => (ICommand) GetValue(CommandProperty);
+			get => (ICommand)GetValue(CommandProperty);
 			set => SetValue(CommandProperty, value);
 		}
 
@@ -121,19 +122,19 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public int ActualLevel
 		{
-			get => (int) GetValue(ActualLevelProperty);
+			get => (int)GetValue(ActualLevelProperty);
 			private set => this.SetReadOnlyValue(ActualLevelPropertyKey, value);
 		}
 
 		public double ActualLevelIndent
 		{
-			get => (double) GetValue(ActualLevelIndentProperty);
+			get => (double)GetValue(ActualLevelIndentProperty);
 			private set => this.SetReadOnlyValue(ActualLevelIndentPropertyKey, value);
 		}
 
 		public ControlTemplate ActualViewTemplate
 		{
-			get => (ControlTemplate) GetValue(ActualViewTemplateProperty);
+			get => (ControlTemplate)GetValue(ActualViewTemplateProperty);
 			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
 		}
 
@@ -145,9 +146,9 @@ namespace Zaaml.UI.Controls.TreeView
 
 		protected virtual bool CanSelect => IsSelectable;
 
-		private TreeViewItemGridCellsPresenter CellsPresenter => TemplateContract.CellsPresenter;
+		private TreeGridViewCellsPresenter CellsPresenter => TemplateContract.CellsPresenter;
 
-		internal TreeViewItemGridCellsPresenter CellsPresenterInternal => CellsPresenter;
+		internal TreeGridViewCellsPresenter CellsPresenterInternal => CellsPresenter;
 
 		private bool CoerceIsExpanded
 		{
@@ -163,7 +164,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public DependencyObject CommandTarget
 		{
-			get => (DependencyObject) GetValue(CommandTargetProperty);
+			get => (DependencyObject)GetValue(CommandTargetProperty);
 			set => SetValue(CommandTargetProperty, value);
 		}
 
@@ -173,7 +174,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public GlyphBase Glyph
 		{
-			get => (GlyphBase) GetValue(GlyphProperty);
+			get => (GlyphBase)GetValue(GlyphProperty);
 			set => SetValue(GlyphProperty, value);
 		}
 
@@ -181,7 +182,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public bool HasItems
 		{
-			get => (bool) GetValue(HasItemsProperty);
+			get => (bool)GetValue(HasItemsProperty);
 			internal set => this.SetReadOnlyValue(HasItemsPropertyKey, value);
 		}
 
@@ -189,8 +190,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public bool IsExpanded
 		{
-			get => (bool) GetValue(IsExpandedProperty);
-			set => SetValue(IsExpandedProperty, value);
+			get => (bool)GetValue(IsExpandedProperty);
+			set => SetValue(IsExpandedProperty, value.Box());
 		}
 
 		private bool IsFocusedVisualState { get; set; }
@@ -201,27 +202,29 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public bool IsSelectable
 		{
-			get => (bool) GetValue(IsSelectableProperty);
-			set => SetValue(IsSelectableProperty, value);
+			get => (bool)GetValue(IsSelectableProperty);
+			set => SetValue(IsSelectableProperty, value.Box());
 		}
 
 		public bool IsSelected
 		{
-			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			get => (bool)GetValue(IsSelectedProperty);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 
 		protected virtual bool IsValid => this.HasValidationError() == false;
 
 		public TreeViewItemCollection ItemCollection => this.GetValueOrCreate(ItemCollectionPropertyKey, CreateItemCollectionPrivate);
 
-		private int Level => TreeViewItemData?.ActualLevel ?? 0;
+		private protected int Level => TreeViewItemData?.ActualLevel ?? 0;
+
+		private protected virtual double LevelIndentSize => TreeViewControl?.LevelIndentSize ?? 0.0;
 
 		public TreeViewItem ParentItem => TreeViewItemData?.ActualParent?.TreeViewItem;
 
 		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			get => (IEnumerable)GetValue(SourceCollectionProperty);
 			set => SetValue(SourceCollectionProperty, value);
 		}
 
@@ -237,11 +240,11 @@ namespace Zaaml.UI.Controls.TreeView
 			set => PackedDefinition.SuspendPushIsExpanded.SetValue(ref _packedValue, value);
 		}
 
-		private TreeViewItemTemplateContract TemplateContract => (TreeViewItemTemplateContract) TemplateContractInternal;
+		private TreeViewItemTemplateContract TemplateContract => (TreeViewItemTemplateContract)TemplateContractInternal;
 
 		public TreeViewControl TreeViewControl
 		{
-			get => (TreeViewControl) GetValue(TreeViewControlProperty);
+			get => (TreeViewControl)GetValue(TreeViewControlProperty);
 			internal set => this.SetReadOnlyValue(TreeViewControlPropertyKey, value);
 		}
 
@@ -276,6 +279,16 @@ namespace Zaaml.UI.Controls.TreeView
 			set => SetValue(ValueProperty, value);
 		}
 
+		private protected virtual int CalculateActualLevel()
+		{
+			return Level;
+		}
+
+		private protected virtual double CalculateActualLevelIndent()
+		{
+			return ActualLevel * LevelIndentSize;
+		}
+
 		private void CleanGlyphPresenter()
 		{
 			if (GlyphPresenter == null)
@@ -295,7 +308,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (ActualCanCollapse == false)
 				return false;
 
-			this.SetCurrentValueInternal(IsExpandedProperty, KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsExpandedProperty, BooleanBoxes.False);
 
 			return IsExpanded == false;
 		}
@@ -310,7 +323,7 @@ namespace Zaaml.UI.Controls.TreeView
 			if (ActualCanExpand == false)
 				return false;
 
-			this.SetCurrentValueInternal(IsExpandedProperty, KnownBoxes.BoolTrue);
+			this.SetCurrentValueInternal(IsExpandedProperty, BooleanBoxes.True);
 
 			return IsExpanded;
 		}
@@ -335,10 +348,10 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private object OnCoerceSelection(object arg)
 		{
-			var isSelected = (bool) arg;
+			var isSelected = (bool)arg;
 
 			if (isSelected && ActualCanSelect == false)
-				return KnownBoxes.BoolFalse;
+				return BooleanBoxes.False;
 
 			return arg;
 		}
@@ -467,6 +480,14 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewControl?.OnItemMouseButton(this, e);
 		}
 
+		protected override void OnMouseDoubleClick(MouseButtonEventArgs e)
+		{
+			if (e.Handled)
+				return;
+
+			TreeViewControl?.OnItemMouseDoubleClick(this, e);
+		}
+
 		protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
 		{
 			if (e.Handled)
@@ -554,7 +575,7 @@ namespace Zaaml.UI.Controls.TreeView
 				UpdateGlyphPresenter();
 			else if (e.Property == TreeViewControl.ViewProperty)
 				UpdateViewTemplate();
-			else if (e.Property == TreeViewControl.LevelIndentProperty)
+			else if (e.Property == TreeViewControl.LevelIndentSizeProperty)
 				UpdateActualLevelIndent();
 		}
 
@@ -596,7 +617,7 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal void SetIsSelectedInternal(bool value)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, value ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsSelectedProperty, value ? BooleanBoxes.True : BooleanBoxes.False);
 		}
 
 		private void SyncTreeNodeState()
@@ -609,8 +630,6 @@ namespace Zaaml.UI.Controls.TreeView
 		public override string ToString()
 		{
 #if DEBUG
-			//return (TreeNode?.ToString() ?? base.ToString()) + $"  ({UniqueId})";
-
 			if (ReferenceEquals(TreeViewItemData?.Data, this))
 				return base.ToString();
 
@@ -627,11 +646,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		private void UpdateActualLevelIndent()
 		{
-			var level = Level;
-			var levelIndent = TreeViewControl?.LevelIndent ?? 0.0;
-
-			ActualLevel = level;
-			ActualLevelIndent = levelIndent * level;
+			ActualLevel = CalculateActualLevel();
+			ActualLevelIndent = CalculateActualLevelIndent();
 		}
 
 		private void UpdateGlyphPresenter()
@@ -779,7 +795,7 @@ namespace Zaaml.UI.Controls.TreeView
 			}
 		}
 
-		private void UpdateZIndex()
+		private protected virtual void UpdateZIndex()
 		{
 			Panel.SetZIndex(this, IsMouseOver ? 30000 : IsSelected ? 20000 : 10000 - ActualLevel);
 		}

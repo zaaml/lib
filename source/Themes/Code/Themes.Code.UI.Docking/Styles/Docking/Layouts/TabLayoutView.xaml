@@ -1,0 +1,69 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  TabViewContentPresenterStyle  -->
+  <zm:Style x:Key="TabViewContentPresenterStyle" TargetType="zm:TabViewContentPresenter">
+    <zm:Setter Property="Template">
+      <zm:Setter.Value>
+        <ControlTemplate TargetType="zm:TabViewContentPresenter">
+          <zm:ControlTemplateRoot>
+            <Border Padding="{TemplateBinding Padding}"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+              <zm:DockPanel>
+
+                <!--  HeaderPresenter  -->
+                <ContentPresenter zm:DockPanel.Dock="Top"
+                                  Content="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=zm:TabLayoutView}, Path=HeaderPresenter}" />
+
+                <!--  ContentPresenter  -->
+                <ContentPresenter x:Name="ContentPresenter"
+                                  Content="{zm:TemplateBinding Path=Content}" />
+
+              </zm:DockPanel>
+            </Border>
+          </zm:ControlTemplateRoot>
+        </ControlTemplate>
+      </zm:Setter.Value>
+    </zm:Setter>
+  </zm:Style>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="TabLayoutViewTemplate"
+                   TargetType="zm:TabLayoutView">
+    <zm:ControlTemplateRoot Background="Transparent">
+
+      <!--  TabViewControl  -->
+      <zm:DockTabViewControl x:Name="TabViewControl"
+                             Padding="0"
+                             Background="Transparent"
+                             BorderBrush="{TemplateBinding BorderBrush}"
+                             ContentPresenterStyle="{zm:NativeStyle Style={StaticResource TabViewContentPresenterStyle}}"
+                             ItemsCloseButtonVisibility="Collapsed"
+                             TabStripPlacement="Bottom">
+
+        <zm:DockTabViewControl.ItemsFlexDefinition>
+          <zm:FlexDefinition Length="Auto"
+                             StretchDirection="Shrink" />
+        </zm:DockTabViewControl.ItemsFlexDefinition>
+      </zm:DockTabViewControl>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="TabLayoutViewBaseStyle" TargetType="zm:TabLayoutView">
+    <zm:Setter Property="Template" Value="{StaticResource TabLayoutViewTemplate}" />
+  </zm:Style>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="TabLayoutViewStyle" BasedOn="{StaticResource TabLayoutViewBaseStyle}" TargetType="zm:TabLayoutView" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="TabLayoutViewThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TabLayoutViewStyle}" TargetType="zm:TabLayoutView" />
+
+</zm:ThemeResourceDictionary>

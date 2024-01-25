@@ -10,12 +10,12 @@ namespace Zaaml.Text
 	{
 		public class ActionEntry
 		{
-			public ActionEntry(Action<ParserContext> action)
+			public ActionEntry(Action<Parser<TToken>> action)
 			{
 				Action = action;
 			}
 
-			public Action<ParserContext> Action { get; }
+			public Action<Parser<TToken>> Action { get; }
 		}
 	}
 }

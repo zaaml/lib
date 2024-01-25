@@ -9,196 +9,166 @@ using System.Threading;
 
 namespace Zaaml.Core.Pools
 {
-  internal class ObjectPool<T> where T : class
-  {
-    #region Fields
+	internal class ObjectPool<T> where T : class
+	{
+		private readonly Action<T> _cleaner;
+		private readonly Func<T> _creator;
+		private readonly Action<T> _initializer;
+		private readonly List<WeakReference> _pool = new();
+		private readonly Semaphore _semaphore;
 
-    private readonly Action<T> _cleaner;
-    private readonly Func<T> _creator;
-    private readonly Action<T> _initializer;
-    private readonly List<WeakReference> _pool = new List<WeakReference>();
-    private readonly Semaphore _semaphore;
+		public ObjectPool(Func<T> creator)
+			: this(creator, null, null, int.MaxValue)
+		{
+		}
 
-    #endregion
+		public ObjectPool(Func<T> creator, Action<T> initializer, Action<T> cleaner, int maxInstances)
+		{
+			_creator = creator;
+			_initializer = initializer;
+			_cleaner = cleaner;
+			InstanceCount = 0;
+			MaxInstances = maxInstances;
+			_semaphore = new Semaphore(MaxInstances);
+		}
 
-    #region Ctors
+		public int InstanceCount { get; private set; }
 
-    public ObjectPool(Func<T> creator)
-      : this(creator, null, null, int.MaxValue)
-    {
-    }
+		public int MaxInstances { get; set; }
 
-    public ObjectPool(Func<T> creator, Action<T> initializer, Action<T> cleaner, int maxInstances)
-    {
-      _creator = creator;
-      _initializer = initializer;
-      _cleaner = cleaner;
-      InstanceCount = 0;
-      MaxInstances = maxInstances;
-      _semaphore = new Semaphore(MaxInstances);
-    }
+		public int Size
+		{
+			get
+			{
+				lock (_pool)
+					return _pool.Count;
+			}
+		}
 
-    #endregion
+		private T Clean(T instance)
+		{
+			_cleaner?.Invoke(instance);
 
-    #region Properties
+			return instance;
+		}
 
-    public int InstanceCount { get; private set; }
+		protected virtual T CreateObject()
+		{
+			var newObject = _creator();
 
-    public int MaxInstances { get; set; }
+			InstanceCount++;
 
-    public int Size
-    {
-      get
-      {
-        lock (_pool)
-          return _pool.Count;
-      }
-    }
+			return newObject;
+		}
 
-    #endregion
+		public T GetObject()
+		{
+			lock (_pool)
+			{
+				var thisObject = RemoveObject();
 
-    #region  Methods
+				if (thisObject != null)
+					return Initialize(thisObject);
 
-    private T Clean(T instance)
-    {
-      _cleaner?.Invoke(instance);
+				return InstanceCount < MaxInstances ? Initialize(CreateObject()) : null;
+			}
+		}
 
-      return instance;
-    }
+		private T Initialize(T instance)
+		{
+			_initializer?.Invoke(instance);
 
-    protected virtual T CreateObject()
-    {
-      var newObject = _creator();
+			return instance;
+		}
 
-      InstanceCount++;
+		public void Release(T obj)
+		{
+			if (obj == null)
+				throw new NullReferenceException();
 
-      return newObject;
-    }
+			lock (_pool)
+			{
+				var refThis = new WeakReference(Clean(obj));
 
-    public T GetObject()
-    {
-      lock (_pool)
-      {
-        var thisObject = RemoveObject();
+				_pool.Add(refThis);
+				_semaphore.Release();
+			}
+		}
 
-        if (thisObject != null)
-          return Initialize(thisObject);
+		private T RemoveObject()
+		{
+			while (_pool.Count > 0)
+			{
+				var refThis = _pool.Last();
 
-        return InstanceCount < MaxInstances ? Initialize(CreateObject()) : null;
-      }
-    }
+				_pool.RemoveAt(_pool.Count - 1);
 
-    private T Initialize(T instance)
-    {
-      _initializer?.Invoke(instance);
+				var thisObject = (T)refThis.Target;
 
-      return instance;
-    }
+				if (thisObject != null)
+					return thisObject;
 
-    public void Release(T obj)
-    {
-      if (obj == null)
-        throw new NullReferenceException();
+				InstanceCount--;
+			}
 
-      lock (_pool)
-      {
-        var refThis = new WeakReference(Clean(obj));
+			return null;
+		}
 
-        _pool.Add(refThis);
-        _semaphore.Release();
-      }
-    }
+		public T WaitForObject()
+		{
+			while (true)
+			{
+				lock (_pool)
+				{
+					var thisObject = RemoveObject();
+					if (thisObject != null)
+						return Initialize(thisObject);
 
-    private T RemoveObject()
-    {
-      while (_pool.Count > 0)
-      {
-        var refThis = _pool.Last();
+					if (InstanceCount < MaxInstances)
+						return Initialize(CreateObject());
+				}
 
-        _pool.RemoveAt(_pool.Count - 1);
+				_semaphore.WaitOne();
+			}
+		}
 
-        var thisObject = (T) refThis.Target;
+		private class Semaphore
+		{
+			public Semaphore(int max = 1)
+			{
+				Mutex = new object();
+				Max = max;
+			}
 
-        if (thisObject != null)
-          return thisObject;
+			private int Count { get; set; }
+			private int Max { get; }
+			private object Mutex { get; }
 
-        InstanceCount--;
-      }
-      return null;
-    }
+			public void Release()
+			{
+				lock (Mutex)
+				{
+					if (Count >= 0)
+						Count--;
+				}
+			}
 
-    public T WaitForObject()
-    {
-      while (true)
-      {
-        lock (_pool)
-        {
-          var thisObject = RemoveObject();
-          if (thisObject != null)
-            return Initialize(thisObject);
+			public void WaitOne()
+			{
+				while (true)
+				{
+					lock (Mutex)
+					{
+						if (Count < Max)
+						{
+							Count++;
+							return;
+						}
+					}
 
-          if (InstanceCount < MaxInstances)
-            return Initialize(CreateObject());
-        }
-        _semaphore.WaitOne();
-      }
-    }
-
-    #endregion
-
-    #region  Nested Types
-
-    private class Semaphore
-    {
-      #region Ctors
-
-      public Semaphore(int max = 1)
-      {
-        Mutex = new object();
-        Max = max;
-      }
-
-      #endregion
-
-      #region Properties
-
-      private int Count { get; set; }
-      private int Max { get; }
-      private object Mutex { get; }
-
-      #endregion
-
-      #region  Methods
-
-      public void Release()
-      {
-        lock (Mutex)
-        {
-          if (Count >= 0)
-            Count--;
-        }
-      }
-
-      public void WaitOne()
-      {
-        while (true)
-        {
-          lock (Mutex)
-          {
-            if (Count < Max)
-            {
-              Count++;
-              return;
-            }
-          }
-
-          Thread.Sleep(50);
-        }
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+					Thread.Sleep(50);
+				}
+			}
+		}
+	}
 }

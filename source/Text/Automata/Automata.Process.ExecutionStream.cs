@@ -6,6 +6,7 @@
 
 
 using System;
+using System.Runtime.CompilerServices;
 using Zaaml.Core;
 
 namespace Zaaml.Text
@@ -18,23 +19,26 @@ namespace Zaaml.Text
 			{
 				private readonly MemorySpanAllocator<int> _memorySpanAllocator;
 				private MemorySpan<int> _executionPathMemorySpan;
-				private bool _forkPath;
 
 				public ExecutionStream(MemorySpanAllocator<int> memorySpanAllocator, Pool<ExecutionStream> pool) : base(pool)
 				{
 					_memorySpanAllocator = memorySpanAllocator;
 				}
 
-				public void Enqueue(ExecutionPath executionPath, ref int streamPointer)
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public void Enqueue(int executionPath, int streamPointer)
 				{
-					_forkPath |= executionPath.IsForkExecutionPath;
-					_executionPathMemorySpan.EnsureSizePower2Ceiling(streamPointer + 1);
-					_executionPathMemorySpan.Span[streamPointer++] = executionPath.Id;
+					_executionPathMemorySpan.Add(executionPath, streamPointer);
 				}
 
-				public Span<int> GetSpan(int executionStreamPointer)
+				public Span<int> GetSpan(int length)
 				{
-					return _executionPathMemorySpan.Span.Slice(0, executionStreamPointer);
+					return _executionPathMemorySpan.SpanSafe.Slice(0, length);
+				}
+
+				public Span<int> GetSpan(int index, int length)
+				{
+					return _executionPathMemorySpan.SpanSafe.Slice(index, length);
 				}
 
 				protected override void OnMount()
@@ -46,13 +50,7 @@ namespace Zaaml.Text
 
 				protected override void OnReleased()
 				{
-					if (_forkPath)
-					{
-
-					}
-
-					_executionPathMemorySpan.Dispose();
-					_executionPathMemorySpan = MemorySpan<int>.Empty;
+					_executionPathMemorySpan = _executionPathMemorySpan.DisposeExchange();
 
 					base.OnReleased();
 				}

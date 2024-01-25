@@ -11,252 +11,230 @@ using System.Windows.Interop;
 using Microsoft.Win32;
 using Zaaml.Platform;
 using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.PresentationCore
 {
-  public class Screen
-  {
-    #region Static Fields and Constants
+	internal sealed class Screen
+	{
+		private const int PrimaryMonitor = unchecked((int) 0xFAADD00D);
+		private const uint MONITORINFOF_PRIMARY = 1;
+		private static readonly object SyncLock = new();
+		private static int _desktopChangedCount = -1;
+		private static readonly bool MultiMonitorSupport = NativeMethods.GetSystemMetrics(SM.CMONITORS) != 0;
+		private static Screen[] _screens;
 
-    private const int PrimaryMonitor = unchecked((int) 0xFAADD00D);
-    private const uint MONITORINFOF_PRIMARY = 1;
-    private static readonly object SyncLock = new object();
-    private static int _desktopChangedCount = -1;
-    private static readonly bool MultiMonitorSupport = NativeMethods.GetSystemMetrics(SM.CMONITORS) != 0;
-    private static Screen[] _screens;
+		private readonly IntPtr _hMonitor;
+		private readonly bool _primary;
+		private int _currentDesktopChangedCount = -1;
+		private Rect _workingArea = Rect.Empty;
 
-    #endregion
+		internal Screen(IntPtr monitor)
+		{
+			if (MultiMonitorSupport == false || monitor == (IntPtr) PrimaryMonitor)
+			{
+				Bounds = new Rect(new Point(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop), new Size(SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight));
+				_primary = true;
+			}
+			else
+			{
+				var monitorInfo = NativeMethods.GetMonitorInfo(monitor);
 
-    #region Fields
+				Bounds = monitorInfo.rcMonitor.ToPresentationRect().FromDeviceToLogical();
+				_primary = (monitorInfo.dwFlags & MONITORINFOF_PRIMARY) != 0;
+			}
 
-    private readonly IntPtr _hmonitor;
-    private readonly bool _primary;
-    private int _currentDesktopChangedCount = -1;
-    private Rect _workingArea = Rect.Empty;
+			_hMonitor = monitor;
+		}
 
-    #endregion
+		public static Screen[] AllScreens
+		{
+			get
+			{
+				if (_screens != null)
+					return _screens;
 
-    #region Ctors
+				if (MultiMonitorSupport)
+				{
+					MonitorEnumCallback closure = new MonitorEnumCallback();
+					NativeMethods.MonitorEnumProc proc = closure.Callback;
+					NativeMethods.EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, proc, IntPtr.Zero);
 
-    internal Screen(IntPtr monitor)
-    {
-      if (MultiMonitorSupport == false || monitor == (IntPtr) PrimaryMonitor)
-      {
-        Bounds = new Rect(new Point(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop), new Size(SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight));
-        _primary = true;
-      }
-      else
-      {
-        var monitorInfo = NativeMethods.GetMonitorInfo(monitor);
-        Bounds = monitorInfo.rcMonitor.ToPresentationRect().FromDeviceToLogical();
-        _primary = (monitorInfo.dwFlags & MONITORINFOF_PRIMARY) != 0;
-      }
-      _hmonitor = monitor;
-    }
+					if (closure.Screens.Count > 0)
+					{
+						Screen[] temp = new Screen[closure.Screens.Count];
+						closure.Screens.CopyTo(temp, 0);
+						_screens = temp;
+					}
+					else
+						_screens = new[] {new Screen((IntPtr) PrimaryMonitor)};
+				}
+				else
+					_screens = new[] {PrimaryScreen};
 
-    #endregion
+				SystemEvents.DisplaySettingsChanging += OnDisplaySettingsChanging;
 
-    #region Properties
+				return _screens;
+			}
+		}
 
-    public static Screen[] AllScreens
-    {
-      get
-      {
-        if (_screens != null) return _screens;
+		public Rect Bounds { get; }
 
-        if (MultiMonitorSupport)
-        {
-          MonitorEnumCallback closure = new MonitorEnumCallback();
-          NativeMethods.MonitorEnumProc proc = closure.Callback;
-          NativeMethods.EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, proc, IntPtr.Zero);
+		private static int DesktopChangedCount
+		{
+			get
+			{
+				if (_desktopChangedCount != -1) 
+					return _desktopChangedCount;
 
-          if (closure.Screens.Count > 0)
-          {
-            Screen[] temp = new Screen[closure.Screens.Count];
-            closure.Screens.CopyTo(temp, 0);
-            _screens = temp;
-          }
-          else
-            _screens = new[] {new Screen((IntPtr) PrimaryMonitor)};
-        }
-        else
-          _screens = new[] {PrimaryScreen};
+				lock (SyncLock)
+				{
+					if (_desktopChangedCount != -1) return _desktopChangedCount;
+					SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
 
-        SystemEvents.DisplaySettingsChanging += OnDisplaySettingsChanging;
+					_desktopChangedCount = 0;
+				}
 
-        return _screens;
-      }
-    }
+				return _desktopChangedCount;
+			}
+		}
 
+		public DpiValue Dpi => DpiUtils.GetMonitorDpi(_hMonitor);
 
-    public Rect Bounds { get; }
+		public int DpiX => Dpi.DpiX;
 
-    private static int DesktopChangedCount
-    {
-      get
-      {
-        if (_desktopChangedCount != -1) return _desktopChangedCount;
+		public int DpiY => Dpi.DpiY;
 
-        lock (SyncLock)
-        {
-          if (_desktopChangedCount != -1) return _desktopChangedCount;
-          SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+		public bool Primary => _primary;
 
-          _desktopChangedCount = 0;
-        }
-        return _desktopChangedCount;
-      }
-    }
+		public static Screen PrimaryScreen => MultiMonitorSupport ? AllScreens.FirstOrDefault(t => t._primary) : new Screen((IntPtr) PrimaryMonitor);
 
-    public bool Primary => _primary;
+		public static Rect VirtualScreenRect => new(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop, SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
 
-    public static Screen PrimaryScreen => MultiMonitorSupport ? AllScreens.FirstOrDefault(t => t._primary) : new Screen((IntPtr) PrimaryMonitor);
+		public static Size VirtualScreenSize => new(SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
 
-    public Rect WorkingArea
-    {
-      get
-      {
-        if (_currentDesktopChangedCount == DesktopChangedCount) return _workingArea;
+		public Rect WorkingArea
+		{
+			get
+			{
+				if (_currentDesktopChangedCount == DesktopChangedCount)
+					return _workingArea;
 
-        Interlocked.Exchange(ref _currentDesktopChangedCount, DesktopChangedCount);
+				Interlocked.Exchange(ref _currentDesktopChangedCount, DesktopChangedCount);
 
-        if (!MultiMonitorSupport || _hmonitor == (IntPtr) PrimaryMonitor)
-          _workingArea = SystemParameters.WorkArea;
-        else
-        {
-          var monitorInfo = NativeMethods.GetMonitorInfo(_hmonitor);
-          _workingArea = monitorInfo.rcWork.ToPresentationRect().FromDeviceToLogical();
-        }
+				if (!MultiMonitorSupport || _hMonitor == (IntPtr) PrimaryMonitor)
+					_workingArea = SystemParameters.WorkArea;
+				else
+				{
+					var monitorInfo = NativeMethods.GetMonitorInfo(_hMonitor);
 
-        return _workingArea;
-      }
-    }
+					_workingArea = monitorInfo.rcWork.ToPresentationRect().FromDeviceToLogical();
+				}
 
-    #endregion
+				return _workingArea;
+			}
+		}
 
-    #region  Methods
+		public override bool Equals(object obj)
+		{
+			if (!(obj is Screen))
+				return false;
 
-    public override bool Equals(object obj)
-    {
-      if (!(obj is Screen)) return false;
+			var comp = (Screen) obj;
 
-      var comp = (Screen) obj;
+			return _hMonitor == comp._hMonitor;
+		}
 
-      return _hmonitor == comp._hmonitor;
-    }
+		public static Screen FromElement(UIElement element)
+		{
+			var hwndSource = (HwndSource) PresentationSource.FromVisual(element);
 
-    public static Screen FromElement(UIElement element)
-    {
-      var hwndSource = (HwndSource) PresentationSource.FromVisual(element);
+			return hwndSource == null ? PrimaryScreen : FromHandleInternal(hwndSource.Handle);
+		}
 
-      return hwndSource == null ? PrimaryScreen : FromHandleInternal(hwndSource.Handle);
-    }
+		private static Screen FromHandleInternal(IntPtr hwnd)
+		{
+			return MultiMonitorSupport ? new Screen(NativeMethods.MonitorFromWindow(hwnd, MonitorOptions.MONITOR_DEFAULTTONEAREST)) : PrimaryScreen;
+		}
 
-    private static Screen FromHandleInternal(IntPtr hwnd)
-    {
-      return MultiMonitorSupport ? new Screen(NativeMethods.MonitorFromWindow(hwnd, MonitorOptions.MONITOR_DEFAULTTONEAREST)) : PrimaryScreen;
-    }
+		public static Screen FromPoint(Point point)
+		{
+			if (MultiMonitorSupport == false)
+				return new Screen((IntPtr) PrimaryMonitor);
 
-    public static Screen FromPoint(Point point)
-    {
-      if (MultiMonitorSupport == false)
-        return new Screen((IntPtr) PrimaryMonitor);
+			var pt = point.FromLogicalToDevice().ToPlatformPoint();
 
-      var pt = point.FromLogicalToDevice().ToPlatformPoint();
-      return new Screen(NativeMethods.MonitorFromPoint(pt, MonitorOptions.MONITOR_DEFAULTTONEAREST));
-    }
+			return new Screen(NativeMethods.MonitorFromPoint(pt, MonitorOptions.MONITOR_DEFAULTTONEAREST));
+		}
 
-    public static Screen FromRectangle(Rect rect)
-    {
-      if (MultiMonitorSupport == false)
-        return new Screen((IntPtr) PrimaryMonitor);
+		public static Screen FromRectangle(Rect rect)
+		{
+			if (MultiMonitorSupport == false)
+				return new Screen((IntPtr) PrimaryMonitor);
 
-      var rc = rect.FromLogicalToDevice().ToPlatformRect();
+			var rc = rect.FromLogicalToDevice().ToPlatformRect();
 
-      return new Screen(NativeMethods.MonitorFromRect(ref rc, MonitorOptions.MONITOR_DEFAULTTONEAREST));
-    }
+			return new Screen(NativeMethods.MonitorFromRect(ref rc, MonitorOptions.MONITOR_DEFAULTTONEAREST));
+		}
 
-    public static Rect GetBounds(Point pt)
-    {
-      return FromPoint(pt).Bounds;
-    }
+		public static Rect GetBounds(Point pt)
+		{
+			return FromPoint(pt).Bounds;
+		}
 
-    public static Rect GetBounds(Rect rect)
-    {
-      return FromRectangle(rect).Bounds;
-    }
+		public static Rect GetBounds(Rect rect)
+		{
+			return FromRectangle(rect).Bounds;
+		}
 
-    public override int GetHashCode()
-    {
-      return (int) _hmonitor;
-    }
+		public override int GetHashCode()
+		{
+			return (int) _hMonitor;
+		}
 
+		public static Rect GetWorkingArea(Point pt)
+		{
+			return FromPoint(pt).WorkingArea;
+		}
 
-    public static Rect GetWorkingArea(Point pt)
-    {
-      return FromPoint(pt).WorkingArea;
-    }
+		public static Rect GetWorkingArea(Rect rect)
+		{
+			return FromRectangle(rect).WorkingArea;
+		}
 
-    public static Rect GetWorkingArea(Rect rect)
-    {
-      return FromRectangle(rect).WorkingArea;
-    }
+		private static void OnDisplaySettingsChanging(object sender, EventArgs e)
+		{
+			SystemEvents.DisplaySettingsChanging -= OnDisplaySettingsChanging;
 
-    private static void OnDisplaySettingsChanging(object sender, EventArgs e)
-    {
-      SystemEvents.DisplaySettingsChanging -= OnDisplaySettingsChanging;
+			_screens = null;
+		}
 
-      _screens = null;
-    }
+		private static void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+		{
+			if (e.Category == UserPreferenceCategory.Desktop)
+			{
+				Interlocked.Increment(ref _desktopChangedCount);
+			}
+		}
 
+		private class MonitorEnumCallback
+		{
+			public readonly ArrayList Screens = new();
 
-    private static void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
-    {
-      if (e.Category == UserPreferenceCategory.Desktop)
-      {
-        Interlocked.Increment(ref _desktopChangedCount);
-      }
-    }
+			public bool Callback(IntPtr monitor, IntPtr hdc, IntPtr lprcMonitor, IntPtr lparam)
+			{
+				Screens.Add(new Screen(monitor));
 
-    #region Properties
+				return true;
+			}
+		}
 
-    public static Rect VirtualScreenRect => new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop, SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
-
-    public static Size VirtualScreenSize => new Size(SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
-
-    #endregion
-
-    public static event EventHandler VirtualScreenSizeChanged
-    {
-      // ReSharper disable ValueParameterNotUsed
-      add { }
-      remove { }
-      // ReSharper restore ValueParameterNotUsed
-    }
-
-    #endregion
-
-    #region  Nested Types
-
-    private class MonitorEnumCallback
-    {
-      #region Fields
-
-      public readonly ArrayList Screens = new ArrayList();
-
-      #endregion
-
-      #region  Methods
-
-      public bool Callback(IntPtr monitor, IntPtr hdc, IntPtr lprcMonitor, IntPtr lparam)
-      {
-        Screens.Add(new Screen(monitor));
-        return true;
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+		public static event EventHandler VirtualScreenSizeChanged
+		{
+			// ReSharper disable ValueParameterNotUsed
+			add { }
+			remove { }
+			// ReSharper restore ValueParameterNotUsed
+		}
+	}
 }

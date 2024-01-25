@@ -72,7 +72,7 @@ namespace Zaaml.Core.Extensions
 			using var enumerator = TreeEnumerator.GetReverseEnumerator(root, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(this ITreeEnumeratorAdvisor<T> iteratorAdvisor, IEnumerable<T> treeItems, Action<T, AncestorsEnumerator<T>> visitor) where T : class
@@ -80,14 +80,15 @@ namespace Zaaml.Core.Extensions
 			using var enumerator = TreeEnumerator.GetReverseEnumerator(treeItems, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(this ITreeEnumeratorAdvisor<T> iteratorAdvisor, IEnumerator<T> treeItemsEnumerator, Action<T, AncestorsEnumerator<T>> visitor) where T : class
 		{
 			using var enumerator = TreeEnumerator.GetReverseEnumerator(treeItemsEnumerator, iteratorAdvisor);
+
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(this ITreeEnumeratorAdvisor<T> iteratorAdvisor, T root, Action<T> visitor) where T : class
@@ -119,7 +120,7 @@ namespace Zaaml.Core.Extensions
 			using var enumerator = TreeEnumerator.GetEnumerator(root, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(this ITreeEnumeratorAdvisor<T> iteratorAdvisor, IEnumerable<T> treeItems, Action<T, AncestorsEnumerator<T>> visitor) where T : class
@@ -127,7 +128,7 @@ namespace Zaaml.Core.Extensions
 			using var enumerator = TreeEnumerator.GetEnumerator(treeItems, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(this ITreeEnumeratorAdvisor<T> iteratorAdvisor, IEnumerator<T> treeItemsEnumerator, Action<T, AncestorsEnumerator<T>> visitor) where T : class
@@ -135,7 +136,7 @@ namespace Zaaml.Core.Extensions
 			using var enumerator = TreeEnumerator.GetEnumerator(treeItemsEnumerator, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		#endregion

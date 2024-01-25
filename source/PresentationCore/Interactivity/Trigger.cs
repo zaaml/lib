@@ -11,24 +11,14 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class Trigger : SourceTriggerBase, IPropertySubject
 	{
-		#region Static Fields and Constants
-
 		private static readonly InteractivityProperty TargetValueProperty = RegisterInteractivityProperty(OnValueChanged);
 		private static readonly InteractivityProperty SourceValueProperty = RegisterInteractivityProperty(OnValueChanged);
 
 		private static readonly uint DefaultPackedValue;
 
-		#endregion
-
-		#region Fields
-
 		private ITriggerValueComparer _comparer;
 		private object _sourceValue;
 		private object _targetValue;
-
-		#endregion
-
-		#region Ctors
 
 		static Trigger()
 		{
@@ -42,10 +32,6 @@ namespace Zaaml.PresentationCore.Interactivity
 			PackedValue |= DefaultPackedValue;
 		}
 
-		#endregion
-
-		#region Properties
-
 		private DependencyProperty ActualProperty => PropertyResolver.ResolveProperty(this);
 
 		public ITriggerValueComparer Comparer
@@ -57,7 +43,7 @@ namespace Zaaml.PresentationCore.Interactivity
 					return;
 
 				_comparer = value;
-				
+
 				UpdateTriggerState();
 			}
 		}
@@ -97,16 +83,12 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => SetValue(TargetValueProperty, ref _targetValue, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (Trigger) source;
-			
+			var triggerSource = (Trigger)source;
+
 			PropertyResolver.CopyFrom(this, triggerSource);
 
 			Value = triggerSource.Value;
@@ -144,13 +126,13 @@ namespace Zaaml.PresentationCore.Interactivity
 		protected override void OnActualSourceChanged(DependencyObject oldSource)
 		{
 			base.OnActualSourceChanged(oldSource);
-			
+
 			UpdateSourceBinding();
 		}
 
 		private static void OnValueChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
-			((Trigger) interactivityObject).UpdateTriggerState();
+			((Trigger)interactivityObject).UpdateTriggerState();
 		}
 
 		private void UpdateSourceBinding()
@@ -158,19 +140,13 @@ namespace Zaaml.PresentationCore.Interactivity
 			var source = ActualSource;
 			var property = ActualProperty;
 
-			SourceValue = property != null && source != null ? new Binding {Path = new PropertyPath(property), Source = source} : null;
+			SourceValue = property != null && source != null ? new Binding { Path = new PropertyPath(property), Source = source } : null;
 		}
 
 		protected override TriggerState UpdateTriggerStateCore()
 		{
 			return TriggerCompareUtil.UpdateState(this, SourceValueProperty, ref _sourceValue, TargetValueProperty, ref _targetValue, Comparer);
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IPropertySubject
 
 		DependencyObject IPropertySubject.ActualSubject => ActualSource;
 
@@ -187,21 +163,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			OnActualPropertyChanged(oldProperty, newProperty);
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedEnumItemDefinition<PropertyKind> PropertyKind;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -209,10 +173,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				PropertyKind = allocator.AllocateEnumItem<PropertyKind>();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

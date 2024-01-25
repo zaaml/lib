@@ -7,29 +7,17 @@ using System.Windows;
 
 namespace Zaaml.PresentationCore.Services
 {
-  internal interface IDependencyObjectService<in T> : IDependencyObjectService where T : DependencyObject
-  {
-    #region Properties
+	internal interface IDependencyObjectService<in T> : IDependencyObjectService where T : DependencyObject
+	{
+		bool IsAttached { get; }
 
-    bool IsAttached { get; }
+		IDependencyObjectService<T> Attach(T dependencyObject);
+		IDependencyObjectService<T> Detach(T dependencyObject);
+	}
 
-    #endregion
-
-    #region  Methods
-
-    IDependencyObjectService<T> Attach(T dependencyObject);
-    IDependencyObjectService<T> Detach(T dependencyObject);
-
-    #endregion
-  }
-
-  internal interface IDependencyObjectService : IDisposable
-  {
-    #region  Methods
-
-    IDependencyObjectService Attach(DependencyObject dependencyObject);
-    IDependencyObjectService Detach(DependencyObject dependencyObject);
-
-    #endregion
-  }
+	internal interface IDependencyObjectService : IDisposable
+	{
+		IDependencyObjectService Attach(DependencyObject dependencyObject);
+		IDependencyObjectService Detach(DependencyObject dependencyObject);
+	}
 }

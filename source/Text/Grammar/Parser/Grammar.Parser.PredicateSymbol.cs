@@ -10,42 +10,24 @@ namespace Zaaml.Text
 		{
 			protected internal sealed class PredicateSymbol : Symbol
 			{
-				public PredicateSymbol(Parser<TToken>.PredicateEntry predicate)
+				public PredicateSymbol(PredicateSyntax predicateSyntax)
 				{
-					Predicate = predicate;
+					PredicateSyntax = predicateSyntax;
 				}
 
-				public Parser<TToken>.PredicateEntry Predicate { get; }
+				public Parser<TToken>.PredicateEntry PredicateEntry => PredicateSyntax.PredicateEntry;
+
+				public PredicateSyntax PredicateSyntax { get; }
 			}
 
-			protected internal abstract class PrecedenceSymbol : Symbol
+			protected internal sealed class DataSymbol<TData> : Symbol
 			{
-				public Syntax Syntax { get; }
-
-				public int Value { get; }
-
-				public bool Level { get; }
-
-				protected PrecedenceSymbol(Syntax syntax, int value, bool level)
+				public DataSymbol(TData data)
 				{
-					Syntax = syntax;
-					Value = value;
-					Level = level;
+					Data = data;
 				}
-			}
 
-			protected internal sealed class EnterPrecedenceSymbol : PrecedenceSymbol
-			{
-				public EnterPrecedenceSymbol(Syntax syntax, int value, bool level) : base(syntax, value, level)
-				{
-				}
-			}
-
-			protected internal sealed class LeavePrecedenceSymbol : PrecedenceSymbol
-			{
-				public LeavePrecedenceSymbol(Syntax syntax, int value, bool level) : base(syntax, value, level)
-				{
-				}
+				public TData Data { get; }
 			}
 		}
 	}

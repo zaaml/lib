@@ -19,17 +19,13 @@ namespace Zaaml.PresentationCore.Theming
 
 		private object GetSkinValue(object value, object parameter)
 		{
-			var skin = value as SkinBase;
-
-			if (skin == null)
+			if (value is not SkinBase skin)
 				return null;
 
-			if (parameter is ThemeResourceKey)
-				return skin.GetValueInternal((ThemeResourceKey) parameter);
+			if (parameter is ThemeResourceKey key)
+				return skin.GetValueInternal(key);
 
-			var valuePath = parameter as string;
-
-			return valuePath != null ? skin.GetValueInternal(valuePath) : null;
+			return parameter is string valuePath ? skin.GetValueInternal(valuePath) : null;
 		}
 
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

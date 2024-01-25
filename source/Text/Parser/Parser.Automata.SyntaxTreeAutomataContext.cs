@@ -12,8 +12,8 @@ namespace Zaaml.Text
 		{
 			private sealed class SyntaxTreeAutomataContext : ValueAutomataContext
 			{
-				public SyntaxTreeAutomataContext(ParserRule rule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, ProcessKind processKind, Parser<TGrammar, TToken> parser, ParserAutomata parserAutomata)
-					: base(rule, lexemeSource, parserContext, processKind, parser, parserAutomata)
+				public SyntaxTreeAutomataContext(ParserSyntax syntax, LexemeSource<TToken> lexemeSource, ProcessKind processKind, Parser<TGrammar, TToken> parser, ParserAutomata parserAutomata)
+					: base(syntax, lexemeSource, processKind, parser, parserAutomata)
 				{
 				}
 			}

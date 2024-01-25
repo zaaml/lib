@@ -15,14 +15,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
 	internal class InteractivityProperty
 	{
-		#region Fields
-
 		private readonly bool _bindable;
 		private readonly InteractivityPropertyChangedCallback _onPropertyChanged;
-
-		#endregion
-
-		#region Ctors
 
 		public InteractivityProperty(InteractivityPropertyChangedCallback onPropertyChanged, bool bindable = true)
 		{
@@ -30,34 +24,30 @@ namespace Zaaml.PresentationCore.Interactivity
 			_bindable = bindable;
 		}
 
-		#endregion
-
-		#region  Methods
-
 		public object CacheConvert(InteractivityObject interactivityObject, Type targetType, ref object valueStore)
 		{
 			Load(interactivityObject, ref valueStore);
 
 			if (targetType == null)
-				return GetValueInt(valueStore);
+				return GetValueInternal(valueStore);
 
 			if (valueStore is XamlConvertCache cache)
 				return cache.Convert(targetType);
 
 			if (valueStore is InteractivityBindingProxy bindingProxy)
-		    return bindingProxy.GetValue(targetType);
+				return bindingProxy.GetValue(targetType);
 
-      valueStore = new XamlConvertCache(valueStore, targetType);
+			valueStore = new XamlConvertCache(valueStore, targetType);
 
-			return GetValueInt(valueStore);
+			return GetValueInternal(valueStore);
 		}
 
-		public void Copy(out object targetValue, object sourceValue)
+		public static void Copy(out object targetValue, object sourceValue)
 		{
 			targetValue = GetOriginalValue(sourceValue);
 		}
 
-		public NativeBinding GetBinding(object value)
+		public static NativeBinding GetBinding(object value)
 		{
 			return GetBindingProxy(value)?.Binding;
 		}
@@ -67,7 +57,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			return value as InteractivityBindingProxy;
 		}
 
-		public object GetOriginalValue(object valueStore)
+		public static object GetOriginalValue(object valueStore)
 		{
 			if (valueStore is XamlConvertCache cache)
 				return cache.OriginalValue;
@@ -75,7 +65,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			return valueStore is InteractivityBindingProxy proxy ? proxy.Binding : valueStore;
 		}
 
-		public object GetOriginalValue(InteractivityObject interactivityObject, object valueStore)
+		public static object GetOriginalValue(InteractivityObject interactivityObject, object valueStore)
 		{
 			return GetOriginalValue(valueStore);
 		}
@@ -84,10 +74,10 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			Load(interactivityObject, ref valueStore);
 
-			return GetValueInt(valueStore);
+			return GetValueInternal(valueStore);
 		}
 
-		private static object GetValueInt(object value)
+		private static object GetValueInternal(object value)
 		{
 			if (value is XamlConvertCache cache)
 				return cache.Value;
@@ -103,7 +93,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (valueStore is XamlConvertCache || valueStore is InteractivityBindingProxy)
 				return;
 
-			if (_bindable == false) 
+			if (_bindable == false)
 				return;
 
 			var binding = valueStore as NativeBinding ?? (valueStore as BindingBaseExtension)?.GetBinding(interactivityObject.InteractivityTarget, null);
@@ -129,12 +119,12 @@ namespace Zaaml.PresentationCore.Interactivity
 		public void Unload(InteractivityObject interactivityObject, ref object valueStore)
 		{
 			var proxy = GetBindingProxy(valueStore);
-			
+
 			if (proxy != null)
 			{
 				valueStore = proxy.Binding;
 				proxy.Dispose();
-			
+
 				return;
 			}
 
@@ -142,61 +132,35 @@ namespace Zaaml.PresentationCore.Interactivity
 				valueStore = cache.OriginalValue;
 		}
 
-    #endregion
-
-    #region  Nested Types
-
-    private class InteractivityBindingProxy : BindingProxyBase
+		private class InteractivityBindingProxy : BindingProxyBase
 		{
-			#region Fields
-
 			private readonly WeakReference _interactivityObjectWeak;
 			private readonly InteractivityProperty _property;
-		  private ConvertCacheStore _cacheStore;
-
-			#endregion
-
-			#region Ctors
+			private ConvertCacheStore _cacheStore;
 
 			public InteractivityBindingProxy(InteractivityObject interactivityObject, InteractivityProperty property, NativeBinding binding, DependencyObject dataObject) : base(binding, dataObject)
 			{
 				_interactivityObjectWeak = new WeakReference(interactivityObject);
 				_property = property;
-        _cacheStore.Value = Value;
-      }
+				_cacheStore.Value = Value;
+			}
 
-			#endregion
-
-			#region  Methods
+			public object GetValue(Type targetType)
+			{
+				return XamlStaticConverter.ConvertCache(ref _cacheStore, targetType);
+			}
 
 			protected override void OnPropertyChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
 			{
-			  _cacheStore.Value = newValue;
+				_cacheStore.Value = newValue;
 
-        var interactivityObject = _interactivityObjectWeak.GetTarget<InteractivityObject>();
+				var interactivityObject = _interactivityObjectWeak.GetTarget<InteractivityObject>();
 
 				if (interactivityObject != null)
 					_property.OnChanged(interactivityObject, oldValue, newValue);
 				else
 					Dispose();
 			}
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region IConvertCachable
-
-			public object GetValue(Type targetType)
-			{
-			  return XamlStaticConverter.ConvertCache(ref _cacheStore, targetType);
-			}
-
-			#endregion
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

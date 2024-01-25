@@ -1,0 +1,120 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Visual States  -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!--  OpenStates States  -->
+    <zm:VisualStateGroup Name="OpenStates">
+      <zm:VisualState Name="PopupOpened" />
+      <zm:VisualState Name="PopupClosed" />
+    </zm:VisualStateGroup>
+
+  </zm:VisualStateGroupCollection>
+
+  <!--  Transition  -->
+  <zm:Transition x:Key="Transition"
+                 Duration="0:0:0.2">
+    <BackEase Amplitude=".3"
+              EasingMode="EaseOut" />
+  </zm:Transition>
+
+  <!--  PopupContentPresenter Template  -->
+  <ControlTemplate x:Key="ValidationPopupRootTemplate"
+                   TargetType="zm:PopupContentPresenter">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <zm:ControlTemplateRoot.Resources>
+        <TranslateTransform x:Key="Transform" X="-25" />
+      </zm:ControlTemplateRoot.Resources>
+
+      <zm:Panel Width="{TemplateBinding PopupWidth}"
+                Height="{TemplateBinding PopupHeight}"
+                MinWidth="{TemplateBinding PopupMinWidth}"
+                MinHeight="{TemplateBinding PopupMinHeight}"
+                MaxWidth="{TemplateBinding PopupMaxWidth}"
+                Margin="0"
+                Opacity="0"
+                RenderTransform="{StaticResource Transform}">
+
+        <zm:Extension.Setters>
+
+          <zm:SetterGroup Transition="{StaticResource Transition}" VisualState="PopupOpened">
+            <zm:Setter Property="Opacity" Value="1" />
+            <zm:Setter Target="{StaticResource Transform}" Property="X" Value="0" />
+          </zm:SetterGroup>
+        </zm:Extension.Setters>
+
+        <Border x:Name="ContentHost"
+                Background="{TemplateBinding Background}"
+                CornerRadius="2">
+          <zm:ContentPresenter x:Name="ContentPresenter" />
+        </Border>
+      </zm:Panel>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="ValidationErrorToolTipTemplate"
+                   TargetType="zm:ValidationErrorToolTip">
+    <zm:ControlTemplateRoot>
+
+      <zm:Popup x:Name="Popup"
+                zm:SnapPlacement.AttachedAdjustment="{zm:TemplateBinding Path=(zm:SnapPlacement.AttachedAdjustment)}"
+                zm:SnapPlacement.AttachedDefinition="{zm:TemplateBinding Path=(zm:SnapPlacement.AttachedDefinition)}"
+                PlacementOptions="{TemplateBinding PlacementOptions}"
+                StaysOpen="{TemplateBinding StaysOpen}">
+
+        <zm:PopupContentPresenter x:Name="PopupPresenter"
+                                  zm:Popup.Inflate="0"
+                                  AllowMotionAnimation="False"
+                                  AllowOpacityAnimation="False"
+                                  Background="{TemplateBinding Background}"
+                                  BorderBrush="{TemplateBinding BorderBrush}"
+                                  PopupHeight="{TemplateBinding PopupHeight}"
+                                  PopupMaxHeight="{TemplateBinding PopupMaxHeight}"
+                                  PopupMaxWidth="{TemplateBinding PopupMaxWidth}"
+                                  PopupMinHeight="{TemplateBinding PopupMinHeight}"
+                                  PopupMinWidth="{TemplateBinding PopupMinWidth}"
+                                  PopupWidth="{TemplateBinding PopupWidth}"
+                                  Template="{StaticResource ValidationPopupRootTemplate}">
+
+          <zm:ContentPresenter x:Name="ContentPresenter"
+                               Margin="{TemplateBinding Padding}"
+                               Content="{TemplateBinding Content}">
+
+            <zm:ContentPresenter.Resources>
+              <Style TargetType="{x:Type TextBlock}">
+                <Setter Property="TextWrapping" Value="Wrap" />
+              </Style>
+            </zm:ContentPresenter.Resources>
+
+          </zm:ContentPresenter>
+
+        </zm:PopupContentPresenter>
+      </zm:Popup>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ValidationErrorToolTipBase" Skin="Code.ValidationErrorControl" TargetType="zm:ValidationErrorToolTip">
+    <zm:Setter Property="Padding" Value="8,4" />
+    <zm:Setter Property="Template" Value="{StaticResource ValidationErrorToolTipTemplate}" />
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="Foreground" Property="Foreground" />
+      <zm:Setter ValuePath="Background" Property="Background" />
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+    </zm:SetterGroup>
+
+  </zm:Style>
+
+  <!--  ThemeStyle  -->
+  <zm:ThemeStyle x:Key="ValidationErrorToolTipThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ValidationErrorToolTipBase}" TargetType="zm:ValidationErrorToolTip" />
+
+</zm:ThemeResourceDictionary>

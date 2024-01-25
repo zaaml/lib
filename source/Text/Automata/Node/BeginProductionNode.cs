@@ -8,7 +8,7 @@ namespace Zaaml.Text
 	{
 		private protected sealed class BeginProductionNode : ProductionNode
 		{
-			public BeginProductionNode(Automata<TInstruction, TOperand> automata, Graph graph, Production production) : base(automata, graph, production)
+			public BeginProductionNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, Production production) : base(automata, syntaxGraph, production)
 			{
 			}
 
@@ -19,7 +19,7 @@ namespace Zaaml.Text
 		{
 			public PrecedencePredicate Precedence { get; }
 
-			protected PrecedenceNode(Automata<TInstruction, TOperand> automata, Graph graph, PrecedencePredicate precedence) : base(automata, graph)
+			protected PrecedenceNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, PrecedencePredicate precedence) : base(automata, syntaxGraph)
 			{
 				Precedence = precedence;
 			}
@@ -27,7 +27,7 @@ namespace Zaaml.Text
 
 		private protected sealed class PrecedenceEnterNode : PrecedenceNode
 		{
-			public PrecedenceEnterNode(Automata<TInstruction, TOperand> automata, Graph graph, PrecedencePredicate precedence) : base(automata, graph, precedence)
+			public PrecedenceEnterNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, PrecedencePredicate precedence) : base(automata, syntaxGraph, precedence)
 			{
 			}
 
@@ -36,7 +36,7 @@ namespace Zaaml.Text
 
 		private protected sealed class PrecedenceLeaveNode : PrecedenceNode
 		{
-			public PrecedenceLeaveNode(Automata<TInstruction, TOperand> automata, Graph graph, PrecedencePredicate precedence) : base(automata, graph, precedence)
+			public PrecedenceLeaveNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, PrecedencePredicate precedence) : base(automata, syntaxGraph, precedence)
 			{
 			}
 

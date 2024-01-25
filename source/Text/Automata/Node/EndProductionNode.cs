@@ -8,7 +8,7 @@ namespace Zaaml.Text
 	{
 		private protected sealed class EndProductionNode : ProductionNode
 		{
-			public EndProductionNode(Automata<TInstruction, TOperand> automata, Graph graph, Production production) : base(automata, graph, production)
+			public EndProductionNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, Production production) : base(automata, syntaxGraph, production)
 			{
 			}
 

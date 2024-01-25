@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -82,6 +83,26 @@ namespace Zaaml.Text
 				{
 					return new QuantifierSymbol(new NodeSymbol(this), QuantifierKind.ZeroOrOne, quantifierMode);
 				}
+
+				internal List<SyntaxPrecedence> Precedences { get; } = new();
+
+				public void SetPrecedence(NodeSyntax syntax, int level)
+				{
+					Precedences.Add(new SyntaxPrecedence(syntax, level));
+				}
+			}
+
+			protected internal readonly struct SyntaxPrecedence
+			{
+				public SyntaxPrecedence(NodeSyntax syntax, int level)
+				{
+					Syntax = syntax;
+					Level = level;
+				}
+
+				public readonly NodeSyntax Syntax;
+				public readonly int Level;
+
 			}
 
 			protected internal sealed class NodeSyntax<TNode> : NodeSyntax where TNode : class
@@ -102,9 +123,9 @@ namespace Zaaml.Text
 					return parserSyntaxProduction;
 				}
 
-				public Production AddReturnProduction<TProductionNode>(NodeSyntax<TProductionNode> nodeSyntax) where TProductionNode : class, TNode
+				public Production AddProduction<TProductionNode>(NodeSyntax<TProductionNode> nodeSyntax) where TProductionNode : class, TNode
 				{
-					var parserSyntaxProduction = new Production(new Symbol[] { new NodeSymbol(nodeSyntax) })
+					var parserSyntaxProduction = new Production(new NodeSymbol(nodeSyntax))
 					{
 						Name = typeof(TProductionNode).Name,
 						ProductionBinding = ReturnNodeBinding.Bind<TProductionNode>()
@@ -113,6 +134,17 @@ namespace Zaaml.Text
 					AddProductionCore(parserSyntaxProduction);
 
 					return parserSyntaxProduction;
+				}
+
+				public void DerivedSyntax<TDerivedNode>(NodeSyntax<TDerivedNode> syntax) where TDerivedNode : class, TNode
+				{
+					var parserSyntaxProduction = new Production(new NodeSymbol(syntax))
+					{
+						Name = typeof(TDerivedNode).Name,
+						ProductionBinding = ReturnNodeBinding.Bind<TDerivedNode>()
+					};
+
+					AddProductionCore(parserSyntaxProduction);
 				}
 			}
 		}

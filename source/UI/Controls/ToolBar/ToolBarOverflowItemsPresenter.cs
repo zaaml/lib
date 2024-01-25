@@ -17,16 +17,10 @@ namespace Zaaml.UI.Controls.ToolBar
 	[TemplateContractType(typeof(ToolBarOverflowItemsPresenterTemplateContract))]
 	public sealed class ToolBarOverflowItemsPresenter : TemplateContractControl
 	{
-		#region Static Fields and Constants
-
 		private static readonly DependencyPropertyKey ToolBarPropertyKey = DPM.RegisterReadOnly<ToolBarControl, ToolBarOverflowItemsPresenter>
 			("ToolBar");
 
 		public static readonly DependencyProperty ToolBarProperty = ToolBarPropertyKey.DependencyProperty;
-
-		#endregion
-
-		#region Ctors
 
 		static ToolBarOverflowItemsPresenter()
 		{
@@ -40,25 +34,17 @@ namespace Zaaml.UI.Controls.ToolBar
 			OverflowItems = new ToolBarOverflowItemCollection(this);
 		}
 
-		#endregion
-
-		#region Properties
-
 		private ToolBarOverflowItemsPanel ItemsHost => TemplateContract.ItemsHost;
 
 		internal ToolBarOverflowItemCollection OverflowItems { get; }
 
-		private ToolBarOverflowItemsPresenterTemplateContract TemplateContract => (ToolBarOverflowItemsPresenterTemplateContract) TemplateContractInternal;
+		private ToolBarOverflowItemsPresenterTemplateContract TemplateContract => (ToolBarOverflowItemsPresenterTemplateContract)TemplateContractCore;
 
 		public ToolBarControl ToolBar
 		{
-			get => (ToolBarControl) GetValue(ToolBarProperty);
+			get => (ToolBarControl)GetValue(ToolBarProperty);
 			internal set => this.SetReadOnlyValue(ToolBarPropertyKey, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		internal void OnItemAttached(OverflowItem<ToolBarItem> item)
 		{
@@ -81,8 +67,6 @@ namespace Zaaml.UI.Controls.ToolBar
 
 			base.OnTemplateContractDetaching();
 		}
-
-		#endregion
 	}
 
 	public sealed class ToolBarOverflowItemsPanel : StackItemsPanelBase<OverflowItem<ToolBarItem>>
@@ -91,11 +75,7 @@ namespace Zaaml.UI.Controls.ToolBar
 
 	public sealed class ToolBarOverflowItemsPresenterTemplateContract : TemplateContract
 	{
-		#region Properties
-
 		[TemplateContractPart(Required = true)]
 		public ToolBarOverflowItemsPanel ItemsHost { get; [UsedImplicitly] private set; }
-
-		#endregion
 	}
 }

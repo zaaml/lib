@@ -5,75 +5,56 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-  //[ContentProperty(nameof(Template))]
-  public partial class TemplateIcon : IconBase
-  {
-    #region Static Fields and Constants
+	public partial class TemplateIcon : IconBase
+	{
+		public static readonly DependencyProperty TemplateProperty = DPM.RegisterAttached<DataTemplate, TemplateIcon>
+			("Template", OnIconPropertyChanged);
 
-    public static readonly DependencyProperty TemplateProperty = DPM.RegisterAttached<DataTemplate, TemplateIcon>
-      ("Template", OnIconPropertyChanged);
+		private static readonly List<DependencyProperty> Properties = new()
+		{
+			TemplateProperty
+		};
 
-    private static readonly List<DependencyProperty> Properties = new List<DependencyProperty>
-    {
-      TemplateProperty
-    };
+		private ContentPresenter _contentPresenter;
 
-    #endregion
+		static TemplateIcon()
+		{
+			Factories[TemplateProperty] = () => new TemplateIcon();
+		}
 
-    #region Fields
+		private DataTemplate ActualTemplate => GetActualValue<DataTemplate>(TemplateProperty);
 
-    private ContentPresenter _contentPresenter;
+		protected internal override FrameworkElement IconElement => _contentPresenter ??= CreateContentPresenter();
 
-    #endregion
+		protected override IEnumerable<DependencyProperty> PropertiesCore => Properties;
 
-    #region Ctors
+		public DataTemplate Template
+		{
+			get => (DataTemplate)GetValue(TemplateProperty);
+			set => SetValue(TemplateProperty, value);
+		}
 
-    static TemplateIcon()
-    {
-      Factories[TemplateProperty] = () => new TemplateIcon();
-    }
+		private ContentPresenter CreateContentPresenter()
+		{
+			return new ContentPresenter { ContentTemplate = ActualTemplate };
+		}
 
-    #endregion
+		protected override IconBase CreateInstanceCore() => new TemplateIcon();
 
-    #region Properties
+		protected override void OnIconPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			if (_contentPresenter == null)
+				return;
 
-    private DataTemplate ActualTemplate => GetActualValue<DataTemplate>(TemplateProperty);
+			var contentPresenterProperty = e.Property == TemplateProperty ? ContentPresenter.ContentTemplateProperty : null;
 
-    protected internal override FrameworkElement IconElement => _contentPresenter ?? (_contentPresenter = CreateContentPresenter());
-
-    protected override IEnumerable<DependencyProperty> PropertiesCore => Properties;
-
-    public DataTemplate Template
-    {
-      get => (DataTemplate) GetValue(TemplateProperty);
-      set => SetValue(TemplateProperty, value);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private ContentPresenter CreateContentPresenter()
-    {
-      return new ContentPresenter {ContentTemplate = ActualTemplate};
-    }
-
-    protected override IconBase CreateInstanceCore() => new TemplateIcon();
-
-    protected override void OnIconPropertyChanged(DependencyPropertyChangedEventArgs e)
-    {
-      if (_contentPresenter == null)
-        return;
-
-      var contentPresenterProperty = e.Property == TemplateProperty ? ContentPresenter.ContentTemplateProperty : null;
-      if (contentPresenterProperty != null)
-        _contentPresenter.SetValue(contentPresenterProperty, GetActualValue<object>(e.Property));
-    }
-
-    #endregion
-  }
+			if (contentPresenterProperty != null)
+				_contentPresenter.SetValue(contentPresenterProperty, GetActualValue<object>(e.Property));
+		}
+	}
 }

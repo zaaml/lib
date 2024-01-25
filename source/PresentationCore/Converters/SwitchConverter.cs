@@ -47,7 +47,7 @@ namespace Zaaml.PresentationCore.Converters
 
 	public class Default<TKey, TValue> : SwitchOption<TKey, TValue>
 	{
-		private XamlConvertCacheStruct<TKey> _keyCache = new XamlConvertCacheStruct<TKey> {Value = default};
+		private XamlConvertCacheStruct<TKey> _keyCache = new() { Value = default };
 
 		internal override TKey XamlConvertKey(Type targetType)
 		{
@@ -64,7 +64,7 @@ namespace Zaaml.PresentationCore.Converters
 	{
 		private static readonly SwitchOption<TKey, TValue> FallBackCase = new Case<TKey, TValue>();
 
-		public OptionCollection<TKey, TValue> Options { get; } = new OptionCollection<TKey, TValue>();
+		public OptionCollection<TKey, TValue> Options { get; } = new();
 
 		protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
 		{
@@ -107,12 +107,12 @@ namespace Zaaml.PresentationCore.Converters
 
 		private static object GetKey(SwitchOption<TKey, TValue> switchOption, SwitchConvertDirection direction, Type targetType)
 		{
-			return direction == SwitchConvertDirection.Direct ? (object) switchOption.XamlConvertKey(targetType) : switchOption.XamlConvertValue(targetType);
+			return direction == SwitchConvertDirection.Direct ? switchOption.XamlConvertKey(targetType) : switchOption.XamlConvertValue(targetType);
 		}
 
 		private static object GetValue(SwitchOption<TKey, TValue> switchOption, SwitchConvertDirection direction, Type targetType)
 		{
-			return direction == SwitchConvertDirection.Direct ? (object) switchOption.XamlConvertValue(targetType) : switchOption.XamlConvertKey(targetType);
+			return direction == SwitchConvertDirection.Direct ? switchOption.XamlConvertValue(targetType) : switchOption.XamlConvertKey(targetType);
 		}
 
 		private enum SwitchConvertDirection
@@ -153,17 +153,17 @@ namespace Zaaml.PresentationCore.Converters
 
 		internal override object XamlConvertKey(Type targetType)
 		{
-			return _keyCache.XamlConvert(targetType);
+			return _keyCache.XamlTryConvert(targetType, out var convertedValue) ? convertedValue : _keyCache.Value;
 		}
 	}
 
 	public class Default : SwitchOption
 	{
-		private XamlConvertCacheStruct _keyCache = new XamlConvertCacheStruct {Value = default};
+		private XamlConvertCacheStruct _keyCache = new() { Value = default };
 
 		internal override object XamlConvertKey(Type targetType)
 		{
-			return _keyCache.XamlConvert(targetType);
+			return _keyCache.XamlTryConvert(targetType, out var convertedValue) ? convertedValue : _keyCache.Value;
 		}
 	}
 
@@ -176,7 +176,7 @@ namespace Zaaml.PresentationCore.Converters
 	{
 		private static readonly SwitchOption FallBackCase = new Case();
 
-		public OptionCollection Options { get; } = new OptionCollection();
+		public OptionCollection Options { get; } = new();
 
 		protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
 		{

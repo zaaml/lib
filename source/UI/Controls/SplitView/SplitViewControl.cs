@@ -5,6 +5,7 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -78,8 +79,8 @@ namespace Zaaml.UI.Controls.SplitView
 
 		public bool IsPaneOpen
 		{
-			get => (bool) GetValue(IsPaneOpenProperty);
-			set => SetValue(IsPaneOpenProperty, value);
+			get => (bool)GetValue(IsPaneOpenProperty);
+			set => SetValue(IsPaneOpenProperty, value.Box());
 		}
 
 		public double OpenPaneLength
@@ -112,8 +113,8 @@ namespace Zaaml.UI.Controls.SplitView
 
 		public bool ShowPaneShadow
 		{
-			get => (bool) GetValue(ShowPaneShadowProperty);
-			set => SetValue(ShowPaneShadowProperty, value);
+			get => (bool)GetValue(ShowPaneShadowProperty);
+			set => SetValue(ShowPaneShadowProperty, value.Box());
 		}
 
 		private SplitViewControlTemplateContract TemplateContract => (SplitViewControlTemplateContract) TemplateContractInternal;

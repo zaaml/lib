@@ -115,7 +115,7 @@ namespace Zaaml.PresentationCore.Input
 
       #region Properties
 
-      private double DragLength => PointUtils.SubtractPoints(MouseInternal.ScreenPosition, ScreenOrigin).Length;
+      private double DragLength => PointUtils.SubtractPoints(MouseInternal.ScreenLogicalPosition, ScreenOrigin).Length;
 
       public int HandlerPriority { get; }
 
@@ -161,7 +161,7 @@ namespace Zaaml.PresentationCore.Input
       {
         IsDragging = true;
 
-        ScreenOrigin = MouseInternal.ScreenPosition;
+        ScreenOrigin = MouseInternal.ScreenLogicalPosition;
         ScreenPoint = ScreenOrigin;
 
         _thresholdExceeded = false;
@@ -202,7 +202,7 @@ namespace Zaaml.PresentationCore.Input
 
         try
         {
-          ScreenPoint = MouseInternal.ScreenPosition;
+          ScreenPoint = MouseInternal.ScreenLogicalPosition;
 
           if (_thresholdExceeded)
             OnDragMove();

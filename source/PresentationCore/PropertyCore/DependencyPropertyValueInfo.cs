@@ -7,149 +7,148 @@ using System.Windows;
 using System.Windows.Data;
 using Zaaml.Core;
 using Zaaml.Core.Utils;
-using Zaaml.PresentationCore.PropertyCore.Extensions;
 
 namespace Zaaml.PresentationCore.PropertyCore
 {
-  internal struct DependencyPropertyValueInfo
-  {
-    private readonly DependencyObject _dependencyObject;
-    private readonly DependencyProperty _dependencyProperty;
-    private object _localValue;
-    private object _value;
-    private object _defaultValue;
-    private PropertyValueSource? _valueSource;
-    private Type _propertyType;
-    private PropertyMetadata _propertyMetadata;
+	internal struct DependencyPropertyValueInfo
+	{
+		private readonly DependencyObject _dependencyObject;
+		private readonly DependencyProperty _dependencyProperty;
+		private object _localValue;
+		private object _value;
+		private object _defaultValue;
+		private PropertyValueSource? _valueSource;
+		private Type _propertyType;
+		private PropertyMetadata _propertyMetadata;
 
-    public DependencyPropertyValueInfo(DependencyObject dependencyObject, DependencyProperty dependencyProperty) : this()
-    {
-      _dependencyObject = dependencyObject;
-      _dependencyProperty = dependencyProperty;
+		public DependencyPropertyValueInfo(DependencyObject dependencyObject, DependencyProperty dependencyProperty) : this()
+		{
+			_dependencyObject = dependencyObject;
+			_dependencyProperty = dependencyProperty;
 
-      _localValue = Unset.Value;
-      _value = Unset.Value;
-      _defaultValue = Unset.Value;
-    }
+			_localValue = Unset.Value;
+			_value = Unset.Value;
+			_defaultValue = Unset.Value;
+		}
 
-    public object LocalValue
-    {
-      get
-      {
-        if (_localValue.IsUnset())
-          _localValue = _dependencyObject.ReadLocalValue(_dependencyProperty);
+		public object LocalValue
+		{
+			get
+			{
+				if (_localValue.IsUnset())
+					_localValue = _dependencyObject.ReadLocalValue(_dependencyProperty);
 
-        return _localValue;
-      }
-    }
+				return _localValue;
+			}
+		}
 
-    public object Value
-    {
-      get
-      {
-        if (_value.IsUnset())
-          _value = _dependencyObject.GetValue(_dependencyProperty);
+		public object Value
+		{
+			get
+			{
+				if (_value.IsUnset())
+					_value = _dependencyObject.GetValue(_dependencyProperty);
 
-        return _value;
-      }
-    }
+				return _value;
+			}
+		}
 
-    public object DefaultValue
-    {
-      get
-      {
-        if (_defaultValue.IsSet())
-          return _defaultValue;
+		public object DefaultValue
+		{
+			get
+			{
+				if (_defaultValue.IsSet())
+					return _defaultValue;
 
-        _defaultValue = PropertyMetadata.DefaultValue;
+				_defaultValue = PropertyMetadata.DefaultValue;
 
-        if (_defaultValue != DependencyProperty.UnsetValue)
-          return _defaultValue;
+				if (_defaultValue != DependencyProperty.UnsetValue)
+					return _defaultValue;
 
-        var propertyType = PropertyType;
+				var propertyType = PropertyType;
 
-        _defaultValue = propertyType != null ? RuntimeUtils.CreateDefaultValue(propertyType) : null;
+				_defaultValue = propertyType != null ? RuntimeUtils.CreateDefaultValue(propertyType) : null;
 
-        return _defaultValue;
-      }
-    }
+				return _defaultValue;
+			}
+		}
 
-    public PropertyMetadata PropertyMetadata
-    {
-      get
-      {
-        if (_propertyMetadata != null)
-          return _propertyMetadata;
+		public PropertyMetadata PropertyMetadata
+		{
+			get
+			{
+				if (_propertyMetadata != null)
+					return _propertyMetadata;
 
-        _propertyMetadata = _dependencyProperty.GetMetadata(_dependencyObject.GetType());
+				_propertyMetadata = _dependencyProperty.GetMetadata(_dependencyObject.GetType());
 
-        return _propertyMetadata;
-      }
-    }
+				return _propertyMetadata;
+			}
+		}
 
-    public Type PropertyType
-    {
-      get
-      {
-        if (_propertyType != null)
-          return _propertyType;
+		public Type PropertyType
+		{
+			get
+			{
+				if (_propertyType != null)
+					return _propertyType;
 
-        _propertyType = _dependencyProperty.GetPropertyType();
+				_propertyType = _dependencyProperty.GetPropertyType();
 
-        return _propertyType;
-      }
-    }
+				return _propertyType;
+			}
+		}
 
-    private PropertyValueSource EvaluateValueSource()
-    {
-#if !SILVERLIGHT
-      var valueSource = DependencyPropertyHelper.GetValueSource(_dependencyObject, _dependencyProperty);
+		private PropertyValueSource EvaluateValueSource()
+		{
+			var valueSource = DependencyPropertyHelper.GetValueSource(_dependencyObject, _dependencyProperty);
 
-      switch (valueSource.BaseValueSource)
-      {
-        case BaseValueSource.Unknown:
-        case BaseValueSource.Default:
-          return PropertyValueSource.Default;
-        case BaseValueSource.Inherited:
-        case BaseValueSource.Style:
-        case BaseValueSource.StyleTrigger:
-        case BaseValueSource.DefaultStyle:
-        case BaseValueSource.DefaultStyleTrigger:
-        case BaseValueSource.ImplicitStyleReference:
-          return PropertyValueSource.Inherited;
-        case BaseValueSource.TemplateTrigger:
-        case BaseValueSource.ParentTemplate:
-        case BaseValueSource.ParentTemplateTrigger:
-          return PropertyValueSource.TemplatedParent;
-        case BaseValueSource.Local:
-          return LocalValue is BindingExpression ? PropertyValueSource.LocalBinding : PropertyValueSource.Local;
-      }
-#endif
-      var localValue = LocalValue;
-      var isUnset = ReferenceEquals(DependencyProperty.UnsetValue, localValue);
+			switch (valueSource.BaseValueSource)
+			{
+				case BaseValueSource.Unknown:
+				case BaseValueSource.Default:
+					return PropertyValueSource.Default;
+				case BaseValueSource.Inherited:
+				case BaseValueSource.Style:
+				case BaseValueSource.StyleTrigger:
+				case BaseValueSource.DefaultStyle:
+				case BaseValueSource.DefaultStyleTrigger:
+				case BaseValueSource.ImplicitStyleReference:
+					return PropertyValueSource.Inherited;
+				case BaseValueSource.TemplateTrigger:
+				case BaseValueSource.ParentTemplate:
+				case BaseValueSource.ParentTemplateTrigger:
+					return PropertyValueSource.TemplatedParent;
+				case BaseValueSource.Local:
+					return LocalValue is BindingExpression ? PropertyValueSource.LocalBinding : PropertyValueSource.Local;
+			}
 
-      if (localValue is BindingExpression)
-        return PropertyValueSource.LocalBinding;
+			var localValue = LocalValue;
+			var isUnset = ReferenceEquals(DependencyProperty.UnsetValue, localValue);
 
-      if (isUnset == false)
-        return PropertyValueSource.Local;
+			if (localValue is BindingExpression)
+				return PropertyValueSource.LocalBinding;
 
-      return Equals(Value, DefaultValue) == false ? PropertyValueSource.Inherited : PropertyValueSource.Default;
-    }
+			if (isUnset == false)
+				return PropertyValueSource.Local;
 
-    public PropertyValueSource ValueSource
-    {
-      get
-      {
-        if (_valueSource.HasValue == false)
-          _valueSource = EvaluateValueSource();
+			return Equals(Value, DefaultValue) == false ? PropertyValueSource.Inherited : PropertyValueSource.Default;
+		}
 
-        return _valueSource.Value;
-      }
-    }
+		public PropertyValueSource ValueSource
+		{
+			get
+			{
+				if (_valueSource.HasValue == false)
+					_valueSource = EvaluateValueSource();
 
-    public bool HasLocalValue => ReferenceEquals(LocalValue, DependencyProperty.UnsetValue) == false;
+				return _valueSource.Value;
+			}
+		}
 
-    public bool IsDefaultValue => HasLocalValue == false && ValueSource == PropertyValueSource.Default;
-  }
+		// TODO: Review logic. Current isn't correct. It returns true when current value differs from default value, but value source is default (SetCurrentValue)
+		public bool HasLocalValue => ReferenceEquals(LocalValue, DependencyProperty.UnsetValue) == false;
+
+		public bool IsDefaultValue => HasLocalValue == false && ValueSource == PropertyValueSource.Default;
+	}
 }

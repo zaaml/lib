@@ -2,6 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Runtime.CompilerServices;
+
 namespace Zaaml.Core.Utils
 {
 	internal static class BitUtils
@@ -48,36 +50,67 @@ namespace Zaaml.Core.Utils
 			return (int)n;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ulong RotateLeft(ulong value, int bitsCount)
+		{
+			return (value << bitsCount) | (value >> (64 - bitsCount));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static uint RotateLeft(uint value, int bitsCount)
+		{
+			return (value << bitsCount) | (value >> (32 - bitsCount));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static uint RotateRight(uint value, int bitsCount)
+		{
+			return (value >> bitsCount) | (value << (32 - bitsCount));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ulong RotateRight(ulong value, int bitsCount)
+		{
+			return (value >> bitsCount) | (value << (64 - bitsCount));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int MostSignificantPosition(int value)
 		{
 			return MostSignificantPosition((ulong)value);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int MostSignificantPosition(uint value)
 		{
 			return MostSignificantPosition((ulong)value);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int MostSignificantPosition(short value)
 		{
 			return MostSignificantPosition((ulong)value);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int MostSignificantPosition(ushort value)
 		{
 			return MostSignificantPosition((ulong)value);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int MostSignificantPosition(byte value)
 		{
 			return MostSignificantPosition((ulong)value);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int MostSignificantPosition(long value)
 		{
 			return MostSignificantPosition((ulong)value);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int MostSignificantPosition(ulong input)
 		{
 			return 63 - LeadingZeroCount(input);

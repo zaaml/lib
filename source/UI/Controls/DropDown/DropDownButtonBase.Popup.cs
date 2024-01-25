@@ -69,7 +69,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		private PopupControlHost PopupHost => TemplateContract.PopupHost;
 
-		private DropDownButtonBaseTemplateContract TemplateContract => (DropDownButtonBaseTemplateContract) TemplateContractInternal;
+		private DropDownButtonBaseTemplateContract TemplateContract => (DropDownButtonBaseTemplateContract) TemplateContractCore;
 
 		protected override TemplateContract CreateTemplateContract()
 		{

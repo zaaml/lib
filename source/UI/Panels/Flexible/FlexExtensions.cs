@@ -3,154 +3,176 @@
 // </copyright>
 
 using System.Windows;
+using System.Windows.Controls;
+using Zaaml.Core.Extensions;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore.Extensions;
-using Zaaml.UI.Panels.Core;
+using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Panels.Flexible
 {
-  public static class FlexExtensions
-  {
-    #region  Methods
+	public static class FlexExtensions
+	{
+		public static FlexElement GetFlexElement(this UIElement child, Panel panel, Orientation orientation, FlexDefinition panelChildDefinition = null)
+		{
+			// ReSharper disable once SuspiciousTypeConversion.Global
 
-    public static FlexElement GetFlexElement(this UIElement child, Panel panel, FlexDefinition panelChildDefinition = null)
-    {
-      // ReSharper disable once SuspiciousTypeConversion.Global
-      var flexChild = child as IFlexElement;
+			if (child is IFlexElementProvider flexElementProvider)
+				return flexElementProvider.GetFlexElement();
 
-      if (flexChild != null)
-      {
-        return new FlexElement(flexChild.MinLength, flexChild.MaxLength, true)
-        {
-          OverflowBehavior = flexChild.OverflowBehavior,
-          StretchDirection = flexChild.StretchDirection,
-          ExpandPriority = flexChild.ExpandPriority,
-          ShrinkPriority = flexChild.ShrinkPriority
-        };
-      }
+			return new FlexElementComposition(child, orientation, null, panel, panelChildDefinition).FlexElement;
+		}
 
-      return new FlexElementComposition(child, null, panel, panelChildDefinition).FlexElement;
-    }
+		private struct FlexElementComposition
+		{
+			private static readonly FlexDefinition DefaultDefinition = new();
 
-    #endregion
+			private readonly UIElement _child;
+			private readonly Orientation _orientation;
+			private readonly FlexDefinition _childExplicitDefinition;
+			private FlexDefinition _childAttachedDefinition;
+			private readonly Panel _panel;
+			private readonly FlexDefinition _panelExplicitDefinition;
+			private FlexDefinition _panelAttachedDefinition;
+			private FlexOverflowBehavior? _overflowBehavior;
+			private FlexStretchDirection? _stretchDirection;
+			private FlexLength? _length;
+			private short? _expandPriority;
+			private short? _shrinkPriority;
+			private double? _maxLength;
+			private double? _minLength;
 
-    #region  Nested Types
+			public FlexElementComposition(UIElement child, Orientation orientation, FlexDefinition childExplicitDefinition, Panel panel, FlexDefinition panelExplicitDefinition) : this()
+			{
+				_child = child;
+				_orientation = orientation;
+				_childExplicitDefinition = childExplicitDefinition;
+				_panel = panel;
+				_panelExplicitDefinition = panelExplicitDefinition;
+				_childAttachedDefinition = DefaultDefinition;
+				_panelAttachedDefinition = DefaultDefinition;
+			}
 
-    private struct FlexElementComposition
-    {
-      private static readonly FlexDefinition DefaultDefinition = new FlexDefinition();
+			private FlexDefinition ActualChildAttachedDefinition
+			{
+				get
+				{
+					if (ReferenceEquals(_childAttachedDefinition, DefaultDefinition))
+						_childAttachedDefinition = (FlexDefinition)_child.GetValue(FlexDefinition.DefinitionProperty);
 
-      private readonly UIElement _child;
-      private readonly FlexDefinition _childExplicitDefinition;
-      private FlexDefinition _childAttachedDefinition;
-      private readonly Panel _panel;
-      private readonly FlexDefinition _panelExplicitDefinition;
-      private FlexDefinition _panelAttachedDefinition;
-      private FlexOverflowBehavior? _overflowBehavior;
-      private FlexStretchDirection? _stretchDirection;
-      private FlexLength? _length;
-      private short? _expandPriority;
-      private short? _shrinkPriority;
-      private double? _maxLength;
-      private double? _minLength;
+					return _childAttachedDefinition;
+				}
+			}
 
-      public FlexElementComposition(UIElement child, FlexDefinition childExplicitDefinition, Panel panel, FlexDefinition panelExplicitDefinition) : this()
-      {
-        _child = child;
-        _childExplicitDefinition = childExplicitDefinition;
-        _panel = panel;
-        _panelExplicitDefinition = panelExplicitDefinition;
-        _childAttachedDefinition = DefaultDefinition;
-        _panelAttachedDefinition = DefaultDefinition;
-      }
+			private FlexDefinition ActualPanelAttachedDefinition
+			{
+				get
+				{
+					if (ReferenceEquals(_panelAttachedDefinition, DefaultDefinition))
+						_panelAttachedDefinition = FlexChildDefinition.GetDefinition(_panel);
 
-      private FlexDefinition ActualChildAttachedDefinition
-      {
-        get
-        {
-          if (ReferenceEquals(_childAttachedDefinition, DefaultDefinition))
-            _childAttachedDefinition = (FlexDefinition)_child.GetValue(FlexDefinition.DefinitionProperty);
+					return _panelAttachedDefinition;
+				}
+			}
 
-          return _childAttachedDefinition;
-        }
-      }
+			private TValue GetActualValue<TValue>(ref TValue? store, DependencyProperty definitionProperty, DependencyProperty childDefinitionProperty, TValue defaultValue) where TValue : struct
+			{
+				if (store.HasValue)
+					return store.Value;
 
-      private FlexDefinition ActualPanelAttachedDefinition
-      {
-        get
-        {
-          if (ReferenceEquals(_panelAttachedDefinition, DefaultDefinition))
-            _panelAttachedDefinition = FlexChildDefinition.GetDefinition(_panel);
+				TValue actualValue = default;
 
-          return _panelAttachedDefinition;
-        }
-      }
+				while (true)
+				{
+					// Child Explicit Definition
+					if (_childExplicitDefinition?.TryGetNonDefaultValue(definitionProperty, out actualValue) == true)
+						break;
 
-      private TValue GetActualValue<TValue>(ref TValue? store, DependencyProperty definitionProperty, DependencyProperty childDefinitionProperty, TValue defaultValue) where TValue : struct
-      {
-        if (store.HasValue)
-          return store.Value;
+					// Child Attached Definition
+					if (ActualChildAttachedDefinition?.TryGetNonDefaultValue(definitionProperty, out actualValue) == true)
+						break;
 
-        var actualValue = default(TValue);
+					// Child Attached Definition Property
+					if (_child.TryGetNonDefaultValue(definitionProperty, out actualValue))
+						break;
 
-        while (true)
-        {
-          // Child Explicit Definition
-          if (_childExplicitDefinition?.TryGetNonDefaultValue(definitionProperty, out actualValue) == true)
-            break;
+					// Panel Explicit Definition
+					if (_panelExplicitDefinition?.TryGetNonDefaultValue(definitionProperty, out actualValue) == true)
+						break;
 
-          // Child Attached Definition
-          if (ActualChildAttachedDefinition?.TryGetNonDefaultValue(definitionProperty, out actualValue) == true)
-            break;
+					// Panel Attached Definition
+					if (ActualPanelAttachedDefinition?.TryGetNonDefaultValue(definitionProperty, out actualValue) == true)
+						break;
 
-          // Child Attached Definition Property
-          if (_child.TryGetNonDefaultValue(definitionProperty, out actualValue))
-            break;
+					// Panel Attached Definition Property
+					if (_panel.TryGetNonDefaultValue(childDefinitionProperty, out actualValue))
+						break;
 
-          // Panel Explicit Definition
-          if (_panelExplicitDefinition?.TryGetNonDefaultValue(definitionProperty, out actualValue) == true)
-            break;
+					actualValue = defaultValue;
 
-          // Panel Attached Definition
-          if (ActualPanelAttachedDefinition?.TryGetNonDefaultValue(definitionProperty, out actualValue) == true)
-            break;
+					break;
+				}
 
-          // Panel Attached Definition Property
-          if (_panel.TryGetNonDefaultValue(childDefinitionProperty, out actualValue))
-            break;
+				store = actualValue;
 
-          actualValue = defaultValue;
-          break;
-        }
+				return actualValue;
+			}
 
-        store = actualValue;
+			private FlexOverflowBehavior OverflowBehavior => GetActualValue(ref _overflowBehavior, FlexDefinition.OverflowBehaviorProperty, FlexChildDefinition.OverflowBehaviorProperty, FlexElement.Default.OverflowBehavior);
 
-        return actualValue;
-      }
+			private FlexStretchDirection StretchDirection => GetActualValue(ref _stretchDirection, FlexDefinition.StretchDirectionProperty, FlexChildDefinition.StretchDirectionProperty, FlexElement.Default.StretchDirection);
 
-      private FlexOverflowBehavior OverflowBehavior => GetActualValue(ref _overflowBehavior, FlexDefinition.OverflowBehaviorProperty, FlexChildDefinition.OverflowBehaviorProperty, FlexElement.Default.OverflowBehavior);
+			private short ExpandPriority => GetActualValue(ref _expandPriority, FlexDefinition.ExpandPriorityProperty, FlexChildDefinition.ExpandPriorityProperty, FlexElement.Default.ExpandPriority);
 
-      private FlexStretchDirection StretchDirection => GetActualValue(ref _stretchDirection, FlexDefinition.StretchDirectionProperty, FlexChildDefinition.StretchDirectionProperty, FlexElement.Default.StretchDirection);
+			private short ShrinkPriority => GetActualValue(ref _shrinkPriority, FlexDefinition.ShrinkPriorityProperty, FlexChildDefinition.ShrinkPriorityProperty, FlexElement.Default.ShrinkPriority);
 
-      private short ExpandPriority => GetActualValue(ref _expandPriority, FlexDefinition.ExpandPriorityProperty, FlexChildDefinition.ExpandPriorityProperty, FlexElement.Default.ExpandPriority);
+			private double MaxLength => GetActualValue(ref _maxLength, FlexDefinition.MaxLengthProperty, FlexChildDefinition.MaxLengthProperty, FlexElement.Default.MaxLength);
 
-      private short ShrinkPriority => GetActualValue(ref _shrinkPriority, FlexDefinition.ShrinkPriorityProperty, FlexChildDefinition.ShrinkPriorityProperty, FlexElement.Default.ShrinkPriority);
+			private double MinLength => GetActualValue(ref _minLength, FlexDefinition.MinLengthProperty, FlexChildDefinition.MinLengthProperty, FlexElement.Default.MinLength);
 
-      private double MaxLength => GetActualValue(ref _maxLength, FlexDefinition.MaxLengthProperty, FlexChildDefinition.MaxLengthProperty, FlexElement.Default.MaxLength);
+			private FlexLength Length => GetActualValue(ref _length, FlexDefinition.LengthProperty, FlexChildDefinition.LengthProperty, FlexElement.Default.Length);
 
-      private double MinLength => GetActualValue(ref _minLength, FlexDefinition.MinLengthProperty, FlexChildDefinition.MinLengthProperty, FlexElement.Default.MinLength);
+			private void CoerceMinMaxLength(ref double minLength, ref double maxLength, ref FlexLength length)
+			{
+				if (_child is not FrameworkElement fre)
+					return;
 
-      private FlexLength Length => GetActualValue(ref _length, FlexDefinition.LengthProperty, FlexChildDefinition.LengthProperty, FlexElement.Default.Length);
+				var minSize = fre.GetMinSize().AsOriented(_orientation).Direct;
+				var maxSize = fre.GetMaxSize().AsOriented(_orientation).Direct;
 
-      public FlexElement FlexElement => new FlexElement(MinLength, MaxLength, true)
-      {
-        Length = Length,
-        OverflowBehavior = OverflowBehavior,
-        StretchDirection = StretchDirection,
-        ExpandPriority = ExpandPriority,
-        ShrinkPriority = ShrinkPriority
-      };
-    }
+				if (minLength < minSize)
+					minLength = minSize;
 
-    #endregion
-  }
+				if (maxLength > maxSize)
+					maxLength = maxSize;
+
+				if (maxLength < minLength)
+					maxLength = minLength;
+
+				if (length.IsAbsolute)
+					length = new FlexLength(length.Value.Clamp(minLength, maxLength), FlexLengthUnitType.Pixel);
+			}
+
+			public FlexElement FlexElement
+			{
+				get
+				{
+					var minLength = MinLength;
+					var maxLength = MaxLength;
+					var length = Length;
+
+					CoerceMinMaxLength(ref minLength, ref maxLength, ref length);
+
+					return new FlexElement(minLength, maxLength, true)
+					{
+						Length = length,
+						OverflowBehavior = OverflowBehavior,
+						StretchDirection = StretchDirection,
+						ExpandPriority = ExpandPriority,
+						ShrinkPriority = ShrinkPriority
+					};
+				}
+			}
+		}
+	}
 }

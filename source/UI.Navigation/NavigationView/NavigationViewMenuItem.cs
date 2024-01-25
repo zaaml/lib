@@ -4,7 +4,7 @@
 
 using System.Windows;
 using System.Windows.Markup;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -39,20 +39,20 @@ namespace Zaaml.UI.Controls.NavigationView
 		public bool IsOpen
 		{
 			get => (bool) GetValue(IsOpenProperty);
-			set => SetValue(IsOpenProperty, value);
+			set => SetValue(IsOpenProperty, value.Box());
 		}
 
 		public NavigationViewSubItemCollection Items => this.GetValueOrCreate(ItemsPropertyKey, () => new NavigationViewSubItemCollection(this));
 
 		private NavigationViewSubItemsPresenter ItemsPresenter => TemplateContract.ItemsPresenter;
 
-		private NavigationViewMenuItemTemplateContract TemplateContract => (NavigationViewMenuItemTemplateContract) TemplateContractInternal;
+		private NavigationViewMenuItemTemplateContract TemplateContract => (NavigationViewMenuItemTemplateContract)TemplateContractCore;
 
 		private protected override void OnClickCore()
 		{
 			base.OnClickCore();
 
-			this.SetCurrentValueInternal(IsOpenProperty, IsOpen ? KnownBoxes.BoolFalse : KnownBoxes.BoolTrue);
+			this.SetCurrentValueInternal(IsOpenProperty, IsOpen.Box());
 		}
 
 		private void OnIsOpenPropertyChangedPrivate()

@@ -14,9 +14,9 @@ namespace Zaaml.Core.Collections
 			SparseMemoryAllocator = sparseMemoryAllocator;
 		}
 
-		private Stack<SparseLinkedListBase<T>.VoidNode> VoidNodePool { get; } = new Stack<SparseLinkedListBase<T>.VoidNode>();
+		private Stack<SparseLinkedListBase<T>.VoidNode> VoidNodePool { get; } = new();
 
-		private Stack<SparseLinkedListBase<T>.RealizedNode> RealizedNodePool { get; } = new Stack<SparseLinkedListBase<T>.RealizedNode>();
+		private Stack<SparseLinkedListBase<T>.RealizedNode> RealizedNodePool { get; } = new();
 
 		public SparseMemoryAllocator<T> SparseMemoryAllocator { get; }
 
@@ -24,6 +24,8 @@ namespace Zaaml.Core.Collections
 		{
 			return SparseMemoryAllocator.Allocate();
 		}
+
+		public int NodeCapacity => SparseMemoryAllocator.NodeCapacity;
 
 		public SparseLinkedListBase<T>.VoidNode GetVoidNode()
 		{

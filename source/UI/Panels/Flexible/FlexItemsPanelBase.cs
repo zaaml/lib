@@ -9,14 +9,13 @@ using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Panels.Interfaces;
+using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Panels.Flexible
 {
 	public class FlexItemsPanelBase<TItem> : ItemsPanel<TItem>, IFlexPanel
 		where TItem : Control
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty DistributorProperty = DPM.Register<IFlexDistributor, FlexItemsPanelBase<TItem>>
 			("Distributor", FlexDistributor.Equalizer, p => p.InvalidateMeasure);
 
@@ -37,27 +36,19 @@ namespace Zaaml.UI.Panels.Flexible
 		private static readonly DependencyPropertyKey IsHiddenPropertyKey = DPM.RegisterAttachedReadOnly<bool, FlexItemsPanelBase<TItem>>
 			("IsHidden", false, OnIsHiddenChanged);
 
-		public static readonly DependencyProperty GenericDefinitionProperty = DPM.Register<FlexDefinition, FlexItemsPanelBase<TItem>>
-			("GenericDefinition", p => p.OnGenericDefinitionChanged);
+		public static readonly DependencyProperty FlexDefinitionProperty = DPM.Register<FlexDefinition, FlexItemsPanelBase<TItem>>
+			("FlexDefinition", p => p.OnFlexDefinitionChanged);
 
 		public static readonly DependencyProperty DefinitionSelectorProperty = DPM.Register<FlexDefinitionSelector, FlexItemsPanelBase<TItem>>
 			("DefinitionSelector", p => p.OnDefinitionSelectorChanged);
 
 		public static readonly DependencyProperty IsHiddenProperty = IsHiddenPropertyKey.DependencyProperty;
 
-		#endregion
-
-		#region Fields
-
 		private int _arrangePassVersion;
 		private FlexPanelLayout _layout;
 		private int _measurePassVersion;
 		private bool _observeLayout;
 		public event EventHandler HasHiddenChildrenChanged;
-
-		#endregion
-
-		#region Ctors
 
 		static FlexItemsPanelBase()
 		{
@@ -66,25 +57,21 @@ namespace Zaaml.UI.Panels.Flexible
 #endif
 		}
 
-		#endregion
-
-		#region Properties
-
 		public FlexDefinitionSelector DefinitionSelector
 		{
-			get => (FlexDefinitionSelector) GetValue(DefinitionSelectorProperty);
+			get => (FlexDefinitionSelector)GetValue(DefinitionSelectorProperty);
 			set => SetValue(DefinitionSelectorProperty, value);
 		}
 
-		public FlexDefinition GenericDefinition
+		public FlexDefinition FlexDefinition
 		{
-			get => (FlexDefinition) GetValue(GenericDefinitionProperty);
-			set => SetValue(GenericDefinitionProperty, value);
+			get => (FlexDefinition)GetValue(FlexDefinitionProperty);
+			set => SetValue(FlexDefinitionProperty, value);
 		}
 
 		public bool HasHiddenChildren
 		{
-			get => (bool) GetValue(HasHiddenChildrenProperty);
+			get => (bool)GetValue(HasHiddenChildrenProperty);
 			private set => this.SetReadOnlyValue(HasHiddenChildrenPropertyKey, value);
 		}
 
@@ -112,10 +99,6 @@ namespace Zaaml.UI.Panels.Flexible
 				Layout.OnLayoutUpdated();
 			}
 		}
-
-		#endregion
-
-		#region  Methods
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
@@ -153,19 +136,19 @@ namespace Zaaml.UI.Panels.Flexible
 			return arrangePass.ActualSize;
 		}
 
-		private FlexPanelLayout CreateLayout()
+		private protected virtual FlexPanelLayout CreateLayout()
 		{
 			return new FlexPanelLayout(this);
 		}
 
 		protected virtual FlexElement GetFlexElement(UIElement child)
 		{
-			return child.GetFlexElement(this, DefinitionSelector?.Select(this, child) ?? GenericDefinition);
+			return child.GetFlexElement(this, Orientation, DefinitionSelector?.Select(this, child) ?? FlexDefinition);
 		}
 
 		public static bool GetIsHidden(DependencyObject element)
 		{
-			return (bool) element.GetValue(IsHiddenPropertyKey.DependencyProperty);
+			return (bool)element.GetValue(IsHiddenPropertyKey.DependencyProperty);
 		}
 
 		protected override Size MeasureOverrideCore(Size availableSize)
@@ -207,6 +190,8 @@ namespace Zaaml.UI.Panels.Flexible
 		private void OnDefinitionChanged(object sender, EventArgs eventArgs)
 		{
 			InvalidateMeasure();
+
+			//FlexPanelLayout.InvalidateFlexMeasure(this);
 		}
 
 		private void OnDefinitionSelectorChanged(FlexDefinitionSelector oldSelector, FlexDefinitionSelector newSelector)
@@ -220,7 +205,7 @@ namespace Zaaml.UI.Panels.Flexible
 			InvalidateMeasure();
 		}
 
-		private void OnGenericDefinitionChanged(FlexDefinition oldDefinition, FlexDefinition newDefinition)
+		private void OnFlexDefinitionChanged(FlexDefinition oldDefinition, FlexDefinition newDefinition)
 		{
 			if (oldDefinition != null)
 				oldDefinition.DefinitionChanged -= OnDefinitionChanged;
@@ -269,12 +254,6 @@ namespace Zaaml.UI.Panels.Flexible
 			element.SetValue(IsHiddenPropertyKey, value);
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IFlexPanel
-
 		void IFlexPanel.SetIsHidden(UIElement child, bool value)
 		{
 			SetIsHidden(child, value);
@@ -298,34 +277,26 @@ namespace Zaaml.UI.Panels.Flexible
 
 		public IFlexDistributor Distributor
 		{
-			get => (IFlexDistributor) GetValue(DistributorProperty);
+			get => (IFlexDistributor)GetValue(DistributorProperty);
 			set => SetValue(DistributorProperty, value);
 		}
 
 		public FlexStretch Stretch
 		{
-			get => (FlexStretch) GetValue(StretchProperty);
+			get => (FlexStretch)GetValue(StretchProperty);
 			set => SetValue(StretchProperty, value);
 		}
 
 		public double Spacing
 		{
-			get => (double) GetValue(SpacingProperty);
+			get => (double)GetValue(SpacingProperty);
 			set => SetValue(SpacingProperty, value);
 		}
 
-		#endregion
-
-		#region IOrientedPanel
-
 		public Orientation Orientation
 		{
-			get => (Orientation) GetValue(OrientationProperty);
+			get => (Orientation)GetValue(OrientationProperty);
 			set => SetValue(OrientationProperty, value);
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

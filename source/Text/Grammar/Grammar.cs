@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Zaaml.Core.Reflection;
 
 namespace Zaaml.Text
 {
@@ -47,35 +48,85 @@ namespace Zaaml.Text
 		where TGrammar : Grammar<TGrammar, TToken>
 		where TToken : unmanaged, Enum
 	{
+		private Func<IServiceProvider, Lexer<TGrammar, TToken>> _lexerFactoryDelegate;
+		private Func<IServiceProvider, Parser<TGrammar, TToken>> _parserFactoryDelegate;
+
 		// ReSharper disable once EmptyConstructor
-		internal Grammar(TToken undefinedToken, LexerGrammar lexer, ParserGrammar parser)
+		internal Grammar(TToken undefinedToken, LexerGrammar lexerGrammar, ParserGrammar parserGrammar)
 		{
 			UndefinedToken = undefinedToken;
+			LexerGrammarInstance = lexerGrammar;
+			ParserGrammarInstance = parserGrammar;
 		}
 
+		public LexerGrammar LexerGrammarInstance { get; }
+
+		public ParserGrammar ParserGrammarInstance { get; }
+
 		public TToken UndefinedToken { get; }
+
+		private Func<IServiceProvider, Lexer<TGrammar, TToken>> CreateLexerFactoryDelegate()
+		{
+			var grammarType = GetType();
+			var lexerFactoryMethodInfo = grammarType.GetMethod("LexerFactory", BF.SPNP);
+
+			if (lexerFactoryMethodInfo == null)
+				throw new InvalidOperationException("Can not find LexerFactory");
+
+#if NET5_0_OR_GREATER
+			return lexerFactoryMethodInfo.CreateDelegate<Func<IServiceProvider, Lexer<TGrammar, TToken>>>();
+#else
+			return (Func<IServiceProvider, Lexer<TGrammar, TToken>>)lexerFactoryMethodInfo.CreateDelegate(typeof(Func<IServiceProvider, Lexer<TGrammar, TToken>>));
+#endif
+		}
+
+		private Func<IServiceProvider, Parser<TGrammar, TToken>> CreateParserFactoryDelegate()
+		{
+			var grammarType = GetType();
+			var parserFactoryMethodInfo = grammarType.GetMethod("ParserFactory", BF.SPNP);
+
+			if (parserFactoryMethodInfo == null)
+				throw new InvalidOperationException("Can not find ParserFactory");
+
+#if NET5_0_OR_GREATER
+			return parserFactoryMethodInfo.CreateDelegate<Func<IServiceProvider, Parser<TGrammar, TToken>>>();
+
+#else
+			return (Func<IServiceProvider, Parser<TGrammar, TToken>>)parserFactoryMethodInfo.CreateDelegate(typeof(Func<IServiceProvider, Parser<TGrammar, TToken>>));			
+#endif
+		}
+
+		internal Func<IServiceProvider, Lexer<TGrammar, TToken>> GetLexerFactory()
+		{
+			return _lexerFactoryDelegate ??= CreateLexerFactoryDelegate();
+		}
+
+		internal Func<IServiceProvider, Parser<TGrammar, TToken>> GetParserFactory()
+		{
+			return _parserFactoryDelegate ??= CreateParserFactoryDelegate();
+		}
 	}
 
 
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 	public sealed class ExternalParserAttribute : Attribute
 	{
-		public Type ParserType { get; }
-
 		public ExternalParserAttribute(Type parserType)
 		{
 			ParserType = parserType;
 		}
+
+		public Type ParserType { get; }
 	}
 
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 	public sealed class ExternalLexerAttribute : Attribute
 	{
-		public Type LexerType { get; }
-
 		public ExternalLexerAttribute(Type lexerType)
 		{
 			LexerType = lexerType;
 		}
+
+		public Type LexerType { get; }
 	}
 }

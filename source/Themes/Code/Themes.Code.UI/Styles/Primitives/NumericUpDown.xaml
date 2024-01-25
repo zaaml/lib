@@ -1,0 +1,92 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!-- FocusStates States -->
+    <zm:VisualStateGroup Name="FocusStates">
+      <zm:VisualState Name="Unfocused" />
+      <zm:VisualState Name="Focused" />
+    </zm:VisualStateGroup>
+
+    <!-- ValidationStates States -->
+    <zm:VisualStateGroup Name="ValidationStates">
+      <zm:VisualState Name="Valid" />
+      <zm:VisualState Name="InvalidFocused" />
+      <zm:VisualState Name="InvalidUnfocused" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="NumericUpDownTemplate" TargetType="zm:NumericUpDown">
+    <zm:ControlTemplateRoot Background="Transparent" 
+                            VisualStateGroups="{StaticResource VisualStates}">
+      <Border Background="{TemplateBinding Background}" 
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+
+        <zm:DockPanel>
+          <TextBox x:Name="TextBox" 
+                   IsTabStop="False"
+                   BorderThickness="0"
+                   IsReadOnly="{zm:TemplateBinding Path=IsEditable, Converter={zm:Static Member=zm:NegateConverter.Default}}" />
+
+          <zm:ButtonSpinner x:Name="Spinner"
+                            IsTabStop="False"
+                            zm:DockPanel.Dock="Right"
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="1,0,0,0" />
+
+        </zm:DockPanel>
+      </Border>
+
+      <!-- Validation Error Element -->
+      <zm:ValidationErrorControl />
+
+      <!-- Disabled Veil -->
+      <zm:DisableVeilControl />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="NumericUpDownBaseStyle" TargetType="zm:NumericUpDown">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Template" Value="{StaticResource NumericUpDownTemplate}" />
+    <zm:Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="NumericUpDownStyle" TargetType="zm:NumericUpDown" BasedOn="{StaticResource NumericUpDownBaseStyle}" 
+            Skin="Code.NumericUpDown">
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!-- Background -->
+      <zm:Setter Property="Background" ValuePath="Background" />
+      
+      <!-- BorderBrush -->
+      <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
+        <zm:Setter ValuePath="Normal"/>
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Focused" ValuePath="Focused" Priority="1" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="NumericUpDownThemeStyle" TargetType="zm:NumericUpDown" BasedOn="{StaticResource NumericUpDownStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

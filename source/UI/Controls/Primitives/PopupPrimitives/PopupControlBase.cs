@@ -67,7 +67,10 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			("PopupHeight", PopupLength.Auto);
 
 		public static readonly DependencyProperty TriggerProperty = DPM.Register<PopupTrigger, PopupControlBase>
-			("Trigger", default, d => d.OnTriggerPropertyChangedPrivate);
+			("Trigger", d => d.OnTriggerPropertyChangedPrivate);
+
+		public static readonly DependencyProperty ScopeProperty = DPM.Register<PopupControlScope, PopupControlBase>
+			("Scope", PopupControlScope.Shared, d => d.OnScopePropertyChangedPrivate);
 
 		public static readonly DependencyProperty OwnerProperty = OwnerPropertyKey.DependencyProperty;
 
@@ -85,24 +88,22 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			PopupHierarchyController.EnableHierarchy(this);
 
-#if !SILVERLIGHT
 			Focusable = true;
-#endif
 			IsTabStop = false;
 
-			CloseCommand = new RelayCommand(CloseCore);
-			OpenCommand = new RelayCommand(OpenCore);
+			OpenCommand = new RelayCommand(OnOpenCommandExecutedPrivate, OnCanExecuteOpenCommandPrivate);
+			CloseCommand = new RelayCommand(OnCloseCommandExecutedPrivate, OnCanExecuteCloseCommandPrivate);
 		}
 
 		public bool AllowMotionAnimation
 		{
-			get => (bool) GetValue(AllowMotionAnimationProperty);
+			get => (bool)GetValue(AllowMotionAnimationProperty);
 			set => SetValue(AllowMotionAnimationProperty, value);
 		}
 
 		public bool AllowOpacityAnimation
 		{
-			get => (bool) GetValue(AllowOpacityAnimationProperty);
+			get => (bool)GetValue(AllowOpacityAnimationProperty);
 			set => SetValue(AllowOpacityAnimationProperty, value);
 		}
 
@@ -112,7 +113,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public bool DropShadow
 		{
-			get => (bool) GetValue(DropShadowProperty);
+			get => (bool)GetValue(DropShadowProperty);
 			set => SetValue(DropShadowProperty, value);
 		}
 
@@ -122,13 +123,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public FrameworkElement Owner
 		{
-			get => (FrameworkElement) GetValue(OwnerProperty);
+			get => (FrameworkElement)GetValue(OwnerProperty);
 			internal set => this.SetReadOnlyValue(OwnerPropertyKey, value);
 		}
 
 		public PopupPlacementOptions PlacementOptions
 		{
-			get => (PopupPlacementOptions) GetValue(PlacementOptionsProperty);
+			get => (PopupPlacementOptions)GetValue(PlacementOptionsProperty);
 			set => SetValue(PlacementOptionsProperty, value);
 		}
 
@@ -139,35 +140,35 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		[TypeConverter(typeof(PopupLengthTypeConverter))]
 		public PopupLength PopupHeight
 		{
-			get => (PopupLength) GetValue(PopupHeightProperty);
+			get => (PopupLength)GetValue(PopupHeightProperty);
 			set => SetValue(PopupHeightProperty, value);
 		}
 
 		[TypeConverter(typeof(PopupLengthTypeConverter))]
 		public PopupLength PopupMaxHeight
 		{
-			get => (PopupLength) GetValue(PopupMaxHeightProperty);
+			get => (PopupLength)GetValue(PopupMaxHeightProperty);
 			set => SetValue(PopupMaxHeightProperty, value);
 		}
 
 		[TypeConverter(typeof(PopupLengthTypeConverter))]
 		public PopupLength PopupMaxWidth
 		{
-			get => (PopupLength) GetValue(PopupMaxWidthProperty);
+			get => (PopupLength)GetValue(PopupMaxWidthProperty);
 			set => SetValue(PopupMaxWidthProperty, value);
 		}
 
 		[TypeConverter(typeof(PopupLengthTypeConverter))]
 		public PopupLength PopupMinHeight
 		{
-			get => (PopupLength) GetValue(PopupMinHeightProperty);
+			get => (PopupLength)GetValue(PopupMinHeightProperty);
 			set => SetValue(PopupMinHeightProperty, value);
 		}
 
 		[TypeConverter(typeof(PopupLengthTypeConverter))]
 		public PopupLength PopupMinWidth
 		{
-			get => (PopupLength) GetValue(PopupMinWidthProperty);
+			get => (PopupLength)GetValue(PopupMinWidthProperty);
 			set => SetValue(PopupMinWidthProperty, value);
 		}
 
@@ -176,27 +177,27 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		[TypeConverter(typeof(PopupLengthTypeConverter))]
 		public PopupLength PopupWidth
 		{
-			get => (PopupLength) GetValue(PopupWidthProperty);
+			get => (PopupLength)GetValue(PopupWidthProperty);
 			set => SetValue(PopupWidthProperty, value);
 		}
 
-		//public bool StandAlone
-		//{
-		//  get { return _controller.StandAlone; }
-		//  set { _controller.StandAlone = value; }
-		//}
+		public PopupControlScope Scope
+		{
+			get => (PopupControlScope)GetValue(ScopeProperty);
+			set => SetValue(ScopeProperty, value);
+		}
 
 		public bool StaysOpen
 		{
-			get => (bool) GetValue(StaysOpenProperty);
+			get => (bool)GetValue(StaysOpenProperty);
 			set => SetValue(StaysOpenProperty, value);
 		}
 
-		private PopupControlBaseTemplateContract TemplateContract => (PopupControlBaseTemplateContract) TemplateContractInternal;
+		private PopupControlBaseTemplateContract TemplateContract => (PopupControlBaseTemplateContract)TemplateContractInternal;
 
 		public PopupTrigger Trigger
 		{
-			get => (PopupTrigger) GetValue(TriggerProperty);
+			get => (PopupTrigger)GetValue(TriggerProperty);
 			set => SetValue(TriggerProperty, value);
 		}
 
@@ -243,6 +244,37 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				Source = this,
 				Mode = BindingMode.OneWay
 			});
+		}
+
+		protected virtual bool OnCanExecuteCloseCommand(object commandParameter)
+		{
+			return true;
+		}
+
+		private bool OnCanExecuteCloseCommandPrivate(object commandParameter)
+		{
+			return StaysOpen == false && OnCanExecuteCloseCommand(commandParameter);
+		}
+
+		protected virtual bool OnCanExecuteOpenCommand(object commandParameter)
+		{
+			return true;
+		}
+
+		private bool OnCanExecuteOpenCommandPrivate(object commandParameter)
+		{
+			return OnCanExecuteOpenCommand(commandParameter);
+		}
+
+		protected virtual void OnCloseCommandExecuted(object commandParameter)
+		{
+			CloseCore();
+		}
+
+		private void OnCloseCommandExecutedPrivate(object commandParameter)
+		{
+			if (StaysOpen == false)
+				OnCloseCommandExecuted(commandParameter);
 		}
 
 		protected virtual void OnClosed()
@@ -317,6 +349,16 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		{
 		}
 
+		protected virtual void OnOpenCommandExecuted(object commandParameter)
+		{
+			OpenCore();
+		}
+
+		private void OnOpenCommandExecutedPrivate(object commandParameter)
+		{
+			OnOpenCommandExecuted(commandParameter);
+		}
+
 		protected virtual void OnOpened()
 		{
 			Opened?.Invoke(this, RoutedEventArgsFactory.Create(this));
@@ -378,6 +420,10 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			OnPlacementChanged(oldPlacement, newPlacement);
 		}
 
+		private void OnScopePropertyChangedPrivate(PopupControlScope oldValue, PopupControlScope newValue)
+		{
+		}
+
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
@@ -390,10 +436,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			MountContent();
 
 			// TODO DropDownBar refactoring. Investigate
-#if !SILVERLIGHT
 			//Popup.TreeMode = PopupTreeMode.Detached;
 			//PopupController.OnPopupTreeModeChanged();
-#endif
 		}
 
 		protected override void OnTemplateContractDetaching()
@@ -491,13 +535,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public bool IsOpen
 		{
-			get => (bool) GetValue(IsOpenProperty);
+			get => (bool)GetValue(IsOpenProperty);
 			set => SetValue(IsOpenProperty, value);
 		}
 
 		public PopupPlacement Placement
 		{
-			get => (PopupPlacement) GetValue(PlacementProperty);
+			get => (PopupPlacement)GetValue(PlacementProperty);
 			set => SetValue(PlacementProperty, value);
 		}
 

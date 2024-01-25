@@ -52,7 +52,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 		public ColorSliderEditorControl SliderEditor => TemplateContract.SliderEditor;
 
-		private ColorEditorControlTemplateContract TemplateContract => (ColorEditorControlTemplateContract) TemplateContractInternal;
+		private ColorEditorControlTemplateContract TemplateContract => (ColorEditorControlTemplateContract) TemplateContractCore;
 
 		protected override void OnColorChanged(Color oldColor, Color newColor)
 		{

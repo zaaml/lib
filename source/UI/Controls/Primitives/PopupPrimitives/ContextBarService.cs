@@ -9,54 +9,46 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  public static class ContextBarService
-  {
-    #region Static Fields and Constants
+	public static class ContextBarService
+	{
+		public static readonly DependencyProperty ContextBarProperty = DPM.RegisterAttached<ContextBar>
+		("ContextBar", typeof(ContextBarService),
+			DPM.StaticCallback<FrameworkElement, ContextBar>(OnContextBarPropertyChanged));
 
-    public static readonly DependencyProperty ContextBarProperty = DPM.RegisterAttached<ContextBar>
-    ("ContextBar", typeof(ContextBarService),
-      DPM.StaticCallback<FrameworkElement, ContextBar>(OnContextBarPropertyChanged));
+		public static readonly DependencyProperty ContextBarSelectorProperty = DPM.RegisterAttached<ContextBarSelector>
+		("ContextBarSelector", typeof(ContextBarService),
+			DPM.StaticCallback<FrameworkElement, ContextBarSelector>(OnContextBarSelectorPropertyChanged));
 
-    public static readonly DependencyProperty ContextBarSelectorProperty = DPM.RegisterAttached<ContextBarSelector>
-    ("ContextBarSelector", typeof(ContextBarService),
-      DPM.StaticCallback<FrameworkElement, ContextBarSelector>(OnContextBarSelectorPropertyChanged));
+		public static ContextBar GetContextBar(DependencyObject element)
+		{
+			return (ContextBar)element.GetValue(ContextBarProperty);
+		}
 
-    #endregion
+		public static ContextBarSelector GetContextBarSelector(FrameworkElement element)
+		{
+			return element.GetValue<ContextBarSelector>(ContextBarSelectorProperty);
+		}
 
-    #region  Methods
+		private static void OnContextBarPropertyChanged(FrameworkElement frameworkElement, ContextBar oldBar, ContextBar newBar)
+		{
+			SharedItemHelper.Share(frameworkElement, oldBar, newBar);
+			ContextPopupControlService.OnPopupControllerSelectorChanged(frameworkElement, oldBar?.PopupController, newBar?.PopupController);
+		}
 
-    public static ContextBar GetContextBar(DependencyObject element)
-    {
-      return (ContextBar) element.GetValue(ContextBarProperty);
-    }
+		private static void OnContextBarSelectorPropertyChanged(FrameworkElement frameworkElement, ContextBarSelector oldBarSelector, ContextBarSelector newBarSelector)
+		{
+			SharedItemHelper.Share(frameworkElement, oldBarSelector, newBarSelector);
+			ContextPopupControlService.OnPopupControllerSelectorChanged(frameworkElement, oldBarSelector, newBarSelector);
+		}
 
-    public static ContextBarSelector GetContextBarSelector(FrameworkElement element)
-    {
-      return element.GetValue<ContextBarSelector>(ContextBarSelectorProperty);
-    }
+		public static void SetContextBar(DependencyObject element, ContextBar value)
+		{
+			element.SetValue(ContextBarProperty, value);
+		}
 
-    private static void OnContextBarPropertyChanged(FrameworkElement frameworkElement, ContextBar oldBar, ContextBar newBar)
-    {
-      SharedItemHelper.Share(frameworkElement, oldBar, newBar);
-      PopupControlService.OnPopupControllerSelectorChanged(frameworkElement, oldBar?.PopupController, newBar?.PopupController);
-    }
-
-    private static void OnContextBarSelectorPropertyChanged(FrameworkElement frameworkElement, ContextBarSelector oldBarSelector, ContextBarSelector newBarSelector)
-    {
-      SharedItemHelper.Share(frameworkElement, oldBarSelector, newBarSelector);
-      PopupControlService.OnPopupControllerSelectorChanged(frameworkElement, oldBarSelector, newBarSelector);
-    }
-
-    public static void SetContextBar(DependencyObject element, ContextBar value)
-    {
-      element.SetValue(ContextBarProperty, value);
-    }
-
-    public static void SetContextBarSelector(FrameworkElement element, ContextBarSelector value)
-    {
-      element.SetValue(ContextBarSelectorProperty, value);
-    }
-
-    #endregion
-  }
+		public static void SetContextBarSelector(FrameworkElement element, ContextBarSelector value)
+		{
+			element.SetValue(ContextBarSelectorProperty, value);
+		}
+	}
 }

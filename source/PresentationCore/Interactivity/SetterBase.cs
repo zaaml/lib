@@ -12,13 +12,7 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public abstract class SetterBase : InteractivityObject
 	{
-		#region Static Fields and Constants
-
 		private static readonly uint DefaultPackedValue;
-
-		#endregion
-
-		#region Ctors
 
 		static SetterBase()
 		{
@@ -32,33 +26,20 @@ namespace Zaaml.PresentationCore.Interactivity
 			PackedValue |= DefaultPackedValue;
 		}
 
-		#endregion
+		internal virtual SetterBase ActualSetter => this;
 
-		#region Properties
+		internal virtual DependencyProperty DependencyProperty => DependencyPropertyManager.UnresolvedDependencyProperty;
 
-	  internal virtual SetterBase ActualSetter => this;
-
-		internal virtual DependencyProperty DependencyProperty  => DependencyPropertyManager.UnresolvedDependencyProperty;
-
-    internal virtual DependencyProperty MergeDependencyProperty => DependencyProperty;
-
-	  internal virtual ushort Index
-	  {
-      get => 0;
-      // ReSharper disable once ValueParameterNotUsed
-      set { }
-	  }
+		internal virtual ushort Index
+		{
+			get => 0;
+			// ReSharper disable once ValueParameterNotUsed
+			set { }
+		}
 
 		internal bool IsApplied => Status == StatusKindConst.Applied;
 
-		protected bool IsAppliedOrQueried
-		{
-			get
-			{
-				var status = Status;
-				return status == StatusKindConst.Applied || status == StatusKindConst.ApplyQueried;
-			}
-		}
+		protected bool IsAppliedOrQueried => Status is StatusKindConst.Applied or StatusKindConst.ApplyQueried;
 
 		protected bool IsApplyQueried => Status == StatusKindConst.ApplyQueried;
 
@@ -87,15 +68,13 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
+		internal virtual DependencyProperty MergeDependencyProperty => DependencyProperty;
+
 		private uint Status
 		{
 			get => PackedDefinition.Status.GetValue(PackedValue);
 			set => PackedDefinition.Status.SetValue(ref PackedValue, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		internal void Apply()
 		{
@@ -129,8 +108,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (IsApplyQueried)
 				Apply();
 		}
-
-
+		
 		protected virtual void OnIsEnabledIntChanged()
 		{
 			UpdateState();
@@ -194,32 +172,32 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
-		#endregion
+		private protected override bool TryProvideValue(object target, object targetProperty, IServiceProvider serviceProvider, out object value)
+		{
+			if (target is not FrameworkElement frameworkElement || targetProperty is not DependencyProperty dependencyProperty) 
+				return base.TryProvideValue(target, targetProperty, serviceProvider, out value);
+			
+			var setters = Extension.GetSetters(frameworkElement);
 
-		#region  Nested Types
+			setters.Add(this);
+
+			value = frameworkElement.GetValue(dependencyProperty);
+
+			return true;
+		}
 
 		private static class StatusKindConst
 		{
-			#region Static Fields and Constants
-
 			public const uint Default = 0;
 			public const uint ApplyQueried = 1;
 			public const uint Applied = 2;
 			public const uint Overriden = 3;
-
-			#endregion
 		}
 
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedUIntItemDefinition Status;
 			public static readonly PackedBoolItemDefinition IsEnabled;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -228,10 +206,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				Status = allocator.AllocateUIntItem(3);
 				IsEnabled = allocator.AllocateBoolItem();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -4,7 +4,7 @@
 
 using System.Windows;
 
-namespace Zaaml.PresentationCore
+namespace Zaaml.PresentationCore.PropertyCore
 {
   internal interface IDependencyPropertyListener
   {

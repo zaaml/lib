@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>library</OutputType>
 		<UseWPF>true</UseWPF>
@@ -8,14 +8,21 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFramework>net5.0-windows</TargetFramework>
+		<TargetFramework>net8.0-windows</TargetFramework>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="$(Publish) == 'true'">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0-windows;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFrameworks>net8.0-windows;net7.0-windows;net6.0-windows;net5.0-windows;net48</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="GitVersion.MsBuild" Version="5.12.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
 	
 	<ItemGroup>
 		<ProjectReference Include="..\Themes.Metro.UI.Artboard\Zaaml.Themes.Metro.UI.Artboard.csproj" />

@@ -19,25 +19,34 @@ namespace Zaaml.PresentationCore.Theming
 
 	public sealed class SkinDictionaryCollectionTypeConverter : TypeConverter
 	{
-		private static readonly char[] Delimiters = {',', ' ', '|'};
+		private static readonly char[] Delimiters = { ',', ' ', '|' };
 
 		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
 		{
-			return sourceType == typeof(string);
+			return sourceType == typeof(string) || typeof(SkinDictionary).IsAssignableFrom(sourceType);
 		}
 
 		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
-			var strValue = value as string;
+			if (value is string strValue)
+			{
+				var result = new SkinDictionaryCollection();
 
-			if (strValue == null)
-				throw new InvalidOperationException("Expected string value");
+				result.AddRange(strValue.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries).Select(key => new SkinDictionary { DeferredKey = key }));
 
-			var result = new SkinDictionaryCollection();
+				return result;
+			}
 
-			result.AddRange(strValue.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries).Select(key => new SkinDictionary {DeferredKey = key}));
+			if (value is SkinDictionary skinDictionary)
+			{
+				var result = new SkinDictionaryCollection();
 
-			return result;
+				result.AddRange(skinDictionary);
+
+				return result;
+			}
+
+			return null;
 		}
 	}
 }

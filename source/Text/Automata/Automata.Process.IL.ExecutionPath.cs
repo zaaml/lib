@@ -18,8 +18,9 @@ namespace Zaaml.Text
 		partial class Process
 		{
 			private static Type ProcessType => typeof(Process);
+			private static Type ThreadContextType => typeof(ThreadContext);
 
-			internal partial class ProcessILGenerator
+			private protected partial class ProcessILGenerator
 			{
 				private static Type ProcessILGeneratorType => typeof(ProcessILGenerator);
 
@@ -37,7 +38,7 @@ namespace Zaaml.Text
 
 				#region Methods
 
-				protected virtual void EmitEnterRuleEntry(ILContext ilBuilderContext, RuleEntry ruleEntry)
+				protected virtual void EmitEnterSyntaxEntry(ILContext ilBuilderContext, SyntaxEntry syntaxEntry)
 				{
 				}
 
@@ -45,7 +46,11 @@ namespace Zaaml.Text
 				{
 				}
 
-				protected virtual void EmitInvoke(ILContext ilBuilderContext, MatchEntry matchEntry, bool main)
+				protected virtual void EmitInvoke(ILContext ilBuilderContext, MatchEntry matchEntry)
+				{
+				}
+
+				protected virtual void EmitValue(ILContext ilBContext, ValueEntry valueEntry)
 				{
 				}
 
@@ -53,7 +58,7 @@ namespace Zaaml.Text
 				{
 				}
 
-				protected virtual void EmitLeaveRuleEntry(ILContext ilBuilderContext, RuleEntry ruleEntry)
+				protected virtual void EmitLeaveSyntaxEntry(ILContext ilBuilderContext, SyntaxEntry syntaxEntry)
 				{
 				}
 
@@ -137,22 +142,22 @@ namespace Zaaml.Text
 
 				#region Automata<TInstruction,TOperand>.IILBuilder
 
-				public ExecutionPathMethodDelegate Build(ExecutionPathMethodKind kind, ExecutionPath executionPath, out object[] closure)
+				public ExecutionPathMethodDelegate Build(ExecutionPathMethodKind kind, ExecutionPath executionPath)
 				{
 					switch (kind)
 					{
 						case ExecutionPathMethodKind.Main:
-							{
-								var dynamicMethod = BuildMain(executionPath, out closure);
+						{
+							var dynamicMethod = BuildMain(executionPath, out var closure);
 
-								return (ExecutionPathMethodDelegate)dynamicMethod.CreateDelegate(typeof(ExecutionPathMethodDelegate), executionPath);
-							}
+							return (ExecutionPathMethodDelegate)dynamicMethod.CreateDelegate(typeof(ExecutionPathMethodDelegate), closure);
+						}
 						case ExecutionPathMethodKind.Parallel:
-							{
-								var dynamicMethod = BuildParallel(executionPath, out closure);
+						{
+							var dynamicMethod = BuildParallel(executionPath, out var closure);
 
-								return (ExecutionPathMethodDelegate)dynamicMethod.CreateDelegate(typeof(ExecutionPathMethodDelegate), executionPath);
-							}
+							return (ExecutionPathMethodDelegate)dynamicMethod.CreateDelegate(typeof(ExecutionPathMethodDelegate), closure);
+						}
 						default:
 							throw new ArgumentOutOfRangeException(nameof(kind));
 					}
@@ -160,7 +165,7 @@ namespace Zaaml.Text
 
 				private DynamicMethod BuildParallel(ExecutionPath executionPath, out object[] closure)
 				{
-					var ilBuilderContext = new ILContext(executionPath, ExecutionPathMethodKind.Parallel, this);
+					var ilBuilderContext = new ILContext(executionPath, ExecutionPathMethodKind.Parallel);
 
 					EmitEnqueueParallelPath(ilBuilderContext);
 
@@ -170,133 +175,148 @@ namespace Zaaml.Text
 
 						switch (node)
 						{
-							case EnterRuleNode enterStateNode:
-								{
-									AutomataStack.ILGenerator.EmitPush(ilBuilderContext, enterStateNode.SubGraph);
+							case EnterSyntaxNode enterStateNode:
+							{
+								AutomataStack.ILGenerator.EmitPush(ilBuilderContext, enterStateNode.SubGraph);
 
-									break;
-								}
+								break;
+							}
 
 							case ActionNode actionNode:
+							{
+								var action = actionNode.ActionEntry.Action;
+
+								if (action.Target != null)
 								{
-									var action = actionNode.ActionEntry.Action;
-
-									if (action.Target != null)
-									{
-										ilBuilderContext.EmitLdValue(action.Target);
-										ilBuilderContext.EmitLdContext();
-										ilBuilderContext.IL.Emit(OpCodes.Callvirt, action.Method);
-									}
-									else
-									{
-										ilBuilderContext.EmitLdContext();
-										ilBuilderContext.IL.Emit(OpCodes.Call, action.Method);
-									}
-
-									break;
+									ilBuilderContext.EmitLdValue(action.Target);
+									ilBuilderContext.EmitLdContext();
+									ilBuilderContext.IL.Emit(OpCodes.Callvirt, action.Method);
 								}
+								else
+								{
+									ilBuilderContext.EmitLdContext();
+									ilBuilderContext.IL.Emit(OpCodes.Call, action.Method);
+								}
+
+								break;
+							}
 
 							case OperandNode operandNode:
-								{
-									if (IsOverriden(nameof(EmitInvoke)))
-										EmitInvoke(ilBuilderContext, operandNode.MatchEntry, false);
+							{
+								//_instructionPointer.MoveNext();
+								ilBuilderContext.EmitMoveInstructionPointer();
 
-									//_instructionPointer.MoveNext();
-									ilBuilderContext.EmitMoveInstructionPointer();
-
-									break;
-								}
+								break;
+							}
 
 							case PrecedenceEnterNode precedenceEnterNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									var successLabel = ilBuilderContext.IL.DefineLabel();
+								var successLabel = ilBuilderContext.IL.DefineLabel();
 
-									Thread.ThreadILGenerator.EmitEnterPrecedenceNode(ilBuilderContext, precedenceEnterNode);
-									ilBuilderContext.IL.Emit(OpCodes.Brtrue, successLabel);
-									EmitGetUnexpectedNode(ilBuilderContext);
-									ilBuilderContext.IL.Emit(OpCodes.Ret);
-									ilBuilderContext.IL.MarkLabel(successLabel);
+								Thread.ThreadILGenerator.EmitEnterPrecedenceNode(ilBuilderContext, precedenceEnterNode);
+								ilBuilderContext.IL.Emit(OpCodes.Brtrue, successLabel);
+								EmitGetUnexpectedNode(ilBuilderContext);
+								ilBuilderContext.IL.Emit(OpCodes.Ret);
+								ilBuilderContext.IL.MarkLabel(successLabel);
 
-									break;
-								}
+								break;
+							}
 
 							case PrecedenceLeaveNode precedenceLeaveNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									Thread.ThreadILGenerator.EmitLeavePrecedenceNode(ilBuilderContext, precedenceLeaveNode);
+								Thread.ThreadILGenerator.EmitLeavePrecedenceNode(ilBuilderContext, precedenceLeaveNode);
 
-									break;
-								}
+								break;
+							}
 
 							case PredicateNode predicateNode:
-								{
-									//if (predicate.Predicate.Predicate(Context) == false)
-									//	return null;
+							{
+								//if (predicate.Predicate.Predicate(Context) == false)
+								//	return null;
 
-									var predicate = predicateNode.PredicateEntry;
-									var trueLabel = ilBuilderContext.IL.DefineLabel();
-									var forkLabel = ilBuilderContext.IL.DefineLabel();
-									var resultLocal = ilBuilderContext.IL.DeclareLocal(typeof(PredicateResult));
+								var predicate = predicateNode.PredicateEntry;
+								var trueLabel = ilBuilderContext.IL.DefineLabel();
+								var forkLabel = ilBuilderContext.IL.DefineLabel();
+								var resultLocal = ilBuilderContext.IL.DeclareLocal(typeof(PredicateResult));
 
-									ilBuilderContext.EmitLdProcess();
-									ilBuilderContext.EmitExecutionPath();
-									ilBuilderContext.IL.Emit(OpCodes.Call, CallPredicateMethodInfo);
+								ilBuilderContext.EmitLdProcess();
+								ilBuilderContext.EmitExecutionPath();
+								ilBuilderContext.IL.Emit(OpCodes.Call, CallPredicateMethodInfo);
 
-									ilBuilderContext.IL.Emit(OpCodes.Stloc, resultLocal);
-									ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
+								ilBuilderContext.IL.Emit(OpCodes.Stloc, resultLocal);
+								ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
 
-									ilBuilderContext.IL.Emit(OpCodes.Brtrue, forkLabel);
+								ilBuilderContext.IL.Emit(OpCodes.Brtrue, forkLabel);
 
-									EmitGetUnexpectedNode(ilBuilderContext);
+								EmitGetUnexpectedNode(ilBuilderContext);
 
-									ilBuilderContext.IL.Emit(OpCodes.Ret);
+								ilBuilderContext.IL.Emit(OpCodes.Ret);
 
-									ilBuilderContext.IL.MarkLabel(forkLabel);
+								ilBuilderContext.IL.MarkLabel(forkLabel);
 
-									// ForkPredicate
-									ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
-									ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultIsForkMethodInfo);
-									ilBuilderContext.IL.Emit(OpCodes.Brfalse, trueLabel);
+								// ForkPredicate
+								ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
+								ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultIsForkMethodInfo);
+								ilBuilderContext.IL.Emit(OpCodes.Brfalse, trueLabel);
 
-									EmitBuildForkNode(ilBuilderContext, index, resultLocal);
+								EmitBuildForkNode(ilBuilderContext, index, resultLocal);
 
-									ilBuilderContext.IL.Emit(OpCodes.Ret);
+								ilBuilderContext.IL.Emit(OpCodes.Ret);
 
-									ilBuilderContext.IL.MarkLabel(trueLabel);
+								ilBuilderContext.IL.MarkLabel(trueLabel);
 
-									if (predicate.ConsumeResult)
-										EmitEnqueuePredicateResult(ilBuilderContext, resultLocal);
+								if (predicate.ConsumeResult)
+									EmitEnqueuePredicateResult(ilBuilderContext, resultLocal);
 
-									break;
-								}
+								break;
+							}
 
-							case ReturnRuleNode _:
-								{
+							case BeginSyntaxNode beginSyntaxNode:
+							{
+								if (beginSyntaxNode.SyntaxGraph.Syntax.CollapseBacktracking)
+									EmitEnterForkFrame(ilBuilderContext);
+
+								break;
+							}
+
+							case ReturnSyntaxNode returnNode:
+							{
 									//return stack.Pop().LeaveNode;
+
+									//if (returnNode.SyntaxGraph.Syntax.CollapseBacktracking)
+									//{
+									//	ilBuilderContext.EmitLdThreadContext();
+									//	ilBuilderContext.IL.Emit(OpCodes.Call, ThreadContext.CompleteBlockMethodInfo);
+									//}
+
 									AutomataStack.ILGenerator.EmitPopLeaveNode(ilBuilderContext);
 
-									if (index == executionPath.Nodes.Length - 1)
-									{
-										ilBuilderContext.IL.Emit(OpCodes.Ret);
+								if (returnNode.SyntaxGraph.Syntax.CollapseBacktracking)
+										EmitLeaveForkFrame(ilBuilderContext);
 
-										closure = ilBuilderContext.Values.ToArray();
+								if (index == executionPath.Nodes.Length - 1)
+								{
+									ilBuilderContext.IL.Emit(OpCodes.Ret);
 
-										return ilBuilderContext.DynMethod;
-									}
+									closure = ilBuilderContext.Values.ToArray();
 
-									ilBuilderContext.IL.Emit(OpCodes.Pop);
-
-									break;
+									return ilBuilderContext.DynMethod;
 								}
+
+								ilBuilderContext.IL.Emit(OpCodes.Pop);
+
+								break;
+							}
 						}
 					}
 
 					if (executionPath.Output == null)
 						throw new InvalidOperationException();
-					
+
 					ilBuilderContext.EmitLdValue(executionPath.Output);
 
 					ilBuilderContext.IL.Emit(OpCodes.Ret);
@@ -312,7 +332,7 @@ namespace Zaaml.Text
 
 				private DynamicMethod BuildMain(ExecutionPath executionPath, out object[] closure)
 				{
-					var ilBuilderContext = new ILContext(executionPath, ExecutionPathMethodKind.Main, this);
+					var ilBuilderContext = new ILContext(executionPath, ExecutionPathMethodKind.Main);
 
 					if (executionPath.StackDepth > 0)
 					{
@@ -323,16 +343,16 @@ namespace Zaaml.Text
 					}
 
 					{
-						if (executionPath.PathSourceNode is LeaveRuleNode leaveRuleNode)
+						if (executionPath.PathSourceNode is LeaveSyntaxNode leaveRuleNode)
 						{
 							EmitDebugNode(ilBuilderContext, executionPath.PathSourceNode, executionPath);
 
 							var subGraph = leaveRuleNode.SubGraph;
 
-							if (subGraph.RuleEntry != null)
+							if (subGraph.SyntaxEntry != null)
 							{
-								if (IsOverriden(nameof(EmitLeaveRuleEntry)))
-									EmitLeaveRuleEntry(ilBuilderContext, subGraph.RuleEntry);
+								if (IsOverriden(nameof(EmitLeaveSyntaxEntry)))
+									EmitLeaveSyntaxEntry(ilBuilderContext, subGraph.SyntaxEntry);
 							}
 						}
 					}
@@ -345,258 +365,272 @@ namespace Zaaml.Text
 
 						switch (node)
 						{
-							case LeaveRuleNode leaveRuleNode:
+							case LeaveSyntaxNode leaveRuleNode:
+							{
+								EmitDebugNode(ilBuilderContext, executionPath.PathSourceNode, executionPath);
+
+								var subGraph = leaveRuleNode.SubGraph;
+
+								if (subGraph.SyntaxEntry != null)
 								{
-									EmitDebugNode(ilBuilderContext, executionPath.PathSourceNode, executionPath);
-
-									var subGraph = leaveRuleNode.SubGraph;
-
-									if (subGraph.RuleEntry != null)
-									{
-										if (IsOverriden(nameof(EmitLeaveRuleEntry)))
-											EmitLeaveRuleEntry(ilBuilderContext, subGraph.RuleEntry);
-									}
-
-									break;
+									if (IsOverriden(nameof(EmitLeaveSyntaxEntry)))
+										EmitLeaveSyntaxEntry(ilBuilderContext, subGraph.SyntaxEntry);
 								}
+
+								break;
+							}
 
 							case ActionNode actionNode:
+							{
+								var action = actionNode.ActionEntry.Action;
+
+								if (action.Target != null)
 								{
-									var action = actionNode.ActionEntry.Action;
-
-									if (action.Target != null)
-									{
-										ilBuilderContext.EmitLdValue(action.Target);
-										ilBuilderContext.EmitLdContext();
-										ilBuilderContext.IL.Emit(OpCodes.Callvirt, action.Method);
-									}
-									else
-									{
-										ilBuilderContext.EmitLdContext();
-										ilBuilderContext.IL.Emit(OpCodes.Call, action.Method);
-									}
-
-									break;
+									ilBuilderContext.EmitLdValue(action.Target);
+									ilBuilderContext.EmitLdContext();
+									ilBuilderContext.IL.Emit(OpCodes.Callvirt, action.Method);
+								}
+								else
+								{
+									ilBuilderContext.EmitLdContext();
+									ilBuilderContext.IL.Emit(OpCodes.Call, action.Method);
 								}
 
-							case BeginRuleNode beginRuleNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+								break;
+							}
 
-									break;
-								}
+							case BeginSyntaxNode beginRuleNode:
+							{
+								if (beginRuleNode.SyntaxGraph.Syntax.CollapseBacktracking)
+									EmitEnterForkFrame(ilBuilderContext);
+								
+								EmitDebugNode(ilBuilderContext, node, executionPath);
+
+								break;
+							}
 
 							case PrecedenceEnterNode precedenceEnterNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									var successLabel = ilBuilderContext.IL.DefineLabel();
+								var successLabel = ilBuilderContext.IL.DefineLabel();
 
-									Thread.ThreadILGenerator.EmitEnterPrecedenceNode(ilBuilderContext, precedenceEnterNode);
-									ilBuilderContext.IL.Emit(OpCodes.Brtrue, successLabel);
-									EmitGetUnexpectedNode(ilBuilderContext);
-									ilBuilderContext.IL.Emit(OpCodes.Ret);
-									ilBuilderContext.IL.MarkLabel(successLabel);
+								Thread.ThreadILGenerator.EmitEnterPrecedenceNode(ilBuilderContext, precedenceEnterNode);
+								ilBuilderContext.IL.Emit(OpCodes.Brtrue, successLabel);
+								EmitGetUnexpectedNode(ilBuilderContext);
+								ilBuilderContext.IL.Emit(OpCodes.Ret);
+								ilBuilderContext.IL.MarkLabel(successLabel);
 
-									break;
-								}
+								break;
+							}
 
 							case PrecedenceLeaveNode precedenceLeaveNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									Thread.ThreadILGenerator.EmitLeavePrecedenceNode(ilBuilderContext, precedenceLeaveNode);
+								Thread.ThreadILGenerator.EmitLeavePrecedenceNode(ilBuilderContext, precedenceLeaveNode);
 
-									break;
-								}
+								break;
+							}
 
 							case BeginProductionNode beginProductionNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									if (IsOverriden(nameof(EmitEnterProduction)))
-										EmitEnterProduction(ilBuilderContext, beginProductionNode.Production);
+								if (IsOverriden(nameof(EmitEnterProduction)))
+									EmitEnterProduction(ilBuilderContext, beginProductionNode.Production);
 
-									break;
-								}
+								break;
+							}
 
 							case EndProductionNode endProductionNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									if (IsOverriden(nameof(EmitLeaveProduction)))
-										EmitLeaveProduction(ilBuilderContext, endProductionNode.Production);
+								if (IsOverriden(nameof(EmitLeaveProduction)))
+									EmitLeaveProduction(ilBuilderContext, endProductionNode.Production);
 
-									break;
-								}
+								break;
+							}
 
-							case EnterRuleNode enterRuleNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							case EnterSyntaxNode enterRuleNode:
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									var subGraph = enterRuleNode.SubGraph;
+								var subGraph = enterRuleNode.SubGraph;
 
-									if (IsOverriden(nameof(EmitEnterRuleEntry)))
-										EmitEnterRuleEntry(ilBuilderContext, subGraph.RuleEntry);
+								if (IsOverriden(nameof(EmitEnterSyntaxEntry)))
+									EmitEnterSyntaxEntry(ilBuilderContext, subGraph.SyntaxEntry);
 
-									//stack.Push(subGraph);
-									AutomataStack.ILGenerator.EmitPush(ilBuilderContext, subGraph);
+								//stack.Push(subGraph);
+								AutomataStack.ILGenerator.EmitPush(ilBuilderContext, subGraph);
 
-									break;
-								}
+								break;
+							}
 
-							case InlineEnterRuleNode inlineEnterRuleNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							case InlineEnterSyntaxNode inlineEnterRuleNode:
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									var ruleEntry = inlineEnterRuleNode.RuleEntry;
+								var ruleEntry = inlineEnterRuleNode.RuleEntry;
 
-									if (IsOverriden(nameof(EmitEnterRuleEntry)))
-										EmitEnterRuleEntry(ilBuilderContext, ruleEntry);
+								if (IsOverriden(nameof(EmitEnterSyntaxEntry)))
+									EmitEnterSyntaxEntry(ilBuilderContext, ruleEntry);
 
-									break;
-								}
+								break;
+							}
 
-							case InlineLeaveRuleNode inlineLeaveRuleNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							case InlineLeaveSyntaxNode inlineLeaveRuleNode:
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									var ruleEntry = inlineLeaveRuleNode.RuleEntry;
+								var ruleEntry = inlineLeaveRuleNode.RuleEntry;
 
-									if (IsOverriden(nameof(EmitLeaveRuleEntry)))
-										EmitLeaveRuleEntry(ilBuilderContext, ruleEntry);
+								if (IsOverriden(nameof(EmitLeaveSyntaxEntry)))
+									EmitLeaveSyntaxEntry(ilBuilderContext, ruleEntry);
 
-									break;
-								}
+								break;
+							}
 
 							case OperandNode operandNode:
-								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
 
-									if (IsOverriden(nameof(EmitInvoke)))
-										EmitInvoke(ilBuilderContext, operandNode.MatchEntry, true);
+								if (IsOverriden(nameof(EmitInvoke)))
+									EmitInvoke(ilBuilderContext, operandNode.MatchEntry);
 
-									ilBuilderContext.EmitMoveInstructionPointer();
+								ilBuilderContext.EmitMoveInstructionPointer();
 
-									break;
-								}
+								break;
+							}
 
 							case PredicateNode predicateNode:
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
+
+								//if (predicate.Predicate.Predicate(Context) == false)
+								//	return null;
+
+								var returnPredicateLabel = ilBuilderContext.IL.DefineLabel();
+								var callPredicateLabel = ilBuilderContext.IL.DefineLabel();
+								var predicate = predicateNode.PredicateEntry;
+								var consumeResult = predicate.ConsumeResult && IsOverriden(nameof(EmitConsumePredicateResult));
+								var trueLabel = ilBuilderContext.IL.DefineLabel();
+								var forkLabel = ilBuilderContext.IL.DefineLabel();
+								var resultLocal = ilBuilderContext.IL.DeclareLocal(typeof(PredicateResult));
+
+								EmitLdExecuteThreadQueue(ilBuilderContext);
+
+								ilBuilderContext.IL.Emit(OpCodes.Brfalse, callPredicateLabel);
+
+								// Get Result from Process Result Queue
+								if (consumeResult)
 								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
-
-									//if (predicate.Predicate.Predicate(Context) == false)
-									//	return null;
-
-									var returnPredicateLabel = ilBuilderContext.IL.DefineLabel();
-									var callPredicateLabel = ilBuilderContext.IL.DefineLabel();
-									var predicate = predicateNode.PredicateEntry;
-									var consumeResult = predicate.ConsumeResult && IsOverriden(nameof(EmitConsumePredicateResult));
-									var trueLabel = ilBuilderContext.IL.DefineLabel();
-									var forkLabel = ilBuilderContext.IL.DefineLabel();
-									var resultLocal = ilBuilderContext.IL.DeclareLocal(typeof(PredicateResult));
-
-									EmitLdExecuteThreadQueue(ilBuilderContext);
-
-									ilBuilderContext.IL.Emit(OpCodes.Brfalse, callPredicateLabel);
-
-									// Get Result from Process Result Queue
-									if (consumeResult)
-									{
-										// if (predicate.PopResult == false)
-										//   return
-
-										ilBuilderContext.EmitLdProcess();
-										ilBuilderContext.EmitExecutionPath();
-										ilBuilderContext.IL.Emit(OpCodes.Call, ShouldPopPredicateResultMethodInfo);
-										ilBuilderContext.IL.Emit(OpCodes.Brfalse, returnPredicateLabel);
-
-										EmitDequePredicateResult(ilBuilderContext);
-
-										ilBuilderContext.IL.Emit(OpCodes.Stloc, resultLocal);
-
-										EmitConsumePredicateResult(ilBuilderContext, resultLocal, predicateNode.PredicateEntry.GetActualPredicateEntry());
-
-										ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
-										ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultDisposeMethodInfo);
-									}
-
-									ilBuilderContext.IL.Emit(OpCodes.Br, returnPredicateLabel);
-
-									ilBuilderContext.IL.MarkLabel(callPredicateLabel);
+									// if (predicate.PopResult == false)
+									//   return
 
 									ilBuilderContext.EmitLdProcess();
 									ilBuilderContext.EmitExecutionPath();
-									ilBuilderContext.IL.Emit(OpCodes.Call, CallPredicateMethodInfo);
+									ilBuilderContext.IL.Emit(OpCodes.Call, ShouldPopPredicateResultMethodInfo);
+									ilBuilderContext.IL.Emit(OpCodes.Brfalse, returnPredicateLabel);
+
+									EmitDequePredicateResult(ilBuilderContext);
 
 									ilBuilderContext.IL.Emit(OpCodes.Stloc, resultLocal);
+
+									EmitConsumePredicateResult(ilBuilderContext, resultLocal, predicateNode.PredicateEntry.GetActualPredicateEntry());
+
 									ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
-
-									ilBuilderContext.IL.Emit(OpCodes.Brtrue, forkLabel);
-
-									EmitGetUnexpectedNode(ilBuilderContext);
-
-									ilBuilderContext.IL.Emit(OpCodes.Ret);
-
-									ilBuilderContext.IL.MarkLabel(forkLabel);
-
-									// ForkPredicate
-									ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
-									ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultIsForkMethodInfo);
-									ilBuilderContext.IL.Emit(OpCodes.Brfalse, trueLabel);
-
-									EmitBuildForkNode(ilBuilderContext, index, resultLocal);
-
-									ilBuilderContext.IL.Emit(OpCodes.Ret);
-
-									ilBuilderContext.IL.MarkLabel(trueLabel);
-
-									if (consumeResult)
-									{
-										EmitConsumePredicateResult(ilBuilderContext, resultLocal, predicateNode.PredicateEntry.GetActualPredicateEntry());
-
-										ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
-										ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultDisposeMethodInfo);
-									}
-									else
-									{
-										ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
-										ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultDisposeMethodInfo);
-									}
-
-									ilBuilderContext.IL.MarkLabel(returnPredicateLabel);
-
-									break;
+									ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultDisposeMethodInfo);
 								}
 
-							case ReturnRuleNode returnRuleNode:
+								ilBuilderContext.IL.Emit(OpCodes.Br, returnPredicateLabel);
+
+								ilBuilderContext.IL.MarkLabel(callPredicateLabel);
+
+								ilBuilderContext.EmitLdProcess();
+								ilBuilderContext.EmitExecutionPath();
+								ilBuilderContext.IL.Emit(OpCodes.Call, CallPredicateMethodInfo);
+
+								ilBuilderContext.IL.Emit(OpCodes.Stloc, resultLocal);
+								ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
+
+								ilBuilderContext.IL.Emit(OpCodes.Brtrue, forkLabel);
+
+								EmitGetUnexpectedNode(ilBuilderContext);
+
+								ilBuilderContext.IL.Emit(OpCodes.Ret);
+
+								ilBuilderContext.IL.MarkLabel(forkLabel);
+
+								// ForkPredicate
+								ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
+								ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultIsForkMethodInfo);
+								ilBuilderContext.IL.Emit(OpCodes.Brfalse, trueLabel);
+
+								EmitBuildForkNode(ilBuilderContext, index, resultLocal);
+
+								ilBuilderContext.IL.Emit(OpCodes.Ret);
+
+								ilBuilderContext.IL.MarkLabel(trueLabel);
+
+								if (consumeResult)
 								{
-									EmitDebugNode(ilBuilderContext, node, executionPath);
+									EmitConsumePredicateResult(ilBuilderContext, resultLocal, predicateNode.PredicateEntry.GetActualPredicateEntry());
 
-									var lastNode = index == executionPath.Nodes.Length - 1;
-									var leaveNodeLocal = lastNode ? ilBuilderContext.IL.DeclareLocal(typeof(Node)) : null;
-
-									if (lastNode)
-									{
-										AutomataStack.ILGenerator.EmitPopLeaveNode(ilBuilderContext);
-
-										ilBuilderContext.IL.Emit(OpCodes.Stloc, leaveNodeLocal);
-									}
-									else
-										AutomataStack.ILGenerator.EmitPopNoRet(ilBuilderContext);
-
-									if (lastNode)
-									{
-										ilBuilderContext.IL.Emit(OpCodes.Ldloc, leaveNodeLocal);
-										ilBuilderContext.IL.Emit(OpCodes.Ret);
-
-										closure = ilBuilderContext.Values.ToArray();
-
-										return ilBuilderContext.DynMethod;
-									}
-
-									break;
+									ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
+									ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultDisposeMethodInfo);
 								}
+								else
+								{
+									ilBuilderContext.IL.Emit(OpCodes.Ldloc, resultLocal);
+									ilBuilderContext.IL.Emit(OpCodes.Callvirt, PredicateResultDisposeMethodInfo);
+								}
+
+								ilBuilderContext.IL.MarkLabel(returnPredicateLabel);
+
+								break;
+							}
+
+							case ValueNode valueNode:
+							{
+								if (IsOverriden(nameof(EmitValue)))
+									EmitValue(ilBuilderContext, valueNode.ValueEntry);
+
+								break;
+							}
+
+							case ReturnSyntaxNode returnSyntaxNode:
+							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
+
+								var lastNode = index == executionPath.Nodes.Length - 1;
+								var leaveNodeLocal = lastNode ? ilBuilderContext.IL.DeclareLocal(typeof(Node)) : null;
+
+								if (lastNode)
+								{
+									AutomataStack.ILGenerator.EmitPopLeaveNode(ilBuilderContext);
+
+									ilBuilderContext.IL.Emit(OpCodes.Stloc, leaveNodeLocal);
+								}
+								else
+									AutomataStack.ILGenerator.EmitPopNoRet(ilBuilderContext);
+
+								if (returnSyntaxNode.SyntaxGraph.Syntax.CollapseBacktracking)
+										EmitLeaveForkFrame(ilBuilderContext);
+
+								if (lastNode)
+								{
+									ilBuilderContext.IL.Emit(OpCodes.Ldloc, leaveNodeLocal);
+									ilBuilderContext.IL.Emit(OpCodes.Ret);
+
+									closure = ilBuilderContext.Values.ToArray();
+
+									return ilBuilderContext.DynMethod;
+								}
+
+								break;
+							}
 						}
 					}
 

@@ -6,17 +6,12 @@ using System;
 
 namespace Zaaml.Text
 {
-	internal struct Lexeme<TToken> where TToken : unmanaged, Enum
+	public struct Lexeme<TToken> where TToken : unmanaged, Enum
 	{
 		internal int EndField;
 		internal int StartField;
+		internal int DataField;
 		internal TToken TokenField;
-
-		#region Fields
-
-		#endregion
-
-		#region Properties
 
 		public int End
 		{
@@ -30,13 +25,19 @@ namespace Zaaml.Text
 			internal set => StartField = value;
 		}
 
+		public int Length => EndField - StartField;
+
 		public TToken Token
 		{
 			get => TokenField;
 			internal set => TokenField = value;
 		}
 
-		#endregion
+		public int Data
+		{
+			get => DataField;
+			internal set => DataField = value;
+		}
 
 		public override string ToString()
 		{

@@ -3,16 +3,13 @@
 // </copyright>
 
 using System.Windows;
-using Zaaml.PresentationCore.Animation.Interpolators;
 
 namespace Zaaml.PresentationCore.Animation
 {
-  public sealed class SizeAnimation : PrimitiveAnimationBase<Size>
-  {
-    #region Properties
-
-    private protected override IInterpolator<Size> Interpolator => SizeInterpolator.Instance;
-
-    #endregion
-  }
+	public sealed class SizeAnimation : PrimitiveAnimation<Size>
+	{
+		public SizeAnimation() : base(SizeInterpolator.Instance)
+		{
+		}
+	}
 }

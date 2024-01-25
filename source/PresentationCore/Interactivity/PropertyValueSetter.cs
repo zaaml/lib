@@ -29,6 +29,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		private object _propertyStore;
 		private object _runtimeTransitionStore = Unset.Value;
 		private object _valueStore;
+		private string _classStyle;
 
 		static PropertyValueSetter()
 		{
@@ -352,7 +353,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				try
 				{
 					var isAppliedOrQueried = IsAppliedOrQueried;
-
 					var oldTransition = isAppliedOrQueried ? ActualTransition : null;
 
 					if (_runtimeTransitionStore is RuntimeSetter runtimeSetter)
@@ -386,7 +386,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				try
 				{
 					var isAppliedOrQueried = IsAppliedOrQueried;
-
 					var oldValue = isAppliedOrQueried ? ActualValue : null;
 
 					ValueResolver.SetValue(this, value);
@@ -406,6 +405,23 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
+		[ApiProperty]
+		public string Class
+		{
+			get => _classStyle;
+			set
+			{
+				try
+				{
+					_classStyle = value;
+				}
+				finally
+				{
+					OnApiPropertyChanged(nameof(Class));
+				}
+			}
+		}
+
 		private ValueKind ValueKind
 		{
 			get => PackedDefinition.ValueKind.GetValue(PackedValue);
@@ -421,7 +437,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				try
 				{
 					var isAppliedOrQueried = IsAppliedOrQueried;
-
 					var oldValuePath = isAppliedOrQueried ? ActualValuePath : null;
 
 					ValueResolver.SetValuePath(this, value);
@@ -483,7 +498,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				try
 				{
 					var isAppliedOrQueried = IsAppliedOrQueried;
-
 					var oldVisualState = isAppliedOrQueried ? ActualVisualState : null;
 
 					VisualStateIndex = VisualStateMap.GetStateIndex(value);
@@ -543,10 +557,13 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			if (setterSource.IsOverriden)
 				IsOverriden = true;
+
 			if (setterSource.IsPrioritySet)
 				Priority = setterSource.Priority;
+
 			if (setterSource.IsVisualStateSet)
 				VisualStateIndex = setterSource.VisualStateIndex;
+
 			if (setterSource.IsTransitionSet)
 				Transition = setterSource.Transition;
 		}
@@ -639,11 +656,19 @@ namespace Zaaml.PresentationCore.Interactivity
 			return s.IsVisualStateSet;
 		}
 
+		private protected override bool TryProvideValue(object target, object targetProperty, IServiceProvider serviceProvider, out object value)
+		{
+			if (targetProperty is DependencyProperty dependencyProperty) 
+				Property = dependencyProperty;
+
+			return base.TryProvideValue(target, targetProperty, serviceProvider, out value);
+		}
+
 		protected override void InitFromServiceProvider(IServiceProvider serviceProvider)
 		{
 			base.InitFromServiceProvider(serviceProvider);
 
-			if (!(Property is string stringProperty))
+			if (Property is not string stringProperty)
 				return;
 
 			var property = DependencyPropertyUtils.ResolveAttachedDependencyProperty(stringProperty, serviceProvider);

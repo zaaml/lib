@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Input;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Trees;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
@@ -113,7 +114,7 @@ namespace Zaaml.UI.Windows
 
 		public bool ActualShowIcon
 		{
-			get => (bool) GetValue(ActualShowIconProperty);
+			get => (bool)GetValue(ActualShowIconProperty);
 			private set => this.SetReadOnlyValue(ActualShowIconPropertyKey, value);
 		}
 
@@ -131,20 +132,20 @@ namespace Zaaml.UI.Windows
 
 		public bool ActualShowTitle
 		{
-			get => (bool) GetValue(ActualShowTitleProperty);
+			get => (bool)GetValue(ActualShowTitleProperty);
 			private set => this.SetReadOnlyValue(ActualShowTitlePropertyKey, value);
 		}
 
 		public NativeStyle ContentPresenterStyle
 		{
-			get => (NativeStyle) GetValue(ContentPresenterStyleProperty);
+			get => (NativeStyle)GetValue(ContentPresenterStyleProperty);
 			set => SetValue(ContentPresenterStyleProperty, value);
 		}
 
 		public bool DropShadow
 		{
-			get => (bool) GetValue(DropShadowProperty);
-			set => SetValue(DropShadowProperty, value);
+			get => (bool)GetValue(DropShadowProperty);
+			set => SetValue(DropShadowProperty, value.Box());
 		}
 
 		internal WindowFooterPresenter FooterPresenter
@@ -167,7 +168,7 @@ namespace Zaaml.UI.Windows
 
 		public NativeStyle FooterPresenterStyle
 		{
-			get => (NativeStyle) GetValue(FooterPresenterStyleProperty);
+			get => (NativeStyle)GetValue(FooterPresenterStyleProperty);
 			set => SetValue(FooterPresenterStyleProperty, value);
 		}
 
@@ -191,14 +192,14 @@ namespace Zaaml.UI.Windows
 
 		public NativeStyle HeaderPresenterStyle
 		{
-			get => (NativeStyle) GetValue(HeaderPresenterStyleProperty);
+			get => (NativeStyle)GetValue(HeaderPresenterStyleProperty);
 			set => SetValue(HeaderPresenterStyleProperty, value);
 		}
 
 		public bool IsDraggable
 		{
-			get => (bool) GetValue(IsDraggableProperty);
-			set => SetValue(IsDraggableProperty, value);
+			get => (bool)GetValue(IsDraggableProperty);
+			set => SetValue(IsDraggableProperty, value.Box());
 		}
 
 		protected internal bool IsManualLocation
@@ -213,11 +214,15 @@ namespace Zaaml.UI.Windows
 			set => PackedDefinition.IsManualSize.SetValue(ref _packedValue, value);
 		}
 
+		protected bool IsMoving { get; private set; }
+
 		public bool IsResizable
 		{
-			get => (bool) GetValue(IsResizableProperty);
-			set => SetValue(IsResizableProperty, value);
+			get => (bool)GetValue(IsResizableProperty);
+			set => SetValue(IsResizableProperty, value.Box());
 		}
+
+		protected bool IsResizing { get; private set; }
 
 		private protected LogicalChildMentor LogicalChildMentor => _logicalChildMentor ??= LogicalChildMentor.Create(this);
 
@@ -231,32 +236,32 @@ namespace Zaaml.UI.Windows
 
 		public bool ShowCloseButton
 		{
-			get => (bool) GetValue(ShowCloseButtonProperty);
-			set => SetValue(ShowCloseButtonProperty, value);
+			get => (bool)GetValue(ShowCloseButtonProperty);
+			set => SetValue(ShowCloseButtonProperty, value.Box());
 		}
 
 		public bool ShowIcon
 		{
-			get => (bool) GetValue(ShowIconProperty);
-			set => SetValue(ShowIconProperty, value);
+			get => (bool)GetValue(ShowIconProperty);
+			set => SetValue(ShowIconProperty, value.Box());
 		}
 
 		public bool ShowMaximizeButton
 		{
-			get => (bool) GetValue(ShowMaximizeButtonProperty);
-			set => SetValue(ShowMaximizeButtonProperty, value);
+			get => (bool)GetValue(ShowMaximizeButtonProperty);
+			set => SetValue(ShowMaximizeButtonProperty, value.Box());
 		}
 
 		public bool ShowMinimizeButton
 		{
-			get => (bool) GetValue(ShowMinimizeButtonProperty);
-			set => SetValue(ShowMinimizeButtonProperty, value);
+			get => (bool)GetValue(ShowMinimizeButtonProperty);
+			set => SetValue(ShowMinimizeButtonProperty, value.Box());
 		}
 
 		public bool ShowTitle
 		{
-			get => (bool) GetValue(ShowTitleProperty);
-			set => SetValue(ShowTitleProperty, value);
+			get => (bool)GetValue(ShowTitleProperty);
+			set => SetValue(ShowTitleProperty, value.Box());
 		}
 
 		public WindowStatus Status
@@ -321,7 +326,7 @@ namespace Zaaml.UI.Windows
 
 		protected virtual void AttachWindowPresenter()
 		{
-			WindowPresenter = (WindowPresenter) GetTemplateChild("WindowPresenter");
+			WindowPresenter = (WindowPresenter)GetTemplateChild("WindowPresenter");
 
 			if (WindowPresenter == null)
 				return;
@@ -394,7 +399,7 @@ namespace Zaaml.UI.Windows
 
 		private void ExecutedCloseWithDialogResultCommand(object sender, ExecutedRoutedEventArgs e)
 		{
-			SetDialogResultAndClose((bool?) e.Parameter);
+			SetDialogResultAndClose((bool?)e.Parameter);
 
 			e.Handled = true;
 		}
@@ -420,11 +425,7 @@ namespace Zaaml.UI.Windows
 
 		internal static Window GetWindowInternal(FrameworkElement element)
 		{
-#if SILVERLIGHT
-			return element.GetAncestorsAndSelf<Window>(MixedTreeEnumerationStrategy.VisualThenLogicalInstance).FirstOrDefault();
-#else
 			return GetWindow(element);
-#endif
 		}
 
 		private void MoveWindowToCenter(Size finalArrange)
@@ -479,14 +480,39 @@ namespace Zaaml.UI.Windows
 			OnTemplateAttach();
 		}
 
-		internal virtual void OnBeginDragMove()
+		protected virtual void OnBeginDragMove()
 		{
 		}
 
-		internal void OnBeginResize()
+		internal void OnBeginDragMoveInternal()
 		{
+			OnBeginDragMovePrivate();
+		}
+
+		private void OnBeginDragMovePrivate()
+		{
+			IsMoving = true;
+
+			OnBeginDragMove();
+		}
+
+		protected virtual void OnBeginResize()
+		{
+		}
+
+		internal void OnBeginResizeInternal()
+		{
+			OnBeginResizePrivate();
+		}
+
+		private void OnBeginResizePrivate()
+		{
+			IsResizing = true;
+
 			foreach (var windowElement in EnumerateDescendantWindowElements().OfType<IWindowEventListener>())
 				windowElement.OnResizeStarted();
+
+			OnBeginResize();
 		}
 
 		protected override void OnDeactivated(EventArgs e)
@@ -496,12 +522,53 @@ namespace Zaaml.UI.Windows
 			OnIsActiveChangedPrivate();
 		}
 
-		internal virtual void OnDragMove()
+		internal void OnDragMoveInternal()
+		{
+			OnDragMovePrivate();
+		}
+
+		private void OnDragMovePrivate()
+		{
+			OnDragMove();
+		}
+
+		protected virtual void OnDragMove()
 		{
 		}
 
-		internal virtual void OnEndDragMove()
+		protected virtual void OnEndDragMove()
 		{
+		}
+
+		internal void OnEndDragMoveInternal()
+		{
+			OnEndDragMovePrivate();
+		}
+
+		private void OnEndDragMovePrivate()
+		{
+			IsMoving = false;
+
+			OnEndDragMove();
+		}
+
+		protected virtual void OnEndResize()
+		{
+		}
+
+		internal void OnEndResizeInternal()
+		{
+			OnEndResizePrivate();
+		}
+
+		private void OnEndResizePrivate()
+		{
+			IsResizing = false;
+
+			OnEndResize();
+
+			foreach (var windowElement in EnumerateDescendantWindowElements().OfType<IWindowEventListener>())
+				windowElement.OnResizeFinished();
 		}
 
 		protected virtual void OnExecutedCloseCommand(object commandParameter)
@@ -613,12 +680,6 @@ namespace Zaaml.UI.Windows
 			base.OnMouseRightButtonDown(e);
 
 			FocusInt();
-		}
-
-		internal void OnOnEndResize()
-		{
-			foreach (var windowElement in EnumerateDescendantWindowElements().OfType<IWindowEventListener>())
-				windowElement.OnResizeFinished();
 		}
 
 		partial void OnPlatformAfterApplyTemplate();

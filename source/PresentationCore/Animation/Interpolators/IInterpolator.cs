@@ -3,42 +3,29 @@
 // </copyright>
 
 using System.Windows.Media.Animation;
-using Zaaml.PresentationCore.Animation.Animators;
 
-namespace Zaaml.PresentationCore.Animation.Interpolators
+namespace Zaaml.PresentationCore.Animation
 {
-  public interface IInterpolator
-  {
-    #region  Methods
-
-    object Evaluate(object start, object end, double progress);
-
-    #endregion
-  }
+	public interface IInterpolator
+	{
+		IAnimationValue CreateAnimationValue();
+	}
 
 	public interface IInterpolator<T> : IInterpolator
-  {
-    #region  Methods
-
-    T Evaluate(T start, T end, double progress);
-
-    #endregion
-  }
+	{
+		void Evaluate(ref T value, T start, T end, double progress);
+	}
 
 	public static class InterpolatorExtensions
-  {
-    #region  Methods
+	{
+		public static AnimationValue<T> CreateAnimationValue<T>(this Interpolator<T> interpolator)
+		{
+			return new AnimationValue<T>(interpolator);
+		}
 
-    public static PrimitiveAnimator<T> CreateAnimator<T>(this IInterpolator<T> interpolator)
-    {
-      return PrimitiveAnimator.Create(interpolator);
-    }
-
-    public static T Evaluate<T>(this IInterpolator<T> interpolator, T start, T end, double progress, IEasingFunction easingFunction = null)
-    {
-      return interpolator.Evaluate(start, end, easingFunction?.Ease(progress) ?? progress);
-    }
-
-    #endregion
-  }
+		public static void Evaluate<T>(this IInterpolator<T> interpolator, ref T value, T start, T end, double progress, IEasingFunction easingFunction = null)
+		{
+			interpolator.Evaluate(ref value, start, end, easingFunction?.Ease(progress) ?? progress);
+		}
+	}
 }

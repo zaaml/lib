@@ -65,7 +65,7 @@ namespace Zaaml.UI.Controls.TabView
       internal set => this.SetReadOnlyValue(TabViewControlPropertyKey, value);
     }
 
-    private TabViewControlContentPresenterTemplateContract TemplateContract => (TabViewControlContentPresenterTemplateContract) TemplateContractInternal;
+    private TabViewControlContentPresenterTemplateContract TemplateContract => (TabViewControlContentPresenterTemplateContract) TemplateContractCore;
 
     #endregion
   }

@@ -11,12 +11,12 @@ using System.Windows.Markup;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
-using Range = Zaaml.Core.Range;
 
 namespace Zaaml.UI.Controls.Primitives.TrackBar
 {
@@ -67,6 +67,12 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			set => PackedDefinition.IsDragSyncValue.SetValue(ref _packedValue, value);
 		}
 
+		private bool CornersDirty
+		{
+			get => PackedDefinition.CornersDirty.GetValue(_packedValue);
+			set => PackedDefinition.CornersDirty.SetValue(ref _packedValue, value);
+		}
+
 		public TrackBarItemCollection ItemCollection
 		{
 			get { return this.GetValueOrCreate(ItemCollectionPropertyKey, () => new TrackBarItemCollection(this)); }
@@ -80,7 +86,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private double PixelRatio => TrackBarPanel?.PixelRatio ?? 0.0;
 
-		private TrackBarTemplateContract TemplateContract => (TrackBarTemplateContract) TemplateContractInternal;
+		private TrackBarTemplateContract TemplateContract => (TrackBarTemplateContract) TemplateContractCore;
 
 		private TrackBarPanel TrackBarPanel => TemplateContract.TrackBarPanel;
 
@@ -213,6 +219,8 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			TrackBarPanel?.Children.Add(item);
 
 			item.TrackBar = this;
+
+			InvalidateCornerRadius();
 		}
 
 		internal void OnItemMouseLeftButtonDown(TrackBarItem item, MouseButtonEventArgs e)
@@ -260,6 +268,8 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			item.TrackBar = null;
 
 			TrackBarPanel?.Children.Remove(item);
+
+			InvalidateCornerRadius();
 		}
 
 		protected override void OnLostMouseCapture(MouseEventArgs e)
@@ -407,8 +417,8 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 				if (newValue < minimumValue)
 					_valueDelta = minimumValue - _originRange.Minimum;
 
-				prevValueItem.Value = _originRange.Minimum + _valueDelta;
-				nextValueItem.Value = _originRange.Maximum + _valueDelta;
+				prevValueItem.SetValueInternal(_originRange.Minimum + _valueDelta);
+				nextValueItem.SetValueInternal(_originRange.Maximum + _valueDelta);
 			}
 			else if (_valueDelta > 0)
 			{
@@ -418,15 +428,64 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 				if (newValue > maximumValue)
 					_valueDelta = maximumValue - _originRange.Maximum;
 
-				prevValueItem.Value = _originRange.Minimum + _valueDelta;
-				nextValueItem.Value = _originRange.Maximum + _valueDelta;
+				prevValueItem.SetValueInternal(_originRange.Minimum + _valueDelta);
+				nextValueItem.SetValueInternal(_originRange.Maximum + _valueDelta);
 			}
+		}
+
+		
+		protected override void OnCornerRadiusChanged(CornerRadius oldValue, CornerRadius newValue)
+		{
+			base.OnCornerRadiusChanged(oldValue, newValue);
+
+			InvalidateCornerRadius();
+		}
+
+		private void InvalidateCornerRadius()
+		{
+			CornersDirty = true;
+
+			InvalidateMeasure();
+		}
+
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			if (CornersDirty)
+			{
+				CornersDirty = false;
+
+				UpdateCornerRadius();
+			}
+
+			return base.MeasureOverride(availableSize);
+		}
+
+		private void UpdateCornerRadius()
+		{
+			var enabledCorners = CornerRadius;
+			var disabledCorners = new CornerRadius(0);
+
+			TrackBarRangeItem first = null;
+			TrackBarRangeItem last = null;
+
+			foreach (var trackBarRangeItem in ItemCollection.OfType<TrackBarRangeItem>())
+			{
+				first ??= trackBarRangeItem;
+				last = trackBarRangeItem;
+			}
+
+			if (first != null)
+				first.ActualCornerRadius = CornerRadiusUtils.Compose(enabledCorners, disabledCorners, false, MaskCornerRadiusFlags.TopLeft | MaskCornerRadiusFlags.BottomLeft);
+
+			if (last != null && ReferenceEquals(first, last) == false)
+				last.ActualCornerRadius = CornerRadiusUtils.Compose(enabledCorners, disabledCorners, false, MaskCornerRadiusFlags.TopRight | MaskCornerRadiusFlags.BottomRight);
 		}
 
 		private static class PackedDefinition
 		{
 			public static readonly PackedBoolItemDefinition Initializing;
 			public static readonly PackedBoolItemDefinition IsDragSyncValue;
+			public static readonly PackedBoolItemDefinition CornersDirty;
 
 			static PackedDefinition()
 			{
@@ -434,6 +493,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 				Initializing = allocator.AllocateBoolItem();
 				IsDragSyncValue = allocator.AllocateBoolItem();
+				CornersDirty = allocator.AllocateBoolItem();
 			}
 		}
 	}

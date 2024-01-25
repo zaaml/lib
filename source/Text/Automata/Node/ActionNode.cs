@@ -10,7 +10,7 @@ namespace Zaaml.Text
 	{
 		private protected sealed class ActionNode : Node
 		{
-			public ActionNode(Automata<TInstruction, TOperand> automata, Graph graph, ActionEntry actionEntry) : base(automata, graph)
+			public ActionNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, ActionEntry actionEntry) : base(automata, syntaxGraph)
 			{
 				ActionEntry = actionEntry;
 			}

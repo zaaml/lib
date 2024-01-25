@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
@@ -48,7 +49,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
     public bool IsReadOnly
     {
       get => (bool) GetValue(IsReadOnlyProperty);
-      set => SetValue(IsReadOnlyProperty, value);
+      set => SetValue(IsReadOnlyProperty, value.Box());
     }
 
     public CheckedPopupBarOpenMode SubBarOpenMode
@@ -137,8 +138,9 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
     public bool IsThreeState
     {
       get => (bool) GetValue(IsThreeStateProperty);
-      set => SetValue(IsThreeStateProperty, value);
+      set => SetValue(IsThreeStateProperty, value.Box());
     }
+
     DependencyProperty IToggleButton.IsCheckedPropertyInt => IsCheckedProperty;
 
     #endregion

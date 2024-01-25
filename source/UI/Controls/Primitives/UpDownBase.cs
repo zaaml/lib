@@ -8,9 +8,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
-using Zaaml.UI.Controls.Core;
 using Control = Zaaml.UI.Controls.Core.Control;
 
 namespace Zaaml.UI.Controls.Primitives
@@ -44,8 +44,8 @@ namespace Zaaml.UI.Controls.Primitives
 
     public bool IsEditable
     {
-      get => (bool) GetValue(IsEditableProperty);
-      set => SetValue(IsEditableProperty, value);
+	    get => (bool)GetValue(IsEditableProperty);
+	    set => SetValue(IsEditableProperty, value.Box());
     }
 
     protected TextBox TextBox => _templateContract.TextBox;

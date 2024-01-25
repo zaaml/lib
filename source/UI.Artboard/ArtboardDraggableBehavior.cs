@@ -24,7 +24,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private GeneralTransform CanvasTransform { get; set; }
 
-		public override DragInfo DragInfo => new DragInfo(ConvertLocation(ActualHandle.OriginLocation), ConvertLocation(ActualHandle.CurrentLocation));
+		public override DragInfo DragInfo => new(ConvertLocation(ActualHandle.OriginLocation), ConvertLocation(ActualHandle.CurrentLocation));
 
 		private GeneralTransform InversedCanvasTransform { get; set; }
 

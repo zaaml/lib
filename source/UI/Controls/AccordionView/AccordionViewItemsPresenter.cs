@@ -2,17 +2,22 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Windows;
+using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
-using Zaaml.UI.Panels.Primitives;
 
 namespace Zaaml.UI.Controls.AccordionView
 {
 	[TemplateContractType(typeof(AccordionViewItemsPresenterTemplateContract))]
 	public class AccordionViewItemsPresenter : ItemsPresenterBase<AccordionViewControl, AccordionViewItem, AccordionViewItemCollection, AccordionViewPanel>
 	{
-		#region Ctors
+		private static readonly DependencyPropertyKey AccordionViewControlPropertyKey = DPM.RegisterReadOnly<AccordionViewControl, AccordionViewItemsPresenter>
+			("AccordionViewControl", d => d.OnAccordionViewControlPropertyChangedPrivate);
+
+		public static readonly DependencyProperty AccordionViewControlProperty = AccordionViewControlPropertyKey.DependencyProperty;
 
 		static AccordionViewItemsPresenter()
 		{
@@ -24,14 +29,14 @@ namespace Zaaml.UI.Controls.AccordionView
 			this.OverrideStyleKey<AccordionViewItemsPresenter>();
 		}
 
-		#endregion
-	}
+		public AccordionViewControl AccordionViewControl
+		{
+			get => (AccordionViewControl)GetValue(AccordionViewControlProperty);
+			internal set => this.SetReadOnlyValue(AccordionViewControlPropertyKey, value);
+		}
 
-	public class AccordionViewPanel : StackItemsPanelBase<AccordionViewItem>
-	{
-	}
-
-	public class AccordionViewItemsPresenterTemplateContract : ItemsPresenterBaseTemplateContract<AccordionViewPanel, AccordionViewItem>
-	{
+		private void OnAccordionViewControlPropertyChangedPrivate(AccordionViewControl oldValue, AccordionViewControl newValue)
+		{
+		}
 	}
 }

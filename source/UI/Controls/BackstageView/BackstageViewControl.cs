@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -15,6 +16,7 @@ using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.BackstageView
 {
@@ -107,7 +109,7 @@ namespace Zaaml.UI.Controls.BackstageView
 		public bool IsOpen
 		{
 			get => (bool) GetValue(IsOpenProperty);
-			set => SetValue(IsOpenProperty, value);
+			set => SetValue(IsOpenProperty, value.Box());
 		}
 
 		public BackstageViewItemGeneratorBase ItemGenerator
@@ -128,7 +130,7 @@ namespace Zaaml.UI.Controls.BackstageView
 			set => SetValue(SourceCollectionProperty, value);
 		}
 
-		private BackstageViewControlTemplateContract TemplateContract => (BackstageViewControlTemplateContract) TemplateContractInternal;
+		private BackstageViewControlTemplateContract TemplateContract => (BackstageViewControlTemplateContract) TemplateContractCore;
 
 		public void Activate(BackstageViewItem backstageViewItem)
 		{
@@ -311,6 +313,8 @@ namespace Zaaml.UI.Controls.BackstageView
 			get => (DataTemplate) GetValue(ItemHeaderTemplateProperty);
 			set => SetValue(ItemHeaderTemplateProperty, value);
 		}
+
+		IIconSelector IIconContentItemsControl.ItemIconSelector => null;
 	}
 
 	public class BackstageViewControlTemplateContract : IndexedSelectorBaseTemplateContract<BackstageViewItemsPresenter>

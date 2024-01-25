@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
@@ -46,10 +47,10 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 		public bool IsTextEditable
 		{
 			get => (bool) GetValue(IsTextEditableProperty);
-			set => SetValue(IsTextEditableProperty, value);
+			set => SetValue(IsTextEditableProperty, value.Box());
 		}
 
-		private DropDownTreeViewEditorTemplateContract TemplateContract => (DropDownTreeViewEditorTemplateContract) TemplateContractInternal;
+		private DropDownTreeViewEditorTemplateContract TemplateContract => (DropDownTreeViewEditorTemplateContract) TemplateContractCore;
 
 		public TreeViewControl TreeViewControl
 		{

@@ -16,9 +16,10 @@ namespace Zaaml.UI.Controls.Docking
 		public static readonly DependencyProperty SelectedItemProperty = DPM.Register<DockItem, BaseLayout>
 			("SelectedItem", t => t.OnSelectedItemChangedPrivate);
 
-		private static readonly Dictionary<Type, DependencyProperty> LayoutIndexProperties = new Dictionary<Type, DependencyProperty>();
-		private static readonly Dictionary<Type, List<DependencyProperty>> LayoutPropertiesDict = new Dictionary<Type, List<DependencyProperty>>();
-		private static readonly Dictionary<Type, LayoutSerializer> LayoutSerializers = new Dictionary<Type, LayoutSerializer>();
+		private static readonly Dictionary<Type, List<DependencyProperty>> LayoutPropertiesDict = new();
+		private static readonly Dictionary<Type, LayoutSerializer> LayoutSerializers = new();
+
+		private int _layoutIndex;
 
 		private BaseLayoutView _view;
 
@@ -31,8 +32,6 @@ namespace Zaaml.UI.Controls.Docking
 
 		internal DockControl DockControl { get; set; }
 
-		internal DockItemIndexProvider IndexProvider { get; } = new DockItemIndexProvider();
-
 		public DockItemCollection Items { get; }
 
 		public abstract LayoutKind LayoutKind { get; }
@@ -41,7 +40,7 @@ namespace Zaaml.UI.Controls.Docking
 
 		public DockItem SelectedItem
 		{
-			get => (DockItem) GetValue(SelectedItemProperty);
+			get => (DockItem)GetValue(SelectedItemProperty);
 			set => SetValue(SelectedItemProperty, value);
 		}
 
@@ -54,13 +53,35 @@ namespace Zaaml.UI.Controls.Docking
 					return;
 
 				if (_view != null)
+				{
+					foreach (var item in Items)
+						RemoveViewItem(item);
+
 					_view.LayoutInternal = null;
+				}
 
 				_view = value;
 
 				if (_view != null)
+				{
 					_view.LayoutInternal = this;
+
+					foreach (var item in Items)
+						AddViewItem(item);
+				}
 			}
+		}
+
+		private void RemoveViewItem(DockItem item)
+		{
+			if (item.AttachToView)
+				View?.Items.Remove(item);
+		}
+
+		private void AddViewItem(DockItem item)
+		{
+			if (item.AttachToView)
+				View?.Items.Add(item);
 		}
 
 		internal virtual void AttachController(DockControllerBase controller)
@@ -88,39 +109,25 @@ namespace Zaaml.UI.Controls.Docking
 			Controller = null;
 		}
 
-		internal static int GetActualDockItemIndex<T>(DockItem item) where T : BaseLayout
+		protected virtual int GetDockItemOrder(DockItem dockItem)
 		{
-			return (int?) item.GetValue(GetDockItemIndexProperty<T>()) ?? 0;
+			return 0;
 		}
 
-		internal static int GetActualDockItemIndex(DockItem item, Type layoutType)
+		internal int GetDockItemOrderInternal(DockItem dockItem)
 		{
-			return (int?) item.GetValue(GetDockItemIndexProperty(layoutType)) ?? 0;
-		}
+			var dockItemOrderInternal = dockItem.GetLayoutIndex(this);
 
-		internal static int? GetDockItemIndex<T>(DockItem item) where T : BaseLayout
-		{
-			return (int?) item.GetValue(GetDockItemIndexProperty<T>());
-		}
+			if (dockItemOrderInternal == null)
+			{
+				var index = _layoutIndex++;
 
-		internal static int? GetDockItemIndex(DockItem item, Type layoutType)
-		{
-			return (int?) item.GetValue(GetDockItemIndexProperty(layoutType));
-		}
+				dockItem.SetLayoutIndex(this, index);
 
-		internal int? GetDockItemIndex(DockItem item)
-		{
-			return (int?) item.GetValue(GetDockItemIndexProperty(GetType()));
-		}
+				return index;
+			}
 
-		internal static DependencyProperty GetDockItemIndexProperty(Type layoutType)
-		{
-			return LayoutIndexProperties.GetValueOrCreate(layoutType, t => DPM.RegisterAttached<int?>($"{t.Name}DockItemIndex", layoutType, OnDockItemIndexPropertyChanged));
-		}
-
-		internal static DependencyProperty GetDockItemIndexProperty<T>() where T : BaseLayout
-		{
-			return GetDockItemIndexProperty(typeof(T));
+			return dockItemOrderInternal.Value;
 		}
 
 		internal static IEnumerable<DependencyProperty> GetLayoutProperties(Type layoutType)
@@ -128,7 +135,7 @@ namespace Zaaml.UI.Controls.Docking
 			return LayoutPropertiesDict.GetValueOrDefault(layoutType) ?? Enumerable.Empty<DependencyProperty>();
 		}
 
-		internal static IEnumerable<DependencyProperty> GetLayoutProperties<T>(IEnumerable<DependencyProperty> properties) where T : BaseLayout
+		internal static IEnumerable<DependencyProperty> GetLayoutProperties<T>() where T : BaseLayout
 		{
 			return GetLayoutProperties(typeof(T));
 		}
@@ -166,13 +173,26 @@ namespace Zaaml.UI.Controls.Docking
 			throw new ArgumentOutOfRangeException(nameof(dockState));
 		}
 
+		internal void InvalidateLayoutInternal()
+		{
+			InvalidateView();
+		}
+
 		private void InvalidateMeasureArrange(DockItem item)
 		{
 			item.InvalidateMeasure();
 			item.InvalidateArrange();
 
-			View?.InvalidateMeasure();
-			View?.InvalidateArrange();
+			InvalidateView();
+		}
+
+		private void InvalidateView()
+		{
+			if (View == null)
+				return;
+
+			View.InvalidateMeasure();
+			View.InvalidateArrange();
 		}
 
 		public virtual bool IsVisible(DockItem item)
@@ -186,30 +206,21 @@ namespace Zaaml.UI.Controls.Docking
 
 		private void OnDockItemAddedPrivate(DockItem item)
 		{
-			View?.Items.Add(item);
+			if (item.GetLayoutIndex(this) == null)
+				item.SetLayoutIndex(this, _layoutIndex++);
 
 			InvalidateMeasureArrange(item);
 
 			SyncSelection();
 
-			IndexProvider.SyncDockItemIndex(GetDockItemIndex(item));
-
 			OnDockItemAdded(item);
+
+			AddViewItem(item);
 		}
 
-		protected static void OnDockItemIndexPropertyChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs args)
+		internal int GetNewLayoutIndex()
 		{
-			var dockItem = depObj as DockItem;
-			var actualLayout = dockItem?.ActualLayout;
-
-			if (actualLayout == null)
-				return;
-
-			if (ReferenceEquals(GetDockItemIndexProperty(actualLayout.GetType()), args.Property))
-			{
-				// TODO ActualLayout could be wrong
-				actualLayout.IndexProvider.OnDockItemIndexChanged(dockItem.ActualLayout?.GetDockItemIndex(dockItem));
-			}
+			return _layoutIndex++;
 		}
 
 		protected virtual void OnDockItemRemoved(DockItem item)
@@ -218,13 +229,24 @@ namespace Zaaml.UI.Controls.Docking
 
 		private void OnDockItemRemovedPrivate(DockItem item)
 		{
-			View?.Items.Remove(item);
+			RemoveViewItem(item);
 
 			InvalidateMeasureArrange(item);
 
 			SyncSelection();
 
 			OnDockItemRemoved(item);
+		}
+
+		internal void OnItemAttachToViewChangedInternal(DockItem dockItem)
+		{
+			if (View == null)
+				return;
+
+			if (dockItem.AttachToView)
+				View.Items.Add(dockItem);
+			else
+				View.Items.Remove(dockItem);
 		}
 
 		protected static void OnLayoutPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -251,7 +273,7 @@ namespace Zaaml.UI.Controls.Docking
 
 		internal static void RegisterLayoutProperties(Type layoutType, IEnumerable<DependencyProperty> properties)
 		{
-			LayoutPropertiesDict[layoutType] = properties.Concat(GetDockItemIndexProperty(layoutType)).ToList();
+			LayoutPropertiesDict[layoutType] = properties.ToList();
 		}
 
 		internal static void RegisterLayoutProperties<T>(IEnumerable<DependencyProperty> properties) where T : BaseLayout
@@ -264,26 +286,8 @@ namespace Zaaml.UI.Controls.Docking
 			LayoutSerializers[typeof(TLayout)] = serializer;
 		}
 
-		internal static void SetDockItemIndex(DockItem item, Type layoutType, int? index)
-		{
-			item.SetValue(GetDockItemIndexProperty(layoutType), index);
-		}
-
-		internal static void SetDockItemIndex<T>(DockItem item, int? index) where T : BaseLayout
-		{
-			item.SetValue(GetDockItemIndexProperty<T>(), index);
-		}
-
-		internal void SetDockItemIndex(DockItem item, int? value)
-		{
-			item.SetValue(GetDockItemIndexProperty(GetType()), value);
-		}
-
 		internal static bool ShouldSerializeProperty(Type layoutType, DependencyObject dependencyObject, DependencyProperty dependencyProperty)
 		{
-			if (ReferenceEquals(GetDockItemIndexProperty(layoutType), dependencyProperty))
-				return false;
-
 			if (DependencyPropertyUtils.GetValueSource(dependencyObject, dependencyProperty) == PropertyValueSource.Default)
 				return false;
 
@@ -315,11 +319,6 @@ namespace Zaaml.UI.Controls.Docking
 				selectedItem = selectionScopeSelectedItem;
 
 			SelectedItem = selectedItem;
-		}
-
-		internal void UpdateDockItemIndex(DockItem item)
-		{
-			SetDockItemIndex(item, GetDockItemIndex(item) ?? IndexProvider.NewIndex);
 		}
 	}
 

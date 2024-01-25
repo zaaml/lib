@@ -1,0 +1,14 @@
+﻿<zm:ThemeSkinResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:zm="http://schemas.zaaml.com/xaml"
+    Name="Dark">
+
+  <zm:ThemeSkinResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="../Glyphs.Shared.xaml"/>
+    <zm:ThemeResourceDictionary Source="../Assets.Shared.xaml"/>
+    <zm:ThemeResourceDictionary Source="SharedAssets.xaml"/>
+    <zm:ThemeResourceDictionary Source="ThemeKeywords.xaml"/>
+  </zm:ThemeSkinResourceDictionary.MergedDictionaries>
+
+</zm:ThemeSkinResourceDictionary>

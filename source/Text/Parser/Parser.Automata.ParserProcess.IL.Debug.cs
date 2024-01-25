@@ -32,11 +32,11 @@ namespace Zaaml.Text
 				{
 				}
 
-				private void DebugPostRuleEnter(RuleEntry ruleEntry)
+				private void DebugPostSyntaxEnter(SyntaxEntry syntaxEntry)
 				{
 				}
 
-				private void DebugPostRuleLeave(RuleEntry ruleEntry)
+				private void DebugPostSyntaxLeave(SyntaxEntry syntaxEntry)
 				{
 				}
 
@@ -56,21 +56,21 @@ namespace Zaaml.Text
 				{
 				}
 
-				private void DebugPreRuleEnter(RuleEntry ruleEntry)
+				private void DebugPreSyntaxEnter(SyntaxEntry syntaxEntry)
 				{
 				}
 
-				private void DebugPreRuleLeave(RuleEntry ruleEntry)
+				private void DebugPreSyntaxLeave(SyntaxEntry syntaxEntry)
 				{
 				}
 
-				internal partial class ParserILGenerator
+				private partial class ParserILGenerator
 				{
-					private static readonly MethodInfo DebugPreRuleEnterMethodInfo = ParserProcessType.GetMethod(nameof(DebugPreRuleEnter), IPNP);
-					private static readonly MethodInfo DebugPostRuleEnterMethodInfo = ParserProcessType.GetMethod(nameof(DebugPostRuleEnter), IPNP);
+					private static readonly MethodInfo DebugPreRuleEnterMethodInfo = ParserProcessType.GetMethod(nameof(DebugPreSyntaxEnter), IPNP);
+					private static readonly MethodInfo DebugPostRuleEnterMethodInfo = ParserProcessType.GetMethod(nameof(DebugPostSyntaxEnter), IPNP);
 
-					private static readonly MethodInfo DebugPreRuleLeaveMethodInfo = ParserProcessType.GetMethod(nameof(DebugPreRuleLeave), IPNP);
-					private static readonly MethodInfo DebugPostRuleLeaveMethodInfo = ParserProcessType.GetMethod(nameof(DebugPostRuleLeave), IPNP);
+					private static readonly MethodInfo DebugPreRuleLeaveMethodInfo = ParserProcessType.GetMethod(nameof(DebugPreSyntaxLeave), IPNP);
+					private static readonly MethodInfo DebugPostRuleLeaveMethodInfo = ParserProcessType.GetMethod(nameof(DebugPostSyntaxLeave), IPNP);
 
 					private static readonly MethodInfo DebugPreProductionEnterMethodInfo = ParserProcessType.GetMethod(nameof(DebugPreProductionEnter), IPNP);
 					private static readonly MethodInfo DebugPostProductionEnterMethodInfo = ParserProcessType.GetMethod(nameof(DebugPostProductionEnter), IPNP);
@@ -113,17 +113,17 @@ namespace Zaaml.Text
 						context.IL.Emit(OpCodes.Call, DebugPostProductionLeaveMethodInfo);
 					}
 
-					private void EmitDebugPostRuleEnter(ILContext context, RuleEntry ruleEntry)
+					private void EmitDebugPostSyntaxEnter(ILContext context, SyntaxEntry syntaxEntry)
 					{
 						context.EmitLdProcess();
-						context.EmitLdValue(ruleEntry);
+						context.EmitLdValue(syntaxEntry);
 						context.IL.Emit(OpCodes.Call, DebugPostRuleEnterMethodInfo);
 					}
 
-					private void EmitDebugPostRuleLeave(ILContext context, RuleEntry ruleEntry)
+					private void EmitDebugPostSyntaxLeave(ILContext context, SyntaxEntry syntaxEntry)
 					{
 						context.EmitLdProcess();
-						context.EmitLdValue(ruleEntry);
+						context.EmitLdValue(syntaxEntry);
 						context.IL.Emit(OpCodes.Call, DebugPostRuleLeaveMethodInfo);
 					}
 
@@ -155,17 +155,17 @@ namespace Zaaml.Text
 						context.IL.Emit(OpCodes.Call, DebugPreProductionLeaveMethodInfo);
 					}
 
-					private void EmitDebugPreRuleEnter(ILContext context, RuleEntry ruleEntry)
+					private void EmitDebugPreSyntaxEnter(ILContext context, SyntaxEntry syntaxEntry)
 					{
 						context.EmitLdProcess();
-						context.EmitLdValue(ruleEntry);
+						context.EmitLdValue(syntaxEntry);
 						context.IL.Emit(OpCodes.Call, DebugPreRuleEnterMethodInfo);
 					}
 
-					private void EmitDebugPreRuleLeave(ILContext context, RuleEntry ruleEntry)
+					private void EmitDebugPreSyntaxLeave(ILContext context, SyntaxEntry syntaxEntry)
 					{
 						context.EmitLdProcess();
-						context.EmitLdValue(ruleEntry);
+						context.EmitLdValue(syntaxEntry);
 						context.IL.Emit(OpCodes.Call, DebugPreRuleLeaveMethodInfo);
 					}
 				}

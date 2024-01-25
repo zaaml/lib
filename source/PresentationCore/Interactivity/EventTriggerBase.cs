@@ -13,22 +13,12 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public abstract class EventTriggerBase : ActionSourceTriggerBase, INotifyPropertyChanged
 	{
-		#region Fields
-
 		private object _eventArgs;
 		private event PropertyChangedEventHandler PropertyChangedInt;
-
-		#endregion
-
-		#region Ctors
 
 		internal EventTriggerBase()
 		{
 		}
-
-		#endregion
-
-		#region Properties
 
 		public object EventArgs
 		{
@@ -36,15 +26,12 @@ namespace Zaaml.PresentationCore.Interactivity
 			private set
 			{
 				_eventArgs = value;
+
 				OnPropertyChanged(nameof(EventArgs));
 			}
 		}
 
 		protected TriggerRuntimeBase TriggerRuntime { get; private set; }
-
-		#endregion
-
-		#region  Methods
 
 		protected abstract TriggerRuntimeBase CreateTriggerRuntime();
 
@@ -70,7 +57,6 @@ namespace Zaaml.PresentationCore.Interactivity
 			InitializeRuntime();
 		}
 
-
 		protected sealed override void OnActualSourceChanged(DependencyObject oldSource)
 		{
 			InitializeRuntime();
@@ -84,6 +70,11 @@ namespace Zaaml.PresentationCore.Interactivity
 				action.SetArgs(eventArgs as EventArgs);
 
 			Invoke();
+
+			EventArgs = null;
+
+			foreach (var action in ActualActions.OfType<IEventTriggerArgsSupport>())
+				action.SetArgs(null);
 		}
 
 		[NotifyPropertyChangedInvocator]
@@ -99,28 +90,14 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.UnloadCore(root);
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region INotifyPropertyChanged
-
 		event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
 		{
 			add => PropertyChangedInt += value;
 			remove => PropertyChangedInt -= value;
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		protected abstract class TriggerRuntimeBase : IDisposable
 		{
-			#region Ctors
-
 			private readonly WeakReference _weakTriggerReference;
 
 			protected TriggerRuntimeBase(EventTriggerBase trigger)
@@ -129,25 +106,11 @@ namespace Zaaml.PresentationCore.Interactivity
 				_weakTriggerReference = new WeakReference(trigger);
 			}
 
-			#endregion
-
-			#region Properties
-
 			protected DependencyObject ActualSource { get; private set; }
 
 			protected EventTriggerBase Trigger => (EventTriggerBase)_weakTriggerReference.Target;
 
-			#endregion
-
-			#region  Methods
-
 			public abstract void DisposeCore();
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region IDisposable
 
 			public void Dispose()
 			{
@@ -158,12 +121,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				ActualSource = null;
 			}
-
-			#endregion
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -10,12 +10,15 @@ namespace Zaaml.Text
 	{
 		public class PredicateEntry
 		{
-			public PredicateEntry(Func<ParserContext, bool> predicate)
+			public PredicateEntry(Func<Parser<TToken>, bool> predicate, string predicateName = null)
 			{
 				Predicate = predicate;
+				PredicateName = predicateName;
 			}
 
-			public Func<ParserContext, bool> Predicate { get; }
+			public Func<Parser<TToken>, bool> Predicate { get; }
+
+			public string PredicateName { get; }
 		}
 	}
 }

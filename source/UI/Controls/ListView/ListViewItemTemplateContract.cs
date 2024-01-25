@@ -11,7 +11,7 @@ namespace Zaaml.UI.Controls.ListView
 	public class ListViewItemTemplateContract : IconContentControlTemplateContract
 	{
 		[TemplateContractPart(Required = false)]
-		public ListViewItemGridCellsPresenter CellsPresenter { get; [UsedImplicitly] private set; }
+		public ListGridViewCellsPresenter GridViewCellsPresenter { get; [UsedImplicitly] private set; }
 
 		[TemplateContractPart(Required = false)]
 		public ListViewItemGlyphPresenter GlyphPresenter { get; [UsedImplicitly] private set; }

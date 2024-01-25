@@ -91,7 +91,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		private ArtboardItemTemplateContract TemplateContract => (ArtboardItemTemplateContract) TemplateContractInternal;
+		private ArtboardItemTemplateContract TemplateContract => (ArtboardItemTemplateContract)TemplateContractCore;
 
 		private double Zoom
 		{

@@ -5,149 +5,166 @@
 using System;
 using System.Windows;
 using Zaaml.PresentationCore;
+using Zaaml.PresentationCore.Extensions;
+using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Snapping;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  public abstract class PopupPlacement : InheritanceContextObject
-  {
-    #region Fields
+	public abstract class PopupPlacement : InheritanceContextObject
+	{
+		private static readonly DependencyPropertyKey PopupPropertyKey = DPM.RegisterReadOnly<Popup, PopupPlacement>
+			("Popup", d => d.OnPopupPropertyChangedPrivate);
 
-    private bool _isPopupOpen;
+		public static readonly DependencyProperty PopupProperty = PopupPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty AttachedProperty = DPM.RegisterAttached<PopupPlacement, PopupPlacement>("Attached");
 
-    private Popup _popup;
+		private bool _isPopupOpen;
 
-    #endregion
+		internal PopupPlacement()
+		{
+		}
 
-    #region Ctors
+		protected bool IsPopupOpen
+		{
+			get => _isPopupOpen;
+			private set
+			{
+				if (_isPopupOpen == value)
+					return;
 
-    internal PopupPlacement()
-    {
-    }
+				_isPopupOpen = value;
 
-    #endregion
+				if (_isPopupOpen)
+					OnPopupOpenedInternal();
+				else
+					OnPopupClosedInternal();
+			}
+		}
 
-    #region Properties
+		public Popup Popup
+		{
+			get => (Popup)GetValue(PopupProperty);
+			private set => this.SetReadOnlyValue(PopupPropertyKey, value);
+		}
 
-    internal virtual PopupPlacement ActualPlacement => this;
+		internal virtual Rect ScreenBoundsCore => ScreenBoundsOverride;
 
-    protected bool IsPopupOpen
-    {
-      get => _isPopupOpen;
-      private set
-      {
-        if (_isPopupOpen == value)
-          return;
+		protected virtual Rect ScreenBoundsOverride => Screen.FromElement(Popup.Child).Bounds;
 
-        _isPopupOpen = value;
+		internal virtual bool ShouldConstraint => true;
 
-        if (_isPopupOpen)
-          OnPopupOpenedInt();
-        else
-          OnPopupClosedInt();
-      }
-    }
+		internal Rect Arrange(Size desiredSize)
+		{
+			return Constraint(ArrangeOverride(desiredSize));
+		}
 
-    internal virtual Popup Popup
-    {
-      get => _popup;
-      set
-      {
-        if (_popup != null && value != null)
-          throw new InvalidOperationException("PopupPlacement already attached to popup.");
+		protected abstract Rect ArrangeOverride(Size desiredSize);
 
-        if (_popup != null)
-          OnPopupDetaching();
+		internal void AttachPopup(Popup popup)
+		{
+			if (popup == null)
+				throw new ArgumentNullException(nameof(popup));
 
-        _popup = value;
+			if (ReferenceEquals(Popup, null) == false)
+				throw new InvalidOperationException("Popup is already attached.");
 
-        if (_popup != null)
-          OnPopupAttached();
+			Popup = popup;
+			IsPopupOpen = popup.IsOpen;
 
-        IsPopupOpen = _popup?.IsOpen ?? false;
-      }
-    }
+			OnPopupAttached();
+		}
 
-    internal virtual Rect ScreenBoundsCore => ScreenBoundsOverride;
-
-    protected virtual Rect ScreenBoundsOverride => Screen.FromElement(Popup.Child).Bounds;
-
-    internal virtual bool ShouldConstraint => true;
-
-    #endregion
-
-    #region  Methods
-
-    internal Rect Arrange(Size desiredSize)
-    {
-      return Constraint(ArrangeOverride(desiredSize));
-    }
+		private Rect Constraint(Rect arrangeOverride)
+		{
+			return ShouldConstraint ? Snapper.Constraint(ScreenBoundsCore, arrangeOverride, ConvertOptions(Popup?.PlacementOptions ?? PopupPlacementOptions.None)) : arrangeOverride;
+		}
 
 		// TODO Implement preview arrange logic
-    //internal Rect PreviewArrange(Size desiredSize)
-    //{
-    //}
-		
+		//internal Rect PreviewArrange(Size desiredSize)
+		//{
+		//}
+
 		internal static SnapOptions ConvertOptions(PopupPlacementOptions options)
-    {
-	    var snapOptions = SnapOptions.None;
+		{
+			var snapOptions = SnapOptions.None;
 
-	    if ((options & PopupPlacementOptions.Fit) != 0)
-		    snapOptions |= SnapOptions.Fit;
+			if ((options & PopupPlacementOptions.Fit) != 0)
+				snapOptions |= SnapOptions.Fit;
 
-	    if ((options & PopupPlacementOptions.Move) != 0)
-		    snapOptions |= SnapOptions.Move;
+			if ((options & PopupPlacementOptions.Move) != 0)
+				snapOptions |= SnapOptions.Move;
 
-	    if ((options & PopupPlacementOptions.Fit) != 0)
-		    snapOptions |= SnapOptions.Fit;
+			if ((options & PopupPlacementOptions.Fit) != 0)
+				snapOptions |= SnapOptions.Fit;
 
-	    return snapOptions;
-    }
+			return snapOptions;
+		}
 
-    private Rect Constraint(Rect arrangeOverride)
-    {
-      return ShouldConstraint ? Snapper.Constraint(ScreenBoundsCore, arrangeOverride, ConvertOptions(Popup?.PlacementOptions ?? PopupPlacementOptions.None)) : arrangeOverride;
-    }
+		internal void DetachPopup(Popup popup)
+		{
+			if (popup == null)
+				throw new ArgumentNullException(nameof(popup));
 
-    protected abstract Rect ArrangeOverride(Size desiredSize);
+			if (ReferenceEquals(Popup, popup) == false)
+				throw new InvalidOperationException("Popup is not attached.");
 
-    //protected abstract Rect PreviewArrangeOverride(Size desiredSize);
+			OnPopupDetaching();
 
-    protected void Invalidate()
-    {
-      _popup?.InvalidatePlacement();
-    }
+			Popup = null;
 
-    protected virtual void OnPopupAttached()
-    {
-    }
+			IsPopupOpen = false;
+		}
 
-    protected virtual void OnPopupClosed()
-    {
-    }
+		public static PopupPlacement GetAttached(DependencyObject element)
+		{
+			return (PopupPlacement)element.GetValue(AttachedProperty);
+		}
 
-    internal virtual void OnPopupClosedInt()
-    {
-      IsPopupOpen = false;
+		//protected abstract Rect PreviewArrangeOverride(Size desiredSize);
 
-      OnPopupClosed();
-    }
+		protected void Invalidate()
+		{
+			Popup?.InvalidatePlacement();
+		}
 
-    protected virtual void OnPopupDetaching()
-    {
-    }
+		protected virtual void OnPopupAttached()
+		{
+		}
 
-    protected virtual void OnPopupOpened()
-    {
-    }
+		protected virtual void OnPopupClosed()
+		{
+		}
 
-    internal virtual void OnPopupOpenedInt()
-    {
-      IsPopupOpen = true;
+		internal virtual void OnPopupClosedInternal()
+		{
+			IsPopupOpen = false;
 
-      OnPopupOpened();
-    }
+			OnPopupClosed();
+		}
 
-    #endregion
-  }
+		protected virtual void OnPopupDetaching()
+		{
+		}
+
+		protected virtual void OnPopupOpened()
+		{
+		}
+
+		internal virtual void OnPopupOpenedInternal()
+		{
+			IsPopupOpen = true;
+
+			OnPopupOpened();
+		}
+
+		private void OnPopupPropertyChangedPrivate(Popup oldValue, Popup newValue)
+		{
+		}
+
+		public static void SetAttached(DependencyObject element, PopupPlacement value)
+		{
+			element.SetValue(AttachedProperty, value);
+		}
+	}
 }

@@ -1,0 +1,205 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="DropCompassCommon.xaml" />
+    <ResourceDictionary Source="DropGuide.xaml" />
+    <ResourceDictionary Source="../Glyphs.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+
+  <!--  GlobalGuideBorderStyle  -->
+  <Style x:Key="GlobalGuideBorderStyle"
+         TargetType="Border">
+    <Setter Property="Padding" Value="2" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <!--  GuideBox  -->
+  <Style x:Key="GuideBox"
+         TargetType="Border">
+    <Setter Property="Margin" Value="10" />
+    <Setter Property="Padding" Value="3" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="#99000000" />
+    <Setter Property="Background" Value="#99FFFFFF" />
+  </Style>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="GlobalDropCompassTemplate"
+                   TargetType="zm:DropCompass">
+    <zm:ControlTemplateRoot Visibility="Collapsed">
+      <!--  Left  -->
+      <zm:Popup HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsHidden="{zm:TemplateBinding Path=PlacementTarget,
+                                              Converter={zm:Static Member=zm:IsNullConverter.Instance}}"
+                IsOpen="True">
+        <zm:Popup.Placement>
+          <zm:RelativePlacement Target="{zm:TemplateBinding Path=PlacementTarget}" />
+        </zm:Popup.Placement>
+
+        <Border Background="{zm:TemplateBinding Path=Background}"
+                BorderBrush="{zm:TemplateBinding Path=BorderBrush}"
+                Style="{StaticResource GlobalGuideBorderStyle}">
+          <Border.RenderTransform>
+            <TranslateTransform x:Name="LeftOffsetTransform" X="{Binding Path=ActualWidth, ElementName=AutoHideLeftGuideContainer, Converter={zm:Static Member=zm:NegateConverter.Default}}" />
+          </Border.RenderTransform>
+          <StackPanel Orientation="Horizontal">
+            <zm:ExpandControl x:Name="AutoHideLeftGuideContainer"
+                              Orientation="Horizontal">
+              <zm:DropGuide x:Name="AutoHideLeftGuide"
+                            Width="10"
+                            Action="AutoHideLeft"
+                            BorderThickness="1,1,0,1">
+                <zm:Extension.Setters>
+                  <zm:Setter ExpandoProperty="CornerRadius" Value="3,0,0,3" />
+                </zm:Extension.Setters>
+                <ContentControl Style="{zm:NativeStyle Style={StaticResource GlyphIconControlStyle}}"
+                                Template="{StaticResource TabVerticalIcon}" />
+              </zm:DropGuide>
+            </zm:ExpandControl>
+            <zm:DropGuide x:Name="DockLeftGuide"
+                          Action="DockLeft">
+              <ContentControl Style="{zm:NativeStyle Style={StaticResource GlyphIconControlStyle}}"
+                              Template="{StaticResource SplitLeftIcon}" />
+            </zm:DropGuide>
+          </StackPanel>
+        </Border>
+      </zm:Popup>
+
+      <!--  Top  -->
+      <zm:Popup HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                IsHidden="{zm:TemplateBinding Path=PlacementTarget,
+                                              Converter={zm:Static Member=zm:IsNullConverter.Instance}}"
+                IsOpen="True">
+        <zm:Popup.Placement>
+          <zm:RelativePlacement Target="{zm:TemplateBinding Path=PlacementTarget}" />
+        </zm:Popup.Placement>
+        <Border Background="{zm:TemplateBinding Path=Background}"
+                BorderBrush="{zm:TemplateBinding Path=BorderBrush}"
+                Style="{StaticResource GlobalGuideBorderStyle}">
+          <Border.RenderTransform>
+            <TranslateTransform x:Name="TopOffsetTransform" Y="{Binding Path=ActualHeight, ElementName=AutoHideTopGuideContainer, Converter={zm:Static Member=zm:NegateConverter.Default}}" />
+          </Border.RenderTransform>
+          <StackPanel Orientation="Vertical">
+            <zm:ExpandControl x:Name="AutoHideTopGuideContainer"
+                              Orientation="Vertical">
+              <zm:DropGuide x:Name="AutoHideTopGuide"
+                            Height="10"
+                            Action="AutoHideTop"
+                            BorderThickness="1,1,1,0">
+                <zm:Extension.Setters>
+                  <zm:Setter ExpandoProperty="CornerRadius" Value="3,3,0,0" />
+                </zm:Extension.Setters>
+                <ContentControl Style="{zm:NativeStyle Style={StaticResource GlyphIconControlStyle}}"
+                                Template="{StaticResource TabHorizontalIcon}" />
+              </zm:DropGuide>
+            </zm:ExpandControl>
+            <zm:DropGuide x:Name="DockTopGuide"
+                          Action="DockTop">
+              <ContentControl Style="{zm:NativeStyle Style={StaticResource GlyphIconControlStyle}}"
+                              Template="{StaticResource SplitTopIcon}" />
+            </zm:DropGuide>
+          </StackPanel>
+        </Border>
+      </zm:Popup>
+
+      <!--  Right  -->
+      <zm:Popup HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                IsHidden="{zm:TemplateBinding Path=PlacementTarget,
+                                              Converter={zm:Static Member=zm:IsNullConverter.Instance}}"
+                IsOpen="True">
+        <zm:Popup.Placement>
+          <zm:RelativePlacement Target="{zm:TemplateBinding Path=PlacementTarget}" />
+        </zm:Popup.Placement>
+        <Border Background="{zm:TemplateBinding Path=Background}"
+                BorderBrush="{zm:TemplateBinding Path=BorderBrush}"
+                Style="{StaticResource GlobalGuideBorderStyle}">
+          <Border.RenderTransform>
+            <TranslateTransform x:Name="RightOffsetTransform" X="{Binding Path=ActualWidth, ElementName=AutoHideRightGuideContainer}" />
+          </Border.RenderTransform>
+          <StackPanel Orientation="Horizontal">
+            <zm:DropGuide x:Name="DockRightGuide"
+                          Action="DockRight">
+              <ContentControl Style="{zm:NativeStyle Style={StaticResource GlyphIconControlStyle}}"
+                              Template="{StaticResource SplitRightIcon}" />
+            </zm:DropGuide>
+            <zm:ExpandControl x:Name="AutoHideRightGuideContainer"
+                              Orientation="Horizontal">
+              <zm:DropGuide x:Name="AutoHideRightGuide"
+                            Width="10"
+                            Action="AutoHideRight"
+                            BorderThickness="0,1,1,1">
+                <zm:Extension.Setters>
+                  <zm:Setter ExpandoProperty="CornerRadius" Value="0,3,3,0" />
+                </zm:Extension.Setters>
+                <ContentControl Style="{zm:NativeStyle Style={StaticResource GlyphIconControlStyle}}"
+                                Template="{StaticResource TabVerticalIcon}" />
+              </zm:DropGuide>
+            </zm:ExpandControl>
+          </StackPanel>
+        </Border>
+      </zm:Popup>
+
+      <!--  Bottom  -->
+      <zm:Popup HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                IsHidden="{zm:TemplateBinding Path=PlacementTarget,
+                                              Converter={zm:Static Member=zm:IsNullConverter.Instance}}"
+                IsOpen="True">
+        <zm:Popup.Placement>
+          <zm:RelativePlacement Target="{zm:TemplateBinding Path=PlacementTarget}" />
+        </zm:Popup.Placement>
+        <Border Background="{zm:TemplateBinding Path=Background}"
+                BorderBrush="{zm:TemplateBinding Path=BorderBrush}"
+                Style="{StaticResource GlobalGuideBorderStyle}">
+          <Border.RenderTransform>
+            <TranslateTransform x:Name="BottomOffsetTransform" Y="{Binding Path=ActualHeight, ElementName=AutoHideBottomGuideContainer}" />
+          </Border.RenderTransform>
+          <StackPanel Orientation="Vertical">
+            <zm:DropGuide x:Name="DockBottomGuide"
+                          Action="DockBottom">
+              <ContentControl Style="{zm:NativeStyle Style={StaticResource GlyphIconControlStyle}}"
+                              Template="{StaticResource SplitBottomIcon}" />
+            </zm:DropGuide>
+            <zm:ExpandControl x:Name="AutoHideBottomGuideContainer"
+                              Orientation="Vertical">
+              <zm:DropGuide x:Name="AutoHideBottomGuide"
+                            Height="10"
+                            Action="AutoHideBottom"
+                            BorderThickness="1,0,1,1">
+                <zm:Extension.Setters>
+                  <zm:Setter ExpandoProperty="CornerRadius" Value="0,0,3,3" />
+                </zm:Extension.Setters>
+                <ContentControl Style="{zm:NativeStyle Style={StaticResource GlyphIconControlStyle}}"
+                                Template="{StaticResource TabHorizontalIcon}" />
+              </zm:DropGuide>
+            </zm:ExpandControl>
+          </StackPanel>
+        </Border>
+      </zm:Popup>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="GlobalDropCompassBaseStyle" BasedOn="{StaticResource DropCompassCommon}" TargetType="zm:GlobalDropCompass">
+    <zm:Setter Property="VerticalAlignment" Value="Stretch" />
+    <zm:Setter Property="HorizontalAlignment" Value="Stretch" />
+    <zm:Setter Property="AllowedActions" Value="DockAll" />
+    <zm:Setter Property="Template" Value="{StaticResource GlobalDropCompassTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="GlobalDropCompassStyle" BasedOn="{StaticResource GlobalDropCompassBaseStyle}" TargetType="zm:GlobalDropCompass" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="GlobalDropCompassThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource GlobalDropCompassStyle}" TargetType="zm:GlobalDropCompass" />
+
+</zm:ThemeResourceDictionary>

@@ -10,12 +10,14 @@ namespace Zaaml.Text
 		{
 			protected internal sealed class PredicateSymbol : Symbol
 			{
-				public PredicateSymbol(Lexer<TToken>.PredicateEntry predicateEntry)
+				public PredicateSyntax PredicateSyntax { get; }
+
+				public PredicateSymbol(PredicateSyntax predicateSyntax)
 				{
-					PredicateEntry = predicateEntry;
+					PredicateSyntax = predicateSyntax;
 				}
 
-				public Lexer<TToken>.PredicateEntry PredicateEntry { get; }
+				public Lexer<TToken>.PredicateEntry PredicateEntry => PredicateSyntax.PredicateEntry;
 			}
 		}
 	}

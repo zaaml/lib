@@ -11,13 +11,7 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class EventTrigger : EventTriggerBase
 	{
-		#region Fields
-
 		private string _event;
-
-		#endregion
-
-		#region Properties
 
 		public string Event
 		{
@@ -37,15 +31,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (EventTrigger) source;
+			var triggerSource = (EventTrigger)source;
 
 			Event = triggerSource.Event;
 		}
@@ -60,20 +50,10 @@ namespace Zaaml.PresentationCore.Interactivity
 			return new EventTriggerRuntime(this);
 		}
 
-		#endregion
-
-		#region  Nested Types
-
 		private class EventTriggerRuntime : TriggerRuntimeBase
 		{
-			#region Fields
-
 			private readonly Delegate _delegate;
 			private readonly EventInfo _eventInfo;
-
-			#endregion
-
-			#region Ctors
 
 			public EventTriggerRuntime(EventTrigger trigger) : base(trigger)
 			{
@@ -98,10 +78,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				_eventInfo.AddEventHandler(actualSource, _delegate);
 			}
 
-			#endregion
-
-			#region  Methods
-
 			public override void DisposeCore()
 			{
 				_eventInfo.RemoveEventHandler(ActualSource, _delegate);
@@ -109,12 +85,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			private void OnEvent(object sender, object args)
 			{
-				((EventTrigger) Trigger)?.OnEvent(sender, (EventArgs) args);
+				((EventTrigger)Trigger)?.OnEvent(sender, (EventArgs)args);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

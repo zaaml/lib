@@ -16,7 +16,7 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	internal abstract class RuntimeSetter : IDisposable
 	{
-		private static readonly List<RuntimeSetter> UseTransitionsList = new List<RuntimeSetter>();
+		private static readonly List<RuntimeSetter> UseTransitionsList = new();
 
 		private EffectiveValue _effectiveValue;
 		private RuntimeSetter _nextSetter;

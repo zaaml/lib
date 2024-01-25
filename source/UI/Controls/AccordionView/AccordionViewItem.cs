@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
@@ -70,7 +71,7 @@ namespace Zaaml.UI.Controls.AccordionView
 		public bool IsSelected
 		{
 			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 	}
 }

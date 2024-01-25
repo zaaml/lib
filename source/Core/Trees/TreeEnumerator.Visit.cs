@@ -38,7 +38,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(root, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(IEnumerable<T> treeItems, ITreeEnumeratorAdvisor<T> iteratorAdvisor, Action<T, AncestorsEnumerator<T>> visitor)
@@ -46,7 +46,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(treeItems, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(IEnumerator<T> treeItemsEnumerator, ITreeEnumeratorAdvisor<T> iteratorAdvisor, Action<T, AncestorsEnumerator<T>> visitor)
@@ -54,7 +54,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(treeItemsEnumerator, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(T root, ITreeEnumeratorAdvisor<T> iteratorAdvisor, Action<T> visitor)
@@ -86,7 +86,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(root, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(IEnumerable<T> treeItems, ITreeEnumeratorAdvisor<T> iteratorAdvisor, Action<T, AncestorsEnumerator<T>> visitor)
@@ -94,7 +94,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(treeItems, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(IEnumerator<T> treeItemsEnumerator, ITreeEnumeratorAdvisor<T> iteratorAdvisor, Action<T, AncestorsEnumerator<T>> visitor)
@@ -102,7 +102,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(treeItemsEnumerator, iteratorAdvisor);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(T root, Func<T, IEnumerator<T>> childrenFactory, Action<T> visitor)
@@ -134,7 +134,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(root, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(IEnumerable<T> treeItems, Func<T, IEnumerator<T>> childrenFactory, Action<T, AncestorsEnumerator<T>> visitor)
@@ -142,7 +142,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(treeItems, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(IEnumerator<T> treeItemsEnumerator, Func<T, IEnumerator<T>> childrenFactory, Action<T, AncestorsEnumerator<T>> visitor)
@@ -150,7 +150,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(treeItemsEnumerator, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(T root, Func<T, IEnumerator<T>> childrenFactory, Action<T> visitor)
@@ -182,7 +182,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(root, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(IEnumerable<T> treeItems, Func<T, IEnumerator<T>> childrenFactory, Action<T, AncestorsEnumerator<T>> visitor)
@@ -190,7 +190,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(treeItems, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(IEnumerator<T> treeItemsEnumerator, Func<T, IEnumerator<T>> childrenFactory, Action<T, AncestorsEnumerator<T>> visitor)
@@ -198,7 +198,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(treeItemsEnumerator, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(T root, Func<T, IEnumerable<T>> childrenFactory, Action<T> visitor)
@@ -230,7 +230,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(root, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(IEnumerable<T> treeItems, Func<T, IEnumerable<T>> childrenFactory, Action<T, AncestorsEnumerator<T>> visitor)
@@ -238,7 +238,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(treeItems, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void ReverseVisit<T>(IEnumerator<T> treeItemsEnumerator, Func<T, IEnumerable<T>> childrenFactory, Action<T, AncestorsEnumerator<T>> visitor)
@@ -246,7 +246,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetReverseEnumerator(treeItemsEnumerator, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(T root, Func<T, IEnumerable<T>> childrenFactory, Action<T> visitor)
@@ -278,7 +278,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(root, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(IEnumerable<T> treeItems, Func<T, IEnumerable<T>> childrenFactory, Action<T, AncestorsEnumerator<T>> visitor)
@@ -286,7 +286,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(treeItems, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 
 		public static void Visit<T>(IEnumerator<T> treeItemsEnumerator, Func<T, IEnumerable<T>> childrenFactory, Action<T, AncestorsEnumerator<T>> visitor)
@@ -294,7 +294,7 @@ namespace Zaaml.Core.Trees
 			using var enumerator = GetEnumerator(treeItemsEnumerator, childrenFactory);
 
 			while (enumerator.MoveNext())
-				visitor(enumerator.Current, enumerator.CurrentAncestors);
+				visitor(enumerator.Current, enumerator.GetAncestorsEnumerator());
 		}
 	}
 }

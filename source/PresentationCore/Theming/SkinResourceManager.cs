@@ -118,46 +118,13 @@ namespace Zaaml.PresentationCore.Theming
 					Root.Merge(themeResource, SkinDictionaryMergeFlags.Default);
 			}
 
-			if (ResolveDependencies() == false)
+			if (Root.ResolveDependencies(Root) == false)
 				return;
 
 			var frozenRoot = Root.AsFrozen();
 
 			foreach (var themeResourceKeyValuePair in frozenRoot.Flatten().Select(UnwrapValue))
 				AddThemeResource(themeResourceKeyValuePair);
-		}
-
-		private bool ResolveDependencies()
-		{
-			var result = true;
-
-			TreeEnumerator.Visit(Root, SkinDictionary.SkinDictionaryTreeAdvisor, s =>
-			{
-				if (s.BasedOnInternal == null || s.BasedOnInternal.Count == 0)
-					return;
-
-				for (var index = 0; index < s.BasedOn.Count; index++)
-				{
-					var basedOn = s.BasedOn[index];
-
-					if (basedOn.IsDeferred == false || basedOn.IsAbsoluteKey == false)
-						continue;
-
-					if (Root.TryGetValue(basedOn.DeferredKey, out var resolved) == false)
-					{
-						result = false;
-
-						continue;
-					}
-
-					if (resolved is SkinDictionary resolvedSkin)
-						s.BasedOn[index] = resolvedSkin;
-					else
-						result = false;
-				}
-			});
-
-			return result;
 		}
 
 		private static KeyValuePair<string, object> UnwrapValue(KeyValuePair<string, object> keyValuePair)

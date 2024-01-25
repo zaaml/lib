@@ -13,25 +13,15 @@ namespace Zaaml.PresentationCore.Animation
 	[ContentProperty("AnimationCollection")]
 	public class CompositeAnimation : AnimationBase
 	{
-		#region Static Fields and Constants
-
 		private static readonly DependencyPropertyKey AnimationCollectionPropertyKey = DPM.RegisterReadOnly<AnimationCollection, CompositeAnimation>
 			("AnimationCollectionPrivate");
 
 		public static readonly DependencyProperty AnimationCollectionProperty = AnimationCollectionPropertyKey.DependencyProperty;
 
-		#endregion
-
-		#region Properties
-
 		public AnimationCollection AnimationCollection
 		{
 			get { return this.GetValueOrCreate(AnimationCollectionPropertyKey, () => new AnimationCollectionInt(this)); }
 		}
-
-		#endregion
-
-		#region  Methods
 
 		internal override void AttachContext(IInheritanceContext inheritanceContext)
 		{
@@ -65,28 +55,14 @@ namespace Zaaml.PresentationCore.Animation
 				animation.RelativeTime = RelativeTime;
 		}
 
-		#endregion
-
-		#region  Nested Types
-
 		private class AnimationCollectionInt : AnimationCollection
 		{
-			#region Fields
-
 			private readonly CompositeAnimation _compositeAnimation;
-
-			#endregion
-
-			#region Ctors
 
 			public AnimationCollectionInt(CompositeAnimation compositeAnimation)
 			{
 				_compositeAnimation = compositeAnimation;
 			}
-
-			#endregion
-
-			#region  Methods
 
 			protected override void OnItemAdded(AnimationBase animation)
 			{
@@ -107,10 +83,6 @@ namespace Zaaml.PresentationCore.Animation
 
 				base.OnItemRemoved(animation);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -23,20 +23,37 @@ namespace Zaaml.Text
 					foreach (var symbol in symbols)
 						AddSymbolCore(symbol);
 				}
+				
+				public Production(params Symbol[] symbols)
+				{
+					Index = RegisterParserSyntaxProduction(this);
+
+					foreach (var symbol in symbols)
+						AddSymbolCore(symbol);
+				}
 
 				public int Index { get; }
 
 				internal string Name { get; set; }
 
-				public Production WithPrecedence(Syntax syntax, int value, bool level = false)
+				public Production WithPrecedence(Syntax syntax, short value)
 				{
-					var enterPrecedence = new EnterPrecedenceSymbol(syntax, value, level);
-					var leavePrecedence = new LeavePrecedenceSymbol(syntax, value, level);
+					var enterPrecedence = new EnterPrecedenceSymbol(syntax, value, false);
+					var leavePrecedence = new LeavePrecedenceSymbol(syntax, value, false);
 
 					InsertSymbolCore(0, enterPrecedence);
 					AddSymbolCore(leavePrecedence);
 
-					syntax.MaxPrecedenceValue = Math.Max(syntax.MaxPrecedenceValue, value);
+					return this;
+				}
+
+				public Production WithPrecedenceLevel(Syntax syntax)
+				{
+					var enterPrecedence = new EnterPrecedenceSymbol(syntax, short.MaxValue, true);
+					var leavePrecedence = new LeavePrecedenceSymbol(syntax, short.MaxValue, true);
+
+					InsertSymbolCore(0, enterPrecedence);
+					AddSymbolCore(leavePrecedence);
 
 					return this;
 				}

@@ -7,9 +7,9 @@ namespace Zaaml.UI.Controls.Docking
   public enum DockItemKind
   {
     DockItem,
-    Document,
-    TabGroup,
-    SplitGroup,
-    DocumentGroup
+    DocumentDockItem,
+    TabDockItemGroup,
+    SplitDockItemGroup,
+    DocumentDockItemGroup
   }
 }

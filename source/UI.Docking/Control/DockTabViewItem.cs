@@ -13,133 +13,97 @@ using Zaaml.UI.Controls.TabView;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class DockTabViewItem : TabViewItem
-  {
-    #region Static Fields and Constants
+	public class DockTabViewItem : TabViewItem
+	{
+		private static readonly RelayCommand<DockTabViewItem> StaticCloseCommand = new(OnStaticCloseCommandExecuted);
 
-    private static readonly RelayCommand<DockTabViewItem> StaticCloseCommand = new RelayCommand<DockTabViewItem>(OnStaticCloseCommandExecuted);
+		static DockTabViewItem()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<DockTabViewItem>();
+		}
 
-    #endregion
+		public DockTabViewItem(DockItem dockItem)
+		{
+			this.OverrideStyleKey<DockTabViewItem>();
 
-    #region Ctors
+			DockItem = dockItem;
 
-    static DockTabViewItem()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<DockTabViewItem>();
-    }
+			SetBinding(HeaderProperty, new Binding { Path = new PropertyPath(DockItem.TitleProperty), Source = dockItem });
+			SetBinding(IconProperty, new Binding { Path = new PropertyPath(DockItem.IconProperty), Source = dockItem });
+			SetBinding(DisplayIndexProperty, new Binding { Path = new PropertyPath(TabLayout.OrderProperty), Source = dockItem, Converter = DisplayIndexConverter.Instance, Mode = BindingMode.TwoWay });
 
-    public DockTabViewItem(DockItem dockItem)
-    {
-      this.OverrideStyleKey<DockTabViewItem>();
+			DataContext = dockItem;
 
-      DockItem = dockItem;
+			DragOutBehavior = new DragOutBehavior
+			{
+				DragOutCommand = new RelayCommand(OnDragOutCommandExecuted),
+				ProcessHandledEvents = true,
+				Target = this
+			};
 
-      SetBinding(HeaderProperty, new Binding {Path = new PropertyPath(DockItem.TitleProperty), Source = dockItem});
-      SetBinding(IconProperty, new Binding {Path = new PropertyPath(DockItem.IconProperty), Source = dockItem});
-      SetBinding(DisplayIndexProperty, new Binding {Path = new PropertyPath(BaseLayout.GetDockItemIndexProperty<TabLayout>()), Source = dockItem, Converter = DisplayIndexConverter.Instance, Mode = BindingMode.TwoWay});
+			CloseCommand = StaticCloseCommand;
+			CloseCommandParameter = this;
+		}
 
-      DataContext = dockItem;
+		public DockItem DockItem { get; }
 
-      DragOutBehavior = new DragOutBehavior
-      {
-        DragOutCommand = new RelayCommand(OnDragOutCommandExecuted),
-        ProcessHandledEvents = true,
-        Target = this
-      };
+		[UsedImplicitly]
+		private DragOutBehavior DragOutBehavior { get; }
 
-      CloseCommand = StaticCloseCommand;
-      CloseCommandParameter = this;
-    }
+		internal override void OnActivated()
+		{
+			base.OnActivated();
 
-    #endregion
+			DockItem.SelectAndFocus();
+		}
 
-    #region Properties
+		internal void OnAttachedInternal()
+		{
+			if (DockItem.IsSelected)
+				IsSelected = true;
+		}
 
-    public DockItem DockItem { get; }
+		internal void OnDetachedInternal()
+		{
+		}
 
-    [UsedImplicitly]
-    private DragOutBehavior DragOutBehavior { get; }
+		private void OnDragOutCommandExecuted()
+		{
+			DockItem.DragOutInternal(DragOutBehavior.OriginMousePosition);
+		}
 
-    #endregion
+		protected override void OnIsSelectedChanged()
+		{
+			base.OnIsSelectedChanged();
 
-    #region  Methods
+			if (IsSelected == false)
+				return;
 
-    internal override void OnActivated()
-    {
-      base.OnActivated();
+			DockItem.Select();
+		}
 
-      DockItem.SelectAndFocus();
-    }
+		private static void OnStaticCloseCommandExecuted(DockTabViewItem dockTabViewItem)
+		{
+			dockTabViewItem.DockItem.DockState = DockItemState.Hidden;
+		}
 
-    internal void OnAttachedInternal()
-    {
-      if (DockItem.IsSelected)
-        IsSelected = true;
-    }
+		private class DisplayIndexConverter : IValueConverter
+		{
+			public static readonly DisplayIndexConverter Instance = new DisplayIndexConverter();
 
-    internal void OnDetachedInternal()
-    {
-    }
+			private DisplayIndexConverter()
+			{
+			}
 
-    private void OnDragOutCommandExecuted()
-    {
-      DockItem.DragOutInternal(DragOutBehavior.OriginMousePosition);
-    }
+			public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+			{
+				return (int?)value ?? int.MaxValue;
+			}
 
-    protected override void OnIsSelectedChanged()
-    {
-      base.OnIsSelectedChanged();
-
-      if (IsSelected == false)
-        return;
-
-      DockItem.Select();
-    }
-
-    private static void OnStaticCloseCommandExecuted(DockTabViewItem dockTabViewItem)
-    {
-      dockTabViewItem.DockItem.DockState = DockItemState.Hidden;
-    }
-
-    #endregion
-
-    #region  Nested Types
-
-    private class DisplayIndexConverter : IValueConverter
-    {
-      #region Static Fields and Constants
-
-      public static readonly DisplayIndexConverter Instance = new DisplayIndexConverter();
-
-      #endregion
-
-      #region Ctors
-
-      private DisplayIndexConverter()
-      {
-      }
-
-      #endregion
-
-      #region Interface Implementations
-
-      #region IValueConverter
-
-      public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-      {
-        return (int?) value ?? int.MaxValue;
-      }
-
-      public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-      {
-        return value;
-      }
-
-      #endregion
-
-      #endregion
-    }
-
-    #endregion
-  }
+			public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+			{
+				return value;
+			}
+		}
+	}
 }

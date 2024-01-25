@@ -34,7 +34,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		private NavigationViewCommandItemsPresenter ItemsPresenter => TemplateContract.ItemsPresenter;
 
-		private NavigationViewCommandBarTemplateContract TemplateContract => (NavigationViewCommandBarTemplateContract) TemplateContractInternal;
+		private NavigationViewCommandBarTemplateContract TemplateContract => (NavigationViewCommandBarTemplateContract)TemplateContractCore;
 
 		internal void OnItemAttached(NavigationViewCommandItem item)
 		{

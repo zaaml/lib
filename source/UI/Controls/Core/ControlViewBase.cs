@@ -8,5 +8,9 @@ namespace Zaaml.UI.Controls.Core
 {
 	public abstract class ControlViewBase : InheritanceContextObject
 	{
+		protected override bool FreezeCore(bool isChecking)
+		{
+			return false;
+		}
 	}
 }

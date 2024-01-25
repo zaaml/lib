@@ -10,15 +10,15 @@ namespace Zaaml.Text
 		{
 			protected internal sealed class CharRangeSymbol : PrimitiveMatchSymbol
 			{
-				public CharRangeSymbol(char first, char last)
+				public CharRangeSymbol(int first, int last)
 				{
 					First = first;
 					Last = last;
 				}
 
-				public char First { get; }
+				public int First { get; }
 
-				public char Last { get; }
+				public int Last { get; }
 			}
 		}
 	}

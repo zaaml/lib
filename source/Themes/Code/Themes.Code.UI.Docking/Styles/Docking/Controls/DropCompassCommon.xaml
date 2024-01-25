@@ -1,0 +1,36 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <SolidColorBrush x:Key="CompassStroke">Black</SolidColorBrush>
+  <SolidColorBrush x:Key="CompassFill">White</SolidColorBrush>
+
+  <zm:SwitchConverter x:Key="CompassVisibilityConverter">
+    <zm:Case Key="{x:Null}" Value="Collapsed" />
+    <zm:Default Value="Visible" />
+  </zm:SwitchConverter>
+
+  <zm:SwitchConverter x:Key="CompassHitTestVisibilityConverter">
+    <zm:Case Key="{x:Null}" Value="{zm:False}" />
+    <zm:Default Value="{zm:True}" />
+  </zm:SwitchConverter>
+
+  <zm:Style x:Key="DropCompassCommon" TargetType="zm:DropCompass">
+    <zm:Setter Property="UseLayoutRounding" Value="True" />
+
+    <zm:Setter Property="Opacity" Value="0.7" />
+
+    <zm:SetterGroup ValuePathSource="ThemeResource">
+      <zm:Setter Property="Background" ValuePath="Code.Docking.DropCompass.Background" />
+      <zm:Setter Property="BorderBrush" ValuePath="Code.Docking.DropCompass.BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <zm:Style x:Key="GlyphIconControlStyle" TargetType="ContentControl">
+    <zm:SetterGroup ValuePathSource="ThemeResource">
+      <zm:Setter ExpandoProperty="IconStroke" ValuePath="Code.Docking.DropGuide.IconStroke" />
+      <zm:Setter ExpandoProperty="IconFill" ValuePath="Code.Docking.DropGuide.IconFill" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+</ResourceDictionary>

@@ -6,19 +6,11 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class Or : ConditionGroup
 	{
-		#region Properties
-
 		protected override ConditionLogicalOperator LogicalOperator => ConditionLogicalOperator.Or;
-
-		#endregion
-
-		#region  Methods
 
 		protected override InteractivityObject CreateInstance()
 		{
 			return new Or();
 		}
-
-		#endregion
 	}
 }

@@ -202,7 +202,7 @@
 
       <SolidColorBrush x:Key="Foreground" Color="#E3000000" />
       <SolidColorBrush x:Key="Background" Color="#FFE6E6E6" />
-      <SolidColorBrush x:Key="BorderBrush" Color="#FFE6E6E6" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#FF0173C7" />
 
     </zm:SkinDictionary>
 

@@ -10,7 +10,7 @@ namespace Zaaml.PresentationCore.Theming
 {
 	internal readonly struct ThemeResourceKey
 	{
-		private static readonly string[] EmptyKeyParts = new string[0];
+		private static readonly string[] EmptyKeyParts = Array.Empty<string>();
 		private static readonly Dictionary<ThemeResourceKey, ThemeResourceKey> KeyInternDict = new();
 		private static readonly Dictionary<string, ThemeResourceKey> KeyDict = new();
 		public static readonly List<string> Builder = new();
@@ -75,7 +75,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		public static explicit operator ThemeResourceKey(string key)
 		{
-			return new(key);
+			return new ThemeResourceKey(key);
 		}
 
 		public static explicit operator string(ThemeResourceKey key)

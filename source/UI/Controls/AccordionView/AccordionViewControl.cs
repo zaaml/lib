@@ -10,6 +10,7 @@ using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.AccordionView
 {
@@ -64,6 +65,8 @@ namespace Zaaml.UI.Controls.AccordionView
 			this.OverrideStyleKey<AccordionViewControl>();
 		}
 
+		private AccordionViewItemsPresenter AccordionViewItemsPresenter => TemplateContract.ItemsPresenter;
+
 		private AccordionViewItemGeneratorBase ActualGenerator => ItemGenerator ?? DefaultGenerator;
 
 		private AccordionViewItemGeneratorBase DefaultGenerator => DefaultGeneratorImplementation.Generator;
@@ -73,21 +76,23 @@ namespace Zaaml.UI.Controls.AccordionView
 
 		public AccordionViewItemGeneratorBase ItemGenerator
 		{
-			get => (AccordionViewItemGeneratorBase) GetValue(ItemGeneratorProperty);
+			get => (AccordionViewItemGeneratorBase)GetValue(ItemGeneratorProperty);
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
 		public AccordionViewSelectionMode SelectionMode
 		{
-			get => (AccordionViewSelectionMode) GetValue(SelectionModeProperty);
+			get => (AccordionViewSelectionMode)GetValue(SelectionModeProperty);
 			set => SetValue(SelectionModeProperty, value);
 		}
 
 		public IEnumerable SourceCollection
 		{
-			get => (IEnumerable) GetValue(SourceCollectionProperty);
+			get => (IEnumerable)GetValue(SourceCollectionProperty);
 			set => SetValue(SourceCollectionProperty, value);
 		}
+
+		private AccordionViewControlTemplateContract TemplateContract => (AccordionViewControlTemplateContract)TemplateContractCore;
 
 		protected override AccordionViewItemCollection CreateItemCollection()
 		{
@@ -121,62 +126,74 @@ namespace Zaaml.UI.Controls.AccordionView
 			SourceCollectionCore = newSource;
 		}
 
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
+
+			AccordionViewItemsPresenter.AccordionViewControl = this;
+		}
+
+		protected override void OnTemplateContractDetaching()
+		{
+			AccordionViewItemsPresenter.AccordionViewControl = null;
+
+			base.OnTemplateContractDetaching();
+		}
+
 		public string ItemIconMember
 		{
-			get => (string) GetValue(ItemIconMemberProperty);
+			get => (string)GetValue(ItemIconMemberProperty);
 			set => SetValue(ItemIconMemberProperty, value);
 		}
 
+		IIconSelector IIconContentItemsControl.ItemIconSelector => null;
+
 		public string ItemHeaderMember
 		{
-			get => (string) GetValue(ItemHeaderMemberProperty);
+			get => (string)GetValue(ItemHeaderMemberProperty);
 			set => SetValue(ItemHeaderMemberProperty, value);
 		}
 
 		public string ItemContentMember
 		{
-			get => (string) GetValue(ItemContentMemberProperty);
+			get => (string)GetValue(ItemContentMemberProperty);
 			set => SetValue(ItemContentMemberProperty, value);
 		}
 
 		public string ItemContentStringFormat
 		{
-			get => (string) GetValue(ItemContentStringFormatProperty);
+			get => (string)GetValue(ItemContentStringFormatProperty);
 			set => SetValue(ItemContentStringFormatProperty, value);
 		}
 
 		public DataTemplate ItemContentTemplate
 		{
-			get => (DataTemplate) GetValue(ItemContentTemplateProperty);
+			get => (DataTemplate)GetValue(ItemContentTemplateProperty);
 			set => SetValue(ItemContentTemplateProperty, value);
 		}
 
 		public DataTemplateSelector ItemContentTemplateSelector
 		{
-			get => (DataTemplateSelector) GetValue(ItemContentTemplateSelectorProperty);
+			get => (DataTemplateSelector)GetValue(ItemContentTemplateSelectorProperty);
 			set => SetValue(ItemContentTemplateSelectorProperty, value);
 		}
 
 		public string ItemHeaderStringFormat
 		{
-			get => (string) GetValue(ItemHeaderStringFormatProperty);
+			get => (string)GetValue(ItemHeaderStringFormatProperty);
 			set => SetValue(ItemHeaderStringFormatProperty, value);
 		}
 
 		public DataTemplateSelector ItemHeaderTemplateSelector
 		{
-			get => (DataTemplateSelector) GetValue(ItemHeaderTemplateSelectorProperty);
+			get => (DataTemplateSelector)GetValue(ItemHeaderTemplateSelectorProperty);
 			set => SetValue(ItemHeaderTemplateSelectorProperty, value);
 		}
 
 		public DataTemplate ItemHeaderTemplate
 		{
-			get => (DataTemplate) GetValue(ItemHeaderTemplateProperty);
+			get => (DataTemplate)GetValue(ItemHeaderTemplateProperty);
 			set => SetValue(ItemHeaderTemplateProperty, value);
 		}
-	}
-
-	public class AccordionViewControlTemplateContract : ItemsControlBaseTemplateContract<AccordionViewItemsPresenter>
-	{
 	}
 }

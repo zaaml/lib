@@ -11,101 +11,65 @@ using NativeBinding = System.Windows.Data.Binding;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public abstract class SkinBindingBaseExtension : BindingBaseExtension
-  {
-    #region Static Fields and Constants
+	public abstract class SkinBindingBaseExtension : BindingBaseExtension
+	{
+		private static readonly PropertyPath PropertyPath = new(Extension.ActualSkinProperty);
 
-    private static readonly PropertyPath PropertyPath = new PropertyPath(Extension.ActualSkinProperty);
+		internal SkinBindingBaseExtension()
+		{
+		}
 
-    #endregion
+		public string SkinPath { get; set; }
 
-    #region Ctors
+		protected abstract RelativeSource Source { get; }
 
-    internal SkinBindingBaseExtension()
-    {
-    }
+		protected override NativeBinding GetBindingCore(IServiceProvider serviceProvider)
+		{
+			var binding = new NativeBinding
+			{
+				Path = PropertyPath,
+				RelativeSource = Source,
+			};
 
-    #endregion
+			InitBinding(binding);
 
-    #region Properties
+			if (binding.Converter == null)
+			{
+				binding.Converter = SkinResourceConverter.Instance;
+				binding.ConverterParameter = SkinPath;
+			}
+			else
+			{
+				binding.Converter = new WrapConverter(binding.Converter, binding.ConverterParameter);
+				binding.ConverterParameter = SkinPath;
+			}
 
-    public string SkinPath { get; set; }
+			return binding;
+		}
 
-    protected abstract RelativeSource Source { get; }
+		private sealed class WrapConverter : IValueConverter
+		{
+			public WrapConverter(IValueConverter innerConverter, object converterParameter)
+			{
+				InnerConverter = innerConverter;
+				ConverterParameter = converterParameter;
+			}
 
-    #endregion
+			private object ConverterParameter { get; }
 
-    #region  Methods
+			private IValueConverter InnerConverter { get; }
 
-    protected override NativeBinding GetBindingCore(IServiceProvider serviceProvider)
-    {
-      var binding = new NativeBinding
-      {
-        Path = PropertyPath,
-        RelativeSource = Source,
-      };
+			public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+			{
+				var skinResource = SkinResourceConverter.Instance.Convert(value, targetType, parameter, culture);
 
-      InitBinding(binding);
+				return InnerConverter.Convert(skinResource, targetType, ConverterParameter, culture);
+			}
 
-      if (binding.Converter == null)
-      {
-        binding.Converter = SkinResourceConverter.Instance;
-        binding.ConverterParameter = SkinPath;
-      }
-      else
-      {
-        binding.Converter = new WrapConverter(binding.Converter, binding.ConverterParameter);
-        binding.ConverterParameter = SkinPath;
-      }
-
-      return binding;
-    }
-
-    #endregion
-
-    #region  Nested Types
-
-    private sealed class WrapConverter : IValueConverter
-    {
-      #region Ctors
-
-      public WrapConverter(IValueConverter innerConverter, object converterParameter)
-      {
-        InnerConverter = innerConverter;
-        ConverterParameter = converterParameter;
-      }
-
-      #endregion
-
-      #region Properties
-
-      private object ConverterParameter { get; }
-
-      private IValueConverter InnerConverter { get; }
-
-      #endregion
-
-      #region Interface Implementations
-
-      #region IValueConverter
-
-      public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-      {
-        var skinResource = SkinResourceConverter.Instance.Convert(value, targetType, parameter, culture);
-
-        return InnerConverter.Convert(skinResource, targetType, ConverterParameter, culture);
-      }
-
-      public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-      {
-        throw new NotSupportedException();
-      }
-
-      #endregion
-
-      #endregion
-    }
-
-    #endregion
-  }
+			public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+			{
+				throw new NotSupportedException();
+			}
+		}
+	}
 }

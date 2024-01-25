@@ -3,6 +3,7 @@
                             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                             xmlns:zm="http://schemas.zaaml.com/xaml"
                             xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:gridView="clr-namespace:Zaaml.UI.Controls.Core.GridView;assembly=Zaaml.UI"
                             mc:Ignorable="zmb">
 
   <!--  Visual States  -->
@@ -17,25 +18,24 @@
 
   <!--  Template  -->
   <ControlTemplate x:Key="ListViewItemGridCellTemplate"
-                   TargetType="zm:ListViewItemGridCell">
+                   TargetType="zm:ListGridViewCell">
 
-    <zm:GridCellRoot VisualStateGroups="{StaticResource VisualStates}">
-      <Border x:Name="Border"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}" />
-    </zm:GridCellRoot>
+    <gridView:GridViewCellRoot VisualStateGroups="{StaticResource VisualStates}">
+      <gridView:GridViewCellPresenter x:Name="CellPresenter" />
+    </gridView:GridViewCellRoot>
 
   </ControlTemplate>
 
   <!--  Base Style  -->
-  <zm:Style x:Key="ListViewItemGridCellBaseStyle" TargetType="zm:ListViewItemGridCell">
+  <zm:Style x:Key="ListViewItemGridCellBaseStyle" TargetType="zm:ListGridViewCell">
     <zm:Setter Property="Template" Value="{StaticResource ListViewItemGridCellTemplate}" />
-    <zm:Setter Property="Padding" Value="4,2" />
+    <zm:Setter Property="DisplayPadding" Value="5,2" />
+    <zm:Setter Property="Padding" Value="0" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="ListViewItemGridCellStyle" BasedOn="{StaticResource ListViewItemGridCellBaseStyle}" Skin="Metro.ListViewItemGridCell" TargetType="zm:ListViewItemGridCell">
+  <zm:Style x:Key="ListViewItemGridCellStyle" BasedOn="{StaticResource ListViewItemGridCellBaseStyle}"
+            Skin="Metro.ListViewItemGridCell" TargetType="zm:ListGridViewCell">
 
     <zm:SetterGroup ValuePathSource="Skin">
 
@@ -58,6 +58,7 @@
   </zm:Style>
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="ListViewItemGridCellThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ListViewItemGridCellStyle}" TargetType="zm:ListViewItemGridCell" />
+  <zm:ThemeStyle x:Key="ListViewItemGridCellThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource ListViewItemGridCellStyle}" TargetType="zm:ListGridViewCell" />
 
 </zm:ThemeResourceDictionary>

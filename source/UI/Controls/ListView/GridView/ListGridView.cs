@@ -8,8 +8,9 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
-using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.Core.GridView;
 using Zaaml.UI.Panels.Flexible;
+using GridViewColumn = Zaaml.UI.Controls.Core.GridView.GridViewColumn;
 
 namespace Zaaml.UI.Controls.ListView
 {
@@ -23,27 +24,53 @@ namespace Zaaml.UI.Controls.ListView
 			("Template", OnTemplatePropertyChanged);
 
 		public static readonly DependencyProperty ColumnWidthProperty = DPM.Register<FlexLength, ListGridView>
-			("ColumnWidth", GridColumn.DefaultWidth, d => d.OnColumnWidthPropertyChangedPrivate);
+			("ColumnWidth", GridViewColumn.DefaultWidth, d => d.OnColumnWidthPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ColumnMinWidthProperty = DPM.Register<FlexLength, ListGridView>
-			("ColumnMinWidth", GridColumn.DefaultMinWidth, d => d.OnColumnMinWidthPropertyChangedPrivate);
+			("ColumnMinWidth", GridViewColumn.DefaultMinWidth, d => d.OnColumnMinWidthPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ColumnMaxWidthProperty = DPM.Register<FlexLength, ListGridView>
-			("ColumnMaxWidth", GridColumn.DefaultMaxWidth, d => d.OnColumnMaxWidthPropertyChangedPrivate);
+			("ColumnMaxWidth", GridViewColumn.DefaultMaxWidth, d => d.OnColumnMaxWidthPropertyChangedPrivate);
+
+		public static readonly DependencyProperty CellStyleProperty = DPM.Register<Style, ListGridView>
+			("CellStyle", d => d.OnCellStylePropertyChangedPrivate);
+
+		public static readonly DependencyProperty HeaderStyleProperty = DPM.Register<Style, ListGridView>
+			("HeaderStyle", d => d.OnHeaderStylePropertyChangedPrivate);
+
+		public static readonly DependencyProperty CellAppearanceProperty = DPM.Register<ListGridViewCellAppearance, ListGridView>
+			("CellAppearance", default, d => d.OnCellAppearancePropertyChangedPrivate);
+
+		public static readonly DependencyProperty HeaderAppearanceProperty = DPM.Register<ListGridViewHeaderAppearance, ListGridView>
+			("HeaderAppearance", default, d => d.OnHeaderAppearancePropertyChangedPrivate);
 
 		public static readonly DependencyProperty ColumnsProperty = ColumnsPropertyKey.DependencyProperty;
+
+		public ListGridViewCellAppearance CellAppearance
+		{
+			get => (ListGridViewCellAppearance)GetValue(CellAppearanceProperty);
+			set => SetValue(CellAppearanceProperty, value);
+		}
+
+		public Style CellStyle
+		{
+			get => (Style)GetValue(CellStyleProperty);
+			set => SetValue(CellStyleProperty, value);
+		}
+
+		private GridViewColumnController ColumnController => ViewController?.ColumnController;
 
 		[TypeConverter(typeof(FlexLengthTypeConverter))]
 		public FlexLength ColumnMaxWidth
 		{
-			get => (FlexLength) GetValue(ColumnMaxWidthProperty);
+			get => (FlexLength)GetValue(ColumnMaxWidthProperty);
 			set => SetValue(ColumnMaxWidthProperty, value);
 		}
 
 		[TypeConverter(typeof(FlexLengthTypeConverter))]
 		public FlexLength ColumnMinWidth
 		{
-			get => (FlexLength) GetValue(ColumnMinWidthProperty);
+			get => (FlexLength)GetValue(ColumnMinWidthProperty);
 			set => SetValue(ColumnMinWidthProperty, value);
 		}
 
@@ -52,17 +79,29 @@ namespace Zaaml.UI.Controls.ListView
 		[TypeConverter(typeof(FlexLengthTypeConverter))]
 		public FlexLength ColumnWidth
 		{
-			get => (FlexLength) GetValue(ColumnWidthProperty);
+			get => (FlexLength)GetValue(ColumnWidthProperty);
 			set => SetValue(ColumnWidthProperty, value);
 		}
 
-		internal GridColumnWidthConstraints DefaultColumnWidthConstraints => new(ColumnWidth, ColumnMinWidth, ColumnMaxWidth);
+		internal GridViewColumnWidthConstraints DefaultColumnWidthConstraints => new(ColumnWidth, ColumnMinWidth, ColumnMaxWidth);
 
-		internal ListViewItemGridController GridController { get; private set; }
+		public ListGridViewHeaderAppearance HeaderAppearance
+		{
+			get => (ListGridViewHeaderAppearance)GetValue(HeaderAppearanceProperty);
+			set => SetValue(HeaderAppearanceProperty, value);
+		}
+
+		public Style HeaderStyle
+		{
+			get => (Style)GetValue(HeaderStyleProperty);
+			set => SetValue(HeaderStyleProperty, value);
+		}
+
+		internal ListGridViewController ViewController { get; private set; }
 
 		public static ControlTemplate GetTemplate(DependencyObject element)
 		{
-			return (ControlTemplate) element.GetValue(TemplateProperty);
+			return (ControlTemplate)element.GetValue(TemplateProperty);
 		}
 
 		protected override ControlTemplate GetTemplateCore(FrameworkElement frameworkElement)
@@ -70,26 +109,46 @@ namespace Zaaml.UI.Controls.ListView
 			return GetTemplate(frameworkElement);
 		}
 
+		private void OnCellAppearancePropertyChangedPrivate(ListGridViewCellAppearance oldValue, ListGridViewCellAppearance newValue)
+		{
+		}
+
+		private void OnCellStylePropertyChangedPrivate(Style oldValue, Style newValue)
+		{
+			foreach (var column in Columns)
+				column.UpdateActualCellStyle();
+		}
+
 		private void OnColumnMaxWidthPropertyChangedPrivate(FlexLength oldValue, FlexLength newValue)
 		{
-			GridController?.OnColumnWidthConstraintsChanged();
+			ColumnController?.OnColumnWidthConstraintsChanged();
 		}
 
 		private void OnColumnMinWidthPropertyChangedPrivate(FlexLength oldValue, FlexLength newValue)
 		{
-			GridController?.OnColumnWidthConstraintsChanged();
+			ColumnController?.OnColumnWidthConstraintsChanged();
 		}
 
 		private void OnColumnWidthPropertyChangedPrivate(FlexLength oldValue, FlexLength newValue)
 		{
-			GridController?.OnColumnWidthConstraintsChanged();
+			ColumnController?.OnColumnWidthConstraintsChanged();
+		}
+
+		private void OnHeaderAppearancePropertyChangedPrivate(ListGridViewHeaderAppearance oldValue, ListGridViewHeaderAppearance newValue)
+		{
+		}
+
+		private void OnHeaderStylePropertyChangedPrivate(Style oldValue, Style newValue)
+		{
+			foreach (var column in Columns)
+				column.UpdateActualHeaderStyle();
 		}
 
 		protected override void OnListViewControlChanged(ListViewControl oldValue, ListViewControl newValue)
 		{
 			base.OnListViewControlChanged(oldValue, newValue);
 
-			GridController = newValue != null ? new ListViewItemGridController(newValue) : null;
+			ViewController = newValue != null ? new ListGridViewController(newValue) : null;
 		}
 
 		private static void OnTemplatePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

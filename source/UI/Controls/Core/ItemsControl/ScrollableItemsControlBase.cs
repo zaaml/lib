@@ -31,7 +31,7 @@ namespace Zaaml.UI.Controls.Core
 
 		protected ScrollViewControl ScrollView => TemplateContract.ScrollView;
 
-		private ScrollableItemsControlBaseTemplateContract<TPresenter> TemplateContract => (ScrollableItemsControlBaseTemplateContract<TPresenter>)TemplateContractInternal;
+		private ScrollableItemsControlBaseTemplateContract<TPresenter> TemplateContract => (ScrollableItemsControlBaseTemplateContract<TPresenter>)TemplateContractCore;
 
 		private protected virtual void BringItemIntoView(TItem item, bool updateLayout)
 		{
@@ -42,7 +42,7 @@ namespace Zaaml.UI.Controls.Core
 				return;
 			}
 
-			if (!(ItemsPresenter?.ItemsHostInternal is IItemsHost<TItem> host))
+			if (ItemsPresenter?.ItemsHostInternal is not IItemsHost<TItem> host)
 				return;
 
 			var bringIntoViewRequest = new BringIntoViewRequest<TItem>(item, DefaultBringIntoViewMode, 0);
@@ -127,11 +127,24 @@ namespace Zaaml.UI.Controls.Core
 			{
 				ScrollView.IsTabStop = false;
 				ItemsPresenter.ScrollView = ScrollView;
+				ScrollView.ScrollInfoChangedInternal += OnScrollInfoChangedHandler;
 			}
+		}
+
+		private void OnScrollInfoChangedHandler(object sender, ScrollInfoChangedEventArgs e)
+		{
+			OnScrollInfoChanged(e);
+		}
+
+		private protected virtual void OnScrollInfoChanged(ScrollInfoChangedEventArgs e)
+		{
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
+			if (ScrollView != null)
+				ScrollView.ScrollInfoChangedInternal -= OnScrollInfoChangedHandler;
+
 			ItemsPresenter.ScrollView = null;
 
 			base.OnTemplateContractDetaching();

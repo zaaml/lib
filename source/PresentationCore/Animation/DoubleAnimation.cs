@@ -2,16 +2,12 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using Zaaml.PresentationCore.Animation.Interpolators;
-
 namespace Zaaml.PresentationCore.Animation
 {
-  public sealed class DoubleAnimation : PrimitiveAnimationBase<double>
-  {
-    #region Properties
-
-    private protected override IInterpolator<double> Interpolator => DoubleInterpolator.Instance;
-
-    #endregion
-  }
+	public sealed class DoubleAnimation : PrimitiveAnimation<double>
+	{
+		public DoubleAnimation() : base(DoubleInterpolator.Instance)
+		{
+		}
+	}
 }

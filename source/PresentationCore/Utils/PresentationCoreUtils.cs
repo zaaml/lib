@@ -90,11 +90,8 @@ namespace Zaaml.PresentationCore.Utils
     // ReSharper disable once MemberCanBeMadeStatic.Local
     public static object FreezeValue(object value)
     {
-#if !SILVERLIGHT
-      var freezable = value as Freezable;
-      if (freezable != null && freezable.IsFrozen == false && freezable.CanFreeze)
+	    if (value is Freezable { IsFrozen: false, CanFreeze: true } freezable)
         freezable.Freeze();
-#endif
 
       return value;
     }

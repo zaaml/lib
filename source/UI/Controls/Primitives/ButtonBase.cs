@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
@@ -14,9 +15,6 @@ using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.Primitives.ContentPrimitives;
-#if !SILVERLIGHT
-using Zaaml.PresentationCore;
-#endif
 
 namespace Zaaml.UI.Controls.Primitives
 {
@@ -59,11 +57,13 @@ namespace Zaaml.UI.Controls.Primitives
 
 		[UsedImplicitly] private readonly IButtonController _buttonController;
 
+		public event EventHandler CommandChanged;
+		public event EventHandler CommandParameterChanged;
+		public event EventHandler CommandTargetChanged;
+
 		static ButtonBase()
 		{
-#if !SILVERLIGHT
-			KeyboardNavigation.AcceptsReturnProperty.OverrideMetadata(typeof(ButtonBase), new FrameworkPropertyMetadata(KnownBoxes.BoolTrue));
-#endif
+			KeyboardNavigation.AcceptsReturnProperty.OverrideMetadata(typeof(ButtonBase), new FrameworkPropertyMetadata(BooleanBoxes.True));
 		}
 
 		protected ButtonBase()
@@ -73,38 +73,38 @@ namespace Zaaml.UI.Controls.Primitives
 
 		public bool CanClick
 		{
-			get => (bool) GetValue(CanClickProperty);
-			set => SetValue(CanClickProperty, value);
+			get => (bool)GetValue(CanClickProperty);
+			set => SetValue(CanClickProperty, value.Box());
 		}
 
 		public ClickMode ClickMode
 		{
-			get => (ClickMode) GetValue(ClickModeProperty);
+			get => (ClickMode)GetValue(ClickModeProperty);
 			set => SetValue(ClickModeProperty, value);
 		}
 
 		public double IconDistance
 		{
-			get => (double) GetValue(IconDistanceProperty);
+			get => (double)GetValue(IconDistanceProperty);
 			set => SetValue(IconDistanceProperty, value);
 		}
 
 		public Dock IconDock
 		{
-			get => (Dock) GetValue(IconDockProperty);
+			get => (Dock)GetValue(IconDockProperty);
 			set => SetValue(IconDockProperty, value);
 		}
 
 		public bool ShowContent
 		{
-			get => (bool) GetValue(ShowContentProperty);
-			set => SetValue(ShowContentProperty, value);
+			get => (bool)GetValue(ShowContentProperty);
+			set => SetValue(ShowContentProperty, value.Box());
 		}
 
 		public bool ShowIcon
 		{
-			get => (bool) GetValue(ShowIconProperty);
-			set => SetValue(ShowIconProperty, value);
+			get => (bool)GetValue(ShowIconProperty);
+			set => SetValue(ShowIconProperty, value.Box());
 		}
 
 		protected override TemplateContract CreateTemplateContract()
@@ -213,23 +213,19 @@ namespace Zaaml.UI.Controls.Primitives
 
 		public bool IsPressed
 		{
-			get => (bool) GetValue(IsPressedProperty);
+			get => (bool)GetValue(IsPressedProperty);
 			internal set => this.SetReadOnlyValue(IsPressedPropertyKey, value);
 		}
 
-		public event EventHandler CommandChanged;
-		public event EventHandler CommandParameterChanged;
-		public event EventHandler CommandTargetChanged;
-
 		public DependencyObject CommandTarget
 		{
-			get => (DependencyObject) GetValue(CommandTargetProperty);
+			get => (DependencyObject)GetValue(CommandTargetProperty);
 			set => SetValue(CommandTargetProperty, value);
 		}
 
 		public ICommand Command
 		{
-			get => (ICommand) GetValue(CommandProperty);
+			get => (ICommand)GetValue(CommandProperty);
 			set => SetValue(CommandProperty, value);
 		}
 
@@ -241,7 +237,7 @@ namespace Zaaml.UI.Controls.Primitives
 
 		public IconBase Icon
 		{
-			get => (IconBase) GetValue(IconProperty);
+			get => (IconBase)GetValue(IconProperty);
 			set => SetValue(IconProperty, value);
 		}
 
@@ -258,7 +254,7 @@ namespace Zaaml.UI.Controls.Primitives
 		bool IManagedButton.CanClick => CanClick;
 
 		bool IManagedButton.InvokeCommandBeforeClick => false;
-		
+
 		void IManagedButton.OnClick()
 		{
 			OnClick();
@@ -271,7 +267,7 @@ namespace Zaaml.UI.Controls.Primitives
 		void IManagedButton.OnPostClick()
 		{
 		}
-		
+
 		void IManagedButton.FocusControl()
 		{
 			if (Focusable)

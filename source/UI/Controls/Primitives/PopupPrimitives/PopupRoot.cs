@@ -10,13 +10,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
 	public sealed class PopupRoot : ControlRootBase
 	{
-		#region Fields
-
 		private Popup _popup;
-
-		#endregion
-
-		#region Properties
 
 		internal Popup Popup
 		{
@@ -35,10 +29,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 					AttachPopup();
 			}
 		}
-
-		#endregion
-
-		#region  Methods
 
 		private void AttachPopup()
 		{
@@ -97,7 +87,5 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 					break;
 			}
 		}
-
-		#endregion
 	}
 }

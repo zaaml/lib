@@ -1,4 +1,4 @@
-// <copyright file="TabGroup.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="TabDockItemGroup.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -8,67 +8,74 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class TabDockItemGroup : DockItemGroup<TabLayout>
-  {
-    #region Ctors
+	public sealed class TabDockItemGroup : DockItemGroup<TabLayout>
+	{
+		static TabDockItemGroup()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<TabDockItemGroup>();
+		}
 
-    static TabDockItemGroup()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<TabDockItemGroup>();
-    }
+		internal TabDockItemGroup()
+		{
+			this.OverrideStyleKey<TabDockItemGroup>();
+		}
 
-    internal TabDockItemGroup() : this(DockItemState.Float)
-    {
-    }
+		public override DockItemGroupKind GroupKind => DockItemGroupKind.Tab;
 
-    internal TabDockItemGroup(DockItemState dockState) : base(dockState)
-    {
-      this.OverrideStyleKey<TabDockItemGroup>();
-    }
+		public override DockItemKind Kind => DockItemKind.TabDockItemGroup;
 
-    #endregion
+		protected override BaseLayoutView<TabLayout> LayoutView => TabLayoutView;
 
-    #region Properties
+		private TabLayoutView TabLayoutView => TemplateContract.LayoutView;
 
-    public override DockItemGroupKind GroupKind => DockItemGroupKind.Tab;
+		private TabDockItemGroupTemplateContract TemplateContract => (TabDockItemGroupTemplateContract)TemplateContractInternal;
 
-    public override DockItemKind Kind => DockItemKind.TabGroup;
+		protected internal override DockItemLayout CreateItemLayout()
+		{
+			return new TabDockItemGroupLayout(this);
+		}
 
-    protected override BaseLayoutView<TabLayout> LayoutView => TabLayoutView;
+		protected override DockItem CreatePreviewItem(DockItemState dockState)
+		{
+			return new TabDockItemGroup { DockState = dockState };
+		}
 
-    private TabLayoutView TabLayoutView => TemplateContract.LayoutView;
+		protected override TemplateContract CreateTemplateContract()
+		{
+			return new TabDockItemGroupTemplateContract();
+		}
 
-    private TabDockItemGroupTemplateContract TemplateContract => (TabDockItemGroupTemplateContract) TemplateContractInternal;
+		protected override void OnItemAdded(DockItem item)
+		{
+			if (item.GetType().IsSubclassOf(typeof(DockItemGroup)))
+				throw new Exception("Only simple items could be added");
 
-    #endregion
+			base.OnItemAdded(item);
+		}
 
-    #region  Methods
+		//private protected override void OnItemDockStateChanged(DockItem item, DockItemStateChangedEventArgs args)
+		//{
+		//	if (ShouldSyncDockGroupState(item, args))
+		//	{
+		//		(item.DockState, DockState) = (DockState, item.DockState);
+		//	}
+		//	else
+		//		base.OnItemDockStateChanged(item, args);
+		//}
 
-    protected internal override DockItemLayout CreateItemLayout()
-    {
-      return new TabDockItemGroupLayout(this);
-    }
+		private bool ShouldSyncDockGroupState(DockItem item, DockItemStateChangedEventArgs args)
+		{
+			if (item.DockState == DockItemState.Hidden || args.OldDockState == DockItemState.Hidden)
+				return false;
 
-    protected override DockItem CreatePreviewItem(DockItemState dockState)
-    {
-      return new TabDockItemGroup(dockState);
-    }
+			if (args.OldDockState != DockState)
+				return false;
 
-    protected override TemplateContract CreateTemplateContract()
-    {
-      return new TabDockItemGroupTemplateContract();
-    }
+			if ((item.DockState == DockItemState.AutoHide && args.OldDockState == DockItemState.Dock) == false &&
+			    (item.DockState == DockItemState.Dock && args.OldDockState == DockItemState.AutoHide) == false)
+				return false;
 
-    internal override BaseLayout GetItemTargetLayout(DockItem item, bool arrange) => DockState == DockItemState.AutoHide ? Controller?.GetLayout(DockItemState.AutoHide) : base.GetItemTargetLayout(item, arrange);
-
-    protected override void OnItemAdded(DockItem item)
-    {
-      if (item.GetType().IsSubclassOf(typeof(DockItemGroup)))
-        throw new Exception("Only simple items could be added");
-
-      base.OnItemAdded(item);
-    }
-
-    #endregion
-  }
+			return true;
+		}
+	}
 }

@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -43,7 +44,7 @@ namespace Zaaml.UI.Controls.Core
 
 		internal bool PreserveMinSize { get; set; }
 
-		private ItemsControlBaseTemplateContract TemplateContract => (ItemsControlBaseTemplateContract) TemplateContractInternal;
+		private ItemsControlBaseTemplateContract TemplateContract => (ItemsControlBaseTemplateContract) TemplateContractCore;
 
 		protected override Size ArrangeOverride(Size arrangeBounds)
 		{
@@ -96,7 +97,7 @@ namespace Zaaml.UI.Controls.Core
 		public bool HasItems
 		{
 			get => (bool) GetValue(HasItemsProperty);
-			internal set => this.SetReadOnlyValue(HasItemsPropertyKey, value);
+			internal set => this.SetReadOnlyValue(HasItemsPropertyKey, value.Box());
 		}
 
 		void IItemsControl.OnSourceChanged()

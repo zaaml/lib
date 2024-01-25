@@ -8,7 +8,7 @@ namespace Zaaml.Text
 	{
 		private protected abstract class ProductionNode : Node
 		{
-			protected ProductionNode(Automata<TInstruction, TOperand> automata, Graph graph, Production production) : base(automata, graph)
+			protected ProductionNode(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, Production production) : base(automata, syntaxGraph)
 			{
 				Production = production;
 			}

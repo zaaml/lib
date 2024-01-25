@@ -11,19 +11,9 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class SwitchTrigger : SwitchTriggerBase, IPropertySubject
 	{
-		#region Static Fields and Constants
-
 		private static readonly InteractivityProperty SourceValueProperty = RegisterInteractivityProperty(OnValueChanged);
 
-		#endregion
-
-		#region Fields
-
 		private object _sourceValue;
-
-		#endregion
-
-		#region Ctors
 
 		static SwitchTrigger()
 		{
@@ -35,10 +25,6 @@ namespace Zaaml.PresentationCore.Interactivity
 			PackedDefinition.PropertyKind.SetValue(ref PackedValue, PropertyKind.Unspecified);
 			PackedDefinition.SubjectKind.SetValue(ref PackedValue, SubjectKind.Unspecified);
 		}
-
-		#endregion
-
-		#region Properties
 
 		private DependencyProperty ActualProperty => PropertyResolver.ResolveProperty(this);
 
@@ -88,15 +74,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => PackedDefinition.SubjectKind.SetValue(ref PackedValue, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (SwitchTrigger) source;
+			var triggerSource = (SwitchTrigger)source;
 
 			SubjectResolver.CopyFrom(this, triggerSource);
 			PropertyResolver.CopyFrom(this, triggerSource);
@@ -125,9 +107,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			UpdateSourceBinding();
 		}
 
-		private static void OnValueChanged(InteractivityObject interactivityobject, object oldvalue, object newvalue)
+		private static void OnValueChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
-			((SwitchTrigger) interactivityobject).OnValueChanged();
+			((SwitchTrigger)interactivityObject).OnValueChanged();
 		}
 
 		private void OnValueChanged()
@@ -151,16 +133,10 @@ namespace Zaaml.PresentationCore.Interactivity
 			var property = ActualProperty;
 
 			if (property != null && source != null)
-				SourceValue = new Binding {Path = new PropertyPath(property), Source = source};
+				SourceValue = new Binding { Path = new PropertyPath(property), Source = source };
 			else
 				SourceValue = null;
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IInteractivitySubject
 
 		object IInteractivitySubject.SubjectStore { get; set; }
 
@@ -175,10 +151,6 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			OnActualSourceChanged(oldSubject);
 		}
-
-		#endregion
-
-		#region IPropertySubject
 
 		DependencyObject IPropertySubject.ActualSubject => ActualSource;
 
@@ -195,22 +167,10 @@ namespace Zaaml.PresentationCore.Interactivity
 			OnActualPropertyChanged(oldProperty, newProperty);
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedEnumItemDefinition<PropertyKind> PropertyKind;
 			public static readonly PackedEnumItemDefinition<SubjectKind> SubjectKind;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -219,10 +179,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				PropertyKind = allocator.AllocateEnumItem<PropertyKind>();
 				SubjectKind = allocator.AllocateEnumItem<SubjectKind>();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

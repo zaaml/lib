@@ -10,109 +10,142 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  public partial class ContextBar : PopupBarBase, IContextPopupControlInternal
-  {
-    #region Static Fields and Constants
+	public partial class ContextBar : PopupBarBase, IContextPopupControlInternal
+	{
+		private static readonly DependencyPropertyKey TargetPropertyKey = DPM.RegisterAttachedReadOnly<DependencyObject, ContextBar>
+			("Target", OnTargetPropertyChanged);
 
-    private static readonly DependencyPropertyKey TargetPropertyKey = DPM.RegisterReadOnly<DependencyObject, ContextBar>
-      ("Target");
+		public static readonly DependencyProperty TargetProperty = TargetPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty TargetProperty = TargetPropertyKey.DependencyProperty;
+		private bool _isShared;
 
-    #endregion
+		static ContextBar()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<ContextBar>();
+		}
 
-    #region Fields
+		public ContextBar()
+		{
+			Owners = new SharedItemOwnerCollection(this);
 
-    private bool _isShared;
+			this.OverrideStyleKey<ContextBar>();
+		}
 
-    #endregion
+		private bool IsShared
+		{
+			get => _isShared;
+			set
+			{
+				if (_isShared == value)
+					return;
 
-    #region Ctors
+				_isShared = value;
 
-    static ContextBar()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<ContextBar>();
-    }
+				OnIsSharedChanged();
+			}
+		}
 
-    public ContextBar()
-    {
-      Owners = new SharedItemOwnerCollection(this);
-      this.OverrideStyleKey<ContextBar>();
-    }
+		internal virtual bool OwnerAttachSelector => true;
 
-    #endregion
+		private SharedItemOwnerCollection Owners { get; }
 
-    #region Properties
+		public DependencyObject Target
+		{
+			get => (DependencyObject)GetValue(TargetProperty);
+			private set => this.SetReadOnlyValue(TargetPropertyKey, value);
+		}
 
-    private bool IsShared
-    {
-      get => _isShared;
-      set
-      {
-        if (_isShared == value)
-          return;
+		public static DependencyObject GetTarget(DependencyObject dependencyObject)
+		{
+			return (DependencyObject)dependencyObject.GetValue(TargetProperty);
+		}
 
-        _isShared = value;
+		private bool IsCommandParameterContextBar(object commandParameter, out FrameworkElement frameworkElement)
+		{
+			frameworkElement = commandParameter as FrameworkElement;
 
-        OnIsSharedChanged();
-      }
-    }
+			if (frameworkElement == null)
+				return false;
 
-    private SharedItemOwnerCollection Owners { get; }
+			var contextBar = ContextBarService.GetContextBar(frameworkElement);
 
-    public DependencyObject Target
-    {
-      get => (DependencyObject) GetValue(TargetProperty);
-      private set => this.SetReadOnlyValue(TargetPropertyKey, value);
-    }
+			return ReferenceEquals(this, contextBar);
+		}
 
-    internal virtual bool OwnerAttachSelector => true;
+		protected override bool OnCanExecuteCloseCommand(object commandParameter)
+		{
+			return IsCommandParameterContextBar(commandParameter, out _);
+		}
 
-		#endregion
+		protected override bool OnCanExecuteOpenCommand(object commandParameter)
+		{
+			return IsCommandParameterContextBar(commandParameter, out _);
+		}
 
-		#region  Methods
+		protected override void OnCloseCommandExecuted(object commandParameter)
+		{
+			if (IsCommandParameterContextBar(commandParameter, out var fre))
+				PopupController.CloseContextControl(fre, fre);
+		}
 
 		private void OnIsSharedChanged()
-    {
-      PlatformOnIsSharedChanged();
-    }
+		{
+			PlatformOnIsSharedChanged();
+		}
 
-    partial void PlatformOnIsSharedChanged();
+		protected override void OnOpenCommandExecuted(object commandParameter)
+		{
+			if (IsCommandParameterContextBar(commandParameter, out var fre))
+				PopupController.OpenContextControl(fre, fre);
+		}
 
-    #endregion
+		private void OnTargetChanged(DependencyObject oldValue, DependencyObject newValue)
+		{
+			Popup?.SetReadOnlyValue(TargetPropertyKey, newValue);
+		}
 
-    #region Interface Implementations
+		private static void OnTargetPropertyChanged(DependencyObject dependencyObject, DependencyObject oldValue, DependencyObject newValue)
+		{
+			if (dependencyObject is ContextBar contextBar)
+				contextBar.OnTargetChanged(oldValue, newValue);
+		}
 
-    #region IContextPopupControlInternal
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-    FrameworkElement IContextPopupControlInternal.Owner
-    {
-      get => Owner;
-      set => Owner = value;
-    }
+			Popup.SetValue(TargetPropertyKey, Target);
+		}
 
-    DependencyObject IContextPopupControlInternal.Target
-    {
-      get => Target;
-      set => Target = value;
-    }
+		protected override void OnTemplateContractDetaching()
+		{
+			Popup.SetValue(TargetPropertyKey, null);
 
-    bool IContextPopupControlInternal.OwnerAttachSelector => OwnerAttachSelector;
+			base.OnTemplateContractDetaching();
+		}
 
-		#endregion
+		partial void PlatformOnIsSharedChanged();
 
-		#region ISharedItem
+		FrameworkElement IContextPopupControlInternal.Owner
+		{
+			get => Owner;
+			set => Owner = value;
+		}
+
+		DependencyObject IContextPopupControlInternal.Target
+		{
+			get => Target;
+			set => Target = value;
+		}
+
+		bool IContextPopupControlInternal.OwnerAttachSelector => OwnerAttachSelector;
 
 		bool ISharedItem.IsShared
-    {
-      get => IsShared;
-      set => IsShared = value;
-    }
+		{
+			get => IsShared;
+			set => IsShared = value;
+		}
 
-    SharedItemOwnerCollection ISharedItem.Owners => Owners;
-
-    #endregion
-
-    #endregion
-  }
+		SharedItemOwnerCollection ISharedItem.Owners => Owners;
+	}
 }

@@ -11,14 +11,8 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class EventStateTrigger : EventStateTriggerBase
 	{
-		#region Fields
-
 		private string _closeEvent;
 		private string _openEvent;
-
-		#endregion
-
-		#region Properties
 
 		public string CloseEvent
 		{
@@ -56,15 +50,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (EventStateTrigger) source;
+			var triggerSource = (EventStateTrigger)source;
 
 			OpenEvent = triggerSource.OpenEvent;
 			CloseEvent = triggerSource.CloseEvent;
@@ -80,22 +70,12 @@ namespace Zaaml.PresentationCore.Interactivity
 			return new EventTriggerRuntime(this);
 		}
 
-		#endregion
-
-		#region  Nested Types
-
 		private class EventTriggerRuntime : TriggerRuntimeBase
 		{
-			#region Fields
-
 			private readonly Delegate _closeDelegate;
 			private readonly EventInfo _closeEventInfo;
 			private readonly Delegate _openDelegate;
 			private readonly EventInfo _openEventInfo;
-
-			#endregion
-
-			#region Ctors
 
 			public EventTriggerRuntime(EventStateTrigger trigger) : base(trigger)
 			{
@@ -126,10 +106,6 @@ namespace Zaaml.PresentationCore.Interactivity
 				_closeEventInfo.AddEventHandler(actualSource, _closeDelegate);
 			}
 
-			#endregion
-
-			#region  Methods
-
 			protected override void DisposeCore()
 			{
 				_openEventInfo.RemoveEventHandler(ActualSource, _openDelegate);
@@ -138,17 +114,13 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			private void OnCloseEvent(object sender, object args)
 			{
-				((EventStateTrigger) Trigger)?.OnCloseEvent(sender, (EventArgs) args);
+				((EventStateTrigger)Trigger)?.OnCloseEvent(sender, (EventArgs)args);
 			}
 
 			private void OnOpenEvent(object sender, object args)
 			{
-				((EventStateTrigger) Trigger)?.OnOpenEvent(sender, (EventArgs) args);
+				((EventStateTrigger)Trigger)?.OnOpenEvent(sender, (EventArgs)args);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

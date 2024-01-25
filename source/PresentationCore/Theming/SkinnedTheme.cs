@@ -123,9 +123,7 @@ namespace Zaaml.PresentationCore.Theming
 			if (ProcessedResourceDictionaries.Contains(resourceDictionary))
 				return;
 
-			var skinResourceDictionary = resource.ResourceDictionary as ThemeSkinResourceDictionary;
-
-			if (skinResourceDictionary != null)
+			if (resource.ResourceDictionary is ThemeSkinResourceDictionary skinResourceDictionary)
 				ProcessSkinResourceDictionary(skinResourceDictionary);
 		}
 

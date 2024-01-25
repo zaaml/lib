@@ -16,12 +16,12 @@ namespace Zaaml.Text
 				MinOperand = minOperand;
 				MaxOperand = maxOperand;
 
-				IntRange = new Interval<int>(ConvertFromOperand(minOperand), ConvertFromOperand(maxOperand));
+				Range = new Range<int>(ConvertFromOperand(minOperand), ConvertFromOperand(maxOperand));
 			}
 
-			internal RangeMatchEntry(Interval<int> range)
+			internal RangeMatchEntry(Range<int> range)
 			{
-				IntRange = range;
+				Range = range;
 
 				MinOperand = ConvertToOperand(range.Minimum);
 				MaxOperand = ConvertToOperand(range.Maximum);
@@ -31,7 +31,7 @@ namespace Zaaml.Text
 
 			public static IEqualityComparer<RangeMatchEntry> EqualityComparer => RangeMatchEntryEqualityComparer.Instance;
 
-			internal Interval<int> IntRange { get; }
+			internal Range<int> Range { get; }
 
 			public TOperand MaxOperand { get; }
 
@@ -39,12 +39,12 @@ namespace Zaaml.Text
 
 			public override bool Match(TOperand operand)
 			{
-				return IntRange.Contains(ConvertFromOperand(operand));
+				return Range.Contains(ConvertFromOperand(operand));
 			}
 
 			public override bool Match(int operand)
 			{
-				return IntRange.Contains(operand);
+				return Range.Contains(operand);
 			}
 
 			private sealed class RangeMatchEntryEqualityComparer : IEqualityComparer<RangeMatchEntry>

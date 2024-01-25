@@ -9,146 +9,109 @@ using System.Windows.Media.Imaging;
 
 namespace Zaaml.Platform
 {
-  internal class NativeWindow
-  {
-    #region Fields
+	internal class NativeWindow
+	{
+		private readonly IntPtr _hwnd;
 
-    private readonly IntPtr _hwnd;
+		public NativeWindow(IntPtr hwnd)
+		{
+			_hwnd = hwnd;
+		}
 
-    #endregion
+		public RECT GetClientRect()
+		{
+			NativeMethods.GetClientRect(_hwnd, out var rect);
 
-    #region Ctors
+			return rect;
+		}
 
-    public NativeWindow(IntPtr hwnd)
-    {
-      _hwnd = hwnd;
-    }
+		public RECT GetWindowRect()
+		{
+			return NativeMethodsSafe.GetWindowRect(_hwnd);
+		}
 
-    #endregion
+		public void Invalidate()
+		{
+			var rect = GetWindowRect();
 
-    #region  Methods
+			rect.Left = 0;
+			rect.Top = 0;
+			rect.Right = 500;
+			rect.Bottom = 500;
 
-    public RECT GetClientRect()
-    {
+			NativeMethods.InvalidateRect(_hwnd, ref rect, true);
+		}
+	}
 
-      NativeMethods.GetClientRect(_hwnd, out var rect);
+	internal struct NativeRegion
+	{
+		private readonly IntPtr _hrgn;
 
-      return rect;
-    }
+		public NativeRegion(IntPtr hrgn)
+		{
+			_hrgn = hrgn;
+		}
 
-    public RECT GetWindowRect()
-    {
-      return NativeMethodsSafe.GetWindowRect(_hwnd);
-    }
+		public RECT GetRegionRect()
+		{
+			return NativeMethods.GetRgnBox(_hrgn, out var rect) != CombineRgnResult.ERROR ? rect : new RECT();
+		}
+	}
 
-    public void Invalidate()
-    {
-      var rect = GetWindowRect();
+	internal class NativeBitmap : IDisposable
+	{
+		private IntPtr _memoryBlockPointer;
 
-      rect.Left = 0;
-      rect.Top = 0;
-      rect.Right = 500;
-      rect.Bottom = 500;
+		private NativeBitmap(BitmapSource source)
+		{
+			Source = source;
+			_memoryBlockPointer = IntPtr.Zero;
 
-      NativeMethods.InvalidateRect(_hwnd, ref rect, true);
-    }
+			var width = source.PixelWidth;
+			var height = source.PixelHeight;
+			var stride = width * ((source.Format.BitsPerPixel + 7) / 8);
 
-    #endregion
-  }
+			_memoryBlockPointer = Marshal.AllocHGlobal(height * stride);
 
-  internal struct NativeRegion
-  {
-    private readonly IntPtr _hrgn;
+			source.CopyPixels(new Int32Rect(0, 0, width, height), _memoryBlockPointer, height * stride, stride);
 
-    public NativeRegion(IntPtr hrgn)
-    {
-      _hrgn = hrgn;
-    }
+			Handle = NativeMethods.CreateBitmap(width, height, 1, 32, _memoryBlockPointer);
+		}
 
-    public RECT GetRegionRect()
-    {
-	    return NativeMethods.GetRgnBox(_hrgn, out var rect) != CombineRgnResult.ERROR ? rect : new RECT();
-    }
-  }
+		public IntPtr Handle { get; private set; }
 
-  internal class NativeBitmap : IDisposable
-  {
-    #region Fields
+		public BitmapSource Source { get; }
 
-    private IntPtr _memoryBlockPointer;
+		public static NativeBitmap Create(BitmapSource bitmap)
+		{
+			return new NativeBitmap(bitmap);
+		}
 
-    #endregion
+		private void DisposeInt()
+		{
+			if (_memoryBlockPointer != IntPtr.Zero)
+			{
+				Marshal.FreeHGlobal(_memoryBlockPointer);
 
-    #region Ctors
+				_memoryBlockPointer = IntPtr.Zero;
+			}
 
-    private NativeBitmap(BitmapSource source)
-    {
-      Source = source;
-      _memoryBlockPointer = IntPtr.Zero;
+			if (Handle != IntPtr.Zero)
+			{
+				NativeMethods.DeleteObject(Handle);
 
-      var width = source.PixelWidth;
-      var height = source.PixelHeight;
-      var stride = width * ((source.Format.BitsPerPixel + 7) / 8);
+				Handle = IntPtr.Zero;
+			}
+		}
 
-      _memoryBlockPointer = Marshal.AllocHGlobal(height * stride);
+		public void Dispose()
+		{
+			DisposeInt();
+		}
 
-      source.CopyPixels(new Int32Rect(0, 0, width, height), _memoryBlockPointer, height * stride, stride);
-
-      Handle = NativeMethods.CreateBitmap(width, height, 1, 32, _memoryBlockPointer);
-    }
-
-    #endregion
-
-    #region Properties
-
-    public IntPtr Handle { get; private set; }
-
-    public BitmapSource Source { get; }
-
-    #endregion
-
-    #region  Methods
-
-    public static NativeBitmap Create(BitmapSource bitmap)
-    {
-      return new NativeBitmap(bitmap);
-    }
-
-    void DisposeInt()
-    {
-      if (_memoryBlockPointer != IntPtr.Zero)
-      {
-        Marshal.FreeHGlobal(_memoryBlockPointer);
-
-        _memoryBlockPointer = IntPtr.Zero;
-      }
-
-      if (Handle != IntPtr.Zero)
-      {
-        NativeMethods.DeleteObject(Handle);
-
-        Handle = IntPtr.Zero;
-      }
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IDisposable
-
-    public void Dispose()
-    {
-      DisposeInt();
-    }
-
-    #endregion
-
-    #endregion
-
-    ~NativeBitmap()
-    {
-      DisposeInt();
-    }
-  }
+		~NativeBitmap()
+		{
+			DisposeInt();
+		}
+	}
 }

@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		private bool InSyncText { get; set; }
 
-		private bool IsTextBoxVisible => AutoCompleteTextBox != null && AutoCompleteTextBox.Visibility == Visibility.Visible;
+		private bool IsTextBoxVisible => AutoCompleteTextBox is { Visibility: Visibility.Visible };
 
 		public string OriginalText
 		{
@@ -58,7 +58,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 
 		protected virtual bool StaysEditingOnCommit => false;
 
-		private TextEditorBaseTemplateContract TemplateContract => (TextEditorBaseTemplateContract) TemplateContractInternal;
+		private TextEditorBaseTemplateContract TemplateContract => (TextEditorBaseTemplateContract) TemplateContractCore;
 
 		public string Text
 		{

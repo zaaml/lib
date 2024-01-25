@@ -12,34 +12,21 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	internal interface IBindingProxyListener
 	{
-		#region  Methods
-
 		void OnPropertyChanged(BindingProxy bindingProxy, object oldValue, object newValue);
-
-		#endregion
 	}
 
 	internal class BindingProxyAttribute : Attribute
 	{
-		#region Properties
-
 		public string PropertyChangedCallback { get; set; }
-		public string ProxyMember { get; set; }
 
-		#endregion
+		public string ProxyMember { get; set; }
 	}
 
 
 	internal abstract class BindingProxyBase : IDependencyPropertyListener, IDisposable
 	{
-		#region Fields
-
 		private readonly DependencyObject _dataObject;
 		private readonly DependencyProperty _serviceProperty;
-
-		#endregion
-
-		#region Ctors
 
 		protected BindingProxyBase(Binding binding, DependencyObject dataObject)
 		{
@@ -51,25 +38,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			_dataObject = dataObject;
 		}
 
-		#endregion
-
-		#region Properties
-
 		public Binding Binding => _dataObject.ReadLocalBinding(_serviceProperty);
 
 		public object Value => _dataObject.GetValue(_serviceProperty);
 
-		#endregion
-
-		#region  Methods
-
 		protected abstract void OnPropertyChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue);
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IDependencyPropertyListener
 
 		void IDependencyPropertyListener.OnPropertyChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
 		{
@@ -77,29 +50,15 @@ namespace Zaaml.PresentationCore.Interactivity
 				OnPropertyChanged(depObj, dependencyProperty, oldValue, newValue);
 		}
 
-		#endregion
-
-		#region IDisposable
-
 		public void Dispose()
 		{
 			_dataObject.GetDependencyPropertyService().ReleaseServiceProperty(_serviceProperty);
 		}
-
-		#endregion
-
-		#endregion
 	}
 
 	internal class BindingProxy : BindingProxyBase
 	{
-		#region Fields
-
 		private readonly IBindingProxyListener _listener;
-
-		#endregion
-
-		#region Ctors
 
 		public BindingProxy(Binding binding, DependencyObject dataObject) : base(binding, dataObject)
 		{
@@ -110,15 +69,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			_listener = listener;
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected override void OnPropertyChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
 		{
 			_listener?.OnPropertyChanged(this, oldValue, newValue);
 		}
-
-		#endregion
 	}
 }

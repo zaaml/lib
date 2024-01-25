@@ -11,121 +11,101 @@ using Zaaml.PresentationCore.Services;
 
 namespace Zaaml.PresentationCore.Input
 {
-  internal class MouseEnterLeaveService : ServiceBase<FrameworkElement>
-  {
-    #region Static Fields and Constants
+	internal class MouseEnterLeaveService : ServiceBase<FrameworkElement>
+	{
+		private static readonly FrameworkElement UnsetUIElement = new Fr();
 
-    private static readonly FrameworkElement UnsetUIElement = new Fr();
+		private bool _isMouseOver;
+		private WeakReference _lastMouseEventSource = new(UnsetUIElement);
+		private Rect? _layoutBox;
 
-    #endregion
+		public event EventHandler IsMouseOverChanged;
 
-    #region Fields
+		public event EventHandler MouseEnter;
 
-    private bool _isMouseOver;
-    private WeakReference _lastMouseEventSource = new WeakReference(UnsetUIElement);
-    private Rect? _layoutBox;
+		public event EventHandler MouseLeave;
 
-    public event EventHandler IsMouseOverChanged;
+		public bool IsMouseOver
+		{
+			get => _isMouseOver;
+			private set
+			{
+				if (_isMouseOver == value)
+					return;
 
-    public event EventHandler MouseEnter;
+				if (value)
+					OnMouseEnter();
+				else
+					OnMouseLeave();
 
-    public event EventHandler MouseLeave;
+				_isMouseOver = value;
+				OnIsMouseOverChanged();
+			}
+		}
 
-    #endregion
+		public Rect LayoutBox => _layoutBox ??= Target.DirectCast<FrameworkElement>().GetScreenLogicalBox();
 
-    #region Properties
+		protected override void OnAttach()
+		{
+			base.OnAttach();
 
-    public bool IsMouseOver
-    {
-      get => _isMouseOver;
-      private set
-      {
-        if (_isMouseOver == value)
-          return;
+			MouseInternal.MouseMove += OnGlobalMouseMove;
+			Target.LayoutUpdated += TargetOnLayoutUpdated;
 
-        if (value)
-          OnMouseEnter();
-        else
-          OnMouseLeave();
+			ProcessMouseEventSource();
+		}
 
-        _isMouseOver = value;
-        OnIsMouseOverChanged();
-      }
-    }
+		protected override void OnDetach()
+		{
+			Target.LayoutUpdated -= TargetOnLayoutUpdated;
+			MouseInternal.MouseMove -= OnGlobalMouseMove;
 
-    public Rect LayoutBox => (_layoutBox ?? (_layoutBox = Target.DirectCast<FrameworkElement>().GetScreenBox())).Value;
+			base.OnDetach();
+		}
 
-    #endregion
+		private void OnGlobalMouseMove(object sender, MouseEventArgsInt mouseEventArgsInt)
+		{
+			ProcessMouseEventSource();
+		}
 
-    #region  Methods
+		protected virtual void OnIsMouseOverChanged()
+		{
+			IsMouseOverChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    protected override void OnAttach()
-    {
-      base.OnAttach();
-      
-      MouseInternal.MouseMove += OnGlobalMouseMove;
-      Target.LayoutUpdated += TargetOnLayoutUpdated;
-      
-      ProcessMouseEventSource();
-    }
+		protected virtual void OnMouseEnter()
+		{
+			MouseEnter?.Invoke(this, EventArgs.Empty);
+		}
 
-    protected override void OnDetach()
-    {
-      Target.LayoutUpdated -= TargetOnLayoutUpdated;
-      MouseInternal.MouseMove -= OnGlobalMouseMove;
-      
-      base.OnDetach();
-    }
+		protected virtual void OnMouseLeave()
+		{
+			MouseLeave?.Invoke(this, EventArgs.Empty);
+		}
 
-    private void OnGlobalMouseMove(object sender, MouseEventArgsInt mouseEventArgsInt)
-    {
-      ProcessMouseEventSource();
-    }
+		private void ProcessMouseEventSource()
+		{
+			var fre = MouseInternal.DirectlyOver as FrameworkElement;
 
-    protected virtual void OnIsMouseOverChanged()
-    {
-      IsMouseOverChanged?.Invoke(this, EventArgs.Empty);
-    }
+			if (fre == null)
+				return;
 
-    protected virtual void OnMouseEnter()
-    {
-      MouseEnter?.Invoke(this, EventArgs.Empty);
-    }
+			var lastSourceRef = _lastMouseEventSource.GetTarget<FrameworkElement>();
+			if (ReferenceEquals(lastSourceRef, fre) && MouseInternal.IsMouseCaptured == false)
+				return;
 
-    protected virtual void OnMouseLeave()
-    {
-      MouseLeave?.Invoke(this, EventArgs.Empty);
-    }
+			IsMouseOver = MouseInternal.IsMouseCaptured == false ? fre.IsVisualDescendantOf(Target) : LayoutBox.Contains(MouseInternal.ScreenLogicalPosition);
 
-    private void ProcessMouseEventSource()
-    {
-      var fre = MouseInternal.DirectlyOver as FrameworkElement;
-      
-      if (fre == null)
-        return;
+			_lastMouseEventSource = new WeakReference(fre);
+		}
 
-      var lastSourceRef = _lastMouseEventSource.GetTarget<FrameworkElement>();
-      if (ReferenceEquals(lastSourceRef, fre) && MouseInternal.IsMouseCaptured == false)
-        return;
+		private void TargetOnLayoutUpdated(object sender, EventArgs eventArgs)
+		{
+			_layoutBox = null;
+		}
 
-      IsMouseOver = MouseInternal.IsMouseCaptured == false ? fre.IsVisualDescendantOf(Target) : LayoutBox.Contains(MouseInternal.ScreenPosition);
-
-      _lastMouseEventSource = new WeakReference(fre);
-    }
-
-    private void TargetOnLayoutUpdated(object sender, EventArgs eventArgs)
-    {
-      _layoutBox = null;
-    }
-
-    #endregion
-
-    #region  Nested Types
-
-    private class Fr : FrameworkElement
-    {
-    }
-
-    #endregion
-  }
+		private class Fr : FrameworkElement
+		{
+		}
+	}
 }

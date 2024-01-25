@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<UseWPF>true</UseWPF>
+		<EnableDefaultItems>false</EnableDefaultItems>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<TargetFrameworks>net8.0-windows;net7.0-windows;net6.0-windows;net5.0-windows;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\Themes.Code.UI.Artboard\Zaaml.Themes.Metro.UI.Artboard.csproj" />
+		<ProjectReference Include="..\Themes.Code.UI.Navigation\Zaaml.Themes.Metro.UI.Navigation.csproj" />
+		<ProjectReference Include="..\Themes.Code.UI.PropertyView\Zaaml.Themes.Metro.UI.PropertyView.csproj" />
+		<ProjectReference Include="..\Themes.Code.UI\Zaaml.Themes.Metro.UI.csproj" />
+		<ProjectReference Include="..\Themes.Code.Framework\Zaaml.Themes.Metro.Framework.csproj" />
+		<ProjectReference Include="..\Themes.Code.UI.Ribbon\Zaaml.Themes.Metro.UI.Ribbon.csproj" />
+		<ProjectReference Include="..\Themes.Code.UI.Docking\Zaaml.Themes.Metro.UI.Docking.csproj" />
+		<ProjectReference Include="..\Themes.Code.UI.Spy\Zaaml.Themes.Metro.UI.Spy.csproj" />
+	</ItemGroup>
+
+	<Target Name="CombineBuild" AfterTargets="Build">
+		<Message Text="Combine" Importance="High" />
+		<Exec Command="dotnet restore $(MSBuildThisFileDirectory)..\Themes.Code\Zaaml.Themes.Code.Combine.csproj -p:Publish=true" />
+		<MSBuild Projects="$(MSBuildThisFileDirectory)..\Themes.Metro\Zaaml.Themes.Code.Combine.csproj" Properties="Configuration=$(Configuration)" />
+	</Target>
+
+</Project>

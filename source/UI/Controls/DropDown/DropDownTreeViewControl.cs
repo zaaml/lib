@@ -10,6 +10,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Markup;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -90,7 +91,7 @@ namespace Zaaml.UI.Controls.DropDown
 		public bool PreserveExpandedNodes
 		{
 			get => (bool) GetValue(PreserveExpandedNodesProperty);
-			set => SetValue(PreserveExpandedNodesProperty, value);
+			set => SetValue(PreserveExpandedNodesProperty, value.Box());
 		}
 
 		protected override ScrollViewControl ScrollView => TreeViewControl?.ScrollViewInternal;
@@ -109,7 +110,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override FrameworkElement SelectionPresenterCore => SelectionPresenter;
 
-		private DropDownTreeViewTemplateContract TemplateContract => (DropDownTreeViewTemplateContract) TemplateContractInternal;
+		private DropDownTreeViewTemplateContract TemplateContract => (DropDownTreeViewTemplateContract) TemplateContractCore;
 
 		public TreeViewControl TreeViewControl
 		{
@@ -236,7 +237,7 @@ namespace Zaaml.UI.Controls.DropDown
 				oldTreeViewControl.ItemsDefaultFilter = DefaultFilter = null;
 				oldTreeViewControl.ItemMouseButtonUp -= OnTreeViewItemMouseButtonUp;
 				oldTreeViewControl.ItemIsExpandedChanged -= OnItemIsExpandedChanged;
-				oldTreeViewControl.ItemClickMode = ClickMode.Release;
+				oldTreeViewControl.ItemClickMode = ItemClickMode.Release;
 				oldTreeViewControl.FocusItemOnMouseHover = false;
 				oldTreeViewControl.SelectItemOnFocus = true;
 				oldTreeViewControl.PreserveMinSize = false;
@@ -250,7 +251,7 @@ namespace Zaaml.UI.Controls.DropDown
 				newTreeViewControl.ItemsDefaultFilter = DefaultFilter = new TreeViewItemTextFilter();
 				newTreeViewControl.ItemMouseButtonUp += OnTreeViewItemMouseButtonUp;
 				newTreeViewControl.ItemIsExpandedChanged += OnItemIsExpandedChanged;
-				newTreeViewControl.ItemClickMode = ClickMode.Release;
+				newTreeViewControl.ItemClickMode = ItemClickMode.Release;
 				newTreeViewControl.FocusItemOnMouseHover = true;
 				newTreeViewControl.SelectItemOnFocus = false;
 				newTreeViewControl.PreserveMinSize = true;

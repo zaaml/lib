@@ -100,7 +100,6 @@ namespace Zaaml.UI.Controls.Core
 		TPanel Panel { get; }
 	}
 
-
 	public abstract class FixedTemplateContentControlBase<TPanel, TChild> : FixedTemplateControl<TPanel>, IFixedTemplateContentControl<TPanel>
 		where TPanel : Panel
 		where TChild : FrameworkElement

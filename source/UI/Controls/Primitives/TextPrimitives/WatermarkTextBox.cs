@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
@@ -77,8 +78,8 @@ namespace Zaaml.UI.Controls.Primitives.TextPrimitives
 
 		public bool ShowWatermark
 		{
-			get => (bool) GetValue(ShowWatermarkProperty);
-			set => SetValue(ShowWatermarkProperty, value);
+			get => (bool)GetValue(ShowWatermarkProperty);
+			set => SetValue(ShowWatermarkProperty, value.Box());
 		}
 
 		public ImageSource WatermarkIcon

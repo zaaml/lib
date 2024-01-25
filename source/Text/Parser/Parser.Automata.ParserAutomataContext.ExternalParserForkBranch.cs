@@ -32,7 +32,7 @@ namespace Zaaml.Text
 
 					internal override PredicateEntryBase GetActualPredicateEntry()
 					{
-						return ExternalContext.ExternalParserInvokeInfo.PredicateEntry;
+						return ExternalContext.ExternalParserDelegate.PredicateEntry;
 					}
 
 					public ExternalParserForkBranch<TExternalGrammar, TExternalToken> Mount(ExternalParserContext<TExternalGrammar, TExternalToken> externalContext, Automata<Lexeme<TExternalToken>, TExternalToken>.ForkAutomataResult externalResult,
@@ -51,7 +51,7 @@ namespace Zaaml.Text
 						{
 							ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition(ExternalContext.Offset + ExternalResult.InstructionStreamPosition);
 
-							return _externalParserResources.ExternalParserForkBranchPredicateResultPool.Get().Mount(this);
+							return _externalParserResources.ExternalParserForkBranchPredicateResultPool.Rent().Mount(this);
 						}
 
 						var result = ExternalResult.RunSecond();
@@ -64,14 +64,14 @@ namespace Zaaml.Text
 
 									ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition(ExternalContext.Offset + localResult.InstructionPosition);
 
-									return _externalParserResources.ExternalParserForkBranchPredicateResultPool.Get().Mount(this);
+									return _externalParserResources.ExternalParserForkBranchPredicateResultPool.Rent().Mount(this);
 
 								case Automata<Lexeme<TExternalToken>, TExternalToken>.ForkAutomataResult forkResult:
 								{
-									var firstBranch = _externalParserResources.ExternalParserForkBranchPool.Get().Mount(ExternalContext, forkResult, true);
-									var secondBranch = _externalParserResources.ExternalParserForkBranchPool.Get().Mount(ExternalContext, forkResult, false);
+									var firstBranch = _externalParserResources.ExternalParserForkBranchPool.Rent().Mount(ExternalContext, forkResult, true);
+									var secondBranch = _externalParserResources.ExternalParserForkBranchPool.Rent().Mount(ExternalContext, forkResult, false);
 
-									return _externalParserResources.ExternalParserForkPredicateResultPool.Get().Mount(firstBranch, secondBranch);
+									return _externalParserResources.ExternalParserForkPredicateResultPool.Rent().Mount(firstBranch, secondBranch);
 								}
 
 								default:
@@ -89,7 +89,7 @@ namespace Zaaml.Text
 						ExternalResult = ExternalResult.DisposeExchange();
 						ExternalContext.ReleaseReference();
 						ExternalContext = null;
-						_externalParserResources.ExternalParserForkBranchPool.Release(this);
+						_externalParserResources.ExternalParserForkBranchPool.Return(this);
 					}
 				}
 
@@ -118,7 +118,7 @@ namespace Zaaml.Text
 
 					internal override PredicateEntryBase GetActualPredicateEntry()
 					{
-						return ExternalContext.ExternalParserInvokeInfo.PredicateEntry;
+						return ExternalContext.ExternalParserDelegate.PredicateEntry;
 					}
 
 					public ExternalParserForkBranch<TExternalGrammar, TExternalToken, TExternalNode> Mount(ExternalParserContext<TExternalGrammar, TExternalToken, TExternalNode> externalParserContext,
@@ -139,7 +139,7 @@ namespace Zaaml.Text
 						{
 							ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition(ExternalContext.Offset + ExternalResult.InstructionStreamPosition);
 
-							return _resources.ExternalParserForkBranchPredicateResultPool.Get().Mount(this);
+							return _resources.ExternalParserForkBranchPredicateResultPool.Rent().Mount(this);
 						}
 
 						var result = ExternalResult.RunSecond();
@@ -150,15 +150,15 @@ namespace Zaaml.Text
 							{
 								ExternalContext.InternalAutomataContext.Process.AdvanceInstructionPosition(ExternalContext.Offset + localResult.InstructionPosition);
 
-								return _resources.ExternalParserForkBranchPredicateResultPool.Get().Mount(this);
+								return _resources.ExternalParserForkBranchPredicateResultPool.Rent().Mount(this);
 							}
 
 							if (result is Automata<Lexeme<TExternalToken>, TExternalToken>.ForkAutomataResult forkResult)
 							{
-								var firstBranch = _resources.ExternalParserForkBranchPool.Get().Mount(ExternalContext, forkResult, true, false);
-								var secondBranch = _resources.ExternalParserForkBranchPool.Get().Mount(ExternalContext, forkResult, false, false);
+								var firstBranch = _resources.ExternalParserForkBranchPool.Rent().Mount(ExternalContext, forkResult, true, false);
+								var secondBranch = _resources.ExternalParserForkBranchPool.Rent().Mount(ExternalContext, forkResult, false, false);
 
-								return _resources.ExternalParserForkPredicateResultPool.Get().Mount(firstBranch, secondBranch);
+								return _resources.ExternalParserForkPredicateResultPool.Rent().Mount(firstBranch, secondBranch);
 							}
 
 							return null;
@@ -174,7 +174,7 @@ namespace Zaaml.Text
 						ExternalResult = ExternalResult.DisposeExchange();
 						ExternalContext.ReleaseReference();
 						ExternalContext = null;
-						_resources.ExternalParserForkBranchPool.Release(this);
+						_resources.ExternalParserForkBranchPool.Return(this);
 					}
 				}
 			}

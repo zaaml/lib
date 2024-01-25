@@ -11,16 +11,16 @@ namespace Zaaml.PresentationCore
 {
 	public sealed class ExpressionEngine
 	{
-		public static readonly ExpressionEngine Instance = new ExpressionEngine();
+		public static readonly ExpressionEngine Instance = new();
 
-		private readonly Expressions.ExpressionEngine _engine = new Expressions.ExpressionEngine();
+		private readonly Expressions.ExpressionEngine _engine = new();
 
 		private ExpressionEngine()
 		{
-			_engine.RegisterMethod<Color, double, Color>("Tint", (color, amount) => ColorFunctions.Tint(color.ToRgbColor(), amount, ColorFunctionUnits.Relative).ToXamlColor());
-			_engine.RegisterMethod<Color, double, Color>("Shade", (color, amount) => ColorFunctions.Shade(color.ToRgbColor(), amount, ColorFunctionUnits.Relative).ToXamlColor());
-			_engine.RegisterMethod<Color, double, Color>("Lighten", (color, amount) => ColorFunctions.Lighten(color.ToRgbColor(), amount, ColorFunctionUnits.Relative).ToXamlColor());
-			_engine.RegisterMethod<Color, double, Color>("Darken", (color, amount) => ColorFunctions.Darken(color.ToRgbColor(), amount, ColorFunctionUnits.Relative).ToXamlColor());
+			_engine.RegisterMethod<Color, double, Color>("Tint", (color, amount) => ColorFunctions.Tint(color.ToRgbColor(), amount, Core.ColorModel.ColorFunctionUnits.Relative).ToXamlColor());
+			_engine.RegisterMethod<Color, double, Color>("Shade", (color, amount) => ColorFunctions.Shade(color.ToRgbColor(), amount, Core.ColorModel.ColorFunctionUnits.Relative).ToXamlColor());
+			_engine.RegisterMethod<Color, double, Color>("Lighten", (color, amount) => ColorFunctions.Lighten(color.ToRgbColor(), amount, Core.ColorModel.ColorFunctionUnits.Relative).ToXamlColor());
+			_engine.RegisterMethod<Color, double, Color>("Darken", (color, amount) => ColorFunctions.Darken(color.ToRgbColor(), amount, Core.ColorModel.ColorFunctionUnits.Relative).ToXamlColor());
 		}
 
 		internal Func<ExpressionScope, T> CompileFunc<T>(string expressionString)

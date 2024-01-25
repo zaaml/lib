@@ -7,103 +7,129 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore.Converters
 {
-  internal struct XamlConvertCacheStruct
-  {
-    #region Fields
+	internal struct XamlConvertCacheStruct
+	{
+		#region Fields
 
-    private Type _cacheType;
-    private object _convertedValueCache;
-    private object _value;
+		private Type _cacheType;
+		private object _convertedValueCache;
+		private object _value;
 
-    #endregion
+		#endregion
 
-    #region Ctors
+		#region Ctors
 
-    #endregion
+		#endregion
 
-    #region Properties
+		#region Properties
 
-    public object Value
-    {
-      get => _value;
-      set
-      {
-        if (ReferenceEquals(_value, value))
-          return;
+		public object Value
+		{
+			get => _value;
+			set
+			{
+				if (ReferenceEquals(_value, value))
+					return;
 
-        _value = value;
-        _cacheType = null;
-      }
-    }
+				_value = value;
+				_cacheType = null;
+			}
+		}
 
-    #endregion
+		#endregion
 
-    #region  Methods
+		#region Methods
 
-    public object XamlConvert(Type targetType)
-    {
-      if (targetType == null)
-        throw new ArgumentNullException(nameof(targetType));
+		public object XamlConvert(Type targetType)
+		{
+			if (targetType == null)
+				throw new ArgumentNullException(nameof(targetType));
 
-      if (_cacheType == targetType)
-        return _convertedValueCache;
+			if (_cacheType == targetType)
+				return _convertedValueCache;
 
-      _convertedValueCache = _value.XamlConvert(targetType);
-      _cacheType = targetType;
+			_convertedValueCache = _value.XamlConvert(targetType);
+			_cacheType = targetType;
 
-      return _convertedValueCache;
-    }
+			return _convertedValueCache;
+		}
 
-    #endregion
-  }
+		public bool XamlTryConvert(Type targetType, out object convertedValue)
+		{
+			if (targetType == null)
+				throw new ArgumentNullException(nameof(targetType));
 
-  internal struct XamlConvertCacheStruct<TValue>
-  {
-	  #region Fields
+			if (_cacheType == targetType)
+			{
+				convertedValue = _convertedValueCache;
 
-	  private Type _cacheType;
-	  private TValue _convertedValueCache;
-	  private TValue _value;
+				return true;
+			}
 
-	  #endregion
+			if (_value.XamlTryConvert(targetType, out convertedValue))
+			{
+				_convertedValueCache = convertedValue;
+				_cacheType = targetType;
 
-	  #region Ctors
+				return true;
+			}
 
-	  #endregion
+			_cacheType = null;
+			_convertedValueCache = null;
 
-	  #region Properties
+			return false;
+		}
 
-	  public TValue Value
-	  {
-		  get => _value;
-		  set
-		  {
-			  if (ReferenceEquals(_value, value))
-				  return;
+		#endregion
+	}
 
-			  _value = value;
-			  _cacheType = null;
-		  }
-	  }
+	internal struct XamlConvertCacheStruct<TValue>
+	{
+		#region Fields
 
-	  #endregion
+		private Type _cacheType;
+		private TValue _convertedValueCache;
+		private TValue _value;
 
-	  #region  Methods
+		#endregion
 
-	  public TValue XamlConvert(Type targetType)
-	  {
-		  if (targetType == null)
-			  throw new ArgumentNullException(nameof(targetType));
+		#region Ctors
 
-		  if (_cacheType == targetType)
-			  return _convertedValueCache;
+		#endregion
 
-		  _convertedValueCache = (TValue)_value.XamlConvert(targetType);
-		  _cacheType = targetType;
+		#region Properties
 
-		  return _convertedValueCache;
-	  }
+		public TValue Value
+		{
+			get => _value;
+			set
+			{
+				if (ReferenceEquals(_value, value))
+					return;
 
-	  #endregion
-  }
+				_value = value;
+				_cacheType = null;
+			}
+		}
+
+		#endregion
+
+		#region Methods
+
+		public TValue XamlConvert(Type targetType)
+		{
+			if (targetType == null)
+				throw new ArgumentNullException(nameof(targetType));
+
+			if (_cacheType == targetType)
+				return _convertedValueCache;
+
+			_convertedValueCache = (TValue)_value.XamlConvert(targetType);
+			_cacheType = targetType;
+
+			return _convertedValueCache;
+		}
+
+		#endregion
+	}
 }

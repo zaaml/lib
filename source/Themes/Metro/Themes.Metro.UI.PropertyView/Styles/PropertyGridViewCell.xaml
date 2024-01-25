@@ -1,0 +1,41 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:gridView="clr-namespace:Zaaml.UI.Controls.Core.GridView;assembly=Zaaml.UI"
+                            mc:Ignorable="zmb">
+
+  <!--  Visual States  -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!--  CommonStates States  -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+    </zm:VisualStateGroup>
+
+  </zm:VisualStateGroupCollection>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="PropertyViewItemCellTemplate"
+                   TargetType="zm:PropertyGridViewCell">
+
+    <gridView:GridViewCellRoot VisualStateGroups="{StaticResource VisualStates}">
+      <gridView:GridViewCellPresenter x:Name="CellPresenter" />
+    </gridView:GridViewCellRoot>
+
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="PropertyViewItemCellBaseStyle" TargetType="zm:PropertyGridViewCell">
+    <zm:Setter Property="Template" Value="{StaticResource PropertyViewItemCellTemplate}" />
+    <zm:Setter Property="Padding" Value="0" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="PropertyViewItemCellStyle" BasedOn="{StaticResource PropertyViewItemCellBaseStyle}" TargetType="zm:PropertyGridViewCell" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="PropertyViewItemCellThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource PropertyViewItemCellStyle}" TargetType="zm:PropertyGridViewCell" />
+
+</zm:ThemeResourceDictionary>

@@ -41,7 +41,7 @@ namespace Zaaml.PresentationCore.Input
 
 		public KeyStrokeCollection KeyStrokes { get; }
 
-		private static Dictionary<string, KeyChordGesture> StaticGestures { get; } = new Dictionary<string, KeyChordGesture>();
+		private static Dictionary<string, KeyChordGesture> StaticGestures { get; } = new();
 
 		public override bool Matches(object targetElement, InputEventArgs inputEventArgs)
 		{

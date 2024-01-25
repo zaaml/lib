@@ -2,31 +2,19 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-namespace Zaaml.PresentationCore.Animation.Interpolators
+namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class DecimalInterpolator : InterpolatorBase<decimal>
-  {
-    #region Static Fields and Constants
+	public sealed class DecimalInterpolator : PrimitiveInterpolator<decimal>
+	{
+		public static readonly DecimalInterpolator Instance = new();
 
-    public static DecimalInterpolator Instance = new DecimalInterpolator();
+		private DecimalInterpolator()
+		{
+		}
 
-    #endregion
-
-    #region Ctors
-
-    private DecimalInterpolator()
-    {
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected internal override decimal EvaluateCore(decimal start, decimal end, double progress)
-    {
-      return start + (end - start) * (decimal) progress;
-    }
-
-    #endregion
-  }
+		protected internal override decimal EvaluateCore(decimal start, decimal end, double progress)
+		{
+			return start + (end - start) * (decimal)progress;
+		}
+	}
 }

@@ -8,71 +8,61 @@ using Zaaml.PresentationCore.TemplateCore;
 
 namespace Zaaml.UI.Controls.Core
 {
-  public abstract class TemplateContractControl : Control
-  {
-    #region Fields
+	public abstract class TemplateContractControl : Control
+	{
+		private TemplateContract _templateContract;
 
-    private TemplateContract _templateContract;
+		internal event EventHandler TemplateContractAttached;
+		internal event EventHandler TemplateContractDetaching;
 
-    internal event EventHandler TemplateContractAttached;
-    internal event EventHandler TemplateContractDetaching;
+		protected internal bool IsTemplateAttached => TemplateContractCore.IsAttached;
 
-    #endregion
+		protected TemplateContract TemplateContractCore
+		{
+			get
+			{
+				if (_templateContract != null)
+					return _templateContract;
 
-    #region Properties
+				_templateContract = CreateTemplateContract();
+				_templateContract.TemplateContractBinder = new TemplateContractBinder(GetTemplateChild);
 
-    protected internal bool IsTemplateAttached => TemplateContractInternal.IsAttached;
+				return _templateContract;
+			}
+		}
 
-    protected TemplateContract TemplateContractInternal
-    {
-      get
-      {
-        if (_templateContract != null) 
-	        return _templateContract;
+		internal TemplateContract TemplateContractCoreInternal => TemplateContractCore;
 
-        _templateContract = CreateTemplateContract();
-        _templateContract.TemplateContractBinder = new TemplateContractBinder(GetTemplateChild);
+		protected virtual TemplateContract CreateTemplateContract()
+		{
+			return GetType().GetAttribute<TemplateContractTypeAttribute>().CreateTemplateContractInternal();
+		}
 
-        return _templateContract;
-      }
-    }
+		public override void OnApplyTemplate()
+		{
+			if (TemplateContractCore.IsAttached)
+			{
+				OnTemplateContractDetaching();
+				TemplateContractCore.Detach();
+			}
 
-    #endregion
+			base.OnApplyTemplate();
 
-    #region  Methods
+			if (Template != null)
+			{
+				TemplateContractCore.Attach();
+				OnTemplateContractAttached();
+			}
+		}
 
-    protected virtual TemplateContract CreateTemplateContract()
-    {
-      return GetType().GetAttribute<TemplateContractTypeAttribute>().CreateTemplateContractInternal();
-    }
+		protected virtual void OnTemplateContractAttached()
+		{
+			TemplateContractAttached?.Invoke(this, EventArgs.Empty);
+		}
 
-    public override void OnApplyTemplate()
-    {
-      if (TemplateContractInternal.IsAttached)
-      {
-        OnTemplateContractDetaching();
-        TemplateContractInternal.Detach();
-      }
-
-      base.OnApplyTemplate();
-
-      if (Template != null)
-      {
-        TemplateContractInternal.Attach();
-        OnTemplateContractAttached();
-      }
-    }
-
-    protected virtual void OnTemplateContractAttached()
-    {
-      TemplateContractAttached?.Invoke(this, EventArgs.Empty);
-    }
-
-    protected virtual void OnTemplateContractDetaching()
-    {
-      TemplateContractDetaching?.Invoke(this, EventArgs.Empty);
-    }
-
-    #endregion
-  }
+		protected virtual void OnTemplateContractDetaching()
+		{
+			TemplateContractDetaching?.Invoke(this, EventArgs.Empty);
+		}
+	}
 }

@@ -5,366 +5,428 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Zaaml.Core.Extensions;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Windows;
+using DispatcherPriority = System.Windows.Threading.DispatcherPriority;
 using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class FloatingDockWindow : WindowBase
-  {
-    #region Static Fields and Constants
+	public class FloatingDockWindow : WindowBase
+	{
+		private static readonly DependencyPropertyKey DockItemPropertyKey = DPM.RegisterReadOnly<DockItem, FloatingDockWindow>
+			("DockItem", w => w.OnDockItemChanged);
+
+		public static readonly DependencyProperty DockItemProperty = DockItemPropertyKey.DependencyProperty;
+
+		private readonly ContentPresenter _presenter;
+		private readonly ContentPresenter _previewPresenter;
+		private DockItemHeaderPresenter _dockItemHeaderPresenter;
+		private DockItem _previewDockItem;
+		private bool _suspendLocationSizeHandler;
+		private readonly RenderDelayAction _delayShow;
+		private readonly RenderDelayAction _delayHide;
+		private readonly RenderDelayAction _delayDrag;
+
+		internal event EventHandler DockItemChanged;
+
+		static FloatingDockWindow()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<FloatingDockWindow>();
+
+			WidthProperty.OverrideMetadata(typeof(FloatingDockWindow), new FrameworkPropertyMetadata(FloatLayout.DefaultWidth));
+			HeightProperty.OverrideMetadata(typeof(FloatingDockWindow), new FrameworkPropertyMetadata(FloatLayout.DefaultHeight));
+		}
+
+		internal FloatingDockWindow(FloatingDockWindowController controller)
+		{
+			this.OverrideStyleKey<FloatingDockWindow>();
+
+			Controller = controller;
+
+			ShowInTaskbar = false;
+			ShowActivated = false;
+			AllowsTransparency = true;
+			Opacity = 0.0;
+
+			_presenter = new ContentPresenter();
+			_previewPresenter = new ContentPresenter();
+
+			var host = new Panel
+			{
+				Children =
+				{
+					_previewPresenter,
+					_presenter
+				}
+			};
+
+			Content = host;
+
+			SizeChanged += OnSizeChanged;
+
+			_delayDrag = new RenderDelayAction(HandleBeginDrag, 3);
+			_delayShow = new RenderDelayAction(() =>
+			{
+				if (DockItem.IsDragMove)
+				{
+					Activate();
+					Keyboard.Focus(this);
+
+					_delayDrag.Invoke();
+				}
+				
+				Opacity = 1.0;
+			}, 1);
+
+			_delayHide = new RenderDelayAction(() =>
+			{
+				Opacity = 0.0;
+
+				_delayDrag.Revoke();
+			}, 0);
+		}
+
+		internal FloatingDockWindowController Controller { get; }
+
+		public DockItem DockItem
+		{
+			get => (DockItem) GetValue(DockItemProperty);
+			private set => this.SetReadOnlyValue(DockItemPropertyKey, value);
+		}
+
+		public DockItemHeaderPresenter DockItemHeaderPresenter
+		{
+			get => _dockItemHeaderPresenter;
+			set
+			{
+				if (ReferenceEquals(_dockItemHeaderPresenter, value))
+					return;
+
+				if (_dockItemHeaderPresenter != null)
+					OnDockItemHeaderPresenterDetaching(_dockItemHeaderPresenter);
+
+				_dockItemHeaderPresenter = value;
+
+				if (_dockItemHeaderPresenter != null)
+					OnDockItemHeaderPresenterAttached(_dockItemHeaderPresenter);
+			}
+		}
+
+		internal DockItem PreviewDockItem
+		{
+			get => _previewDockItem;
+			private set
+			{
+				if (ReferenceEquals(_previewDockItem, value))
+					return;
+
+				_previewDockItem = value;
+				_previewPresenter.Content = value;
+			}
+		}
+
+		internal void AttachContent()
+		{
+			_presenter.Content = DockItem;
+			_previewPresenter.Content = PreviewDockItem;
+		}
+
+		internal void AttachItem(DockItem dockItem)
+		{
+			if (dockItem.IsPreview)
+			{
+				if (dockItem.PreviewFloatingWindow != null || PreviewDockItem != null)
+					throw new InvalidOperationException();
+
+				PreviewDockItem = dockItem;
+
+				dockItem.PreviewFloatingWindow = this;
+			}
+			else
+			{
+				if (dockItem.FloatingWindow != null || DockItem != null)
+					throw new InvalidOperationException();
+
+				DockItem = dockItem;
+
+				dockItem.FloatingWindow = this;
+
+				UpdateLocationAndSize(dockItem);
+
+				_presenter.Content = DockItem;
+			}
+
+			_delayHide.Revoke();
+			_delayShow.Invoke();
+		}
+
+		private void HandleBeginDrag()
+		{
+			var dockItem = DockItem;
+
+			if (dockItem == null)
+				return;
+
+			if (dockItem.IsDragMove == false) 
+				return;
+
+			dockItem.IsDragMove = false;
+
+			if (IsContentRendered)
+				Dispatcher.BeginInvoke(DispatcherPriority.Render, BeginDragMove);
+		}
+
+		internal void BeginDragMove()
+		{
+			if (DockItem?.EnqueueSyncDragPosition != true)
+				return;
+
+			Activate();
+			SyncPosition();
+			BeginDragMove(true);
+		}
+
+		internal void DetachContent()
+		{
+			_presenter.Content = null;
+			_previewPresenter.Content = null;
+		}
+
+		internal void DetachItem(DockItem dockItem)
+		{
+			if (dockItem.IsPreview)
+			{
+				if (ReferenceEquals(dockItem.PreviewFloatingWindow, this) == false || ReferenceEquals(PreviewDockItem, dockItem) == false)
+					throw new InvalidOperationException();
 
-    private static readonly DependencyPropertyKey DockItemPropertyKey = DPM.RegisterReadOnly<DockItem, FloatingDockWindow>
-      ("DockItem", w => w.OnDockItemChanged);
+				PreviewDockItem = null;
+				dockItem.PreviewFloatingWindow = null;
+			}
+			else
+			{
+				if (ReferenceEquals(dockItem.FloatingWindow, this) == false || ReferenceEquals(DockItem, dockItem) == false)
+					throw new InvalidOperationException();
+
+				DockItem = null;
+				dockItem.FloatingWindow = null;
+
+				_presenter.Content = null;
+			}
+
+			_delayShow.Revoke();
+			_delayHide.Invoke();
+		}
+
+		protected override void OnActivated(EventArgs e)
+		{
+			base.OnActivated(e);
+
+			DockItem?.Select();
+		}
 
-    public static readonly DependencyProperty DockItemProperty = DockItemPropertyKey.DependencyProperty;
+		protected override void OnBeginDragMove()
+		{
+			SyncPosition();
 
-    #endregion
+			DockItem.OnBeginDragMoveInternal();
+		}
 
-    #region Fields
+		protected override void OnContentRendered(EventArgs e)
+		{
+			base.OnContentRendered(e);
 
-    private readonly ContentPresenter _presenter;
-    private readonly ContentPresenter _previewPresenter;
-    private DockItemHeaderPresenter _dockItemHeaderPresenter;
-    private DockItem _previewDockItem;
-    private bool _suspendLocationSizeHandler;
-    internal event EventHandler DockItemChanged;
+			BeginDragMove();
+		}
 
-    #endregion
+		private void OnDockItemChanged()
+		{
+			DockItemChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    #region Ctors
+		private void OnDockItemHeaderPresenterAttached(DockItemHeaderPresenter dockItemHeaderPresenter)
+		{
+			dockItemHeaderPresenter.FloatingWindow = this;
+		}
 
-    static FloatingDockWindow()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<FloatingDockWindow>();
-    }
+		private void OnDockItemHeaderPresenterDetaching(DockItemHeaderPresenter dockItemHeaderPresenter)
+		{
+			dockItemHeaderPresenter.FloatingWindow = null;
+		}
 
-    internal FloatingDockWindow(FloatingDockWindowController controller)
-    {
-      this.OverrideStyleKey<FloatingDockWindow>();
+		protected override void OnDragMove()
+		{
+			base.OnDragMove();
 
-      Controller = controller;
+			DockItem.OnDragMoveInternal();
+		}
 
-      ShowInTaskbar = false;
-      ShowActivated = false;
+		protected override void OnEndDragMove()
+		{
+			base.OnEndDragMove();
 
-      _presenter = new ContentPresenter();
-      _previewPresenter = new ContentPresenter();
+			if (DockItem.DockControl?.CurrentDropGuide == null)
+				SyncItemFloatPosition();
 
-      var host = new Panel
-      {
-        Children =
-        {
-          _previewPresenter,
-          _presenter
-        }
-      };
+			DockItem.OnEndDragMoveInternal();
+		}
 
-      Content = host;
+		protected override void OnEndResize()
+		{
+			base.OnEndResize();
 
-      SizeChanged += OnSizeChanged;
-    }
+			SyncItemFloatSize();
+		}
+
+		internal override void OnHeaderPresenterAttachedInternal(WindowHeaderPresenter headerPresenter)
+		{
+			base.OnHeaderPresenterAttachedInternal(headerPresenter);
+
+			headerPresenter.TemplateContractAttached += OnHeaderPresenterTemplateContractAttached;
+			headerPresenter.TemplateContractDetaching += OnHeaderPresenterTemplateContractDetaching;
 
-    #endregion
+			DockItemHeaderPresenter = (DockItemHeaderPresenter) HeaderPresenter.FindName("DockItemHeaderPresenter");
+		}
 
-    #region Properties
+		internal override void OnHeaderPresenterDetachingInternal(WindowHeaderPresenter headerPresenter)
+		{
+			headerPresenter.TemplateContractAttached -= OnHeaderPresenterTemplateContractAttached;
+			headerPresenter.TemplateContractDetaching -= OnHeaderPresenterTemplateContractDetaching;
 
-    internal FloatingDockWindowController Controller { get; }
+			DockItemHeaderPresenter = null;
 
-    public DockItem DockItem
-    {
-      get => (DockItem) GetValue(DockItemProperty);
-      private set => this.SetReadOnlyValue(DockItemPropertyKey, value);
-    }
+			base.OnHeaderPresenterDetachingInternal(headerPresenter);
+		}
 
-    public DockItemHeaderPresenter DockItemHeaderPresenter
-    {
-      get => _dockItemHeaderPresenter;
-      set
-      {
-        if (ReferenceEquals(_dockItemHeaderPresenter, value))
-          return;
+		private void OnHeaderPresenterTemplateContractAttached(object sender, EventArgs e)
+		{
+			DockItemHeaderPresenter = (DockItemHeaderPresenter) HeaderPresenter.GetTemplateChildInternal("DockItemHeaderPresenter");
+		}
 
-        if (_dockItemHeaderPresenter != null)
-          OnDockItemHeaderPresenterDetaching(_dockItemHeaderPresenter);
+		private void OnHeaderPresenterTemplateContractDetaching(object sender, EventArgs e)
+		{
+			DockItemHeaderPresenter = null;
+		}
 
-        _dockItemHeaderPresenter = value;
+		protected override void OnLocationChanged(EventArgs e)
+		{
+			base.OnLocationChanged(e);
 
-        if (_dockItemHeaderPresenter != null)
-          OnDockItemHeaderPresenterAttached(_dockItemHeaderPresenter);
-      }
-    }
+			SyncItemFloatPosition();
+		}
 
-    internal Point DragOutLocation { get; set; }
+		private void OnSizeChanged(object sender, SizeChangedEventArgs sizeChangedEventArgs)
+		{
+			SyncItemFloatSize();
+		}
 
-    internal DockItem PreviewDockItem
-    {
-      get => _previewDockItem;
-      private set
-      {
-        if (ReferenceEquals(_previewDockItem, value))
-          return;
+		private void SyncItemFloatPosition()
+		{
+			var dockItem = DockItem;
 
-        _previewDockItem = value;
-        _previewPresenter.Content = value;
-      }
-    }
+			if (_suspendLocationSizeHandler || dockItem == null || IsMoving || dockItem.EnqueueSyncDragPosition)
+				return;
 
-    private Rect Rect { get; set; }
-
-    #endregion
-
-    #region  Methods
-
-    internal void AttachContent()
-    {
-      _presenter.Content = DockItem;
-      _previewPresenter.Content = PreviewDockItem;
-    }
-
-    internal void AttachItem(DockItem dockItem)
-    {
-      if (dockItem.IsPreview)
-      {
-        if (dockItem.PreviewFloatingWindow != null || PreviewDockItem != null)
-          throw new InvalidOperationException();
-
-        PreviewDockItem = dockItem;
-
-        dockItem.PreviewFloatingWindow = this;
-      }
-      else
-      {
-        if (dockItem.FloatingWindow != null || DockItem != null)
-          throw new InvalidOperationException();
-
-        DockItem = dockItem;
-
-        dockItem.FloatingWindow = this;
-
-        UpdateLocationAndSize(dockItem);
-
-        _presenter.Content = DockItem;
-      }
-    }
-
-    internal void DetachContent()
-    {
-      _presenter.Content = null;
-      _previewPresenter.Content = null;
-    }
-
-    internal void DetachItem(DockItem dockItem)
-    {
-      if (dockItem.IsPreview)
-      {
-        if (ReferenceEquals(dockItem.PreviewFloatingWindow, this) == false || ReferenceEquals(PreviewDockItem, dockItem) == false)
-          throw new InvalidOperationException();
-
-        PreviewDockItem = null;
-        dockItem.PreviewFloatingWindow = null;
-      }
-      else
-      {
-        if (ReferenceEquals(dockItem.FloatingWindow, this) == false || ReferenceEquals(DockItem, dockItem) == false)
-          throw new InvalidOperationException();
+			_suspendLocationSizeHandler = true;
 
-        DockItem = null;
-        dockItem.FloatingWindow = null;
+			FloatLayout.SetLeft(dockItem, Left);
+			FloatLayout.SetTop(dockItem, Top);
 
-        _presenter.Content = null;
-      }
-    }
+			_suspendLocationSizeHandler = false;
+		}
 
-    protected override void OnActivated(EventArgs e)
-    {
-      base.OnActivated(e);
+		private void SyncItemFloatSize()
+		{
+			var dockItem = DockItem;
 
-      DockItem?.Select();
-    }
+			if (_suspendLocationSizeHandler || dockItem == null || IsResizing)
+				return;
 
-    internal override void OnBeginDragMove()
-    {
-      SyncPosition();
+			_suspendLocationSizeHandler = true;
 
-      DockItem.OnBeginDragMoveInternal();
-    }
+			FloatLayout.SetWidth(dockItem, Width);
+			FloatLayout.SetHeight(dockItem, Height);
 
-    protected override void OnContentRendered(EventArgs e)
-    {
-      base.OnContentRendered(e);
+			_suspendLocationSizeHandler = false;
+		}
 
-      if (DockItem?.EnqueueSyncDragPosition != true)
-        return;
+		private void SyncPosition()
+		{
+			var mousePosition = MouseInternal.ScreenLogicalPosition;
+			var rect = new Rect(new Point(Left, Top), new Size(Width, Height));
 
-      Activate();
-      SyncPosition();
-      BeginDragMove(true);
-    }
+			if (DockItem != null)
+			{
+				if (DockItem.EnqueueSyncDragPosition)
+				{
+					DockItem.EnqueueSyncDragPosition = false;
 
-    private void OnDockItemChanged()
-    {
-      DockItemChanged?.Invoke(this, EventArgs.Empty);
-    }
+					rect.Size = FloatLayout.GetSize(DockItem);
+				}
+				else
+					rect = FloatLayout.GetRect(DockItem);
 
-    private void OnDockItemHeaderPresenterAttached(DockItemHeaderPresenter dockItemHeaderPresenter)
-    {
-      dockItemHeaderPresenter.FloatingWindow = this;
-    }
+				var dragOrigin = DockItem.HeaderMousePosition;
 
-    private void OnDockItemHeaderPresenterDetaching(DockItemHeaderPresenter dockItemHeaderPresenter)
-    {
-      dockItemHeaderPresenter.FloatingWindow = null;
-    }
-
-    internal override void OnDragMove()
-    {
-      DockItem.OnDragMoveInternal();
-    }
-
-    internal override void OnEndDragMove()
-    {
-      DockItem.OnEndDragMoveInternal();
-    }
-
-    internal override void OnHeaderPresenterAttachedInternal(WindowHeaderPresenter headerPresenter)
-    {
-      base.OnHeaderPresenterAttachedInternal(headerPresenter);
+				if (dragOrigin.HasValue)
+				{
+					rect.X = mousePosition.X - dragOrigin.Value.X;
+					rect.Y = mousePosition.Y - dragOrigin.Value.Y;
+				}
+			}
+			else
+			{
+				rect.X = mousePosition.X;
+				rect.Y = mousePosition.Y;
+			}
 
-      headerPresenter.TemplateContractAttached += OnHeaderPresenterTemplateContractAttached;
-      headerPresenter.TemplateContractDetaching += OnHeaderPresenterTemplateContractDetaching;
+			UpdateLocationAndSize(rect);
+		}
 
-      DockItemHeaderPresenter = (DockItemHeaderPresenter) HeaderPresenter.FindName("DockItemHeaderPresenter");
-    }
-
-    internal override void OnHeaderPresenterDetachingInternal(WindowHeaderPresenter headerPresenter)
-    {
-      headerPresenter.TemplateContractAttached -= OnHeaderPresenterTemplateContractAttached;
-      headerPresenter.TemplateContractDetaching -= OnHeaderPresenterTemplateContractDetaching;
-
-      DockItemHeaderPresenter = null;
-
-      base.OnHeaderPresenterDetachingInternal(headerPresenter);
-    }
+		private void UpdateLocationAndSize(Rect rect)
+		{
+			_suspendLocationSizeHandler = true;
 
-    private void OnHeaderPresenterTemplateContractAttached(object sender, EventArgs e)
-    {
-      DockItemHeaderPresenter = (DockItemHeaderPresenter) HeaderPresenter.GetTemplateChildInternal("DockItemHeaderPresenter");
-    }
+			if (Left.IsCloseTo(rect.Left) == false)
+				Left = rect.Left;
 
-    private void OnHeaderPresenterTemplateContractDetaching(object sender, EventArgs e)
-    {
-      DockItemHeaderPresenter = null;
-    }
+			if (Top.IsCloseTo(rect.Top) == false)
+				Top = rect.Top;
 
-    protected override void OnLocationChanged(EventArgs e)
-    {
-      base.OnLocationChanged(e);
+			if (Width.IsCloseTo(rect.Width) == false)
+				Width = rect.Width;
 
-      var dockItem = DockItem;
+			if (Height.IsCloseTo(rect.Height) == false)
+				Height = rect.Height;
 
-      if (_suspendLocationSizeHandler || dockItem == null || dockItem.EnqueueSyncDragPosition)
-        return;
+			_suspendLocationSizeHandler = false;
+		}
 
-      _suspendLocationSizeHandler = true;
+		internal void UpdateLocationAndSize(DockItem dockItem)
+		{
+			if (ReferenceEquals(DockItem, dockItem) == false)
+				return;
 
-      FloatLayout.SetFloatLeft(dockItem, Left);
-      FloatLayout.SetFloatTop(dockItem, Top);
+			if (_suspendLocationSizeHandler)
+				return;
 
-      _suspendLocationSizeHandler = false;
-    }
+			UpdateLocationAndSize(FloatLayout.GetRect(dockItem));
+		}
 
-    private void OnSizeChanged(object sender, SizeChangedEventArgs sizeChangedEventArgs)
-    {
-      var dockItem = DockItem;
+		internal void ShowDockWindow()
+		{
+			Show();
+		}
 
-      if (_suspendLocationSizeHandler || dockItem == null)
-        return;
-
-      _suspendLocationSizeHandler = true;
-
-      FloatLayout.SetFloatWidth(dockItem, Width);
-      FloatLayout.SetFloatHeight(dockItem, Height);
-
-      _suspendLocationSizeHandler = false;
-    }
-
-    private void SyncPosition()
-    {
-      var mousePosition = MouseInternal.ScreenPosition;
-      var rect = new Rect(new Point(Left, Top), new Size(Width, Height));
-
-      if (DockItem != null)
-      {
-        if (DockItem.EnqueueSyncDragPosition)
-        {
-          DockItem.EnqueueSyncDragPosition = false;
-
-          rect.Size = Rect.Size;
-        }
-        else
-          rect.Size = FloatLayout.GetFloatRect(DockItem).Size;
-
-        var dragOrigin = DockItem.HeaderMousePosition;
-
-        if (dragOrigin.HasValue)
-        {
-          rect.X = mousePosition.X - dragOrigin.Value.X;
-          rect.Y = mousePosition.Y - dragOrigin.Value.Y;
-        }
-      }
-      else
-      {
-        rect.X = mousePosition.X;
-        rect.Y = mousePosition.Y;
-      }
-
-      UpdateLocationAndSize(rect);
-    }
-
-    private void UpdateLocationAndSize(Rect rect)
-    {
-      if (Left.IsCloseTo(rect.Left) == false)
-        Left = rect.Left;
-
-      if (Top.IsCloseTo(rect.Top) == false)
-        Top = rect.Top;
-
-      if (Width.IsCloseTo(rect.Width) == false)
-        Width = rect.Width;
-
-      if (Height.IsCloseTo(rect.Height) == false)
-        Height = rect.Height;
-    }
-
-    internal void UpdateLocationAndSize(DockItem dockItem)
-    {
-      if (ReferenceEquals(DockItem, dockItem) == false)
-        return;
-
-      if (dockItem.IsItemLayoutValid == false)
-        return;
-
-      if (dockItem.Controller?.IsLayoutSuspended == true)
-        return;
-
-      if (_suspendLocationSizeHandler)
-        return;
-
-      _suspendLocationSizeHandler = true;
-
-      Rect = FloatLayout.GetFloatRect(dockItem);
-
-      UpdateLocationAndSize(Rect);
-
-      _suspendLocationSizeHandler = false;
-    }
-
-    #endregion
-  }
+		internal void HideDockWindow()
+		{
+			Hide();
+		}
+	}
 }

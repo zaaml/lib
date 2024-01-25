@@ -63,6 +63,14 @@ namespace Zaaml.Text
 				{
 					return new QuantifierSymbol(new FragmentSymbol(this), QuantifierKind.ZeroOrOne, quantifierMode);
 				}
+
+				public FragmentSymbol Bind(string name)
+				{
+					return new FragmentSymbol(this)
+					{
+						ArgumentName = name
+					};
+				}
 			}
 		}
 	}

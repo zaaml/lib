@@ -12,180 +12,152 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.Converters
 {
-  internal static class XamlStaticConverter
-  {
-    #region Ctors
+	internal static class XamlStaticConverter
+	{
+		static XamlStaticConverter()
+		{
+			RuntimeHelpers.RunClassConstructor(typeof(ValueConverters).TypeHandle);
+		}
 
-    static XamlStaticConverter()
-    {
-      RuntimeHelpers.RunClassConstructor(typeof(ValueConverters).TypeHandle);
-    }
+		private static bool CanCacheValueOfType(Type type)
+		{
+			return type.IsValueType;
+		}
 
-    #endregion
+		public static object ConvertCache(ref ConvertCacheStore cacheStore, Type targetType)
+		{
+			return TryConvertCache(ref cacheStore, targetType).Result;
+		}
 
-    #region  Methods
+		public static T ConvertValue<T>(object value)
+		{
+			return (T)ConvertValue(value, typeof(T));
+		}
 
-    public static object ConvertCache(ref ConvertCacheStore cacheStore, Type targetType)
-    {
-      return TryConvertCache(ref cacheStore, targetType).Result;
-    }
+		public static object ConvertValue(object value, Type targetType)
+		{
+			var result = ConvertValueImpl(value, targetType, out var exception);
 
-    private static object ConvertValueImpl(object value, Type targetType, out XamlConvertException exception)
-    {
-      try
-      {
-        exception = null;
+			if (exception != null)
+				throw exception;
 
-        // Target type is undefined or type of object
-        if (targetType == null || targetType == typeof(object))
-          return value;
+			return result;
+		}
 
-        // Unset or null value
-        if (value == null || value.IsUnset())
-          return targetType.CreateDefaultValue();
+		private static object ConvertValueImpl(object value, Type targetType, out XamlConvertException exception)
+		{
+			try
+			{
+				exception = null;
 
-        var valueType = value.GetType();
+				// Target type is undefined or type of object
+				if (targetType == null || targetType == typeof(object))
+					return value;
 
-        // No conversion is needed
-        if (targetType.IsAssignableFrom(valueType))
-          return value;
+				// Unset or null value
+				if (value == null || value.IsUnset())
+					return targetType.CreateDefaultValue();
 
-        // Primitive converter
-        var primitiveConverter = value.GetConverter(targetType);
+				var valueType = value.GetType();
 
-        if (primitiveConverter != null)
-          return primitiveConverter.Convert(value, CultureInfo.InvariantCulture);
+				// No conversion is needed
+				if (targetType.IsAssignableFrom(valueType))
+					return value;
 
-        var typeDescriptorContext = DummyTypeDescriptorContext.TypeDescriptorInstance;
+				// Primitive converter
+				var primitiveConverter = value.GetConverter(targetType);
 
-        // Target Type converter
-        var converter = TypeConversionUtil.GetTypeConverter(targetType);
+				if (primitiveConverter != null)
+					return primitiveConverter.Convert(value, CultureInfo.InvariantCulture);
 
-        if (converter?.CanConvertFrom(typeDescriptorContext, valueType) == true)
-          return converter.ConvertFrom(typeDescriptorContext, CultureInfo.InvariantCulture, value);
+				var typeDescriptorContext = DummyTypeDescriptorContext.TypeDescriptorInstance;
 
-        // Source Type converter
-        converter = TypeConversionUtil.GetTypeConverter(valueType);
+				// Target Type converter
+				var converter = TypeConversionUtil.GetTypeConverter(targetType);
 
-        if (converter?.CanConvertTo(typeDescriptorContext, targetType) == true)
-          return converter.ConvertTo(typeDescriptorContext, CultureInfo.InvariantCulture, value, targetType);
+				if (converter?.CanConvertFrom(typeDescriptorContext, valueType) == true)
+					return converter.ConvertFrom(typeDescriptorContext, CultureInfo.InvariantCulture, value);
 
-        // Xaml converter
-        converter = XamlTypeConverter.GetConverter(targetType);
+				// Source Type converter
+				converter = TypeConversionUtil.GetTypeConverter(valueType);
 
-        if (converter?.CanConvertFrom(typeDescriptorContext, valueType) == true)
-          return converter.ConvertFrom(typeDescriptorContext, CultureInfo.InvariantCulture, value);
+				if (converter?.CanConvertTo(typeDescriptorContext, targetType) == true)
+					return converter.ConvertTo(typeDescriptorContext, CultureInfo.InvariantCulture, value, targetType);
 
-        exception = CreateException(value, targetType, $"Can not convert value '{value}' to type {targetType}");
-      }
-      catch (Exception e)
-      {
-        exception = CreateException(value, targetType, e);
-      }
+				// Xaml converter
+				converter = XamlTypeConverter.GetConverter(targetType);
 
-      return null;
-    }
+				if (converter?.CanConvertFrom(typeDescriptorContext, valueType) == true)
+					return converter.ConvertFrom(typeDescriptorContext, CultureInfo.InvariantCulture, value);
 
-    public static T ConvertValue<T>(object value)
-    {
-	    return (T) ConvertValue(value, typeof(T));
-    }
+				exception = CreateException(value, targetType, $"Can not convert value '{value}' to type {targetType}");
+			}
+			catch (Exception e)
+			{
+				exception = CreateException(value, targetType, e);
+			}
 
-    public static object ConvertValue(object value, Type targetType)
-    {
-	    var result = ConvertValueImpl(value, targetType, out var exception);
+			return null;
+		}
 
-      if (exception != null)
-        throw exception;
+		private static XamlConvertException CreateException(object value, Type targetType, Exception innerException)
+		{
+			return new XamlConvertException(value, targetType, $"Error occurred while converting value '{value}' to type {targetType}", innerException);
+		}
 
-      return result;
-    }
+		private static XamlConvertException CreateException(object value, Type targetType, string message)
+		{
+			return new XamlConvertException(value, targetType, message, null);
+		}
 
-    private static XamlConvertException CreateException(object value, Type targetType, Exception innerException)
-    {
-      return new XamlConvertException(value, targetType, $"Error occurred while converting value '{value}' to type {targetType}", innerException);
-    }
+		public static XamlConvertResult TryConvertCache(ref ConvertCacheStore cacheStore, Type targetType)
+		{
+			if (targetType == null)
+				return new XamlConvertResult(null, CreateException(cacheStore.Value, null, "Target type is not specified"));
 
-    private static XamlConvertException CreateException(object value, Type targetType, string message)
-    {
-      return new XamlConvertException(value, targetType, message, null);
-    }
+			if (cacheStore.CachedType == targetType)
+				return new XamlConvertResult(cacheStore.CachedValue, null);
 
-    public static XamlConvertResult TryConvertCache(ref ConvertCacheStore cacheStore, Type targetType)
-    {
-      if (targetType == null)
-        return new XamlConvertResult(null, CreateException(cacheStore.Value, null, "Target type is not specified"));
+			var actualValue = cacheStore.Value.IsUnset() ? null : cacheStore.Value;
 
-      if (cacheStore.CachedType == targetType)
-        return new XamlConvertResult(cacheStore.CachedValue, null);
+			var result = TryConvertValue(actualValue, targetType);
 
-      var actualValue = cacheStore.Value.IsUnset() ? null : cacheStore.Value;
+			cacheStore.CachedValue = result.IsValid ? result.Result : targetType.CreateDefaultValue();
 
-      var result = TryConvertValue(actualValue, targetType);
+			if (CanCacheValueOfType(targetType))
+				cacheStore.CachedType = targetType;
 
-      cacheStore.CachedValue = result.IsValid ? result.Result : targetType.CreateDefaultValue();
+			return result;
+		}
 
-      if (CanCacheValueOfType(targetType))
-        cacheStore.CachedType = targetType;
+		public static XamlConvertResult TryConvertValue(object value, Type targetType)
+		{
+			var result = ConvertValueImpl(value, targetType, out var exception);
 
-      return result;
-    }
+			return exception == null ? new XamlConvertResult(result, null) : new XamlConvertResult(null, exception);
+		}
 
-    private static bool CanCacheValueOfType(Type type)
-    {
-      return type.IsValueType;
-    }
+		private class DummyTypeDescriptorContext : ITypeDescriptorContext
+		{
+			public static readonly ITypeDescriptorContext TypeDescriptorInstance = new DummyTypeDescriptorContext();
 
-    public static XamlConvertResult TryConvertValue(object value, Type targetType)
-    {
-	    var result = ConvertValueImpl(value, targetType, out var exception);
+			private DummyTypeDescriptorContext()
+			{
+			}
 
-      return exception == null ? new XamlConvertResult(result, null) : new XamlConvertResult(null, exception);
-    }
+			public IContainer Container => null;
 
-    #endregion
+			public object Instance => null;
 
-    #region  Nested Types
+			public PropertyDescriptor PropertyDescriptor => null;
 
-    private class DummyTypeDescriptorContext : ITypeDescriptorContext
-    {
-      #region Static Fields and Constants
+			public object GetService(Type serviceType) => null;
 
-      public static readonly ITypeDescriptorContext TypeDescriptorInstance = new DummyTypeDescriptorContext();
+			public bool OnComponentChanging() => false;
 
-      #endregion
-
-      #region Ctors
-
-      private DummyTypeDescriptorContext()
-      {
-      }
-
-      #endregion
-
-      #region Properties
-
-      public IContainer Container => null;
-
-      public object Instance => null;
-
-      public PropertyDescriptor PropertyDescriptor => null;
-
-      #endregion
-
-      #region  Methods
-
-      public object GetService(Type serviceType) => null;
-
-      public bool OnComponentChanging() => false;
-
-      public void OnComponentChanged()
-      {
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+			public void OnComponentChanged()
+			{
+			}
+		}
+	}
 }

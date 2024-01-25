@@ -20,10 +20,10 @@
                       Stretch="Fill">
 
           <!--  Header  -->
-          <zm:FlexPanel.GenericDefinition>
+          <zm:FlexPanel.FlexDefinition>
             <zm:FlexDefinition Length="Auto"
                                StretchDirection="None" />
-          </zm:FlexPanel.GenericDefinition>
+          </zm:FlexPanel.FlexDefinition>
 
           <ContentPresenter Content="{zm:TemplateBinding Path=Header}"
                             ContentTemplate="{zm:TemplateBinding Path=HeaderTemplate}" />

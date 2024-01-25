@@ -8,9 +8,4 @@ namespace Zaaml.UI.Controls.PropertyView
 	{
 		PropertyItem CreatePropertyItem(object propertyObject, PropertyItem parentItem);
 	}
-
-	internal interface IPropertyItemFactory<in TTarget>
-	{
-		PropertyItem CreatePropertyItem(TTarget propertyObject, PropertyItem parentItem);
-	}
 }

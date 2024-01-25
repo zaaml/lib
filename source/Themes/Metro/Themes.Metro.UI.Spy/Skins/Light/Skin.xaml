@@ -8,10 +8,6 @@
     mc:Ignorable="zmb"
     Name="Light">
 
-  <zm:SkinDictionary x:Key="Metro">
-
-    <zm:SkinDictionary x:Key="Spy" />
-
-  </zm:SkinDictionary>
+  <zm:SkinDictionary x:Key="Spy" />
 
 </zm:ThemeSkinResourceDictionary>  

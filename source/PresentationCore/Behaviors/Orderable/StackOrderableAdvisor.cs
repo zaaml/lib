@@ -81,7 +81,7 @@ namespace Zaaml.PresentationCore.Behaviors.Orderable
       var elementSite = GetActualSite(element);
       var mousePosition = GetMousePosition(element);
 
-      elementSite.Position = elementSite.OriginalPosition.Offset((Point)delta);
+      elementSite.Position = elementSite.OriginalPosition.WithOffset((Point)delta);
 
       if (_returnSite != null && _returnSite.Contains(mousePosition))
       {

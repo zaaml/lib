@@ -4,11 +4,13 @@
 
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 using Zaaml.UI.Controls.ScrollView;
 using Zaaml.UI.Controls.TreeView;
 
@@ -27,21 +29,39 @@ namespace Zaaml.UI.Controls.Spy
 
 		public SpyVisualTreeViewControl()
 		{
-			ItemContentMember = "Type";
+			//ItemContentMember = "Type";
 			ItemSourceCollectionMember = "Children";
 
 			ScrollUnit = ScrollUnit.Pixel;
 			SourceCollection = _sourceCollection;
 
 			ItemCollection.DefaultBringIntoViewMode = BringIntoViewMode.Center;
+			
+			LevelIndentSize = 15;
 
-			LevelIndent = 15;
+			var resourcePathUri = Assembly.GetExecutingAssembly().GetResourceUri("/Resources/Icons.xaml");
+
+			Resources.MergedDictionaries.Add(ResourceDictionaryUtils.LoadResourceDictionary(resourcePathUri));
 		}
 
 		public UIElement Element
 		{
 			get => (UIElement) GetValue(ElementProperty);
 			set => SetValue(ElementProperty, value);
+		}
+
+		internal override void OnItemAttachedInternal(TreeViewItem item)
+		{
+			base.OnItemAttachedInternal(item);
+
+			item.Icon = (PathIcon)Resources["CodeIcon"];
+		}
+
+		internal override void OnItemDetachedInternal(TreeViewItem item)
+		{
+			item.Icon = null;
+
+			base.OnItemDetachedInternal(item);
 		}
 
 		private SpyVisualTreeDataItem RootDataItem

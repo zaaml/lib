@@ -98,7 +98,7 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		private RepeatButton SmallIncrease => TemplateContract.SmallIncrease;
 
-		internal ScrollBarTemplateContract TemplateContract => (ScrollBarTemplateContract) TemplateContractInternal;
+		internal ScrollBarTemplateContract TemplateContract => (ScrollBarTemplateContract) TemplateContractCore;
 
 		private ScrollBarThumb Thumb => TemplateContract.Thumb;
 

@@ -18,7 +18,7 @@ namespace Zaaml.Text
 				private readonly MethodInfo _factoryInfo;
 				private object _factoryTarget;
 
-				public SyntaxNodeFactoryBinder(ParserProduction parserProduction):base(parserProduction)
+				public SyntaxNodeFactoryBinder(ParserProduction parserProduction) : base(parserProduction)
 				{
 					Binding = (Grammar<TGrammar, TToken>.ParserGrammar.SyntaxNodeFactoryBinding)parserProduction.GrammarParserProduction.ProductionBinding;
 
@@ -85,7 +85,7 @@ namespace Zaaml.Text
 					public override void EmitPushResetArgument(LocalBuilder productionEntityLocal, LocalBuilder entityArgumentLocal, ILGenerator ilBuilder, OpCode processLdArg)
 					{
 						ilBuilder.Emit(processLdArg);
-						ilBuilder.Emit(OpCodes.Ldfld, ParserProcess.ParserILGenerator.SyntaxTreeFactoryFieldInfo);
+						ilBuilder.Emit(OpCodes.Ldfld, ParserProcess.SyntaxTreeFactoryFieldInfo);
 					}
 				}
 			}

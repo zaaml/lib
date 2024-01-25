@@ -19,118 +19,94 @@ using System.Xaml;
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-  internal class IconTypeConverter : TypeConverter
-  {
-    #region  Methods
+	internal class IconTypeConverter : TypeConverter
+	{
+		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		{
+			return IconConverterImpl.CanConvertFrom(context, sourceType);
+		}
 
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-    {
-      return IconConverterImpl.CanConvertFrom(context, sourceType);
-    }
+		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		{
+			return IconConverterImpl.ConvertFrom(context, culture, value);
+		}
+	}
 
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-      return IconConverterImpl.ConvertFrom(context, culture, value);
-    }
+	internal static class IconConverterImpl
+	{
+		public static bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		{
+			return sourceType == typeof(string) || sourceType == typeof(Uri) || sourceType == typeof(Geometry) || typeof(ImageSource).IsAssignableFrom(sourceType);
+		}
 
-    #endregion
-  }
+		public static object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		{
+			try
+			{
+				if (value == null)
+					return null;
 
-  internal static class IconConverterImpl
-  {
-    #region  Methods
+				if (context != null)
+				{
+					var imageSource = (ImageSource)SafeImageSourceConverter.Converter.ConvertFrom(context, culture, value);
+					if (imageSource != null)
+						return new BitmapIcon { Source = imageSource };
+				}
 
-    public static bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-    {
-      return sourceType == typeof(string) || sourceType == typeof(Uri) || sourceType == typeof(Geometry) || typeof(ImageSource).IsAssignableFrom(sourceType);
-    }
+				if (value is string stringValue)
+					return UpdateBaseUri(context, new BitmapIcon { Source = new BitmapImage(new Uri(stringValue, UriKind.RelativeOrAbsolute)) });
 
-    public static object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-      try
-      {
-        if (value == null)
-          return null;
+				var uriValue = value as Uri;
 
-        if (context != null)
-        {
-          var imageSource = (ImageSource)SafeImageSourceConverter.Converter.ConvertFrom(context, culture, value);
-          if (imageSource != null)
-            return new BitmapIcon { Source = imageSource };
-        }
+				if (uriValue != null)
+					return UpdateBaseUri(context, new BitmapIcon { Source = new BitmapImage(uriValue) });
 
-        if (value is string stringValue)
-          return UpdateBaseUri(context, new BitmapIcon {Source = new BitmapImage(new Uri(stringValue, UriKind.RelativeOrAbsolute))});
+				if (value is ImageSource imageSourceValue)
+					return new BitmapIcon { Source = imageSourceValue };
 
-        var uriValue = value as Uri;
-        
-        if (uriValue != null)
-          return UpdateBaseUri(context, new BitmapIcon {Source = new BitmapImage(uriValue)});
+				if (value is Geometry geometry)
+					return new PathIcon { Data = geometry };
 
-        if (value is ImageSource imageSourceValue)
-          return new BitmapIcon { Source = imageSourceValue };
+				throw new InvalidOperationException();
+			}
+			catch (Exception e)
+			{
+				LogService.LogError(e);
+			}
 
-        if (value is Geometry geometry)
-          return new PathIcon { Data = geometry };
+			return new BitmapIcon();
+		}
 
-        throw new InvalidOperationException();
-      }
-      catch (Exception e)
-      {
-        LogService.LogError(e);
-      }
-
-      return new BitmapIcon();
-    }
-
-    private static BitmapIcon UpdateBaseUri(IServiceProvider context, BitmapIcon icon)
-    {
+		private static BitmapIcon UpdateBaseUri(IServiceProvider context, BitmapIcon icon)
+		{
 #if !SILVERLIGHT
-      var rootProvider = context?.GetService(typeof(IRootObjectProvider)) as IRootObjectProvider;
+			var rootProvider = context?.GetService(typeof(IRootObjectProvider)) as IRootObjectProvider;
 
-      if (rootProvider?.RootObject is DependencyObject ro)
-        icon.BaseUri = BaseUriHelper.GetBaseUri(ro);
+			if (rootProvider?.RootObject is DependencyObject ro)
+				icon.BaseUri = BaseUriHelper.GetBaseUri(ro);
 #endif
 
-      return icon;
-    }
+			return icon;
+		}
+	}
 
-    #endregion
-  }
+	public class IconConverterExtension : MarkupExtensionBase, IValueConverter
+	{
+		public static readonly IconConverterExtension Instance = new();
 
-  public class IconConverter : MarkupExtensionBase, IValueConverter
-  {
-    #region Static Fields and Constants
+		public override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			return Instance;
+		}
 
-    public static readonly IconConverter Instance = new IconConverter();
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return IconConverterImpl.ConvertFrom(null, culture, value);
+		}
 
-    #endregion
-
-    #region  Methods
-
-    public override object ProvideValue(IServiceProvider serviceProvider)
-    {
-      return Instance;
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IValueConverter
-
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      return IconConverterImpl.ConvertFrom(null, culture, value);
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      return new NotSupportedException();
-    }
-
-    #endregion
-
-    #endregion
-  }
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return new NotSupportedException();
+		}
+	}
 }

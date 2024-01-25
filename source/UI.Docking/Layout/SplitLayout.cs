@@ -9,84 +9,107 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class SplitLayout : BaseLayout
-  {
-    #region Static Fields and Constants
+	public sealed class SplitLayout : BaseLayout
+	{
+		public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, SplitLayout>
+			("Orientation", Orientation.Horizontal, l => l.OnOrientationChanged);
 
-    public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, SplitLayout>
-      ("Orientation", Orientation.Horizontal, l => l.OnOrientationChanged);
+		public static readonly DependencyProperty WidthProperty = DPM.RegisterAttached<double, SplitLayout>
+			("Width", 200, OnWidthChanged);
 
-    public static readonly DependencyProperty SplitWidthProperty = DPM.RegisterAttached<double, SplitLayout>
-      ("SplitWidth", 200, OnSplitWidthChanged);
+		public static readonly DependencyProperty HeightProperty = DPM.RegisterAttached<double, SplitLayout>
+			("Height", 200, OnHeightChanged);
 
-    public static readonly DependencyProperty SplitHeightProperty = DPM.RegisterAttached<double, SplitLayout>
-      ("SplitHeight", 200, OnSplitHeightChanged);
+		public static readonly DependencyProperty OrderProperty = DPM.RegisterAttached<int, SplitLayout>
+			("Order", 0, OnOrderPropertyChanged);
 
-    private static readonly List<DependencyProperty> SplitLayoutProperties = new List<DependencyProperty>
-    {
-      SplitWidthProperty,
-      SplitHeightProperty
-    };
+		private static readonly List<DependencyProperty> SplitLayoutProperties = new()
+		{
+			WidthProperty,
+			HeightProperty,
+			OrderProperty
+		};
 
-    #endregion
-
-    #region Ctors
-
-    static SplitLayout()
-    {
-      RegisterLayoutProperties<SplitLayout>(SplitLayoutProperties);
-    }
-
-    #endregion
-
-    #region Properties
-
-    public override LayoutKind LayoutKind => LayoutKind.Split;
-
-    public Orientation Orientation
-    {
-      get => (Orientation) GetValue(OrientationProperty);
-      set => SetValue(OrientationProperty, value);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    public static double GetSplitHeight(DependencyObject depObj)
-    {
-      return (double) depObj.GetValue(SplitHeightProperty);
-    }
-
-    public static double GetSplitWidth(DependencyObject depObj)
-    {
-      return (double) depObj.GetValue(SplitWidthProperty);
-    }
-
-    private void OnOrientationChanged(Orientation oldOrientation, Orientation newOrientation)
-    {
-    }
-
-    private static void OnSplitHeightChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
-    {
-			OnLayoutPropertyChanged(dependencyObject, e);
-    }
-
-    private static void OnSplitWidthChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
-    {
-	    OnLayoutPropertyChanged(dependencyObject, e);
+		static SplitLayout()
+		{
+			RegisterLayoutProperties<SplitLayout>(SplitLayoutProperties);
 		}
 
-    public static void SetSplitHeight(DependencyObject depObj, double value)
-    {
-      depObj.SetValue(SplitHeightProperty, value);
-    }
+		public override LayoutKind LayoutKind => LayoutKind.Split;
 
-    public static void SetSplitWidth(DependencyObject depObj, double value)
-    {
-      depObj.SetValue(SplitWidthProperty, value);
-    }
+		public Orientation Orientation
+		{
+			get => (Orientation)GetValue(OrientationProperty);
+			set => SetValue(OrientationProperty, value);
+		}
 
-    #endregion
-  }
+		public static double GetHeight(DependencyObject depObj)
+		{
+			return (double)depObj.GetValue(HeightProperty);
+		}
+
+		public static int GetOrder(DependencyObject depObj)
+		{
+			return (int)depObj.GetValue(OrderProperty);
+		}
+
+		protected override int GetDockItemOrder(DockItem dockItem)
+		{
+			return GetOrder(dockItem);
+		}
+
+		public static double GetWidth(DependencyObject depObj)
+		{
+			return (double)depObj.GetValue(WidthProperty);
+		}
+
+		private static void OnHeightChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+		{
+			OnLayoutPropertyChanged(dependencyObject, e);
+		}
+
+		private void OnItemOrderChanged(DockItem dockItem)
+		{
+		}
+
+		private static void OnOrderChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+		{
+			if (depObj is not DockItem dockItem)
+				return;
+
+			var splitLayout = dockItem.ActualLayout as SplitLayout;
+
+			splitLayout?.OnItemOrderChanged(dockItem);
+		}
+
+		private static void OnOrderPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			OnOrderChanged(d, e);
+			OnLayoutPropertyChanged(d, e);
+		}
+
+		private void OnOrientationChanged(Orientation oldOrientation, Orientation newOrientation)
+		{
+		}
+
+		private static void OnWidthChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+		{
+			OnLayoutPropertyChanged(dependencyObject, e);
+		}
+
+		public static void SetHeight(DependencyObject depObj, double value)
+		{
+			depObj.SetValue(HeightProperty, value);
+		}
+
+		public static void SetOrder(DependencyObject depObj, int orderIndex)
+		{
+			depObj.SetValue(OrderProperty, orderIndex);
+		}
+
+		public static void SetWidth(DependencyObject depObj, double value)
+		{
+			depObj.SetValue(WidthProperty, value);
+		}
+	}
 }

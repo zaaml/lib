@@ -1,0 +1,40 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="SeparatorTemplate"
+                   TargetType="zm:ToolBarSeparator">
+    <zm:ControlTemplateRoot x:Name="TemplateRoot"
+                            Background="Transparent">
+
+      <!-- SeparatorControl -->
+      <zm:SeparatorControl Background="{zm:TemplateSkinBinding SkinPath=SeparatorBrush}"
+                           Orientation="{zm:TemplateBinding Path=ActualOrientation,
+                                                            Converter={zm:TernaryConverter Operand=Vertical,
+                                                                                           TrueValue=Horizontal,
+                                                                                           FalseValue=Vertical}}" />
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ToolBarSeparatorBaseStyle" TargetType="zm:ToolBarSeparator">
+    <zm:Setter Property="Template" Value="{StaticResource SeparatorTemplate}" />
+    <zm:Setter Property="IsTabStop" Value="False" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ToolBarSeparatorStyle" BasedOn="{StaticResource ToolBarSeparatorBaseStyle}" Skin="Code.ToolBarSeparator" TargetType="zm:ToolBarSeparator">
+
+    <zm:Setter Property="zm:Extension.Skin" Value="{zm:SelfBinding Path=ToolBar.(zm:Extension.ActualSkin), Converter={zm:Static Member=zm:SkinResourceConverter.Instance}, ConverterParameter=ToolBarSeparator}" />
+
+  </zm:Style>
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="ToolBarItemSeparatorThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ToolBarSeparatorStyle}" TargetType="zm:ToolBarSeparator" />
+
+</zm:ThemeResourceDictionary>

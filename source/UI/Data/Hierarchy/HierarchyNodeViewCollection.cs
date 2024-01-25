@@ -17,7 +17,7 @@ namespace Zaaml.UI.Data.Hierarchy
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
 	{
 		private static readonly IEnumerator<TNode> EmptyEnumerator = Enumerable.Empty<TNode>().GetEnumerator();
-		private static readonly List<TNode> EmptyCollection = new List<TNode>();
+		private static readonly List<TNode> EmptyCollection = new();
 		private IEnumerable _source;
 
 		protected HierarchyNodeViewCollection(THierarchy hierarchy, TNode parentViewItemData, Func<object, TNode> nodeFactory)
@@ -94,10 +94,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		internal void HandleMove(int oldIndex, int newIndex)
 		{
-			var oldItem = Collection[oldIndex];
-
-			Collection[oldIndex] = Collection[newIndex];
-			Collection[newIndex] = oldItem;
+			(Collection[oldIndex], Collection[newIndex]) = (Collection[newIndex], Collection[oldIndex]);
 		}
 
 		internal void HandleRemove(int oldIndex, IList oldItems)

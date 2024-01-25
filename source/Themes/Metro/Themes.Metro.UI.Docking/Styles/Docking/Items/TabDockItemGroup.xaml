@@ -21,7 +21,7 @@
 
       <!--  TabLayoutView  -->
       <zm:TabLayoutView x:Name="LayoutView"
-                        Margin="{zm:TemplateBinding Path=ActualLayoutKind,
+                        Margin="{zm:TemplateBinding Path=ActualLayout.LayoutKind,
                                                     Converter={zm:TernaryConverter Operand=Float,
                                                                                    TrueValue=-1,
                                                                                    FalseValue=0}}"
@@ -33,7 +33,7 @@
           <zm:DockItemHeaderPresenter x:Name="HeaderPresenter">
 
             <zm:Extension.Triggers>
-              <zm:DataTrigger Binding="{zm:TemplateBinding Path=ActualLayoutKind, Converter={StaticResource IsRawContentConverter}}" Value="True">
+              <zm:DataTrigger Binding="{zm:TemplateBinding Path=ActualLayout.LayoutKind, Converter={StaticResource IsRawContentConverter}}" Value="True">
                 <zm:Setter Property="Visibility" Value="Collapsed" />
               </zm:DataTrigger>
             </zm:Extension.Triggers>

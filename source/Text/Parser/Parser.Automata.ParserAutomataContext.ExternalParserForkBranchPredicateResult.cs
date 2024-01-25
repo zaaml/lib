@@ -32,7 +32,7 @@ namespace Zaaml.Text
 
 						_forkBranch = null;
 
-						_pool.Release(this);
+						_pool.Return(this);
 					}
 
 					public ExternalParserForkBranchPredicateResult<TExternalGrammar, TExternalToken> Mount(ExternalParserForkBranch<TExternalGrammar, TExternalToken> branch)
@@ -61,7 +61,7 @@ namespace Zaaml.Text
 						base.Dispose();
 
 						_forkBranch = null;
-						_pool.Release(this);
+						_pool.Return(this);
 					}
 
 					protected override TExternalNode GetResultCore()

@@ -23,6 +23,7 @@ namespace Zaaml.Core.Collections.Pooled
 		private int _size;
 		private object _syncRoot;
 		private int _version;
+		private long _nonce;
 
 		public PooledList() : this(DefaultCapacity, true, ArrayPool<T>.Shared)
 		{
@@ -43,6 +44,8 @@ namespace Zaaml.Core.Collections.Pooled
 			_pool = pool ?? ArrayPool<T>.Shared;
 			_clearArray = clearArray;
 		}
+
+		internal int Version => _version;
 
 		public int Capacity
 		{
@@ -212,6 +215,28 @@ namespace Zaaml.Core.Collections.Pooled
 			return pool.Count > 0 ? pool.Pop() : new PooledList<T>(true);
 		}
 
+		internal static PooledList<T> RentList(long nonce)
+		{
+			var pool = ThreadPool.Value;
+
+			return pool.Count > 0 ? pool.Pop().WithNonce(nonce) : new PooledList<T>(true).WithNonce(nonce);
+		}
+
+		internal PooledList<T> VerifyNonce(long nonce)
+		{
+			if (_nonce != nonce)
+				throw new InvalidOperationException("Invalid nonce");
+
+			return this;
+		}
+
+		private PooledList<T> WithNonce(long nonce)
+		{
+			_nonce = nonce;
+
+			return this;
+		}
+
 		private void ReturnArray()
 		{
 			if (_items.Length == 0)
@@ -230,6 +255,17 @@ namespace Zaaml.Core.Collections.Pooled
 
 		internal static void ReturnList(PooledList<T> list)
 		{
+			list.Clear();
+
+			ThreadPool.Value.Push(list);
+		}
+
+		internal static void ReturnList(PooledList<T> list, long nonce)
+		{
+			list.VerifyNonce(nonce);
+
+			list._nonce = 0;
+
 			list.Clear();
 
 			ThreadPool.Value.Push(list);

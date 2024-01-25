@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Zaaml.Core.Weak.Collections
 {
@@ -167,13 +168,8 @@ namespace Zaaml.Core.Weak.Collections
 			return GetEnumerator();
 		}
 
-		public IEnumerator<T> GetEnumerator()
+		internal IEnumerator<T> GetCleanEnumerator()
 		{
-			if (_head == null)
-				yield break;
-
-			EnsureClean();
-
 			if (_head == null)
 				yield break;
 
@@ -188,6 +184,16 @@ namespace Zaaml.Core.Weak.Collections
 
 				current = current.Next;
 			}
+		}
+
+		public IEnumerator<T> GetEnumerator()
+		{
+			if (_head == null)
+				return Enumerable.Empty<T>().GetEnumerator();
+
+			EnsureClean();
+
+			return GetCleanEnumerator();
 		}
 	}
 }

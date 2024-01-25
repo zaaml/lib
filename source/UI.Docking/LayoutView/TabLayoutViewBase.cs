@@ -7,170 +7,153 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.TabView;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public abstract class TabLayoutViewBase<TLayout> : BaseLayoutView<TLayout> where TLayout : TabLayoutBase
-  {
-    #region Properties
+	public abstract class TabLayoutViewBase<TLayout> : BaseLayoutView<TLayout> where TLayout : TabLayoutBase
+	{
+		private Panel Host => TemplateContract.Host;
 
-    private Panel Host => TemplateContract.Host;
+		private DockTabViewControl TabViewControl => TemplateContract.TabViewControl;
 
-    private DockTabViewControl TabViewControl => TemplateContract.TabViewControl;
+		private TabLayoutViewBaseTemplateContract TemplateContract => (TabLayoutViewBaseTemplateContract)TemplateContractInternal;
 
-    private TabLayoutViewBaseTemplateContract TemplateContract => (TabLayoutViewBaseTemplateContract) TemplateContractInternal;
+		protected internal override void ArrangeItems()
+		{
+		}
 
-    #endregion
+		private void AttachItem(DockItem item)
+		{
+			if (TabViewControl != null)
+			{
+				item.ActualSelectionScope.Suspend();
 
-    #region  Methods
+				var tabViewItem = item.TabViewItem;
 
-    protected internal override void ArrangeItems()
-    {
-    }
+				tabViewItem.Content = item;
+				TabViewControl?.ItemCollection.Add(tabViewItem);
 
-    private void AttachItem(DockItem item)
-    {
-      if (TabViewControl != null)
-      {
-        item.ActualSelectionScope.Suspend();
+				item.ActualSelectionScope.Resume();
 
-        var tabViewItem = item.TabViewItem;
+				tabViewItem.OnAttachedInternal();
+			}
+			else
+				Host?.Children.Add(item);
+		}
 
-        tabViewItem.Content = item;
-        TabViewControl?.ItemCollection.Add(tabViewItem);
+		protected override TemplateContract CreateTemplateContract()
+		{
+			return new TabLayoutViewBaseTemplateContract();
+		}
 
-        item.ActualSelectionScope.Resume();
+		private void DetachItem(DockItem item)
+		{
+			if (TabViewControl != null)
+			{
+				item.ActualSelectionScope.Suspend();
 
-        tabViewItem.OnAttachedInternal();
-      }
-      else
-        Host?.Children.Add(item);
-    }
+				var tabViewItem = item.TabViewItem;
 
-    protected override TemplateContract CreateTemplateContract()
-    {
-      return new TabLayoutViewBaseTemplateContract();
-    }
+				item.TabViewItem.Content = null;
+				TabViewControl?.ItemCollection.Remove(tabViewItem);
 
-    private void DetachItem(DockItem item)
-    {
-      if (TabViewControl != null)
-      {
-        item.ActualSelectionScope.Suspend();
+				item.ActualSelectionScope.Resume();
 
-        var tabViewItem = item.TabViewItem;
+				tabViewItem.OnDetachedInternal();
+			}
+			else
+				Host?.Children.Remove(item);
+		}
 
-        item.TabViewItem.Content = null;
-        TabViewControl?.ItemCollection.Remove(tabViewItem);
+		internal override bool IsItemVisible(DockItem item)
+		{
+			return TabViewControl != null ? item.TabViewItem.IsSelected : Host.Children.Contains(item);
+		}
 
-        item.ActualSelectionScope.Resume();
+		protected override void OnItemAdded(DockItem item)
+		{
+			AttachItem(item);
 
-        tabViewItem.OnDetachedInternal();
-      }
-      else
-        Host?.Children.Remove(item);
-    }
+			UpdateItemsPresenterVisibility();
+		}
 
-    internal override bool IsItemVisible(DockItem item)
-    {
-      return TabViewControl != null ? item.TabViewItem.IsSelected : Host.Children.Contains(item);
-    }
+		protected override void OnItemRemoved(DockItem item)
+		{
+			DetachItem(item);
 
-    protected override void OnItemAdded(DockItem item)
-    {
-      AttachItem(item);
-    }
+			UpdateItemsPresenterVisibility();
+		}
 
-    protected override void OnItemRemoved(DockItem item)
-    {
-      DetachItem(item);
-    }
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
+			foreach (var item in Items)
+				AttachItem(item);
 
-      foreach (var item in Items)
-        AttachItem(item);
+			TabViewControl?.SetBinding(TabView.TabViewControl.SelectedItemProperty, new Binding
+			{
+				Path = new PropertyPath(SelectedItemProperty),
+				Mode = BindingMode.TwoWay,
+				Source = this,
+				Converter = TabViewItemConverter.Instance
+			});
 
-      TabViewControl?.SetBinding(TabView.TabViewControl.SelectedItemProperty, new Binding
-      {
-        Path = new PropertyPath(SelectedItemProperty),
-        Mode = BindingMode.TwoWay,
-        Source = this,
-        Converter = TabViewItemConverter.Instance
-      });
-    }
+			UpdateItemsPresenterVisibility();
+		}
 
-    protected override void OnTemplateContractDetaching()
-    {
-      TabViewControl?.ClearValue(TabView.TabViewControl.SelectedItemProperty);
+		protected virtual int MinimumItemsCount => 1;
 
-      foreach (var item in Items)
-        DetachItem(item);
+		private void UpdateItemsPresenterVisibility()
+		{
+			if (TabViewControl != null) 
+				TabViewControl.ItemsPresenterVisibility = Items.Count >= MinimumItemsCount ? ElementVisibility.Auto : ElementVisibility.Collapsed;
+		}
 
-      base.OnTemplateContractDetaching();
-    }
+		protected override void OnTemplateContractDetaching()
+		{
+			TabViewControl?.ClearValue(TabView.TabViewControl.SelectedItemProperty);
 
-    #endregion
+			foreach (var item in Items)
+				DetachItem(item);
 
-    #region  Nested Types
+			base.OnTemplateContractDetaching();
+		}
 
-    private sealed class TabViewItemConverter : IValueConverter
-    {
-      #region Static Fields and Constants
+		private sealed class TabViewItemConverter : IValueConverter
+		{
+			public static readonly TabViewItemConverter Instance = new();
 
-      public static readonly TabViewItemConverter Instance = new TabViewItemConverter();
+			private TabViewItemConverter()
+			{
+			}
 
-      #endregion
+			private static object Convert(object value, Type targetType)
+			{
+				if (value == null)
+					return null;
 
-      #region Ctors
+				if (typeof(TabViewItem).IsAssignableFrom(targetType) && value is DockItem)
+					return ((DockItem)value).TabViewItem;
 
-      private TabViewItemConverter()
-      {
-      }
+				if (typeof(DockItem).IsAssignableFrom(targetType) && value is DockTabViewItem)
+					return ((DockTabViewItem)value).DockItem;
 
-      #endregion
+				throw new InvalidOperationException();
+			}
 
-      #region  Methods
+			public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+			{
+				return Convert(value, targetType);
+			}
 
-      private static object Convert(object value, Type targetType)
-      {
-        if (value == null)
-          return null;
-
-        if (typeof(TabViewItem).IsAssignableFrom(targetType) && value is DockItem)
-          return ((DockItem) value).TabViewItem;
-
-        if (typeof(DockItem).IsAssignableFrom(targetType) && value is DockTabViewItem)
-          return ((DockTabViewItem) value).DockItem;
-
-        throw new InvalidOperationException();
-      }
-
-      #endregion
-
-      #region Interface Implementations
-
-      #region IValueConverter
-
-      public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-      {
-        return Convert(value, targetType);
-      }
-
-      public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-      {
-        return Convert(value, targetType);
-      }
-
-      #endregion
-
-      #endregion
-    }
-
-    #endregion
-  }
+			public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+			{
+				return Convert(value, targetType);
+			}
+		}
+	}
 }

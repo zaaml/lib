@@ -16,67 +16,80 @@ namespace Zaaml.Text
 	{
 		partial class Process
 		{
-			internal struct ThreadContext
+			private protected struct ThreadContext
 			{
 				public static ThreadContext Empty;
 
 				public static readonly FieldInfo InstructionStreamPointerFieldInfo = typeof(ThreadContext).GetField(nameof(InstructionStreamPointer), BF.IPNP);
 				public static readonly FieldInfo InstructionStreamFieldInfo = typeof(ThreadContext).GetField(nameof(InstructionStream), BF.IPNP);
+				public static readonly MethodInfo CompleteBlockMethodInfo = typeof(ThreadContext).GetMethod(nameof(CompleteBlock), BF.IPNP);
 				public int Index;
 				public Process Process;
 				public int ExecutionStreamPointer;
 				public int InstructionStreamPointer;
 				public int PredicateResultStreamPointer;
 				public ExecutionStream ExecutionStream;
-				public AutomataContextState ContextState;
+				public AutomataContext AutomataContext;
+				public AutomataContextState AutomataContextState;
 				public InstructionStream InstructionStream;
 				public List<ExecutionPath> ExecutionPathRegistry;
 				public PredicateResultStream PredicateResultStream;
-				public ExecutionPathMethodCollection ExecutionMethodRegistry;
+				public int ExecutionMethodIndex;
 				public bool IsExecutionStreamRunning;
+				public bool IsCompleteBlock;
 
-				public ThreadContext(Process process, InstructionStream instructionStream, ExecutionStream executionStream, PredicateResultStream predicateResultStream, AutomataContextState contextState)
+				public ThreadContext(Process process, InstructionStream instructionStream, ExecutionStream executionStream, PredicateResultStream predicateResultStream, AutomataContext automataContext)
 				{
 					Index = 0;
 					Process = process;
-					ContextState = contextState;
-					ExecutionStream = executionStream.AddReference();
-					InstructionStream = instructionStream.AddReference();
-					PredicateResultStream = predicateResultStream.AddReference();
+					AutomataContext = automataContext;
+					AutomataContextState = default;
+					ExecutionStream = executionStream;
+					InstructionStream = instructionStream;
+					PredicateResultStream = predicateResultStream;
 					ExecutionStreamPointer = 0;
 					InstructionStreamPointer = 0;
 					PredicateResultStreamPointer = 0;
 					ExecutionPathRegistry = Process._automata._executionPathRegistry;
-					ExecutionMethodRegistry = Process.ILGenerator.MainExecutionMethods;
+					ExecutionMethodIndex = Process.ILGenerator.MainExecutionMethodIndex;
 					IsExecutionStreamRunning = false;
+					IsCompleteBlock = false;
 
 					InstructionStream.LockPointer(InstructionStreamPointer);
+
+					InstructionStream.AddReference();
 				}
 
 				public ThreadContext(int index, Process process, InstructionStream instructionStream, int instructionPointer, ExecutionStream executionStream, int executionStreamPointer, PredicateResultStream predicateResultStream,
-					int predicateResultStreamPointer, AutomataContextState contextState)
+					int predicateResultStreamPointer, AutomataContext context, AutomataContextState contextState)
 				{
 					Debug.Assert(index > 0);
 
 					Index = index;
 					Process = process;
-					ContextState = contextState;
-					ExecutionStream = executionStream.AddReference();
-					InstructionStream = instructionStream.AddReference();
-					PredicateResultStream = predicateResultStream.AddReference();
+					AutomataContext = context;
+					AutomataContextState = contextState;
+					ExecutionStream = executionStream;
+					InstructionStream = instructionStream;
+					PredicateResultStream = predicateResultStream;
 					ExecutionStreamPointer = executionStreamPointer;
 					InstructionStreamPointer = instructionPointer;
 					PredicateResultStreamPointer = predicateResultStreamPointer;
 					ExecutionPathRegistry = Process._automata._executionPathRegistry;
-					ExecutionMethodRegistry = Process.ILGenerator.ParallelExecutionMethods;
+					ExecutionMethodIndex = Process.ILGenerator.ParallelExecutionMethodIndex;
 
 					IsExecutionStreamRunning = false;
+					IsCompleteBlock = false;
+
 					InstructionStream.LockPointer(InstructionStreamPointer);
+
+					InstructionStream.AddReference();
 				}
 
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void EnqueueParallelPath(ExecutionPath executionPath)
 				{
-					ExecutionStream.Enqueue(executionPath, ref ExecutionStreamPointer);
+					ExecutionStream.Enqueue(executionPath.Id, ExecutionStreamPointer++);
 
 					if (executionPath.ForkPredicatePath)
 						executionPath.AddReference();
@@ -84,7 +97,29 @@ namespace Zaaml.Text
 
 				public ref TInstruction Instruction => ref InstructionStream.PeekInstructionRef(InstructionStreamPointer);
 
-				public int InstructionOperand => InstructionStream.PeekOperand(InstructionStreamPointer);
+				public int InstructionOperand
+				{
+					[MethodImpl(MethodImplOptions.AggressiveInlining)]
+					get { return InstructionStream.PeekOperand(InstructionStreamPointer); }
+				}
+
+				public int FetchInstructionOperand
+				{
+					[MethodImpl(MethodImplOptions.AggressiveInlining)]
+					get { return InstructionStream.FetchPeekOperand(InstructionStreamPointer); }
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public int FetchPeekOperand(int delta)
+				{
+					return InstructionStream.FetchPeekOperand(InstructionStreamPointer + delta);
+				}
+
+				public TInstruction FetchInstruction
+				{
+					[MethodImpl(MethodImplOptions.AggressiveInlining)]
+					get { return InstructionStream.FetchPeekInstruction(InstructionStreamPointer); }
+				}
 
 				public int InstructionStreamPosition => InstructionStream.GetPosition(InstructionStreamPointer);
 
@@ -93,10 +128,13 @@ namespace Zaaml.Text
 					return ref InstructionStream.PeekInstructionOperand(InstructionStreamPointer, out operand);
 				}
 
+				public void CompleteBlock()
+				{
+					IsCompleteBlock = true;
+				}
+
 				public void RunExecutionStream(ref Thread thread)
 				{
-					Debug.Assert(ReferenceEquals(thread.Stack, Process._stack));
-
 					IsExecutionStreamRunning = true;
 
 					var executionQueue = ExecutionStream.GetSpan(ExecutionStreamPointer);
@@ -106,7 +144,7 @@ namespace Zaaml.Text
 					PredicateResultStreamPointer = 0;
 
 					foreach (var executionPathId in executionQueue)
-						thread.Node = Execute(executionPathId, ref thread);
+						thread.Node = Execute(executionPathId);
 
 					ExecutionStreamPointer = 0;
 					PredicateResultStreamPointer = 0;
@@ -118,14 +156,15 @@ namespace Zaaml.Text
 
 				public void Dispose()
 				{
-					ExecutionStream.ReleaseReference();
 					InstructionStream.UnlockPointer(InstructionStreamPointer);
 					InstructionStream.ReleaseReference();
-					PredicateResultStream.ReleaseReference();
-					Process._context.DisposeContextStateInternal(ContextState);
-
+					
+					AutomataContext.DisposeContextStateInternal(AutomataContextState);
+					
+					IsCompleteBlock = false;
 					Process = null;
-					ContextState = null;
+					AutomataContext = null;
+					AutomataContextState = null;
 					ExecutionStream = null;
 					InstructionStream = null;
 					PredicateResultStream = null;
@@ -133,16 +172,15 @@ namespace Zaaml.Text
 
 				public ThreadContext Fork()
 				{
-					return new ThreadContext(Index + 1, Process, InstructionStream, InstructionStreamPointer, ExecutionStream, ExecutionStreamPointer, PredicateResultStream, PredicateResultStreamPointer, ContextState);
+					return new ThreadContext(Index + 1, Process, InstructionStream, InstructionStreamPointer, ExecutionStream, ExecutionStreamPointer, PredicateResultStream, PredicateResultStreamPointer, AutomataContext, AutomataContext.CloneContextStateInternal(AutomataContextState));
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				public Node Execute(int executionPathId, ref Thread thread)
+				public Node Execute(int executionPathId)
 				{
-					//if (Index == 0)
-					//	Debug.WriteLine(executionPathId);
+					var executionPath = ExecutionPathRegistry[executionPathId];
 
-					return ExecutionMethodRegistry.GetExecutionPathMethod(ExecutionPathRegistry[executionPathId]).Execute(Process, ref thread, ref this);
+					return executionPath.Execute(ExecutionMethodIndex, Process);
 				}
 
 				public void EnqueuePredicateResult(PredicateResult predicateResult)

@@ -4,10 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Zaaml.Core.Extensions;
-using Zaaml.Core.Utils;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -21,11 +20,11 @@ namespace Zaaml.Text
 			{
 				private static readonly Dictionary<Type, Type> ArrayTypeDictionary = new();
 				public readonly ProductionBinder Binder;
+				
 				private ProductionArgumentCollection _arguments;
-				private ProductionEntity[] _productionEntityPool;
-				private int _productionEntityPoolTail = -1;
+				private ProductionEntity _productionEntityPoolHead;
 
-				public ParserProduction(ParserAutomata automata, Func<ParserProduction, ProductionBinder> binderFactory, IEnumerable<Entry> entries, ParserProduction sourceProduction, ParserProduction actualProduction) 
+				public ParserProduction(ParserAutomata automata, Func<ParserProduction, ProductionBinder> binderFactory, IEnumerable<Entry> entries, ParserProduction sourceProduction, ParserProduction actualProduction)
 					: base(CloneEntries(automata, entries))
 				{
 					if (binderFactory == null)
@@ -39,11 +38,11 @@ namespace Zaaml.Text
 					MapArgumentsBuilder = true;
 				}
 
-				public ParserProduction(ParserAutomata automata, ParserRule parserRule, Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax, Grammar<TGrammar, TToken>.ParserGrammar.Production grammarParserProduction)
-					: base(CreateEntries(automata, grammarParserProduction))
+				public ParserProduction(ParserAutomata automata, ParserSyntax parserSyntax, Grammar<TGrammar, TToken>.ParserGrammar.Syntax grammarParserSyntax, Grammar<TGrammar, TToken>.ParserGrammar.Production grammarParserProduction)
+					: base(grammarParserProduction.Symbols.SelectMany(automata.CreateParserEntries))
 				{
 					Name = grammarParserProduction.Name ?? automata.GenerateProductionName();
-					ParserSyntax = parserSyntax;
+					GrammarParserSyntax = grammarParserSyntax;
 					GrammarParserProduction = grammarParserProduction;
 					ProductionIndex = automata.RegisterProduction(this);
 
@@ -51,21 +50,6 @@ namespace Zaaml.Text
 						return;
 
 					Binder = CreateProductionBinder(grammarParserProduction);
-				}
-
-				private static IEnumerable<Entry> CloneEntries(ParserAutomata automata, IEnumerable<Entry> entries)
-				{
-					foreach (var sourceEntry in entries)
-					{
-						if (sourceEntry is IParserEntry parserEntry)
-						{
-							var cloneEntry = parserEntry.Clone();
-
-							yield return cloneEntry;
-						}
-						else
-							yield return sourceEntry;
-					}
 				}
 
 				public ParserProduction ActualProduction { get; }
@@ -76,26 +60,26 @@ namespace Zaaml.Text
 
 				public Grammar<TGrammar, TToken>.ParserGrammar.Production GrammarParserProduction { get; }
 
+				public Grammar<TGrammar, TToken>.ParserGrammar.Syntax GrammarParserSyntax { get; }
+
 				private bool MapArgumentsBuilder { get; }
 
-				private string Name { get; }
-
-				public Grammar<TGrammar, TToken>.ParserGrammar.Syntax ParserSyntax { get; }
+				public string Name { get; }
 
 				public int ProductionIndex { get; }
 
 				internal ParserProduction SourceProduction { get; }
 
-				private void BuildArgument(List<Entry> stack, ParserProduction parserProduction, ProductionArgumentCollection argumentCollection, Action<Entry, List<Entry>, ProductionArgumentCollection> argumentBuilder)
+				private void BuildArgument(List<Entry> stack, ParserProduction parserProduction, ProductionArgumentCollection argumentCollection, Action<Entry, List<Entry>, ProductionArgumentCollection> argumentFactory)
 				{
 					var entry = stack[stack.Count - 1];
 
-					if (entry is ParserRuleEntry { Fragment: true } parserStateEntry)
+					if (entry is ParserSyntaxEntry { Fragment: true } parserSyntaxEntry)
 					{
-						stack.Add(parserStateEntry);
+						stack.Add(parserSyntaxEntry);
 
-						foreach (var fragmentProduction in parserStateEntry.Rule.Productions)
-							BuildArguments(parserProduction, fragmentProduction, stack, argumentCollection, argumentBuilder);
+						foreach (var fragmentProduction in parserSyntaxEntry.Syntax.Productions)
+							BuildArguments(parserProduction, fragmentProduction, stack, argumentCollection, argumentFactory);
 
 						stack.RemoveAt(stack.Count - 1);
 					}
@@ -105,12 +89,12 @@ namespace Zaaml.Text
 
 						stack.Add(parserPrimitiveEntry);
 
-						BuildArgument(stack, parserProduction, argumentCollection, argumentBuilder);
+						BuildArgument(stack, parserProduction, argumentCollection, argumentFactory);
 
 						stack.RemoveAt(stack.Count - 1);
 					}
 					else
-						argumentBuilder(entry, stack, argumentCollection);
+						argumentFactory(entry, stack, argumentCollection);
 				}
 
 				private ProductionArgumentCollection BuildArguments()
@@ -128,15 +112,30 @@ namespace Zaaml.Text
 				}
 
 				private void BuildArguments(ParserProduction parserProduction, Production fragmentProduction, List<Entry> stack, ProductionArgumentCollection argumentCollection,
-					Action<Entry, List<Entry>, ProductionArgumentCollection> argumentBuilder)
+					Action<Entry, List<Entry>, ProductionArgumentCollection> argumentFactory)
 				{
 					foreach (var entry in fragmentProduction.Entries)
 					{
 						stack.Add(entry);
 
-						BuildArgument(stack, parserProduction, argumentCollection, argumentBuilder);
+						BuildArgument(stack, parserProduction, argumentCollection, argumentFactory);
 
 						stack.RemoveAt(stack.Count - 1);
+					}
+				}
+
+				private static IEnumerable<Entry> CloneEntries(ParserAutomata automata, IEnumerable<Entry> entries)
+				{
+					foreach (var sourceEntry in entries)
+					{
+						if (sourceEntry is IParserEntry parserEntry)
+						{
+							var cloneEntry = parserEntry.Clone();
+
+							yield return cloneEntry;
+						}
+						else
+							yield return sourceEntry;
 					}
 				}
 
@@ -147,7 +146,7 @@ namespace Zaaml.Text
 
 					var argumentType = GetArgumentType(entry);
 
-					if (argumentType == null)
+					if (argumentType == null || ReferenceEquals(parserEntry.ProductionArgument, NullArgument.Instance))
 					{
 						argumentCollection.AddArgument(new NullArgument(EnsureEntryName(entry, stack), entry, argumentCollection.Count, this));
 
@@ -161,8 +160,9 @@ namespace Zaaml.Text
 					{
 						IParserPredicate parserPredicateEntry => CreatePredicateArgument(argumentName, parserPredicateEntry, argumentIndex, argumentType, array),
 						ParserSetMatchEntry _ => CreateLexerArgument(argumentName, entry, argumentIndex, argumentType, array),
-						ParserSingleMatchEntry _ => CreateLexerArgument(argumentName, entry, argumentIndex, argumentType, array),
-						ParserRuleEntry _ => CreateParserArgument(argumentName, entry, argumentIndex, argumentType, array),
+						ParserOperandMatchEntry _ => CreateLexerArgument(argumentName, entry, argumentIndex, argumentType, array),
+						CompositeOperandEntry _ => CreateLexerArgument(argumentName, entry,argumentIndex, argumentType, array),
+						ParserSyntaxEntry _ => CreateParserArgument(argumentName, entry, argumentIndex, argumentType, array),
 						_ => null
 					};
 
@@ -170,15 +170,6 @@ namespace Zaaml.Text
 						return;
 
 					argumentCollection.AddArgument(argument);
-				}
-
-				private static IEnumerable<Entry> CreateEntries(ParserAutomata automata, Grammar<TGrammar, TToken>.ParserGrammar.Production grammarParserProduction)
-				{
-					var entries = new List<Entry>();
-
-					entries.AddRange(grammarParserProduction.Symbols.SelectMany(symbol => InlineFragment(automata, symbol)));
-
-					return entries;
 				}
 
 				private ProductionArgument CreateLexerArgument(string name, Entry parserEntry, int argumentIndex, Type argumentType, bool array)
@@ -223,6 +214,10 @@ namespace Zaaml.Text
 					return _arguments ??= BuildArguments();
 				}
 
+				private SourceEntityFactory _sourceEntityFactory;
+
+				public SourceEntityFactory SourceEntityFactory => _sourceEntityFactory ??= new SourceEntityFactory(this);
+
 				public void EnsureBinder()
 				{
 					Binder?.Build();
@@ -233,17 +228,17 @@ namespace Zaaml.Text
 					if (entry is not IParserEntry parserEntry)
 						return null;
 
-					var name = EnsureName(parserEntry.GrammarEntry);
+					var name = EnsureName(parserEntry.GrammarSymbol);
 
 					if (stack.Count > 1 && stack[stack.Count - 2] is ParserQuantifierEntry parserQuantifierEntry)
-						return EnsureName(parserQuantifierEntry.GrammarEntry) ?? name;
+						return EnsureName(parserQuantifierEntry.GrammarSymbol) ?? name;
 
 					return name;
 				}
 
 				public ProductionNamedArgumentCollection GetArguments(string name, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
 				{
-					return new(name, this, comparisonType);
+					return new ProductionNamedArgumentCollection(name, this, comparisonType);
 				}
 
 				private static Type GetArgumentType(Entry parserEntry)
@@ -251,9 +246,10 @@ namespace Zaaml.Text
 					return parserEntry switch
 					{
 						IParserPredicate parserPredicateEntry => GetPredicateArgumentType(parserPredicateEntry),
-						ParserRuleEntry parserRuleEntry => ((Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol)parserRuleEntry.GrammarEntry).Node.NodeType,
+						ParserSyntaxEntry parserSyntaxEntry => ((Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol)parserSyntaxEntry.GrammarSymbol).Node.NodeType,
 						ParserSetMatchEntry _ => typeof(Lexeme<TToken>),
-						ParserSingleMatchEntry _ => typeof(Lexeme<TToken>),
+						ParserOperandMatchEntry _ => typeof(Lexeme<TToken>),
+						CompositeOperandEntry _ => typeof(Lexeme<TToken>),
 						_ => null
 					};
 				}
@@ -264,6 +260,19 @@ namespace Zaaml.Text
 						ArrayTypeDictionary[elementType] = arrayType = Array.CreateInstance(elementType, 0).GetType();
 
 					return arrayType;
+				}
+
+				private static Entry GetEntrySource(Entry entry)
+				{
+					if (entry is IParserEntry parserEntry)
+						return (Entry)parserEntry.Source ?? entry;
+
+					return entry;
+				}
+
+				private static Type GetExternalNodeType(IParserPredicate parserPredicateEntry)
+				{
+					return parserPredicateEntry.ResultType;
 				}
 
 				private static Type GetExternalTokenType(IParserPredicate parserPredicateEntry)
@@ -277,64 +286,9 @@ namespace Zaaml.Text
 					{
 						ParserPredicateKind.ExternalParser => GetExternalNodeType(parserPredicateEntry),
 						ParserPredicateKind.ExternalLexer => GetExternalTokenType(parserPredicateEntry),
+						ParserPredicateKind.GenericValue => parserPredicateEntry.ResultType,
 						_ => null
 					};
-				}
-
-				private static Type GetExternalNodeType(IParserPredicate parserPredicateEntry)
-				{
-					return parserPredicateEntry.ResultType;
-				}
-
-				private void InitPool()
-				{
-					_productionEntityPool = new ProductionEntity[8];
-
-					var length = _productionEntityPool.Length;
-
-					for (var i = 0; i < length; i++)
-						_productionEntityPool[i] = new ProductionEntity(this);
-
-					_productionEntityPoolTail = length - 1;
-				}
-
-				private static IEnumerable<Entry> InlineFragment(ParserAutomata automata, Grammar<TGrammar, TToken>.ParserGrammar.Symbol symbol)
-				{
-					switch (symbol)
-					{
-						case Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol fragmentSymbol:
-
-							if (fragmentSymbol.Fragment.Productions.Count == 1)
-							{
-								var production = fragmentSymbol.Fragment.Productions[0];
-
-								if (production.Symbols.Any(s => s is Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol recursiveFragmentSymbol && ReferenceEquals(recursiveFragmentSymbol.Fragment, fragmentSymbol.Fragment)))
-									yield return automata.CreateParserEntry(symbol);
-								else
-								{
-									foreach (var entry in production.Symbols.SelectMany(ps => InlineFragment(automata, ps)))
-										yield return entry;
-								}
-							}
-							else
-								yield return automata.CreateParserEntry(symbol);
-
-							break;
-
-						default:
-
-							yield return automata.CreateParserEntry(symbol);
-
-							break;
-					}
-				}
-
-				private static Entry GetEntrySource(Entry entry)
-				{
-					if (entry is IParserEntry parserEntry)
-						return (Entry)parserEntry.Source ?? entry;
-
-					return entry;
 				}
 
 				private void MapArgument(Entry entry, List<Entry> stack, ProductionArgumentCollection argumentCollection)
@@ -348,43 +302,28 @@ namespace Zaaml.Text
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public ProductionEntity RentEntity()
 				{
-					if (_productionEntityPoolTail == -1)
-						Resize();
+					if (_productionEntityPoolHead == null)
+						return new ProductionEntity(this) { Busy = true };
 
-					var productionEntity = _productionEntityPool[_productionEntityPoolTail--];
+					var productionEntity = _productionEntityPoolHead;
 
-					//_productionEntityPool[_productionEntityPoolTail + 1] = null;
+					_productionEntityPoolHead = productionEntity.PoolNext;
 
 					productionEntity.Busy = true;
 
 					return productionEntity;
 				}
 
-				private void Resize()
-				{
-					if (_productionEntityPool == null)
-					{
-						InitPool();
-
-						return;
-					}
-
-					var length = _productionEntityPool.Length;
-
-					ArrayUtils.ExpandArrayLength(ref _productionEntityPool, false);
-
-					for (var i = 0; i < length; i++)
-						_productionEntityPool[i] = new ProductionEntity(this);
-
-					_productionEntityPoolTail = length - 1;
-				}
-
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void ReturnEntity(ProductionEntity productionEntity)
 				{
-					productionEntity.Busy = false;
+					Debug.Assert(productionEntity.Busy);
 
-					_productionEntityPool[++_productionEntityPoolTail] = productionEntity;
+					productionEntity.Busy = false;
+					productionEntity.SpanStart = 0;
+					productionEntity.PoolNext = _productionEntityPoolHead;
+
+					_productionEntityPoolHead = productionEntity;
 				}
 
 				public override string ToString()

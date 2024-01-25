@@ -15,26 +15,30 @@ namespace Zaaml.UI.Controls.Docking
 {
 	public sealed class AutoHideLayout : BaseLayout
 	{
-		public static readonly DependencyProperty DockSideProperty = DPM.RegisterAttached<Dock, AutoHideLayout>
-			("DockSide", Dock.Top, OnDockSidePropertyChanged);
+		public static readonly DependencyProperty DockProperty = DPM.RegisterAttached<Dock, AutoHideLayout>
+			("Dock", Dock.Left, OnDockPropertyChanged);
 
-		public static readonly DependencyProperty AutoHideWidthProperty = DPM.RegisterAttached<double, AutoHideLayout>
-			("AutoHideWidth", 200, OnAutoHideWidthPropertyChanged);
+		public static readonly DependencyProperty WidthProperty = DPM.RegisterAttached<double, AutoHideLayout>
+			("Width", 200, OnWidthPropertyChanged);
 
-		public static readonly DependencyProperty AutoHideHeightProperty = DPM.RegisterAttached<double, AutoHideLayout>
-			("AutoHideHeight", 200, OnAutoHideHeightPropertyChanged);
+		public static readonly DependencyProperty HeightProperty = DPM.RegisterAttached<double, AutoHideLayout>
+			("Height", 200, OnHeightPropertyChanged);
 
-		private static readonly List<DependencyProperty> AutoHideLayoutProperties = new List<DependencyProperty>
+		public static readonly DependencyProperty OrderProperty = DPM.RegisterAttached<int, AutoHideLayout>
+			("Order", 0, OnOrderPropertyChanged);
+
+		private static readonly List<DependencyProperty> AutoHideLayoutProperties = new()
 		{
-			DockSideProperty,
-			AutoHideHeightProperty,
-			AutoHideWidthProperty
+			DockProperty,
+			HeightProperty,
+			WidthProperty,
+			OrderProperty
 		};
 
-		private static readonly List<DependencyProperty> AutoHideLayoutSizeProperties = new List<DependencyProperty>
+		private static readonly List<DependencyProperty> AutoHideLayoutSizeProperties = new()
 		{
-			AutoHideHeightProperty,
-			AutoHideWidthProperty
+			HeightProperty,
+			WidthProperty
 		};
 
 		static AutoHideLayout()
@@ -45,60 +49,95 @@ namespace Zaaml.UI.Controls.Docking
 
 		public override LayoutKind LayoutKind => LayoutKind.AutoHide;
 
-		public static double GetAutoHideHeight(DependencyObject dependencyObject)
+		public static Size GetSize(DependencyObject depObj)
 		{
-			return (double) dependencyObject.GetValue(AutoHideHeightProperty);
+			return new Size(GetWidth(depObj), GetHeight(depObj));
 		}
 
-		public static Size GetAutoHideSize(DependencyObject depObj)
+		public static double GetHeight(DependencyObject dependencyObject)
 		{
-			return new Size(GetAutoHideWidth(depObj), GetAutoHideHeight(depObj));
+			return (double)dependencyObject.GetValue(HeightProperty);
 		}
 
-		public static double GetAutoHideWidth(DependencyObject dependencyObject)
+		public static int GetOrder(DependencyObject depObj)
 		{
-			return (double) dependencyObject.GetValue(AutoHideWidthProperty);
+			return (int)depObj.GetValue(OrderProperty);
 		}
 
-		public static Dock GetDockSide(DependencyObject depObj)
+		protected override int GetDockItemOrder(DockItem dockItem)
 		{
-			return (Dock) depObj.GetValue(DockSideProperty);
+			return GetOrder(dockItem);
 		}
 
-		private static void OnAutoHideHeightPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		public static Dock GetDock(DependencyObject depObj)
+		{
+			return (Dock)depObj.GetValue(DockProperty);
+		}
+
+		public static double GetWidth(DependencyObject dependencyObject)
+		{
+			return (double)dependencyObject.GetValue(WidthProperty);
+		}
+
+		private static void OnHeightPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
 			OnLayoutPropertyChanged(d, e);
 		}
 
-		private static void OnAutoHideWidthPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		private void OnItemOrderChanged(DockItem dockItem)
+		{
+		}
+
+		private static void OnOrderChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
+		{
+			if (depObj is not DockItem dockItem)
+				return;
+
+			var autoHideLayout = dockItem.ActualLayout as AutoHideLayout;
+
+			autoHideLayout?.OnItemOrderChanged(dockItem);
+		}
+
+		private static void OnOrderPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			OnOrderChanged(d, e);
+			OnLayoutPropertyChanged(d, e);
+		}
+
+		private static void OnDockPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
 			OnLayoutPropertyChanged(d, e);
 		}
 
-		private static void OnDockSidePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		private static void OnWidthPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
 			OnLayoutPropertyChanged(d, e);
 		}
 
-		public static void SetAutoHideHeight(DependencyObject dependencyObject, double height)
+		public static void SetSize(DependencyObject depObj, Size size)
 		{
-			dependencyObject.SetValue(AutoHideHeightProperty, height);
+			SetWidth(depObj, size.Width);
+			SetHeight(depObj, size.Height);
 		}
 
-		public static void SetAutoHideSize(DependencyObject depObj, Size size)
+		public static void SetHeight(DependencyObject dependencyObject, double height)
 		{
-			SetAutoHideWidth(depObj, size.Width);
-			SetAutoHideHeight(depObj, size.Height);
+			dependencyObject.SetValue(HeightProperty, height);
 		}
 
-		public static void SetAutoHideWidth(DependencyObject dependencyObject, double width)
+		public static void SetOrder(DependencyObject depObj, int orderIndex)
 		{
-			dependencyObject.SetValue(AutoHideWidthProperty, width);
+			depObj.SetValue(OrderProperty, orderIndex);
 		}
 
-		public static void SetDockSide(DependencyObject depObj, Dock value)
+		public static void SetDock(DependencyObject depObj, Dock value)
 		{
-			depObj.SetValue(DockSideProperty, value);
+			depObj.SetValue(DockProperty, value);
+		}
+
+		public static void SetWidth(DependencyObject dependencyObject, double width)
+		{
+			dependencyObject.SetValue(WidthProperty, width);
 		}
 
 		private sealed class AutoHideLayoutSerializer : LayoutSerializer
@@ -109,16 +148,16 @@ namespace Zaaml.UI.Controls.Docking
 			{
 				if (AutoHideLayoutSizeProperties.Any(l => ShouldSerializeProperty(LayoutType, dependencyObject, l)))
 				{
-					var propertyName = FormatProperty(typeof(DockLayout), "AutoHideSize");
+					var propertyName = FormatProperty(typeof(AutoHideLayout), "Size");
 
-					element.Add(new XAttribute(propertyName, GetAutoHideSize(dependencyObject).ToString(CultureInfo.InvariantCulture)));
+					element.Add(new XAttribute(propertyName, GetSize(dependencyObject).ToString(CultureInfo.InvariantCulture)));
 				}
 
-				if (ShouldSerializeProperty(LayoutType, dependencyObject, DockSideProperty))
+				if (ShouldSerializeProperty(LayoutType, dependencyObject, DockProperty))
 				{
-					var propertyName = FormatProperty(LayoutType, "DockSide");
+					var propertyName = FormatProperty(LayoutType, "Dock");
 
-					element.Add(new XAttribute(propertyName, GetDockSide(dependencyObject).ToString()));
+					element.Add(new XAttribute(propertyName, GetDock(dependencyObject).ToString()));
 				}
 			}
 		}

@@ -1,0 +1,72 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:s="clr-namespace:System;assembly=mscorlib"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="WindowHeaderPresenter.xaml " />
+    <zm:ThemeResourceDictionary Source="WindowFooterPresenter.xaml " />
+    <zm:ThemeResourceDictionary Source="WindowContentPresenter.xaml " />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="MessageWindowTemplate"
+                   TargetType="zm:MessageWindow">
+    <zm:WindowTemplateRoot Background="Transparent">
+
+      <ContentControl x:Name="AdornedContentControl">
+
+        <zm:WindowPresenter x:Name="WindowPresenter"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1"
+                            ContentPresenterStyle="{TemplateBinding ContentPresenterStyle}"
+                            FooterPresenterStyle="{TemplateBinding FooterPresenterStyle}"
+                            HeaderPresenterStyle="{TemplateBinding HeaderPresenterStyle}">
+
+          <zm:IconContentPresenter Margin="10"
+                                   HorizontalContentAlignment="Stretch"
+                                   VerticalContentAlignment="Stretch"
+                                   Icon="{zm:TemplateBinding Path=ActualMessageIcon,
+                                                             Converter={zm:IconConverter}}"
+                                   IconDistance="10">
+
+            <zm:ScrollViewControl x:Name="ScrollViewer"
+                                  BorderThickness="0"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+
+              <TextBlock HorizontalAlignment="Stretch"
+                         VerticalAlignment="Center"
+                         Foreground="{zm:ThemeResource Key=Code.MessageWindow.Foreground}"
+                         Text="{zm:TemplateBinding Path=Message,
+                                                   TargetNullValue={zm:Static Member=s:String.Empty}}"
+                         TextWrapping="Wrap" />
+            </zm:ScrollViewControl>
+          </zm:IconContentPresenter>
+        </zm:WindowPresenter>
+      </ContentControl>
+    </zm:WindowTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="MessageWindowBaseStyle" TargetType="zm:MessageWindow">
+    <zm:Setter Property="Template" Value="{StaticResource MessageWindowTemplate}" />
+    <zm:Setter Property="FooterPresenterStyle" Value="{StaticResource WindowFooterPresenterStyle}" />
+    <zm:Setter Property="HeaderPresenterStyle" Value="{StaticResource WindowHeaderPresenterStyle}" />
+    <zm:Setter Property="ContentPresenterStyle" Value="{StaticResource WindowContentPresenterStyle}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="MessageWindowStyle" BasedOn="{StaticResource MessageWindowBaseStyle}" TargetType="zm:MessageWindow">
+    <zm:Setter Property="MinWidth" Value="300" />
+    <zm:Setter Property="MinHeight" Value="140" />
+  </zm:Style>
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="MessageWindowThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource MessageWindowStyle}" TargetType="zm:MessageWindow" />
+
+</zm:ThemeResourceDictionary>

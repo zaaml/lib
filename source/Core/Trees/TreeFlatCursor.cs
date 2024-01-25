@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Zaaml.Core.Utils;
 
 namespace Zaaml.Core.Trees
@@ -40,17 +41,23 @@ namespace Zaaml.Core.Trees
 
 			var count = 1;
 
-			while (MoveNext())
+			while (MoveNext()) 
 				count++;
 
 			return count;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Ensure()
 		{
 			if (FlatCount != -1)
 				return;
 
+			Initialize();
+		}
+
+		private void Initialize()
+		{
 			_depth = 0;
 
 			for (var i = 0; i < _data.Length; i++)
@@ -76,6 +83,22 @@ namespace Zaaml.Core.Trees
 			};
 
 			FlatCount = CalcFlatCount();
+
+			if (FlatCount == 0)
+				return;
+
+			_depth = 0;
+
+			for (var i = 0; i < _data.Length; i++)
+				_data[i] = new Data();
+
+			FlatIndex = 0;
+
+			_data[0] = new Data
+			{
+				Index = index,
+				Node = child
+			};
 		}
 
 		private void EnsureDataSize(int size)
@@ -223,8 +246,6 @@ namespace Zaaml.Core.Trees
 
 		private bool MoveNext()
 		{
-			Ensure();
-
 			var data = _data[_depth];
 
 			if (data.Node == null)
@@ -302,8 +323,6 @@ namespace Zaaml.Core.Trees
 
 		private bool MovePrev()
 		{
-			Ensure();
-
 			var data = _data[_depth];
 
 			if (data.Node == null)

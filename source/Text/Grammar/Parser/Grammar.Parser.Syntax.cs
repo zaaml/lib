@@ -14,9 +14,7 @@ namespace Zaaml.Text
 				{
 				}
 
-				internal int MaxPrecedenceValue { get; set; }
-
-				public bool InlineReturnProductions { get; set; }
+				public bool CollapseBacktracking { get; set; }
 			}
 		}
 	}

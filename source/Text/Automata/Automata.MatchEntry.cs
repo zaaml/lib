@@ -27,5 +27,9 @@ namespace Zaaml.Text
 				return new QuantifierEntry(this, QuantifierKind.ZeroOrOne, mode);
 			}
 		}
+
+		protected abstract class ValueEntry : PrimitiveEntry
+		{
+		}
 	}
 }

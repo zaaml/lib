@@ -3,97 +3,113 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 
 namespace Zaaml.Core.Collections
 {
-	internal sealed class Trie<TValue>
+	internal sealed class Trie<TKey, TValue>
 	{
-		private const byte Mask = 0xF;
+		private readonly InternalNode _rootNode = new();
 
-		private readonly TrieNodeInner _root = new TrieNodeInner();
-
-		public TrieNode Root => new TrieNode(_root);
-
-		public TrieNode GetNodeOrCreate(ReadOnlySpan<char> span)
+		public TrieNode GetNodeOrCreate(TKey key)
 		{
-			var currentNode = _root;
-
-			foreach (var c in span)
-			{
-				var local = c;
-				var i = local & Mask;
-
-				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
-
-				local >>= 4;
-				i = local & Mask;
-
-				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
-
-				local >>= 4;
-				i = local & Mask;
-
-				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
-
-				local >>= 4;
-				i = local & Mask;
-
-				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
-			}
-
-			return new TrieNode(currentNode);
+			return _rootNode.GetNext(key, true);
 		}
 
-		public class TrieNodeInner
+		public TrieNode GetNodeOrCreate(ReadOnlySpan<TKey> span)
 		{
-			public readonly TrieNodeInner[] InnerNodes = new TrieNodeInner[16];
+			return _rootNode.GetNext(span, true);
+		}
+
+		public TrieNode GetNode(TKey key)
+		{
+			return _rootNode.GetNext(key, false);
+		}
+
+		public TrieNode GetNode(ReadOnlySpan<TKey> span)
+		{
+			return _rootNode.GetNext(span, false);
+		}
+
+		public TrieNode RootNode => new(_rootNode);
+
+		internal sealed class InternalNode
+		{
+			public readonly Dictionary<TKey, InternalNode> Nodes = new();
 			public TValue Value;
 
-			public TrieNodeInner Next(char c)
+			public TrieNode GetNext(TKey key, bool create)
 			{
-				var local = c;
-				var i = local & Mask;
-				var currentNode = this;
+				if (Nodes.TryGetValue(key, out var node))
+					return new TrieNode(node);
 
-				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
+				return create ? new TrieNode(Nodes[key] = new InternalNode()) : TrieNode.Empty;
+			}
 
-				local >>= 4;
-				i = local & Mask;
+			public TrieNode GetNext(ReadOnlySpan<TKey> span, bool create)
+			{
+				var node = this;
 
-				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
+				foreach (var key in span)
+				{
+					if (node.Nodes.TryGetValue(key, out var nextNode) == false)
+					{
+						if (create == false)
+							return TrieNode.Empty;
 
-				local >>= 4;
-				i = local & Mask;
+						node.Nodes[key] = nextNode = new InternalNode();
+					}
 
-				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
+					node = nextNode;
+				}
 
-				local >>= 4;
-				i = local & Mask;
-
-				currentNode = currentNode.InnerNodes[i] ?? (currentNode.InnerNodes[i] = new TrieNodeInner());
-
-				return currentNode;
+				return new TrieNode(node);
 			}
 		}
 
 		public readonly ref struct TrieNode
 		{
-			private readonly TrieNodeInner _node;
+			private readonly InternalNode _node;
 
-			public TrieNode(TrieNodeInner node)
+			public bool IsEmpty => _node == null;
+
+			public static TrieNode Empty => new(null);
+
+			internal TrieNode(InternalNode node)
 			{
 				_node = node;
 			}
 
 			public TValue Value
 			{
-				get => _node.Value;
-				set => _node.Value = value;
+				get => _node == null ? default : _node.Value;
+				set
+				{
+					if (_node == null)
+						throw new InvalidOperationException("Node is empty");
+
+					_node.Value = value;
+				}
 			}
 
-			public TrieNode Next(char c)
+			public TrieNode GetNext(TKey key)
 			{
-				return new TrieNode(_node.Next(c));
+				return IsEmpty ? Empty : _node.GetNext(key, false);
+			}
+
+			public TrieNode GetNextOrCreate(TKey key)
+			{
+				return IsEmpty ? Empty : _node.GetNext(key, true);
+			}
+
+			public TrieNode GetNext(ReadOnlySpan<TKey> span)
+			{
+				return IsEmpty ? Empty : _node.GetNext(span, false);
+			}
+
+			public TrieNode GetNextOrCreate(ReadOnlySpan<TKey> span)
+			{
+				return IsEmpty ? Empty : _node.GetNext(span, true);
 			}
 		}
 	}

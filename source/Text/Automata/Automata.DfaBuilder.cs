@@ -1,312 +1,227 @@
-﻿// <copyright file="Automata.DfaBuilder.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="Automata.Pool.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
-using Zaaml.Core.Utils;
+using Zaaml.Core;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		private protected abstract partial class DfaBuilder<TDfaState> where TDfaState : DfaState<TDfaState>
+		private protected sealed class DfaBuilder
 		{
-			private const int NullSaveIndexOffset = 0x10000000;
+			private readonly Automata<TInstruction, TOperand> _automata;
+			private readonly Process.AutomataStackPool _automataStackPool;
+			private readonly List<DfaState> _dfaList = new();
+			private readonly ArrayPool<int> _arrayPool = ArrayPool<int>.Create(1024 * 1024, 256);
+			private readonly MemorySpanAllocator<int> _dfaStackAllocator;
+			private readonly Stack<int> _executionPathBuilder = new();
+			private readonly List<DfaTransition> _nfaBuilderList = new();
+			private readonly MemorySpanAllocator<int> _railPathAllocator;
 
-			private readonly Stack<DfaBuilderKey> _builderKeyPool = new();
-			private readonly Dictionary<(Node, DfaTransition, ExecutionPath), DfaNode> _dfaNodesDictionary = new();
-			private readonly Dictionary<DfaTransitionCollection, DfaTransitionCollection> _frozenLazyTransitionsDictionary = new();
-			private readonly Dictionary<DfaNodeCollection, DfaNodeCollection> _frozenNodesDictionary = new();
-			private readonly Dictionary<DfaStateKey, TDfaState> _frozenStatesDictionary = new();
-			private readonly List<DfaNode> _initialStateNodes;
-			private readonly List<DfaNode> _noOpInitialStateNodes;
-			private readonly object _syncRoot = new();
-			private readonly int _transitionCount;
-			public readonly TDfaState InitialState;
-			public readonly TDfaState NoOpInitialState;
-			public TDfaState[] StateRepository = new TDfaState[128];
+			public const int DefaultNextDepth = 1;
+			public const int MaxNextDepth = 1;
 
-			protected DfaBuilder(IEnumerable<Rule> rules, Automata<TInstruction, TOperand> automata)
+			public DfaBuilder(Automata<TInstruction, TOperand> automata)
 			{
-				_initialStateNodes = new List<DfaNode>();
-				_noOpInitialStateNodes = new List<DfaNode>();
-
-				foreach (var subGraph in rules.Select(automata.EnsureSubGraph))
-				{
-					if (subGraph.Graph.CanSimulateDfa == false)
-						throw new InvalidOperationException($"FiniteState {subGraph.Rule} can not be simulated as DFA");
-
-					if (subGraph.Graph.HasOperandNodes == false)
-						_noOpInitialStateNodes.Add(CreateDfaNode(subGraph.Graph.BeginNode, new DfaTransition(subGraph, _transitionCount), null));
-					else
-						_initialStateNodes.Add(CreateDfaNode(subGraph.Graph.BeginNode, new DfaTransition(subGraph, _transitionCount), null));
-
-					_transitionCount++;
-				}
-
-				FastLookup = _initialStateNodes.Count < 100;
-
-				var builderKey = GetBuilderKey();
-
-				InitialState = builderKey.Build(_initialStateNodes);
-				NoOpInitialState = builderKey.Build(_noOpInitialStateNodes);
-
-				ReleaseBuilderKey(builderKey);
-
-				if (FastLookup)
-					BuildFastLookup(InitialState);
+				_automata = automata;
+				_dfaStackAllocator = new MemorySpanAllocator<int>(_arrayPool, false);
+				_railPathAllocator = new MemorySpanAllocator<int>(_arrayPool, false);
+				_automataStackPool = new Process.AutomataStackPool(automata, _dfaStackAllocator);
 			}
 
-			public bool FastLookup { get; }
-
-			private int StateCount { get; set; }
-
-			public TDfaState Build(int operand, TDfaState currentState)
+			private DfaState CreateDfa(Node node, Span<int> stack, DfaState sourceDfa)
 			{
-				lock (_syncRoot)
-				{
-					var dfaState = currentState.TryGetState(operand);
+				var stackCopy =  _dfaStackAllocator.Allocate(stack.Length);
 
-					if (dfaState != null)
-						return dfaState;
+				stack.CopyTo(stackCopy.SpanSafe);
 
-					dfaState = BuildImpl(operand, currentState);
+				var dfa = new DfaState(this, _dfaList.Count, node, stackCopy, sourceDfa);
 
-					currentState.SetState(operand, dfaState);
+				_dfaList.Add(dfa);
 
-					return dfaState;
-				}
+				return dfa;
 			}
 
-			private void BuildFastLookup(TDfaState initialState)
+			public DfaState GetDfa(Node node, Span<int> stack, DfaState sourceDfa, bool next)
 			{
-				if (initialState.Break)
-					return;
+				var depth = sourceDfa?.Depth ?? node.DfaDepth;
 
-				var builderKey = GetBuilderKey();
-				var hashSet = new HashSet<TDfaState>();
-				var queue = new Queue<TDfaState>();
+				if (next)
+					depth--;
 
-				hashSet.Add(initialState);
-				queue.Enqueue(initialState);
+				if (node.HasReturn == false && depth <= 1)
+					return node.Dfa;
 
-				while (queue.Count > 0)
+				var trie = node.DfaTrie;
+				var depthThreshold = Math.Max(1, depth);
+
+				lock (trie)
 				{
-					var state = queue.Dequeue();
-					var nextBreakCount = 0;
+					var trieNode = trie.RootNode;
+					var stackDepth = 0;
+					var length = stack.Length - 1;
 
-					for (var i = 0; i < DfaState.ArrayLimit; i++)
+					for (var index = length; index >= 0; index--)
 					{
-						var next = state.TryGetState(i);
+						stackDepth++;
 
-						if (next == null)
-						{
-							next = builderKey.Build(i, state);
-							state.SetState(i, next);
-						}
+						var id = stack[index];
 
-						if (next.Break)
-						{
-							nextBreakCount++;
+						trieNode = trieNode.GetNextOrCreateSafe(id & SubGraphIdMask);
 
+						if (id > SubGraphIdMask)
 							continue;
+
+						if (--depthThreshold == 0)
+							break;
+					}
+
+					trieNode.Value ??= CreateDfa(node, stack.Slice(stack.Length - stackDepth, stackDepth), sourceDfa);
+
+					return trieNode.Value;
+				}
+			}
+
+			public DfaState CreateNodeDfa(Node node)
+			{
+				return CreateDfa(node, Span<int>.Empty, null);
+			}
+
+			public DfaState BuildNextDfa(DfaState dfaState, int executionPathId)
+			{
+				using var automataStack = _automataStackPool.Rent();
+				var executionPath = _automata._executionPathRegistry[executionPathId];
+
+				automataStack.Load(dfaState.Stack);
+
+				var node = automataStack.Eval(executionPath);
+
+				node.EnsureSafe();
+
+				return GetDfa(node, automataStack.Span, dfaState, true);
+			}
+
+			public NfaState BuildNfa(DfaState dfa, int operand)
+			{
+				RecursiveBuildNfa(operand, dfa.Node, dfa.Stack, dfa);
+
+				var dfaTransitions = new DfaTransition[_nfaBuilderList.Count];
+
+				for (var index = 0; index < _nfaBuilderList.Count; index++)
+					dfaTransitions[index] = _nfaBuilderList[index];
+
+				_nfaBuilderList.Clear();
+
+				return new NfaState(dfaTransitions, BuildPrefixExecutionList(dfa, dfaTransitions));
+			}
+
+			private static int GetPrefixLength(DfaTransition[] transitions)
+			{
+				var prefixLength = 0;
+
+				while (true)
+				{
+					var executionPath = 0;
+
+					foreach (var dfaTransition in transitions)
+					{
+						var executionRail = dfaTransition.ExecutionRail;
+
+						if (executionRail.Length <= prefixLength)
+						{
+							executionPath = 0;
+
+							break;
 						}
 
-						if (hashSet.Add(next))
-							queue.Enqueue(next);
+						if (executionPath == 0)
+							executionPath = executionRail[prefixLength];
+						else if (executionPath != executionRail[prefixLength])
+						{
+							executionPath = 0;
+
+							break;
+						}
 					}
 
-					if (nextBreakCount == DfaState.ArrayLimit && state.SuccessSubGraph != null && state.SavePointer)
-						state.NoFastNext = true;
+					if (executionPath == 0)
+						break;
+
+					prefixLength++;
 				}
 
-				foreach (var dfaState in hashSet)
-				{
-					if (dfaState.Array == null)
-						continue;
+				return prefixLength;
+			}
 
-					for (var i = 0; i < DfaState.ArrayLimit; i++)
+			private void RecursiveBuildNfa(int operand, Node node, MemorySpan<int> stack, DfaState sourceDfa)
+			{
+				node.EnsureSafe();
+
+				var executionPaths = node.GetExecutionPaths(operand);
+
+				foreach (var executionPath in executionPaths)
+				{
+					if (executionPath.IsPredicate)
 					{
-						var next = dfaState.Array[i];
+						var outNode = executionPath.Output;
 
-						if (next.NoFastNext)
-							dfaState.Array[i] = next.NullSaveState;
+						_executionPathBuilder.Push(executionPath.Id);
+
+						RecursiveBuildNfa(operand, outNode, stack, sourceDfa);
+
+						_executionPathBuilder.Pop();
+					}
+					else if (executionPath.OutputReturn)
+					{
+						var leaveNode = _automata._subGraphRegistry[stack[stack.Length - 1] & SubGraphIdMask].LeaveNode;
+
+						_executionPathBuilder.Push(executionPath.Id);
+
+						RecursiveBuildNfa(operand, leaveNode, stack.Slice(0, stack.Length - 1), sourceDfa);
+
+						_executionPathBuilder.Pop();
+					}
+					else
+					{
+						var dfa = GetDfa(node, stack, sourceDfa, true);
+						var nextDfa = dfa.GetNextDfa(executionPath.Id);
+						var executionPathRail = _railPathAllocator.Allocate(_executionPathBuilder.Count + 1);
+						var ei = 0;
+
+						foreach (var e in _executionPathBuilder.Reverse())
+							executionPathRail[ei++] = e;
+
+						executionPathRail[ei] = executionPath.Id;
+
+						_nfaBuilderList.Add(new DfaTransition(nextDfa, executionPathRail));
 					}
 				}
-
-				ReleaseBuilderKey(builderKey);
 			}
 
-			private TDfaState BuildImpl(int operand, TDfaState currentState)
+			public ExecutionRailNode BuildPrefixExecutionList(DfaState sourceDfa, DfaTransition[] transitions)
 			{
-				var builderKey = GetBuilderKey();
-				var dfaState = builderKey.Build(operand, currentState);
+				var prefixLength = GetPrefixLength(transitions);
 
-				ReleaseBuilderKey(builderKey);
+				if (prefixLength == 0)
+					return null;
 
-				return dfaState;
-			}
+				var sourceExecutionRail = transitions[0].ExecutionRail.Slice(0, prefixLength);
+				var targetExecutionRail = _railPathAllocator.Allocate(prefixLength);
+				var targetDfa = sourceDfa.GetNextDfa(sourceExecutionRail);
 
-			public TDfaState BuildPredicateState(int operand, TDfaState currentState, bool predicateResult)
-			{
-				lock (_syncRoot)
+				sourceExecutionRail.CopyTo(targetExecutionRail);
+
+				var executionRailNode = new ExecutionRailNode(targetDfa)
 				{
-					var dfaState = operand == 0 ? currentState.TryGetPredicateState(predicateResult) : currentState.TryGetPredicateState(operand, predicateResult);
-
-					if (dfaState != null)
-						return dfaState;
-
-					var builderKey = GetBuilderKey();
-					var state = builderKey.BuildPredicateState(operand, currentState, predicateResult);
-
-					ReleaseBuilderKey(builderKey);
-
-					if (operand == 0)
-						currentState.SetPredicateState(state, predicateResult);
-					else
-						currentState.SetPredicateState(operand, state, predicateResult);
-
-					if (FastLookup)
-						BuildFastLookup(state);
-
-					return state;
-				}
-			}
-
-			private DfaNode CreateDfaNode(Node node, DfaTransition transition, ExecutionPath predicatePath)
-			{
-				var tuple = (node, transition, predicatePath);
-
-				if (_dfaNodesDictionary.TryGetValue(tuple, out var dfaNode))
-					return dfaNode;
-
-				return _dfaNodesDictionary[tuple] = new DfaNode(node, transition, predicatePath);
-			}
-
-			protected abstract TDfaState CreateDfaState(DfaNode[] nodes, DfaTransition[] lazyTransitions, DfaTransition successTransition, DfaTransition prevSuccessTransition, int hashCode);
-
-			private DfaBuilderKey GetBuilderKey()
-			{
-				return _builderKeyPool.Count > 0 ? _builderKeyPool.Pop() : new DfaBuilderKey(this, _transitionCount);
-			}
-
-			public TDfaState GetByIndex(int id)
-			{
-				return StateRepository[id];
-			}
-
-			public static int GetNullIndex(bool save, int stateIndex)
-			{
-				return save ? -stateIndex - NullSaveIndexOffset : -stateIndex;
-			}
-
-			public static int GetNullOwnerIndex(int index)
-			{
-				return index + NullSaveIndexOffset < 0 ? -(index + NullSaveIndexOffset) : -index;
-			}
-
-			public int Register(TDfaState dfaState)
-			{
-				var stateIndex = StateCount;
-
-				StateRepository[stateIndex] = dfaState;
-				StateCount++;
-
-				if (StateCount == StateRepository.Length)
-					Array.Resize(ref StateRepository, StateCount * 2);
-
-				return stateIndex;
-			}
-
-			private void ReleaseBuilderKey(DfaBuilderKey dfaBuilderKey)
-			{
-				_builderKeyPool.Push(dfaBuilderKey);
-			}
-
-			private sealed class DfaNodeCollection : CollectionKey<DfaNode, DfaNodeCollection>
-			{
-			}
-
-			private sealed class DfaTransitionCollection : CollectionKey<DfaTransition, DfaTransitionCollection>
-			{
-			}
-		}
-
-		private abstract class CollectionKey<TElement, TCollection> where TElement : IEquatable<TElement> where TCollection : CollectionKey<TElement, TCollection>, new()
-		{
-			private int _count;
-			private TElement[] _elements;
-			private int _elementsHashCode;
-
-			public int Count => _count;
-
-			public TElement[] Elements => _elements;
-
-			public int ElementsHashCode => _elementsHashCode;
-
-			public void Add(TElement element)
-			{
-				ArrayUtils.EnsureArrayLength(ref _elements, Count + 1, true);
-
-				_elements[_count++] = element;
-
-				unchecked
-				{
-					_elementsHashCode *= 397;
-					_elementsHashCode ^= element.GetHashCode();
-				}
-			}
-
-			private static bool AreEqual(CollectionKey<TElement, TCollection> collection1, CollectionKey<TElement, TCollection> collection2)
-			{
-				var arrayLength1 = collection1.Count;
-				var arrayLength2 = collection2.Count;
-
-				if (arrayLength1 != arrayLength2)
-					return false;
-
-				var array1 = collection1.Elements;
-				var array2 = collection2.Elements;
-
-				for (var i = 0; i < arrayLength1; i++)
-					if (array1[i].Equals(array2[i]) == false)
-						return false;
-
-				return true;
-			}
-
-			public void Clear()
-			{
-				_count = 0;
-				_elementsHashCode = 0;
-			}
-
-			public override bool Equals(object obj)
-			{
-				return AreEqual(this, (CollectionKey<TElement, TCollection>)obj);
-			}
-
-			public TCollection Freeze()
-			{
-				var collection = new TCollection
-				{
-					_elements = Count == 0 ? Array.Empty<TElement>() : new TElement[Count],
-					_elementsHashCode = ElementsHashCode,
-					_count = Count
+					ExecutionRail = targetExecutionRail
 				};
 
-				if (_elements != null)
-					Array.Copy(_elements, collection._elements, Count);
-
-				return collection;
-			}
-
-			public override int GetHashCode()
-			{
-				// ReSharper disable once NonReadonlyMemberInGetHashCode
-				return ElementsHashCode;
+				return executionRailNode;
 			}
 		}
 	}

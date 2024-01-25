@@ -6,7 +6,7 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Markup;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -41,7 +41,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		internal bool ActualCanSelect => CanSelect && Frame?.CanSelectItemInternal(this) != false;
 
-		protected virtual bool CanSelect => Frame != null;
+		protected virtual bool CanSelect => IsInitialized == false || Frame != null;
 
 		[TypeConverter(typeof(NavigationViewFrameConverter))]
 		public NavigationViewFrame Frame
@@ -57,7 +57,7 @@ namespace Zaaml.UI.Controls.NavigationView
 		public bool IsSelected
 		{
 			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 
 		private protected override bool IsSelectedVisualState => IsSelected;
@@ -106,7 +106,7 @@ namespace Zaaml.UI.Controls.NavigationView
 			var isSelected = (bool) isSelectedObject;
 
 			if (isSelected && CanSelect == false)
-				return KnownBoxes.BoolFalse;
+				return BooleanBoxes.False;
 
 			return isSelectedObject;
 		}
@@ -115,6 +115,9 @@ namespace Zaaml.UI.Controls.NavigationView
 		{
 			oldValue?.DetachItem(this);
 			newValue?.AttachItem(this);
+
+			if (IsSelected) 
+				Frame?.Select(this);
 		}
 
 		protected virtual void OnIsSelectedChanged()
@@ -162,7 +165,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		internal void SetIsSelectedInternal(bool value)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, value ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsSelectedProperty, value.Box());
 		}
 	}
 }

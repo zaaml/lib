@@ -9,8 +9,13 @@
   <!--  Template  -->
   <ControlTemplate x:Key="Template"
                    TargetType="zm:TrackBarControl">
-    <zm:ControlTemplateRoot Background="Transparent">
-      <zm:TrackBarPanel x:Name="TrackBarPanel" />
+    <zm:ControlTemplateRoot>
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{TemplateBinding CornerRadius}">
+        <zm:TrackBarPanel x:Name="TrackBarPanel" />
+      </Border>
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
@@ -20,12 +25,7 @@
   </zm:Style>
 
   <!--  Skinned Style  -->
-  <zm:Style x:Key="TrackBarControlSkinnedStyle" BasedOn="{StaticResource TrackBarControlStyle}" Skin="Metro.TrackBar" TargetType="zm:TrackBarControl">
-
-    <zm:SetterGroup ValuePathSource="Skin">
-      <zm:Setter ValuePath="Stroke" Property="Background" />
-    </zm:SetterGroup>
-  </zm:Style>
+  <zm:Style x:Key="TrackBarControlSkinnedStyle" BasedOn="{StaticResource TrackBarControlStyle}" Skin="Metro.TrackBar" TargetType="zm:TrackBarControl"/>
 
   <!--  Theme Style  -->
   <zm:ThemeStyle x:Key="TrackBarControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TrackBarControlSkinnedStyle}" TargetType="zm:TrackBarControl" />

@@ -57,7 +57,7 @@ namespace Zaaml.UI.Controls.ColorEditor
 
 		private ColorChannelEditorControl SaturationChannelEditor => TemplateContract.SaturationChannelEditor;
 
-		private ColorSliderEditorControlTemplateContract TemplateContract => (ColorSliderEditorControlTemplateContract) TemplateContractInternal;
+		private ColorSliderEditorControlTemplateContract TemplateContract => (ColorSliderEditorControlTemplateContract) TemplateContractCore;
 
 		private ColorChannelEditorControl ValueChannelEditor => TemplateContract.ValueChannelEditor;
 

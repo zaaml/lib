@@ -10,35 +10,25 @@ using Zaaml.PresentationCore.Snapping;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  internal sealed class MousePlacement : AbsolutePlacementBase
-  {
-    #region Fields
+	internal sealed class MousePlacement : AbsolutePlacementBase
+	{
+		private Point _mousePoint;
 
-    private Point _mousePoint;
+		protected override Rect ScreenBoundsOverride => Screen.FromPoint(_mousePoint).Bounds;
 
-    #endregion
+		internal override bool ShouldConstraint => false;
 
-    #region Properties
+		protected override Rect ArrangeOverride(Size desiredSize)
+		{
+			return Snapper.Snap(ScreenBoundsCore, new Rect(_mousePoint, XamlConstants.ZeroSize), desiredSize.Rect(), SnapOptions.Fit | SnapOptions.Move, SnapDefinition.Default, SnapAdjustment.ZeroAdjustment, SnapAdjustment.ZeroAdjustment,
+				SnapSide.Bottom);
+		}
 
-    protected override Rect ScreenBoundsOverride => Screen.FromPoint(_mousePoint).Bounds;
+		internal override void OnPopupOpenedInternal()
+		{
+			_mousePoint = MouseInternal.ScreenLogicalPosition;
 
-    internal override bool ShouldConstraint => false;
-
-    #endregion
-
-    #region  Methods
-
-    protected override Rect ArrangeOverride(Size desiredSize)
-    {
-      return Snapper.Snap(ScreenBoundsCore, new Rect(_mousePoint, XamlConstants.ZeroSize), desiredSize.Rect(), SnapOptions.Fit | SnapOptions.Move, SnapDefinition.Default, SnapAdjustment.ZeroAdjustment, SnapAdjustment.ZeroAdjustment, SnapSide.Bottom);
-    }
-
-    internal override void OnPopupOpenedInt()
-    {
-      _mousePoint = MouseInternal.ScreenPosition;
-      base.OnPopupOpenedInt();
-    }
-
-    #endregion
-  }
+			base.OnPopupOpenedInternal();
+		}
+	}
 }

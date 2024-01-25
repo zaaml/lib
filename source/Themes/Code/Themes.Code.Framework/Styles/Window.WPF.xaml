@@ -1,0 +1,19 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!--<ControlTemplate x:Key="WindowTemplate" TargetType="Window">
+    <ContentPresenter />
+  </ControlTemplate>
+
+  <zm:Style x:Key="WindowStyle" TargetType="Window">
+    <zm:Setter Property="Template" Value="{StaticResource WindowTemplate}" />
+    <zm:Setter Property="Foreground" Value="White" />
+  </zm:Style>
+  
+  <zm:ThemeStyle x:Key="WindowThemeStyle" TargetType="Window" BasedOn="{StaticResource WindowStyle}" />-->
+
+</zm:ThemeResourceDictionary>

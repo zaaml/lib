@@ -6,20 +6,16 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class GlobalDropCompass : DropCompass
-  {
-    #region Ctors
+	public class GlobalDropCompass : DropCompass
+	{
+		static GlobalDropCompass()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<GlobalDropCompass>();
+		}
 
-    static GlobalDropCompass()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<GlobalDropCompass>();
-    }
-
-    public GlobalDropCompass()
-    {
-      this.OverrideStyleKey<GlobalDropCompass>();
-    }
-
-    #endregion
-  }
+		public GlobalDropCompass()
+		{
+			this.OverrideStyleKey<GlobalDropCompass>();
+		}
+	}
 }

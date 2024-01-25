@@ -11,131 +11,105 @@ using Zaaml.PresentationCore.TemplateCore;
 
 namespace Zaaml.UI.Panels.Core
 {
-  internal sealed class ControlRootStack
-  {
-    #region Fields
+	internal sealed class ControlRootStack
+	{
+		private readonly Stack<ControlRootBase> _stack = new Stack<ControlRootBase>();
 
-    private readonly Stack<ControlRootBase> _stack = new Stack<ControlRootBase>();
+		public IEnumerable<ControlRootBase> Enumerate()
+		{
+			foreach (var rootBase in _stack)
+				yield return rootBase;
+		}
 
-    #endregion
+		public void Pop(ControlRootBase root)
+		{
+			if (ReferenceEquals(_stack.Peek(), root) == false)
+				throw new InvalidOperationException();
 
-    #region  Methods
+			_stack.Pop();
+		}
 
-    public IEnumerable<ControlRootBase> Enumerate()
-    {
-      foreach (var rootBase in _stack)
-        yield return rootBase;
-    }
+		public void Push(ControlRootBase root)
+		{
+			_stack.Push(root);
+		}
+	}
 
-    public void Pop(ControlRootBase root)
-    {
-      if (ReferenceEquals(_stack.Peek(), root) == false)
-        throw new InvalidOperationException();
+	public abstract class ControlRootBase : Panel
+	{
+		internal static readonly ControlRootStack MeasureStack = new();
+		internal static readonly ControlRootStack ArrangeStack = new();
 
-      _stack.Pop();
-    }
+		protected virtual Size ArrangeCoreOverride(Size finalSize)
+		{
+			return BaseArrange(finalSize);
+		}
 
-    public void Push(ControlRootBase root)
-    {
-      _stack.Push(root);
-    }
+		protected sealed override Size ArrangeOverrideCore(Size finalSize)
+		{
+			try
+			{
+				ArrangeStack.Push(this);
 
-    #endregion
-  }
+				return ArrangeCoreOverride(finalSize);
+			}
+			catch (Exception e)
+			{
+				LogService.LogError(e);
+			}
+			finally
+			{
+				ArrangeStack.Pop(this);
+			}
 
-  public abstract class ControlRootBase : Panel
-  {
-    #region Static Fields and Constants
+			return finalSize;
+		}
 
-    internal static readonly ControlRootStack MeasureStack = new ControlRootStack();
-    internal static readonly ControlRootStack ArrangeStack = new ControlRootStack();
+		protected virtual Size MeasureCoreOverride(Size availableSize)
+		{
+			return BaseMeasure(availableSize);
+		}
 
-    #endregion
+		protected sealed override Size MeasureOverrideCore(Size availableSize)
+		{
+			try
+			{
+				MeasureStack.Push(this);
 
-    #region  Methods
+				ImplementationRootLoadedService.PulseImplementationRoot(this);
 
-    protected virtual Size ArrangeCoreOverride(Size finalSize)
-    {
-      return BaseArrange(finalSize);
-    }
+				return MeasureCoreOverride(availableSize);
+			}
+			catch (Exception e)
+			{
+				LogService.LogError(e);
+			}
+			finally
+			{
+				MeasureStack.Pop(this);
+			}
 
-    protected sealed override Size ArrangeOverrideCore(Size finalSize)
-    {
-      try
-      {
-        ArrangeStack.Push(this);
+			return XamlConstants.ZeroSize;
+		}
+	}
 
-        return ArrangeCoreOverride(finalSize);
-      }
-      catch (Exception e)
-      {
-        LogService.LogError(e);
-      }
-      finally
-      {
-        ArrangeStack.Pop(this);
-      }
+	public abstract class TemplateRoot : ControlRootBase
+	{
+		internal TemplateRoot()
+		{
+		}
+	}
 
-      return finalSize;
-    }
+	public sealed class UserControlRoot : ControlRootBase
+	{
+	}
 
-    protected virtual Size MeasureCoreOverride(Size availableSize)
-    {
-      return BaseMeasure(availableSize);
-    }
-
-    protected sealed override Size MeasureOverrideCore(Size availableSize)
-    {
-      try
-      {
-        MeasureStack.Push(this);
-
-        ImplementationRootLoadedService.PulseImplementationRoot(this);
-
-        return MeasureCoreOverride(availableSize);
-      }
-      catch (Exception e)
-      {
-        LogService.LogError(e);
-      }
-      finally
-      {
-        MeasureStack.Pop(this);
-      }
-
-      return XamlConstants.ZeroSize;
-    }
-
-    #endregion
-  }
-
-  public abstract class TemplateRoot : ControlRootBase
-  {
-    #region Ctors
-
-    internal TemplateRoot()
-    {
-    }
-
-    #endregion
-  }
-
-  public sealed class UserControlRoot : ControlRootBase
-  {
-  }
-
-  public sealed class WindowTemplateRoot : TemplateRoot
-  {
-    #region Ctors
-
-    public WindowTemplateRoot()
-    {
-#if !SILVERLIGHT
-      SnapsToDevicePixels = true;
-      UseLayoutRounding = false;
-#endif
-    }
-
-    #endregion
-  }
+	public sealed class WindowTemplateRoot : TemplateRoot
+	{
+		public WindowTemplateRoot()
+		{
+			SnapsToDevicePixels = true;
+			UseLayoutRounding = false;
+		}
+	}
 }

@@ -7,18 +7,12 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-	public abstract class CaseTriggerBase : DelayStateTriggerBase
+	public abstract class CaseTriggerBase : StateTriggerBase
 	{
-		#region Ctors
-
 		static CaseTriggerBase()
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
 		}
-
-		#endregion
-
-		#region Properties
 
 		internal bool IsOpen
 		{
@@ -35,28 +29,14 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		internal SwitchTriggerBase SwitchDataTrigger => Parent as SwitchTriggerBase;
 
-		#endregion
-
-		#region  Methods
-
 		protected sealed override TriggerState UpdateTriggerStateCore()
 		{
 			return SwitchDataTrigger != null && IsOpen ? TriggerState.Opened : TriggerState.Closed;
 		}
 
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedBoolItemDefinition IsOpen;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -64,10 +44,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				IsOpen = allocator.AllocateBoolItem();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

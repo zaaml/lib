@@ -47,7 +47,7 @@ namespace Zaaml.Text
 				for (var i = 0; i < BufferSize; i++)
 					_lexemeBuffer[i] = new Lexeme<TToken>();
 
-				_bufferSize = _lexemeSource.Read(ref _position, _lexemeBuffer, _operandBuffer, 0, BufferSize, true);
+				_bufferSize = _lexemeSource.Read(ref _position, _lexemeBuffer, _operandBuffer, 0, BufferSize);
 
 				if (_bufferSize == 0)
 				{

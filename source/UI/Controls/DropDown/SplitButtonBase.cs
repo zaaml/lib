@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -48,23 +49,23 @@ namespace Zaaml.UI.Controls.DropDown
 
 		public SplitButtonPopupPlacementTarget PopupPlacementTarget
 		{
-			get => this.GetValue<SplitButtonPopupPlacementTarget>(PopupPlacementTargetProperty);
-			set => this.SetValue<SplitButtonPopupPlacementTarget>(PopupPlacementTargetProperty, value);
+			get => (SplitButtonPopupPlacementTarget)GetValue(PopupPlacementTargetProperty);
+			set => SetValue(PopupPlacementTargetProperty, value);
 		}
 
 		public bool ShowDropDownButton
 		{
-			get => this.GetValue<bool>(ShowDropDownButtonProperty);
-			set => this.SetValue<bool>(ShowDropDownButtonProperty, value);
+			get => (bool)GetValue(ShowDropDownButtonProperty);
+			set => SetValue(ShowDropDownButtonProperty, value.Box());
 		}
 
 		public bool ShowSeparator
 		{
 			get => (bool) GetValue(ShowSeparatorProperty);
-			set => SetValue(ShowSeparatorProperty, value);
+			set => SetValue(ShowSeparatorProperty, value.Box());
 		}
 
-		private SplitButtonBaseTemplateContract TemplateContract => (SplitButtonBaseTemplateContract) TemplateContractInternal;
+		private SplitButtonBaseTemplateContract TemplateContract => (SplitButtonBaseTemplateContract) TemplateContractCore;
 
 		protected override TemplateContract CreateTemplateContract()
 		{

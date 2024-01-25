@@ -1,9 +1,10 @@
-// <copyright file="Range.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="Interval.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Zaaml.Core.Text;
@@ -19,16 +20,10 @@ namespace Zaaml.Core
 
 	internal static class IntervalEndPointFlag
 	{
-		#region Static Fields and Constants
-
 		private const int MaximumPointOpenShift = 1;
 		private const int MinimumPointOpenShift = 3;
 		public static readonly IntervalEndPoint[] MinPointFlagArray = new IntervalEndPoint[32];
 		public static readonly IntervalEndPoint[] MaxPointFlagArray = new IntervalEndPoint[32];
-
-		#endregion
-
-		#region Ctors
 
 		static IntervalEndPointFlag()
 		{
@@ -71,21 +66,15 @@ namespace Zaaml.Core
 			MaxPointFlagArray[CalcFlag(IntervalEndPoint.Unbounded, IntervalEndPoint.Unbounded, true)] = IntervalEndPoint.Unbounded;
 		}
 
-		#endregion
-
-		#region  Methods
-
 		public static byte CalcFlag(IntervalEndPoint minimumPoint, IntervalEndPoint maximumPoint, bool isEmpty)
 		{
-			var minimumPointVal = (int) minimumPoint << MinimumPointOpenShift;
-			var maximumPointVal = (int) maximumPoint << MaximumPointOpenShift;
+			var minimumPointVal = (int)minimumPoint << MinimumPointOpenShift;
+			var maximumPointVal = (int)maximumPoint << MaximumPointOpenShift;
 
 			var isEmptyVal = isEmpty ? 1 : 0;
 
-			return (byte) (minimumPointVal | maximumPointVal | isEmptyVal);
+			return (byte)(minimumPointVal | maximumPointVal | isEmptyVal);
 		}
-
-		#endregion
 	}
 
 	internal readonly struct Interval<T> : IComparable<Interval<T>> where T : IComparable<T>
@@ -108,13 +97,23 @@ namespace Zaaml.Core
 			_flags = CalculateFlags(minimum, minimumPoint, maximum, maximumPoint);
 		}
 
+		private Interval(bool empty)
+		{
+			Debug.Assert(empty);
+
+			Minimum = default;
+			Maximum = default;
+
+			_flags = IntervalEndPointFlag.CalcFlag(IntervalEndPoint.Open, IntervalEndPoint.Open, true);
+		}
+
 		#endregion
 
 		#region Properties
 
-		public static readonly Interval<T> Empty = new Interval<T>(default, IntervalEndPoint.Open, default, IntervalEndPoint.Open);
+		public static readonly Interval<T> Empty = new(true);
 
-		public static readonly Interval<T> Universe = new Interval<T>(IntervalMinMax.Get<T>().Minimum, IntervalEndPoint.Unbounded, IntervalMinMax.Get<T>().Maximum, IntervalEndPoint.Unbounded);
+		public static readonly Interval<T> Universe = new(IntervalMinMax.Get<T>().Minimum, IntervalEndPoint.Unbounded, IntervalMinMax.Get<T>().Maximum, IntervalEndPoint.Unbounded);
 
 		public readonly T Maximum;
 
@@ -143,7 +142,7 @@ namespace Zaaml.Core
 
 			if (minMaxCompare > 0)
 				isEmpty = true;
-			else if (minMaxCompare == 0)
+			else if (minMaxCompare == 0) 
 				isEmpty = minimumPoint == IntervalEndPoint.Open || maximumPoint == IntervalEndPoint.Open;
 
 			if (minimumPoint == IntervalEndPoint.Unbounded || maximumPoint == IntervalEndPoint.Unbounded)
@@ -339,6 +338,9 @@ namespace Zaaml.Core
 
 		public override string ToString()
 		{
+			//if (IsEmpty)
+			//	return "(Empty)";
+
 			var leftParen = MinimumPoint == IntervalEndPoint.Closed ? "[" : "(";
 			var rightParen = MaximumPoint == IntervalEndPoint.Closed ? "]" : ")";
 			var minimum = MinimumPoint == IntervalEndPoint.Unbounded ? "-INF" : Minimum.ToString();
@@ -378,23 +380,12 @@ namespace Zaaml.Core
 			return Interval.Create(range.Minimum, range.Maximum);
 		}
 
-		internal Range<T> AsRange()
-		{
-			return new Range<T>(Minimum, Maximum);
-		}
-
 		#endregion
 	}
 
 	internal static partial class Interval
 	{
-		#region Static Fields and Constants
-
-		private static readonly Regex ParseRegex = new Regex(@"\s*([\[\(])\s*(.*)\s*;\s*(.*)\s*([\]\)])\s*", RegexOptions.Compiled);
-
-		#endregion
-
-		#region  Methods
+		private static readonly Regex ParseRegex = new(@"\s*([\[\(])\s*(.*)\s*;\s*(.*)\s*([\]\)])\s*", RegexOptions.Compiled);
 
 		internal static int CompareMaximumEndPoint(IntervalEndPoint first, IntervalEndPoint second)
 		{
@@ -416,6 +407,51 @@ namespace Zaaml.Core
 				return 1;
 
 			return first == IntervalEndPoint.Closed ? -1 : 1;
+		}
+
+		public static int Count(this Interval<byte> range)
+		{
+			return range.Maximum - range.Minimum + GetEndPointCount(range);
+		}
+
+		public static int Count(this Interval<sbyte> range)
+		{
+			return range.Maximum - range.Minimum + GetEndPointCount(range);
+		}
+
+		public static int Count(this Interval<char> range)
+		{
+			return range.Maximum - range.Minimum + GetEndPointCount(range);
+		}
+
+		public static int Count(this Interval<short> range)
+		{
+			return range.Maximum - range.Minimum + GetEndPointCount(range);
+		}
+
+		public static int Count(this Interval<ushort> range)
+		{
+			return range.Maximum - range.Minimum + GetEndPointCount(range);
+		}
+
+		public static int Count(this Interval<int> range)
+		{
+			return range.Maximum - range.Minimum + GetEndPointCount(range);
+		}
+
+		public static long Count(this Interval<uint> range)
+		{
+			return range.Maximum - range.Minimum + GetEndPointCount(range);
+		}
+
+		public static long Count(this Interval<long> range)
+		{
+			return range.Maximum - range.Minimum + GetEndPointCount(range);
+		}
+
+		public static ulong Count(this Interval<ulong> range)
+		{
+			return range.Maximum - range.Minimum + (ulong)GetEndPointCount(range);
 		}
 
 		//public static Range<T> Complement<T>(Range<T> first, Range<T> second) where T : IComparable<T>
@@ -513,7 +549,27 @@ namespace Zaaml.Core
 
 		private static Exception FormatNonContiguousException(string operation)
 		{
-			return new ArgumentOutOfRangeException($"{operation} operation produces 2 non contiguous ranges.", (Exception) null);
+			return new ArgumentOutOfRangeException($"{operation} operation produces 2 non contiguous ranges.", (Exception)null);
+		}
+
+		private static int GetEndPointCount<T>(this Interval<T> range) where T : IComparable<T>
+		{
+			return GetEndPointCount(range.MinimumPoint) + GetEndPointCount(range.MaximumPoint) - 1;
+		}
+
+		private static int GetEndPointCount(IntervalEndPoint endPoint)
+		{
+			switch (endPoint)
+			{
+				case IntervalEndPoint.Open:
+					return 0;
+				case IntervalEndPoint.Closed:
+					return 1;
+				case IntervalEndPoint.Unbounded:
+					return 0;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(endPoint), endPoint, null);
+			}
 		}
 
 		public static bool HasIntersection<T>(Interval<T> first, Interval<T> second) where T : IComparable<T>
@@ -543,7 +599,24 @@ namespace Zaaml.Core
 
 			SortEndPoints(first, second, out _, out var rightMin, out var leftMax, out _);
 
-			return rightMin.Value.CompareTo(leftMax.Value) > 0 ? Interval<T>.Empty : new Interval<T>(rightMin.Value, rightMin.EndPoint, leftMax.Value, leftMax.EndPoint);
+			var compareTo = rightMin.Value.CompareTo(leftMax.Value);
+
+			if (compareTo > 0)
+				return Interval<T>.Empty;
+
+			if (compareTo < 0)
+				return new Interval<T>(rightMin.Value, rightMin.EndPoint, leftMax.Value, leftMax.EndPoint);
+
+			if (leftMax.EndPoint == IntervalEndPoint.Open && rightMin.EndPoint == IntervalEndPoint.Closed)
+				return new Interval<T>(rightMin.Value, rightMin.EndPoint, leftMax.Value, leftMax.EndPoint);
+
+			if (leftMax.EndPoint == IntervalEndPoint.Closed && rightMin.EndPoint == IntervalEndPoint.Open)
+				return new Interval<T>(rightMin.Value, rightMin.EndPoint, leftMax.Value, leftMax.EndPoint);
+			
+			if (leftMax.EndPoint == IntervalEndPoint.Closed && rightMin.EndPoint == IntervalEndPoint.Closed)
+				return new Interval<T>(rightMin.Value, rightMin.EndPoint, leftMax.Value, leftMax.EndPoint);
+			
+			return Interval<T>.Empty;
 		}
 
 		private static IntervalEndPoint InverseEndPoint(IntervalEndPoint endPoint)
@@ -592,7 +665,8 @@ namespace Zaaml.Core
 			throw new Exception("Parse exception");
 		}
 
-		private static void SortEndPoints<T>(Interval<T> first, Interval<T> second, out RangeEndPointValue<T> leftMin, out RangeEndPointValue<T> rightMin, out RangeEndPointValue<T> leftMax, out RangeEndPointValue<T> rightMax) where T : IComparable<T>
+		private static void SortEndPoints<T>(Interval<T> first, Interval<T> second, out RangeEndPointValue<T> leftMin, out RangeEndPointValue<T> rightMin, out RangeEndPointValue<T> leftMax, out RangeEndPointValue<T> rightMax)
+			where T : IComparable<T>
 		{
 			var firstMinimumPoint = first.MinimumPoint;
 			var secondMinimumPoint = second.MinimumPoint;
@@ -863,67 +937,6 @@ namespace Zaaml.Core
 			return new Interval<T>(leftMin.Value, leftMin.EndPoint, rightMax.Value, rightMax.EndPoint);
 		}
 
-		public static int Count(this Interval<byte> range)
-		{
-			return range.Maximum - range.Minimum + GetEndPointCount(range);
-		}
-		public static int Count(this Interval<sbyte> range)
-		{
-			return range.Maximum - range.Minimum + GetEndPointCount(range);
-		}
-		public static int Count(this Interval<char> range)
-		{
-			return range.Maximum - range.Minimum + GetEndPointCount(range);
-		}
-		public static int Count(this Interval<short> range)
-		{
-			return range.Maximum - range.Minimum + GetEndPointCount(range);
-		}
-		public static int Count(this Interval<ushort> range)
-		{
-			return range.Maximum - range.Minimum + GetEndPointCount(range);
-		}
-		public static int Count(this Interval<int> range)
-		{
-			return range.Maximum - range.Minimum + GetEndPointCount(range);
-		}
-		public static long Count(this Interval<uint> range)
-		{
-			return range.Maximum - range.Minimum + GetEndPointCount(range);
-		}
-		public static long Count(this Interval<long> range)
-		{
-			return range.Maximum - range.Minimum + GetEndPointCount(range);
-		}
-		public static ulong Count(this Interval<ulong> range)
-		{
-			return range.Maximum - range.Minimum + (ulong)GetEndPointCount(range);
-		}
-
-		private static int GetEndPointCount<T>(this Interval<T> range) where T : IComparable<T>
-		{
-			return GetEndPointCount(range.MinimumPoint) + GetEndPointCount(range.MaximumPoint) - 1;
-		}
-
-		private static int GetEndPointCount(IntervalEndPoint endPoint)
-		{
-			switch (endPoint)
-			{
-				case IntervalEndPoint.Open:
-					return 0;
-				case IntervalEndPoint.Closed:
-					return 1;
-				case IntervalEndPoint.Unbounded:
-					return 0;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(endPoint), endPoint, null);
-			}
-		}
-
-		#endregion
-
-		#region  Nested Types
-
 		private readonly struct SplitPointData<T>
 		{
 			public SplitPointData(T point, IntervalEndPoint endPoint)
@@ -957,28 +970,18 @@ namespace Zaaml.Core
 			{
 				unchecked
 				{
-					return (EqualityComparer<T>.Default.GetHashCode(Point) * 397) ^ (int) EndPoint;
+					return (EqualityComparer<T>.Default.GetHashCode(Point) * 397) ^ (int)EndPoint;
 				}
 			}
 		}
 
 		private class SplitDataPointComparer<T> : IComparer<SplitPointData<T>> where T : IComparable<T>
 		{
-			#region Static Fields and Constants
-
 			public static readonly IComparer<SplitPointData<T>> Default = new SplitDataPointComparer<T>();
-
-			#endregion
-
-			#region Ctors
 
 			private SplitDataPointComparer()
 			{
 			}
-
-			#endregion
-
-			#region  Methods
 
 			private static int GetEndPointValue(IntervalEndPoint endPoint)
 			{
@@ -995,22 +998,12 @@ namespace Zaaml.Core
 				}
 			}
 
-			#endregion
-
-			#region Interface Implementations
-
-			#region IComparer<SplitPointData<T>>
-
 			public int Compare(SplitPointData<T> x, SplitPointData<T> y)
 			{
 				var pointCompare = x.Point.CompareTo(y.Point);
 
 				return pointCompare == 0 ? Comparer<int>.Default.Compare(GetEndPointValue(x.EndPoint), GetEndPointValue(y.EndPoint)) : pointCompare;
 			}
-
-			#endregion
-
-			#endregion
 		}
 
 		private readonly struct RangeEndPointValue<T> where T : IComparable<T>
@@ -1026,20 +1019,14 @@ namespace Zaaml.Core
 			public readonly IntervalEndPoint EndPoint;
 			public readonly int RangeIndex;
 		}
-
-		#endregion
 	}
 
 	internal static class IntervalItem
 	{
-		#region  Methods
-
 		public static IntervalItem<TItem, T> Create<TItem, T>(TItem item, Interval<T> range) where T : IComparable<T>
 		{
 			return new IntervalItem<TItem, T>(item, range);
 		}
-
-		#endregion
 	}
 
 	internal readonly struct IntervalItem<TItem, T> : IComparable<IntervalItem<TItem, T>> where T : IComparable<T>

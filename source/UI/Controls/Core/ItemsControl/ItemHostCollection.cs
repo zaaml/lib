@@ -11,7 +11,7 @@ namespace Zaaml.UI.Controls.Core
 	internal abstract class ItemHostCollection<TItem> : IEnumerable<TItem>
 		where TItem : FrameworkElement
 	{
-		protected List<TItem> Items { get; } = new List<TItem>();
+		protected List<TItem> Items { get; } = new();
 
 		internal void ClearInternal()
 		{
@@ -86,7 +86,7 @@ namespace Zaaml.UI.Controls.Core
 				Item = item;
 			}
 
-			public static SyncActionData Empty => new SyncActionData(-1, null);
+			public static SyncActionData Empty => new(-1, null);
 
 			public int Index { get; }
 

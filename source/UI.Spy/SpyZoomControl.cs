@@ -4,13 +4,15 @@
 
 using System;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Artboard;
 using Zaaml.UI.Controls.Core;
-using Zaaml.UI.Panels.Core;
+using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Controls.Spy
 {
@@ -21,6 +23,7 @@ namespace Zaaml.UI.Controls.Spy
 			("Element", d => d.OnElementPropertyChangedPrivate);
 
 		private Window _elementWindow;
+		private bool _isElementMouseOver;
 
 		static SpyZoomControl()
 		{
@@ -33,25 +36,34 @@ namespace Zaaml.UI.Controls.Spy
 
 			Renderer = new ElementRenderer(this);
 
-			ArtboardItem = new ArtboardItem
+			Canvas = new ArtboardCanvas
 			{
-				Canvas = new ArtboardCanvas
+				Children =
 				{
-					Children =
-					{
-						Renderer
-					}
+					Renderer, SizeRenderer
 				}
 			};
+
+			ArtboardItem = new ArtboardItem
+			{
+				Canvas = Canvas
+			};
 		}
+
+		private ArtboardCanvas Canvas { get; }
 
 		private SpyArtboardControl ArtboardControl => TemplateContract.ArtboardControl;
 
 		private ArtboardItem ArtboardItem { get; }
 
+		private SpyZoomElementSizeRenderer SizeRenderer { get; } = new()
+		{
+			Visibility = Visibility.Collapsed
+		};
+
 		public UIElement Element
 		{
-			get => (UIElement) GetValue(ElementProperty);
+			get => (UIElement)GetValue(ElementProperty);
 			set => SetValue(ElementProperty, value);
 		}
 
@@ -85,7 +97,27 @@ namespace Zaaml.UI.Controls.Spy
 
 		private ElementRenderer Renderer { get; }
 
-		private SpyZoomControlTemplateContract TemplateContract => (SpyZoomControlTemplateContract) TemplateContractInternal;
+		private SpyZoomControlTemplateContract TemplateContract => (SpyZoomControlTemplateContract)TemplateContractCore;
+
+		private bool IsElementMouseOver
+		{
+			get => _isElementMouseOver;
+			set
+			{
+				if (_isElementMouseOver == value)
+					return;
+
+				if (_isElementMouseOver)
+					OnMouseLeaveElement();
+
+				_isElementMouseOver = value;
+
+				if (_isElementMouseOver)
+					OnMouseEnterElement();
+			}
+		}
+
+		private Rect ElementBox { get; set; }
 
 		private void ElementWindowOnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
@@ -94,7 +126,29 @@ namespace Zaaml.UI.Controls.Spy
 
 		private void OnElementLayoutUpdated(object sender, EventArgs e)
 		{
+			UpdateElementBox();
 			UpdateElementWindow();
+			UpdateSizeRenderer();
+		}
+
+		private void UpdateElementBox()
+		{
+			if (ElementWindow != null && Element is FrameworkElement element)
+				ElementBox = element.GetBoundingBox(ElementWindow);
+			else
+				ElementBox = Rect.Empty;
+		}
+
+		private void UpdateSizeRenderer()
+		{
+			if (Element is not FrameworkElement element)
+				return;
+
+			var box = element.GetVisualRootBox();
+
+			SizeRenderer.ElementSize = box.Size;
+
+			ArtboardCanvas.SetPosition(SizeRenderer, box.Location.WithOffset(0, -SizeRenderer.ActualHeight));
 		}
 
 		private void OnElementPropertyChangedPrivate(UIElement oldValue, UIElement newValue)
@@ -105,7 +159,12 @@ namespace Zaaml.UI.Controls.Spy
 			if (newValue is FrameworkElement newFrameworkElement)
 				newFrameworkElement.LayoutUpdated += OnElementLayoutUpdated;
 
+			UpdateElementBox();
+
+			IsElementMouseOver = ElementBox.IsEmpty == false && ElementBox.Contains(Mouse.GetPosition(Renderer));
+			
 			UpdateElementWindow();
+			UpdateSizeRenderer();
 		}
 
 		protected override void OnTemplateContractAttached()
@@ -155,6 +214,28 @@ namespace Zaaml.UI.Controls.Spy
 				ElementWindow = elementWindow;
 		}
 
+		private void OnMouseEnterElement()
+		{
+			SizeRenderer.Visibility = Visibility.Visible;
+		}
+
+		private void OnMouseLeaveElement()
+		{
+			SizeRenderer.Visibility = Visibility.Collapsed;
+		}
+
+		private void OnElementRendererMouseMove(MouseEventArgs e)
+		{
+			if (ElementWindow == null || Element == null)
+			{
+				IsElementMouseOver = false;
+
+				return;
+			}
+
+			IsElementMouseOver = ElementBox.IsEmpty == false && ElementBox.Contains(e.GetPosition(Renderer));
+		}
+
 		internal class ElementRenderer : Panel
 		{
 			public ElementRenderer(SpyZoomControl spyZoomControl)
@@ -163,6 +244,11 @@ namespace Zaaml.UI.Controls.Spy
 			}
 
 			public SpyZoomControl SpyZoomControl { get; }
+
+			protected override void OnMouseMove(MouseEventArgs e)
+			{
+				SpyZoomControl.OnElementRendererMouseMove(e);
+			}
 		}
 	}
 }

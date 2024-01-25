@@ -2,15 +2,15 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
 	public abstract class TriggerBase : InteractivityObject
 	{
-		#region Ctors
-
 		private static readonly uint DefaultPackedValue;
 
 		static TriggerBase()
@@ -24,10 +24,6 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			PackedValue |= DefaultPackedValue;
 		}
-
-		#endregion
-
-		#region Properties
 
 		protected internal bool IsEnabled
 		{
@@ -43,27 +39,27 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected virtual void OnIsEnabledChanged()
 		{
 		}
 
-		#endregion
+		private protected override bool TryProvideValue(object target, object targetProperty, IServiceProvider serviceProvider, out object value)
+		{
+			if (target is not FrameworkElement frameworkElement) 
+				return base.TryProvideValue(target, targetProperty, serviceProvider, out value);
+			
+			var triggers = Extension.GetTriggers(frameworkElement);
 
-		#region  Nested Types
+			triggers.Add(this);
+
+			value = triggers;
+
+			return true;
+		}
 
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedBoolItemDefinition IsEnabled;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -71,10 +67,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				IsEnabled = allocator.AllocateBoolItem();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

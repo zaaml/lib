@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Markup;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
@@ -44,8 +45,8 @@ namespace Zaaml.UI.Controls.Primitives.SharedSizePrimitives
 
     public bool IsSharingEnabled
     {
-      get => (bool) GetValue(IsSharingEnabledProperty);
-      set => SetValue(IsSharingEnabledProperty, value);
+	    get => (bool)GetValue(IsSharingEnabledProperty);
+	    set => SetValue(IsSharingEnabledProperty, value.Box());
     }
 
     protected override IEnumerator LogicalChildren => TemplateRoot == null || Child == null ? base.LogicalChildren : EnumeratorUtils.Concat(Child, base.LogicalChildren);

@@ -38,7 +38,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		private NavigationViewSelectorController SelectorController => _selectorController ??= CreateSelectorControllerPrivate();
 
-		private NavigationViewFrameTemplateContract TemplateContract => (NavigationViewFrameTemplateContract) TemplateContractInternal;
+		private NavigationViewFrameTemplateContract TemplateContract => (NavigationViewFrameTemplateContract)TemplateContractCore;
 
 		internal void AttachItem(NavigationViewItem navigationViewItem)
 		{

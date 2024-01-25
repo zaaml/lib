@@ -1,4 +1,4 @@
-// <copyright file="OrientedScrollView.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="AxisScrollInfo.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -11,19 +11,13 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.ScrollView
 {
-	internal struct OrientedScrollInfo
+	internal struct AxisScrollInfo
 	{
-		#region Fields
-
 		private double _extent;
 		private double _offset;
 		private double _viewport;
 
-		#endregion
-
-		#region Ctors
-
-		public OrientedScrollInfo(Orientation orientation)
+		public AxisScrollInfo(Orientation orientation)
 		{
 			Orientation = orientation;
 
@@ -32,7 +26,7 @@ namespace Zaaml.UI.Controls.ScrollView
 			_viewport = 0.0;
 		}
 
-		public OrientedScrollInfo(Orientation orientation, double offset, double viewport, double extent)
+		public AxisScrollInfo(Orientation orientation, double offset, double viewport, double extent)
 		{
 			Orientation = orientation;
 
@@ -42,12 +36,6 @@ namespace Zaaml.UI.Controls.ScrollView
 
 			ClampOffset();
 		}
-
-		#endregion
-
-		#region Properties
-
-		public double ScrollableSize => Math.Max(0, Extent - Viewport);
 
 		public double Extent
 		{
@@ -79,6 +67,8 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		public Orientation Orientation { get; }
 
+		public double ScrollableSize => Math.Max(0, Extent - Viewport);
+
 		public double Viewport
 		{
 			get => _viewport;
@@ -98,15 +88,6 @@ namespace Zaaml.UI.Controls.ScrollView
 			_offset = _offset.Clamp(0, ScrollableSize);
 		}
 
-		#endregion
-
-		#region  Methods
-
-		public double GetSize(Size size)
-		{
-			return size.AsOriented(Orientation).Direct;
-		}
-
 		public void ExecuteScrollCommand(ScrollCommandKind command, double smallChange, double wheelChange)
 		{
 			var commandOrientation = ScrollViewUtils.GetCommandOrientation(command);
@@ -121,6 +102,17 @@ namespace Zaaml.UI.Controls.ScrollView
 			ClampOffset();
 		}
 
-		#endregion
+		public double GetSize(Size size)
+		{
+			return size.AsOriented(Orientation).Direct;
+		}
+
+		public bool IsCloseTo(AxisScrollInfo scrollInfo)
+		{
+			if (Orientation != scrollInfo.Orientation)
+				throw new InvalidOperationException();
+
+			return Offset.IsCloseTo(scrollInfo.Offset) && Extent.IsCloseTo(scrollInfo.Extent) && Viewport.IsCloseTo(scrollInfo.Viewport);
+		}
 	}
 }

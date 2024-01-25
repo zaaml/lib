@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
@@ -33,6 +34,10 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		protected abstract double DirectWheelChange { get; }
 
+		public int FirstIndex => _context.FirstIndex;
+
+		public int FirstVisibleIndex => _context.FirstVisibleIndex;
+
 		protected virtual double IndirectSmallChange => ScrollViewUtils.DefaultPixelSmallChange;
 
 		protected virtual double IndirectWheelChange => ScrollViewUtils.DefaultPixelWheelChange;
@@ -40,6 +45,10 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 		public bool IsBringIntoViewRequested => BringIntoViewRequest != null;
 
 		private long LastArrangeFrame { get; set; } = -1;
+
+		public int LastIndex => _context.LastIndex;
+
+		public int LastVisibleIndex => _context.LastVisibleIndex;
 
 		public Orientation Orientation => Panel.Orientation;
 
@@ -49,7 +58,22 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 
 		public abstract ScrollUnit ScrollUnit { get; }
 
-		protected VirtualUIElementCollectionInserter UIElementInserter { get; } = new VirtualUIElementCollectionInserter();
+		protected VirtualUIElementCollectionInserter UIElementInserter { get; } = new();
+
+		private double IndirectScrollArrangeCompensation { get; set; }
+
+		private double CalcIndirectArrangeCompensation()
+		{
+			var orientation = Orientation;
+
+			var indirectOrientedScrollInfo = ScrollInfo.Axis(orientation.Rotate());
+			var desiredOriented = _context.OrientedResult;
+
+			if (indirectOrientedScrollInfo.Offset > 0 && desiredOriented.Indirect - indirectOrientedScrollInfo.Offset < indirectOrientedScrollInfo.Viewport)
+				return Math.Min(indirectOrientedScrollInfo.Offset, indirectOrientedScrollInfo.Viewport - (desiredOriented.Indirect - indirectOrientedScrollInfo.Offset));
+
+			return 0.0;
+		}
 
 		protected override Size ArrangeCore(Size finalSize)
 		{
@@ -57,34 +81,38 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			var offset = new OrientedPoint(orientation);
 			var finalOriented = finalSize.AsOriented(orientation);
 
+			IndirectScrollArrangeCompensation = CalcIndirectArrangeCompensation();
+
+			finalOriented.Indirect += IndirectScrollArrangeCompensation;
+
 			offset.Direct -= _context.PreCacheDelta - _context.PreviewFirstVisibleOffset;
 
 			foreach (UIElement child in Children)
 			{
-				var desiredSize = child.DesiredSize;
-				var desiredOrientedSize = child.DesiredSize.AsOriented(orientation);
+				var childDesiredSize = child.DesiredSize;
+				var childDesiredOrientedSize = child.DesiredSize.AsOriented(orientation);
 
-				desiredOrientedSize.Indirect = finalOriented.Indirect;
+				childDesiredOrientedSize.Indirect = finalOriented.Indirect;
 
-				var rect = new Rect(offset.Point, desiredOrientedSize.Size);
-				
+				var rect = new Rect(offset.Point, childDesiredOrientedSize.Size);
+
 				ArrangeChild(child, rect);
 
-				if (child.DesiredSize.IsCloseTo(desiredSize) == false)
+				if (child.DesiredSize.IsCloseTo(childDesiredSize) == false)
 				{
-					var orientedOriginal = desiredSize.AsOriented(orientation);
+					var orientedOriginal = childDesiredSize.AsOriented(orientation);
 					var orientedCurrent = child.DesiredSize.AsOriented(orientation);
 
 					if (orientedCurrent.Indirect.IsGreaterThan(orientedOriginal.Indirect) && orientedCurrent.Indirect.IsGreaterThan(finalOriented.Indirect))
 						Panel.InvalidateMeasure();
 				}
 
-				offset.Direct += desiredOrientedSize.Direct;
+				offset.Direct += childDesiredOrientedSize.Direct;
 			}
 
 			LastArrangeFrame = FrameCounter.Frame;
 
-			return finalSize;
+			return finalOriented.Size;
 		}
 
 		private protected abstract int CalcFirstVisibleIndex(Vector offset, out double localFirstVisibleOffset);
@@ -104,8 +132,8 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			var orientedViewport = Viewport.AsOriented(orientation);
 			var orientedExtent = Extent.AsOriented(orientation);
 			var orientedOffset = Offset.AsOriented(orientation);
-			var directScrollView = new OrientedScrollInfo(orientation, orientedOffset.Direct, orientedViewport.Direct, orientedExtent.Direct);
-			var indirectScrollView = new OrientedScrollInfo(orientation.Rotate(), orientedOffset.Indirect, orientedViewport.Indirect, orientedExtent.Indirect);
+			var directScrollView = new AxisScrollInfo(orientation, orientedOffset.Direct, orientedViewport.Direct, orientedExtent.Direct);
+			var indirectScrollView = new AxisScrollInfo(orientation.Rotate(), orientedOffset.Indirect, orientedViewport.Indirect, orientedExtent.Indirect);
 
 			var directSmallChange = commandOrientation == orientation ? DirectSmallChange : IndirectSmallChange;
 			var directWheelChange = commandOrientation == orientation ? DirectWheelChange : IndirectWheelChange;
@@ -236,6 +264,9 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 			if (CalcFirstVisibleIndex(e.OldInfo.Offset, out var oldLocalOffset) != CalcFirstVisibleIndex(e.NewInfo.Offset, out var newLocalOffset) || oldLocalOffset.IsCloseTo(newLocalOffset) == false)
 				Panel.InvalidateMeasure();
 
+			if (IndirectScrollArrangeCompensation.IsCloseTo(CalcIndirectArrangeCompensation()) == false)
+				Panel.InvalidateArrange();
+
 			UpdateTransform();
 		}
 
@@ -257,14 +288,6 @@ namespace Zaaml.UI.Panels.VirtualStackPanelLayout
 		{
 			ScrollInfo = CalcScrollInfo(ref _context);
 		}
-
-		public int FirstIndex => _context.FirstIndex;
-
-		public int LastIndex => _context.LastIndex;
-
-		public int FirstVisibleIndex => _context.FirstVisibleIndex;
-
-		public int LastVisibleIndex => _context.LastVisibleIndex;
 
 		private protected void UpdateTransform()
 		{

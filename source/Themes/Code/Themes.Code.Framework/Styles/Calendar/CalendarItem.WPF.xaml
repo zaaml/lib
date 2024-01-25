@@ -1,0 +1,134 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+	<zm:ThemeResourceDictionary.MergedDictionaries>
+		<ResourceDictionary Source="CalendarItem.xaml"/>
+	</zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!-- Item Template -->
+  <ControlTemplate x:Key="CalendarItemTemplate" TargetType="CalendarItem">
+    <ControlTemplate.Resources>
+      <DataTemplate x:Key="{x:Static CalendarItem.DayTitleTemplateResourceKey}">
+        <TextBlock Foreground="{zm:ThemeResource Key=Code.StandardControls.CalendarItem.HeaderButton.Foreground.Normal}" 
+                   FontWeight="Bold" 
+                   FontSize="9.5" 
+                   Text="{Binding}"
+                   Margin="0,4,0,4" 
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Center" />
+      </DataTemplate>
+    </ControlTemplate.Resources>
+    <Grid x:Name="PART_Root">
+      <Border BorderThickness="{TemplateBinding BorderThickness}" 
+							BorderBrush="{TemplateBinding BorderBrush}" 
+							Background="{TemplateBinding Background}"
+              Margin="0,2,0,2">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+
+          <!-- Previous Button -->
+          <Button x:Name="PART_PreviousButton" 
+									Grid.Row="0" 
+									Height="20" 
+									Width="28" 
+									Template="{StaticResource PreviousButtonTemplate}" 
+									HorizontalAlignment="Left" />
+
+          <!-- Header Button -->
+          <Button x:Name="PART_HeaderButton" 
+									Grid.Row="0" 
+									Grid.Column="1" 
+									FontWeight="Bold" 
+									FontSize="10.5" 
+									Template="{StaticResource HeaderButtonTemplate}"
+                  HorizontalAlignment="Center" 
+									VerticalAlignment="Center" />
+
+          <!-- Next Button -->
+          <Button x:Name="PART_NextButton" 
+									Grid.Row="0" 
+									Grid.Column="2" 
+									Height="20" 
+									Width="28" 
+									Template="{StaticResource NextButtonTemplate}" 
+									HorizontalAlignment="Right" />
+
+          <!-- Month View -->
+          <Grid x:Name="PART_MonthView" 
+                Grid.Row="1" 
+                Grid.ColumnSpan="3" 
+                Visibility="{Binding DisplayMode, RelativeSource={RelativeSource FindAncestor, AncestorType=Calendar}, Converter={StaticResource MonthViewVisibilityConverter}}" 
+                Margin="6,0,6,6">
+            <Grid.RowDefinitions>
+              <RowDefinition />
+              <RowDefinition />
+              <RowDefinition />
+              <RowDefinition />
+              <RowDefinition />
+              <RowDefinition />
+              <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition />
+              <ColumnDefinition />
+              <ColumnDefinition />
+              <ColumnDefinition />
+              <ColumnDefinition />
+              <ColumnDefinition />
+              <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+          </Grid>
+
+          <!-- Year View -->
+          <Grid x:Name="PART_YearView" 
+                Grid.Row="1" 
+                Grid.ColumnSpan="3" 
+                Visibility="{Binding DisplayMode, RelativeSource={RelativeSource FindAncestor, AncestorType=Calendar}, Converter={StaticResource YearViewVisibilityConverter}}" 
+                Margin="6,0,6,6">
+            <Grid.RowDefinitions>
+              <RowDefinition />
+              <RowDefinition />
+              <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition />
+              <ColumnDefinition />
+              <ColumnDefinition />
+              <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+          </Grid>
+        </Grid>
+      </Border>
+    </Grid>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="CalendarItemBaseStyle" TargetType="CalendarItem">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Template" Value="{StaticResource CalendarItemTemplate}" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="CalendarItemStyle" TargetType="CalendarItem" BasedOn="{StaticResource CalendarItemBaseStyle}" 
+            Skin="Code.StandardControls.CalendarItem">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Background" ValuePath="Background" />
+      <zm:Setter Property="BorderBrush" ValuePath="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="CalendarItemThemeStyle" TargetType="CalendarItem" BasedOn="{StaticResource CalendarItemStyle}"  zmb:Deferred="True" />
+    
+</zm:ThemeResourceDictionary>

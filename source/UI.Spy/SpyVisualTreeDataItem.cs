@@ -7,13 +7,14 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.Core;
 using Zaaml.Core.Trees;
 using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.Spy
 {
-	internal sealed class SpyVisualTreeDataItem : INotifyPropertyChanged
+	public sealed class SpyVisualTreeDataItem : INotifyPropertyChanged
 	{
 		internal static readonly DelegateTreeEnumeratorAdvisor<SpyVisualTreeDataItem> EagerTreeAdvisor = new(d => d.EagerChildren.GetEnumerator());
 		internal static readonly DelegateTreeEnumeratorAdvisor<SpyVisualTreeDataItem> LazyTreeAdvisor = new(d => d.LazyChildren.GetEnumerator());
@@ -23,7 +24,7 @@ namespace Zaaml.UI.Controls.Spy
 		private bool _childrenDirty;
 		private UIElement _element;
 
-		public SpyVisualTreeDataItem(SpyVisualTreeDataItemPool pool)
+		internal SpyVisualTreeDataItem(SpyVisualTreeDataItemPool pool)
 		{
 			_pool = pool;
 		}
@@ -52,7 +53,7 @@ namespace Zaaml.UI.Controls.Spy
 				_childrenDirty = true;
 
 				OnPropertyChanged();
-				OnPropertyChanged(nameof(Type));
+				OnPropertyChanged(nameof(TypeName));
 				OnPropertyChanged(nameof(Children));
 			}
 		}
@@ -61,7 +62,9 @@ namespace Zaaml.UI.Controls.Spy
 
 		public string Name => Element is FrameworkElement fre ? fre.Name : string.Empty;
 
-		public string Type => Element?.GetType().Name;
+		public string TypeName => Element?.GetType().Name;
+
+		public bool IsControl => Element is Control;
 
 		[NotifyPropertyChangedInvocator]
 		private void OnPropertyChanged([CallerMemberName] string propertyName = null)

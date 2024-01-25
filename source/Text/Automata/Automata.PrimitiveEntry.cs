@@ -8,14 +8,14 @@ namespace Zaaml.Text
 	{
 		protected abstract class PrimitiveEntry : Entry
 		{
-			public static implicit operator PrimitiveEntry(Rule state)
+			public static implicit operator PrimitiveEntry(Syntax state)
 			{
-				return new RuleEntry(state);
+				return new SyntaxEntry(state);
 			}
 
 			public static implicit operator PrimitiveEntry(TOperand input)
 			{
-				return new SingleMatchEntry(input);
+				return new OperandMatchEntry(input);
 			}
 		}
 

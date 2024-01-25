@@ -61,7 +61,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		protected abstract MenuItemsPresenterBase<TMenuItem, TMenuItemsPanel> MenuItemsPresenter { get; }
 
-		private MenuItemGroupTemplateContractBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel> TemplateContract => (MenuItemGroupTemplateContractBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel>) TemplateContractInternal;
+		private MenuItemGroupTemplateContractBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel> TemplateContract => (MenuItemGroupTemplateContractBase<TMenuItem, TMenuItemsPresenterHost, TMenuItemsPanel>) TemplateContractCore;
 
 		#endregion
 

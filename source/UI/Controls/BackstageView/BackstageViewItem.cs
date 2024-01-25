@@ -7,8 +7,8 @@ using System.Collections;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
-using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
@@ -52,12 +52,12 @@ namespace Zaaml.UI.Controls.BackstageView
 			internal set => this.SetReadOnlyValue(BackstageViewControlPropertyKey, value);
 		}
 
-		internal ContentPresenter ContentHost { get; } = new ContentPresenter();
+		internal ContentPresenter ContentHost { get; } = new();
 
 		public bool IsSelected
 		{
 			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 
 		protected override IEnumerator LogicalChildren => EnumeratorUtils.Concat(ContentHost, base.LogicalChildren);
@@ -119,13 +119,9 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		private void SetIsSelectedPrivate(bool isSelected)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, isSelected ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsSelectedProperty, isSelected.Box());
 		}
 
-		protected override void UpdateVisualState(bool useTransitions)
-		{
-			base.UpdateVisualState(useTransitions);
-		}
 
 		DependencyProperty ISelectableItem.ValueProperty => ValueProperty;
 

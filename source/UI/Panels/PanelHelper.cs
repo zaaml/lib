@@ -15,159 +15,147 @@ using Zaaml.PresentationCore.Interfaces;
 
 namespace Zaaml.UI.Panels
 {
-  internal static class PanelHelper
-  {
-    #region  Methods
+	internal static class PanelHelper
+	{
+		public static OrientedSize ArrangeStackLine(IEnumerable<UIElement> elements, Orientation orientation, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
+		{
+			var isHorizontal = orientation.IsHorizontal();
+			var orientedSize = new OrientedSize(orientation);
 
-    //public static OrientedSize ArrangeStackLine(this Panel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
-    //{
-    //  return ArrangeStackLine(panel.Children.Cast<UIElement>().Skip(line.Minimum).Take(line.Maximum - line.Minimum), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
-    //}
+			foreach (var element in elements)
+			{
+				var desiredSize = element.DesiredSize.AsOriented(orientation);
+				var itemSize = fixedItemSize ?? desiredSize.Direct;
+				var lineSize = fixedLineSize ?? desiredSize.Indirect;
+				var actualSize = new OrientedSize(orientation).ChangeDirect(itemSize).ChangeIndirect(lineSize);
+				var bounds = isHorizontal
+					? new Rect(itemOffset, lineOffset, itemSize, lineSize)
+					: new Rect(lineOffset, itemOffset, lineSize, itemSize);
 
-    public static OrientedSize ArrangeStackLine(IEnumerable<UIElement> elements, Orientation orientation, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
-    {
-      var isHorizontal = orientation.IsHorizontal();
+				element.Arrange(bounds);
+				itemOffset += itemSize;
 
-      var orientedSize = new OrientedSize(orientation);
+				orientedSize = orientedSize.StackSize(actualSize);
+			}
 
-      foreach (var element in elements)
-      {
-        var elementSize = element.DesiredSize.AsOriented(orientation);
+			return orientedSize;
+		}
 
-        var itemSize = fixedItemSize ?? elementSize.Direct;
-        var lineSize = fixedLineSize ?? elementSize.Indirect;
+		public static OrientedSize ArrangeStackLine(this IPanel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
+		{
+			return ArrangeStackLine(panel.Elements.Skip(line.Minimum).Take(line.Maximum - line.Minimum), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
+		}
 
-        var bounds = isHorizontal
-          ? new Rect(itemOffset, lineOffset, itemSize, lineSize)
-          : new Rect(lineOffset, itemOffset, lineSize, itemSize);
-
-	      //bounds = bounds.LayoutRoundToEven();
-
-        element.Arrange(bounds);
-        itemOffset += itemSize;
-	      //itemOffset = itemOffset.LayoutRoundMidPointFromZero(orientation);
-
-        orientedSize = orientedSize.StackSize(elementSize);
-      }
-
-      return orientedSize;
-    }
-
-    public static OrientedSize ArrangeStackLine(this IPanel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
-    {
-      return ArrangeStackLine(panel.Elements.Skip(line.Minimum).Take(line.Maximum - line.Minimum), orientation, lineOffset, itemOffset, fixedLineSize, fixedItemSize);
-    }
-		
-    internal static Size ConstraintSize(this Size desiredSize, Size availableSize)
-    {
-      return new Size(desiredSize.Width.Clamp(0, availableSize.Width), desiredSize.Height.Clamp(0, availableSize.Height));
-    }
-
-    internal static OrientedSize ConstraintSize(this OrientedSize desiredSize, OrientedSize availableSize)
-    {
-      if (desiredSize.Orientation != availableSize.Orientation)
-        throw new InvalidOperationException();
-
-      return new OrientedSize(desiredSize.Orientation, desiredSize.Size.ConstraintSize(availableSize.Size));
-    }
-
-	  internal static OrientedSize Clamp(this OrientedSize self, OrientedSize min, OrientedSize max)
-	  {
+		internal static OrientedSize Clamp(this OrientedSize self, OrientedSize min, OrientedSize max)
+		{
 			if (self.Orientation != min.Orientation || min.Orientation != max.Orientation)
 				throw new InvalidOperationException();
 
-		  return new OrientedSize(self.Orientation)
-		  {
-			  Direct = self.Direct.Clamp(min.Direct, max.Direct),
-			  Indirect = self.Indirect.Clamp(min.Indirect, max.Indirect),
-		  };
-	  }
+			return new OrientedSize(self.Orientation)
+			{
+				Direct = self.Direct.Clamp(min.Direct, max.Direct),
+				Indirect = self.Indirect.Clamp(min.Indirect, max.Indirect),
+			};
+		}
 
-    internal static Rect FillRect(this FrameworkElement fre, Size availableSize)
-    {
-      var rect = fre.DesiredSize.Rect();
+		internal static Size ConstraintSize(this Size desiredSize, Size availableSize)
+		{
+			return new Size(desiredSize.Width.Clamp(0, availableSize.Width), desiredSize.Height.Clamp(0, availableSize.Height));
+		}
 
-      if (fre.ShouldFill(Orientation.Horizontal))
-        rect.Width = availableSize.Width;
+		internal static OrientedSize ConstraintSize(this OrientedSize desiredSize, OrientedSize availableSize)
+		{
+			if (desiredSize.Orientation != availableSize.Orientation)
+				throw new InvalidOperationException();
 
-      if (fre.ShouldFill(Orientation.Vertical))
-        rect.Height = availableSize.Height;
+			return new OrientedSize(desiredSize.Orientation, desiredSize.Size.ConstraintSize(availableSize.Size));
+		}
 
-      return rect;
-    }
+		internal static Rect FillRect(this FrameworkElement fre, Size availableSize)
+		{
+			var rect = fre.DesiredSize.Rect();
 
-    internal static Rect FillRectIndirect(this FrameworkElement fre, Orientation orientation, Size availableSize)
-    {
-      if (!fre.ShouldFill(orientation)) 
-	      return fre.DesiredSize.Rect();
+			if (fre.ShouldFill(Orientation.Horizontal))
+				rect.Width = availableSize.Width;
 
-      var orientedSize = fre.DesiredSize.AsOriented(orientation);
+			if (fre.ShouldFill(Orientation.Vertical))
+				rect.Height = availableSize.Height;
 
-      orientedSize.Indirect = availableSize.AsOriented(orientation).Indirect;
+			return rect;
+		}
 
-      return orientedSize.Size.Rect();
-    }
+		internal static Rect FillRectIndirect(this FrameworkElement fre, Orientation orientation, Size availableSize)
+		{
+			if (!fre.ShouldFill(orientation))
+				return fre.DesiredSize.Rect();
 
-    public static OrientedSize GetDesiredOrientedSize(this UIElement uie, Orientation orientation)
-    {
-      return new OrientedSize(orientation, uie.DesiredSize.Width, uie.DesiredSize.Height);
-    }
+			var orientedSize = fre.DesiredSize.AsOriented(orientation);
 
-    public static OrientedSize GetDesiredOrientedSize(this UIElement uie, Orientation orientation, double? fixedWidth, double? fixedHeight)
-    {
-      return new OrientedSize(orientation, fixedWidth ?? uie.DesiredSize.Width, fixedHeight ?? uie.DesiredSize.Height);
-    }
+			orientedSize.Indirect = availableSize.AsOriented(orientation).Indirect;
 
-    private static Size Measure(UIElement element, Size size)
-    {
-      element.Measure(size);
+			return orientedSize.Size.Rect();
+		}
 
-      return element.DesiredSize;
-    }
+		public static OrientedSize GetDesiredOrientedSize(this UIElement uie, Orientation orientation)
+		{
+			return new OrientedSize(orientation, uie.DesiredSize.Width, uie.DesiredSize.Height);
+		}
 
-    public static Size MeasureSimple(IEnumerable<UIElement> elements, Size availableSize)
-    {
-      return elements.Aggregate(XamlConstants.ZeroSize, (current, element) => current.ExpandTo(Measure(element, availableSize)));
-    }
+		public static OrientedSize GetDesiredOrientedSize(this UIElement uie, Orientation orientation, double? fixedWidth, double? fixedHeight)
+		{
+			return new OrientedSize(orientation, fixedWidth ?? uie.DesiredSize.Width, fixedHeight ?? uie.DesiredSize.Height);
+		}
 
-    //public static OrientedSize MeasureStackLine(this Panel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
-    //{
-    //  return MeasureStackLine(panel.Children.Cast<UIElement>().Skip(line.Minimum).Take(line.Length()), orientation, null, null, fixedLineSize, fixedItemSize);
-    //}
+		private static Size Measure(UIElement element, Size size)
+		{
+			element.Measure(size);
 
-    public static OrientedSize MeasureStackLine(IEnumerable<UIElement> elements, OrientedSize availableSize, OrientedSize minimumSize, double? fixedLineSize, double? fixedItemSize)
-    {
-	    var orientation = availableSize.Orientation;
-      var orientedSize = new OrientedSize(orientation);
+			return element.DesiredSize;
+		}
 
-      foreach (var element in elements)
-      {
-	      var currentConstraint = new OrientedSize(orientation)
-	      {
-		      Direct = (availableSize.Direct - orientedSize.Direct).Clamp(minimumSize.Direct, double.PositiveInfinity),
-		      Indirect = availableSize.Indirect.Clamp(minimumSize.Indirect, double.PositiveInfinity)
+		public static Size MeasureSimple(IEnumerable<UIElement> elements, Size availableSize)
+		{
+			return elements.Aggregate(XamlConstants.ZeroSize, (current, element) => current.ExpandTo(Measure(element, availableSize)));
+		}
+
+		//public static OrientedSize MeasureStackLine(this Panel panel, Orientation orientation, Range<int> line, double lineOffset, double itemOffset, double? fixedLineSize, double? fixedItemSize)
+		//{
+		//  return MeasureStackLine(panel.Children.Cast<UIElement>().Skip(line.Minimum).Take(line.Length()), orientation, null, null, fixedLineSize, fixedItemSize);
+		//}
+
+		public static OrientedSize MeasureStackLine(IEnumerable<UIElement> elements, OrientedSize availableSize, OrientedSize minimumSize, double? fixedLineSize, double? fixedItemSize)
+		{
+			var orientation = availableSize.Orientation;
+			var orientedSize = new OrientedSize(orientation);
+
+			foreach (var element in elements)
+			{
+				var currentConstraint = new OrientedSize(orientation)
+				{
+					Direct = (availableSize.Direct - orientedSize.Direct).Clamp(minimumSize.Direct, double.PositiveInfinity),
+					Indirect = availableSize.Indirect.Clamp(minimumSize.Indirect, double.PositiveInfinity)
 				};
 
-	      var measureSize = new OrientedSize(orientation)
-	      {
-		      Direct = Math.Min(currentConstraint.Direct, fixedItemSize ?? double.PositiveInfinity),
-		      Indirect = Math.Min(currentConstraint.Indirect, fixedLineSize ?? double.PositiveInfinity)
-	      };
+				var measureSize = new OrientedSize(orientation)
+				{
+					Direct = Math.Min(currentConstraint.Direct, fixedItemSize ?? double.PositiveInfinity),
+					Indirect = Math.Min(currentConstraint.Indirect, fixedLineSize ?? double.PositiveInfinity)
+				};
 
 				element.Measure(measureSize.Size);
 
-	      var desired = element.DesiredSize.AsOriented(orientation);
+				var desired = element.DesiredSize.AsOriented(orientation);
 
-        orientedSize = orientedSize.StackSize(desired);
-      }
+				orientedSize = orientedSize.StackSize(desired);
+			}
 
-      return orientedSize;
-    }
+			return orientedSize;
+		}
 
-    public static bool ShouldFill(this FrameworkElement fre, Orientation orientation)
-    {
-      return orientation.IsHorizontal() ? fre.Width.IsNaN() && fre.HorizontalAlignment == HorizontalAlignment.Stretch : fre.Height.IsNaN() && fre.VerticalAlignment == VerticalAlignment.Stretch;
-    }
+		public static bool ShouldFill(this FrameworkElement fre, Orientation orientation)
+		{
+			return orientation.IsHorizontal() ? fre.Width.IsNaN() && fre.HorizontalAlignment == HorizontalAlignment.Stretch : fre.Height.IsNaN() && fre.VerticalAlignment == VerticalAlignment.Stretch;
+		}
 
 		public static bool ShouldFill(this IFrameworkElement fre, Orientation orientation)
 		{
@@ -175,36 +163,34 @@ namespace Zaaml.UI.Panels
 		}
 
 		public static bool ShouldFill(this UIElement uie, Orientation orientation)
-    {
-	    return uie is FrameworkElement fre && fre.ShouldFill(orientation);
-    }
+		{
+			return uie is FrameworkElement fre && fre.ShouldFill(orientation);
+		}
 
-    public static OrientedSize StackSize(this OrientedSize self, OrientedSize itemSize)
-    {
-      self.Indirect = Math.Max(itemSize.Indirect, self.Indirect);
-      self.Direct += itemSize.Direct;
+		public static OrientedSize StackSize(this OrientedSize self, OrientedSize itemSize)
+		{
+			self.Indirect = Math.Max(itemSize.Indirect, self.Indirect);
+			self.Direct += itemSize.Direct;
 
-      return self;
-    }
+			return self;
+		}
 
-    public static OrientedSize StackSize(this OrientedSize self, Size itemSize)
-    {
-      return self.StackSize(itemSize.AsOriented(self.Orientation));
-    }
+		public static OrientedSize StackSize(this OrientedSize self, Size itemSize)
+		{
+			return self.StackSize(itemSize.AsOriented(self.Orientation));
+		}
 
-    public static OrientedSize WrapSize(this OrientedSize self, OrientedSize itemSize)
-    {
-      self.Direct = Math.Max(itemSize.Direct, self.Direct);
-      self.Indirect += itemSize.Indirect;
+		public static OrientedSize WrapSize(this OrientedSize self, OrientedSize itemSize)
+		{
+			self.Direct = Math.Max(itemSize.Direct, self.Direct);
+			self.Indirect += itemSize.Indirect;
 
-      return self;
-    }
+			return self;
+		}
 
-    public static OrientedSize WrapSize(this OrientedSize self, Size itemSize)
-    {
-      return self.WrapSize(itemSize.AsOriented(self.Orientation));
-    }
-
-    #endregion
-  }
+		public static OrientedSize WrapSize(this OrientedSize self, Size itemSize)
+		{
+			return self.WrapSize(itemSize.AsOriented(self.Orientation));
+		}
+	}
 }
