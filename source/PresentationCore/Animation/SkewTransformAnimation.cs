@@ -3,11 +3,13 @@
 // </copyright>
 
 using System.Windows.Media;
-using Zaaml.PresentationCore.Animation.Animators;
 
 namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class SkewTransformAnimation : Animation<SkewTransform, SkewTransformAnimator>
+	public sealed class SkewTransformAnimation : AnimationBase<SkewTransform>
 	{
+		public SkewTransformAnimation() : base(SkewTransformInterpolator.Instance)
+		{
+		}
 	}
 }

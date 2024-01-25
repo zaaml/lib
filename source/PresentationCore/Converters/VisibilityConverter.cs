@@ -28,10 +28,9 @@ namespace Zaaml.PresentationCore.Converters
     public static readonly VisibilityConverter TrueToCollapsedVisibility = new VisibilityConverter(Visibility.Visible, Visibility.Collapsed);
 #endif
 
-
     protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
     {
-      if (value == null || (value is bool && (bool) value == false))
+      if (value == null || value is bool boolValue && boolValue == false)
         return _falseVisibility;
 
       return _trueVisibility;

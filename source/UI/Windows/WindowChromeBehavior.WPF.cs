@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Security.Permissions;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -29,1127 +28,1172 @@ using HANDLE_MESSAGE = System.Collections.Generic.KeyValuePair<Zaaml.Platform.WM
 
 namespace Zaaml.UI.Windows
 {
-  internal sealed class WindowChromeBehavior : Behavior<WindowBase>
-  {
-    #region Static Fields and Constants
+	internal sealed class WindowChromeBehavior : Behavior<WindowBase>
+	{
+		private const SWP SwpFlags = SWP.FRAMECHANGED | SWP.NOACTIVATE | SWP.NOCOPYBITS | SWP.NOMOVE | SWP.NOOWNERZORDER | SWP.NOREPOSITION | SWP.NOSENDCHANGING | SWP.NOSIZE | SWP.NOZORDER;
+
+		private static int TaskBarMagic = 10;
 
-    private const SWP SwpFlags = SWP.FRAMECHANGED | SWP.NOACTIVATE | SWP.NOCOPYBITS | SWP.NOMOVE | SWP.NOOWNERZORDER | SWP.NOREPOSITION | SWP.NOSENDCHANGING | SWP.NOSIZE | SWP.NOZORDER;
+		public static readonly DependencyProperty CornerRadiusProperty = DPM.Register<CornerRadius, WindowChromeBehavior>
+			("CornerRadius", w => w.OnChromePropertyChangedThatRequiresRepaint);
 
-    private static int TaskBarMagic = 10;
+		private static readonly DependencyProperty GlassFrameThicknessProperty = DPM.Register<Thickness, WindowChromeBehavior>
+			("GlassFrameThickness", new Thickness(0), w => w.OnChromePropertyChangedThatRequiresRepaint);
 
-    public static readonly DependencyProperty CornerRadiusProperty = DPM.Register<CornerRadius, WindowChromeBehavior>
-      ("CornerRadius", w => w.OnChromePropertyChangedThatRequiresRepaint);
+		private readonly List<HANDLE_MESSAGE> _messageTable;
 
-    private static readonly DependencyProperty GlassFrameThicknessProperty = DPM.Register<Thickness, WindowChromeBehavior>
-      ("GlassFrameThickness", new Thickness(0), w => w.OnChromePropertyChangedThatRequiresRepaint);
+		private NativeBrush _backgroundWindowClassBrush;
+		private int _currentDpi;
+		private bool _customSizing;
 
-    #endregion
+		[SecurityCritical] private IntPtr _hwnd;
 
-    #region Fields
+		[SecurityCritical] private HwndSource _hwndSource;
 
-    private readonly List<HANDLE_MESSAGE> _messageTable;
+		private bool _isGlassEnabled;
+		private bool _isHooked;
+		private WindowState _lastRoundingState;
 
-    private NativeBrush _backgroundWindowClassBrush;
+		private bool _maximized;
+		private NativeBitmap _nativeRenderBitmap;
+		private NativeWindow _nativeWindow;
 
-    private bool _customSizing;
+		private bool _perMonitorEnabled = true;
+		private double _scaleFactor;
+		private double _systemDpi = DpiUtils.DpiX;
+		private WindowPresenter _windowPresenterControl;
+		private double _wpfDpi;
 
-    [SecurityCritical] private IntPtr _hwnd;
+		[SecurityCritical]
+		static WindowChromeBehavior()
+		{
+		}
 
-    [SecurityCritical] private HwndSource _hwndSource;
+		public WindowChromeBehavior()
+		{
+			ApplicationColors.Instance.ChromeBehaviors.Add(this);
 
-    private bool _isGlassEnabled;
-    private bool _isHooked;
-    private WindowState _lastRoundingState;
-    private NativeBitmap _nativeRenderBitmap;
-    private NativeWindow _nativeWindow;
-    private WindowPresenter _windowPresenterControl;
+			GlassFrameThickness = new Thickness(1);
 
-    #endregion
+			_messageTable = new List<HANDLE_MESSAGE>
+			{
+				new(WM.SETTEXT, HandleSetTextOrIcon),
+				new(WM.SETICON, HandleSetTextOrIcon),
+				new(WM.NCACTIVATE, HandleNCActivate),
+				new(WM.NCCALCSIZE, HandleNCCalcSize),
 
-    #region Ctors
+				//new HANDLE_MESSAGE(WM.NCUAHDRAWCAPTION, HandleNCPaint),
+				//new HANDLE_MESSAGE(WM.NCUAHDRAWFRAME, HandleNCPaint),
+				//new HANDLE_MESSAGE(WM.NCPAINT, HandleNCPaint),
 
-    [SecurityCritical]
-    static WindowChromeBehavior()
-    {
-    }
+				new(WM.SYSCOMMAND, HandleSysCommand),
+				new(WM.PAINT, HandlePaint),
+				new(WM.ERASEBKGND, HandleEraseBKGND),
+				new(WM.NCHITTEST, HandleNCHitTest),
+				new(WM.SIZE, HandleSize),
+				new(WM.WINDOWPOSCHANGED, HandleWindowPosChanged),
+				new(WM.DWMCOMPOSITIONCHANGED, HandleDwmCompositionChanged),
+				new(WM.ENTERSIZEMOVE, HandleEnterSizeMove),
+				new(WM.EXITSIZEMOVE, HandleExitSizeMove),
+				new(WM.MOVING, HandleMoving),
+				new(WM.DPICHANGED, HandleDpiChanged),
+			};
+		}
 
-    public WindowChromeBehavior()
-    {
-      ApplicationColors.Instance.ChromeBehaviors.Add(this);
+		public CornerRadius CornerRadius
+		{
+			get => (CornerRadius) GetValue(CornerRadiusProperty);
+			set => SetValue(CornerRadiusProperty, value);
+		}
 
-      GlassFrameThickness = new Thickness(1);
+		public Thickness GlassFrameThickness
+		{
+			get => (Thickness) GetValue(GlassFrameThicknessProperty);
+			set => SetValue(GlassFrameThicknessProperty, value);
+		}
 
-      _messageTable = new List<HANDLE_MESSAGE>
-      {
-        new HANDLE_MESSAGE(WM.SETTEXT, HandleSetTextOrIcon),
-        new HANDLE_MESSAGE(WM.SETICON, HandleSetTextOrIcon),
-        new HANDLE_MESSAGE(WM.NCACTIVATE, HandleNCActivate),
-        new HANDLE_MESSAGE(WM.NCCALCSIZE, HandleNCCalcSize),
+		public bool IsDraggable { get; set; }
 
-        //new HANDLE_MESSAGE(WM.NCUAHDRAWCAPTION, HandleNCPaint),
-        //new HANDLE_MESSAGE(WM.NCUAHDRAWFRAME, HandleNCPaint),
-        //new HANDLE_MESSAGE(WM.NCPAINT, HandleNCPaint),
+		private bool IsDragging { get; set; }
 
-        new HANDLE_MESSAGE(WM.SYSCOMMAND, HandleSysCommand),
-        new HANDLE_MESSAGE(WM.PAINT, HandlePaint),
-        new HANDLE_MESSAGE(WM.ERASEBKGND, HandleEraseBKGND),
-        new HANDLE_MESSAGE(WM.NCHITTEST, HandleNCHitTest),
-        new HANDLE_MESSAGE(WM.SIZE, HandleSize),
-        new HANDLE_MESSAGE(WM.WINDOWPOSCHANGED, HandleWindowPosChanged),
-        new HANDLE_MESSAGE(WM.DWMCOMPOSITIONCHANGED, HandleDwmCompositionChanged),
-        new HANDLE_MESSAGE(WM.ENTERSIZEMOVE, HandleEnterSizeMove),
-        new HANDLE_MESSAGE(WM.EXITSIZEMOVE, HandleExitSizeMove),
-        new HANDLE_MESSAGE(WM.MOVING, HandleMoving),
-      };
-    }
+		private bool IsDwmCompositionEnabled => NativeMethods.DwmIsCompositionEnabled();
 
-    #endregion
+		public bool IsResizable { get; set; }
 
-    #region Properties
+		private bool IsResizing { get; set; }
 
-    public CornerRadius CornerRadius
-    {
-      get => (CornerRadius) GetValue(CornerRadiusProperty);
-      set => SetValue(CornerRadiusProperty, value);
-    }
+		internal BitmapSource RenderBitmap
+		{
+			get => _nativeRenderBitmap?.Source;
+			set
+			{
+				if (ReferenceEquals(RenderBitmap, value))
+					return;
 
-    public Thickness GlassFrameThickness
-    {
-      get => (Thickness) GetValue(GlassFrameThicknessProperty);
-      set => SetValue(GlassFrameThicknessProperty, value);
-    }
+				_nativeRenderBitmap = value != null ? NativeBitmap.Create(value) : null;
 
-    public bool IsDraggable { get; set; }
-
-    private bool IsDragging { get; set; }
-
-    private bool IsDwmCompositionEnabled => NativeMethods.DwmIsCompositionEnabled();
-
-    public bool IsResizable { get; set; }
-
-    private bool IsResizing { get; set; }
-
-    internal BitmapSource RenderBitmap
-    {
-      get => _nativeRenderBitmap?.Source;
-      set
-      {
-        if (ReferenceEquals(RenderBitmap, value))
-          return;
-
-        _nativeRenderBitmap = value != null ? NativeBitmap.Create(value) : null;
-
-        var windowRect = _nativeWindow.GetWindowRect();
-        windowRect.Left = 0;
-        windowRect.Top = 0;
-
-        NativeMethods.InvalidateRect(_hwnd, ref windowRect, true);
-        NativeMethods.UpdateWindow(_hwnd);
-      }
-    }
-
-    public WindowPresenter WindowPresenterControl
-    {
-      get => _windowPresenterControl;
-      set
-      {
-        _windowPresenterControl = value;
-
-        FixupWindowPresenter(null);
-      }
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private void BeginDragMoveImpl()
-    {
-      Target.Activate();
-
-      IsDragging = true;
-
-      Target.OnBeginDragMove();
-
-      NativeMethods.SendMessage(_hwnd, (IntPtr)WM.SYSCOMMAND, (IntPtr)SC.MOUSEMOVE, IntPtr.Zero);
-
-      Target.OnEndDragMove();
-
-      IsDragging = false;
-    }
-
-    internal void BeginDragMove(bool async)
-    {
-      if (IsDraggable == false)
-        return;
-
-      if (async)
-      {
-        var modalCancellationToken = new ModalStateCancellationToken();
-
-        Target.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
-        {
-          BeginDragMoveImpl();
-
-          modalCancellationToken.Cancel();
-        }));
-
-        ModalState.Enter(modalCancellationToken);
-      }
-      else
-        BeginDragMoveImpl();
-    }
-
-    internal void BeginResize(ResizableHandleKind handleKind, bool async)
-    {
-      BeginResize(GetSizingAction(handleKind), async);
-    }
-
-    private void BeginResize(SizingAction sizingAction, bool async)
-    {
-      if (IsResizable == false)
-        return;
-
-      if (async)
-      {
-        var modalCancellationToken = new ModalStateCancellationToken();
-
-        Target.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
-        {
-          BeginResizeImpl(sizingAction);
-
-          modalCancellationToken.Cancel();
-        }));
-
-        ModalState.Enter(modalCancellationToken);
-      }
-      else
-        BeginResizeImpl(sizingAction);
-    }
-
-    private void BeginResizeImpl(SizingAction sizingAction)
-    {
-      IsResizing = true;
-
-      Target.OnBeginResize();
-
-      NativeMethods.SendMessage(_hwnd, (IntPtr) WM.SYSCOMMAND, (IntPtr) (SC.SIZE + (int) sizingAction), IntPtr.Zero);
-
-      Target.OnOnEndResize();
-
-      IsResizing = false;
-    }
-
-    private void ChangeRenderMode(RenderMode mode)
-    {
-      var hwndSource = PresentationSource.FromVisual(Target) as HwndSource;
-
-      if (hwndSource?.CompositionTarget != null)
-        hwndSource.CompositionTarget.RenderMode = mode;
-    }
-
-    [SecurityCritical]
-    private void ClearRoundingRegion()
-    {
-      NativeMethods.SetWindowRgn(_hwnd, IntPtr.Zero, NativeMethods.IsWindowVisible(_hwnd));
-    }
-
-    private void Deinitialize()
-    {
-      try
-      {
-        Target.SourceInitialized -= WindowSourceInitialized;
-        Target.Closed -= OnWindowClosed;
-        Target.StateChanged -= TargetOnStateChanged;
-
-        RestoreStandardChromeState(true);
-      }
-      finally
-      {
-        _hwnd = IntPtr.Zero;
-        _hwndSource = null;
-        _nativeWindow = null;
-      }
-    }
-
-    [SecurityCritical]
-    private void ExtendGlassFrame()
-    {
-      if (PlatformUtil.IsOSVistaOrNewer == false)
-        return;
-
-      if (IntPtr.Zero == _hwnd || _hwndSource?.CompositionTarget == null)
-        return;
-
-      if (IsDwmCompositionEnabled == false)
-        _hwndSource.CompositionTarget.BackgroundColor = SystemColors.WindowColor;
-      else
-      {
-        _hwndSource.CompositionTarget.BackgroundColor = Colors.Transparent;
-
-        var actualGlassFrameThickness = GlassFrameThickness;
-        var deviceGlassThickness = DpiUtils.LogicalThicknessToDevice(actualGlassFrameThickness);
-
-        var dwmMargin = new MARGINS();
-
-        NativeMethods.DwmExtendFrameIntoClientArea(_hwnd, ref dwmMargin);
-
-        dwmMargin = new MARGINS
-        {
-          cxLeftWidth = (int) Math.Ceiling(deviceGlassThickness.Left),
-          cxRightWidth = (int) Math.Ceiling(deviceGlassThickness.Right),
-          cyTopHeight = (int) Math.Ceiling(deviceGlassThickness.Top),
-          cyBottomHeight = (int) Math.Ceiling(deviceGlassThickness.Bottom)
-        };
-
-        NativeMethods.DwmExtendFrameIntoClientArea(_hwnd, ref dwmMargin);
-      }
-    }
-
-    private void FillBackground()
-    {
-      var rect = _nativeWindow.GetWindowRect();
-
-      rect.Left = 0;
-      rect.Top = 0;
-
-      var hdc = NativeMethods.GetWindowDC(_hwnd);
-			var clientRect = _nativeWindow.GetClientRect();
-
-      // Adjust non client area
-
-      //clientRect.Left += 100;
-      //clientRect.Top += 100;
-      //clientRect.Bottom += 100 + 1;
-      //clientRect.Right += 100 + 1;
-			
-      var hrgn = NativeMethods.CreateRectRgn(clientRect.Left, clientRect.Top, clientRect.Right, clientRect.Bottom);
-
-      NativeMethods.ExtSelectClipRgn(hdc, hrgn, CombineRgnStyles.RGN_DIFF);
-
-      NativeMethods.FillRect(hdc, ref rect, ApplicationColors.Instance.NativeBackgroundBrush.HBrush);
-      NativeMethods.ReleaseDC(_hwnd, hdc);
-    }
-
-    private void FixupWindowPresenter(WindowState? windowState)
-    {
-      if (WindowPresenterControl == null || _hwnd == IntPtr.Zero)
-        return;
-
-      switch (windowState ?? GetHwndState())
-      {
-        case WindowState.Normal:
-          WindowPresenterControl.Margin = new Thickness(0);
-          break;
-        case WindowState.Maximized:
-          var thickness = new Thickness(8);
-
-          if (TaskBarHelper.IsAutoHide(out var edge, _hwndSource.Handle))
-          {
-            if (edge == (int) ABEdge.ABE_BOTTOM)
-              thickness.Bottom -= TaskBarMagic;
-
-            if (edge == (int) ABEdge.ABE_RIGHT)
-              thickness.Right -= TaskBarMagic;
-
-            if (edge == (int) ABEdge.ABE_TOP)
-              thickness.Top += TaskBarMagic;
-
-            if (edge == (int) ABEdge.ABE_LEFT)
-              thickness.Left += TaskBarMagic;
-          }
-
-          WindowPresenterControl.Margin = thickness;
-          break;
-      }
-    }
-
-    [SecurityCritical]
-    private RECT GetAdjustedWindowRect(RECT rcWindow)
-    {
-      var style = (WS) NativeMethods.GetWindowLongPtr(_hwnd, GWL.STYLE);
-      var exstyle = (WS_EX) NativeMethods.GetWindowLongPtr(_hwnd, GWL.EXSTYLE);
-
-      return NativeMethods.AdjustWindowRectEx(rcWindow, style, false, exstyle);
-    }
-
-    [SecurityCritical]
-    private WindowState GetHwndState()
-    {
-      var wpl = NativeMethods.GetWindowPlacement(_hwnd);
-
-      switch (wpl.ShowCmd)
-      {
-        case SW.SHOWMINIMIZED:
-          return WindowState.Minimized;
-        case SW.SHOWMAXIMIZED:
-          return WindowState.Maximized;
-      }
-
-      return WindowState.Normal;
-    }
-
-    private static SizingAction GetSizingAction(ResizableHandleKind part)
-    {
-      switch (part)
-      {
-        case ResizableHandleKind.Undefined:
-          return SizingAction.Undefined;
-        case ResizableHandleKind.Left:
-          return SizingAction.West;
-        case ResizableHandleKind.Top:
-          return SizingAction.North;
-        case ResizableHandleKind.Right:
-          return SizingAction.East;
-        case ResizableHandleKind.Bottom:
-          return SizingAction.South;
-        case ResizableHandleKind.TopLeft:
-          return SizingAction.NorthWest;
-        case ResizableHandleKind.TopRight:
-          return SizingAction.NorthEast;
-        case ResizableHandleKind.BottomRight:
-          return SizingAction.SouthEast;
-        case ResizableHandleKind.BottomLeft:
-          return SizingAction.SouthWest;
-        default:
-          throw new ArgumentOutOfRangeException(nameof(part));
-      }
-    }
-
-    [SecurityCritical]
-    private Rect GetWindowRect()
-    {
-      return _nativeWindow.GetWindowRect().ToPresentationRect();
-    }
-
-    private IntPtr Handle(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      handled = true;
-
-      return IntPtr.Zero;
-    }
-
-    [SecurityCritical]
-    private IntPtr HandleDwmCompositionChanged(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      UpdateCaptionStyle();
-      UpdateFrameState(false);
-
-      handled = false;
-
-      return IntPtr.Zero;
-    }
-
-    [SecurityCritical]
-    private IntPtr HandleEnterSizeMove(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      OnSizeMoveStarted();
-
-      handled = false;
-
-      return IntPtr.Zero;
-    }
-
-    private IntPtr HandleEraseBKGND(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      handled = true;
-
-      if (Target.IsContentRendered == false)
-      {
-        var hdc = wparam;
 				var windowRect = _nativeWindow.GetWindowRect();
 
-        windowRect.Left = 0;
-        windowRect.Top = 0;
+				windowRect.Left = 0;
+				windowRect.Top = 0;
 
-        NativeMethods.FillRect(hdc, ref windowRect, ApplicationColors.Instance.NativeBackgroundBrush.HBrush);
-      }
+				NativeMethods.InvalidateRect(_hwnd, ref windowRect, true);
+				NativeMethods.UpdateWindow(_hwnd);
+			}
+		}
 
-      return new IntPtr(1);
-    }
+		public WindowPresenter WindowPresenterControl
+		{
+			get => _windowPresenterControl;
+			set
+			{
+				_windowPresenterControl = value;
 
-    [SecurityCritical]
-    private IntPtr HandleExitSizeMove(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      OnSizeMoveFinished();
+				FixupWindowPresenter(null);
+				UpdateDpi();
+			}
+		}
 
-      handled = false;
+		internal void BeginDragMove(bool async)
+		{
+			if (IsDraggable == false)
+				return;
 
-      return IntPtr.Zero;
-    }
+			if (async)
+			{
+				var modalCancellationToken = new ModalStateCancellationToken();
 
-    private IntPtr HandleMoving(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      handled = true;
+				Target.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+				{
+					BeginDragMoveImpl();
 
-      Target.OnDragMove();
+					modalCancellationToken.Cancel();
+				}));
 
-      return IntPtr.Zero;
-    }
+				ModalState.Enter(modalCancellationToken);
+			}
+			else
+				BeginDragMoveImpl();
+		}
 
-    private IntPtr HandleNCActivate(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      handled = true;
+		private void BeginDragMoveImpl()
+		{
+			Target.Activate();
 
-      //if (Target.WindowState == WindowState.Minimized)
-      //{
-      //  return NativeMethods.DefWindowProc(_hwnd, WM.NCACTIVATE, wparam, new IntPtr(-1));
-      //}
+			IsDragging = true;
 
-      //PaintNCArea(new IntPtr(1));
+			Target.OnBeginDragMoveInternal();
 
-      //return new IntPtr(1);
+			NativeMethods.SendMessage(_hwnd, (IntPtr) WM.SYSCOMMAND, (IntPtr) SC.MOUSEMOVE, IntPtr.Zero);
 
-      var lRet = NativeMethods.DefWindowProc(_hwnd, WM.NCACTIVATE, wparam, new IntPtr(-1));
+			Target.OnEndDragMoveInternal();
 
-      if (IsDwmCompositionEnabled)
-      {
-        var rect = _nativeWindow.GetWindowRect();
+			IsDragging = false;
+		}
 
-        rect.Top = 0;
-        rect.Left = 0;
+		internal void BeginResize(ResizableHandleKind handleKind, bool async)
+		{
+			BeginResize(GetSizingAction(handleKind), async);
+		}
 
-        NativeMethods.InvalidateRect(_hwnd, ref rect, false);
-      }
+		private void BeginResize(SizingAction sizingAction, bool async)
+		{
+			if (IsResizable == false)
+				return;
 
-      return lRet;
-    }
+			if (async)
+			{
+				var modalCancellationToken = new ModalStateCancellationToken();
 
-    [SecurityCritical]
-    private IntPtr HandleNCCalcSize(WM uMsg, IntPtr wParam, IntPtr lParam, out bool handled)
-    {
-      var thickness = new Thickness(0, 0, 0, IsDwmCompositionEnabled ? -1 : 0);
+				Target.Dispatcher.BeginInvoke(DispatcherPriority.Input, new Action(() =>
+				{
+					BeginResizeImpl(sizingAction);
+
+					modalCancellationToken.Cancel();
+				}));
+
+				ModalState.Enter(modalCancellationToken);
+			}
+			else
+				BeginResizeImpl(sizingAction);
+		}
+
+		private void BeginResizeImpl(SizingAction sizingAction)
+		{
+			IsResizing = true;
+
+			Target.OnBeginResizeInternal();
+
+			NativeMethods.SendMessage(_hwnd, (IntPtr) WM.SYSCOMMAND, (IntPtr) (SC.SIZE + (int) sizingAction), IntPtr.Zero);
+
+			Target.OnEndResizeInternal();
+
+			IsResizing = false;
+		}
+
+		private RECT CalcNC(RECT rcClientArea)
+		{
+			var b = Target.AllowsTransparency == false;
+
+			var thickness = new Thickness(0, 0, 0, IsDwmCompositionEnabled && b ? -1 : 0);
 			var thicknessDevice = DpiUtils.LogicalThicknessToDevice(thickness);
-			var rcClientArea = (RECT) Marshal.PtrToStructure(lParam, typeof(RECT));
 
-      rcClientArea.Top += (int) thicknessDevice.Top;
-      rcClientArea.Left += (int) thicknessDevice.Left;
-      rcClientArea.Bottom -= (int) thicknessDevice.Bottom;
-      rcClientArea.Right -= (int) thicknessDevice.Right;
+			rcClientArea.Top += (int) thicknessDevice.Top;
+			rcClientArea.Left += (int) thicknessDevice.Left;
+			rcClientArea.Bottom -= (int) thicknessDevice.Bottom;
+			rcClientArea.Right -= (int) thicknessDevice.Right;
 
-      if (Target.WindowState == WindowState.Maximized)
-      {
-        int edge;
-        if (TaskBarHelper.IsAutoHide(out edge, _hwndSource.Handle))
-        {
-          if (edge == (int) ABEdge.ABE_BOTTOM)
-            rcClientArea.Bottom -= TaskBarMagic;
+			if (Target.WindowState == WindowState.Maximized)
+			{
+				int edge;
+				if (TaskBarHelper.IsAutoHide(out edge, _hwndSource.Handle))
+				{
+					if (edge == (int) ABEdge.ABE_BOTTOM)
+						rcClientArea.Bottom -= TaskBarMagic;
 
-          if (edge == (int) ABEdge.ABE_RIGHT)
-            rcClientArea.Right -= TaskBarMagic;
+					if (edge == (int) ABEdge.ABE_RIGHT)
+						rcClientArea.Right -= TaskBarMagic;
 
-          if (edge == (int) ABEdge.ABE_TOP)
-            rcClientArea.Top += TaskBarMagic;
+					if (edge == (int) ABEdge.ABE_TOP)
+						rcClientArea.Top += TaskBarMagic;
 
-          if (edge == (int) ABEdge.ABE_LEFT)
-            rcClientArea.Left += TaskBarMagic;
-        }
-      }
+					if (edge == (int) ABEdge.ABE_LEFT)
+						rcClientArea.Left += TaskBarMagic;
+				}
+			}
 
-      Marshal.StructureToPtr(rcClientArea, lParam, false);
+			return rcClientArea;
+		}
 
-      handled = true;
+		private void ChangeRenderMode(RenderMode mode)
+		{
+			var hwndSource = PresentationSource.FromVisual(Target) as HwndSource;
 
-      return new IntPtr((int) (WVR.VALIDRECTS | WVR.REDRAW));
-    }
+			if (hwndSource?.CompositionTarget != null)
+				hwndSource.CompositionTarget.RenderMode = mode;
+		}
 
-    private IntPtr HandleNCHitTest(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      handled = true;
+		[SecurityCritical]
+		private void ClearRoundingRegion()
+		{
+			NativeMethods.SetWindowRgn(_hwnd, IntPtr.Zero, NativeMethods.IsWindowVisible(_hwnd));
+		}
 
-      var mousePosScreen = new POINT
-      {
-        x = PlatformUtil.GET_X_LPARAM(lparam),
-        y = PlatformUtil.GET_Y_LPARAM(lparam)
-      };
+		private void Deinitialize()
+		{
+			try
+			{
+				Target.SourceInitialized -= WindowSourceInitialized;
+				Target.Closed -= OnWindowClosed;
+				Target.StateChanged -= TargetOnStateChanged;
 
-      var windowPosition = _nativeWindow.GetWindowRect();
+				RestoreStandardChromeState(true);
+			}
+			finally
+			{
+				_hwnd = IntPtr.Zero;
+				_hwndSource = null;
+				_nativeWindow = null;
+			}
+		}
+
+		[SecurityCritical]
+		private void ExtendGlassFrame()
+		{
+			if (PlatformUtil.IsOSVistaOrNewer == false)
+				return;
+
+			if (IntPtr.Zero == _hwnd || _hwndSource?.CompositionTarget == null)
+				return;
+
+			if (IsDwmCompositionEnabled == false)
+				_hwndSource.CompositionTarget.BackgroundColor = SystemColors.WindowColor;
+			else
+			{
+				_hwndSource.CompositionTarget.BackgroundColor = Colors.Transparent;
+
+				var actualGlassFrameThickness = GlassFrameThickness;
+				var deviceGlassThickness = DpiUtils.LogicalThicknessToDevice(actualGlassFrameThickness);
+
+				var dwmMargin = new MARGINS();
+
+				NativeMethods.DwmExtendFrameIntoClientArea(_hwnd, ref dwmMargin);
+
+				dwmMargin = new MARGINS
+				{
+					cxLeftWidth = (int) Math.Ceiling(deviceGlassThickness.Left),
+					cxRightWidth = (int) Math.Ceiling(deviceGlassThickness.Right),
+					cyTopHeight = (int) Math.Ceiling(deviceGlassThickness.Top),
+					cyBottomHeight = (int) Math.Ceiling(deviceGlassThickness.Bottom)
+				};
+
+				NativeMethods.DwmExtendFrameIntoClientArea(_hwnd, ref dwmMargin);
+			}
+		}
+
+		private void FillBackground()
+		{
+			var rect = _nativeWindow.GetWindowRect();
+
+			rect.Left = 0;
+			rect.Top = 0;
+
+			var hdc = NativeMethods.GetWindowDC(_hwnd);
+			var clientRect = _nativeWindow.GetClientRect();
+
+			// Adjust non client area
+
+			//clientRect.Left += 100;
+			//clientRect.Top += 100;
+			//clientRect.Bottom += 100 + 1;
+			//clientRect.Right += 100 + 1;
+
+			var hrgn = NativeMethods.CreateRectRgn(clientRect.Left, clientRect.Top, clientRect.Right, clientRect.Bottom);
+
+			NativeMethods.ExtSelectClipRgn(hdc, hrgn, CombineRgnStyles.RGN_DIFF);
+
+			NativeMethods.FillRect(hdc, ref rect, ApplicationColors.Instance.NativeBackgroundBrush.HBrush);
+			NativeMethods.ReleaseDC(_hwnd, hdc);
+		}
+
+		private void FixupWindowPresenter(WindowState? windowState)
+		{
+			if (WindowPresenterControl == null || _hwnd == IntPtr.Zero)
+				return;
+
+			switch (windowState ?? GetHwndState())
+			{
+				case WindowState.Normal:
+					WindowPresenterControl.Margin = new Thickness(0);
+					break;
+				case WindowState.Maximized:
+					var thickness = new Thickness(8);
+
+					if (TaskBarHelper.IsAutoHide(out var edge, _hwndSource.Handle))
+					{
+						if (edge == (int) ABEdge.ABE_BOTTOM)
+							thickness.Bottom -= TaskBarMagic;
+
+						if (edge == (int) ABEdge.ABE_RIGHT)
+							thickness.Right -= TaskBarMagic;
+
+						if (edge == (int) ABEdge.ABE_TOP)
+							thickness.Top += TaskBarMagic;
+
+						if (edge == (int) ABEdge.ABE_LEFT)
+							thickness.Left += TaskBarMagic;
+					}
+
+					WindowPresenterControl.Margin = thickness;
+					break;
+			}
+		}
+
+		[SecurityCritical]
+		private RECT GetAdjustedWindowRect(RECT rcWindow)
+		{
+			var style = (WS) NativeMethods.GetWindowLongPtr(_hwnd, GWL.STYLE);
+			var exstyle = (WS_EX) NativeMethods.GetWindowLongPtr(_hwnd, GWL.EXSTYLE);
+
+			return NativeMethods.AdjustWindowRectEx(rcWindow, style, false, exstyle);
+		}
+
+		[SecurityCritical]
+		private WindowState GetHwndState()
+		{
+			var wpl = NativeMethods.GetWindowPlacement(_hwnd);
+
+			switch (wpl.ShowCmd)
+			{
+				case SW.SHOWMINIMIZED:
+					return WindowState.Minimized;
+				case SW.SHOWMAXIMIZED:
+					return WindowState.Maximized;
+			}
+
+			return WindowState.Normal;
+		}
+
+		private static SizingAction GetSizingAction(ResizableHandleKind part)
+		{
+			switch (part)
+			{
+				case ResizableHandleKind.Undefined:
+					return SizingAction.Undefined;
+				case ResizableHandleKind.Left:
+					return SizingAction.West;
+				case ResizableHandleKind.Top:
+					return SizingAction.North;
+				case ResizableHandleKind.Right:
+					return SizingAction.East;
+				case ResizableHandleKind.Bottom:
+					return SizingAction.South;
+				case ResizableHandleKind.TopLeft:
+					return SizingAction.NorthWest;
+				case ResizableHandleKind.TopRight:
+					return SizingAction.NorthEast;
+				case ResizableHandleKind.BottomRight:
+					return SizingAction.SouthEast;
+				case ResizableHandleKind.BottomLeft:
+					return SizingAction.SouthWest;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(part));
+			}
+		}
+
+		[SecurityCritical]
+		private Rect GetWindowRect()
+		{
+			return _nativeWindow.GetWindowRect().ToPresentationRect();
+		}
+
+		private IntPtr Handle(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			handled = true;
+
+			return IntPtr.Zero;
+		}
+
+		private IntPtr HandleDpiChanged(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			handled = true;
+
+			var lprNewRect = (RECT) Marshal.PtrToStructure(lparam, typeof(RECT));
+
+			NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero, lprNewRect.Left, lprNewRect.Top, lprNewRect.Width, lprNewRect.Height,
+				SWP.NOZORDER | SWP.NOOWNERZORDER | SWP.NOACTIVATE);
+
+			var oldDpi = _currentDpi;
+
+			_currentDpi = wparam.ToInt32() & 0xFFFF;
+
+			if (oldDpi != _currentDpi)
+				OnDpiChanged();
+
+			return IntPtr.Zero;
+		}
+
+		[SecurityCritical]
+		private IntPtr HandleDwmCompositionChanged(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			UpdateCaptionStyle();
+			UpdateFrameState(false);
+
+			handled = false;
+
+			return IntPtr.Zero;
+		}
+
+		[SecurityCritical]
+		private IntPtr HandleEnterSizeMove(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			OnSizeMoveStarted();
+
+			handled = false;
+
+			return IntPtr.Zero;
+		}
+
+		private IntPtr HandleEraseBKGND(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			handled = true;
+
+			if (Target.IsContentRendered == false)
+			{
+				var hdc = wparam;
+				var windowRect = _nativeWindow.GetWindowRect();
+
+				windowRect.Left = 0;
+				windowRect.Top = 0;
+
+				NativeMethods.FillRect(hdc, ref windowRect, ApplicationColors.Instance.NativeBackgroundBrush.HBrush);
+			}
+
+			return new IntPtr(1);
+		}
+
+		[SecurityCritical]
+		private IntPtr HandleExitSizeMove(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			OnSizeMoveFinished();
+
+			handled = false;
+
+			return IntPtr.Zero;
+		}
+
+		private IntPtr HandleMoving(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			handled = true;
+
+			Target.OnDragMoveInternal();
+
+			return IntPtr.Zero;
+		}
+
+		private IntPtr HandleNCActivate(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			handled = true;
+
+			var lRet = NativeMethods.DefWindowProc(_hwnd, WM.NCACTIVATE, wparam, new IntPtr(-1));
+
+			if (IsDwmCompositionEnabled)
+			{
+				var rect = _nativeWindow.GetWindowRect();
+
+				rect.Top = 0;
+				rect.Left = 0;
+
+				NativeMethods.InvalidateRect(_hwnd, ref rect, false);
+			}
+
+			return lRet;
+		}
+
+		[SecurityCritical]
+		private IntPtr HandleNCCalcSize(WM uMsg, IntPtr wParam, IntPtr lParam, out bool handled)
+		{
+			if (wParam == new IntPtr(1))
+			{
+				var rcClientArea = (NCCALCSIZE_PARAMS) Marshal.PtrToStructure(lParam, typeof(NCCALCSIZE_PARAMS));
+				var nc = CalcNC(rcClientArea.rgrc[0]);
+
+				rcClientArea.rgrc[0] = nc;
+
+				Marshal.StructureToPtr(rcClientArea, lParam, false);
+			}
+			else if (wParam == IntPtr.Zero)
+			{
+				var rcClientArea = (RECT) Marshal.PtrToStructure(lParam, typeof(RECT));
+
+				rcClientArea = CalcNC(rcClientArea);
+
+				Marshal.StructureToPtr(rcClientArea, lParam, false);
+			}
+
+			handled = true;
+
+			return new IntPtr((int) (WVR.VALIDRECTS | WVR.REDRAW));
+		}
+
+		private IntPtr HandleNCHitTest(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			handled = true;
+
+			var mousePosScreen = new POINT
+			{
+				x = PlatformUtil.GET_X_LPARAM(lparam),
+				y = PlatformUtil.GET_Y_LPARAM(lparam)
+			};
+
+			var windowPosition = _nativeWindow.GetWindowRect();
 			var mousePosWindow = mousePosScreen;
 
-      mousePosWindow.x -= windowPosition.Left;
-      mousePosWindow.y -= windowPosition.Top;
+			mousePosWindow.x -= windowPosition.Left;
+			mousePosWindow.y -= windowPosition.Top;
 
-      var hitTestResizeBorder = IsResizable ? HitTestResizeBorder(mousePosWindow, windowPosition.Height, windowPosition.Width, 4, 1) : HT.NOWHERE;
+			var hitTestResizeBorder = IsResizable ? HitTestResizeBorder(mousePosWindow, windowPosition.Height, windowPosition.Width, 4, 1) : HT.NOWHERE;
 
-      if (hitTestResizeBorder != HT.NOWHERE)
-        return (IntPtr) hitTestResizeBorder;
+			if (hitTestResizeBorder != HT.NOWHERE)
+				return (IntPtr) hitTestResizeBorder;
 
-      return (IntPtr) HT.CLIENT;
-    }
+			return (IntPtr) HT.CLIENT;
+		}
 
-    private IntPtr HandleNCPaint(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      handled = true;
+		private IntPtr HandleNCPaint(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			handled = true;
 
-      PaintNCArea(wparam);
+			PaintNCArea(wparam);
 
-      return new IntPtr(1);
-    }
+			return new IntPtr(1);
+		}
 
-    private IntPtr HandlePaint(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      if (_nativeRenderBitmap == null)
-      {
-        handled = false;
+		private IntPtr HandlePaint(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			if (_nativeRenderBitmap == null)
+			{
+				handled = false;
 
-        return IntPtr.Zero;
-      }
+				return IntPtr.Zero;
+			}
 
-      var hdc = NativeMethods.BeginPaint(_hwnd, out var paintStruct);
+			var hdc = NativeMethods.BeginPaint(_hwnd, out var paintStruct);
 
-      if (hdc == IntPtr.Zero)
-      {
-        handled = false;
+			if (hdc == IntPtr.Zero)
+			{
+				handled = false;
 
-        return IntPtr.Zero;
-      }
+				return IntPtr.Zero;
+			}
 
-      handled = true;
+			handled = true;
 
-      var windowRect = _nativeWindow.GetWindowRect();
+			var windowRect = _nativeWindow.GetWindowRect();
 
-      windowRect.Left = 0;
-      windowRect.Top = 0;
+			windowRect.Left = 0;
+			windowRect.Top = 0;
 
-      var width = _nativeRenderBitmap.Source.PixelWidth;
-      var height = _nativeRenderBitmap.Source.PixelHeight;
+			var width = _nativeRenderBitmap.Source.PixelWidth;
+			var height = _nativeRenderBitmap.Source.PixelHeight;
 
-      var hdcMem = NativeMethods.CreateCompatibleDC(hdc);
-      var hbmOld = NativeMethods.SelectObject(hdcMem, _nativeRenderBitmap.Handle);
+			var hdcMem = NativeMethods.CreateCompatibleDC(hdc);
+			var hbmOld = NativeMethods.SelectObject(hdcMem, _nativeRenderBitmap.Handle);
 
-      NativeMethods.BitBlt(hdc, 0, 0, width, height, hdcMem, 0, 0, TernaryRasterOperations.SRCCOPY);
-      NativeMethods.SelectObject(hdcMem, hbmOld);
-      NativeMethods.DeleteDC(hdcMem);
+			NativeMethods.BitBlt(hdc, 0, 0, width, height, hdcMem, 0, 0, TernaryRasterOperations.SRCCOPY);
+			NativeMethods.SelectObject(hdcMem, hbmOld);
+			NativeMethods.DeleteDC(hdcMem);
 
-      NativeMethods.EndPaint(_hwnd, ref paintStruct);
+			NativeMethods.EndPaint(_hwnd, ref paintStruct);
 
-      return IntPtr.Zero;
-    }
+			return IntPtr.Zero;
+		}
 
 		private IntPtr HandleSetTextOrIcon(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      var modified = PlatformUtil.ModifyStyle(_hwnd, WS.VISIBLE, 0);
+		{
+			var modified = PlatformUtil.ModifyStyle(_hwnd, WS.VISIBLE, 0);
 
-      var lRet = NativeMethods.DefWindowProc(_hwnd, umsg, wparam, lparam);
+			var lRet = NativeMethods.DefWindowProc(_hwnd, umsg, wparam, lparam);
 
-      if (modified)
-        PlatformUtil.ModifyStyle(_hwnd, 0, WS.VISIBLE);
+			if (modified)
+				PlatformUtil.ModifyStyle(_hwnd, 0, WS.VISIBLE);
 
-      handled = true;
+			handled = true;
 
-      return lRet;
-    }
+			return lRet;
+		}
 
-    [SecurityCritical]
-    private IntPtr HandleSize(WM uMsg, IntPtr wParam, IntPtr lParam, out bool handled)
-    {
-      const int SIZE_MAXIMIZED = 2;
-      const int SIZE_RESTORED = 0;
+		[SecurityCritical]
+		private IntPtr HandleSize(WM uMsg, IntPtr wParam, IntPtr lParam, out bool handled)
+		{
+			const int SIZE_MAXIMIZED = 2;
+			const int SIZE_RESTORED = 0;
 
-      switch (wParam.ToInt32())
-      {
-        case SIZE_MAXIMIZED:
-          FixupWindowPresenter(WindowState.Maximized);
-          break;
-        case SIZE_RESTORED:
-          FixupWindowPresenter(WindowState.Normal);
-          break;
-      }
+			var maximized = _maximized;
 
-      UpdateFrameState(true);
+			switch (wParam.ToInt32())
+			{
+				case SIZE_MAXIMIZED:
 
-      handled = false;
+					_maximized = true;
 
-      return IntPtr.Zero;
-    }
+					FixupWindowPresenter(WindowState.Maximized);
 
-    private IntPtr HandleSysCommand(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
-    {
-      handled = false;
+					break;
+				case SIZE_RESTORED:
 
-      var sysCommand = wparam.ToInt32();
+					if (_maximized)
+						FixupWindowPresenter(WindowState.Normal);
 
-      if (sysCommand >= (int) SC.SIZE + (int) SizingAction.MinAction && sysCommand <= (int) SC.SIZE + (int) SizingAction.MaxAction)
-      {
-        if (_customSizing)
-          return IntPtr.Zero;
+					_maximized = false;
 
-        try
-        {
-          _customSizing = true;
+					break;
+			}
 
-          handled = true;
+			if (maximized != _maximized)
+				UpdateFrameState(true);
 
-          BeginResize((SizingAction) (sysCommand - SC.SIZE), false);
-        }
-        finally
-        {
-          _customSizing = false;
-        }
-      }
+			handled = false;
 
-      return IntPtr.Zero;
-    }
+			return IntPtr.Zero;
+		}
 
-    [SecurityCritical]
-    private IntPtr HandleWindowPosChanged(WM uMsg, IntPtr wParam, IntPtr lParam, out bool handled)
-    {
-      var wp = (WINDOWPOS) Marshal.PtrToStructure(lParam, typeof(WINDOWPOS));
+		private IntPtr HandleSysCommand(WM umsg, IntPtr wparam, IntPtr lparam, out bool handled)
+		{
+			handled = false;
 
-      if (CommonUtils.IsFlagSet(wp.flags, (int) SWP.NOSIZE) == false)
-      {
-        if (_isGlassEnabled == false)
-          SetRoundingRegion(wp);
-      }
+			var sysCommand = wparam.ToInt32();
 
-      handled = false;
+			if (sysCommand >= (int) SC.SIZE + (int) SizingAction.MinAction && sysCommand <= (int) SC.SIZE + (int) SizingAction.MaxAction)
+			{
+				if (_customSizing)
+					return IntPtr.Zero;
 
-      return IntPtr.Zero;
-    }
+				try
+				{
+					_customSizing = true;
 
-    private static HT HitTestResizeBorder(POINT position, int height, int width, int thickness, int dc)
-    {
-      var resPart = ResizableHandleKind.Undefined;
+					handled = true;
 
-      resPart |= position.y >= 0 && position.y <= dc * thickness ? ResizableHandleKind.Top : 0;
-      resPart |= position.y >= height - dc * thickness && position.y <= height ? ResizableHandleKind.Bottom : 0;
-      resPart |= position.x >= 0 && position.x <= dc * thickness ? ResizableHandleKind.Left : 0;
-      resPart |= position.x >= width - dc * thickness && position.x <= width ? ResizableHandleKind.Right : 0;
+					BeginResize((SizingAction) (sysCommand - SC.SIZE), false);
+				}
+				finally
+				{
+					_customSizing = false;
+				}
+			}
+
+			return IntPtr.Zero;
+		}
+
+		[SecurityCritical]
+		private IntPtr HandleWindowPosChanged(WM uMsg, IntPtr wParam, IntPtr lParam, out bool handled)
+		{
+			var wp = (WINDOWPOS) Marshal.PtrToStructure(lParam, typeof(WINDOWPOS));
+
+			if (CommonUtils.IsFlagSet(wp.flags, (int) SWP.NOSIZE) == false)
+			{
+				if (_isGlassEnabled == false)
+					SetRoundingRegion(wp);
+			}
+
+			handled = false;
+
+			return IntPtr.Zero;
+		}
+
+		private static HT HitTestResizeBorder(POINT position, int height, int width, int thickness, int dc)
+		{
+			var resPart = ResizableHandleKind.Undefined;
+
+			resPart |= position.y >= 0 && position.y <= dc * thickness ? ResizableHandleKind.Top : 0;
+			resPart |= position.y >= height - dc * thickness && position.y <= height ? ResizableHandleKind.Bottom : 0;
+			resPart |= position.x >= 0 && position.x <= dc * thickness ? ResizableHandleKind.Left : 0;
+			resPart |= position.x >= width - dc * thickness && position.x <= width ? ResizableHandleKind.Right : 0;
 
 			switch (resPart)
-      {
-        case ResizableHandleKind.Left:
-          return HT.LEFT;
-        case ResizableHandleKind.Top:
-          return HT.TOP;
-        case ResizableHandleKind.Right:
-          return HT.RIGHT;
-        case ResizableHandleKind.Bottom:
-          return HT.BOTTOM;
-        case ResizableHandleKind.TopLeft:
-          return HT.TOPLEFT;
-        case ResizableHandleKind.TopRight:
-          return HT.TOPRIGHT;
-        case ResizableHandleKind.BottomRight:
-          return HT.BOTTOMRIGHT;
-        case ResizableHandleKind.BottomLeft:
-          return HT.BOTTOMLEFT;
-      }
+			{
+				case ResizableHandleKind.Left:
+					return HT.LEFT;
+				case ResizableHandleKind.Top:
+					return HT.TOP;
+				case ResizableHandleKind.Right:
+					return HT.RIGHT;
+				case ResizableHandleKind.Bottom:
+					return HT.BOTTOM;
+				case ResizableHandleKind.TopLeft:
+					return HT.TOPLEFT;
+				case ResizableHandleKind.TopRight:
+					return HT.TOPRIGHT;
+				case ResizableHandleKind.BottomRight:
+					return HT.BOTTOMRIGHT;
+				case ResizableHandleKind.BottomLeft:
+					return HT.BOTTOMLEFT;
+			}
 
-      return HT.NOWHERE;
-    }
+			return HT.NOWHERE;
+		}
 
-    private void Initialize()
-    {
-      var wih = new WindowInteropHelper(Target);
+		private void Initialize()
+		{
+			var wih = new WindowInteropHelper(Target);
 
-      Target.StateChanged += TargetOnStateChanged;
-      Target.Closed += OnWindowClosed;
+			Target.StateChanged += TargetOnStateChanged;
+			Target.Closed += OnWindowClosed;
 
-      if (IntPtr.Zero != wih.Handle)
-        InitializeStep2(wih);
-      else
-        Target.SourceInitialized += WindowSourceInitialized;
-    }
+			if (IntPtr.Zero != wih.Handle)
+				InitializeStep2(wih);
+			else
+				Target.SourceInitialized += WindowSourceInitialized;
+		}
 
-    private void InitializeStep2(WindowInteropHelper wih)
-    {
-      if (_hwnd != IntPtr.Zero)
-        return;
+		private void InitializeStep2(WindowInteropHelper wih)
+		{
+			if (_hwnd != IntPtr.Zero)
+				return;
 
-      if (wih.Handle == IntPtr.Zero)
-        return;
+			if (wih.Handle == IntPtr.Zero)
+				return;
 
-      _hwndSource = HwndSource.FromHwnd(wih.Handle);
+			_hwndSource = HwndSource.FromHwnd(wih.Handle);
 
-      if (_hwndSource == null || _hwndSource.IsDisposed)
-        return;
+			if (_hwndSource == null || _hwndSource.IsDisposed)
+				return;
 
-      _hwnd = wih.Handle;
+			_hwnd = wih.Handle;
+			_perMonitorEnabled = DpiUtils.SetPerMonitorDPIAware();
+			//var hrgn = NativeMethods.CreateRectRgn(0, 0, 0, 0);
 
-      //var hrgn = NativeMethods.CreateRectRgn(0, 0, 0, 0);
-
-      //NativeMethods.SetWindowRgn(_hwnd, hrgn, true);
+			//NativeMethods.SetWindowRgn(_hwnd, hrgn, true);
 
 			_nativeWindow = new NativeWindow(_hwnd);
 
-      if (_isHooked == false)
-      {
-        _hwndSource.AddHook(WndProc);
-        _isHooked = true;
-      }
+			if (_isHooked == false)
+			{
+				_hwndSource.AddHook(WndProc);
+				_isHooked = true;
+			}
 
+			UpdateDpi();
 			UpdateBackgroundColor();
-      UpdateBorderColor();
-      UpdateCaptionStyle();
+			UpdateBorderColor();
+			UpdateCaptionStyle();
 
-      Target.ApplyTemplate();
-      FixupWindowPresenter(null);
-      UpdateFrameState(true);
+			Target.ApplyTemplate();
+			FixupWindowPresenter(null);
+			UpdateFrameState(true);
 
-      NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0, SwpFlags);
+			NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0, SwpFlags);
 
-      Target.SourceInitialized -= WindowSourceInitialized;
-    }
+			Target.SourceInitialized -= WindowSourceInitialized;
+		}
 
-    protected override void OnAttached()
-    {
-      base.OnAttached();
+		protected override void OnAttached()
+		{
+			base.OnAttached();
 
-      Initialize();
-    }
+			Initialize();
+		}
 
-    [SecuritySafeCritical]
-    private void OnChromePropertyChangedThatRequiresRepaint()
-    {
-      UpdateFrameState(true);
-    }
+		[SecuritySafeCritical]
+		private void OnChromePropertyChangedThatRequiresRepaint()
+		{
+			UpdateFrameState(true);
+		}
 
-    protected override void OnDetaching()
-    {
-      Deinitialize();
+		protected override void OnDetaching()
+		{
+			Deinitialize();
 
-      base.OnDetaching();
-    }
+			base.OnDetaching();
+		}
 
-    public void OnMeasure()
-    {
-      if (_hwnd != IntPtr.Zero)
-        return;
+		private void OnDpiChanged()
+		{
+			_scaleFactor = _currentDpi / _wpfDpi;
 
-      InitializeStep2(new WindowInteropHelper(Target));
-    }
+			UpdateDpiLayoutTransform(_scaleFactor);
+		}
 
-    private void OnSizeMoveFinished()
-    {
-      //ChangeRenderMode(RenderMode.Default);
-    }
+		public void OnMeasure()
+		{
+			if (_hwnd != IntPtr.Zero)
+				return;
 
-    private void OnSizeMoveStarted()
-    {
-      //ChangeRenderMode(RenderMode.SoftwareOnly);
-    }
+			// TODO: Why Target is null here?
+			if (Target == null)
+				return;
 
-    private void OnWindowClosed(object sender, EventArgs e)
-    {
-    }
+			InitializeStep2(new WindowInteropHelper(Target));
+		}
 
-    private void PaintNCArea(IntPtr hRgn)
-    {
-      var windowRect = _nativeWindow.GetWindowRect();
+		private void OnSizeMoveFinished()
+		{
+			//ChangeRenderMode(RenderMode.Default);
+		}
 
-      if (windowRect.Width == 0 || windowRect.Height == 0)
-        return;
+		private void OnSizeMoveStarted()
+		{
+			//ChangeRenderMode(RenderMode.SoftwareOnly);
+		}
 
-      windowRect = new RECT { Left = 0, Top = 0, Right = windowRect.Width, Bottom = windowRect.Bottom };
+		private void OnWindowClosed(object sender, EventArgs e)
+		{
+		}
 
-      var flags = DeviceContextValues.Window | DeviceContextValues.IntersectRgn | DeviceContextValues.Cache | DeviceContextValues.ClipSiblings;
-      var hDC = NativeMethods.GetDCEx(_hwnd, hRgn == new IntPtr(1) ? IntPtr.Zero : hRgn, hRgn == new IntPtr(1) ? DeviceContextValues.Window : flags);
+		private void PaintNCArea(IntPtr hRgn)
+		{
+			var windowRect = _nativeWindow.GetWindowRect();
 
-      if (hDC == IntPtr.Zero)
-        return;
+			if (windowRect.Width == 0 || windowRect.Height == 0)
+				return;
 
-      try
-      {
-	      
-      }
-      finally
-      {
-        NativeMethods.ReleaseDC(_hwnd, hDC);
-      }
-    }
+			windowRect = new RECT {Left = 0, Top = 0, Right = windowRect.Width, Bottom = windowRect.Bottom};
 
-    private void RedrawFrame()
-    {
-      NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0, SwpFlags);
-    }
+			var flags = DeviceContextValues.Window | DeviceContextValues.IntersectRgn | DeviceContextValues.Cache | DeviceContextValues.ClipSiblings;
+			var hDC = NativeMethods.GetDCEx(_hwnd, hRgn == new IntPtr(1) ? IntPtr.Zero : hRgn, hRgn == new IntPtr(1) ? DeviceContextValues.Window : flags);
 
-    [SecurityCritical]
-    private void RestoreGlassFrame()
-    {
-      if (PlatformUtil.IsOSVistaOrNewer == false || _hwnd == IntPtr.Zero || null == _hwndSource.CompositionTarget)
-        return;
+			if (hDC == IntPtr.Zero)
+				return;
 
-      _hwndSource.CompositionTarget.BackgroundColor = SystemColors.WindowColor;
+			try
+			{
+			}
+			finally
+			{
+				NativeMethods.ReleaseDC(_hwnd, hDC);
+			}
+		}
 
-      if (NativeMethods.DwmIsCompositionEnabled() == false)
-        return;
+		private void RedrawFrame()
+		{
+			NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0, SwpFlags);
+		}
 
-      var dwmMargin = new MARGINS();
-      NativeMethods.DwmExtendFrameIntoClientArea(_hwnd, ref dwmMargin);
-    }
+		[SecurityCritical]
+		private void RestoreGlassFrame()
+		{
+			if (PlatformUtil.IsOSVistaOrNewer == false || _hwnd == IntPtr.Zero || null == _hwndSource.CompositionTarget)
+				return;
 
-    [SecurityCritical]
-    private void RestoreHrgn()
-    {
-      ClearRoundingRegion();
-      NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0, SwpFlags);
-    }
+			_hwndSource.CompositionTarget.BackgroundColor = SystemColors.WindowColor;
 
-    [SecurityCritical]
-    private void RestoreStandardChromeState(bool isClosing)
-    {
-      VerifyAccess();
+			if (NativeMethods.DwmIsCompositionEnabled() == false)
+				return;
 
-      UnhookCustomChrome();
+			var dwmMargin = new MARGINS();
+			NativeMethods.DwmExtendFrameIntoClientArea(_hwnd, ref dwmMargin);
+		}
 
-      if (!isClosing && !_hwndSource.IsDisposed)
-      {
-        RestoreGlassFrame();
-        RestoreHrgn();
+		[SecurityCritical]
+		private void RestoreHrgn()
+		{
+			ClearRoundingRegion();
+			NativeMethods.SetWindowPos(_hwnd, IntPtr.Zero, 0, 0, 0, 0, SwpFlags);
+		}
 
-        Target.InvalidateMeasure();
-      }
-    }
+		[SecurityCritical]
+		private void RestoreStandardChromeState(bool isClosing)
+		{
+			VerifyAccess();
 
-    [SecurityCritical]
-    private void SetRoundingRegion(WINDOWPOS? wp)
-    {
-      var wpl = NativeMethods.GetWindowPlacement(_hwnd);
-      var hrgn = IntPtr.Zero;
+			UnhookCustomChrome();
 
-      try
-      {
-        if (wpl.ShowCmd == SW.SHOWMAXIMIZED)
-        {
-          var location = (wp?.GetRect() ?? _nativeWindow.GetWindowRect()).ToPresentationRect().GetTopLeft();
-          var hMon = NativeMethods.MonitorFromWindow(_hwnd, MonitorOptions.MONITOR_DEFAULTTONEAREST);
-          var mi = NativeMethods.GetMonitorInfo(hMon);
-          var rcMax = mi.rcWork.ToPresentationRect().Offset(location.Negate());
+			if (!isClosing && !_hwndSource.IsDisposed)
+			{
+				RestoreGlassFrame();
+				RestoreHrgn();
 
-          hrgn = NativeMethods.CreateRectRgnIndirect(rcMax.ToPlatformRect());
-          NativeMethods.SetWindowRgn(_hwnd, hrgn, NativeMethods.IsWindowVisible(_hwnd));
-          hrgn = IntPtr.Zero;
-        }
-        else
-        {
-          Size windowSize;
+				Target.InvalidateMeasure();
+			}
+		}
 
-          if (null != wp && CommonUtils.IsFlagSet(wp.Value.flags, (int) SWP.NOSIZE) == false)
-            windowSize = new Size(wp.Value.cx, wp.Value.cy);
-          else if (null != wp && _lastRoundingState == Target.WindowState)
-            return;
-          else
-            windowSize = GetWindowRect().Size;
+		[SecurityCritical]
+		private void SetRoundingRegion(WINDOWPOS? wp)
+		{
+			var wpl = NativeMethods.GetWindowPlacement(_hwnd);
+			var hrgn = IntPtr.Zero;
 
-          _lastRoundingState = Target.WindowState;
+			try
+			{
+				if (wpl.ShowCmd == SW.SHOWMAXIMIZED)
+				{
+					var location = (wp?.GetRect() ?? _nativeWindow.GetWindowRect()).ToPresentationRect().GetTopLeft();
+					var hMon = NativeMethods.MonitorFromWindow(_hwnd, MonitorOptions.MONITOR_DEFAULTTONEAREST);
+					var mi = NativeMethods.GetMonitorInfo(hMon);
+					var rcMax = mi.rcWork.ToPresentationRect().WithOffset(location.Negate());
 
-          var windowRect = new Rect(windowSize);
+					hrgn = NativeMethods.CreateRectRgnIndirect(rcMax.ToPlatformRect());
+					NativeMethods.SetWindowRgn(_hwnd, hrgn, NativeMethods.IsWindowVisible(_hwnd));
+					hrgn = IntPtr.Zero;
+				}
+				else
+				{
+					Size windowSize;
 
-          hrgn = RegionHelper.CreateRoundedCornerRegion(windowRect, DpiUtils.LogicalCornerRadiusToDevice(CornerRadius));
-          NativeMethods.SetWindowRgn(_hwnd, hrgn, NativeMethods.IsWindowVisible(_hwnd));
-          hrgn = IntPtr.Zero;
-        }
-      }
-      finally
-      {
-        PlatformUtil.SafeDeleteObject(ref hrgn);
-      }
-    }
+					if (null != wp && CommonUtils.IsFlagSet(wp.Value.flags, (int) SWP.NOSIZE) == false)
+						windowSize = new Size(wp.Value.cx, wp.Value.cy);
+					else if (null != wp && _lastRoundingState == Target.WindowState)
+						return;
+					else
+						windowSize = GetWindowRect().Size;
 
-    private void TargetOnStateChanged(object sender, EventArgs eventArgs)
-    {
-      RedrawFrame();
-    }
+					_lastRoundingState = Target.WindowState;
 
-    [SecurityCritical]
-    private void UnhookCustomChrome()
-    {
-      if (_isHooked == false) return;
+					var windowRect = new Rect(windowSize);
 
-      _hwndSource.RemoveHook(WndProc);
-      _isHooked = false;
-    }
+					hrgn = RegionHelper.CreateRoundedCornerRegion(windowRect, DpiUtils.LogicalCornerRadiusToDevice(CornerRadius));
+					NativeMethods.SetWindowRgn(_hwnd, hrgn, NativeMethods.IsWindowVisible(_hwnd));
+					hrgn = IntPtr.Zero;
+				}
+			}
+			finally
+			{
+				PlatformUtil.SafeDeleteObject(ref hrgn);
+			}
+		}
 
-    private void UpdateBackgroundColor()
-    {
-      if (_isHooked)
-      {
-        var backgroundWindowClassBrush = ApplicationColors.Instance.BackgroundColor.ToNativeBrush();
+		private void TargetOnStateChanged(object sender, EventArgs eventArgs)
+		{
+			RedrawFrame();
+		}
 
-        // Do not use ApplicationColors.Instance.NativeBackgroundBrush.HBrush !!! It will be disposed when window using brush handle get closed.
-        NativeMethods.SetClassLong(_hwnd, ClassLongFlags.GCLP_HBRBACKGROUND, backgroundWindowClassBrush.HBrush);
+		[SecurityCritical]
+		private void UnhookCustomChrome()
+		{
+			if (_isHooked == false) return;
 
-        _backgroundWindowClassBrush = _backgroundWindowClassBrush.DisposeExchange(backgroundWindowClassBrush);
-      }
-    }
+			_hwndSource.RemoveHook(WndProc);
+			_isHooked = false;
+		}
 
-    private void UpdateBorderColor()
-    {
-    }
+		private void UpdateBackgroundColor()
+		{
+			if (_isHooked)
+			{
+				var backgroundWindowClassBrush = ApplicationColors.Instance.BackgroundColor.ToNativeBrush();
 
-    private void UpdateCaptionStyle()
-    {
-      PlatformUtil.ModifyStyle(_hwnd, 0, WS.CAPTION);
-    }
+				// Do not use ApplicationColors.Instance.NativeBackgroundBrush.HBrush !!! It will be disposed when window using brush handle get closed.
+				NativeMethods.SetClassLong(_hwnd, ClassLongFlags.GCLP_HBRBACKGROUND, backgroundWindowClassBrush.HBrush);
 
-    internal void UpdateFrameState(bool force)
-    {
-      if (IntPtr.Zero == _hwnd || _hwndSource.IsDisposed)
-        return;
+				_backgroundWindowClassBrush = _backgroundWindowClassBrush.DisposeExchange(backgroundWindowClassBrush);
+			}
+		}
 
-      var frameState = IsDwmCompositionEnabled;
+		private void UpdateBorderColor()
+		{
+		}
 
-      if (force == false && frameState == _isGlassEnabled) 
-	      return;
+		private void UpdateCaptionStyle()
+		{
+			PlatformUtil.ModifyStyle(_hwnd, 0, WS.CAPTION);
+		}
 
-      var isGlassEnabled = _isGlassEnabled;
+		private void UpdateDpi()
+		{
+			if (_hwndSource == null)
+				return;
 
-      _isGlassEnabled = frameState;
+			_wpfDpi = 96.0 * _hwndSource.CompositionTarget.TransformToDevice.M11;
+			_currentDpi = DpiUtils.GetMonitorDpi(_hwnd).DpiX;
+			_scaleFactor = _currentDpi / _wpfDpi;
 
-      ClearRoundingRegion();
+			UpdateDpiLayoutTransform(_scaleFactor);
+		}
 
-      if (isGlassEnabled != _isGlassEnabled)
-      {
-        if (_isGlassEnabled == false)
-          SetRoundingRegion(null);
-        else
-          ExtendGlassFrame();
-      }
-
-      RedrawFrame();
-    }
-
-    [SecuritySafeCritical]
-#if !NET5_0
-    [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
+		private void UpdateDpiLayoutTransform(double scaleFactor)
+		{
+#if DPI_EXP
+			if (_perMonitorEnabled == false)
+				return;
+			
+			if (WindowPresenterControl == null)
+				return;
+			
+			if (_scaleFactor != 1.0)
+				WindowPresenterControl.SetValue(FrameworkElement.LayoutTransformProperty, new ScaleTransform(scaleFactor, scaleFactor));
+			else
+				WindowPresenterControl.SetValue(FrameworkElement.LayoutTransformProperty, null);
 #endif
-    private void WindowSourceInitialized(object sender, EventArgs e)
-    {
-      InitializeStep2(new WindowInteropHelper(Target));
-    }
+		}
 
-    [SecurityCritical]
-    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-    {
-      var message = (WM) msg;
+		internal void UpdateFrameState(bool force)
+		{
+			if (IntPtr.Zero == _hwnd || _hwndSource.IsDisposed)
+				return;
 
-      foreach (var handlePair in _messageTable.Where(handlePair => handlePair.Key == message))
-        return handlePair.Value(message, wParam, lParam, out handled);
+			var frameState = IsDwmCompositionEnabled;
 
-      return IntPtr.Zero;
-    }
+			if (force == false && frameState == _isGlassEnabled)
+				return;
 
-    #endregion
+			var isGlassEnabled = _isGlassEnabled;
 
-    #region  Nested Types
+			_isGlassEnabled = frameState;
 
-    private static class TaskBarHelper
-    {
-      #region Static Fields and Constants
+			ClearRoundingRegion();
 
-      const int ABS_AUTOHIDE = 1;
+			if (isGlassEnabled != _isGlassEnabled)
+			{
+				if (_isGlassEnabled == false)
+					SetRoundingRegion(null);
+				else
+					ExtendGlassFrame();
+			}
 
-      #endregion
+			RedrawFrame();
+		}
 
-      #region  Methods
+		[SecuritySafeCritical]
+#if !NET5_0
+    //[PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
+#endif
+		private void WindowSourceInitialized(object sender, EventArgs e)
+		{
+			InitializeStep2(new WindowInteropHelper(Target));
+		}
 
-      [SecurityCritical]
-      public static bool IsAutoHide(out int edge, IntPtr handle)
-      {
-        edge = 0;
-        var data = new APPBARDATA();
+		[SecurityCritical]
+		private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+		{
+			var message = (WM) msg;
 
-        data.cbSize = Marshal.SizeOf(data);
-        data.hWnd = handle;
+			foreach (var handlePair in _messageTable.Where(handlePair => handlePair.Key == message))
+				return handlePair.Value(message, wParam, lParam, out handled);
 
-        var res = NativeMethods.SHAppBarMessage((int) ABMsg.ABM_GETSTATE, ref data);
+			return IntPtr.Zero;
+		}
 
-        if ((res & ABS_AUTOHIDE) == 0)
-          return false;
+		private static class TaskBarHelper
+		{
+			private const int ABS_AUTOHIDE = 1;
 
-        for (var n = 0; n < 4; n++)
-        {
-          edge = n;
-          data.uEdge = (uint) n;
+			[SecurityCritical]
+			public static bool IsAutoHide(out int edge, IntPtr handle)
+			{
+				edge = 0;
+				var data = new APPBARDATA();
 
-          if (NativeMethods.SHAppBarMessage((int) ABMsg.ABM_GETAUTOHIDEBAR, ref data) != 0)
-            return true;
-        }
+				data.cbSize = Marshal.SizeOf(data);
+				data.hWnd = handle;
 
-        edge = (int) ABEdge.ABE_BOTTOM;
-        return true;
-      }
+				var res = NativeMethods.SHAppBarMessage((int) ABMsg.ABM_GETSTATE, ref data);
 
-      #endregion
-    }
+				if ((res & ABS_AUTOHIDE) == 0)
+					return false;
 
-    private class ApplicationColors : DependencyObject
-    {
-      #region Static Fields and Constants
+				for (var n = 0; n < 4; n++)
+				{
+					edge = n;
+					data.uEdge = (uint) n;
 
-      private static readonly Lazy<ApplicationColors> LazyInstance = new Lazy<ApplicationColors>(() => new ApplicationColors());
+					if (NativeMethods.SHAppBarMessage((int) ABMsg.ABM_GETAUTOHIDEBAR, ref data) != 0)
+						return true;
+				}
 
-      private static readonly DependencyProperty BackgroundColorProperty = DPM.Register<Color, ApplicationColors>
-        ("BackgroundColor", a => a.OnBackgroundColorChanged);
+				edge = (int) ABEdge.ABE_BOTTOM;
+				return true;
+			}
+		}
 
-      public static readonly DependencyProperty BorderColorProperty = DPM.Register<Color, ApplicationColors>
-        ("BorderColor", a => a.OnBorderColorChanged);
+		private class ApplicationColors : DependencyObject
+		{
+			private static readonly Lazy<ApplicationColors> LazyInstance = new Lazy<ApplicationColors>(() => new ApplicationColors());
 
-      #endregion
+			private static readonly DependencyProperty BackgroundColorProperty = DPM.Register<Color, ApplicationColors>
+				("BackgroundColor", a => a.OnBackgroundColorChanged);
 
-      #region Ctors
+			public static readonly DependencyProperty BorderColorProperty = DPM.Register<Color, ApplicationColors>
+				("BorderColor", a => a.OnBorderColorChanged);
 
-      private ApplicationColors()
-      {
-        ThemeManager.AssignThemeResource(this, BackgroundColorProperty, ThemeKeyword.ApplicationBackgroundColor);
-        ThemeManager.AssignThemeResource(this, BorderColorProperty, ThemeKeyword.ApplicationBorderColor);
-      }
+			private ApplicationColors()
+			{
+				ThemeManager.AssignThemeResource(this, BackgroundColorProperty, ThemeKeyword.ApplicationBackgroundColor);
+				ThemeManager.AssignThemeResource(this, BorderColorProperty, ThemeKeyword.ApplicationBorderColor);
+			}
 
-      #endregion
+			public Color BackgroundColor => (Color) GetValue(BackgroundColorProperty);
 
-      #region Properties
+			public Color BorderColor => (Color) GetValue(BorderColorProperty);
 
-      public Color BackgroundColor => (Color) GetValue(BackgroundColorProperty);
+			public WeakLinkedList<WindowChromeBehavior> ChromeBehaviors { get; } = new WeakLinkedList<WindowChromeBehavior>();
 
-      public Color BorderColor => (Color) GetValue(BorderColorProperty);
+			public static ApplicationColors Instance => LazyInstance.Value;
 
-      public WeakLinkedList<WindowChromeBehavior> ChromeBehaviors { get; } = new WeakLinkedList<WindowChromeBehavior>();
+			public NativeBrush NativeBackgroundBrush { get; private set; } = Colors.White.ToNativeBrush();
 
-      public static ApplicationColors Instance => LazyInstance.Value;
+			public NativeBrush NativeBorderBrush { get; private set; } = Colors.White.ToNativeBrush();
 
-      public NativeBrush NativeBackgroundBrush { get; private set; } = Colors.White.ToNativeBrush();
+			private void OnBackgroundColorChanged()
+			{
+				NativeBackgroundBrush = NativeBackgroundBrush.DisposeExchange(BackgroundColor.ToNativeBrush());
 
-      public NativeBrush NativeBorderBrush { get; private set; } = Colors.White.ToNativeBrush();
+				foreach (var chromeBehavior in ChromeBehaviors)
+					chromeBehavior.UpdateBackgroundColor();
+			}
 
-      #endregion
+			private void OnBorderColorChanged()
+			{
+				NativeBorderBrush = NativeBorderBrush.DisposeExchange(BorderColor.ToNativeBrush());
 
-      #region  Methods
+				foreach (var chromeBehavior in ChromeBehaviors)
+					chromeBehavior.UpdateBorderColor();
+			}
+		}
 
-      private void OnBackgroundColorChanged()
-      {
-        NativeBackgroundBrush = NativeBackgroundBrush.DisposeExchange(BackgroundColor.ToNativeBrush());
-
-        foreach (var chromeBehavior in ChromeBehaviors)
-          chromeBehavior.UpdateBackgroundColor();
-      }
-
-      private void OnBorderColorChanged()
-      {
-        NativeBorderBrush = NativeBorderBrush.DisposeExchange(BorderColor.ToNativeBrush());
-
-        foreach (var chromeBehavior in ChromeBehaviors)
-          chromeBehavior.UpdateBorderColor();
-      }
-
-      #endregion
-    }
-
-    private enum SizingAction
-    {
-      Undefined = -1,
-      MinAction = 1,
-      North = 3,
-      South = 6,
-      East = 2,
-      West = 1,
-      NorthEast = 5,
-      NorthWest = 4,
-      SouthEast = 8,
-      SouthWest = 7,
-      MaxAction = 8
-    }
-
-    #endregion
-  }
+		private enum SizingAction
+		{
+			Undefined = -1,
+			MinAction = 1,
+			North = 3,
+			South = 6,
+			East = 2,
+			West = 1,
+			NorthEast = 5,
+			NorthWest = 4,
+			SouthEast = 8,
+			SouthWest = 7,
+			MaxAction = 8
+		}
+	}
 }

@@ -6,46 +6,53 @@ using Zaaml.Core;
 
 namespace Zaaml.PresentationCore.Converters
 {
-  internal class PixelValueConverter
-  {
-    #region Fields
+	internal sealed class PixelValueConverter
+	{
+		private double _pixel2ValueRatio;
+		private Range<double> _pixelRange = new Range<double>(0, 0);
 
-    private readonly double _pixel2ValueRatio;
+		private double _value2PixelRatio;
+		private Range<double> _valueRange = new Range<double>(0, 0);
 
-    private readonly Range<double> _pixelRange;
-    private readonly double _value2PixelRatio;
-    private readonly Range<double> _valueRange;
+		public Range<double> PixelRange
+		{
+			get => _pixelRange;
+			set
+			{
+				_pixelRange = value;
 
-    #endregion
+				UpdateRatio();
+			}
+		}
 
-    #region Ctors
+		public Range<double> ValueRange
+		{
+			get => _valueRange;
+			set
+			{
+				_valueRange = value;
 
-    public PixelValueConverter(Range<double> pixelRange, Range<double> valueRange)
-    {
-      _pixelRange = pixelRange;
-      _valueRange = valueRange;
+				UpdateRatio();
+			}
+		}
 
-      var pixelDistance = _pixelRange.Maximum - _pixelRange.Minimum;
-      var valueDistance = _valueRange.Maximum - _valueRange.Minimum;
+		public double PixelToValue(double pixel)
+		{
+			return _valueRange.Minimum + (PixelRange.Clamp(pixel) - PixelRange.Minimum) * _pixel2ValueRatio;
+		}
 
-      _pixel2ValueRatio = valueDistance / pixelDistance;
-      _value2PixelRatio = pixelDistance / valueDistance;
-    }
+		private void UpdateRatio()
+		{
+			var pixelDistance = PixelRange.Maximum - PixelRange.Minimum;
+			var valueDistance = _valueRange.Maximum - _valueRange.Minimum;
 
-    #endregion
+			_pixel2ValueRatio = valueDistance / pixelDistance;
+			_value2PixelRatio = pixelDistance / valueDistance;
+		}
 
-    #region  Methods
-
-    public double PixelToValue(double pixel)
-    {
-      return _valueRange.Minimum + (_pixelRange.Clamp(pixel) - _pixelRange.Minimum) * _pixel2ValueRatio;
-    }
-
-    public double ValueToPixel(double value)
-    {
-      return _pixelRange.Minimum + (_valueRange.Clamp(value) - _valueRange.Minimum) * _value2PixelRatio;
-    }
-
-    #endregion
-  }
+		public double ValueToPixel(double value)
+		{
+			return PixelRange.Minimum + (_valueRange.Clamp(value) - _valueRange.Minimum) * _value2PixelRatio;
+		}
+	}
 }

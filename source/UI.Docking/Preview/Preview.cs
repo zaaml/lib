@@ -8,46 +8,30 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  internal sealed class Preview : DependencyObject
-  {
-    #region Static Fields and Constants
+	internal sealed class Preview : DependencyObject
+	{
+		public static readonly DependencyProperty GeometryProperty = DPM.Register<Geometry, Preview>
+			("Geometry");
 
-    public static readonly DependencyProperty GeometryProperty = DPM.Register<Geometry, Preview>
-      ("Geometry");
+		public readonly DropGuideAction Action;
+		public readonly DockItem DropTarget;
 
-    #endregion
+		public Preview(DropGuideAction action, DockItem dropTarget)
+		{
+			Action = action;
+			DropTarget = dropTarget;
+		}
 
-    #region Fields
+		public bool AwaitGeometry { get; set; }
 
-    public readonly DropGuideAction Action;
-    public readonly DockItem DropTarget;
+		public Geometry Geometry
+		{
+			set => SetValue(GeometryProperty, value);
+			get => (Geometry) GetValue(GeometryProperty);
+		}
 
-    #endregion
+		public bool IsArrangePassed { get; set; }
 
-    #region Ctors
-
-    public Preview(DropGuideAction action, DockItem dropTarget)
-    {
-      Action = action;
-      DropTarget = dropTarget;
-    }
-
-    #endregion
-
-    #region Properties
-
-    public bool AwaitGeometry { get; set; }
-
-    public Geometry Geometry
-    {
-      set => SetValue(GeometryProperty, value);
-      get => (Geometry) GetValue(GeometryProperty);
-    }
-
-    public bool IsArrangePassed { get; set; }
-
-    public bool IsMeasurePassed { get; set; }
-
-    #endregion
-  }
+		public bool IsMeasurePassed { get; set; }
+	}
 }

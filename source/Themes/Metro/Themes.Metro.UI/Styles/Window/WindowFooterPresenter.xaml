@@ -32,8 +32,8 @@
   <ControlTemplate x:Key="WindowFooterPresenterTemplate"
                    TargetType="zm:WindowFooterPresenter">
 
-    <Grid Height="{Binding Path=Buttons.Count, ElementName=ButtonsPresenter, Converter={zm:TernaryConverter Operand=0, TrueValue=0, FalseValue=NaN}}"
-          HorizontalAlignment="Stretch">
+    <zm:Panel Height="{Binding Path=Buttons.Count, ElementName=ButtonsPresenter, Converter={zm:TernaryConverter Operand=0, TrueValue=0, FalseValue=NaN}}"
+              HorizontalAlignment="Stretch">
 
       <Border Margin="0,10,0,0"
               Padding="{zm:ThemeResource Key=Metro.Window.Footer.Buttons.Padding}"
@@ -45,7 +45,7 @@
                                    ButtonStyle="{TemplateBinding ButtonStyle}"
                                    ButtonsPresenterTemplate="{TemplateBinding ButtonsPresenterTemplate}" />
       </Border>
-    </Grid>
+    </zm:Panel>
   </ControlTemplate>
 
   <!--  Base Style  -->

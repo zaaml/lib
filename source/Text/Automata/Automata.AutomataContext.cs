@@ -2,73 +2,30 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using Zaaml.Core;
+using System;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
-		protected abstract partial class AutomataContext
+		private protected abstract class AutomataContext
 		{
-			#region Fields
-
-			private Process _process = Process.DummyProcess;
-
-			#endregion
-
-			#region Ctors
-
-			protected AutomataContext(FiniteState finiteState)
+			protected AutomataContext(Syntax rule, Automata<TInstruction, TOperand> automata, IServiceProvider serviceProvider)
 			{
-				EntryPoint = finiteState;
+				Rule = rule;
+				Automata = automata;
+				ServiceProvider = serviceProvider;
 			}
 
-			#endregion
+			public Automata<TInstruction, TOperand> Automata { get; }
 
-			#region Properties
+			public IServiceProvider ServiceProvider { get; }
 
-			protected AutomataContextState ContextState => _process.ContextState;
+			internal AutomataContextState ContextStateInternal => Process.ContextState;
 
-			internal AutomataContextState ContextStateInternal => _process.ContextState;
+			public abstract Process Process { get; }
 
-			public EntryPoint EntryPoint { get; }
-
-			[UsedImplicitly] public TInstruction Instruction => _process.Instruction;
-
-			[UsedImplicitly] public int InstructionPointer => _process.InstructionPointer;
-
-			// ReSharper disable once MemberCanBeProtected.Global
-			public ref TInstruction InstructionReference => ref _process.Instruction;
-
-			public int InstructionOperand => _process.InstructionOperand;
-
-			protected int InstructionStreamPosition => _process.InstructionStreamPosition;
-
-			internal bool IsMainThread => _process.IsMainThread;
-
-			internal object ProcessField
-			{
-				get => _process;
-				set => _process = (Process) value;
-			}
-
-			protected FiniteState State => (FiniteState) EntryPoint;
-
-			#endregion
-
-			#region Methods
-
-			public ref TInstruction GetInstructionOperand(out int operand)
-			{
-				return ref _process.GetInstructionOperand(out operand);
-			}
-
-			protected void AdvanceInstructionPosition()
-			{
-				_process.AdvanceInstructionPosition();
-			}
+			public Syntax Rule { get; }
 
 			protected virtual AutomataContextState CloneContextState(AutomataContextState contextState)
 			{
@@ -85,6 +42,8 @@ namespace Zaaml.Text
 				return null;
 			}
 
+			public abstract ProcessKind ProcessKind { get; }
+
 			internal AutomataContextState CreateContextStateInternal()
 			{
 				return CreateContextState();
@@ -98,19 +57,10 @@ namespace Zaaml.Text
 			{
 				DisposeContextState(contextState);
 			}
-
-			internal StateEntryContext GetTopStateEntryContext(FiniteState state)
-			{
-				return _process.GetTopStateEntryContext(state);
-			}
-
-			#endregion
 		}
 
 		protected abstract class AutomataContextState
 		{
 		}
-
-		#endregion
 	}
 }

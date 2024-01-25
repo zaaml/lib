@@ -3,11 +3,12 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Zaaml.Core.Collections
 {
-	internal partial class SparseLinkedList<T> : SparseLinkedListBase<T>
+	internal partial class SparseLinkedList<T> : SparseLinkedListBase<T>, ISparseList<T>
 	{
 		public SparseLinkedList()
 		{
@@ -19,35 +20,19 @@ namespace Zaaml.Core.Collections
 
 		private bool Locked { get; set; }
 
-		internal int Version { get; private set; }
+		private int Version { get; set; }
 
-		private void CopyToImpl(T[] array, int arrayIndex)
+		private void CopyTo(T[] array, int arrayIndex)
 		{
-			if (array.Length - arrayIndex < Count)
-				throw new InvalidOperationException("Insufficient array length");
+			Lock();
 
-			long index = arrayIndex;
-			NodeBase current = HeadNode;
+			CopyToImpl(array, arrayIndex);
 
-			while (current != null)
-			{
-				if (current is RealizedNode realizedNode)
-				{
-					//Array.Copy(realizedNode.ItemsPrivate, 0, array, index, realizedNode.Count);
-
-					var sourceSpan = realizedNode.Span.Slice(0, (int) realizedNode.Size);
-					var targetSpan = new Span<T>(array, (int) index, (int) realizedNode.Size);
-
-					sourceSpan.CopyTo(targetSpan);
-				}
-
-				index += current.Size;
-
-				current = current.Next;
-			}
+			Unlock();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional("DEBUG")]
 		private void Lock()
 		{
 			if (Locked)
@@ -57,6 +42,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[Conditional("DEBUG")]
 		private void Unlock()
 		{
 			if (Locked == false)

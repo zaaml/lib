@@ -87,8 +87,7 @@ namespace Zaaml.UI.Controls.Ribbon
 			set => this.SetValue<bool>(ShowDropDownButtonProperty, value);
 		}
 
-		private RibbonSplitButtonBaseTemplateContract TemplateContract =>
-			(RibbonSplitButtonBaseTemplateContract) TemplateContractInternal;
+		private RibbonSplitButtonBaseTemplateContract TemplateContract => (RibbonSplitButtonBaseTemplateContract)TemplateContractCore;
 
 		#endregion
 

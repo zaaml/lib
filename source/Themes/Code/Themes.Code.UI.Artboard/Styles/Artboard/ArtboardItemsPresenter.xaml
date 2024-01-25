@@ -1,0 +1,31 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+  <!--  Template  -->
+  <ControlTemplate x:Key="ArtboardItemsPresenterTemplate"
+                   TargetType="zm:ArtboardItemsPresenter">
+
+    <zm:ControlTemplateRoot x:Name="TemplateRoot">
+
+      <zm:ArtboardItemsPanel x:Name="ItemsHost"/>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ArtboardItemsPresenterStyleBase" TargetType="zm:ArtboardItemsPresenter">
+    <zm:Setter Property="Template" Value="{StaticResource ArtboardItemsPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="ArtboardItemsPresenterStyle" BasedOn="{StaticResource ArtboardItemsPresenterStyleBase}"
+            TargetType="zm:ArtboardItemsPresenter" Skin="Code.ArtboardItemsPresenter" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ArtboardItemsPresenterThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource ArtboardItemsPresenterStyle}" TargetType="zm:ArtboardItemsPresenter" />
+
+</zm:ThemeResourceDictionary>

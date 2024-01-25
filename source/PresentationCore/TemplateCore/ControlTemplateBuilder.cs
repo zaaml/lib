@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,48 +11,39 @@ using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.PresentationCore.TemplateCore
 {
-  internal class ControlTemplateBuilder<T> where T : FrameworkElement
-  {
-    #region Fields
+	internal static class ControlTemplateBuilder
+	{
+		private static readonly Dictionary<Type, ControlTemplate> TemplatesDictionary = new Dictionary<Type, ControlTemplate>();
 
-    private readonly Lazy<ControlTemplate> _lazyTemplateInstance;
+		private static ControlTemplate BuildTemplate(Type type)
+		{
+			var typeNamespace = type.Namespace;
+			var typeAssembly = new AssemblyName(type.Assembly.FullName).Name;
+			var typeNamespacePrefix = $"xmlns:t='clr-namespace:{typeNamespace};assembly={typeAssembly}'";
 
-    #endregion
+			var templateString = $"<ControlTemplate {GenericControlTemplate.XamlNamespaces} {typeNamespacePrefix}><t:{type.Name} x:Name='TemplateRoot'/></ControlTemplate>";
 
-    #region Ctors
+			return XamlUtils.Load<ControlTemplate>(templateString);
+		}
 
-    public ControlTemplateBuilder()
-    {
-      _lazyTemplateInstance = new Lazy<ControlTemplate>(BuildTemplate);
-    }
+		public static ControlTemplate GetTemplate(Type type)
+		{
+			if (TemplatesDictionary.TryGetValue(type, out var template))
+				return template;
 
-    #endregion
+			TemplatesDictionary[type] = template = BuildTemplate(type);
 
-    #region Properties
+			return template;
+		}
+	}
 
-    public ControlTemplate ControlTemplate => _lazyTemplateInstance.Value;
+	internal static class ControlTemplateBuilder<T> where T : FrameworkElement
+	{
+		public static ControlTemplate Template => ControlTemplateBuilder.GetTemplate(typeof(T));
 
-    #endregion
-
-    #region  Methods
-
-    private ControlTemplate BuildTemplate()
-    {
-      var type = typeof(T);
-
-      var typeNamespace = type.Namespace;
-      var typeAssembly = new AssemblyName(type.Assembly.FullName).Name;
-      var typeNamespacePrefix = $"xmlns:t='clr-namespace:{typeNamespace};assembly={typeAssembly}'";
-
-      var templateString = $"<ControlTemplate {GenericControlTemplate.XamlNamespaces} {typeNamespacePrefix}><t:{type.Name} x:Name='TemplateRoot'/></ControlTemplate>";
-      return XamlUtils.Load<ControlTemplate>(templateString);
-    }
-
-    public T GetTemplateRoot(Control control)
-    {
-      return control.GetImplementationRoot<T>();
-    }
-
-    #endregion
-  }
+		public static T GetImplementationRoot(Control control)
+		{
+			return control.GetImplementationRoot<T>();
+		}
+	}
 }

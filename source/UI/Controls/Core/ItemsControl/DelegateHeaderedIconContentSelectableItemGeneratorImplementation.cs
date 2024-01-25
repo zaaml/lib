@@ -7,7 +7,8 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal class DelegateHeaderedIconContentSelectableItemGeneratorImplementation<TItem, TDefaultGenerator> : DelegateHeaderedIconContentItemGeneratorImplementation<TItem, TDefaultGenerator>
+	internal class DelegateHeaderedIconContentSelectableItemGeneratorImplementation<TItem, TDefaultGenerator> 
+		: DelegateHeaderedIconContentItemGeneratorImplementation<TItem, TDefaultGenerator>
 		where TItem : FrameworkElement, ISelectableHeaderedIconContentItem, new()
 		where TDefaultGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{

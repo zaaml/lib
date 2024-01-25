@@ -124,7 +124,7 @@
 
       <Border Margin="{TemplateBinding Padding}"
               zm:Extension.SettersSource="{StaticResource ThumbBorderSetter}"
-              BorderThickness="1" />
+              BorderThickness="0" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

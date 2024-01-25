@@ -25,16 +25,18 @@
 	<PropertyGroup> 
 		<Authors>zaaml</Authors>
 		<Company>zaaml</Company>
-		<Copyright>Copyright © zaaml 2020</Copyright>
+		<Copyright>Copyright © zaaml 2024</Copyright>
 		<Description>zaaml component library</Description>
 		<RepositoryUrl>https://github.com/zaaml/lib</RepositoryUrl>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageOutputPath>$(MSBuildThisFileDirectory)..\artifacts</PackageOutputPath>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 	
 	<ItemGroup>
 		<None Include="$(MSBuildThisFileDirectory)PackageLicense.txt" Pack="true" PackagePath="$(PackageLicenseFile)"/>
+		<None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="$(PackageReadmeFile)" />
 	</ItemGroup>	
 		
 	<ItemGroup Condition="$(ExposeExternalInternals) == 'True' AND Exists('$(SolutionDir)\ExternalInternalsVisibleAttributes.cs')">

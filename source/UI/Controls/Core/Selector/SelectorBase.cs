@@ -9,6 +9,7 @@ using Zaaml.Core;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.UI.Panels;
 using Zaaml.UI.Panels.Core;
 using NativeControl = System.Windows.Controls.Control;
 
@@ -95,7 +96,7 @@ namespace Zaaml.UI.Controls.Core
 			set => SetValue(SelectedValueSourceProperty, value);
 		}
 
-		public Selection<TItem> Selection => new Selection<TItem>(SelectedIndexInternal, SelectedItem, SelectedSource, SelectedValue);
+		public Selection<TItem> Selection => new(SelectedIndexInternal, SelectedItem, SelectedSource, SelectedValue);
 
 		internal bool SelectItemOnFocus { get; set; } = true;
 
@@ -200,10 +201,34 @@ namespace Zaaml.UI.Controls.Core
 		{
 			base.OnLoaded();
 
-			var selectedItem = SelectedItem;
+			EnqueueBringSelectedItemIntoView();
+		}
 
-			if (selectedItem != null)
-				ItemCollection.BringIntoViewInternal(new BringIntoViewRequest<TItem>(selectedItem, DefaultBringIntoViewMode, 0));
+		private protected virtual void EnqueueBringItemIntoView(TItem item)
+		{
+			if (item == null)
+				throw new ArgumentNullException(nameof(item));
+
+			var layoutInformation = ItemCollection.GetItemLayoutInformation(item);
+
+			if (layoutInformation.IsEmpty == false)
+			{
+				if (layoutInformation.Visibility.IsInvisible() == false)
+					return;
+
+				if (HasLogicalOrientation && layoutInformation.GetVisibility(LogicalOrientation).IsInvisible() == false)
+					return;
+			}
+
+			ItemCollection.EnqueueBringIntoViewInternal(new BringIntoViewRequest<TItem>(item, DefaultBringIntoViewMode, 0));
+		}
+
+		private protected void EnqueueBringSelectedItemIntoView()
+		{
+			if (SelectedItem == null)
+				return;
+
+			EnqueueBringItemIntoView(SelectedItem);
 		}
 
 		protected virtual void OnSelectedIndexChanged(int oldIndex, int newIndex)
@@ -273,13 +298,18 @@ namespace Zaaml.UI.Controls.Core
 			SelectionChanged?.Invoke(this, new SelectionChangedEventArgs<TItem>(oldSelection, newSelection));
 		}
 
-		object ISelector<TItem>.GetValue(TItem item, object source)
+		internal object GetValueInternal(TItem item, object source)
+		{
+			return GetValue(item, source);
+		}
+
+		protected virtual object GetValue(TItem item, object source)
 		{
 			switch (SelectedValueSource)
 			{
 				case SelectedValueSource.Auto:
 
-					return GetItemValue(ItemCollection.SourceCollectionInternal == null ? item : source);
+					return GetItemValue(HasSource ? source : item);
 
 				case SelectedValueSource.Item:
 
@@ -330,6 +360,11 @@ namespace Zaaml.UI.Controls.Core
 		public override bool GetItemSelected(TItem item)
 		{
 			return Selector.GetIsSelectedInternal(item);
+		}
+
+		public override object GetValue(TItem item, object source)
+		{
+			return Selector.GetValueInternal(item, source);
 		}
 
 		public override void SetItemSelected(TItem item, bool value)

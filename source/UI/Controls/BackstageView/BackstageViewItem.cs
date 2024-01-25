@@ -7,8 +7,8 @@ using System.Collections;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
-using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
@@ -17,7 +17,7 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.BackstageView
 {
-	public partial class BackstageViewItem : HeaderedIconContentControl, ISelectableHeaderedIconContentItem
+	public partial class BackstageViewItem : HeaderedIconContentControl, ISelectableHeaderedIconContentItem, ISelectionStateControl
 	{
 		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, BackstageViewItem>
 			("IsSelected", b => b.OnIsSelectedChanged);
@@ -41,7 +41,7 @@ namespace Zaaml.UI.Controls.BackstageView
 		{
 			this.OverrideStyleKey<BackstageViewItem>();
 
-			ContentHost.SetBinding(System.Windows.Controls.ContentPresenter.ContentTemplateProperty, new Binding {Path = new PropertyPath(ContentTemplateProperty), Source = this});
+			ContentHost.SetBinding(System.Windows.Controls.ContentPresenter.ContentTemplateProperty, new Binding { Path = new PropertyPath(ContentTemplateProperty), Source = this });
 
 			AddLogicalChild(ContentHost);
 		}
@@ -52,12 +52,12 @@ namespace Zaaml.UI.Controls.BackstageView
 			internal set => this.SetReadOnlyValue(BackstageViewControlPropertyKey, value);
 		}
 
-		internal ContentPresenter ContentHost { get; } = new ContentPresenter();
+		internal ContentPresenter ContentHost { get; } = new();
 
 		public bool IsSelected
 		{
 			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 
 		protected override IEnumerator LogicalChildren => EnumeratorUtils.Concat(ContentHost, base.LogicalChildren);
@@ -70,7 +70,7 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		private void Activate()
 		{
-			SetIsSelectedInt(true);
+			SetIsSelectedPrivate(true);
 			BackstageViewControl?.Activate(this);
 		}
 
@@ -109,6 +109,7 @@ namespace Zaaml.UI.Controls.BackstageView
 				return;
 
 			e.Handled = true;
+
 			Activate();
 		}
 
@@ -116,10 +117,11 @@ namespace Zaaml.UI.Controls.BackstageView
 		{
 		}
 
-		private void SetIsSelectedInt(bool isSelected)
+		private void SetIsSelectedPrivate(bool isSelected)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, isSelected ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsSelectedProperty, isSelected.Box());
 		}
+
 
 		DependencyProperty ISelectableItem.ValueProperty => ValueProperty;
 

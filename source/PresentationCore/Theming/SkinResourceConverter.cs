@@ -9,49 +9,33 @@ using Zaaml.PresentationCore.Converters;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public sealed class SkinResourceConverter : IValueConverter
-  {
-    #region Static Fields and Constants
+	public sealed class SkinResourceConverter : IValueConverter
+	{
+		public static readonly IValueConverter Instance = new SkinResourceConverter();
 
-    public static readonly IValueConverter Instance = new SkinResourceConverter();
+		private SkinResourceConverter()
+		{
+		}
 
-    #endregion
+		private object GetSkinValue(object value, object parameter)
+		{
+			if (value is not SkinBase skin)
+				return null;
 
-    #region Ctors
+			if (parameter is ThemeResourceKey key)
+				return skin.GetValueInternal(key);
 
-    private SkinResourceConverter()
-    {
-    }
+			return parameter is string valuePath ? skin.GetValueInternal(valuePath) : null;
+		}
 
-    #endregion
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return TargetNullValueConverter.Instance.Convert(GetSkinValue(value, parameter), targetType, parameter, culture);
+		}
 
-    #region  Methods
-
-    private object GetSkinValue(object value, object parameter)
-    {
-      var skin = value as SkinBase;
-
-      if (skin == null)
-        return null;
-
-      if (parameter is ThemeResourceKey)
-        return skin.GetValueInternal((ThemeResourceKey) parameter);
-
-      var valuePath = parameter as string;
-
-      return valuePath != null ? skin.GetValueInternal(valuePath) : null;
-    }
-
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      return TargetNullValueConverter.Instance.Convert(GetSkinValue(value, parameter), targetType, parameter, culture);
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      throw new NotSupportedException();
-    }
-
-    #endregion
-  }
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotSupportedException();
+		}
+	}
 }

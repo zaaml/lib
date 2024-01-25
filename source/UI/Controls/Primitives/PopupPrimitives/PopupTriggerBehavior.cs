@@ -5,7 +5,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Behaviors;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
@@ -32,8 +32,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public bool IsOpen
 		{
-			get => (bool) GetValue(IsOpenProperty);
-			set => SetValue(IsOpenProperty, value);
+			get => (bool)GetValue(IsOpenProperty);
+			set => SetValue(IsOpenProperty, value.Box());
 		}
 
 		private bool CheckMouseEventSource(MouseButtonEventArgs e)

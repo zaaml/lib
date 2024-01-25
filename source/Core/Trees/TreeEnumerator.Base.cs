@@ -6,12 +6,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Zaaml.Core.Trees
 {
 	internal abstract class TreeEnumerator<T> : ITreeEnumerator<T>
 	{
-		private static readonly TreeStack EnumerationFinished = new TreeStack();
 		protected T CurrentNode;
 		protected bool HasCurrentNode;
 
@@ -44,7 +44,7 @@ namespace Zaaml.Core.Trees
 
 		internal abstract bool AncestorsIncludesSelf { get; }
 
-		private bool IsEnumerationFinished => ReferenceEquals(Stack, EnumerationFinished);
+		private bool IsEnumerationFinished => ReferenceEquals(Stack, TreeStack.EnumerationFinished);
 
 		protected abstract bool MoveNextCore();
 
@@ -63,7 +63,9 @@ namespace Zaaml.Core.Trees
 
 			if (rootNodeEnumerator.MoveNext())
 			{
-				Stack ??= new TreeStack();
+				if (Stack == null || ReferenceEquals(Stack, TreeStack.EnumerationFinished))
+					Stack = TreeStack.Rent();
+
 				Stack.Push(rootNodeEnumerator);
 
 				return true;
@@ -75,6 +77,21 @@ namespace Zaaml.Core.Trees
 			return true;
 		}
 
+		private void ReleaseStack()
+		{
+			if (Stack == null)
+				return;
+
+			if (ReferenceEquals(Stack, TreeStack.EnumerationFinished) == false)
+			{
+				Stack.Clear();
+
+				TreeStack.Return(Stack);
+			}
+
+			Stack = null;
+		}
+
 		public void Dispose()
 		{
 			if (TreeAdvisor == null)
@@ -82,14 +99,16 @@ namespace Zaaml.Core.Trees
 
 			TreeAdvisor = null;
 			Root = RootEnumerator.Empty;
-			Stack?.Clear();
+
+			ReleaseStack();
 		}
 
 		public void Reset()
 		{
-			Stack = null;
 			CurrentNode = default;
 			HasCurrentNode = false;
+
+			ReleaseStack();
 		}
 
 		public bool MoveNext()
@@ -102,7 +121,11 @@ namespace Zaaml.Core.Trees
 			Version++;
 
 			if (next == false)
-				Stack = EnumerationFinished;
+			{
+				ReleaseStack();
+
+				Stack = TreeStack.EnumerationFinished;
+			}
 
 			return next;
 		}
@@ -111,14 +134,14 @@ namespace Zaaml.Core.Trees
 
 		public T Current => HasCurrentNode && IsEnumerationFinished == false ? CurrentNode : default;
 
-		public AncestorsEnumerator<T> CurrentAncestors => new AncestorsEnumerator<T>(this);
+		public AncestorsEnumerator<T> GetAncestorsEnumerator() => new(this);
 
 		private struct RootEnumerator
 		{
 			private IEnumerator<T> _enumerator;
 			private readonly T _root;
 			private static readonly IEnumerator<T> EmptyEnumerator = Enumerable.Empty<T>().GetEnumerator();
-			public static readonly RootEnumerator Empty = new RootEnumerator(EmptyEnumerator);
+			public static readonly RootEnumerator Empty = new(EmptyEnumerator);
 
 			public RootEnumerator(IEnumerator<T> enumerator) : this()
 			{
@@ -207,15 +230,24 @@ namespace Zaaml.Core.Trees
 
 		internal sealed class TreeStack
 		{
-			private const int DefaultCapacity = 4;
-			private static readonly NodeEnumerator[] EmptyArray = new NodeEnumerator[0];
+			private const int DefaultCapacity = 16;
+
+			public static readonly TreeStack EnumerationFinished = new(Array.Empty<NodeEnumerator>());
+
+			private static readonly ThreadLocal<Stack<TreeStack>> ThreadLocalPool = new(() => new Stack<TreeStack>());
 
 			private NodeEnumerator[] _array;
 			private int _count;
 
-			public TreeStack()
+			private TreeStack()
 			{
-				_array = EmptyArray;
+				_array = new NodeEnumerator[DefaultCapacity];
+				_count = 0;
+			}
+
+			private TreeStack(NodeEnumerator[] array)
+			{
+				_array = array;
 				_count = 0;
 			}
 
@@ -238,6 +270,7 @@ namespace Zaaml.Core.Trees
 			public void Clear()
 			{
 				Array.Clear(_array, 0, _count);
+
 				_count = 0;
 			}
 
@@ -271,19 +304,18 @@ namespace Zaaml.Core.Trees
 
 				_count = num;
 
-				var index = num;
-				var obj = array[index];
+				var pop = array[num];
 
 				_array[_count] = default;
 
-				return obj;
+				return pop;
 			}
 
 			public void Push(NodeEnumerator item)
 			{
 				if (_count == _array.Length)
 				{
-					var objArray = new NodeEnumerator[_array.Length == 0 ? DefaultCapacity : 2 * _array.Length];
+					var objArray = new NodeEnumerator[2 * _array.Length];
 
 					Array.Copy(_array, 0, objArray, 0, _count);
 
@@ -295,10 +327,24 @@ namespace Zaaml.Core.Trees
 
 				_count = size + 1;
 
-				var index = size;
-				var obj = item;
+				array[size] = item;
+			}
 
-				array[index] = obj;
+			public static TreeStack Rent()
+			{
+				var pool = ThreadLocalPool.Value;
+
+				return pool.Count > 0 ? pool.Pop() : new TreeStack();
+			}
+
+			public static void Return(TreeStack treeStack)
+			{
+				if (ReferenceEquals(treeStack, EnumerationFinished))
+					return;
+
+				var pool = ThreadLocalPool.Value;
+
+				pool.Push(treeStack);
 			}
 
 			public void VisitPeakNode()
@@ -306,6 +352,7 @@ namespace Zaaml.Core.Trees
 				var nodeEnumerator = _array[_count - 1];
 
 				nodeEnumerator.Visit();
+
 				_array[_count - 1] = nodeEnumerator;
 			}
 		}

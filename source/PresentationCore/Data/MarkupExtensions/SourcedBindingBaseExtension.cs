@@ -6,43 +6,31 @@ using System.Windows.Data;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public abstract class SourcedBindingBaseExtension : BindingBaseExtension
-  {
-    #region Fields
+	public abstract class SourcedBindingBaseExtension : BindingBaseExtension
+	{
+		private BindingSource _bindingSource;
 
-    private BindingSource _bindingSource;
+		public string ElementName
+		{
+			get => _bindingSource.ElementName;
+			set => _bindingSource.ElementName = value;
+		}
 
-    #endregion
+		public RelativeSource RelativeSource
+		{
+			get => _bindingSource.RelativeSource;
+			set => _bindingSource.RelativeSource = value;
+		}
 
-    #region Properties
+		public object Source
+		{
+			get => _bindingSource.Source;
+			set => _bindingSource.Source = value;
+		}
 
-    public string ElementName
-    {
-      get => _bindingSource.ElementName;
-      set => _bindingSource.ElementName = value;
-    }
-
-    public RelativeSource RelativeSource
-    {
-      get => _bindingSource.RelativeSource;
-      set => _bindingSource.RelativeSource = value;
-    }
-
-    public object Source
-    {
-      get => _bindingSource.Source;
-      set => _bindingSource.Source = value;
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected void InitBindingSource(System.Windows.Data.Binding binding)
-    {
-      _bindingSource.InitSource(binding);
-    }
-
-    #endregion
-  }
+		protected void InitBindingSource(System.Windows.Data.Binding binding)
+		{
+			_bindingSource.InitSource(binding);
+		}
+	}
 }

@@ -46,7 +46,7 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private ItemsPresenterBaseTemplateContract TemplateContract => (ItemsPresenterBaseTemplateContract) TemplateContractInternal;
+		private ItemsPresenterBaseTemplateContract TemplateContract => (ItemsPresenterBaseTemplateContract) TemplateContractCore;
 
 		protected virtual void OnItemsHostAttached()
 		{

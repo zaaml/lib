@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using Zaaml.UI.Controls.Interfaces;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -19,10 +20,24 @@ namespace Zaaml.UI.Controls.Core
 		private DataTemplate _itemHeaderTemplate;
 		private DataTemplateSelector _itemHeaderTemplateSelector;
 
-		public DefaultHeaderedIconContentItemGeneratorImplementation(string itemHeaderMember, DataTemplate itemHeaderTemplate, DataTemplateSelector itemHeaderTemplateSelector, string itemHeaderStringFormat, string itemIconMember, string itemContentMember,
-			DataTemplate itemContentTemplate, DataTemplateSelector itemContentTemplateSelector,
+		public DefaultHeaderedIconContentItemGeneratorImplementation(
+			string itemHeaderMember, 
+			DataTemplate itemHeaderTemplate, 
+			DataTemplateSelector itemHeaderTemplateSelector,
+			string itemHeaderStringFormat, 
+			string itemIconMember, 
+			IIconSelector itemIconSelector,
+			string itemContentMember,
+			DataTemplate itemContentTemplate,
+			DataTemplateSelector itemContentTemplateSelector,
 			string itemContentStringFormat)
-			: base(itemIconMember, itemContentMember, itemContentTemplate, itemContentTemplateSelector, itemContentStringFormat)
+			: base(
+				itemIconMember,
+				itemIconSelector,
+				itemContentMember, 
+				itemContentTemplate, 
+				itemContentTemplateSelector, 
+				itemContentStringFormat)
 		{
 			_itemHeaderMember = itemHeaderMember;
 			_itemHeaderTemplate = itemHeaderTemplate;

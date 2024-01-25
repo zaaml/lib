@@ -10,157 +10,110 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  public sealed class MultiTrigger : DelayStateTriggerBase, IConditionalTrigger
-  {
-    #region Static Fields and Constants
+	public sealed class MultiTrigger : StateTriggerBase, IConditionalTrigger
+	{
+		private static readonly uint DefaultPackedValue;
 
-    private static readonly uint DefaultPackedValue;
+		private ConditionCollection _conditions;
 
-    #endregion
+		static MultiTrigger()
+		{
+			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
 
-    #region Fields
+			PackedDefinition.Modifier.SetValue(ref DefaultPackedValue, ConditionLogicalOperator.And);
+		}
 
-    private ConditionCollection _conditions;
+		public MultiTrigger()
+		{
+			PackedValue |= DefaultPackedValue;
+		}
 
-    #endregion
+		private IEnumerable<ConditionBase> ActualConditions => _conditions ?? Enumerable.Empty<ConditionBase>();
 
-    #region Ctors
+		public ConditionCollection Conditions => _conditions ??= new ConditionCollection(this);
 
-    static MultiTrigger()
-    {
-      RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
+		public ConditionLogicalOperator LogicalOperator
+		{
+			get => PackedDefinition.Modifier.GetValue(PackedValue);
+			set
+			{
+				PackedDefinition.Modifier.SetValue(ref PackedValue, value);
+				UpdateTriggerState();
+			}
+		}
 
-      PackedDefinition.Modifier.SetValue(ref DefaultPackedValue, ConditionLogicalOperator.And);
-    }
+		protected internal override void CopyMembersOverride(InteractivityObject source)
+		{
+			base.CopyMembersOverride(source);
 
-    public MultiTrigger()
-    {
-      PackedValue |= DefaultPackedValue;
-    }
+			var triggerSource = (MultiTrigger)source;
 
-    #endregion
+			LogicalOperator = triggerSource.LogicalOperator;
+			_conditions = triggerSource._conditions?.DeepCloneCollection<ConditionCollection, ConditionBase>(this);
+		}
 
-    #region Properties
+		protected override InteractivityObject CreateInstance()
+		{
+			return new MultiTrigger();
+		}
 
-    private IEnumerable<ConditionBase> ActualConditions => _conditions ?? Enumerable.Empty<ConditionBase>();
+		internal override void DeinitializeTrigger(IInteractivityRoot root)
+		{
+			foreach (var condition in ActualConditions)
+				condition.Unload(root);
 
-    public ConditionCollection Conditions => _conditions ?? (_conditions = new ConditionCollection(this));
+			base.DeinitializeTrigger(root);
+		}
 
-    public ConditionLogicalOperator LogicalOperator
-    {
-      get => PackedDefinition.Modifier.GetValue(PackedValue);
-      set
-      {
-        PackedDefinition.Modifier.SetValue(ref PackedValue, value);
-        UpdateTriggerState();
-      }
-    }
+		internal override void InitializeTrigger(IInteractivityRoot root)
+		{
+			base.InitializeTrigger(root);
 
-    #endregion
+			foreach (var condition in ActualConditions)
+				condition.Load(root);
+		}
 
-    #region  Methods
+		protected override void OnIsEnabledChanged()
+		{
+			foreach (var condition in ActualConditions)
+				condition.IsEnabled = IsEnabled;
 
-    protected internal override void CopyMembersOverride(InteractivityObject source)
-    {
-      base.CopyMembersOverride(source);
+			base.OnIsEnabledChanged();
+		}
 
-      var triggerSource = (MultiTrigger) source;
+		protected override TriggerState UpdateTriggerStateCore()
+		{
+			if (_conditions == null || _conditions.Count == 0)
+				return TriggerState.Opened;
 
-      LogicalOperator = triggerSource.LogicalOperator;
-      _conditions = triggerSource._conditions?.DeepCloneCollection<ConditionCollection, ConditionBase>(this);
-    }
+			return LogicalOperator switch
+			{
+				ConditionLogicalOperator.And => _conditions.All(c => c.IsOpen) ? TriggerState.Opened : TriggerState.Closed,
+				ConditionLogicalOperator.Or => _conditions.Any(c => c.IsOpen) ? TriggerState.Opened : TriggerState.Closed,
+				_ => throw new ArgumentOutOfRangeException()
+			};
+		}
 
-    protected override InteractivityObject CreateInstance()
-    {
-      return new MultiTrigger();
-    }
+		void IConditionalTrigger.UpdateConditionalTrigger()
+		{
+			UpdateTriggerState();
+		}
 
-    internal override void DeinitializeTrigger(IInteractivityRoot root)
-    {
-      foreach (var condition in ActualConditions)
-        condition.Unload(root);
+		private static class PackedDefinition
+		{
+			public static readonly PackedEnumItemDefinition<ConditionLogicalOperator> Modifier;
 
-      base.DeinitializeTrigger(root);
-    }
+			static PackedDefinition()
+			{
+				var allocator = GetAllocator<MultiTrigger>();
 
-    internal override void InitializeTrigger(IInteractivityRoot root)
-    {
-      base.InitializeTrigger(root);
+				Modifier = allocator.AllocateEnumItem<ConditionLogicalOperator>();
+			}
+		}
+	}
 
-      foreach (var condition in ActualConditions)
-        condition.Load(root);
-    }
-
-    protected override void OnIsEnabledChanged()
-    {
-      foreach (var condition in ActualConditions)
-        condition.IsEnabled = IsEnabled;
-
-      base.OnIsEnabledChanged();
-    }
-
-    protected override TriggerState UpdateTriggerStateCore()
-    {
-      if (_conditions == null || _conditions.Count == 0)
-        return TriggerState.Opened;
-
-      switch (LogicalOperator)
-      {
-        case ConditionLogicalOperator.And:
-          return _conditions.All(c => c.IsOpen) ? TriggerState.Opened : TriggerState.Closed;
-        case ConditionLogicalOperator.Or:
-          return _conditions.Any(c => c.IsOpen) ? TriggerState.Opened : TriggerState.Closed;
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IConditionalTrigger
-
-    void IConditionalTrigger.UpdateConditionalTrigger()
-    {
-      UpdateTriggerState();
-    }
-
-    #endregion
-
-    #endregion
-
-    #region  Nested Types
-
-    private static class PackedDefinition
-    {
-      #region Static Fields and Constants
-
-      public static readonly PackedEnumItemDefinition<ConditionLogicalOperator> Modifier;
-
-      #endregion
-
-      #region Ctors
-
-      static PackedDefinition()
-      {
-        var allocator = GetAllocator<MultiTrigger>();
-
-        Modifier = allocator.AllocateEnumItem<ConditionLogicalOperator>();
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
-
-  internal interface IConditionalTrigger
-  {
-    #region  Methods
-
-    void UpdateConditionalTrigger();
-
-    #endregion
-  }
+	internal interface IConditionalTrigger
+	{
+		void UpdateConditionalTrigger();
+	}
 }

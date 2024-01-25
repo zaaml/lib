@@ -7,26 +7,26 @@ using System.Windows.Markup;
 
 namespace Zaaml.PresentationCore.Interactivity.VSM
 {
-  [ContentProperty(nameof(States))]
-  public sealed class VisualStateGroup
-  {
-    public VisualStateGroup()
-    {
-    }
+	[ContentProperty(nameof(States))]
+	public sealed class VisualStateGroup
+	{
+		public VisualStateGroup()
+		{
+		}
 
-    internal VisualStateGroup(string name, IEnumerable<string> states)
-    {
-      Name = name;
-      foreach (var state in states)
-        States.Add(new VisualState {Name = state});
-    }
+		internal VisualStateGroup(string name, IEnumerable<string> states) : this(name)
+		{
+			foreach (var state in states)
+				States.Add(new VisualState {Name = state});
+		}
 
-    #region Properties
+		internal VisualStateGroup(string name)
+		{
+			Name = name;
+		}
 
-    public string Name { get; set; }
+		public string Name { get; set; }
 
-    public VisualStateCollection States { get; } = new VisualStateCollection();
-
-    #endregion
-  }
+		public VisualStateCollection States { get; } = new VisualStateCollection();
+	}
 }

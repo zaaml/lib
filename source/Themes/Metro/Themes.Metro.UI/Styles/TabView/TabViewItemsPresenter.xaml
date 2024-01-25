@@ -13,10 +13,10 @@
   </zm:SwitchConverter>
 
   <zm:SwitchConverter x:Key="CreateTabButtonMarginConverter">
-    <zm:Case Key="Left" Value="2,2,0,0" />
-    <zm:Case Key="Top" Value="2,2,0,0" />
-    <zm:Case Key="Right" Value="0,2,2,0" />
-    <zm:Case Key="Bottom" Value="2,0,0,2" />
+    <zm:Case Key="Left" Value="0,0,0,0" />
+    <zm:Case Key="Top" Value="0,0,0,0" />
+    <zm:Case Key="Right" Value="0,0,0,0" />
+    <zm:Case Key="Bottom" Value="0,0,0,0" />
   </zm:SwitchConverter>
 
   <!--  MenuButtonGlyph  -->
@@ -70,56 +70,60 @@
                                                        Converter={StaticResource OrientationConverter}}"
                       Stretch="Fill">
 
-          <!--  Header  -->
-          <zm:FlexPanel.GenericDefinition>
+          <zm:FlexPanel.FlexDefinition>
             <zm:FlexDefinition Length="Auto"
                                StretchDirection="None" />
-          </zm:FlexPanel.GenericDefinition>
+          </zm:FlexPanel.FlexDefinition>
 
-          <ContentPresenter Content="{zm:TemplateBinding Path=Header}"
-                            ContentTemplate="{zm:TemplateBinding Path=HeaderTemplate}" />
+          <!--  Header  -->
+          <zm:TabViewItemsHeaderPresenter Content="{zm:TemplateBinding Path=Header}"
+                                          ContentTemplate="{zm:TemplateBinding Path=HeaderTemplate}" />
 
           <!--  Items Host  -->
           <zm:TabViewItemsPanel x:Name="ItemsHost"
-                                HorizontalAlignment="Left"
+                                HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
+                                zm:FlexDefinition.ExpandPriority="1"
                                 zm:FlexDefinition.Length="*"
                                 zm:FlexDefinition.StretchDirection="Both"
                                 Background="Transparent"
-                                GenericDefinition="{zm:TemplateBinding Path=TabViewControl.ItemsFlexDefinition}"
+                                FlexDefinition="{zm:TemplateBinding Path=TabViewControl.ItemsFlexDefinition}"
                                 Orientation="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
                                                                  Converter={StaticResource OrientationConverter}}"
                                 Spacing="-1"
                                 Stretch="Fill" />
 
           <!--  CreateTab Button  -->
-          <zm:Button Margin="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
+          <zm:Button
+            Margin="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
                                                  Converter={StaticResource CreateTabButtonMarginConverter}}"
-                     Padding="4,0"
-                     HorizontalAlignment="Left"
-                     VerticalAlignment="Stretch"
-                     HorizontalContentAlignment="Stretch"
-                     VerticalContentAlignment="Stretch"
-                     Command="{zm:TemplateBinding Path=TabViewControl.CreateTabCommand}"
-                     Content="{zm:TemplateBinding Path=TabViewControl.CreateTabButtonContent}"
-                     ContentTemplate="{zm:TemplateBinding Path=TabViewControl.CreateTabButtonContentTemplate}"
-                     Visibility="{zm:TemplateBinding Path=TabViewControl.ActualCreateTabButtonVisibility}" />
+            Padding="4,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
+            Command="{zm:TemplateBinding Path=TabViewControl.CreateTabCommand}"
+            Content="{zm:TemplateBinding Path=TabViewControl.CreateTabButtonContent}"
+            ContentTemplate="{zm:TemplateBinding Path=TabViewControl.CreateTabButtonContentTemplate}"
+            Visibility="{zm:TemplateBinding Path=TabViewControl.ActualCreateTabButtonVisibility}" />
 
           <!--  Footer  -->
-          <ContentPresenter zm:FlexDefinition.ShrinkPriority="1"
-                            zm:FlexDefinition.StretchDirection="Both"
-                            Content="{zm:TemplateBinding Path=Footer}"
-                            ContentTemplate="{zm:TemplateBinding Path=FooterTemplate}" />
+          <zm:TabViewItemsFooterPresenter zm:FlexDefinition.ShrinkPriority="1"
+                                          zm:FlexDefinition.StretchDirection="Both"
+                                          Content="{zm:TemplateBinding Path=Footer}"
+                                          ContentTemplate="{zm:TemplateBinding Path=FooterTemplate}" />
 
           <!--  MenuButton  -->
           <zm:DropDownButton x:Name="ItemsMenuButton"
                              Margin="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
                                                          Converter={StaticResource CreateTabButtonMarginConverter}}"
-                             Padding="0"
+                             Padding="2"
                              HorizontalAlignment="Stretch"
                              VerticalAlignment="Stretch"
+                             zm:FlexDefinition.StretchDirection="None"
                              zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=ItemsMenuButton}"
                              BorderThickness="0"
+                             ShowContent="False"
                              DropDownGlyph="{Binding Path=HasHiddenChildren, ElementName=ItemsHost, Converter={zm:TernaryConverter Operand=True, TrueValue={StaticResource OverflowMenuButtonGlyph}, FalseValue={StaticResource MenuButtonGlyph}}}"
                              Visibility="{zm:TemplateBinding Path=TabViewControl.ActualItemsMenuButtonVisibility}">
 
@@ -139,9 +143,11 @@
   </zm:Style>
 
   <!--  Styles  -->
-  <zm:Style x:Key="TabViewItemsPresenterStyle" BasedOn="{StaticResource TabViewItemsPresenterBaseStyle}" Skin="Metro.TabViewItemsPresenter" TargetType="zm:TabViewItemsPresenter" />
+  <zm:Style x:Key="TabViewItemsPresenterStyle" BasedOn="{StaticResource TabViewItemsPresenterBaseStyle}"
+            Skin="Metro.TabViewItemsPresenter" TargetType="zm:TabViewItemsPresenter" />
 
   <!--  Theme Styles  -->
-  <zm:ThemeStyle x:Key="TabViewItemsPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TabViewItemsPresenterStyle}" TargetType="zm:TabViewItemsPresenter" />
+  <zm:ThemeStyle x:Key="TabViewItemsPresenterThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource TabViewItemsPresenterStyle}" TargetType="zm:TabViewItemsPresenter" />
 
 </zm:ThemeResourceDictionary>

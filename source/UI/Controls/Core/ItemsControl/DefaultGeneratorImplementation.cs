@@ -12,7 +12,7 @@ namespace Zaaml.UI.Controls.Core
 	{
 		protected DefaultGeneratorImplementation()
 		{
-			Generator = new TGenerator {Implementation = this};
+			Generator = new TGenerator { Implementation = this };
 		}
 
 		public TGenerator Generator { get; }

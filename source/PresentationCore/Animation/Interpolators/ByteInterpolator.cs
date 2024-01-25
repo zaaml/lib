@@ -1,28 +1,20 @@
-namespace Zaaml.PresentationCore.Animation.Interpolators
+// <copyright file="ByteInterpolator.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+//   Copyright (c) Zaaml. All rights reserved.
+// </copyright>
+
+namespace Zaaml.PresentationCore.Animation
 {
-  public sealed class ByteInterpolator : InterpolatorBase<byte>
-  {
-    #region Static Fields and Constants
+	public sealed class ByteInterpolator : PrimitiveInterpolator<byte>
+	{
+		public static readonly ByteInterpolator Instance = new();
 
-    public static ByteInterpolator Instance = new ByteInterpolator();
+		private ByteInterpolator()
+		{
+		}
 
-    #endregion
-
-    #region Ctors
-
-    private ByteInterpolator()
-    {
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected internal override byte EvaluateCore(byte start, byte end, double progress)
-    {
-      return (byte)(start + (int)((end - start + 0.5) * progress));
-    }
-
-    #endregion
-  }
+		protected internal override byte EvaluateCore(byte start, byte end, double progress)
+		{
+			return (byte)(start + (int)((end - start + 0.5) * progress));
+		}
+	}
 }

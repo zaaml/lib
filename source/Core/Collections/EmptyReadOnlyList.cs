@@ -43,12 +43,12 @@ namespace Zaaml.Core.Collections
 
     public void Add(T item)
     {
-      throw AcessException.ExceptionInstance;
+      throw AccessException.ExceptionInstance;
     }
 
     public void Clear()
     {
-      throw AcessException.ExceptionInstance;
+      throw AccessException.ExceptionInstance;
     }
 
     public bool Contains(T item)
@@ -62,7 +62,7 @@ namespace Zaaml.Core.Collections
 
     public bool Remove(T item)
     {
-      throw AcessException.ExceptionInstance;
+      throw AccessException.ExceptionInstance;
     }
 
     public int Count => 0;
@@ -108,18 +108,18 @@ namespace Zaaml.Core.Collections
 
     public void Insert(int index, object value)
     {
-      throw AcessException.ExceptionInstance;
+      throw AccessException.ExceptionInstance;
     }
 
     public void Remove(object value)
     {
-      throw AcessException.ExceptionInstance;
+      throw AccessException.ExceptionInstance;
     }
 
     object IList.this[int index]
     {
       get => throw new ArgumentOutOfRangeException(nameof(index));
-      set => throw AcessException.ExceptionInstance;
+      set => throw AccessException.ExceptionInstance;
     }
 
     public bool IsFixedSize => true;
@@ -135,18 +135,18 @@ namespace Zaaml.Core.Collections
 
     public void Insert(int index, T item)
     {
-      throw AcessException.ExceptionInstance;
+      throw AccessException.ExceptionInstance;
     }
 
     public void RemoveAt(int index)
     {
-      throw AcessException.ExceptionInstance;
+      throw AccessException.ExceptionInstance;
     }
 
     public T this[int index]
     {
       get => throw new ArgumentOutOfRangeException(nameof(index));
-      set => throw AcessException.ExceptionInstance;
+      set => throw AccessException.ExceptionInstance;
     }
 
     #endregion
@@ -155,17 +155,17 @@ namespace Zaaml.Core.Collections
 
     #region  Nested Types
 
-    private class AcessException : Exception
+    private class AccessException : Exception
     {
       #region Static Fields and Constants
 
-      public static readonly Exception ExceptionInstance = new AcessException();
+      public static readonly Exception ExceptionInstance = new AccessException();
 
       #endregion
 
       #region Ctors
 
-      private AcessException()
+      private AccessException()
       {
       }
 

@@ -33,6 +33,7 @@ namespace Zaaml.UI.Windows
     public override void SetPosition(UIElement element, Point value)
     {
       var window = (WindowBase) element;
+
       window.SetLocation(value);
       window.IsManualLocation = true;
     }

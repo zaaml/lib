@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
@@ -90,7 +91,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		private MenuItemGeneratorBase ActualGenerator => ItemGenerator ?? ParentGenerator;
 
-		private bool IsItem => ItemCollection.Count == 0;
+		private bool IsItem => ActualRole is MenuItemRole.SubmenuItem or MenuItemRole.TopLevelItem;
 
 		public Style ItemContainerStyle
 		{
@@ -123,7 +124,7 @@ namespace Zaaml.UI.Controls.Menu
 		public bool StaysOpenOnClick
 		{
 			get => (bool) GetValue(StaysOpenOnClickProperty);
-			set => SetValue(StaysOpenOnClickProperty, value);
+			set => SetValue(StaysOpenOnClickProperty, value.Box());
 		}
 
 		internal override bool StaysOpenOnClickInternal => StaysOpenOnClick;

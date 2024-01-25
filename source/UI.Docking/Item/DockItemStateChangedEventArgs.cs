@@ -6,21 +6,19 @@ using System;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class DockItemStateChangedEventArgs : EventArgs
-  {
-    #region Fields
+	public class DockItemStateChangedEventArgs : EventArgs
+	{
+		public DockItemStateChangedEventArgs(DockItem item, DockItemState oldDockState, DockItemState newDockState)
+		{
+			Item = item;
+			NewDockState = newDockState;
+			OldDockState = oldDockState;
+		}
 
-    public readonly DockItemState OldDockState;
+		public DockItem Item { get; }
 
-    #endregion
+		public DockItemState NewDockState { get; }
 
-    #region Ctors
-
-    public DockItemStateChangedEventArgs(DockItemState oldDockState)
-    {
-      OldDockState = oldDockState;
-    }
-
-    #endregion
-  }
+		public DockItemState OldDockState { get; }
+	}
 }

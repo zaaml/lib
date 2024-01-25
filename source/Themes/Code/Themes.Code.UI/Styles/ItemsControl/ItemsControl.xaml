@@ -1,0 +1,38 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="ItemsPresenter.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="ItemsControlTemplate"
+                   TargetType="zm:ItemsControl">
+    <zm:ControlTemplateRoot Background="Transparent">
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+        <zm:ItemsPresenter x:Name="ItemsPresenter"
+                           Template="{zm:TemplateBinding Path=ItemsPresenterTemplate,
+                                                         TargetNullValue={StaticResource ItemsPresenterTemplate}}" />
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ItemsControlBaseStyle" TargetType="zm:ItemsControl">
+    <zm:Setter Property="IsTabStop" Value="False" />
+    <zm:Setter Property="Template" Value="{StaticResource ItemsControlTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ItemsControlStyle" BasedOn="{StaticResource ItemsControlBaseStyle}" TargetType="zm:ItemsControl" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ItemsControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ItemsControlStyle}" TargetType="zm:ItemsControl" />
+
+</zm:ThemeResourceDictionary>

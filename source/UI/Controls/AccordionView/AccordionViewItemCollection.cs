@@ -8,24 +8,16 @@ namespace Zaaml.UI.Controls.AccordionView
 {
 	public sealed class AccordionViewItemCollection : ItemCollectionBase<AccordionViewControl, AccordionViewItem>
 	{
-		#region Ctors
-
 		internal AccordionViewItemCollection(AccordionViewControl accordionView) : base(accordionView)
 		{
 		}
-
-		#endregion
-
-		#region Properties
 
 		protected override ItemGenerator<AccordionViewItem> DefaultGenerator { get; } = new AccordionViewItemGenerator();
 
 		internal AccordionViewItemGeneratorBase Generator
 		{
-			get => (AccordionViewItemGeneratorBase) GeneratorCore;
+			get => (AccordionViewItemGeneratorBase)GeneratorCore;
 			set => GeneratorCore = value;
 		}
-
-		#endregion
 	}
 }

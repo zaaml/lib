@@ -9,8 +9,13 @@
   <!--  Template  -->
   <ControlTemplate x:Key="Template"
                    TargetType="zm:TrackBarValueItem">
-    <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
-      <ContentPresenter Content="{TemplateBinding Content}" />
+    <zm:ControlTemplateRoot>
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{TemplateBinding CornerRadius}">
+        <ContentPresenter Content="{TemplateBinding Content}" />
+      </Border>
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 

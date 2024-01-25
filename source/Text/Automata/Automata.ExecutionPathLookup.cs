@@ -8,32 +8,20 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Zaaml.Core;
 using Zaaml.Core.Collections;
-using Zaaml.Core.Extensions;
+using Zaaml.Core.Collections.Pooled;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
-		private class ExecutionPathLookup
+		private protected class ExecutionPathLookup
 		{
-			#region Static Fields and Constants
-
-			private const int FastLookupLimit = 1024;
-			public static readonly ExecutionPathLookup Empty = new ExecutionPathLookup(Enumerable.Empty<ExecutionPath>());
+			private const int FastLookupLimit = 64;
+			public static readonly ExecutionPathLookup Empty = new();
 			private static readonly ExecutionPathGroup[] EmptyFastLookup;
-
-			#endregion
-
-			#region Fields
 
 			private readonly ExecutionPathGroup[] _fastLookup;
 			private readonly ILookup _lookup;
-
-			#endregion
-
-			#region Ctors
 
 			static ExecutionPathLookup()
 			{
@@ -43,36 +31,43 @@ namespace Zaaml.Text
 				EmptyFastLookup = CreateFastLookupArray();
 			}
 
-			public ExecutionPathLookup(IEnumerable<ExecutionPath> executionPaths)
+			private ExecutionPathLookup()
 			{
-				var executionPathGroups = GroupExecutionPaths(executionPaths, out var predicateGroup).ToList();
-				var emptyGroup = predicateGroup ?? ExecutionPathGroup.Empty;
+				_lookup = new AnyLookup(ExecutionPathGroup.Empty);
+			}
+
+			public ExecutionPathLookup(Automata<TInstruction, TOperand> automata, IEnumerable<ExecutionPath> executionPaths)
+			{
+				var executionPathGroups = GroupExecutionPaths(automata, executionPaths, out var epsilonGroup);
 
 				if (executionPathGroups.Count == 0)
-					_lookup = new AnyLookup(emptyGroup);
+					_lookup = new AnyLookup(epsilonGroup);
 				else if (executionPathGroups.Count == 1)
 				{
-					var match = executionPathGroups[0].Match;
+					var executionPathGroup = executionPathGroups[0];
+					var range = executionPathGroup.Range;
 
-					if (match is RangeMatchEntry rangeMatch)
-						_lookup = new SingleOperandRangeLookup(rangeMatch.MinOperand, rangeMatch.MaxOperand, executionPathGroups[0], emptyGroup);
-					else
-						_lookup = new SingleOperandLookup(((SingleMatchEntry) match).Operand, executionPathGroups[0], emptyGroup);
+					if (range.IsEmpty)
+					{
+						throw new ArgumentOutOfRangeException();
+					}
+
+					_lookup = range.Minimum == range.Maximum
+						? new SingleOperandLookup(range.Minimum, executionPathGroup, epsilonGroup)
+						: new SingleOperandRangeLookup(range, executionPathGroup, epsilonGroup);
 				}
 				else
 				{
-					var hasRanges = executionPathGroups.Any(g => g.Match is RangeMatchEntry);
+					var hasRanges = executionPathGroups.Any(g => g.Range.Minimum != g.Range.Maximum);
 
-					_lookup = hasRanges ? new RangeTreeLookup(executionPathGroups, emptyGroup) : (ILookup) new DictionaryLookup(executionPathGroups, emptyGroup);
+					_lookup = hasRanges ? new RangeTreeLookup(executionPathGroups, epsilonGroup) : new DictionaryLookup(executionPathGroups, epsilonGroup);
 				}
 
-				if (predicateGroup != null)
-					_lookup = new PredicateLookup(_lookup, predicateGroup);
+				if (epsilonGroup != null)
+					_lookup = new EpsilonLookup(_lookup, epsilonGroup);
 
 				if (InstructionsRange.Maximum >= FastLookupLimit)
 					return;
-
-				//_lookup = new FastLookup(_lookup);
 
 				for (var i = 0; i < InstructionsRange.Maximum + 1; i++)
 				{
@@ -88,10 +83,6 @@ namespace Zaaml.Text
 				_fastLookup ??= EmptyFastLookup;
 			}
 
-			#endregion
-
-			#region Methods
-
 			private static ExecutionPathGroup[] CreateFastLookupArray()
 			{
 				var fastLookup = new ExecutionPathGroup[InstructionsRange.Maximum + 1];
@@ -102,19 +93,9 @@ namespace Zaaml.Text
 				return fastLookup;
 			}
 
-			private static Interval<int> CreateRange(TOperand minimum, TOperand maximum)
+			private static Range<int> CreateRange(TOperand minimum, TOperand maximum)
 			{
-				return new Interval<int>(ConvertOperand(minimum), ConvertOperand(maximum));
-			}
-
-			private static Interval<int> CreateRange(PrimitiveMatchEntry operandMatch)
-			{
-				return operandMatch switch
-				{
-					RangeMatchEntry rangeMatch => rangeMatch.IntRange,
-					SingleMatchEntry singleMatch => CreateRange(singleMatch.Operand, singleMatch.Operand),
-					_ => throw new InvalidOperationException()
-				};
+				return new Range<int>(ConvertFromOperand(minimum), ConvertFromOperand(maximum));
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -124,425 +105,341 @@ namespace Zaaml.Text
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public ExecutionPathGroup GetExecutionPathGroup()
-			{
-				if (_lookup is PredicateLookup predicateLookup)
-					return predicateLookup.GetExecutionPathGroup();
-
-				return ExecutionPathGroup.Empty;
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ExecutionPathGroup GetExecutionPathGroupFast(int operand)
 			{
 				return _fastLookup != null ? _fastLookup[operand] : _lookup.GetExecutionPathGroup(operand);
 			}
 
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public ExecutionPathGroup GetExecutionPathGroupFast()
+			private static List<ExecutionPathGroup> Group(Automata<TInstruction, TOperand> automata, IEnumerable<GroupExecutionPathData> matchPaths, List<ExecutionPath> predicatePaths)
 			{
-				if (_lookup is PredicateLookup predicateLookup)
-					return predicateLookup.GetExecutionPathGroup();
-
-				return ExecutionPathGroup.Empty;
+				return matchPaths.SelectMany(p => p.Ranges.Select(r => new { Operand = r.Minimum, p.Path }))
+					.GroupBy(t => t.Operand)
+					.Select(g => new ExecutionPathGroup(automata, new Range<int>(g.Key, g.Key), g.Select(d => d.Path).Concat(predicatePaths))).ToList();
 			}
 
-			private static IEnumerable<ExecutionPathGroup> Group(IEnumerable<GroupExecutionPathData> matchPaths, List<ExecutionPath> predicatePaths)
-			{
-				return matchPaths.GroupBy(p => ((SingleMatchEntry) p.Match).Operand).Select(g => new ExecutionPathGroup(g.Key, g.Select(d => d.Path).Concat(predicatePaths)));
-			}
-
-			private static IEnumerable<ExecutionPathGroup> GroupExecutionPaths(IEnumerable<ExecutionPath> executionPaths, out ExecutionPathGroup predicateGroup)
+			private List<ExecutionPathGroup> GroupExecutionPaths(Automata<TInstruction, TOperand> automata, IEnumerable<ExecutionPath> executionPaths, out ExecutionPathGroup epsilonGroup)
 			{
 				var paths = new List<GroupExecutionPathData>();
-				var predicatePaths = new List<ExecutionPath>();
+				var epsilonPaths = new List<ExecutionPath>();
 				var hasRanges = false;
 
 				foreach (var executionPath in executionPaths)
 				{
-					if (executionPath.IsPredicate)
+					if (executionPath.IsEpsilon)
 					{
-						predicatePaths.Add(executionPath);
+						epsilonPaths.Add(executionPath);
 
 						continue;
 					}
 
 					var match = executionPath.Match;
 
-					if (match is SetMatchEntry setMatch)
-					{
-						foreach (var primitiveOperandMatch in setMatch.Matches)
-						{
-							paths.Add(new GroupExecutionPathData(primitiveOperandMatch, executionPath)); //new ExecutionPath(executionPath.PathSourceNode, executionPath.Nodes, primitiveOperandMatch) {Index = executionPath.Index});
-							hasRanges |= primitiveOperandMatch is RangeMatchEntry;
-						}
-					}
-					else
-					{
-						var primitiveOperandMatch = (PrimitiveMatchEntry) match;
+					if (match is not PrimitiveMatchEntry primitiveMatchEntry)
+						throw new InvalidOperationException();
 
-						paths.Add(new GroupExecutionPathData(primitiveOperandMatch, executionPath));
-						hasRanges |= primitiveOperandMatch is RangeMatchEntry;
-					}
+					var groupExecutionPathData = new GroupExecutionPathData(MergeRanges(FlattenRanges(primitiveMatchEntry)), executionPath);
+
+					paths.Add(groupExecutionPathData);
+
+					foreach (var range in groupExecutionPathData.Ranges)
+						hasRanges |= range.Minimum != range.Maximum;
 				}
 
-				predicateGroup = predicatePaths.Count > 0 ? new ExecutionPathGroup(predicatePaths) : null;
+				epsilonGroup = epsilonPaths.Count > 0 ? new ExecutionPathGroup(automata, epsilonPaths) : ExecutionPathGroup.Empty;
 
-				return hasRanges ? GroupWithRanges(paths, predicatePaths) : Group(paths, predicatePaths);
+				return hasRanges ? GroupWithRanges(automata, paths, epsilonPaths) : Group(automata, paths, epsilonPaths);
 			}
 
-			private static IEnumerable<ExecutionPathGroup> GroupWithRanges(IEnumerable<GroupExecutionPathData> matchPaths, List<ExecutionPath> predicatePaths)
+			private static IEnumerable<Range<int>> FlattenRanges(PrimitiveMatchEntry matchEntry)
 			{
-				var rangeItems = new List<IntervalItem<ExecutionPath, int>>();
-
-				foreach (var executionPath in matchPaths)
+				switch (matchEntry)
 				{
-					switch (executionPath.Match)
+					case OperandMatchEntry operandMatchEntry:
+						yield return new Range<int>(operandMatchEntry.IntOperand, operandMatchEntry.IntOperand);
+
+						break;
+					case RangeMatchEntry rangeMatchEntry:
+						yield return rangeMatchEntry.Range;
+
+						break;
+					case SetMatchEntry setMatchEntry:
 					{
-						case SingleMatchEntry singleMatch:
-							rangeItems.Add(new IntervalItem<ExecutionPath, int>(executionPath.Path, CreateRange(singleMatch.Operand, singleMatch.Operand)));
+						foreach (var range in setMatchEntry.Matches.SelectMany(FlattenRanges))
+							yield return range;
 
-							break;
-						case RangeMatchEntry rangeMatch:
-							rangeItems.Add(new IntervalItem<ExecutionPath, int>(executionPath.Path, rangeMatch.IntRange));
-
-							break;
+						break;
 					}
 				}
-
-				var split = Core.Interval.Split(rangeItems.Distinct());
-				var dictionary = new Dictionary<Interval<int>, List<ExecutionPath>>();
-
-				foreach (var rangeItem in split)
-					dictionary.GetValueOrCreate(rangeItem.Interval, () => new List<ExecutionPath>()).Add(rangeItem.Item);
-
-				return dictionary.Select(kv => new ExecutionPathGroup(new RangeMatchEntry(kv.Key), kv.Value.Concat(predicatePaths)));
 			}
 
-			#endregion
-
-			#region Nested Types
-
-			private struct GroupExecutionPathData
+			private static Range<int>[] MergeRanges(IEnumerable<Range<int>> ranges)
 			{
-				public GroupExecutionPathData(PrimitiveMatchEntry match, ExecutionPath path)
+				var list = PooledList<Range<int>>.RentList();
+
+				list.AddRange(ranges);
+				list.Sort(RangeComparer.Instance);
+
+				var result = MergeRangesImpl(list).ToArray();
+
+				PooledList<Range<int>>.ReturnList(list);
+
+				return result;
+			}
+
+			private static IEnumerable<Range<int>> MergeRangesImpl(IEnumerable<Range<int>> ranges)
+			{
+				var prev = Range<int>.Empty;
+
+				foreach (var range in ranges)
 				{
-					Match = match;
+					if (prev.IsEmpty)
+					{
+						prev = range;
+
+						continue;
+					}
+
+					var prevSpan = prev.AsIntSpan();
+					var span = range.AsIntSpan();
+
+					if (prevSpan.JoinsWith(span) || prevSpan.IntersectsWith(span))
+					{
+						prevSpan = prevSpan.Bounds(span);
+						prev = prevSpan.AsRange();
+
+						continue;
+					}
+
+					yield return prev;
+
+					prev = range;
+				}
+
+				if (prev.IsEmpty == false)
+					yield return prev;
+			}
+
+			private static List<ExecutionPathGroup> GroupWithRanges(Automata<TInstruction, TOperand> automata, IEnumerable<GroupExecutionPathData> matchPaths, List<ExecutionPath> predicatePaths)
+			{
+				var rangeItems = new List<RangeItem<ExecutionPath, int>>();
+
+				foreach (var groupData in matchPaths)
+				{
+					foreach (var range in groupData.Ranges)
+						rangeItems.Add(new RangeItem<ExecutionPath, int>(groupData.Path, range));
+				}
+
+				if (rangeItems.Count == 1)
+				{
+					var r = rangeItems[0];
+					var executionPaths = new List<ExecutionPath> { r.Item };
+
+					executionPaths.AddRange(predicatePaths);
+
+					return new List<ExecutionPathGroup> { new(automata, r.Range, executionPaths) };
+				}
+
+				using var merger = new IntSpanItemMerger<RangeItem<List<ExecutionPath>, int>, List<ExecutionPath>>(rangeItems.Distinct().Select(r => new RangeItem<List<ExecutionPath>, int>(new List<ExecutionPath> { r.Item }, r.Range)),
+					new RangeItem<List<ExecutionPath>, int>(default, Range<int>.Empty),
+					r => r.Range.AsIntSpan(),
+					r => r.Item,
+					(span, path) => new RangeItem<List<ExecutionPath>, int>(path, span.AsRange()),
+					pl => pl.SelectMany(l => l).Distinct().ToList(),
+					true
+				);
+
+				return merger.AsEnumerable().Select(r => new ExecutionPathGroup(automata, r.Range, r.Item.Concat(predicatePaths))).ToList();
+			}
+
+			private sealed class RangeComparer : IComparer<Range<int>>
+			{
+				public static readonly RangeComparer Instance = new();
+
+				private RangeComparer()
+				{
+				}
+
+				public int Compare(Range<int> x, Range<int> y)
+				{
+					var minimumComparison = x.Minimum.CompareTo(y.Minimum);
+
+					if (minimumComparison != 0)
+						return minimumComparison;
+
+					return x.Maximum.CompareTo(y.Maximum);
+				}
+			}
+
+			private readonly struct GroupExecutionPathData
+			{
+				public GroupExecutionPathData(Range<int>[] ranges, ExecutionPath path)
+				{
+					Ranges = ranges;
 					Path = path;
 				}
 
-				public readonly PrimitiveMatchEntry Match;
+				public readonly Range<int>[] Ranges;
 				public readonly ExecutionPath Path;
 			}
 
 			private interface ILookup
 			{
-				#region Methods
-
 				ExecutionPathGroup GetExecutionPathGroup(int operand);
-
-				#endregion
 			}
-
-			//private sealed class FastLookup : ILookup
-			//{
-			//	#region Fields
-
-			//	private readonly ExecutionPathGroup[] _fastLookup;
-
-			//	#endregion
-
-			//	#region Ctors
-
-			//	public FastLookup(ILookup lookup)
-			//	{
-			//		for (var i = 0; i < InstructionsRange.Maximum + 1; i++)
-			//		{
-			//			var executionPathGroup = lookup.GetExecutionPathGroup(i);
-
-			//			if (ReferenceEquals(executionPathGroup, ExecutionPathGroup.Empty))
-			//				continue;
-
-			//			_fastLookup ??= new ExecutionPathGroup[InstructionsRange.Maximum + 1];
-			//			_fastLookup[i] = executionPathGroup;
-			//		}
-
-			//		_fastLookup ??= EmptyFastLookup;
-			//	}
-
-			//	#endregion
-
-			//	#region Interface Implementations
-
-			//	#region Automata<TInstruction,TOperand>.ExecutionPathLookup.ILookup
-
-			//	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			//	public ExecutionPathGroup GetExecutionPathGroup(int operand)
-			//	{
-			//		return _fastLookup[operand];
-			//	}
-
-			//	#endregion
-
-			//	#endregion
-			//}
 
 			private sealed class DictionaryLookup : ILookup
 			{
-				#region Fields
-
-				private readonly HybridDictionaryCacheEx<ExecutionPathGroup> _dictionary = new HybridDictionaryCacheEx<ExecutionPathGroup>();
-				private readonly ExecutionPathGroup _emptyGroup;
+				//private readonly HybridDictionary<ExecutionPathGroup> _dictionary = new();
+				private readonly Dictionary<int, ExecutionPathGroup> _dictionary = new();
+				private readonly ExecutionPathGroup _epsilonGroup;
 				private readonly int _maxValue;
 				private readonly int _minValue;
 
-				#endregion
-
-				#region Ctors
-
-				public DictionaryLookup(IEnumerable<ExecutionPathGroup> executionPaths, ExecutionPathGroup emptyGroup)
+				public DictionaryLookup(IEnumerable<ExecutionPathGroup> executionPathGroups, ExecutionPathGroup epsilonGroup)
 				{
-					_emptyGroup = emptyGroup;
-					foreach (var executionPath in executionPaths)
+					_epsilonGroup = epsilonGroup;
+
+					foreach (var executionPathGroup in executionPathGroups)
 					{
-						var singleMatch = (SingleMatchEntry) executionPath.Match;
-						var operand = ConvertOperand(singleMatch.Operand);
+						var range = executionPathGroup.Range;
+
+						if (range.IsEmpty)
+							throw new InvalidOperationException();
+
+						if (range.Minimum != range.Maximum)
+							throw new InvalidOperationException();
+
+						var operand = range.Minimum;
 
 						_minValue = Math.Min(_minValue, operand);
 						_maxValue = Math.Max(_maxValue, operand);
-						_dictionary.SetValue(operand, executionPath);
+						_dictionary.Add(operand, executionPathGroup);
 					}
 				}
-
-				#endregion
-
-				#region Interface Implementations
-
-				#region Automata<TInstruction,TOperand>.ExecutionPathLookup.ILookup
 
 				public ExecutionPathGroup GetExecutionPathGroup(int operand)
 				{
 					if (operand < _minValue || operand > _maxValue)
-						return ExecutionPathGroup.Empty;
+						return _epsilonGroup;
 
-					return _dictionary.TryGetValue(operand, out var executionPathGroup) ? executionPathGroup : _emptyGroup;
+					return _dictionary.TryGetValue(operand, out var executionPathGroup) ? executionPathGroup : _epsilonGroup;
 				}
-
-				#endregion
-
-				#endregion
 			}
 
 			private sealed class RangeTreeLookup : ILookup
 			{
-				#region Fields
-
-				private readonly HybridDictionaryCacheEx<ExecutionPathGroup> _dictionary = new HybridDictionaryCacheEx<ExecutionPathGroup>();
-				private readonly ExecutionPathGroup _emptyGroup;
+				private readonly HybridDictionary<ExecutionPathGroup> _dictionary = new();
+				private readonly ExecutionPathGroup _epsilonGroup;
 				private readonly int _maxValue;
 				private readonly int _minValue;
-				private readonly IntervalTree<ExecutionPathGroup, int> _intervalTree;
+				private readonly RangeTree<ExecutionPathGroup, int> _rangeTree;
 
-				#endregion
-
-				#region Ctors
-
-				public RangeTreeLookup(System.Collections.Generic.IReadOnlyCollection<ExecutionPathGroup> executionPathGroups, ExecutionPathGroup emptyGroup)
+				public RangeTreeLookup(IReadOnlyCollection<ExecutionPathGroup> executionPathGroups, ExecutionPathGroup epsilonGroup)
 				{
-					_emptyGroup = emptyGroup;
+					_epsilonGroup = epsilonGroup;
 
 					foreach (var executionPathGroup in executionPathGroups)
 					{
-						var range = CreateRange(executionPathGroup.Match);
+						var range = executionPathGroup.Range;
 
 						_minValue = Math.Min(_minValue, range.Minimum);
 						_maxValue = Math.Max(_maxValue, range.Maximum);
 					}
 
-					_intervalTree = IntervalTree.Build(executionPathGroups, e => CreateRange(e.Match));
+					_rangeTree = RangeTree.Build(executionPathGroups, e => e.Range);
 				}
-
-				#endregion
-
-				#region Interface Implementations
-
-				#region Automata<TInstruction,TOperand>.ExecutionPathLookup.ILookup
 
 				public ExecutionPathGroup GetExecutionPathGroup(int operand)
 				{
 					if (operand < _minValue || operand > _maxValue)
-						return ExecutionPathGroup.Empty;
-
-					if (_dictionary.TryGetValue(operand, out var executionPathGroup))
-						return executionPathGroup;
+						return _epsilonGroup;
 
 					lock (_dictionary)
 					{
-						if (_dictionary.TryGetValue(operand, out executionPathGroup))
+						if (_dictionary.TryGetValue(operand, out var executionPathGroup))
 							return executionPathGroup;
 
-						executionPathGroup = _intervalTree.SearchFirstOrDefault(operand) ?? _emptyGroup;
+						executionPathGroup = _rangeTree.SearchFirstOrDefault(operand) ?? _epsilonGroup;
 
 						_dictionary.SetValue(operand, executionPathGroup);
+
+						return executionPathGroup;
 					}
-
-					return executionPathGroup;
 				}
-
-				#endregion
-
-				#endregion
 			}
 
 			private sealed class SingleOperandLookup : ILookup
 			{
-				#region Fields
-
-				private readonly ExecutionPathGroup _emptyGroup;
+				private readonly ExecutionPathGroup _epsilonGroup;
 				private readonly ExecutionPathGroup _executionPath;
 				private readonly int _operand;
 
-				#endregion
-
-				#region Ctors
-
-				public SingleOperandLookup(TOperand operand, ExecutionPathGroup executionPath, ExecutionPathGroup emptyGroup)
+				public SingleOperandLookup(int operand, ExecutionPathGroup executionPath, ExecutionPathGroup epsilonGroup)
 				{
-					_operand = ConvertOperand(operand);
+					_operand = operand;
 					_executionPath = executionPath;
-					_emptyGroup = emptyGroup;
+					_epsilonGroup = epsilonGroup;
 				}
-
-				#endregion
-
-				#region Interface Implementations
-
-				#region Automata<TInstruction,TOperand>.ExecutionPathLookup.ILookup
 
 				public ExecutionPathGroup GetExecutionPathGroup(int operand)
 				{
-					return _operand == operand ? _executionPath : _emptyGroup;
+					return _operand == operand ? _executionPath : _epsilonGroup;
 				}
-
-				#endregion
-
-				#endregion
 			}
 
 			private sealed class AnyLookup : ILookup
 			{
-				#region Fields
-
 				private readonly ExecutionPathGroup _executionPathGroup;
-
-				#endregion
-
-				#region Ctors
 
 				public AnyLookup(ExecutionPathGroup executionPathGroup)
 				{
 					_executionPathGroup = executionPathGroup;
 				}
 
-				#endregion
-
-				#region Interface Implementations
-
-				#region Automata<TInstruction,TOperand>.ExecutionPathLookup.ILookup
-
 				public ExecutionPathGroup GetExecutionPathGroup(int operand)
 				{
 					return _executionPathGroup;
 				}
-
-				#endregion
-
-				#endregion
 			}
 
-			private sealed class PredicateLookup : ILookup
+			private sealed class EpsilonLookup : ILookup
 			{
-				#region Fields
-
+				private readonly ExecutionPathGroup _epsilonGroup;
 				private readonly ILookup _matchLookup;
-				private readonly ExecutionPathGroup _predicateGroup;
 
-				#endregion
-
-				#region Ctors
-
-				public PredicateLookup(ILookup matchLookup, ExecutionPathGroup predicateGroup)
+				public EpsilonLookup(ILookup matchLookup, ExecutionPathGroup epsilonGroup)
 				{
 					_matchLookup = matchLookup;
-					_predicateGroup = predicateGroup;
+					_epsilonGroup = epsilonGroup;
 				}
-
-				#endregion
-
-				#region Methods
-
-				public ExecutionPathGroup GetExecutionPathGroup()
-				{
-					return _predicateGroup;
-				}
-
-				#endregion
-
-				#region Interface Implementations
-
-				#region Automata<TInstruction,TOperand>.ExecutionPathLookup.ILookup
 
 				public ExecutionPathGroup GetExecutionPathGroup(int operand)
 				{
-					return _matchLookup.GetExecutionPathGroup(operand);
+					return operand == 0 ? _epsilonGroup : _matchLookup.GetExecutionPathGroup(operand);
 				}
-
-				#endregion
-
-				#endregion
 			}
 
 			private sealed class SingleOperandRangeLookup : ILookup
 			{
-				#region Fields
-
-				private readonly ExecutionPathGroup _emptyGroup;
+				private readonly ExecutionPathGroup _epsilonGroup;
 
 				private readonly ExecutionPathGroup _executionPath;
 				private readonly int _maxValue;
 				private readonly int _minValue;
 
-				#endregion
-
-				#region Ctors
-
-				public SingleOperandRangeLookup(TOperand from, TOperand to, ExecutionPathGroup executionPath, ExecutionPathGroup emptyGroup)
+				public SingleOperandRangeLookup(Range<int> range, ExecutionPathGroup executionPath, ExecutionPathGroup epsilonGroup)
 				{
 					_executionPath = executionPath;
-					_emptyGroup = emptyGroup;
-					_minValue = ConvertOperand(from);
-					_maxValue = ConvertOperand(to);
+					_epsilonGroup = epsilonGroup;
+					_minValue = range.Minimum;
+					_maxValue = range.Maximum;
 				}
-
-				#endregion
-
-				#region Interface Implementations
-
-				#region Automata<TInstruction,TOperand>.ExecutionPathLookup.ILookup
 
 				public ExecutionPathGroup GetExecutionPathGroup(int operand)
 				{
-					return operand >= _minValue && operand <= _maxValue ? _executionPath : _emptyGroup;
+					return operand >= _minValue && operand <= _maxValue ? _executionPath : _epsilonGroup;
 				}
-
-				#endregion
-
-				#endregion
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

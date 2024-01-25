@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
@@ -70,13 +71,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		public bool AllowSubBar
 		{
 			get => (bool) GetValue(AllowSubBarProperty);
-			set => SetValue(AllowSubBarProperty, value);
+			set => SetValue(AllowSubBarProperty, value.Box());
 		}
 
 		public bool IsSubBarOpen
 		{
 			get => (bool) GetValue(IsSubBarOpenProperty);
-			set => SetValue(IsSubBarOpenProperty, value);
+			set => SetValue(IsSubBarOpenProperty, value.Box());
 		}
 
 		public PopupPlacementOptions PlacementOptions

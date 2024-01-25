@@ -4,28 +4,48 @@
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
+		<Configurations>Debug;Release;Test;NGDebug;NGRelease</Configurations>
+		<IsNGDev Condition="$(Configuration) == 'NGDebug' OR $(Configuration) == 'NGRelease'">True</IsNGDev>
 	</PropertyGroup>
-	
-	<PropertyGroup>
-		<TargetFramework>net5.0</TargetFramework>
+
+  <PropertyGroup Condition="$(Configuration) == 'NGRelease'">
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+	<PropertyGroup Condition="$(IsNGDev) != True">
+		<TargetFramework>net8.0</TargetFramework>
 	</PropertyGroup>
-	
-	<PropertyGroup Condition="$(Publish) == 'true'">
+
+	<PropertyGroup Condition="$(IsNGDev) == True">
+		<TargetFramework>netstandard2.0</TargetFramework>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(Publish) == True AND $(IsNGDev) != True">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
+		<TargetFrameworks>net8.0;net7.0;net6.0;net5.0;net48;netstandard2.0</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
-	
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='NGDebug|AnyCPU'">
+	  <DefineConstants>$(DefineConstants)TRACE;DEBUG</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\Core\Zaaml.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.5.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		<PackageReference Include="GitVersion.MsBuild" Version="5.12.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="System.Memory" Version="4.5.4" />
+		<PackageReference Include="System.Memory" Version="4.5.5" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
+		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+		<PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" />
+		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -39,33 +59,16 @@
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>Automata.Builder.Quantifier.tt</DependentUpon>
 		</Compile>
-		<Compile Update="Grammar\Grammar.ParserRule.BindFactory.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Grammar.ParserRule.BindFactory.tt</DependentUpon>
-		</Compile>
-		<Compile Update="Grammar\GrammarBuilders.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>GrammarBuilders.tt</DependentUpon>
-		</Compile>
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="Automata\Automata.Builder.Quantifier.tt">
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		  <LastGenOutput>Automata.Builder.Quantifier.cs</LastGenOutput>
 		</None>
-		<None Update="Grammar\Grammar.ParserRule.BindFactory.tt">
+		<None Update="Grammar\Grammar.ParserRule.BindFactory.btt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Grammar.ParserRule.BindFactory.cs</LastGenOutput>
 		</None>
-		<None Update="Grammar\GrammarBuilders.tt">
-			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>GrammarBuilders.cs</LastGenOutput>
-		</None>
-	</ItemGroup>
-	<ItemGroup>
-		<Folder Include="Grammar\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />

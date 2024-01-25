@@ -22,14 +22,6 @@
     <zm:Default Value="{zm:Static Member=zm:Transforms.Identity}" />
   </zm:SwitchConverter>
 
-  <zm:SwitchConverter x:Key="UnselectedMarginConverter">
-    <zm:Case Key="Left" Value="2,0,0,0" />
-    <zm:Case Key="Top" Value="0,2,0,0" />
-    <zm:Case Key="Right" Value="0,0,2,0" />
-    <zm:Case Key="Bottom" Value="0,0,0,2" />
-    <zm:Default Value="0" />
-  </zm:SwitchConverter>
-
   <!--  Button Style  -->
   <zm:Style x:Key="ButtonStyle" Skin="Metro.TabViewItem.Button" TargetType="zm:ButtonBase">
     <zm:Setter Property="Template">
@@ -62,9 +54,9 @@
   <!--  TabViewItemTemplate  -->
   <ControlTemplate x:Key="TabViewItemTemplate"
                    TargetType="zm:TabViewItem">
-    <zm:ControlTemplateRoot Margin="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement, Converter={StaticResource UnselectedMarginConverter}}">
+    <zm:ControlTemplateRoot>
       <zm:LayoutTransformer LayoutTransform="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement, Converter={StaticResource LayoutTransformConverter}}">
-        <Grid UseLayoutRounding="True">
+        <zm:Panel UseLayoutRounding="True">
           <Border x:Name="border"
                   Background="{zm:TemplateExpandoBinding Path=Background_Normal}"
                   BorderBrush="{zm:TemplateExpandoBinding Path=BorderBrush_Normal}"
@@ -98,7 +90,7 @@
                                          ShowContent="{TemplateBinding ShowContent}"
                                          ShowIcon="{TemplateBinding ShowIcon}" />
 
-                <zm:StackPanel Margin="-2,2,2,2"
+                <zm:StackPanel Margin="0,0,0,0"
                                zm:DockPanel.Dock="Right"
                                Orientation="Horizontal">
 
@@ -160,7 +152,7 @@
                   BorderThickness="0"
                   Opacity="0" />
 
-        </Grid>
+        </zm:Panel>
       </zm:LayoutTransformer>
 
 

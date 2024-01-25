@@ -8,13 +8,11 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Markup;
 using Zaaml.PresentationCore.Animation;
-using Zaaml.PresentationCore.Extensions;
-using DispatcherPriority = System.Windows.Threading.DispatcherPriority;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
 	[ContentProperty("KeyTriggers")]
-	public sealed class TimelineTrigger : TriggerBase, ITimeline
+	public sealed class TimelineTrigger : TriggerBase, ITimelineClockCallback
 	{
 		private readonly TimelineClock _clock;
 		private Duration _duration = Duration.Automatic;
@@ -308,16 +306,16 @@ namespace Zaaml.PresentationCore.Interactivity
 				keyTrigger.UpdateState();
 		}
 
-		void ITimeline.OnRelativeTimeChanged(double time)
+		void ITimelineClockCallback.OnTimeChanged(TimelineClock clock)
 		{
-			_timelineTime = time;
+			_timelineTime = clock.RelativeTime;
 
 			UpdateTime();
 		}
 		
 		private bool CompletedHandling { get; set; }
 
-		void ITimeline.OnCompleted()
+		void ITimelineClockCallback.OnCompleted(TimelineClock clock)
 		{
 			if (CompletedHandling || Iteration == -1 || IsEnabled == false)
 				return;
@@ -347,15 +345,15 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
-		void ITimeline.OnPaused()
+		void ITimelineClockCallback.OnPaused(TimelineClock clock)
 		{
 		}
 
-		void ITimeline.OnResumed()
+		void ITimelineClockCallback.OnResumed(TimelineClock clock)
 		{
 		}
 
-		void ITimeline.OnStarted()
+		void ITimelineClockCallback.OnStarted(TimelineClock clock)
 		{
 		}
 	}

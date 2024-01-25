@@ -1,0 +1,190 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <!--  ToggleButtonIcon  -->
+  <zm:PathIcon x:Key="ToggleButtonIcon"
+               Width="24"
+               Height="23"
+               Margin="8,0"
+               BrushMode="Fill"
+               Data="M2,6L22,6 22,7 2,7 2,6z M2,11L22,11 22,12 2,12 2,11z M2,16L22,16 22,17 2,17 2,16z M0,0L24,24"
+               Stretch="None" />
+
+  <!--  SplitViewTemplateTriggers  -->
+  <zm:TriggerCollection x:Key="SplitViewTemplateTriggers">
+    <!--  Expanded  -->
+    <zm:DataTrigger Binding="{zm:TemplateBinding Path=DisplayMode}" Value="Expanded">
+      <zm:Setter Property="DisplayMode" Value="{zm:Static Member=zm:SplitViewDisplayMode.CompactInline}" />
+    </zm:DataTrigger>
+
+    <!--  Compact  -->
+    <zm:DataTrigger Binding="{zm:TemplateBinding Path=DisplayMode}" Value="Compact">
+      <zm:Setter Property="DisplayMode" Value="{zm:Static Member=zm:SplitViewDisplayMode.CompactOverlay}" />
+    </zm:DataTrigger>
+
+    <!--  Minimal  -->
+    <zm:DataTrigger Binding="{zm:TemplateBinding Path=DisplayMode}" Value="Minimal">
+
+      <zm:Setter Property="DisplayMode" Value="{zm:Static Member=zm:SplitViewDisplayMode.Overlay}" />
+
+      <zm:DataTrigger.Triggers>
+        <zm:MultiTrigger>
+          <zm:MultiTrigger.Conditions>
+            <zm:DataCondition Binding="{zm:TemplateBinding Path=IsPaneOpen}" Value="False" />
+            <zm:DataCondition Binding="{zm:TemplateBinding Path=ParentWindow}" Value="{x:Null}" />
+          </zm:MultiTrigger.Conditions>
+
+          <zm:Setter TargetName="SwitchContentControl" Property="Presenter" Value="{zm:ElementBinding ElementName=MinimalPaneToggleButtonPresenter}" />
+          <zm:Setter TargetName="PaneToggleButton" Property="ShowContent" Value="False" />
+        </zm:MultiTrigger>
+      </zm:DataTrigger.Triggers>
+
+    </zm:DataTrigger>
+  </zm:TriggerCollection>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="NavigationViewControlTemplate"
+                   TargetType="zm:NavigationViewControl">
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
+
+      <zm:ControlTemplateRoot.Resources>
+        <zm:ResourceItem x:Key="SplitViewControl"
+                         Value="{zm:ElementBinding ElementName=SplitViewControl}" />
+      </zm:ControlTemplateRoot.Resources>
+
+      <!--  SwitchContentControl  -->
+      <zm:SwitchContentControl x:Name="SwitchContentControl"
+                               Presenter="{Binding ElementName=DefaultPaneToggleButton, BindsDirectlyToSource=True}">
+        <zm:ToolBarToggleButton x:Name="PaneToggleButton"
+                                Height="40"
+                                MinWidth="40"
+                                Padding="0"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Center"
+                                BorderThickness="0"
+                                Content="{TemplateBinding PaneTitle}"
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Icon="{StaticResource ToggleButtonIcon}"
+                                IconDistance="0"
+                                IsChecked="{zm:TemplateBinding Path=IsPaneOpen, Mode=TwoWay}"
+                                Visibility="{zm:TemplateBinding Path=IsPaneToggleButtonVisible, Converter={zm:VisibilityConverter}}" />
+      </zm:SwitchContentControl>
+
+      <zm:SwitchContentControl Presenter="{Binding ElementName=TitleDefaultPresenter, BindsDirectlyToSource=True}">
+        <zm:Extension.Triggers>
+
+          <zm:DataTrigger Binding="{zm:TemplateBinding Path=ParentWindow}" Invert="True" Value="{x:Null}">
+
+            <zm:Setter Target="{zm:TemplateBinding Path=ParentWindow}" Property="TitleBarHeadContent">
+              <zm:Setter.Value>
+                <zm:DockPanel Width="{zm:Binding Source={StaticResource SplitViewControl}, Path=Value.ActualPaneLength}"
+                              MinWidth="{zm:TemplateBinding Path=CompactPaneLength}">
+                  <zm:SwitchContentPresenter x:Name="WindowTitleBarPresenter"
+                                             zm:DockPanel.Dock="Left" />
+
+                  <!--  PaneTitle  -->
+                  <zm:NavigationViewHeader HorizontalAlignment="Stretch"
+                                           HorizontalContentAlignment="Center"
+                                           VerticalContentAlignment="Center"
+                                           Content="{zm:TemplateBinding Path=PaneTitle}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{zm:TemplateSkinBinding SkinPath=PaneForeground}"
+                                           IsHitTestVisible="False"
+                                           Visibility="{zm:TemplateBinding Path=IsPaneOpen, Converter={zm:VisibilityConverter}}" />
+                </zm:DockPanel>
+
+              </zm:Setter.Value>
+            </zm:Setter>
+
+            <zm:Setter Property="Presenter" Value="{zm:ElementBinding ElementName=WindowTitleBarPresenter}" />
+            <zm:Setter TargetName="PaneToggleButton" Property="Height" Value="NaN" />
+            <zm:Setter TargetName="PaneToggleButton" Property="ShowContent" Value="False" />
+          </zm:DataTrigger>
+
+        </zm:Extension.Triggers>
+
+        <zm:Panel HorizontalAlignment="Stretch"
+                  Background="{zm:TemplateSkinBinding SkinPath=PaneBackground}"
+                  Canvas.ZIndex="1">
+
+          <!--  DefaultPaneToggleButton  -->
+          <zm:SwitchContentPresenter x:Name="DefaultPaneToggleButton" />
+
+        </zm:Panel>
+
+      </zm:SwitchContentControl>
+
+      <!--  SplitViewControl  -->
+      <zm:SplitViewControl x:Name="SplitViewControl"
+                           zm:Extension.TriggersSource="{StaticResource SplitViewTemplateTriggers}"
+                           CompactPaneLength="{TemplateBinding CompactPaneLength}"
+                           DisplayMode="Inline"
+                           IsPaneOpen="{zm:TemplateBinding Path=IsPaneOpen, Mode=TwoWay}"
+                           OpenPaneLength="{TemplateBinding OpenPaneLength}"
+                           ShowPaneShadow="True">
+
+        <zm:SplitViewControl.Pane>
+
+          <!--  Pane DockPanel  -->
+          <zm:DockPanel x:Name="PaneDockPanel">
+
+            <!--  TitleDefaultPresenter  -->
+            <zm:SwitchContentPresenter x:Name="TitleDefaultPresenter"
+                                       Height="40"
+                                       zm:DockPanel.Dock="Top"
+                                       EmptyVisibility="Collapsed" />
+
+            <!--  ItemsPresenter  -->
+            <zm:NavigationViewItemsPresenter x:Name="ItemsPresenter"
+                                             HorizontalAlignment="Stretch"
+                                             Canvas.ZIndex="1" />
+          </zm:DockPanel>
+
+        </zm:SplitViewControl.Pane>
+
+        <!--  Content Panel  -->
+        <zm:Panel>
+
+          <!--  ContentPresenter  -->
+          <zm:NavigationViewContentPresenter x:Name="ContentPresenter"
+                                             Content="{TemplateBinding Content}" />
+
+          <!--  MinimalPaneToggleButtonPresenter  -->
+          <zm:SwitchContentPresenter x:Name="MinimalPaneToggleButtonPresenter"
+                                     HorizontalAlignment="Left"
+                                     VerticalAlignment="Top" />
+        </zm:Panel>
+      </zm:SplitViewControl>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="NavigationViewControlBaseStyle" TargetType="zm:NavigationViewControl">
+    <zm:Setter Property="Template" Value="{StaticResource NavigationViewControlTemplate}" />
+    <zm:Setter Property="CompactPaneLength" Value="40" />
+    <zm:Setter Property="OpenPaneLength" Value="320" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="NavigationViewControlStyle" BasedOn="{StaticResource NavigationViewControlBaseStyle}" Skin="Metro.NavigationView.NavigationViewControl" TargetType="zm:NavigationViewControl">
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!--  Background  -->
+      <zm:Setter ValuePath="Foreground" Property="Foreground" />
+      <zm:Setter ValuePath="Background" Property="Background" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="NavigationViewControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource NavigationViewControlStyle}" TargetType="zm:NavigationViewControl" />
+
+</zm:ThemeResourceDictionary>

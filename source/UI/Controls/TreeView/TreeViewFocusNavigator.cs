@@ -29,12 +29,12 @@ namespace Zaaml.UI.Controls.TreeView
 				if (ReferenceEquals(_treeViewData, value))
 					return;
 
-				if (_treeViewData?.DataPlainListView is INotifyCollectionChanged oldListView)
+				if (_treeViewData?.FlatTreeView is INotifyCollectionChanged oldListView)
 					oldListView.CollectionChanged -= OnPlainListViewCollectionChanged;
 
 				_treeViewData = value;
 
-				if (_treeViewData?.DataPlainListView is INotifyCollectionChanged newListView)
+				if (_treeViewData?.FlatTreeView is INotifyCollectionChanged newListView)
 					newListView.CollectionChanged += OnPlainListViewCollectionChanged;
 			}
 		}

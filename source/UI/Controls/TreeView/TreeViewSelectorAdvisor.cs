@@ -14,7 +14,14 @@ namespace Zaaml.UI.Controls.TreeView
 			TreeViewControl.VirtualItemCollection.AttachObserver(this);
 		}
 
+		public override bool HasSource => TreeViewControl.SourceCollection != null;
+
 		public TreeViewControl TreeViewControl { get; }
+
+		public override bool CanSelectItem(TreeViewItem item)
+		{
+			return item.ActualCanSelect;
+		}
 
 		public override object GetSource(TreeViewItem item)
 		{
@@ -23,17 +30,18 @@ namespace Zaaml.UI.Controls.TreeView
 
 			if (item.TreeViewItemData != null)
 				return item.TreeViewItemData.Data;
-			
+
 			return base.GetSource(item);
 		}
 
-		public override bool CanSelectItem(TreeViewItem item)
+		public override object GetValue(TreeViewItem item, object source)
 		{
-			return item.ActualCanSelect;
+			if (item != null && source == null)
+				return item.Value;
+
+			return TreeViewControl.GetValueInternal(null, source);
 		}
 
-		public override bool HasSource => TreeViewControl.SourceCollection != null;
-		
 		public override bool TryGetItem(object source, bool ensure, out TreeViewItem item)
 		{
 			TreeViewControl.EnsureVirtualItemCollection();

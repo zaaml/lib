@@ -3,24 +3,23 @@
 // </copyright>
 
 using Zaaml.PresentationCore.Theming;
+using Zaaml.PresentationCore.Utils;
 using ZaamlContentControl = Zaaml.UI.Controls.Core.ContentControl;
 
 namespace Zaaml.UI.Controls.Primitives
 {
-  public class Label : ZaamlContentControl
-  {
-    #region Ctors
+	public class Label : ZaamlContentControl
+	{
+		static Label()
+		{
+			ControlUtils.OverrideIsTabStop<Label>(false);
 
-    static Label()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<Label>();
-    }
+			DefaultStyleKeyHelper.OverrideStyleKey<Label>();
+		}
 
-    public Label()
-    {
-      this.OverrideStyleKey<Label>();
-    }
-
-    #endregion
-  }
+		public Label()
+		{
+			this.OverrideStyleKey<Label>();
+		}
+	}
 }

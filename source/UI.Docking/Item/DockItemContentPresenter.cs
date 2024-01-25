@@ -6,6 +6,7 @@ using System.Windows;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
+using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Docking
@@ -19,6 +20,7 @@ namespace Zaaml.UI.Controls.Docking
 		static DockItemContentPresenter()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<DockItemContentPresenter>();
+			UIElementUtils.OverrideFocusable<DockItemContentPresenter>(false);
 		}
 
 		public DockItemContentPresenter()

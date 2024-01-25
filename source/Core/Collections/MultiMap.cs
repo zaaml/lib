@@ -8,143 +8,111 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.Core.Collections
 {
-  internal class MultiMap<TKey, TValue> : IDictionary<TKey, List<TValue>>
-  {
-    #region Fields
+	internal class MultiMap<TKey, TValue> : IDictionary<TKey, List<TValue>>
+	{
+		private readonly Dictionary<TKey, List<TValue>> _dictionary;
 
-    private readonly Dictionary<TKey, List<TValue>> _dictionary;
+		public MultiMap()
+		{
+			_dictionary = new Dictionary<TKey, List<TValue>>();
+		}
 
-    #endregion
+		public MultiMap(IEqualityComparer<TKey> equalityComparer)
+		{
+			_dictionary = new Dictionary<TKey, List<TValue>>(equalityComparer);
+		}
 
-    #region Ctors
+		public void AddValue(TKey key, TValue value)
+		{
+			GetOrCreateValues(key).Add(value);
+		}
 
-    public MultiMap()
-    {
-      _dictionary = new Dictionary<TKey, List<TValue>>();
-    }
+		public List<TValue> GetOrCreateValues(TKey key)
+		{
+			return _dictionary.GetValueOrCreate(key, () => new List<TValue>());
+		}
 
-    public MultiMap(IEqualityComparer<TKey> equalityComparer)
-    {
-      _dictionary = new Dictionary<TKey, List<TValue>>(equalityComparer);
-    }
+		public bool RemoveValue(TKey key, TValue value, bool disposeList = true)
+		{
+			var list = _dictionary.GetValueOrDefault(key);
+			if (list == null)
+				return false;
 
-    #endregion
+			var result = list.Remove(value);
 
-    #region  Methods
+			if (disposeList && list.Count == 0)
+				_dictionary.Remove(key);
 
-    public void AddValue(TKey key, TValue value)
-    {
-      GetOrCreateValues(key).Add(value);
-    }
+			return result;
+		}
 
-    public List<TValue> GetOrCreateValues(TKey key)
-    {
-      return _dictionary.GetValueOrCreate(key, () => new List<TValue>());
-    }
+		void ICollection<KeyValuePair<TKey, List<TValue>>>.Add(KeyValuePair<TKey, List<TValue>> item)
+		{
+			((ICollection<KeyValuePair<TKey, List<TValue>>>)_dictionary).Add(item);
+		}
 
-    public bool RemoveValue(TKey key, TValue value, bool disposeList = true)
-    {
-      var list = _dictionary.GetValueOrDefault(key);
-      if (list == null)
-        return false;
+		public void Clear()
+		{
+			_dictionary.Clear();
+		}
 
-      var result = list.Remove(value);
+		bool ICollection<KeyValuePair<TKey, List<TValue>>>.Contains(KeyValuePair<TKey, List<TValue>> item)
+		{
+			return ((ICollection<KeyValuePair<TKey, List<TValue>>>)_dictionary).Contains(item);
+		}
 
-      if (disposeList && list.Count == 0)
-        _dictionary.Remove(key);
+		void ICollection<KeyValuePair<TKey, List<TValue>>>.CopyTo(KeyValuePair<TKey, List<TValue>>[] array, int arrayIndex)
+		{
+			((ICollection<KeyValuePair<TKey, List<TValue>>>)_dictionary).CopyTo(array, arrayIndex);
+		}
 
-      return result;
-    }
+		public int Count => _dictionary.Count;
 
-    #endregion
+		public bool IsReadOnly => false;
 
-    #region Interface Implementations
+		bool ICollection<KeyValuePair<TKey, List<TValue>>>.Remove(KeyValuePair<TKey, List<TValue>> item)
+		{
+			return ((ICollection<KeyValuePair<TKey, List<TValue>>>)_dictionary).Remove(item);
+		}
 
-    #region ICollection<KeyValuePair<TKey,List<TValue>>>
+		public void Add(TKey key, List<TValue> value)
+		{
+			_dictionary.Add(key, value);
+		}
 
-    void ICollection<KeyValuePair<TKey, List<TValue>>>.Add(KeyValuePair<TKey, List<TValue>> item)
-    {
-      ((ICollection<KeyValuePair<TKey, List<TValue>>>) _dictionary).Add(item);
-    }
+		public bool ContainsKey(TKey key)
+		{
+			return _dictionary.ContainsKey(key);
+		}
 
-    public void Clear()
-    {
-      _dictionary.Clear();
-    }
+		public List<TValue> this[TKey key]
+		{
+			get => _dictionary[key];
+			set => _dictionary[key] = value;
+		}
 
-    bool ICollection<KeyValuePair<TKey, List<TValue>>>.Contains(KeyValuePair<TKey, List<TValue>> item)
-    {
-      return ((ICollection<KeyValuePair<TKey, List<TValue>>>) _dictionary).Contains(item);
-    }
+		public ICollection<TKey> Keys => _dictionary.Keys;
 
-    void ICollection<KeyValuePair<TKey, List<TValue>>>.CopyTo(KeyValuePair<TKey, List<TValue>>[] array, int arrayIndex)
-    {
-      ((ICollection<KeyValuePair<TKey, List<TValue>>>) _dictionary).CopyTo(array, arrayIndex);
-    }
+		public bool Remove(TKey key)
+		{
+			return _dictionary.Remove(key);
+		}
 
-    public int Count => _dictionary.Count;
+		public bool TryGetValue(TKey key, out List<TValue> value)
+		{
+			return _dictionary.TryGetValue(key, out value);
+		}
 
-    public bool IsReadOnly => false;
+		public ICollection<List<TValue>> Values => _dictionary.Values;
 
-    bool ICollection<KeyValuePair<TKey, List<TValue>>>.Remove(KeyValuePair<TKey, List<TValue>> item)
-    {
-      return ((ICollection<KeyValuePair<TKey, List<TValue>>>) _dictionary).Remove(item);
-    }
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
 
-    #endregion
-
-    #region IDictionary<TKey,List<TValue>>
-
-    public void Add(TKey key, List<TValue> value)
-    {
-      _dictionary.Add(key, value);
-    }
-
-    public bool ContainsKey(TKey key)
-    {
-      return _dictionary.ContainsKey(key);
-    }
-
-    public List<TValue> this[TKey key]
-    {
-      get => _dictionary[key];
-      set => _dictionary[key] = value;
-    }
-
-    public ICollection<TKey> Keys => _dictionary.Keys;
-
-    public bool Remove(TKey key)
-    {
-      return _dictionary.Remove(key);
-    }
-
-    public bool TryGetValue(TKey key, out List<TValue> value)
-    {
-      return _dictionary.TryGetValue(key, out value);
-    }
-
-    public ICollection<List<TValue>> Values => _dictionary.Values;
-
-    #endregion
-
-    #region IEnumerable
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-      return GetEnumerator();
-    }
-
-    #endregion
-
-    #region IEnumerable<KeyValuePair<TKey,List<TValue>>>
-
-    public IEnumerator<KeyValuePair<TKey, List<TValue>>> GetEnumerator()
-    {
-      return _dictionary.GetEnumerator();
-    }
-
-    #endregion
-
-    #endregion
-  }
+		public IEnumerator<KeyValuePair<TKey, List<TValue>>> GetEnumerator()
+		{
+			return _dictionary.GetEnumerator();
+		}
+	}
 }

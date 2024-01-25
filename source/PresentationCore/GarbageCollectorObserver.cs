@@ -3,65 +3,40 @@
 // </copyright>
 
 using System;
-using System.Windows.Media;
-using Zaaml.Core;
+using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore
 {
-  internal sealed class GarbageCollectorObserver : IDisposable
-  {
-    #region Fields
+	internal sealed class GarbageCollectorObserver : IDisposable
+	{
+		private int _gcCount;
+		private CompositionRenderingObserver _renderingObserver;
+		public event EventHandler GarbageCollected;
 
-    private int _gcCount;
+		public GarbageCollectorObserver()
+		{
+			_renderingObserver = new CompositionRenderingObserver(Update);
+		}
 
-    private bool _isDisposed;
-    public event EventHandler GarbageCollected;
+		private void Update()
+		{
+			var gcCount = GC.CollectionCount(0);
+			var isAlive = _gcCount == gcCount;
 
-    #endregion
+			try
+			{
+				if (isAlive == false)
+					GarbageCollected?.Invoke(this, EventArgs.Empty);
+			}
+			finally
+			{
+				_gcCount = gcCount;
+			}
+		}
 
-    #region Ctors
-
-    public GarbageCollectorObserver()
-    {
-      CompositionTarget.Rendering += CompositionTargetOnRendering;
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private void CompositionTargetOnRendering(object sender, EventArgs eventArgs)
-    {
-      var gcCount = GarbageCleanupCounter.CleanupCount;
-      var isAlive = _gcCount == gcCount;
-      try
-      {
-        if (isAlive == false)
-          GarbageCollected?.Invoke(this, EventArgs.Empty);
-      }
-      finally
-      {
-        _gcCount = gcCount;
-      }
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IDisposable
-
-    public void Dispose()
-    {
-      if (_isDisposed)
-        return;
-
-      _isDisposed = true;
-      CompositionTarget.Rendering -= CompositionTargetOnRendering;
-    }
-
-    #endregion
-
-    #endregion
-  }
+		public void Dispose()
+		{
+			_renderingObserver = _renderingObserver.DisposeExchange();
+		}
+	}
 }

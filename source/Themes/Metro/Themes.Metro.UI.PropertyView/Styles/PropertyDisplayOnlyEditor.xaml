@@ -10,11 +10,11 @@
                    TargetType="zm:PropertyDisplayOnlyEditor">
     <zm:ControlTemplateRoot>
 
-      <TextBox zm:DisableVeilControl.EnableVeil="False"
-               BorderThickness="0"
-               IsReadOnly="True"
-               Text="{zm:TemplateBinding Path=TextValue,
-                                         Mode=OneWay}" />
+      <zm:TextEditor zm:DisableVeilControl.EnableVeil="False"
+                     BorderThickness="0"
+                     Foreground="{TemplateBinding Foreground}"
+                     IsReadOnly="True"
+                     Text="{zm:TemplateBinding Path=TextValue, Mode=OneWay}" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -25,10 +25,12 @@
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="PropertyDisplayOnlyEditorStyle" BasedOn="{StaticResource PropertyDisplayOnlyEditorBaseStyle}" Skin="Metro.PropertyDisplayOnlyEditor" TargetType="zm:PropertyDisplayOnlyEditor">
+  <zm:Style x:Key="PropertyDisplayOnlyEditorStyle" BasedOn="{StaticResource PropertyDisplayOnlyEditorBaseStyle}" Skin="Metro.PropertyView.PropertyDisplayOnlyEditor" TargetType="zm:PropertyDisplayOnlyEditor">
 
     <!--  SkinSetters  -->
-    <zm:SetterGroup ValuePathSource="Skin" />
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="Foreground" Property="Foreground" />
+    </zm:SetterGroup>
   </zm:Style>
 
   <!--  Theme Style  -->

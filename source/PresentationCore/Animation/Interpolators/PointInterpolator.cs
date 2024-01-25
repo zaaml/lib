@@ -4,33 +4,24 @@
 
 using System.Windows;
 
-namespace Zaaml.PresentationCore.Animation.Interpolators
+namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class PointInterpolator : InterpolatorBase<Point>
-  {
-    #region Static Fields and Constants
+	public sealed class PointInterpolator : PrimitiveInterpolator<Point>
+	{
+		public static readonly PointInterpolator Instance = new();
 
-    public static PointInterpolator Instance = new PointInterpolator();
+		private PointInterpolator()
+		{
+		}
 
-    #endregion
+		protected internal override Point EvaluateCore(Point start, Point end, double progress)
+		{
+			var doubleInterpolator = DoubleInterpolator.Instance;
 
-    #region Ctors
+			var mx = doubleInterpolator.EvaluateCore(start.X, end.X, progress);
+			var my = doubleInterpolator.EvaluateCore(start.Y, end.Y, progress);
 
-    private PointInterpolator()
-    {
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected internal override Point EvaluateCore(Point start, Point end, double progress)
-    {
-      var mx = DoubleInterpolator.Instance.EvaluateCore(start.X, end.X, progress);
-      var my = DoubleInterpolator.Instance.EvaluateCore(start.Y, end.Y, progress);
-      return new Point(mx, my);
-    }
-
-    #endregion
-  }
+			return new Point(mx, my);
+		}
+	}
 }

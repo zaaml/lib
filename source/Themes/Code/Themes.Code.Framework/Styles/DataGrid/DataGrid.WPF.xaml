@@ -1,0 +1,135 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!--Style and template for the button in the upper left corner of the DataGrid.-->
+  <Style x:Key="DataGridSelectAllButtonStyle" TargetType="Button">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <zm:ControlTemplateRoot>
+            <Border BorderThickness="0,0,1,1" 
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}" 
+                    SnapsToDevicePixels="True" />
+
+            <Polygon HorizontalAlignment="Right" 
+                     Margin="8,8,3,3" 
+                     Opacity="0.15" 
+                     Points="0,10 10,10 10,0" 
+                     Stretch="Uniform" 
+                     VerticalAlignment="Bottom" />
+          </zm:ControlTemplateRoot>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ScrollViewer Template -->
+  <ControlTemplate x:Key="ScrollViewerTemplate" TargetType="ScrollViewer">
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <Button Focusable="False" 
+              Command="{x:Static DataGrid.SelectAllCommand}" 
+              Background="{zm:TemplateSkinBinding SkinPath=SelectAllButton.Background.Normal}"
+              BorderBrush="{zm:TemplateSkinBinding SkinPath=SelectAllButton.BorderBrush.Normal}" 
+              Style="{StaticResource DataGridSelectAllButtonStyle}"
+              Visibility="{Binding HeadersVisibility, ConverterParameter={x:Static DataGridHeadersVisibility.All}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+              Width="{Binding CellsPanelHorizontalOffset, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+
+      <DataGridColumnHeadersPresenter x:Name="PART_ColumnHeadersPresenter" 
+                                      Grid.Column="1"
+                                      Visibility="{Binding HeadersVisibility,ConverterParameter={x:Static DataGridHeadersVisibility.Column}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+
+      <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                              Grid.ColumnSpan="2"
+                              Grid.Row="1"
+                              CanContentScroll="{TemplateBinding CanContentScroll}" />
+
+      <ScrollBar x:Name="PART_VerticalScrollBar" 
+                 Grid.Column="2"
+                 Grid.Row="1" 
+                 Orientation="Vertical" 
+                 ViewportSize="{TemplateBinding ViewportHeight}"
+                 Maximum="{TemplateBinding ScrollableHeight}" 
+                 Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                 Value="{zm:TemplateBinding Path=VerticalOffset, Mode=OneWay}" />
+
+      <Grid Grid.Column="1" Grid.Row="2">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="{Binding NonFrozenColumnsViewportHorizontalOffset, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ScrollBar x:Name="PART_HorizontalScrollBar" 
+                   Grid.Column="1" 
+                   Orientation="Horizontal" 
+                   ViewportSize="{TemplateBinding ViewportWidth}"
+                   Maximum="{TemplateBinding ScrollableWidth}" 
+                   Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                   Value="{zm:TemplateBinding Path=HorizontalOffset, Mode=OneWay}" />
+      </Grid>
+    </Grid>
+  </ControlTemplate>
+
+  <!-- DataGrid Template -->
+  <ControlTemplate x:Key="DataGridTemplate" TargetType="DataGrid">
+    <Border x:Name="border"
+            SnapsToDevicePixels="True" 
+            BorderBrush="{TemplateBinding BorderBrush}" 
+            BorderThickness="{TemplateBinding BorderThickness}"
+            Padding="{TemplateBinding Padding}">
+
+      <ScrollViewer x:Name="DG_ScrollViewer" 
+                    Focusable="False" 
+                    Background="Transparent" 
+                    zm:Extension.Skin="{zm:TemplateBinding Path=(zm:Extension.ActualSkin)}"
+                    Template="{StaticResource ScrollViewerTemplate}">
+        <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+      </ScrollViewer>
+    </Border>
+  </ControlTemplate>
+
+  <SolidColorBrush x:Key="GridLinesBrush" Color="LightGray" />
+  
+  <!-- Base Style -->
+  <zm:Style x:Key="DataGridBaseStyle" TargetType="DataGrid">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+    <zm:Setter Property="Template" Value="{StaticResource DataGridTemplate}" />
+
+
+    <!--<zm:Setter Property="HorizontalGridLinesBrush" Value="{zm:ThemeResource Key=Code.StandardControls.DataGrid.GridLinesBrush}" />
+    <zm:Setter Property="VerticalGridLinesBrush" Value="{zm:ThemeResource Key=Code.StandardControls.DataGrid.GridLinesBrush}" />-->
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="DataGridStyle" TargetType="DataGrid" BasedOn="{StaticResource DataGridBaseStyle}" 
+              Skin="Code.StandardControls.DataGrid">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Foreground" ValuePath="Foreground" />
+      <zm:Setter Property="BorderBrush" ValuePath="BorderBrush" />
+      <zm:Setter Property="RowBackground" ValuePath="RowBackground" />
+      <zm:Setter Property="AlternatingRowBackground" ValuePath="AlternatingRowBackground" />
+      <zm:Setter Property="HorizontalGridLinesBrush" ValuePath="GridLinesBrush" />
+      <zm:Setter Property="VerticalGridLinesBrush" ValuePath="GridLinesBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Styles -->
+  <zm:ThemeStyle x:Key="DataGridThemeStyle" TargetType="DataGrid" BasedOn="{StaticResource DataGridStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

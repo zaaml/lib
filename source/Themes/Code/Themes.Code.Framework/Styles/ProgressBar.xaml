@@ -1,0 +1,78 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Template -->
+  <ControlTemplate x:Key="ProgressBarTemplate" TargetType="ProgressBar">
+    <Grid x:Name="Root">
+      <VisualStateManager.VisualStateGroups>
+        <VisualStateGroup x:Name="CommonStates">
+          <VisualState x:Name="Determinate" />
+          <VisualState x:Name="Indeterminate">
+            <Storyboard RepeatBehavior="Forever">
+              <DoubleAnimation Storyboard.TargetProperty="(Shape.Fill).(LinearGradientBrush.Transform).(TransformGroup.Children)[0].X"
+                               Storyboard.TargetName="IndeterminateGradientFill" Duration="00:00:2" From="0" To="240" />
+              <DoubleAnimation Storyboard.TargetName="IndeterminateRoot" Storyboard.TargetProperty="Opacity" Duration="0" To="1" />
+              <DoubleAnimation Storyboard.TargetName="DeterminateRoot" Storyboard.TargetProperty="Opacity" Duration="0" To="0" />
+            </Storyboard>
+          </VisualState>
+        </VisualStateGroup>
+      </VisualStateManager.VisualStateGroups>
+      <Border Background="{zm:TemplateBinding Path=BorderBrush}">
+        <Border Background="{zm:TemplateBinding Path=Background}" Margin="{zm:TemplateBinding Path=BorderThickness}">
+          <Grid x:Name="ProgressBarTrack">
+            <Grid x:Name="IndeterminateRoot" Opacity="0">
+              <Rectangle x:Name="IndeterminateGradientFill">
+                <Rectangle.Fill>
+                  <LinearGradientBrush EndPoint="0,1" StartPoint="240,1" MappingMode="Absolute" SpreadMethod="Repeat">
+                    <LinearGradientBrush.Transform>
+                      <TransformGroup>
+                        <TranslateTransform X="0" />
+                      </TransformGroup>
+                    </LinearGradientBrush.Transform>
+                    <GradientStop Color="{zm:ThemeResource Key=Code.StandardControls.ProgressBar.IndeterminateGradientFill.GradientStop1}" Offset="0" />
+                    <GradientStop Color="{zm:ThemeResource Key=Code.StandardControls.ProgressBar.IndeterminateGradientFill.GradientStop2}" Offset="1" />
+                    <GradientStop Color="{zm:ThemeResource Key=Code.StandardControls.ProgressBar.IndeterminateGradientFill.GradientStop1}" Offset="0.25" />
+                    <GradientStop Color="{zm:ThemeResource Key=Code.StandardControls.ProgressBar.IndeterminateGradientFill.GradientStop2}" Offset="0.25" />
+                  </LinearGradientBrush>
+                </Rectangle.Fill>
+              </Rectangle>
+              <Border x:Name="IndeterminateRootReflextion" />
+            </Grid>
+            <Grid x:Name="DeterminateRoot" Opacity="1">
+
+              <Border x:Name="ProgressBarIndicator" Background="{zm:TemplateBinding Path=Foreground}" HorizontalAlignment="Left" Visibility="{zm:SilverlightVisible}" />
+
+              <Grid Visibility="{zm:WPFVisible}">
+                <Border x:Name="PART_Track" BorderThickness="1" />
+                <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{zm:TemplateBinding Path=Foreground}" />
+              </Grid>
+
+            </Grid>
+            <Border BorderBrush="{zm:ThemeResource Key=Code.StandardControls.ProgressBar.HighlightBackground}" BorderThickness="1" />
+          </Grid>
+        </Border>
+      </Border>
+    </Grid>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="ProgressBarBaseStyle" TargetType="ProgressBar" Skin="Code.StandardControls.ProgressBar">
+    <zm:Setter Property="IsTabStop" Value="False" />
+    <zm:Setter Property="BorderThickness" Value="2" />
+    <zm:Setter Property="Template" Value="{StaticResource ProgressBarTemplate}" />
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Foreground" ValuePath="IndicatorBackground" />
+      <zm:Setter Property="Background" ValuePath="Background" />
+      <zm:Setter Property="BorderBrush" ValuePath="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="ProgressBarThemeStyle" TargetType="ProgressBar" BasedOn="{StaticResource ProgressBarBaseStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

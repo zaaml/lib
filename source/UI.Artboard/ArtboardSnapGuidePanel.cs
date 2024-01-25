@@ -19,12 +19,12 @@ namespace Zaaml.UI.Controls.Artboard
 				if (snapGuide.Orientation == Orientation.Horizontal)
 				{
 					rect.Width = finalSize.Width;
-					rect.Y = FromDesignMatrix.Transform(new Point(0, snapGuide.Location)).Y;
+					rect.Y = FromMatrix.Transform(new Point(0, snapGuide.Location)).Y;
 				}
 				else
 				{
 					rect.Height = finalSize.Height;
-					rect.X = FromDesignMatrix.Transform(new Point(snapGuide.Location, 0)).X;
+					rect.X = FromMatrix.Transform(new Point(snapGuide.Location, 0)).X;
 				}
 
 				snapGuide.Arrange(rect);

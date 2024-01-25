@@ -214,5 +214,6 @@ ModelManifest.xml
 /CI/build.config
 .idea
 /Source/Themes/Metro/ThemeParts
+/Source/Themes/Code/ThemeParts
 artifacts/
 *.dev.cs

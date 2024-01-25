@@ -21,7 +21,7 @@ namespace Zaaml.UI.Controls.Core
     #region Ctors
 
     public WeakContentControl()
-      : base(true)
+      : base(TemplateKind.ContentPresenter)
     {
     }
 

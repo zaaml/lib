@@ -22,29 +22,29 @@
 
   <!--  ItemsPresenter Left  -->
   <zm:SetterCollection x:Key="ItemsPresenterLeft">
-    <zm:Setter Property="Grid.Row" Value="1" />
-    <zm:Setter Property="Grid.Column" Value="0" />
+    <zm:Setter Property="zm:GridPanel.Row" Value="1" />
+    <zm:Setter Property="zm:GridPanel.Column" Value="0" />
     <zm:Setter Property="Margin" Value="0,0,-1,0" />
   </zm:SetterCollection>
 
   <!--  ItemsPresenter Top  -->
   <zm:SetterCollection x:Key="ItemsPresenterTop">
-    <zm:Setter Property="Grid.Row" Value="0" />
-    <zm:Setter Property="Grid.Column" Value="1" />
+    <zm:Setter Property="zm:GridPanel.Row" Value="0" />
+    <zm:Setter Property="zm:GridPanel.Column" Value="1" />
     <zm:Setter Property="Margin" Value="0,0,0,-1" />
   </zm:SetterCollection>
 
   <!--  ItemsPresenter Right  -->
   <zm:SetterCollection x:Key="ItemsPresenterRight">
-    <zm:Setter Property="Grid.Row" Value="1" />
-    <zm:Setter Property="Grid.Column" Value="2" />
+    <zm:Setter Property="zm:GridPanel.Row" Value="1" />
+    <zm:Setter Property="zm:GridPanel.Column" Value="2" />
     <zm:Setter Property="Margin" Value="-1,0,0,0" />
   </zm:SetterCollection>
 
   <!--  ItemsPresenter Bottom  -->
   <zm:SetterCollection x:Key="ItemsPresenterBottom">
-    <zm:Setter Property="Grid.Row" Value="2" />
-    <zm:Setter Property="Grid.Column" Value="1" />
+    <zm:Setter Property="zm:GridPanel.Row" Value="2" />
+    <zm:Setter Property="zm:GridPanel.Column" Value="1" />
     <zm:Setter Property="Margin" Value="0,-1,0,0" />
   </zm:SetterCollection>
 
@@ -52,22 +52,22 @@
   <ControlTemplate x:Key="TabViewControlTemplate"
                    TargetType="zm:TabViewControl">
     <zm:ControlTemplateRoot>
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="*" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+      <zm:GridPanel>
+        <zm:GridPanel.Columns>
+          <zm:GridPanelColumn Width="Auto" />
+          <zm:GridPanelColumn Width="*" />
+          <zm:GridPanelColumn Width="Auto" />
+        </zm:GridPanel.Columns>
+        <zm:GridPanel.Rows>
+          <zm:GridPanelRow Height="Auto" />
+          <zm:GridPanelRow Height="*" />
+          <zm:GridPanelRow Height="Auto" />
+        </zm:GridPanel.Rows>
 
         <!--  ContentPresenter  -->
         <zm:TabViewContentPresenter x:Name="ContentPresenter"
-                                    Grid.Row="1"
-                                    Grid.Column="1"
+                                    zm:GridPanel.Row="1"
+                                    zm:GridPanel.Column="1"
                                     Padding="{TemplateBinding Padding}"
                                     BackContent="{TemplateBinding BackContent}"
                                     Background="{TemplateBinding Background}"
@@ -76,9 +76,7 @@
                                     Style="{zm:TemplateBinding Path=ContentPresenterStyle,
                                                                TargetNullValue={StaticResource TabViewControlContentPresenterNativeStyle}}" />
 
-
         <!--  ItemsPresenter  -->
-        <!-- ReSharper disable once Xaml.MissingGridIndex -->
         <zm:TabViewItemsPresenter x:Name="ItemsPresenter"
                                   Footer="{TemplateBinding ItemsPresenterFooter}"
                                   FooterTemplate="{TemplateBinding ItemsPresenterFooterTemplate}"
@@ -107,7 +105,7 @@
             </zm:SwitchDataTrigger>
           </zm:Extension.Triggers>
         </zm:TabViewItemsPresenter>
-      </Grid>
+      </zm:GridPanel>
 
       <!--  Disabled Veil  -->
       <zm:DisableVeilControl />

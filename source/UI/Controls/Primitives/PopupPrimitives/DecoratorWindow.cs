@@ -3,15 +3,15 @@
 // </copyright>
 
 using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Zaaml.Core.Runtime;
 using Zaaml.Platform;
-using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
@@ -36,14 +36,20 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		public static readonly DependencyProperty HeightProperty = DPM.Register<double, DecoratorWindow>
 			("Height", default, d => d.OnHeightPropertyChangedPrivate);
 
+		public static readonly DependencyProperty TitleProperty = DPM.Register<string, DecoratorWindow>
+			("Title", default, d => d.OnTitlePropertyChangedPrivate);
+
 		private readonly HwndDpiChangedEventHandler _dpiChangedHandler;
 		private readonly HwndSourceHook _messageFilterHook;
 
 		private readonly AutoResizedEventHandler _onAutoResizeHandler;
+		private HwndSource _hwndSource;
+
+		public event EventHandler HwndSourceChanged;
 
 		public DecoratorWindow()
 		{
-			DecoratorRoot = new DecoratorWindowRoot {Background = null};
+			DecoratorRoot = new DecoratorWindowRoot { Background = null };
 
 			_onAutoResizeHandler = OnAutoResize;
 			_dpiChangedHandler = OnDpiChanged;
@@ -52,7 +58,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public FrameworkElement Child
 		{
-			get => (FrameworkElement) GetValue(ChildProperty);
+			get => (FrameworkElement)GetValue(ChildProperty);
 			set => SetValue(ChildProperty, value);
 		}
 
@@ -60,75 +66,69 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public double Height
 		{
-			get => (double) GetValue(HeightProperty);
+			get => (double)GetValue(HeightProperty);
 			set => SetValue(HeightProperty, value);
 		}
 
-		private HwndSource HwndSource { get; set; }
-
-		public bool IsOpen
+		internal HwndSource HwndSource
 		{
-			get => (bool) GetValue(IsOpenProperty);
-			set => SetValue(IsOpenProperty, value);
-		}
-
-		internal static bool IsPerMonitorDpiScalingActive
-		{
-			get
+			get => _hwndSource;
+			private set
 			{
-				if (IsProcessPerMonitorDpiAware.HasValue)
-				{
-					return IsProcessPerMonitorDpiAware.Value;
-				}
+				if (_hwndSource == value)
+					return;
 
-				var proc = Process.GetCurrentProcess();
+				_hwndSource = value;
 
-				if (NativeMethods.GetProcessDpiAwareness(proc.Handle, out var value) == 0)
-				{
-					IsProcessPerMonitorDpiAware = value == PROCESS_DPI_AWARENESS.PROCESS_PER_MONITOR_DPI_AWARE;
-
-					return IsProcessPerMonitorDpiAware.Value;
-				}
-
-				return false;
+				HwndSourceChanged?.Invoke(this, EventArgs.Empty);
 			}
 		}
 
-		private static bool? IsProcessPerMonitorDpiAware { get; set; }
+		public bool IsOpen
+		{
+			get => (bool)GetValue(IsOpenProperty);
+			set => SetValue(IsOpenProperty, value.Box());
+		}
 
 		public double Left
 		{
-			get => (double) GetValue(LeftProperty);
+			get => (double)GetValue(LeftProperty);
 			set => SetValue(LeftProperty, value);
+		}
+
+		public string Title
+		{
+			get => (string)GetValue(TitleProperty);
+			set => SetValue(TitleProperty, value);
 		}
 
 		public double Top
 		{
-			get => (double) GetValue(TopProperty);
+			get => (double)GetValue(TopProperty);
 			set => SetValue(TopProperty, value);
 		}
 
 		public double Width
 		{
-			get => (double) GetValue(WidthProperty);
+			get => (double)GetValue(WidthProperty);
 			set => SetValue(WidthProperty, value);
 		}
 
 		private HwndSource BuildWindow()
 		{
-			var ws = WS.CLIPSIBLINGS | WS.POPUP;
-			var wsEx = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST | WS_EX.NOACTIVATE | WS_EX.TRANSPARENT;
+			var ws = WS.CLIPSIBLINGS;
+			var wsEx = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TRANSPARENT;
 
 			var param = new HwndSourceParameters(string.Empty)
 			{
 				WindowClassStyle = 0,
-				WindowStyle = unchecked((int) ws),
-				ExtendedWindowStyle = (int) wsEx,
+				WindowStyle = unchecked((int)ws),
+				ExtendedWindowStyle = (int)wsEx,
 				UsesPerPixelOpacity = true
 			};
 
-			param.SetPosition((int) Left, (int) Top);
-			param.SetSize((int) Width, (int) Height);
+			param.SetPosition((int)Left, (int)Top);
+			param.SetSize((int)Width, (int)Height);
 
 			var newWindow = new HwndSource(param);
 
@@ -143,6 +143,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			hwndTarget.BackgroundColor = Colors.Transparent;
 
 			newWindow.RootVisual = DecoratorRoot;
+
 			UpdateChild();
 
 			return newWindow;
@@ -169,22 +170,24 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			if (IsOpen == false)
 				return;
 
-			if (IsPerMonitorDpiScalingActive)
+			if (DpiUtils.IsPerMonitorDpiScalingActive)
 				DestroyWindow();
 
 			HwndSource ??= BuildWindow();
+
+			UpdateWindowTitle();
 		}
 
 		private object HandleDeactivateApp(object arg)
 		{
-			this.SetCurrentValueInternal(IsOpenProperty, KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsOpenProperty, BooleanBoxes.False);
 
 			return null;
 		}
 
 		private IntPtr MessageFilter(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
 		{
-			var wm = (WM) msg;
+			var wm = (WM)msg;
 
 			if (wm == WM.MOUSEACTIVATE)
 			{
@@ -196,6 +199,12 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			if (wm == WM.WINDOWPOSCHANGING)
 			{
+				//var wp = (WINDOWPOS)Marshal.PtrToStructure(lParam, typeof(WINDOWPOS));
+			}
+
+			if (wm == WM.WINDOWPOSCHANGED)
+			{
+				//var wp = (WINDOWPOS)Marshal.PtrToStructure(lParam, typeof(WINDOWPOS));
 			}
 
 			if (wm == WM.ACTIVATEAPP)
@@ -227,7 +236,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private void OnHeightPropertyChangedPrivate(double oldValue, double newValue)
 		{
-			UpdateSize();
+			if (HwndSource != null)
+				UpdateSize();
 		}
 
 		private void OnIsOpenPropertyChangedPrivate(bool oldValue, bool newValue)
@@ -243,14 +253,38 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				UpdatePosition();
 		}
 
+		private void OnTitlePropertyChangedPrivate(string oldValue, string newValue)
+		{
+			UpdateWindowTitle();
+		}
+
+		private void OnTopmostPropertyChangedPrivate(bool oldValue, bool newValue)
+		{
+			if (HwndSource != null)
+				UpdatePosition();
+		}
+
 		private void OnTopPropertyChangedPrivate(double oldValue, double newValue)
 		{
-			UpdatePosition();
+			if (HwndSource != null)
+				UpdatePosition();
 		}
 
 		private void OnWidthPropertyChangedPrivate(double oldValue, double newValue)
 		{
-			UpdateSize();
+			if (HwndSource != null)
+				UpdateSize();
+		}
+
+		public void SetZOrder(IntPtr hwnd)
+		{
+			if (HwndSource == null)
+				return;
+
+			if (IsOpen)
+				NativeMethods.SetWindowPos(HwndSource.Handle, hwnd, 0, 0, 0, 0, SWP.NOACTIVATE | SWP.NOSIZE | SWP.NOMOVE | SWP.SHOWWINDOW);
+			else
+				NativeMethods.SetWindowPos(HwndSource.Handle, hwnd, 0, 0, 0, 0, SWP.NOACTIVATE | SWP.NOSIZE | SWP.NOMOVE | SWP.HIDEWINDOW);
 		}
 
 		private void UpdateChild()
@@ -268,7 +302,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			if (HwndSource == null)
 				return;
 
-			NativeMethods.SetWindowPos(HwndSource.Handle, IntPtr.Zero, (int) Left, (int) Top, 0, 0, SWP.NOACTIVATE | SWP.NOSIZE | SWP.NOOWNERZORDER | SWP.NOZORDER | SWP.NOREDRAW);
+			NativeMethods.SetWindowPos(HwndSource.Handle, IntPtr.Zero, (int)Left, (int)Top, 0, 0, SWP.NOACTIVATE | SWP.NOSIZE | SWP.NOOWNERZORDER | SWP.NOZORDER | SWP.NOREDRAW);
 		}
 
 		private void UpdateSize()
@@ -276,7 +310,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			if (HwndSource == null)
 				return;
 
-			NativeMethods.SetWindowPos(HwndSource.Handle, IntPtr.Zero, 0, 0, (int) Width, (int) Height, SWP.NOACTIVATE | SWP.NOMOVE | SWP.NOOWNERZORDER | SWP.NOZORDER);
+			NativeMethods.SetWindowPos(HwndSource.Handle, IntPtr.Zero, 0, 0, (int)Width, (int)Height, SWP.NOACTIVATE | SWP.NOMOVE | SWP.NOOWNERZORDER | SWP.NOZORDER);
 		}
 
 		private void UpdateVisibility()
@@ -285,9 +319,15 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				return;
 
 			if (IsOpen)
-				NativeMethods.SetWindowPos(HwndSource.Handle, IntPtr.Zero, 0, 0, 0, 0, SWP.NOACTIVATE | SWP.NOSIZE | SWP.NOMOVE | SWP.NOOWNERZORDER | SWP.SHOWWINDOW);
+				NativeMethods.SetWindowPos(HwndSource.Handle, IntPtr.Zero, 0, 0, 0, 0, SWP.NOACTIVATE | SWP.NOSIZE | SWP.NOMOVE | SWP.NOOWNERZORDER | SWP.NOZORDER | SWP.SHOWWINDOW);
 			else
-				NativeMethods.SetWindowPos(HwndSource.Handle, IntPtr.Zero, 0, 0, 0, 0, SWP.NOACTIVATE | SWP.NOSIZE | SWP.NOMOVE | SWP.NOOWNERZORDER | SWP.HIDEWINDOW);
+				NativeMethods.SetWindowPos(HwndSource.Handle, IntPtr.Zero, 0, 0, 0, 0, SWP.NOACTIVATE | SWP.NOSIZE | SWP.NOMOVE | SWP.NOOWNERZORDER | SWP.NOZORDER | SWP.HIDEWINDOW);
+		}
+
+		private void UpdateWindowTitle()
+		{
+			if (HwndSource != null)
+				NativeMethods.SetWindowText(HwndSource.Handle, Title);
 		}
 
 		private sealed class DecoratorWindowRoot : Panel

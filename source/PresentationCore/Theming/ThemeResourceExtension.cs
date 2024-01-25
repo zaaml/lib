@@ -19,294 +19,244 @@ using Binding = System.Windows.Data.Binding;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public sealed class ThemeResourceExtension : BindingMarkupExtension, IValueConverter, IThemeResourceChangeListener, INotifyPropertyChanged, ISetterValueProvider
-  {
-    #region Fields
+	public sealed class ThemeResourceExtension : BindingMarkupExtension, IValueConverter, IThemeResourceChangeListener, INotifyPropertyChanged, ISetterValueProvider
+	{
+		private StrongReferenceBinding _binding;
+		private ConstValueCache _cache;
 
-    private StrongReferenceBinding _binding;
+		private object _keyStore;
+		//private DependencyObject _targetObject;
+		//private DependencyProperty _targetProperty;
 
-    private ConstValueCache _cache = new ConstValueCache();
+		private event PropertyChangedEventHandler PropertyChanged;
 
-    private object _keyStore;
-    //private DependencyObject _targetObject;
-    //private DependencyProperty _targetProperty;
+		private StrongReferenceBinding ActualBinding => _binding ??= new StrongReferenceBinding("Value")
+		{
+			Converter = this,
+			Reference = this,
+			Mode = BindingMode.OneWay
+		};
 
-    private event PropertyChangedEventHandler PropertyChanged;
+		internal string ActualKey => ThemeManager.GetKeyFromKeyword(Keyword) ?? Key;
 
-    #endregion
+		public IValueConverter Converter { get; set; }
 
-    #region Properties
+		public object FallbackValue
+		{
+			get => ActualBinding.FallbackValue;
+			set => ActualBinding.FallbackValue = value;
+		}
 
-    private StrongReferenceBinding ActualBinding => _binding ?? (_binding = new StrongReferenceBinding("Value")
-    {
-      Converter = this,
-      Reference = this,
-      Mode = BindingMode.OneWay
-    });
+		public string Key
+		{
+			get => _keyStore as string;
+			set => _keyStore = value;
+		}
 
-    internal string ActualKey => ThemeManager.GetKeyFromKeyword(Keyword) ?? Key;
+		public ThemeKeyword Keyword
+		{
+			get => _keyStore as ThemeKeyword? ?? ThemeKeyword.Undefined;
+			set => _keyStore = value;
+		}
 
-    public IValueConverter Converter { get; set; }
+		private static PropertyChangedEventArgs PropertyChangedEventArgs { get; } = new PropertyChangedEventArgs("Value");
 
-    public object FallbackValue
-    {
-      get => ActualBinding.FallbackValue;
-      set => ActualBinding.FallbackValue = value;
-    }
+		protected override bool SupportNativeSetter => false;
 
-    public string Key
-    {
-      get => _keyStore as string;
-      set => _keyStore = value;
-    }
+		public object TargetNullValue
+		{
+			get => ActualBinding.TargetNullValue;
+			set => ActualBinding.TargetNullValue = value;
+		}
 
-    public ThemeKeyword Keyword
-    {
-      get => _keyStore as ThemeKeyword? ?? ThemeKeyword.Undefined;
-      set => _keyStore = value;
-    }
+		private ThemeResourceReference ThemeResourceReference => ThemeManager.GetThemeResourceReference(ActualKey, true);
 
-    private static PropertyChangedEventArgs PropertyChangedEventArgs { get; } = new PropertyChangedEventArgs("Value");
+		public object Value => ThemeResourceReference.Value;
 
-    protected override bool SupportNativeSetter => false;
+		private object CoerceValueProvider(object value, Type targetType)
+		{
+			return _cache.ProvideValue(value.IsUnset() || value.IsDependencyPropertyUnsetValue() ? null : value, targetType);
+		}
 
-    public object TargetNullValue
-    {
-      get => ActualBinding.TargetNullValue;
-      set => ActualBinding.TargetNullValue = value;
-    }
+		protected internal override Binding GetBinding(IServiceProvider serviceProvider)
+		{
+			if (ActualBinding.Source != null)
+				return ActualBinding;
 
-    private ThemeResourceReference ThemeResourceReference => ThemeManager.GetThemeReference(ActualKey, true);
+			//if (targetObject == null || targetProperty == null)
+			//  throw new InvalidOperationException("ThemeResourceExtension require TargetObject and TargetProperty to be accessible through ServiceProvider in the call to ProvideValue");
 
-    public object Value => ThemeResourceReference.Value;
+			//_targetObject = targetObject;
+			//_targetProperty = GetDependencyProperty(targetProperty);
 
-    #endregion
+			var themeResourceReference = ThemeManager.GetThemeResourceReference(ActualKey, true);
 
-    #region  Methods
+			if (ThemeManager.IsStatic == false)
+				themeResourceReference.AddListener(this);
 
-    private object CoerceValueProvider(object value, Type targetType)
-    {
-      return _cache.ProvideValue(value.IsUnset() || value.IsDependencyPropertyUnsetValue() ? null : value, targetType);
-    }
+			ActualBinding.Source = this;
 
-    protected internal override Binding GetBinding(IServiceProvider serviceProvider)
-    {
-      if (ActualBinding.Source != null)
-        return ActualBinding;
+			return ActualBinding;
+		}
 
-      //if (targetObject == null || targetProperty == null)
-      //  throw new InvalidOperationException("ThemeResourceExtension require TargetObject and TargetProperty to be accessible through ServiceProvider in the call to ProvideValue");
+		private void LogError(object target, object targetProperty, Type targetPropertyType, Exception exception)
+		{
+			LogService.LogWarning($"Error occurred while setting '{targetProperty}' property of type '{targetPropertyType}' to theme resource value with key '{Key}' on target '{target}'.\n\t{exception}");
+		}
 
-      //_targetObject = targetObject;
-      //_targetProperty = GetDependencyProperty(targetProperty);
+		protected override object ProvideValueCore(object target, object targetProperty, IServiceProvider serviceProvider)
+		{
+			//if (target is SetterBase)
+			//  return this;
 
-      var themeResourceReference = ThemeManager.GetThemeReference(ActualKey, true);
+			var actualKey = ActualKey;
+			var themeResourceReference = ThemeManager.GetThemeResourceReference(actualKey, true);
 
-      if (ThemeManager.IsStatic == false)
-        themeResourceReference.AddListener(this);
+			if (themeResourceReference.IsBound == false || ThemeManager.IsStatic == false)
+			{
+				if (ThemeManager.IsStatic)
+					LogService.LogWarning($"Theme resource with key '{actualKey}' can not be resolved statically in a static theme. Dynamic link to theme resource is created.");
 
-      ActualBinding.Source = this;
+				return base.ProvideValueCore(target, targetProperty, serviceProvider);
+			}
 
-      return ActualBinding;
-    }
+			var targetPropertyType = GetPropertyType(targetProperty) ?? typeof(object);
 
-    private void LogError(object target, object targetProperty, Type targetPropertyType, Exception exception)
-    {
-      LogService.LogWarning($"Error occcurred while setting '{targetProperty}' property of type '{targetPropertyType}' to theme resource value with key '{Key}' on target '{target}'.\n\t{exception}");
-    }
+			if (_binding == null)
+			{
+				var convertResult = themeResourceReference.XamlConvertValue(targetPropertyType);
 
-    protected override object ProvideValueCore(object target, object targetProperty, IServiceProvider serviceProvider)
-    {
-      //if (target is SetterBase)
-      //  return this;
+				if (convertResult.IsFailed)
+				{
+					LogError(target, targetProperty, targetPropertyType, convertResult.Exception);
 
-      var actualKey = ActualKey;
-      var themeResourceReference = ThemeManager.GetThemeReference(actualKey, true);
-      if (themeResourceReference.IsBound == false || ThemeManager.IsStatic == false)
-      {
-        if (ThemeManager.IsStatic)
-          LogService.LogWarning($"Theme resource with key '{actualKey}' can not be resolved statically in a static theme. Dynamic link to theme resource is created.");
+					return targetPropertyType.CreateDefaultValue();
+				}
 
-        return base.ProvideValueCore(target, targetProperty, serviceProvider);
-      }
+				return DefaultInnerConverter.Convert(themeResourceReference.CachedValue, targetPropertyType);
+			}
 
-      var targetPropertyType = GetPropertyType(targetProperty) ?? typeof(object);
+			_binding.Mode = BindingMode.OneTime;
 
-      if (_binding == null)
-      {
-        var convertResult = themeResourceReference.XamlConvertValue(targetPropertyType);
+			try
+			{
+				var evaluatedValue = BindingEvaluator.EvaluateBinding(_binding, targetPropertyType);
+				var convertResult = XamlStaticConverter.TryConvertValue(evaluatedValue, targetPropertyType);
 
-        if (convertResult.IsFailed)
-        {
-          LogError(target, targetProperty, targetPropertyType, convertResult.Exception);
-          return targetPropertyType.CreateDefaultValue();
-        }
+				if (convertResult.IsFailed)
+				{
+					LogError(target, targetProperty, targetPropertyType, convertResult.Exception);
 
-        return DefaultInnerConverter.Convert(themeResourceReference.CachedValue, targetPropertyType);
-      }
+					return targetPropertyType.CreateDefaultValue();
+				}
 
-      _binding.Mode = BindingMode.OneTime;
+				return DefaultInnerConverter.Convert(convertResult.Result, targetPropertyType);
+			}
+			catch (Exception e)
+			{
+				LogError(target, targetProperty, targetPropertyType, e);
+			}
 
-      try
-      {
-        var evaluatedValue = BindingEvaluator.EvaluateBinding(_binding, targetPropertyType);
-        var convertResult = XamlStaticConverter.TryConvertValue(evaluatedValue, targetPropertyType);
+			return targetPropertyType.CreateDefaultValue();
+		}
 
-        if (convertResult.IsFailed)
-        {
-          LogError(target, targetProperty, targetPropertyType, convertResult.Exception);
-          return targetPropertyType.CreateDefaultValue();
-        }
+		internal void UpdateThemeResource()
+		{
+			_cache.Reset();
+		}
 
-        return DefaultInnerConverter.Convert(convertResult.Result, targetPropertyType);
-      }
-      catch (Exception e)
-      {
-        LogError(target, targetProperty, targetPropertyType, e);
-      }
+		event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
+		{
+			add => PropertyChanged += value;
+			remove => PropertyChanged -= value;
+		}
 
-      return targetPropertyType.CreateDefaultValue();
-    }
+		ValueProviderOptions ISetterValueProvider.Options => ValueProviderOptions.StaticValue | ValueProviderOptions.Shared | ValueProviderOptions.LongLife;
 
-    internal void UpdateThemeResource()
-    {
-      _cache.Reset();
-    }
+		object ISetterValueProvider.OriginalValue => this;
 
-    #endregion
+		void ISetterValueProvider.Attach(RuntimeSetter setter)
+		{
+		}
 
-    #region Interface Implementations
+		void ISetterValueProvider.Detach(RuntimeSetter setter)
+		{
+		}
 
-    #region INotifyPropertyChanged
+		object ISetterValueProvider.ProvideValue(RuntimeSetter setter)
+		{
+			var targetType = setter.EffectiveValue.Property.GetPropertyType();
 
-    event PropertyChangedEventHandler INotifyPropertyChanged.PropertyChanged
-    {
-      add => PropertyChanged += value;
-      remove => PropertyChanged -= value;
-    }
+			var value = ThemeResourceReference.Value;
 
-    #endregion
+			if (value == null)
+				return CoerceValueProvider(TargetNullValue, targetType);
 
-    #region ISetterValueProvider
+			if (value.IsUnset() || value.IsDependencyPropertyUnsetValue())
+				return CoerceValueProvider(FallbackValue, targetType);
 
-    ValueProviderOptions ISetterValueProvider.Options => ValueProviderOptions.StaticValue | ValueProviderOptions.Shared | ValueProviderOptions.LongLife;
+			return CoerceValueProvider(Converter?.Convert(value, typeof(object), null, CultureInfo.CurrentCulture) ?? value, targetType);
+		}
 
-    object ISetterValueProvider.OriginalValue => this;
+		void IThemeResourceChangeListener.OnThemeResourceChanged()
+		{
+			_cache.Reset();
+			PropertyChanged?.Invoke(this, PropertyChangedEventArgs);
+		}
 
-    void ISetterValueProvider.Attach(RuntimeSetter setter)
-    {
-    }
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			if (value.IsDependencyPropertyUnsetValue() || value.IsUnset())
+				value = FallbackValue;
 
-    void ISetterValueProvider.Detach(RuntimeSetter setter)
-    {
-    }
+			return (Converter ?? DefaultInnerConverter.Instance).Convert(value, targetType, parameter, culture);
+		}
 
-    object ISetterValueProvider.ProvideValue(RuntimeSetter setter)
-    {
-      var targetType = setter.EffectiveValue.Property.GetPropertyType();
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return value;
+		}
 
-      var value = ThemeResourceReference.Value;
+		private class DefaultInnerConverter : IValueConverter
+		{
+			public static readonly IValueConverter Instance = new DefaultInnerConverter();
 
-      if (value == null)
-        return CoerceValueProvider(TargetNullValue, targetType);
+			public static object Convert(object value, Type targetType)
+			{
+				if (value == null || value.IsDependencyPropertyUnsetValue() || value.IsUnset())
+					return RuntimeUtils.CreateDefaultValue(targetType);
 
-      if (value.IsUnset() || value.IsDependencyPropertyUnsetValue())
-        return CoerceValueProvider(FallbackValue, targetType);
+				return value;
+			}
 
-      return CoerceValueProvider(Converter?.Convert(value, typeof(object), null, CultureInfo.CurrentCulture) ?? value, targetType);
-    }
+			public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+			{
+				return Convert(value, targetType);
+			}
 
-    #endregion
+			public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+			{
+				throw new NotSupportedException();
+			}
+		}
+	}
 
-    #region IThemeResourceChangeListener
+	internal sealed class IsStyleExtensionConverter : IValueConverter
+	{
+		public static readonly IValueConverter Instance = new IsStyleExtensionConverter();
 
-    void IThemeResourceChangeListener.OnThemeResourceChanged()
-    {
-      _cache.Reset();
-      PropertyChanged?.Invoke(this, PropertyChangedEventArgs);
-    }
+		private IsStyleExtensionConverter()
+		{
+		}
 
-    #endregion
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return value;
+		}
 
-    #region IValueConverter
-
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      if (value.IsDependencyPropertyUnsetValue() || value.IsUnset())
-        value = FallbackValue;
-
-      return (Converter ?? DefaultInnerConverter.Instance).Convert(value, targetType, parameter, culture);
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      return value;
-    }
-
-    #endregion
-
-    #endregion
-
-    #region  Nested Types
-
-    private class DefaultInnerConverter : IValueConverter
-    {
-      #region Static Fields and Constants
-
-      public static readonly IValueConverter Instance = new DefaultInnerConverter();
-
-      #endregion
-
-      #region  Methods
-
-      public static object Convert(object value, Type targetType)
-      {
-        if (value == null || value.IsDependencyPropertyUnsetValue() || value.IsUnset())
-          return RuntimeUtils.CreateDefaultValue(targetType);
-
-        return value;
-      }
-
-      #endregion
-
-      #region Interface Implementations
-
-      #region IValueConverter
-
-      public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-      {
-        return Convert(value, targetType);
-      }
-
-      public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-      {
-        throw new NotSupportedException();
-      }
-
-      #endregion
-
-      #endregion
-    }
-
-    #endregion
-  }
-
-  internal sealed class IsStyleExtensionConverter : IValueConverter
-  {
-    private IsStyleExtensionConverter()
-    {
-    }
-
-    public static readonly IValueConverter Instance = new IsStyleExtensionConverter();
-
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      return value;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      return value;
-    }
-  }
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return value;
+		}
+	}
 }

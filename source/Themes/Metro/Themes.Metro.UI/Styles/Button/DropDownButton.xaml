@@ -32,7 +32,6 @@
         <!--  Content  -->
         <zm:DockPanel>
           <zm:IconContentPresenter Margin="{TemplateBinding Padding}"
-                                   Visibility="{zm:SelfBinding Path=ActualShow, Converter={zm:VisibilityConverter}}"
                                    HorizontalAlignment="Stretch"
                                    VerticalAlignment="Stretch"
                                    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"

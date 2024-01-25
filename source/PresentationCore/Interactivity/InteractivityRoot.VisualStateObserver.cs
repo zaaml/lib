@@ -21,12 +21,13 @@ namespace Zaaml.PresentationCore.Interactivity
 
     #region Properties
 
-    public IVisualStateObserver RealObserver
+    public IVisualStateObserver RealVisualStateObserver
     {
       get => (IVisualStateObserver) _realObserverWeak?.Target;
       set
       {
-        var realObserver = RealObserver;
+        var realObserver = RealVisualStateObserver;
+
         if (ReferenceEquals(realObserver, value))
           return;
 
@@ -50,7 +51,7 @@ namespace Zaaml.PresentationCore.Interactivity
     {
       var listener = new MulticastVisualStateListener(visualStateName);
 
-      RealObserver?.AttachListener(GetWeakListener(listener));
+      RealVisualStateObserver?.AttachListener(GetWeakListener(listener));
 
       return listener;
     }

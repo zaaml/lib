@@ -12,22 +12,12 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class RoutedEventTrigger : EventTriggerBase
 	{
-		#region Fields
-
 		private RoutedEvent _event;
-
-		#endregion
-
-		#region Ctors
 
 		static RoutedEventTrigger()
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
 		}
-
-		#endregion
-
-		#region Properties
 
 		public RoutedEvent Event
 		{
@@ -75,21 +65,17 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				PackedDefinition.MarkHandled.SetValue(ref PackedValue, value);
 
-				var routedEventRuntime = (RoutedEventTriggerRuntime) TriggerRuntime;
+				var routedEventRuntime = (RoutedEventTriggerRuntime)TriggerRuntime;
 				if (routedEventRuntime != null)
 					routedEventRuntime.MarkHandled = value;
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (RoutedEventTrigger) source;
+			var triggerSource = (RoutedEventTrigger)source;
 
 			Event = triggerSource.Event;
 			HandledEventsToo = triggerSource.HandledEventsToo;
@@ -109,20 +95,10 @@ namespace Zaaml.PresentationCore.Interactivity
 			};
 		}
 
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedBoolItemDefinition HandledEventsToo;
 			public static readonly PackedBoolItemDefinition MarkHandled;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -131,20 +107,12 @@ namespace Zaaml.PresentationCore.Interactivity
 				HandledEventsToo = allocator.AllocateBoolItem();
 				MarkHandled = allocator.AllocateBoolItem();
 			}
-
-			#endregion
 		}
 
 		private class RoutedEventTriggerRuntime : TriggerRuntimeBase
 		{
-			#region Fields
-
 			private readonly Delegate _eventHandler;
 			private readonly RoutedEvent _routedEvent;
-
-			#endregion
-
-			#region Ctors
 
 			public RoutedEventTriggerRuntime(RoutedEventTrigger trigger) : base(trigger)
 			{
@@ -154,15 +122,7 @@ namespace Zaaml.PresentationCore.Interactivity
 				(ActualSource as UIElement)?.AddHandler(_routedEvent, _eventHandler, trigger.HandledEventsToo);
 			}
 
-			#endregion
-
-			#region Properties
-
 			public bool MarkHandled { private get; set; }
-
-			#endregion
-
-			#region  Methods
 
 			public override void DisposeCore()
 			{
@@ -171,15 +131,11 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			private void OnRoutedEvent(object sender, object args)
 			{
-				((RoutedEventTrigger) Trigger)?.OnEvent(sender, (EventArgs) args);
+				((RoutedEventTrigger)Trigger)?.OnEvent(sender, (EventArgs)args);
 
 				if (MarkHandled)
-					RoutedEventArgsUtils.SetHandled((RoutedEventArgs) args, true);
+					RoutedEventArgsUtils.SetHandled((RoutedEventArgs)args, true);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

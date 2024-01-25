@@ -1,22 +1,17 @@
-﻿// <copyright file="AdornerPanel.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="OverlayPanel.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 using System;
 using System.Windows;
+using Zaaml.PresentationCore;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Panels.Core
 {
 	public sealed class OverlayPanel : Panel
 	{
-		#region Properties
-
 		internal OverlayContentControl Control { get; set; }
-
-		#endregion
-
-		#region  Methods
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
@@ -26,7 +21,11 @@ namespace Zaaml.UI.Panels.Core
 			{
 				var child = Children[i];
 
-				child.Arrange(finalRect);
+				if (child is OverlayItemPresenter overlayItemPresenter)
+					//child.Arrange(new Rect(new Point(overlayItemPresenter.X, overlayItemPresenter.Y), child.DesiredSize));
+					child.Arrange(finalRect);
+				else
+					child.Arrange(finalRect);
 			}
 
 			return finalSize;
@@ -40,6 +39,13 @@ namespace Zaaml.UI.Panels.Core
 			{
 				var child = Children[i];
 
+				if (child is OverlayItemPresenter)
+				{
+					child.Measure(XamlConstants.InfiniteSize);
+
+					continue;
+				}
+
 				child.Measure(availableSize);
 
 				size.Width = Math.Max(size.Width, child.DesiredSize.Width);
@@ -48,7 +54,5 @@ namespace Zaaml.UI.Panels.Core
 
 			return size;
 		}
-
-		#endregion
 	}
 }

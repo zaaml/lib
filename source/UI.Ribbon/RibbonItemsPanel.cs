@@ -14,85 +14,73 @@ using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  public sealed class RibbonItemsPanel : ItemsPanel<RibbonItem>
-  {
-    #region Fields
+	public sealed class RibbonItemsPanel : ItemsPanel<RibbonItem>
+	{
+		private readonly List<RibbonItemGroup> _groups = new();
 
-    private readonly List<RibbonItemGroup> _groups = new List<RibbonItemGroup>();
+		internal RibbonGroup Group => ItemsPresenter?.Group;
 
-    #endregion
+		private bool IsFullMeasurePass => Group?.IsFullMeasurePass == true;
 
-    #region Properties
+		internal RibbonItemsPresenter ItemsPresenter { get; set; }
 
-    internal RibbonGroup Group => ItemsPresenter?.Group;
+		private static double ArrangeControlGroup(RibbonItemGroup itemGroup, Size finalSize, double offset)
+		{
+			var orientation = itemGroup.Orientation;
 
-    private bool IsFullMeasurePass => Group?.IsFullMeasurePass == true;
+			switch (orientation)
+			{
+				case Orientation.Vertical:
+					var lineWidth = itemGroup.EnumerateItems().Max(i => i.DesiredSize.Width);
+					return offset + PanelHelper.ArrangeStackLine(itemGroup.EnumerateItems(), orientation, offset, 0, lineWidth, finalSize.Height / 3).Indirect;
+				case Orientation.Horizontal:
+					return offset + PanelHelper.ArrangeStackLine(itemGroup.EnumerateItems(), orientation, 0, offset, finalSize.Height, null).Direct;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
 
-    internal RibbonItemsPresenter ItemsPresenter { get; set; }
+		protected override Size ArrangeOverrideCore(Size finalSize)
+		{
+			if (_groups.Any())
+				_groups.Aggregate(0.0, (current, controlGroup) => ArrangeControlGroup(controlGroup, finalSize, current));
+			else
+				this.ArrangeStackLine(Orientation.Horizontal, new Range<int>(0, Children.Count), 0, 0, finalSize.Height, null);
 
-    #endregion
+			return finalSize;
+		}
 
-    #region  Methods
+		private static Size MeasureControlGroup(RibbonItemGroup itemGroup, Size measureItemSize, bool forceMeasure)
+		{
+			return itemGroup.MeasureGroup(measureItemSize, forceMeasure);
+		}
 
-    private static double ArrangeControlGroup(RibbonItemGroup itemGroup, Size finalSize, double offset)
-    {
-      var orientation = itemGroup.Orientation;
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			var orientedSize = new OrientedSize(Orientation.Horizontal);
+			var measureItemSize = new Size(double.PositiveInfinity, availableSize.Height);
 
-      switch (orientation)
-      {
-        case Orientation.Vertical:
-          var lineWidth = itemGroup.EnumerateItems().Max(i => i.DesiredSize.Width);
-          return offset + PanelHelper.ArrangeStackLine(itemGroup.EnumerateItems(), orientation, offset, 0, lineWidth, finalSize.Height / 3).Indirect;
-        case Orientation.Horizontal:
-          return offset + PanelHelper.ArrangeStackLine(itemGroup.EnumerateItems(), orientation, 0, offset, finalSize.Height, null).Direct;
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+			_groups.Clear();
 
-    protected override Size ArrangeOverrideCore(Size finalSize)
-    {
-      if (_groups.Any())
-        _groups.Aggregate(0.0, (current, controlGroup) => ArrangeControlGroup(controlGroup, finalSize, current));
-      else
-        this.ArrangeStackLine(Orientation.Horizontal, new Range<int>(0, Children.Count), 0, 0, finalSize.Height, null);
+			if (IsFullMeasurePass == false)
+			{
+				foreach (var child in Children.Cast<RibbonItem>())
+				{
+					child.ActualItemStyle = RibbonItemStyle.Large;
+					child.Measure(measureItemSize);
 
-      return finalSize;
-    }
+					var childDesiredSize = child.DesiredSize;
 
-    private static Size MeasureControlGroup(RibbonItemGroup itemGroup, Size measureItemSize, bool forceMeasure)
-    {
-      return itemGroup.MeasureGroup(measureItemSize, forceMeasure);
-    }
+					orientedSize = orientedSize.StackSize(childDesiredSize);
+				}
+			}
+			else
+			{
+				_groups.AddRange(Group.GetGroups());
+				orientedSize = _groups.Aggregate(orientedSize, (current, group) => current.StackSize(MeasureControlGroup(group, measureItemSize, Group.IsFinalMeasure)));
+			}
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      var orientedSize = new OrientedSize(Orientation.Horizontal);
-      var measureItemSize = new Size(double.PositiveInfinity, availableSize.Height);
-
-      _groups.Clear();
-
-      if (IsFullMeasurePass == false)
-      {
-        foreach (var child in Children.Cast<RibbonItem>())
-        {
-          child.ActualItemStyle = RibbonItemStyle.Large;
-          child.Measure(measureItemSize);
-
-          var childDesiredSize = child.DesiredSize;
-
-          orientedSize = orientedSize.StackSize(childDesiredSize);
-        }
-      }
-      else
-      {
-        _groups.AddRange(Group.GetGroups());
-        orientedSize = _groups.Aggregate(orientedSize, (current, group) => current.StackSize(MeasureControlGroup(group, measureItemSize, Group.IsFinalMeasure)));
-      }
-
-      return orientedSize.Size;
-    }
-
-    #endregion
-  }
+			return orientedSize.Size;
+		}
+	}
 }

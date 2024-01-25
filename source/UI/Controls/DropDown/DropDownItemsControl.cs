@@ -3,8 +3,9 @@
 // </copyright>
 
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
+using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -19,9 +20,6 @@ namespace Zaaml.UI.Controls.DropDown
 	[TemplateContractType(typeof(DropDownItemsControlTemplateContract))]
 	public abstract class DropDownItemsControl : DropDownControlBase
 	{
-		public static readonly DependencyProperty IsDropDownOpenProperty = DPM.Register<bool, DropDownItemsControl>
-			("IsDropDownOpen", d => d.OnIsDropDownOpenChangedPrivate);
-
 		public static readonly DependencyProperty DropDownHeaderProperty = DPM.Register<object, DropDownItemsControl>
 			("DropDownHeader");
 
@@ -33,12 +31,6 @@ namespace Zaaml.UI.Controls.DropDown
 
 		public static readonly DependencyProperty DropDownFooterTemplateProperty = DPM.Register<DataTemplate, DropDownItemsControl>
 			("DropDownFooterTemplate");
-
-		public static readonly DependencyProperty PlacementProperty = DPM.Register<Dock, DropDownItemsControl>
-			("Placement", Dock.Bottom);
-
-		public static readonly DependencyProperty PlacementOptionsProperty = DPM.Register<PopupPlacementOptions, DropDownItemsControl>
-			("PlacementOptions", PopupPlacementOptions.PreservePosition);
 
 		public static readonly DependencyProperty ShowDropDownButtonProperty = DPM.Register<bool, DropDownItemsControl>
 			("ShowDropDownButton", true);
@@ -69,51 +61,26 @@ namespace Zaaml.UI.Controls.DropDown
 
 		private bool IsActuallyFocused => FocusHelper.IsKeyboardFocusWithin(this);
 
-		public bool IsDropDownOpen
-		{
-			get => (bool) GetValue(IsDropDownOpenProperty);
-			set => SetValue(IsDropDownOpenProperty, value);
-		}
+		protected PopupBar PopupBar => TemplateContract.PopupBar;
 
-		public Dock Placement
-		{
-			get => (Dock) GetValue(PlacementProperty);
-			set => SetValue(PlacementProperty, value);
-		}
-
-		public PopupPlacementOptions PlacementOptions
-		{
-			get => (PopupPlacementOptions) GetValue(PlacementOptionsProperty);
-			set => SetValue(PlacementOptionsProperty, value);
-		}
-
-		protected PopupBar Popup => TemplateContract.Popup;
+		protected override PopupControlBase PopupControlCore => PopupBar;
 
 		protected virtual ScrollViewControl ScrollView => null;
 
 		public bool ShowDropDownButton
 		{
 			get => (bool) GetValue(ShowDropDownButtonProperty);
-			set => SetValue(ShowDropDownButtonProperty, value);
+			set => SetValue(ShowDropDownButtonProperty, value.Box());
 		}
 
-		private DropDownItemsControlTemplateContract TemplateContract => (DropDownItemsControlTemplateContract) TemplateContractInternal;
+		private DropDownItemsControlTemplateContract TemplateContract => (DropDownItemsControlTemplateContract) TemplateContractCore;
 
-		protected virtual void OnIsDropDownOpenChanged()
-		{
-		}
-
-		internal virtual void OnIsDropDownOpenChangedInternal()
-		{
-			OnIsDropDownOpenChanged();
-		}
-
-		private void OnIsDropDownOpenChangedPrivate()
+		private protected override void OnIsDropDownOpenChangedInternal()
 		{
 			if (IsDropDownOpen == false)
 				ScrollView?.ResetScrollBarVisibilityShown();
 
-			OnIsDropDownOpenChangedInternal();
+			base.OnIsDropDownOpenChangedInternal();
 		}
 
 		private protected virtual void OnQueryCloseDropDownOnClick(object sender, QueryCloseOnClickEventArgs e)
@@ -124,12 +91,12 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			base.OnTemplateContractAttached();
 
-			Popup.PopupController.QueryCloseOnClick += OnQueryCloseDropDownOnClick;
+			PopupBar.PopupController.QueryCloseOnClick += OnQueryCloseDropDownOnClick;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
-			Popup.PopupController.QueryCloseOnClick -= OnQueryCloseDropDownOnClick;
+			PopupBar.PopupController.QueryCloseOnClick -= OnQueryCloseDropDownOnClick;
 
 			base.OnTemplateContractDetaching();
 		}
@@ -177,6 +144,6 @@ namespace Zaaml.UI.Controls.DropDown
 	public class DropDownItemsControlTemplateContract : TemplateContract
 	{
 		[TemplateContractPart(Required = true)]
-		public PopupBar Popup { get; private set; }
+		public PopupBar PopupBar { get; [UsedImplicitly] private set; }
 	}
 }

@@ -70,21 +70,21 @@ namespace Zaaml.UI.Controls.Core
 
 				{
 					if (_sourceCollection is INotifyCollectionChanged notifyCollectionChanged)
-						notifyCollectionChanged.CollectionChanged -= ObservableSourceOnCollectionChanged;
+						notifyCollectionChanged.CollectionChanged -= OnSourceCollectionChanged;
 				}
 
 				_sourceCollection = value;
 
 				{
 					if (_sourceCollection is INotifyCollectionChanged notifyCollectionChanged)
-						notifyCollectionChanged.CollectionChanged += ObservableSourceOnCollectionChanged;
+						notifyCollectionChanged.CollectionChanged += OnSourceCollectionChanged;
 				}
 
 				IndexedSource = SourceCollection != null ? new IndexedEnumerable(SourceCollection) : IndexedEnumerable.Empty;
 
 				Reset();
 
-				ObservableSourceOnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+				OnSourceCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 			}
 		}
 
@@ -100,6 +100,11 @@ namespace Zaaml.UI.Controls.Core
 
 		public T EnsureItem(int index)
 		{
+			var actualCount = ActualCount;
+
+			if (actualCount == 0 || index < 0 || index >= actualCount)
+				return default;
+
 			return Mode == OperatingMode.Real ? RealEnsureItem(index) : VirtualEnsureItem(index);
 		}
 
@@ -121,6 +126,13 @@ namespace Zaaml.UI.Controls.Core
 		public T GetItemFromIndex(int index)
 		{
 			return Mode == OperatingMode.Real ? RealGetItemFromIndex(index) : VirtualGetItemFromIndex(index);
+		}
+
+		public T GetItemFromSource(object source)
+		{
+			var index = GetIndexFromSource(source);
+
+			return index != -1 ? GetItemFromIndex(index) : default;
 		}
 
 		public object GetSourceFromIndex(int index)
@@ -150,12 +162,14 @@ namespace Zaaml.UI.Controls.Core
 				VirtualLockItem(item);
 		}
 
-		protected virtual void ObservableSourceOnCollectionChanged(NotifyCollectionChangedEventArgs args)
+		protected virtual void OnSourceCollectionChanged(NotifyCollectionChangedEventArgs args)
 		{
 			try
 			{
 				foreach (var observer in _observers)
 					observer.OnSourceCollectionChanged(args);
+
+				SourceCollectionChanged?.Invoke(this, args);
 			}
 			catch (Exception e)
 			{
@@ -202,9 +216,9 @@ namespace Zaaml.UI.Controls.Core
 				VirtualUnlockItem(item);
 		}
 
-		int IVirtualItemCollection.GetIndexFromItem(FrameworkElement frameworkElement)
+		int IVirtualItemCollection.GetIndexFromItem(UIElement uiElement)
 		{
-			return GetIndexFromItem((T) frameworkElement);
+			return GetIndexFromItem((T) uiElement);
 		}
 
 		UIElement IVirtualItemCollection.Realize(int index)

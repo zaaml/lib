@@ -3,7 +3,6 @@
 // </copyright>
 
 using System.Windows;
-using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.Behaviors.Resizable;
 
 namespace Zaaml.UI.Controls.Artboard
@@ -12,8 +11,6 @@ namespace Zaaml.UI.Controls.Artboard
 	{
 		private sealed class ArtboardCanvasResizableAdvisor : ResizableAdvisorBase
 		{
-			private ArtboardSnapEngineContext _snapEngineContext;
-
 			public ArtboardCanvasResizableAdvisor(ArtboardCanvas canvas)
 			{
 				Canvas = canvas;
@@ -38,27 +35,8 @@ namespace Zaaml.UI.Controls.Artboard
 				return new Rect(position, size);
 			}
 
-			protected override void OnResizeEnd(UIElement element, ResizableBehavior resizableBehavior)
-			{
-				base.OnResizeEnd(element, resizableBehavior);
-
-				_snapEngineContext = _snapEngineContext.DisposeExchange();
-			}
-
-			protected override void OnResizeStart(UIElement element, ResizableBehavior resizableBehavior)
-			{
-				base.OnResizeStart(element, resizableBehavior);
-
-				var snapSide = ArtboardSnapEngineUtils.GetResizeSide(resizableBehavior.ResizeInfo.HandleKind);
-
-				_snapEngineContext = Canvas.Artboard?.SnapEngine?.CreateContext(new ArtboardSnapEngineContextParameters(element, snapSide));
-			}
-
 			public override void SetBoundingBox(UIElement element, Rect rect)
 			{
-				if (_snapEngineContext != null)
-					rect = ArtboardSnapEngineUtils.CalcResizeRect(rect, _snapEngineContext.Engine.Snap(new ArtboardSnapParameters(rect, _snapEngineContext)).SnapRect, _snapEngineContext.Parameters.Side);
-
 				SetPosition(element, rect.TopLeft);
 
 				if (element is FrameworkElement frameworkElement)

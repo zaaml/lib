@@ -4,36 +4,19 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Trees;
 
 namespace Zaaml.PresentationCore.Theming
 {
 	[TypeConverter(typeof(SkinDictionaryTypeConverter))]
-	public sealed partial class SkinDictionary : SkinBase
+	public sealed partial class SkinDictionary : ISkinResourceProvider
 	{
-		#region Static Fields and Constants
-
 		// Thread unsafe builder
-		private static readonly List<string> Builder = new List<string>();
-
-		#endregion
-
-		#region Fields
+		private static readonly List<string> Builder = new();
 
 		private SkinDictionaryCollection _basedOn;
-
-		#endregion
-
-		#region Ctors
-
-		public SkinDictionary()
-		{
-			Processors = new SkinDictionaryProcessorCollection(this);
-		}
-
-		#endregion
-
-		#region Properties
 
 		internal string ActualKey
 		{
@@ -66,7 +49,7 @@ namespace Zaaml.PresentationCore.Theming
 		[TypeConverter(typeof(SkinDictionaryCollectionTypeConverter))]
 		public SkinDictionaryCollection BasedOn
 		{
-			get => _basedOn ?? (_basedOn = new SkinDictionaryCollection { Owner = this });
+			get => _basedOn ??= new SkinDictionaryCollection { Owner = this };
 			set
 			{
 				if (ReferenceEquals(_basedOn, value))
@@ -82,21 +65,13 @@ namespace Zaaml.PresentationCore.Theming
 			}
 		}
 
-		public BasedOnFlags BasedOnFlags { get; set; } = BasedOnFlags.Inherit;
-
 		internal SkinDictionaryCollection BasedOnInternal => _basedOn;
 
-#if INTERACTIVITY_DEBUG
-		public bool Debug { get; set; }
-#endif
-
-		private Dictionary<string, object> Dictionary { get; } = new Dictionary<string, object>();
+		private Dictionary<string, object> Dictionary { get; } = new();
 
 		private string Key { get; set; }
 
 		internal SkinDictionary Parent { get; private set; }
-
-		internal override IEnumerable<KeyValuePair<string, object>> Resources => ShallowResources;
 
 		internal SkinDictionary Root
 		{
@@ -111,26 +86,83 @@ namespace Zaaml.PresentationCore.Theming
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
-		protected override object GetValue(string key)
+		internal bool ResolveDependencies(ISkinResourceProvider skinResourceValueProvider)
 		{
-			return this.GetValueOrDefault(key);
+			var result = true;
+
+			TreeEnumerator.Visit(this, SkinDictionaryTreeAdvisor, s =>
+			{
+				if (s.BasedOnInternal == null || s.BasedOnInternal.Count == 0)
+					return;
+
+				for (var index = 0; index < s.BasedOn.Count; index++)
+				{
+					var basedOn = s.BasedOn[index];
+
+					if (basedOn.IsDeferred == false || basedOn.IsAbsoluteKey == false)
+						continue;
+
+					if (skinResourceValueProvider.TryGetValue(basedOn.DeferredKey, out var resolved) == false)
+					{
+						result = false;
+
+						continue;
+					}
+
+					if (resolved is SkinDictionary resolvedSkin)
+						s.BasedOn[index] = resolvedSkin;
+					else
+						result = false;
+				}
+			});
+
+			return result;
+		}
+
+		internal IEnumerable<string> EnumerateDependencies()
+		{
+			return TreeEnumerator
+				.GetEnumerable(this, SkinDictionaryTreeAdvisor)
+				.SelectMany(s => s.BasedOn)
+				.Where(s => s.IsDeferred && s.IsAbsoluteKey)
+				.Select(s => s.DeferredKey);
 		}
 
 		public override string ToString()
 		{
+			if (IsDeferred)
+				return $"Deferred: {DeferredKey}";
+
 			return ActualKey ?? "$";
 		}
 
-		#endregion
-	}
+		private sealed class SkinImpl : SkinBase
+		{
+			private readonly SkinDictionary _skinDictionary;
 
-	public enum BasedOnFlags
-	{
-		Inherit,
-		Override
+			public SkinImpl(SkinDictionary skinDictionary)
+			{
+				_skinDictionary = skinDictionary;
+			}
+
+			internal override IEnumerable<KeyValuePair<string, object>> Resources => _skinDictionary.ShallowResources;
+
+			protected override object GetValue(string key)
+			{
+				return _skinDictionary.GetValueOrDefault(key);
+			}
+		}
+
+#if INTERACTIVITY_DEBUG
+		public bool Debug { get; set; }
+
+		internal void Break()
+		{
+			if (Debug == false)
+				return;
+
+			//System.Diagnostics.Debug.WriteLine("Debug");
+		}
+#endif
 	}
 }

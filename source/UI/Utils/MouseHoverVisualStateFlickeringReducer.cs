@@ -97,25 +97,25 @@ namespace Zaaml.UI.Utils
 		{
 			if (_arrangeAfterWheel)
 			{
-				foreach (var treeViewItem in _panel.Children.OfType<TItem>())
+				foreach (var item in _panel.Children.OfType<TItem>())
 				{
-					var containsMouse = treeViewItem.ArrangeRect.Contains(LocalMousePoint);
+					var containsMouse = item.ArrangeRect.Contains(LocalMousePoint);
 
-					if (treeViewItem.IsMouseOver == containsMouse)
+					if (item.IsMouseOver == containsMouse)
 					{
-						if (ImplicitMouseItems.Remove(treeViewItem))
+						if (ImplicitMouseItems.Remove(item))
 						{
-							treeViewItem.UpdateVisualStateOnArrange(null);
-							treeViewItem.Arrange(treeViewItem.ArrangeRect);
+							item.UpdateVisualStateOnArrange(null);
+							item.Arrange(item.ArrangeRect);
 						}
 
 						continue;
 					}
 
-					ImplicitMouseItems.Add(treeViewItem);
+					ImplicitMouseItems.Add(item);
 
-					treeViewItem.UpdateVisualStateOnArrange(containsMouse);
-					treeViewItem.Arrange(treeViewItem.ArrangeRect);
+					item.UpdateVisualStateOnArrange(containsMouse);
+					item.Arrange(item.ArrangeRect);
 
 					FrameCount = FrameCounter.Frame;
 				}

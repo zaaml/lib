@@ -14,87 +14,67 @@ using Zaaml.UI.Panels.Primitives;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  [TemplateContractType(typeof(RibbonToolBarOverflowItemsPresenterTemplateContract))]
-  public sealed class RibbonToolBarOverflowItemsPresenter : TemplateContractControl
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(RibbonToolBarOverflowItemsPresenterTemplateContract))]
+	public sealed class RibbonToolBarOverflowItemsPresenter : TemplateContractControl
+	{
+		private static readonly DependencyPropertyKey ToolBarPropertyKey = DPM.RegisterReadOnly<RibbonToolBar, RibbonToolBarOverflowItemsPresenter>
+			("ToolBar");
 
-    private static readonly DependencyPropertyKey ToolBarPropertyKey = DPM.RegisterReadOnly<RibbonToolBar, RibbonToolBarOverflowItemsPresenter>
-      ("ToolBar");
+		public static readonly DependencyProperty ToolBarProperty = ToolBarPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty ToolBarProperty = ToolBarPropertyKey.DependencyProperty;
+		static RibbonToolBarOverflowItemsPresenter()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<RibbonToolBarOverflowItemsPresenter>();
+		}
 
-    #endregion
+		public RibbonToolBarOverflowItemsPresenter()
+		{
+			this.OverrideStyleKey<RibbonToolBarOverflowItemsPresenter>();
+			OverflowItems = new RibbonToolBarOverflowItemCollection(this);
+		}
 
-    #region Ctors
+		private RibbonToolBarOverflowItemsPanel ItemsHost => TemplateContract.ItemsHost;
 
-    static RibbonToolBarOverflowItemsPresenter()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<RibbonToolBarOverflowItemsPresenter>();
-    }
+		internal RibbonToolBarOverflowItemCollection OverflowItems { get; }
 
-    public RibbonToolBarOverflowItemsPresenter()
-    {
-      this.OverrideStyleKey<RibbonToolBarOverflowItemsPresenter>();
-      OverflowItems = new RibbonToolBarOverflowItemCollection(this);
-    }
+		private RibbonToolBarOverflowItemsPresenterTemplateContract TemplateContract => (RibbonToolBarOverflowItemsPresenterTemplateContract)TemplateContractCore;
 
-    #endregion
+		public RibbonToolBar ToolBar
+		{
+			get => (RibbonToolBar)GetValue(ToolBarProperty);
+			internal set => this.SetReadOnlyValue(ToolBarPropertyKey, value);
+		}
 
-    #region Properties
+		internal void OnItemAttached(OverflowItem<RibbonItem> item)
+		{
+		}
 
-    private RibbonToolBarOverflowItemsPanel ItemsHost => TemplateContract.ItemsHost;
+		internal void OnItemDetached(OverflowItem<RibbonItem> item)
+		{
+		}
 
-    internal RibbonToolBarOverflowItemCollection OverflowItems { get; }
+		protected override void OnTemplateContractAttached()
+		{
+			OverflowItems.ItemsHost = ItemsHost;
 
-    private RibbonToolBarOverflowItemsPresenterTemplateContract TemplateContract => (RibbonToolBarOverflowItemsPresenterTemplateContract) TemplateContractInternal;
+			base.OnTemplateContractAttached();
+		}
 
-    public RibbonToolBar ToolBar
-    {
-      get => (RibbonToolBar) GetValue(ToolBarProperty);
-      internal set => this.SetReadOnlyValue(ToolBarPropertyKey, value);
-    }
+		protected override void OnTemplateContractDetaching()
+		{
+			OverflowItems.ItemsHost = null;
 
-    #endregion
+			base.OnTemplateContractDetaching();
+		}
+	}
 
-    #region  Methods
+	public sealed class RibbonToolBarOverflowItemsPanel : StackItemsPanelBase<OverflowItem<RibbonItem>>
+	{
+	}
 
-    internal void OnItemAttached(OverflowItem<RibbonItem> item)
-    {
-    }
-
-    internal void OnItemDetached(OverflowItem<RibbonItem> item)
-    {
-    }
-
-    protected override void OnTemplateContractAttached()
-    {
-      OverflowItems.ItemsHost = ItemsHost;
-
-      base.OnTemplateContractAttached();
-    }
-
-    protected override void OnTemplateContractDetaching()
-    {
-      OverflowItems.ItemsHost = null;
-
-      base.OnTemplateContractDetaching();
-    }
-
-    #endregion
-  }
-
-  public sealed class RibbonToolBarOverflowItemsPanel : StackItemsPanelBase<OverflowItem<RibbonItem>>
-  {
-  }
-
-  public sealed class RibbonToolBarOverflowItemsPresenterTemplateContract : TemplateContract
-  {
-    #region Properties
-
-    [TemplateContractPart(Required = true)]
-    public RibbonToolBarOverflowItemsPanel ItemsHost { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
+	public sealed class RibbonToolBarOverflowItemsPresenterTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = true)]
+		public RibbonToolBarOverflowItemsPanel ItemsHost { get; [UsedImplicitly] private set; }
+	}
 }

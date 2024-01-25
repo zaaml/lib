@@ -10,95 +10,75 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  public abstract class RelativePlacementBase : PopupPlacement
-  {
-    #region Static Fields and Constants
+	public abstract class RelativePlacementBase : PopupPlacement
+	{
+		public static readonly DependencyProperty TargetProperty = DPM.Register<FrameworkElement, RelativePlacementBase>
+			("Target", p => p.OnTargetChanged);
 
-    public static readonly DependencyProperty TargetProperty = DPM.Register<FrameworkElement, RelativePlacementBase>
-      ("Target", p => p.OnTargetChanged);
+		public static readonly DependencyProperty ScreenBoundsProperty = DPM.Register<Rect, RelativePlacementBase>
+			("ScreenBounds", Rect.Empty, p => p.Invalidate);
 
-    public static readonly DependencyProperty ScreenBoundsProperty = DPM.Register<Rect, RelativePlacementBase>
-      ("ScreenBounds", Rect.Empty, p => p.Invalidate);
+		private ScreenBoxObserver _screenBoxObserver;
 
-    #endregion
+		internal RelativePlacementBase()
+		{
+		}
 
-    #region Fields
+		protected FrameworkElement ActualTarget => Target ?? Popup.GetVisualParent<FrameworkElement>();
 
-    private ScreenBoxObserver _screenBoxObserver;
+		public Rect ScreenBounds
+		{
+			get => (Rect)GetValue(ScreenBoundsProperty);
+			set => SetValue(ScreenBoundsProperty, value);
+		}
 
-    #endregion
+		protected override Rect ScreenBoundsOverride => ScreenBounds.IsEmpty ? Screen.FromElement(ActualTarget ?? Popup).Bounds : ScreenBounds;
 
-    #region Ctors
+		public FrameworkElement Target
+		{
+			get => (FrameworkElement)GetValue(TargetProperty);
+			set => SetValue(TargetProperty, value);
+		}
 
-    internal RelativePlacementBase()
-    {
-    }
+		protected Rect TargetScreenBox => _screenBoxObserver?.ScreenBox ?? Rect.Empty;
 
-    #endregion
+		internal override void OnPopupClosedInternal()
+		{
+			base.OnPopupClosedInternal();
 
-    #region Properties
+			_screenBoxObserver = _screenBoxObserver.DisposeExchange();
+		}
 
-    public Rect ScreenBounds
-    {
-      get => (Rect) GetValue(ScreenBoundsProperty);
-      set => SetValue(ScreenBoundsProperty, value);
-    }
+		internal override void OnPopupOpenedInternal()
+		{
+			base.OnPopupOpenedInternal();
 
-    protected override Rect ScreenBoundsOverride => ScreenBounds.IsEmpty ? Screen.FromElement(ActualTarget ?? Popup).Bounds : ScreenBounds;
+			var target = ActualTarget;
 
-    public FrameworkElement Target
-    {
-      get => (FrameworkElement) GetValue(TargetProperty);
-      set => SetValue(TargetProperty, value);
-    }
+			if (target == null)
+				return;
 
-    protected Rect TargetScreenBox => _screenBoxObserver?.ScreenBox ?? Rect.Empty;
+			_screenBoxObserver = _screenBoxObserver.DisposeExchange(new ScreenBoxObserver(target, OnTargetScreeBoxChanged));
+		}
 
-    protected FrameworkElement ActualTarget => Target ?? Popup.GetVisualParent<FrameworkElement>();
+		private void OnTargetChanged(FrameworkElement oldTarget, FrameworkElement newTarget)
+		{
+			_screenBoxObserver = _screenBoxObserver.DisposeExchange();
 
-    #endregion
-		
-    #region  Methods
+			if (IsPopupOpen == false || newTarget == null)
+				return;
 
-    internal override void OnPopupClosedInt()
-    {
-      base.OnPopupClosedInt();
+			_screenBoxObserver = new ScreenBoxObserver(newTarget, OnTargetScreeBoxChanged);
 
-      _screenBoxObserver = _screenBoxObserver.DisposeExchange();
-    }
+			Invalidate();
+		}
 
-    internal override void OnPopupOpenedInt()
-    {
-      base.OnPopupOpenedInt();
+		protected virtual void OnTargetScreeBoxChanged()
+		{
+			if (IsPopupOpen == false)
+				return;
 
-      var target = ActualTarget;
-
-      if (target == null)
-        return;
-
-      _screenBoxObserver = _screenBoxObserver.DisposeExchange(new ScreenBoxObserver(target, OnTargetScreeBoxChanged));
-    }
-
-    protected virtual void OnTargetScreeBoxChanged()
-    {
-      if (IsPopupOpen == false)
-        return;
-
-      Invalidate();
-    }
-
-    private void OnTargetChanged(FrameworkElement oldTarget, FrameworkElement newTarget)
-    {
-      _screenBoxObserver = _screenBoxObserver.DisposeExchange();
-
-      if (IsPopupOpen == false || newTarget == null)
-	      return;
-
-      _screenBoxObserver = new ScreenBoxObserver(newTarget, OnTargetScreeBoxChanged);
-
-      Invalidate();
-    }
-
-    #endregion
-  }
+			Invalidate();
+		}
+	}
 }

@@ -7,6 +7,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Weak;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Interactivity;
@@ -22,8 +23,8 @@ namespace Zaaml.UI.Controls.Primitives
 
 		public bool IsEnabled
 		{
-			get => (bool) GetValue(IsEnabledProperty);
-			set => SetValue(IsEnabledProperty, value);
+			get => (bool)GetValue(IsEnabledProperty);
+			set => SetValue(IsEnabledProperty, value.Box());
 		}
 
 		protected virtual void OnIsEnabledChanged()

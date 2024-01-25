@@ -11,10 +11,11 @@
     <zm:ControlTemplateRoot Background="Transparent">
 
       <zm:DropDownTreeViewControl x:Name="DropDownTreeViewControl"
-                                  TreeViewControl="{TemplateBinding TreeViewControl}"
                                   BorderThickness="{TemplateBinding BorderThickness}"
+                                  DisplayMode="{TemplateBinding DisplayMode}"
                                   IsTextEditable="{TemplateBinding IsTextEditable}"
-                                  ShowDropDownButton="{TemplateBinding ActualShowDropDownButton}" />
+                                  ShowDropDownButton="{TemplateBinding ActualShowDropDownButton}"
+                                  TreeViewControl="{TemplateBinding TreeViewControl}" />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>

@@ -16,11 +16,13 @@ namespace Zaaml.Text
 		private readonly Lexeme<TToken>[] _lexemeBuffer;
 		private readonly int[] _operandBuffer;
 		private int _bufferSize;
+		private int _position;
 
 		internal LexemeEnumerator(LexemeSource<TToken> lexemeSource)
 		{
 			_lexemeSource = lexemeSource;
 			_pointer = BufferSize - 1;
+			_position = 0;
 			_lexemeBuffer = new Lexeme<TToken>[BufferSize];
 			_operandBuffer = new int[BufferSize];
 			_bufferSize = BufferSize;
@@ -45,7 +47,7 @@ namespace Zaaml.Text
 				for (var i = 0; i < BufferSize; i++)
 					_lexemeBuffer[i] = new Lexeme<TToken>();
 
-				_bufferSize = _lexemeSource.Read(_lexemeBuffer, _operandBuffer, 0, BufferSize, true);
+				_bufferSize = _lexemeSource.Read(ref _position, _lexemeBuffer, _operandBuffer, 0, BufferSize);
 
 				if (_bufferSize == 0)
 				{

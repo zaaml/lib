@@ -2,8 +2,10 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Linq;
 using System.Windows;
 using System.Windows.Markup;
+using System.Xml.Linq;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
@@ -34,16 +36,17 @@ namespace Zaaml.UI.Controls.Docking
 
 		internal abstract DockItemGroupKind GroupKind { get; }
 
-		internal override DockControlLayout Layout
+		internal override XElement AsXElement(DockItemLayoutXElementOptions options)
 		{
-			get => base.Layout;
-			set
-			{
-				base.Layout = value;
+			var layoutXml = base.AsXElement(options);
 
-				foreach (var dockItemLayout in Items)
-					dockItemLayout.Layout = value;
-			}
+			if (options.Structure == false)
+				return layoutXml;
+
+			foreach (var item in Items)
+				layoutXml.Add(item.AsXElement(options));
+
+			return layoutXml;
 		}
 
 		private void CopyStructure(DockItemGroupLayout container, DockItemLayoutCloneMode mode)
@@ -61,17 +64,37 @@ namespace Zaaml.UI.Controls.Docking
 		{
 		}
 
+		protected override void OnDockStateChanged(DockItemState oldState, DockItemState newState)
+		{
+			foreach (var item in Items.GetByDockState(oldState).ToList())
+				item.DockState = DockState;
+
+			base.OnDockStateChanged(oldState, newState);
+		}
+
+		protected override void OnLayoutChanged(DockControlLayout oldLayout, DockControlLayout newLayout)
+		{
+			base.OnLayoutChanged(oldLayout, newLayout);
+
+			foreach (var dockItemLayout in Items)
+				dockItemLayout.Layout = newLayout;
+		}
+
 		public DockItemLayoutCollection Items => this.GetValueOrCreate(ItemsPropertyKey, CreateDockItemLayoutCollection);
 
 		void IDockItemLayoutCollectionOwner.OnItemAdded(DockItemLayout dockItemLayout)
 		{
 			dockItemLayout.Layout = Layout;
 
+			dockItemLayout.AttachGroup(DockState, this);
+
 			Layout?.OnLayoutChanged();
 		}
 
 		void IDockItemLayoutCollectionOwner.OnItemRemoved(DockItemLayout dockItemLayout)
 		{
+			dockItemLayout.DetachGroup(this);
+
 			if (ReferenceEquals(dockItemLayout.Layout, Layout) && Layout != null)
 				dockItemLayout.Layout = null;
 

@@ -1,4 +1,4 @@
-﻿/* MIT License
+/* MIT License
 
 Copyright (c) 2016 JetBrains http://www.jetbrains.com
 
@@ -46,6 +46,10 @@ namespace Zaaml.Core
 	///   var s = p.ToString(); // Warning: Possible 'System.NullReferenceException'
 	/// }
 	/// </code></example>
+	///
+	///
+	///
+	/// 
 	[AttributeUsage(
 		AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property |
 		AttributeTargets.Delegate | AttributeTargets.Field | AttributeTargets.Event |

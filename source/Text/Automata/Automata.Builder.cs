@@ -9,36 +9,26 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Fields
-
 		private int _inlineStateCounter;
 
-		#endregion
+		private HashSet<Syntax> Syntaxes { get; } = new();
 
-		#region Properties
-
-		private HashSet<FiniteState> States { get; } = new HashSet<FiniteState>();
-
-		#endregion
-
-		#region Methods
-
-		protected void AddState(FiniteState state, Production production)
+		protected void AddSyntax(Syntax rule, Production production)
 		{
-			state.Productions.Add(production);
+			rule.Productions.Add(production);
 
-			States.Add(state);
+			Syntaxes.Add(rule);
 		}
 
-		protected void AddState(FiniteState state, params Production[] productions)
+		protected void AddSyntax(Syntax rule, params Production[] productions)
 		{
-			AddState(state, productions.AsEnumerable());
+			AddSyntax(rule, productions.AsEnumerable());
 		}
 
-		protected void AddState(FiniteState state, IEnumerable<Production> productions)
+		protected void AddSyntax(Syntax rule, IEnumerable<Production> productions)
 		{
 			foreach (var production in productions)
-				AddState(state, production);
+				AddSyntax(rule, production);
 		}
 
 		protected Production CreateProduction(params Entry[] entries)
@@ -46,16 +36,16 @@ namespace Zaaml.Text
 			return new Production(entries);
 		}
 
-		protected StateEntry Inline(IEnumerable<Entry> entries)
+		protected SyntaxEntry Inline(IEnumerable<Entry> entries)
 		{
 			var internalState = new InternalState("Internal_" + _inlineStateCounter++);
 
-			AddState(internalState, new Production(entries));
+			AddSyntax(internalState, new Production(entries));
 
-			return new StateEntry(internalState);
+			return new SyntaxEntry(internalState);
 		}
 
-		protected StateEntry Inline(params Entry[] entries)
+		protected SyntaxEntry Inline(params Entry[] entries)
 		{
 			return Inline(entries.AsEnumerable());
 		}
@@ -70,11 +60,9 @@ namespace Zaaml.Text
 			return new SetMatchEntry(primitiveMatches);
 		}
 
-		protected static SingleMatchEntry Single(TOperand operand)
+		protected static OperandMatchEntry Single(TOperand operand)
 		{
-			return new SingleMatchEntry(operand);
+			return new OperandMatchEntry(operand);
 		}
-
-		#endregion
 	}
 }

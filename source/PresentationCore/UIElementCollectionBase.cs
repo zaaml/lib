@@ -9,7 +9,7 @@ using System.Windows.Controls;
 
 namespace Zaaml.PresentationCore
 {
-	public class UIElementCollectionBase<T> : DependencyObjectCollectionBase<T> where T : UIElement
+	public abstract class UIElementCollectionBase<T> : DependencyObjectCollectionBase<T> where T : UIElement
 	{
 		private Panel _elementsHost;
 		private ILogicalOwner _logicalHost;
@@ -82,7 +82,7 @@ namespace Zaaml.PresentationCore
 
 		private void LogicalAttachElement(T element)
 		{
-			LogicalHost.AddLogicalChild(element);
+			LogicalHost?.AddLogicalChild(element);
 		}
 
 		private void LogicalAttachElements()
@@ -93,7 +93,7 @@ namespace Zaaml.PresentationCore
 
 		private void LogicalDetachElement(T element)
 		{
-			LogicalHost.RemoveLogicalChild(element);
+			LogicalHost?.RemoveLogicalChild(element);
 		}
 
 		private void LogicalDetachElements()

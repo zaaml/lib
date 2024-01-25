@@ -1,0 +1,153 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <zm:SwitchConverter x:Key="OrientationConverter">
+    <zm:Case Key="Left" Value="Vertical" />
+    <zm:Case Key="Right" Value="Vertical" />
+    <zm:Default Value="Horizontal" />
+  </zm:SwitchConverter>
+
+  <zm:SwitchConverter x:Key="CreateTabButtonMarginConverter">
+    <zm:Case Key="Left" Value="0,0,0,0" />
+    <zm:Case Key="Top" Value="0,0,0,0" />
+    <zm:Case Key="Right" Value="0,0,0,0" />
+    <zm:Case Key="Bottom" Value="0,0,0,0" />
+  </zm:SwitchConverter>
+
+  <!--  MenuButtonGlyph  -->
+  <zm:PathIcon x:Key="MenuButtonGlyph"
+               Width="16"
+               Height="16"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               BrushMode="Fill"
+               Data="{zm:ThemeResource Key=Code.Glyphs.Menu}"
+               SharedResource="True"
+               Stretch="Fill"
+               StrokeThickness="0" />
+
+  <!--  OverflowMenuButtonGlyph  -->
+  <zm:PathIcon x:Key="OverflowMenuButtonGlyph"
+               Width="16"
+               Height="16"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               BrushMode="Fill"
+               Data="{zm:ThemeResource Key=Code.Glyphs.MenuOverflowed}"
+               SharedResource="True"
+               Stretch="Fill"
+               StrokeThickness="0" />
+
+  <!--  MenuItemGenerator  -->
+  <zm:MenuItemGenerator x:Key="MenuItemGenerator">
+    <zm:MenuItemGenerator.ItemTemplate>
+      <zm:MenuItemTemplate>
+        <zm:MenuItem d:DataContext="{d:DesignInstance zm:TabViewItem}"
+                     Command="{Binding SelectCommand}"
+                     Header="{Binding Header}"
+                     HeaderTemplate="{Binding HeaderTemplate}"
+                     Icon="{Binding Icon}" />
+      </zm:MenuItemTemplate>
+    </zm:MenuItemGenerator.ItemTemplate>
+  </zm:MenuItemGenerator>
+
+  <!--  Control Template  -->
+  <ControlTemplate x:Key="TabViewItemsPresenterTemplate"
+                   TargetType="zm:TabViewItemsPresenter">
+    <zm:ControlTemplateRoot UseLayoutRounding="True">
+
+      <Border Background="{zm:TemplateBinding Path=Background}"
+              BorderBrush="{zm:TemplateBinding Path=BorderBrush}"
+              BorderThickness="{zm:TemplateBinding Path=BorderThickness}">
+
+        <zm:FlexPanel HorizontalAlignment="Stretch"
+                      Orientation="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
+                                                       Converter={StaticResource OrientationConverter}}"
+                      Stretch="Fill">
+
+          <zm:FlexPanel.FlexDefinition>
+            <zm:FlexDefinition Length="Auto"
+                               StretchDirection="None" />
+          </zm:FlexPanel.FlexDefinition>
+
+          <!--  Header  -->
+          <zm:TabViewItemsHeaderPresenter Content="{zm:TemplateBinding Path=Header}"
+                                          ContentTemplate="{zm:TemplateBinding Path=HeaderTemplate}" />
+
+          <!--  Items Host  -->
+          <zm:TabViewItemsPanel x:Name="ItemsHost"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                zm:FlexDefinition.ExpandPriority="1"
+                                zm:FlexDefinition.Length="*"
+                                zm:FlexDefinition.StretchDirection="Both"
+                                Background="Transparent"
+                                FlexDefinition="{zm:TemplateBinding Path=TabViewControl.ItemsFlexDefinition}"
+                                Orientation="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
+                                                                 Converter={StaticResource OrientationConverter}}"
+                                Spacing="-1"
+                                Stretch="Fill" />
+
+          <!--  CreateTab Button  -->
+          <zm:Button
+            Margin="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
+                                                 Converter={StaticResource CreateTabButtonMarginConverter}}"
+            Padding="4,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
+            Command="{zm:TemplateBinding Path=TabViewControl.CreateTabCommand}"
+            Content="{zm:TemplateBinding Path=TabViewControl.CreateTabButtonContent}"
+            ContentTemplate="{zm:TemplateBinding Path=TabViewControl.CreateTabButtonContentTemplate}"
+            Visibility="{zm:TemplateBinding Path=TabViewControl.ActualCreateTabButtonVisibility}" />
+
+          <!--  Footer  -->
+          <zm:TabViewItemsFooterPresenter zm:FlexDefinition.ShrinkPriority="1"
+                                          zm:FlexDefinition.StretchDirection="Both"
+                                          Content="{zm:TemplateBinding Path=Footer}"
+                                          ContentTemplate="{zm:TemplateBinding Path=FooterTemplate}" />
+
+          <!--  MenuButton  -->
+          <zm:DropDownButton x:Name="ItemsMenuButton"
+                             Margin="{zm:TemplateBinding Path=TabViewControl.TabStripPlacement,
+                                                         Converter={StaticResource CreateTabButtonMarginConverter}}"
+                             Padding="2"
+                             HorizontalAlignment="Stretch"
+                             VerticalAlignment="Stretch"
+                             zm:FlexDefinition.StretchDirection="None"
+                             zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=ItemsMenuButton}"
+                             BorderThickness="0"
+                             ShowContent="False"
+                             DropDownGlyph="{Binding Path=HasHiddenChildren, ElementName=ItemsHost, Converter={zm:TernaryConverter Operand=True, TrueValue={StaticResource OverflowMenuButtonGlyph}, FalseValue={StaticResource MenuButtonGlyph}}}"
+                             Visibility="{zm:TemplateBinding Path=TabViewControl.ActualItemsMenuButtonVisibility}">
+
+            <zm:DropDownButton.PopupControl>
+              <zm:PopupMenu ItemGenerator="{zm:TemplateBinding Path=TabViewControl.ActualMenuItemGenerator}"
+                            SourceCollection="{zm:TemplateBinding Path=TabViewControl.ActualMenuSourceCollection}" />
+            </zm:DropDownButton.PopupControl>
+          </zm:DropDownButton>
+        </zm:FlexPanel>
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Styles  -->
+  <zm:Style x:Key="TabViewItemsPresenterBaseStyle" TargetType="zm:TabViewItemsPresenter">
+    <zm:Setter Property="Template" Value="{StaticResource TabViewItemsPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Styles  -->
+  <zm:Style x:Key="TabViewItemsPresenterStyle" BasedOn="{StaticResource TabViewItemsPresenterBaseStyle}"
+            Skin="Code.TabViewItemsPresenter" TargetType="zm:TabViewItemsPresenter" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="TabViewItemsPresenterThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource TabViewItemsPresenterStyle}" TargetType="zm:TabViewItemsPresenter" />
+
+</zm:ThemeResourceDictionary>

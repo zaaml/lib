@@ -8,54 +8,53 @@
   <!--  Template  -->
   <ControlTemplate x:Key="RibbonControlTemplate"
                    TargetType="zm:RibbonControl">
-    <zm:ControlTemplateRoot>
-      <Border Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="0,0,0,1">
-        <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-          </Grid.RowDefinitions>
+    <zm:ControlTemplateRoot Background="{TemplateBinding Background}">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-          <!--  HeaderPresenter  -->
-          <zm:RibbonHeaderPresenter x:Name="HeaderPresenter"
-                                    Grid.Row="0"
-                                    Background="#FF2576C4"
-                                    Canvas.ZIndex="1"
-                                    QuickAccessToolBar="{TemplateBinding QuickAccessToolBar}">
+        <!--  HeaderPresenter  -->
+        <zm:RibbonHeaderPresenter x:Name="HeaderPresenter"
+                                  Grid.Row="0"
+                                  Background="#FFE6E6E6"
+                                  Canvas.ZIndex="1"
+                                  QuickAccessToolBar="{TemplateBinding QuickAccessToolBar}">
 
-            <!--  Categories Presenter  -->
-            <zm:RibbonHeaderPresenter.PageCategoriesPresenter>
-              <zm:RibbonPageCategoriesPresenter x:Name="ItemsPresenter" />
-            </zm:RibbonHeaderPresenter.PageCategoriesPresenter>
+          <!--  Categories Presenter  -->
+          <zm:RibbonHeaderPresenter.PageCategoriesPresenter>
+            <zm:RibbonPageCategoriesPresenter x:Name="ItemsPresenter" />
+          </zm:RibbonHeaderPresenter.PageCategoriesPresenter>
 
-            <!--  ApplicationMenuButton  -->
-            <zm:RibbonHeaderPresenter.Menu>
-              <zm:ToggleButton x:Name="ApplicationMenuButton"
-                               Padding="15,2"
-                               zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=AppButton}"
-                               BorderThickness="0"
-                               Content="Menu"
-                               IsChecked="{zm:TemplateBinding Path=IsApplicationMenuOpen,
-                                                              Mode=TwoWay}" />
-            </zm:RibbonHeaderPresenter.Menu>
+          <!--  ApplicationMenuButton  -->
+          <zm:RibbonHeaderPresenter.Menu>
+            <zm:ToggleButton x:Name="ApplicationMenuButton"
+                             Padding="15,2"
+                             zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=AppButton}"
+                             BorderThickness="0"
+                             Content="Menu"
+                             IsChecked="{zm:TemplateBinding Path=IsApplicationMenuOpen, Mode=TwoWay}" />
+          </zm:RibbonHeaderPresenter.Menu>
 
-            <!--  PagesPresenter  -->
-            <zm:RibbonHeaderPresenter.PagesPresenter>
-              <zm:RibbonPagesPresenter x:Name="PagesPresenter"
-                                       Grid.Column="1"
-                                       Margin="0" />
-            </zm:RibbonHeaderPresenter.PagesPresenter>
+          <!--  PagesPresenter  -->
+          <zm:RibbonHeaderPresenter.PagesPresenter>
+            <zm:RibbonPagesPresenter x:Name="PagesPresenter"
+                                     Grid.Column="1"
+                                     Margin="0" />
+          </zm:RibbonHeaderPresenter.PagesPresenter>
 
-          </zm:RibbonHeaderPresenter>
+        </zm:RibbonHeaderPresenter>
 
-          <!--  GroupsPresenterHost  -->
-          <zm:RibbonGroupsPresenterHost x:Name="GroupsPresenterHost"
-                                        Grid.Row="1"
-                                        Margin="0,-1,0,0" />
-        </Grid>
-      </Border>
+        <!--  GroupsPresenterHost  -->
+        <Border Grid.Row="1"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="0,1,0,1">
+          <zm:RibbonGroupsPresenterHost x:Name="GroupsPresenterHost" />
+
+        </Border>
+      </Grid>
+
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 

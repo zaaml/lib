@@ -323,7 +323,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 				}
 			}
 
-			private Rect LayoutBox => _layoutBox ??= Target.GetScreenBox();
+			private Rect ScreenLogicalBox => _layoutBox ??= Target.GetScreenLogicalBox();
 
 			public void AddHandler(object handler)
 			{
@@ -366,7 +366,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 			private void ProcessMouseEventSource()
 			{
 				if (IsDragging)
-					IsMouseOver = LayoutBox.Contains(MouseInternal.ScreenPosition);
+					IsMouseOver = ScreenLogicalBox.Contains(MouseInternal.ScreenLogicalPosition);
 			}
 
 			public void RemoveHandler(object handler)

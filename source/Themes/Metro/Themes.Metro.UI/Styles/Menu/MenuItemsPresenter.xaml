@@ -8,7 +8,7 @@
 
       <!--  Content  -->
       <zm:Extension.Assets>
-        <zm:Asset x:Name="Orientation"
+        <zm:ValueAsset x:Name="Orientation"
                   Value="{zm:TemplateBinding Path=ActualOrientation}" />
       </zm:Extension.Assets>
 

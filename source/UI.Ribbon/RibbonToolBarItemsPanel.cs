@@ -40,7 +40,8 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private FlexPanelLayout Layout { get; }
 
-		[UsedImplicitly] private RibbonToolBar ToolBar => ItemsPresenter?.ToolBar;
+		[UsedImplicitly]
+		private RibbonToolBar ToolBar => ItemsPresenter?.ToolBar;
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
@@ -54,7 +55,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private static bool GetIsOverflow(UIElement child)
 		{
-			var overflowItem = (OverflowItem<RibbonItem>) child;
+			var overflowItem = (OverflowItem<RibbonItem>)child;
 			var ribbonItem = overflowItem.Item;
 
 			return ribbonItem.IsOverflow;
@@ -77,7 +78,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private static void SetIsOverflow(UIElement child, bool value)
 		{
-			var overflowItem = (OverflowItem<RibbonItem>) child;
+			var overflowItem = (OverflowItem<RibbonItem>)child;
 			var ribbonItem = overflowItem.Item;
 
 			ribbonItem.IsOverflow = value;
@@ -105,7 +106,7 @@ namespace Zaaml.UI.Controls.Ribbon
 		{
 			var overflowBehavior = Children.Count > 0 && ReferenceEquals(child, Children[0]) ? FlexOverflowBehavior.Pin : FlexOverflowBehavior.Hide;
 
-			return child.GetFlexElement(this).WithStretchDirection(FlexStretchDirection.None).WithOverflowBehavior(overflowBehavior);
+			return child.GetFlexElement(this, Orientation.Horizontal).WithStretchDirection(FlexStretchDirection.None).WithOverflowBehavior(overflowBehavior);
 		}
 
 		bool IFlexPanel.GetIsHidden(UIElement child) => GetIsOverflow(child);

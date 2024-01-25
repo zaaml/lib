@@ -8,37 +8,27 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class TabLayoutView : TabLayoutViewBase<TabLayout>
-  {
-    #region Static Fields and Constants
+	public sealed class TabLayoutView : TabLayoutViewBase<TabLayout>
+	{
+		public static readonly DependencyProperty HeaderPresenterProperty = DPM.Register<DockItemHeaderPresenter, TabLayoutView>
+			("HeaderPresenter");
 
-    public static readonly DependencyProperty HeaderPresenterProperty = DPM.Register<DockItemHeaderPresenter, TabLayoutView>
-      ("HeaderPresenter");
+		static TabLayoutView()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<TabLayoutView>();
+		}
 
-    #endregion
+		public TabLayoutView()
+		{
+			this.OverrideStyleKey<TabLayoutView>();
+		}
 
-    #region Ctors
+		public DockItemHeaderPresenter HeaderPresenter
+		{
+			get => (DockItemHeaderPresenter)GetValue(HeaderPresenterProperty);
+			set => SetValue(HeaderPresenterProperty, value);
+		}
 
-    static TabLayoutView()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<TabLayoutView>();
-    }
-
-    public TabLayoutView()
-    {
-      this.OverrideStyleKey<TabLayoutView>();
-    }
-
-    #endregion
-
-    #region Properties
-
-    public DockItemHeaderPresenter HeaderPresenter
-    {
-      get => (DockItemHeaderPresenter) GetValue(HeaderPresenterProperty);
-      set => SetValue(HeaderPresenterProperty, value);
-    }
-
-    #endregion
-  }
+		protected override int MinimumItemsCount => 2;
+	}
 }

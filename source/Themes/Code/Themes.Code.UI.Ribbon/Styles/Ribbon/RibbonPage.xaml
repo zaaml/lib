@@ -1,0 +1,130 @@
+<zm:ThemeResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:zm="http://schemas.zaaml.com/xaml"
+  xmlns:zmb="http://schemas.zaaml.com/build"
+  mc:Ignorable="zmb">
+
+  <!--  Visual States  -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!--  CommonStates States  -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!--  SelectionStates States  -->
+    <zm:VisualStateGroup Name="SelectionStates">
+      <zm:VisualState Name="Selected" />
+      <zm:VisualState Name="Unselected" />
+      <zm:VisualState Name="SelectedInactive" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="RibbonPageTemplate" TargetType="zm:RibbonPage">
+    <zm:ControlTemplateRoot VisualStateGroups="{StaticResource VisualStates}">
+      <Grid>
+        <Border
+          x:Name="border"
+          Padding="{TemplateBinding Padding}"
+          Background="{TemplateBinding Background}"
+          BorderBrush="{TemplateBinding BorderBrush}"
+          BorderThickness="{Binding Path=ActualThickness, ElementName=BorderThickness}">
+
+          <zm:Extension.Assets>
+            <zm:MaskThickness x:Name="BorderThickness" EnabledThickness="{zm:TemplateBinding Path=BorderThickness}" />
+          </zm:Extension.Assets>
+
+          <!--  Content  -->
+          <zm:IconContentPresenter
+            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+            Content="{TemplateBinding Header}"
+            Icon="{TemplateBinding Icon}" />
+        </Border>
+
+        <!--  GroupsPresenterHost  -->
+        <zm:RibbonGroupsPresenterHost x:Name="GroupsPresenterHost">
+
+          <!--  ItemsPresenter  -->
+          <zm:RibbonGroupsPresenter x:Name="ItemsPresenter" />
+
+        </zm:RibbonGroupsPresenterHost>
+      </Grid>
+
+      <zm:Extension.Triggers>
+        <zm:DataTrigger Binding="{zm:TemplateBinding Path=IsSelected}" Value="True">
+          <zm:Setter
+            TargetName="BorderThickness"
+            Property="Bottom"
+            Value="False" />
+        </zm:DataTrigger>
+      </zm:Extension.Triggers>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="RibbonPageBaseStyle" TargetType="zm:RibbonPage">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Margin" Value="0,0" />
+    <zm:Setter Property="Padding" Value="12,4" />
+    <zm:Setter Property="FontFamily" Value="Portable User Interface" />
+    <zm:Setter Property="FontSize" Value="11" />
+    <zm:Setter Property="Template" Value="{StaticResource RibbonPageTemplate}" />
+    <zm:Setter Property="zm:Extension.Skin" Value="{zm:SelfBinding Path=PageCategory.IsContextual, Converter={zm:TernaryConverter Operand={zm:False}, TrueValue=Code.RibbonPage, FalseValue=Code.RibbonContextualPage}}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style
+    x:Key="RibbonPageStyle"
+    BasedOn="{StaticResource RibbonPageBaseStyle}"
+    Skin="Code.RibbonPage"
+    TargetType="zm:RibbonPage">
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!--  Foreground  -->
+      <zm:SetterGroup ValuePath="Foreground" Property="Foreground">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter
+          Priority="1"
+          ValuePath="Selected"
+          VisualState="Selected" />
+      </zm:SetterGroup>
+
+      <!--  Background  -->
+      <zm:SetterGroup ValuePath="Background" Property="Background">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter
+          Priority="1"
+          ValuePath="Selected"
+          VisualState="Selected" />
+      </zm:SetterGroup>
+
+      <!--  BorderBrush  -->
+      <zm:SetterGroup ValuePath="BorderBrush" Property="BorderBrush">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter
+          Priority="1"
+          ValuePath="Selected"
+          VisualState="Selected" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle
+    x:Key="RibbonPageThemeStyle"
+    zmb:Deferred="True"
+    BasedOn="{StaticResource RibbonPageStyle}"
+    TargetType="zm:RibbonPage" />
+
+</zm:ThemeResourceDictionary>

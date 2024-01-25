@@ -1,0 +1,52 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            mc:Ignorable="zmb">
+
+
+  <!-- ControlTemplate -->
+  <ControlTemplate x:Key="ListBoxBaseTemplate" TargetType="ListBox">
+    <zm:ControlTemplateRoot Background="Transparent">
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+        <ScrollViewer x:Name="ScrollViewer" 
+                      Background="#00FFFFFF" 
+                      BorderThickness="0"
+                      Padding="{TemplateBinding Padding}"
+                      Margin="{zm:TemplateSkinBinding SkinPath=ScrollViewerMargin}"
+                      HorizontalScrollBarVisibility="{zm:TemplateBinding Path=(ScrollViewer.HorizontalScrollBarVisibility)}"
+                      VerticalScrollBarVisibility="{zm:TemplateBinding Path=(ScrollViewer.VerticalScrollBarVisibility)}">
+          <ItemsPresenter />
+        </ScrollViewer>
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="ListBoxBaseStyle" TargetType="ListBox">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="IsTabStop" Value="False" />
+    <zm:Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+    <zm:Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+    <zm:Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+    <zm:Setter Property="Padding" Value="{zm:SelfSkinBinding SkinPath=ScrollViewerPadding}" />
+    <zm:Setter Property="Template" Value="{StaticResource ListBoxBaseTemplate}" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="ListBoxStyle" TargetType="ListBox" BasedOn="{StaticResource ListBoxBaseStyle}" 
+            Skin="Code.StandardControls.ListBox">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Foreground" ValuePath="Foreground" />
+      <zm:Setter Property="Background" ValuePath="Background" />
+      <zm:Setter Property="BorderBrush" ValuePath="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Styles -->
+  <zm:ThemeStyle x:Key="ListBoxThemeStyle" TargetType="ListBox" BasedOn="{StaticResource ListBoxStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

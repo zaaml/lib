@@ -7,44 +7,40 @@ using System.Windows.Input;
 
 namespace Zaaml.UI.Controls.Core
 {
-  public partial class Control
-  {
-    #region  Methods
+	public partial class Control
+	{
+		protected override void OnGotFocus(RoutedEventArgs e)
+		{
+			base.OnGotFocus(e);
 
-    protected override void OnGotFocus(RoutedEventArgs e)
-    {
-      base.OnGotFocus(e);
+			UpdateVisualState(true);
+		}
 
-      UpdateVisualState(true);
-    }
+		protected override void OnLostFocus(RoutedEventArgs e)
+		{
+			base.OnLostFocus(e);
 
-    protected override void OnLostFocus(RoutedEventArgs e)
-    {
-      base.OnLostFocus(e);
+			UpdateVisualState(true);
+		}
 
-      UpdateVisualState(true);
-    }
+		protected override void OnMouseEnter(MouseEventArgs e)
+		{
+			base.OnMouseEnter(e);
 
-    protected override void OnMouseEnter(MouseEventArgs e)
-    {
-      base.OnMouseEnter(e);
+			UpdateVisualState(true);
+		}
 
-      UpdateVisualState(true);
-    }
+		protected override void OnMouseLeave(MouseEventArgs e)
+		{
+			base.OnMouseLeave(e);
 
-    protected override void OnMouseLeave(MouseEventArgs e)
-    {
-      base.OnMouseLeave(e);
+			UpdateVisualState(true);
+		}
 
-      UpdateVisualState(true);
-    }
-
-    partial void PlatformCtor()
-    {
-      Loaded += (sender, args) => OnLoaded();
-      Unloaded += (sender, args) => OnUnloaded();
-    }
-
-    #endregion
-  }
+		partial void PlatformCtor()
+		{
+			Loaded += (sender, args) => OnLoaded();
+			Unloaded += (sender, args) => OnUnloaded();
+		}
+	}
 }

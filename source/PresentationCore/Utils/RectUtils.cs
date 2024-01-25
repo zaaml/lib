@@ -284,7 +284,15 @@ namespace Zaaml.PresentationCore.Utils
       return rect;
     }
 
-    public static Rect Intersect(Rect rect, Rect another)
+    public static Rect Deflate(Rect rect, Thickness thick)
+    {
+	    return new Rect(rect.Left + thick.Left,
+		    rect.Top + thick.Top,
+		    Math.Max(0.0, rect.Width - thick.Left - thick.Right),
+		    Math.Max(0.0, rect.Height - thick.Top - thick.Bottom));
+    }
+
+		public static Rect Intersect(Rect rect, Rect another)
     {
       rect.Intersect(another);
 

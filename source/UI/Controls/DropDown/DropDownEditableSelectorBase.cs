@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -40,7 +41,7 @@ namespace Zaaml.UI.Controls.DropDown
 			("PreserveEditorText", PreserveEditorTextMode.Auto);
 
 		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<DropDownEditableSelectorDisplayMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
-			("DisplayMode", default, d => d.OnDisplayModePropertyChangedPrivate);
+			("DisplayMode", DropDownEditableSelectorDisplayMode.Auto, d => d.OnDisplayModePropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey ActualDisplayModePropertyKey = DPM.RegisterReadOnly<DropDownEditableSelectorDisplayMode, DropDownEditableSelectorBase<TItemsControl, TItem>>
 			("ActualDisplayMode", DropDownEditableSelectorDisplayMode.DropDownButton);
@@ -76,19 +77,19 @@ namespace Zaaml.UI.Controls.DropDown
 		public bool IsEditing
 		{
 			get => (bool) GetValue(IsEditingProperty);
-			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value);
+			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value.Box());
 		}
 
 		public bool IsTextEditable
 		{
 			get => (bool) GetValue(IsTextEditableProperty);
-			set => SetValue(IsTextEditableProperty, value);
+			set => SetValue(IsTextEditableProperty, value.Box());
 		}
 
 		public bool OpenDropDownOnEditing
 		{
 			get => (bool) GetValue(OpenDropDownOnEditingProperty);
-			set => SetValue(OpenDropDownOnEditingProperty, value);
+			set => SetValue(OpenDropDownOnEditingProperty, value.Box());
 		}
 
 		public TimeSpan PostEditorTextDelay
@@ -135,14 +136,14 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			UpdateActualDisplayMode();
 
-			this.SetCurrentValueInternal(IsTabStopProperty, newValue ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsTabStopProperty, newValue ? BooleanBoxes.True : BooleanBoxes.False);
 		}
 
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
 
-			Popup.Closing += PopupCloseControllerOnClosing;
+			PopupBar.Closing += PopupCloseControllerOnClosing;
 
 			if (IsEditing)
 				ShowEditor();
@@ -152,7 +153,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override void OnTemplateContractDetaching()
 		{
-			Popup.Closing -= PopupCloseControllerOnClosing;
+			PopupBar.Closing -= PopupCloseControllerOnClosing;
 
 			base.OnTemplateContractDetaching();
 		}

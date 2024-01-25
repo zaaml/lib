@@ -5,34 +5,22 @@
 using System.Windows.Media;
 using Zaaml.PresentationCore.Extensions;
 
-namespace Zaaml.PresentationCore.Animation.Interpolators
+namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class ColorInterpolator : InterpolatorBase<Color>
-  {
-    #region Static Fields and Constants
+	public sealed class ColorInterpolator : PrimitiveInterpolator<Color>
+	{
+		public static readonly ColorInterpolator Instance = new();
 
-    public static ColorInterpolator Instance = new ColorInterpolator();
+		private ColorInterpolator()
+		{
+		}
 
-    #endregion
+		protected internal override Color EvaluateCore(Color start, Color end, double progress)
+		{
+			var rgbStartColor = start.ToRgbColor();
+			var rgbEndColor = end.ToRgbColor();
 
-    #region Ctors
-
-    private ColorInterpolator()
-    {
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected internal override Color EvaluateCore(Color start, Color end, double progress)
-    {
-      var rgbStartColor = start.ToRgbColor();
-      var rgbEndColor = end.ToRgbColor();
-
-      return (rgbStartColor + (rgbEndColor - rgbStartColor) * progress).ToXamlColor();
-    }
-
-    #endregion
-  }
+			return (rgbStartColor + (rgbEndColor - rgbStartColor) * progress).ToXamlColor();
+		}
+	}
 }

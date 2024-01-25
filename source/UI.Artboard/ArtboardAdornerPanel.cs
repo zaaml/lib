@@ -13,7 +13,12 @@ namespace Zaaml.UI.Controls.Artboard
 
 		internal void ArrangeAdorner(ArtboardAdorner adorner)
 		{
-			adorner.Arrange(ScrollViewTransform.Transform.TransformBounds(adorner.AdornerRect));
+			var adornerRect = adorner.AdornerRect;
+
+			if (adornerRect.IsEmpty)
+				adornerRect = new Rect(new Size(0,0));
+
+			adorner.Arrange(ScrollViewTransform.Transform.TransformBounds(adornerRect));
 		}
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
@@ -21,7 +26,14 @@ namespace Zaaml.UI.Controls.Artboard
 			var transform = ScrollViewTransform.Transform;
 
 			foreach (var adorner in Children.OfType<ArtboardAdorner>())
-				adorner.Arrange(transform.TransformBounds(adorner.AdornerRect));
+			{
+				var adornerRect = adorner.AdornerRect;
+
+				if (adornerRect.IsEmpty)
+					adornerRect = new Rect(new Size(0, 0));
+
+				adorner.Arrange(transform.TransformBounds(adornerRect));
+			}
 
 			return finalSize;
 		}
@@ -31,7 +43,14 @@ namespace Zaaml.UI.Controls.Artboard
 			var transform = ScrollViewTransform.Transform;
 
 			foreach (var adorner in Children.OfType<ArtboardAdorner>())
-				adorner.Measure(transform.TransformBounds(adorner.AdornerRect).Size);
+			{
+				var adornerRect = adorner.AdornerRect;
+
+				if (adornerRect.IsEmpty)
+					adornerRect = new Rect(new Size(0, 0));
+
+				adorner.Measure(transform.TransformBounds(adornerRect).Size);
+			}
 
 			return new Size(0, 0);
 		}

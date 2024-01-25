@@ -9,6 +9,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
+using Zaaml.Core.Runtime;
+using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -18,51 +20,21 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Artboard
 {
-	[ContentProperty("CanvasCollection")]
+	[ContentProperty("ItemCollection")]
 	[TemplateContractType(typeof(ArtboardControlTemplateContract))]
-	public class ArtboardControl : TemplateContractControl
+	public class ArtboardControl : ItemsControlBase<ArtboardControl, ArtboardItem, ArtboardItemCollection, ArtboardItemsPresenter, ArtboardItemsPanel>
 	{
-		public static readonly DependencyProperty DesignWidthProperty = DPM.Register<double, ArtboardControl>
-			("DesignWidth", 640.0, d => d.OnDesignWidthPropertyChangedPrivate);
-
-		public static readonly DependencyProperty DesignHeightProperty = DPM.Register<double, ArtboardControl>
-			("DesignHeight", 480.0, d => d.OnDesignHeightPropertyChangedPrivate);
-
-		public static readonly DependencyProperty DesignTopContentProperty = DPM.Register<object, ArtboardControl>
-			("DesignTopContent");
-
-		public static readonly DependencyProperty DesignBottomContentProperty = DPM.Register<object, ArtboardControl>
-			("DesignBottomContent");
-
-		public static readonly DependencyProperty DesignTopContentTemplateProperty = DPM.Register<DataTemplate, ArtboardControl>
-			("DesignTopContentTemplate");
-
-		public static readonly DependencyProperty DesignBottomContentTemplateProperty = DPM.Register<DataTemplate, ArtboardControl>
-			("DesignBottomContentTemplate");
-
-		public static readonly DependencyProperty DesignBackgroundProperty = DPM.Register<Brush, ArtboardControl>
-			("DesignBackground");
-
-		public static readonly DependencyProperty DesignBorderBrushProperty = DPM.Register<Brush, ArtboardControl>
-			("DesignBorderBrush");
-
-		public static readonly DependencyProperty DesignBorderThicknessProperty = DPM.Register<Thickness, ArtboardControl>
-			("DesignBorderThickness");
-
 		public static readonly DependencyProperty ShowGridProperty = DPM.Register<bool, ArtboardControl>
 			("ShowGrid", true);
+
+		public static readonly DependencyProperty ShowRulersProperty = DPM.Register<bool, ArtboardControl>
+			("ShowRulers", true);
 
 		public static readonly DependencyProperty ZoomProperty = DPM.Register<double, ArtboardControl>
 			("Zoom", 1.0, a => a.OnZoomPropertyChangedPrivate);
 
-		private static readonly DependencyPropertyKey CanvasCollectionPropertyKey = DPM.RegisterReadOnly<ArtboardCanvasCollection, ArtboardControl>
-			("CanvasCollectionPrivate");
-
 		private static readonly DependencyPropertyKey AdornersPropertyKey = DPM.RegisterAttachedReadOnly<ArtboardAdornerCollection, ArtboardControl>
 			("AdornersPrivate");
-
-		private static readonly DependencyPropertyKey AdornerFactoriesPropertyKey = DPM.RegisterReadOnly<ArtboardAdornerFactoryCollection, ArtboardControl>
-			("AdornerFactoriesPrivate");
 
 		public static readonly DependencyProperty SnapEngineProperty = DPM.Register<ArtboardSnapEngine, ArtboardControl>
 			("SnapEngine", d => d.OnSnapEnginePropertyChangedPrivate);
@@ -70,15 +42,24 @@ namespace Zaaml.UI.Controls.Artboard
 		private static readonly DependencyPropertyKey SnapGuidesPropertyKey = DPM.RegisterReadOnly<ArtboardSnapGuideCollection, ArtboardControl>
 			("SnapGuidesPrivate");
 
-		public static readonly DependencyProperty SnapGuidesProperty = SnapGuidesPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ShowTransparentBackgroundProperty = DPM.Register<bool, ArtboardControl>
+			("ShowTransparentBackground", default, d => d.OnShowOpaquePatternPropertyChangedPrivate);
 
-		public static readonly DependencyProperty AdornerFactoriesProperty = AdornerFactoriesPropertyKey.DependencyProperty;
+		public bool ShowTransparentBackground
+		{
+			get => (bool)GetValue(ShowTransparentBackgroundProperty);
+			set => SetValue(ShowTransparentBackgroundProperty, value.Box());
+		}
+
+		private void OnShowOpaquePatternPropertyChangedPrivate(bool oldValue, bool newValue)
+		{
+		}
+
+		public static readonly DependencyProperty SnapGuidesProperty = SnapGuidesPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty AdornersProperty = AdornersPropertyKey.DependencyProperty;
 
-		public static readonly DependencyProperty CanvasCollectionProperty = CanvasCollectionPropertyKey.DependencyProperty;
-
-		private protected readonly CompositeTransform ScrollViewTransform = new CompositeTransform
+		private protected readonly CompositeTransform ScrollViewTransform = new()
 		{
 			ScaleX = 1.0,
 			ScaleY = 1.0
@@ -103,89 +84,28 @@ namespace Zaaml.UI.Controls.Artboard
 			MouseSnapGuide = PreviewSnapGuide;
 		}
 
-		public ArtboardAdornerFactoryCollection AdornerFactories => this.GetValueOrCreate(AdornerFactoriesPropertyKey, CreateArtboardAdornerFactoryCollection);
-
 		private ArtboardAdornerPresenter AdornerPresenter => TemplateContract.AdornerPresenter;
 
 		internal ArtboardAdornerPresenter AdornerPresenterInternal => AdornerPresenter;
-
-		public ArtboardCanvasCollection CanvasCollection => this.GetValueOrCreate(CanvasCollectionPropertyKey, () => new ArtboardCanvasCollection(this));
 
 		private IEnumerable<IArtboardComponentControl> Components
 		{
 			get
 			{
-				yield return Presenter;
+				yield return ItemsPresenter;
 				yield return GridLineControl;
 				yield return VerticalRuler;
 				yield return HorizontalRuler;
 				yield return AdornerPresenter;
-				yield return DesignTopContentControl;
-				yield return DesignBottomContentControl;
 				yield return VerticalSnapGuidePresenter;
 				yield return HorizontalSnapGuidePresenter;
+
+				foreach (var artboardItem in ItemCollection)
+					yield return artboardItem;
 			}
 		}
 
-		public Brush DesignBackground
-		{
-			get => (Brush) GetValue(DesignBackgroundProperty);
-			set => SetValue(DesignBackgroundProperty, value);
-		}
-
-		public Brush DesignBorderBrush
-		{
-			get => (Brush) GetValue(DesignBorderBrushProperty);
-			set => SetValue(DesignBorderBrushProperty, value);
-		}
-
-		public Thickness DesignBorderThickness
-		{
-			get => (Thickness) GetValue(DesignBorderThicknessProperty);
-			set => SetValue(DesignBorderThicknessProperty, value);
-		}
-
-		public object DesignBottomContent
-		{
-			get => GetValue(DesignBottomContentProperty);
-			set => SetValue(DesignBottomContentProperty, value);
-		}
-
-		private ArtboardDesignContentControl DesignBottomContentControl => TemplateContract.DesignBottomContentControl;
-
-		public DataTemplate DesignBottomContentTemplate
-		{
-			get => (DataTemplate) GetValue(DesignBottomContentTemplateProperty);
-			set => SetValue(DesignBottomContentTemplateProperty, value);
-		}
-
-		public double DesignHeight
-		{
-			get => (double) GetValue(DesignHeightProperty);
-			set => SetValue(DesignHeightProperty, value);
-		}
-
-		public object DesignTopContent
-		{
-			get => GetValue(DesignTopContentProperty);
-			set => SetValue(DesignTopContentProperty, value);
-		}
-
-		private ArtboardDesignContentControl DesignTopContentControl => TemplateContract.DesignTopContentControl;
-
-		public DataTemplate DesignTopContentTemplate
-		{
-			get => (DataTemplate) GetValue(DesignTopContentTemplateProperty);
-			set => SetValue(DesignTopContentTemplateProperty, value);
-		}
-
-		public double DesignWidth
-		{
-			get => (double) GetValue(DesignWidthProperty);
-			set => SetValue(DesignWidthProperty, value);
-		}
-
-		protected Matrix FromDesignMatrix => ScrollViewTransform.Transform.Value;
+		protected Matrix FromCanvasMatrix => ScrollViewTransform.Transform.Value;
 
 		private ArtboardGridLineControl GridLineControl => TemplateContract.GridLineControl;
 
@@ -237,9 +157,7 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		private ArtboardPresenter Presenter => TemplateContract.Presenter;
-
-		private ArtboardSnapGuide PreviewSnapGuide { get; } = new ArtboardSnapGuide {IsHitTestVisible = false};
+		private ArtboardSnapGuide PreviewSnapGuide { get; } = new() { IsHitTestVisible = false };
 
 		internal double ScrollPanelOffsetX { get; set; }
 
@@ -251,21 +169,27 @@ namespace Zaaml.UI.Controls.Artboard
 
 		public bool ShowGrid
 		{
-			get => (bool) GetValue(ShowGridProperty);
-			set => SetValue(ShowGridProperty, value);
+			get => (bool)GetValue(ShowGridProperty);
+			set => SetValue(ShowGridProperty, value.Box());
+		}
+
+		public bool ShowRulers
+		{
+			get => (bool)GetValue(ShowRulersProperty);
+			set => SetValue(ShowRulersProperty, value.Box());
 		}
 
 		public ArtboardSnapEngine SnapEngine
 		{
-			get => (ArtboardSnapEngine) GetValue(SnapEngineProperty);
+			get => (ArtboardSnapEngine)GetValue(SnapEngineProperty);
 			set => SetValue(SnapEngineProperty, value);
 		}
 
 		public ArtboardSnapGuideCollection SnapGuides => this.GetValueOrCreate(SnapGuidesPropertyKey, CreateSnapGuidesCollection);
 
-		private ArtboardControlTemplateContract TemplateContract => (ArtboardControlTemplateContract) TemplateContractInternal;
+		private ArtboardControlTemplateContract TemplateContract => (ArtboardControlTemplateContract)TemplateContractCore;
 
-		protected Matrix ToDesignMatrix
+		protected Matrix ToCanvasMatrix
 		{
 			get
 			{
@@ -283,19 +207,8 @@ namespace Zaaml.UI.Controls.Artboard
 
 		public double Zoom
 		{
-			get => (double) GetValue(ZoomProperty);
+			get => (double)GetValue(ZoomProperty);
 			set => SetValue(ZoomProperty, value);
-		}
-
-		internal void ArrangeAdorners(UIElement child, Rect rect)
-		{
-			var adorners = GetAdornersInternal(child);
-
-			if (adorners == null)
-				return;
-
-			foreach (var adorner in adorners)
-				adorner.ArrangeAdorner(rect);
 		}
 
 		private void AttachSnapEngine(ArtboardSnapEngine snapEngine)
@@ -306,9 +219,9 @@ namespace Zaaml.UI.Controls.Artboard
 			snapEngine.Artboard = this;
 		}
 
-		private ArtboardAdornerFactoryCollection CreateArtboardAdornerFactoryCollection()
+		protected override ArtboardItemCollection CreateItemCollection()
 		{
-			return new ArtboardAdornerFactoryCollection(this);
+			return new ArtboardItemCollection(this);
 		}
 
 		private ArtboardSnapGuideCollection CreateSnapGuidesCollection()
@@ -324,14 +237,14 @@ namespace Zaaml.UI.Controls.Artboard
 			snapEngine.Artboard = null;
 		}
 
-		public static ArtboardAdornerCollection GetAdorners(UIElement element)
+		public static ArtboardAdornerCollection GetAdorners(FrameworkElement element)
 		{
 			return element.GetValueOrCreate(AdornersPropertyKey, () => new ArtboardAdornerCollection(element));
 		}
 
 		public static ArtboardAdornerCollection GetAdornersInternal(UIElement element)
 		{
-			return (ArtboardAdornerCollection) element.GetValue(AdornersProperty);
+			return (ArtboardAdornerCollection)element.GetValue(AdornersProperty);
 		}
 
 		private ArtboardSnapGuidePresenter GetTargetSnapGuidePresenter(ArtboardSnapGuide snapGuide)
@@ -361,43 +274,16 @@ namespace Zaaml.UI.Controls.Artboard
 			_movingSnapGuide = true;
 		}
 
-		internal void OnAdornerFactoryAdded(ArtboardAdornerFactory adornerFactory)
-		{
-			foreach (var canvas in CanvasCollection)
-				canvas.OnAdornerFactoryAdded(adornerFactory);
-		}
-
-		internal void OnAdornerFactoryRemoved(ArtboardAdornerFactory adornerFactory)
-		{
-			foreach (var canvas in CanvasCollection)
-				canvas.OnAdornerFactoryRemoved(adornerFactory);
-		}
-
-		private void OnDesignHeightPropertyChangedPrivate()
-		{
-			OnDesignSizeChanged();
-		}
-
-		private void OnDesignSizeChanged()
-		{
-			UpdateDesignSize();
-		}
-
-		private void OnDesignWidthPropertyChangedPrivate()
-		{
-			OnDesignSizeChanged();
-		}
-
 		private void OnRulerGotMouseCapture(object sender, MouseEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 
 			ruler.Cursor = MouseSnapGuide.Cursor;
 		}
 
 		private void OnRulerLostMouseCapture(object sender, MouseEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 
 			ruler.Cursor = Cursors.Arrow;
 
@@ -412,7 +298,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private void OnRulerMouseEnter(object sender, MouseEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 
 			PreviewSnapGuide.Orientation = ruler.Orientation.Rotate();
 			GetTargetSnapGuidePresenter(PreviewSnapGuide).SnapGuides.Add(PreviewSnapGuide);
@@ -429,27 +315,34 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private void OnRulerMouseMove(object sender, MouseEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
-			var designMatrix = ToDesignMatrix;
+			var ruler = (ArtboardRuler)sender;
+			var designMatrix = ToCanvasMatrix;
 			var rulerPosition = e.GetPosition(ruler);
 			var designPosition = designMatrix.Transform(rulerPosition);
 
+			double location;
+			var round = Keyboard.IsKeyUp(Key.LeftAlt);
+
 			if (ReferenceEquals(MouseSnapGuide, PreviewSnapGuide))
-				MouseSnapGuide.Location = ruler.Orientation == Orientation.Horizontal ? designPosition.X : designPosition.Y;
+			{
+				location = ruler.Orientation == Orientation.Horizontal ? designPosition.X : designPosition.Y;
+			}
 			else
 			{
 				var designOriginPosition = designMatrix.Transform(_rulerOriginLocation);
 
 				if (ruler.Orientation == Orientation.Horizontal)
-					MouseSnapGuide.Location = _mouseSnapGuideOriginLocation + designPosition.X - designOriginPosition.X;
+					location = _mouseSnapGuideOriginLocation + designPosition.X - designOriginPosition.X;
 				else
-					MouseSnapGuide.Location = _mouseSnapGuideOriginLocation + designPosition.Y - designOriginPosition.Y;
+					location = _mouseSnapGuideOriginLocation + designPosition.Y - designOriginPosition.Y;
 			}
+
+			MouseSnapGuide.Location = round ? location.LayoutRound(ruler.Orientation, RoundingMode.MidPointFromZero) :  location;
 		}
 
 		private void OnRulerMouseUp(object sender, MouseButtonEventArgs e)
 		{
-			var ruler = (ArtboardRuler) sender;
+			var ruler = (ArtboardRuler)sender;
 
 			if (_movingSnapGuide == false)
 				return;
@@ -556,7 +449,7 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 			base.OnTemplateContractAttached();
 
-			ScrollView.Artboard = this;
+			ScrollView.ArtboardControl = this;
 
 			foreach (var component in Components)
 				component.Artboard = this;
@@ -587,7 +480,6 @@ namespace Zaaml.UI.Controls.Artboard
 
 			UpdateZoom();
 			UpdateOffset();
-			UpdateDesignSize();
 			UpdateSnapGuidePresenterHitTestVisibility();
 		}
 
@@ -612,7 +504,7 @@ namespace Zaaml.UI.Controls.Artboard
 			HorizontalSnapGuidePresenter.SnapGuides.Clear();
 			VerticalSnapGuidePresenter.SnapGuides.Clear();
 
-			ScrollView.Artboard = null;
+			ScrollView.ArtboardControl = null;
 
 			foreach (var component in Components)
 				component.Artboard = this;
@@ -623,23 +515,6 @@ namespace Zaaml.UI.Controls.Artboard
 		private void OnZoomPropertyChangedPrivate(double oldZoom, double newZoom)
 		{
 			UpdateZoom();
-		}
-
-		private void UpdateDesignSize()
-		{
-			if (IsTemplateAttached == false)
-				return;
-
-			var designWidth = DesignWidth;
-			var designHeight = DesignHeight;
-
-			foreach (var component in Components)
-			{
-				component.DesignWidth = designWidth;
-				component.DesignHeight = designHeight;
-			}
-
-			ScrollView.OnDesignSizeChangedInternal();
 		}
 
 		private void UpdateOffset()
@@ -655,8 +530,8 @@ namespace Zaaml.UI.Controls.Artboard
 
 			foreach (var component in Components)
 			{
-				component.OffsetX = offsetX;
-				component.OffsetY = offsetY;
+				component.ScrollOffsetX = offsetX;
+				component.ScrollOffsetY = offsetY;
 			}
 		}
 

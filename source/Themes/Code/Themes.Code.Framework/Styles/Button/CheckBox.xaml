@@ -1,0 +1,126 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!-- CheckStates States -->
+    <zm:VisualStateGroup Name="CheckStates">
+      <zm:VisualState Name="Checked" />
+      <zm:VisualState Name="Unchecked" />
+      <zm:VisualState Name="Indeterminate" />
+    </zm:VisualStateGroup>
+
+    <!-- FocusStates States -->
+    <zm:VisualStateGroup Name="FocusStates">
+      <zm:VisualState Name="Unfocused" />
+      <zm:VisualState Name="Focused" />
+    </zm:VisualStateGroup>
+    
+  </zm:VisualStateGroupCollection>
+  
+  <!-- ControlTemplate -->
+  <ControlTemplate x:Key="CheckBoxBaseTemplate" TargetType="CheckBox">
+    <zm:ControlTemplateRoot Background="Transparent" 
+                            VisualStateGroups="{StaticResource VisualStates}">
+      <zm:DockPanel Margin="{TemplateBinding Padding}">
+
+        <!-- Glyph -->
+        <Border zm:DockPanel.Dock="Left"
+                Width="14" 
+                Height="14"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}">
+          <Path x:Name="Glyph"
+                Margin="1" 
+                Data="{zm:TemplateExpandoBinding Path=Glyph}"
+                Style="{zm:ThemeResource Key=Code.SmallGlyphStyle}" 
+                Fill="{TemplateBinding Foreground}" />
+        </Border>
+
+        <!-- Content -->
+        <ContentPresenter Margin="4,0,0,0"
+                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                          Content="{TemplateBinding Content}" 
+                          ContentTemplate="{TemplateBinding ContentTemplate}" />
+      </zm:DockPanel>
+
+      <!-- Disabled Veil -->
+      <zm:DisableVeilControl />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="CheckBoxBaseStyle" TargetType="CheckBox">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Padding" Value="0,3" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Center" />
+    <zm:Setter Property="Template" Value="{StaticResource CheckBoxBaseTemplate}" />
+    <zm:Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!-- Base Skinned Style -->
+  <zm:Style x:Key="CheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource CheckBoxBaseStyle}" 
+            Skin="Code.StandardControls.CheckBox">
+    
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!-- Foreground -->
+      <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
+        <zm:Setter VisualState="Normal" ValuePath="Normal" />
+        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="3" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed"  Priority="4" />
+        <zm:Setter VisualState="Checked" ValuePath="Checked" Priority="1"/>
+      </zm:SetterGroup>
+
+      <!-- Background -->
+      <zm:SetterGroup Property="Background" ValuePath="Background">
+        <zm:Setter VisualState="Normal" ValuePath="Normal" />
+        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="3" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed"  Priority="4" />
+        <zm:Setter VisualState="Checked" ValuePath="Checked" Priority="1"/>
+      </zm:SetterGroup>
+
+      <!-- BorderBrush -->
+      <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
+        <zm:Setter VisualState="Normal" ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="3" />
+        <zm:Setter VisualState="Pressed" ValuePath="Pressed"  Priority="4" />
+        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualState="Checked" ValuePath="Checked"  Priority="1"/>
+        <zm:Setter VisualState="Focused" ValuePath="Focused" Priority="5" />
+      </zm:SetterGroup>
+
+      <!-- Glyph -->
+      <zm:SetterGroup ExpandoProperty="Glyph">
+        <zm:Setter VisualState="Checked"  ValuePath="CheckedGlyph" />
+        <zm:Setter VisualState="Unchecked" ValuePath="UncheckedGlyph" />
+        <zm:Setter VisualState="Indeterminate" ValuePath="IndeterminateGlyph" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+    
+  </zm:Style>
+
+  <!-- Theme Styles -->
+  <zm:ThemeStyle x:Key="CheckBoxThemeStyle" TargetType="CheckBox" BasedOn="{StaticResource CheckBoxStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

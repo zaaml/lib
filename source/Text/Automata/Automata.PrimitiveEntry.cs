@@ -6,25 +6,61 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected abstract class PrimitiveEntry : Entry
 		{
-			#region Methods
-
-			public static implicit operator PrimitiveEntry(FiniteState state)
+			public static implicit operator PrimitiveEntry(Syntax state)
 			{
-				return new StateEntry(state);
+				return new SyntaxEntry(state);
 			}
 
 			public static implicit operator PrimitiveEntry(TOperand input)
 			{
-				return new SingleMatchEntry(input);
+				return new OperandMatchEntry(input);
 			}
-
-			#endregion
 		}
 
-		#endregion
+		protected abstract class SemanticPredicate : PrimitiveEntry
+		{
+		}
+
+		protected sealed class PreviousMatchSemanticPredicate : SemanticPredicate
+		{
+			public SetMatchEntry Match { get; }
+
+			public PreviousMatchSemanticPredicate(SetMatchEntry match)
+			{
+				Match = match;
+			}
+
+			protected override string DebuggerDisplay => "PreviousMatchSemanticPredicate";
+		}
+
+		protected abstract class PrecedenceEntry : SemanticPredicate
+		{
+			public PrecedencePredicate PrecedencePredicate { get; }
+			
+			protected PrecedenceEntry(PrecedencePredicate precedencePredicate)
+			{
+				PrecedencePredicate = precedencePredicate;
+			}
+		}
+
+		protected sealed class EnterPrecedenceEntry : PrecedenceEntry
+		{
+			public EnterPrecedenceEntry(PrecedencePredicate precedencePredicate) : base(precedencePredicate)
+			{
+			}
+
+			protected override string DebuggerDisplay => "EnterPrecedence";
+		}
+
+		protected sealed class LeavePrecedenceEntry : PrecedenceEntry
+		{
+			public LeavePrecedenceEntry(PrecedencePredicate precedencePredicate) : base(precedencePredicate)
+			{
+			}
+
+			protected override string DebuggerDisplay => "LeavePrecedence";
+		}
 	}
 }

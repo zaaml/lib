@@ -42,7 +42,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
     protected override Rect ArrangeOverride(Size desiredSize)
     {
       var offset = CalcOffset();
-      return desiredSize.Rect().Offset(TargetScreenBox.GetTopLeft());
+      return desiredSize.Rect().WithOffset(TargetScreenBox.GetTopLeft());
     }
 
     private Point CalcOffset()
@@ -61,7 +61,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
       var inflate = anchorPanel.CalcInflate();
       var pointInflate = new Point(inflate.Left, inflate.Top);
 
-      return anchorBox.GetTopLeft().Negate().Offset(pointInflate);
+      return anchorBox.GetTopLeft().Negate().WithOffset(pointInflate);
     }
 
     internal void OnSiteArrange()

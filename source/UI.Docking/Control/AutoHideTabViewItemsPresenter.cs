@@ -50,7 +50,7 @@ namespace Zaaml.UI.Controls.Docking
       set => SetValue(OrientationProperty, value);
     }
 
-    private AutoHideTabViewItemsPresenterTemplateContract TemplateContract => (AutoHideTabViewItemsPresenterTemplateContract) TemplateContractInternal;
+    private AutoHideTabViewItemsPresenterTemplateContract TemplateContract => (AutoHideTabViewItemsPresenterTemplateContract) TemplateContractCore;
 
     #endregion
 

@@ -1,0 +1,61 @@
+﻿<zm:ThemeResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+	<zm:ThemeResourceDictionary.MergedDictionaries>
+		<zm:ThemeResourceDictionary Source="ThemeKeywordAssets.xaml"/>
+		<zm:ThemeResourceDictionary Source="../ThemeKeywordAssets.Shared.xaml"/>
+	</zm:ThemeResourceDictionary.MergedDictionaries>
+
+	<!-- Application ThemeKeywords -->
+  <zm:ThemeKeywordGroup x:Key="ApplicationThemeKeywords">
+		<zm:ThemeResource Keyword="ApplicationBackgroundColor" Value="{StaticResource Code.Application.BackgroundColor}" />
+		<zm:ThemeResource Keyword="ApplicationBackgroundBrush" Value="{StaticResource Code.Application.BackgroundBrush}" />
+		<zm:ThemeResource Keyword="ApplicationForegroundColor" Value="{StaticResource Code.Application.ForegroundColor}" />
+		<zm:ThemeResource Keyword="ApplicationForegroundBrush" Value="{StaticResource Code.Application.ForegroundBrush}" />
+		<zm:ThemeResource Keyword="ApplicationBorderColor" Value="{StaticResource Code.Application.BorderColor}" />
+		<zm:ThemeResource Keyword="ApplicationBorderBrush" Value="{StaticResource Code.Application.BorderBrush}" />
+
+		<zm:ThemeResource Keyword="ApplicationFontFamily" Value="{StaticResource Code.Application.FontFamily}" />
+		<zm:ThemeResource Keyword="ApplicationFontSize" Value="{StaticResource Code.Application.FontSize}" />
+		<zm:ThemeResource Keyword="ApplicationFontWeight" Value="{StaticResource Code.Application.FontWeight}" />
+		<zm:ThemeResource Keyword="ApplicationFontStyle" Value="{StaticResource Code.Application.FontStyle}" />
+		<zm:ThemeResource Keyword="ApplicationFontStretch" Value="{StaticResource Code.Application.FontStretch}" />
+
+	</zm:ThemeKeywordGroup>
+
+	<!-- Control ThemeKeywords -->
+  <zm:ThemeKeywordGroup x:Key="ControlThemeKeywords">
+		<zm:ThemeResource Keyword="ControlBackgroundColor" Value="{StaticResource Code.Control.BackgroundColor}" />
+		<zm:ThemeResource Keyword="ControlBackgroundBrush" Value="{StaticResource Code.Control.BackgroundBrush}" />
+		<zm:ThemeResource Keyword="ControlForegroundColor" Value="{StaticResource Code.Control.ForegroundColor}" />
+		<zm:ThemeResource Keyword="ControlForegroundBrush" Value="{StaticResource Code.Control.ForegroundBrush}" />
+		<zm:ThemeResource Keyword="ControlBorderColor" Value="{StaticResource Code.Control.BorderColor}" />
+		<zm:ThemeResource Keyword="ControlBorderBrush" Value="{StaticResource Code.Control.BorderBrush}" />
+
+		<zm:ThemeResource Keyword="ControlFontFamily" Value="{StaticResource Code.Application.FontFamily}" />
+		<zm:ThemeResource Keyword="ControlFontSize" Value="{StaticResource Code.Application.FontSize}" />
+		<zm:ThemeResource Keyword="ControlFontWeight" Value="{StaticResource Code.Application.FontWeight}" />
+		<zm:ThemeResource Keyword="ControlFontStyle" Value="{StaticResource Code.Application.FontStyle}" />
+		<zm:ThemeResource Keyword="ControlFontStretch" Value="{StaticResource Code.Application.FontStretch}" />
+	</zm:ThemeKeywordGroup>
+
+	<!-- Selection ThemeKeywords -->
+  <zm:ThemeKeywordGroup x:Key="SelectionThemeKeywords">
+		<zm:ThemeResource Keyword="SelectionBorderColor" Value="{StaticResource Code.Selection.BorderColor}" />
+		<zm:ThemeResource Keyword="SelectionBorderBrush" Value="{StaticResource Code.Selection.BorderBrush}" />
+		<zm:ThemeResource Keyword="SelectionBackgroundColor" Value="{StaticResource Code.Selection.BackgroundColor}" />
+		<zm:ThemeResource Keyword="SelectionBackgroundBrush" Value="{StaticResource Code.Selection.BackgroundBrush}" />
+		<zm:ThemeResource Keyword="SelectionForegroundColor" Value="{StaticResource Code.Selection.ForegroundColor}" />
+		<zm:ThemeResource Keyword="SelectionForegroundBrush" Value="{StaticResource Code.Selection.ForegroundBrush}" />
+
+		<zm:ThemeResource Keyword="InactiveSelectionBorderColor" Value="{StaticResource Code.InactiveSelection.BorderColor}" />
+		<zm:ThemeResource Keyword="InactiveSelectionBorderBrush" Value="{StaticResource Code.InactiveSelection.BorderBrush}" />
+		<zm:ThemeResource Keyword="InactiveSelectionBackgroundColor" Value="{StaticResource Code.InactiveSelection.BackgroundColor}" />
+		<zm:ThemeResource Keyword="InactiveSelectionBackgroundBrush" Value="{StaticResource Code.InactiveSelection.BackgroundBrush}" />
+		<zm:ThemeResource Keyword="InactiveSelectionForegroundColor" Value="{StaticResource Code.InactiveSelection.ForegroundColor}" />
+		<zm:ThemeResource Keyword="InactiveSelectionForegroundBrush" Value="{StaticResource Code.InactiveSelection.ForegroundBrush}" />
+	</zm:ThemeKeywordGroup>
+
+</zm:ThemeResourceDictionary>

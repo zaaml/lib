@@ -12,51 +12,39 @@ namespace Zaaml.UI.Panels.Core
 		Rect ArrangeRect { get; set; }
 	}
 
-  internal abstract class PanelLayoutBase<TPanel> where TPanel : IPanel
-  {
-    #region Ctors
+	internal abstract class PanelLayoutBase<TPanel> where TPanel : IPanel
+	{
+		protected PanelLayoutBase(TPanel panel)
+		{
+			Panel = panel;
+		}
 
-    protected PanelLayoutBase(TPanel panel)
-    {
-      Panel = panel;
-    }
+		protected TPanel Panel { get; }
 
-    #endregion
+		public Size Arrange(Size finalSize)
+		{
+			return ArrangeCore(finalSize);
+		}
 
-    #region Properties
-
-    protected TPanel Panel { get; }
-
-    #endregion
-
-    #region  Methods
-
-    protected void ArrangeChild(UIElement element, Rect rect)
-    {
-	    if (element is ILayoutInformation arrangeListener)
-		    arrangeListener.ArrangeRect = rect;
+		protected void ArrangeChild(UIElement element, Rect rect)
+		{
+			if (element is ILayoutInformation arrangeListener)
+				arrangeListener.ArrangeRect = rect;
 
 			element.Arrange(rect);
-    }
+		}
 
-    public Size Arrange(Size finalSize)
-    {
-      return ArrangeCore(finalSize);
-    }
+		protected abstract Size ArrangeCore(Size finalSize);
 
-    protected abstract Size ArrangeCore(Size finalSize);
+		public Size Measure(Size availableSize)
+		{
+			return MeasureCore(availableSize);
+		}
 
-    public Size Measure(Size availableSize)
-    {
-      return MeasureCore(availableSize);
-    }
+		protected abstract Size MeasureCore(Size availableSize);
 
-    protected abstract Size MeasureCore(Size availableSize);
-
-    public virtual void OnLayoutUpdated()
-    {
-    }
-
-    #endregion
-  }
+		public virtual void OnLayoutUpdated()
+		{
+		}
+	}
 }

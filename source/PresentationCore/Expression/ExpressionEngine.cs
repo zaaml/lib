@@ -11,40 +11,23 @@ namespace Zaaml.PresentationCore
 {
 	public sealed class ExpressionEngine
 	{
-		#region Static Fields and Constants
+		public static readonly ExpressionEngine Instance = new();
 
-		public static readonly ExpressionEngine Instance = new ExpressionEngine();
-		internal static readonly Func<ExpressionScope, object> FallbackExpressionFunc = scope => null;
-
-		#endregion
-
-		#region Type: Fields
-
-		private readonly Expressions.ExpressionEngine _engine = new Expressions.ExpressionEngine();
-
-		#endregion
-
-		#region Ctors
+		private readonly Expressions.ExpressionEngine _engine = new();
 
 		private ExpressionEngine()
 		{
-			_engine.RegisterMethod<Color, double, Color>("Tint", (color, amount) => ColorFunctions.Tint(color.ToRgbColor(), amount, ColorFunctionUnits.Relative).ToXamlColor());
-			_engine.RegisterMethod<Color, double, Color>("Shade", (color, amount) => ColorFunctions.Shade(color.ToRgbColor(), amount, ColorFunctionUnits.Relative).ToXamlColor());
-			_engine.RegisterMethod<Color, double, Color>("Lighten", (color, amount) => ColorFunctions.Lighten(color.ToRgbColor(), amount, ColorFunctionUnits.Relative).ToXamlColor());
-			_engine.RegisterMethod<Color, double, Color>("Darken", (color, amount) => ColorFunctions.Darken(color.ToRgbColor(), amount, ColorFunctionUnits.Relative).ToXamlColor());
+			_engine.RegisterMethod<Color, double, Color>("Tint", (color, amount) => ColorFunctions.Tint(color.ToRgbColor(), amount, Core.ColorModel.ColorFunctionUnits.Relative).ToXamlColor());
+			_engine.RegisterMethod<Color, double, Color>("Shade", (color, amount) => ColorFunctions.Shade(color.ToRgbColor(), amount, Core.ColorModel.ColorFunctionUnits.Relative).ToXamlColor());
+			_engine.RegisterMethod<Color, double, Color>("Lighten", (color, amount) => ColorFunctions.Lighten(color.ToRgbColor(), amount, Core.ColorModel.ColorFunctionUnits.Relative).ToXamlColor());
+			_engine.RegisterMethod<Color, double, Color>("Darken", (color, amount) => ColorFunctions.Darken(color.ToRgbColor(), amount, Core.ColorModel.ColorFunctionUnits.Relative).ToXamlColor());
 		}
 
-		#endregion
-
-		#region  Methods
-
-		internal Func<ExpressionScope, object> Compile(string expressionString)
+		internal Func<ExpressionScope, T> CompileFunc<T>(string expressionString)
 		{
-			var expressionFunc = _engine.Compile<object>(expressionString);
+			var expressionFunc = _engine.Compile<T>(expressionString);
 
 			return scope => expressionFunc(scope);
 		}
-
-		#endregion
 	}
 }

@@ -8,10 +8,6 @@ namespace Zaaml.Text
 	{
 		private protected partial class LexerAutomata
 		{
-			private sealed class LexerAutomataContextState : AutomataContextState
-			{
-				public LexerContext<TToken> LexerContext;
-			}
 		}
 	}
 }

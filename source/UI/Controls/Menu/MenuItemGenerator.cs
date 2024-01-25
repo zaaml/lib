@@ -3,48 +3,46 @@
 // </copyright>
 
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Markup;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Menu
 {
+	[ContentProperty(nameof(ItemTemplate))]
 	public sealed class MenuItemGenerator : MenuItemGeneratorBase
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<MenuItemTemplate, MenuItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
+
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<DataTemplateSelector, MenuItemGenerator>
+			("ItemTemplateSelector", d => d.OnItemTemplateSelectorPropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey GeneratorPropertyKey = DPM.RegisterAttachedReadOnly<MenuItemGenerator, MenuItemGenerator>
 			("Generator");
 
 		public static readonly DependencyProperty GeneratorProperty = GeneratorPropertyKey.DependencyProperty;
 
-		#endregion
-
-		#region Fields
-
-		private readonly GeneratorDataTemplateHelper<MenuItemBase, MenuItem> _generatorDataTemplateHelper = new GeneratorDataTemplateHelper<MenuItemBase, MenuItem>();
-
-		#endregion
-
-		#region Properties
+		private readonly GeneratorDataTemplateHelper<MenuItemBase, MenuItem> _generatorDataTemplateHelper = new();
 
 		public MenuItemTemplate ItemTemplate
 		{
-			get => (MenuItemTemplate) GetValue(ItemTemplateProperty);
+			get => (MenuItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
 		}
 
-		#endregion
-
-		#region  Methods
+		public DataTemplateSelector ItemTemplateSelector
+		{
+			get => (DataTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			set => SetValue(ItemTemplateSelectorProperty, value);
+		}
 
 		protected override void AttachItem(MenuItemBase item, object source)
 		{
 			_generatorDataTemplateHelper.AttachDataContext(item, source);
 
-			if (ItemTemplate != null)
+			if (_generatorDataTemplateHelper.SelectTemplate(source) != null)
 				return;
 
 			if (item is HeaderedMenuItem headeredMenuItem)
@@ -65,7 +63,7 @@ namespace Zaaml.UI.Controls.Menu
 			if (ReferenceEquals(item.DataContext, source))
 				item.ClearValue(FrameworkElement.DataContextProperty);
 
-			if (item is HeaderedMenuItem headeredMenuItem && ReferenceEquals(headeredMenuItem.Header, source)) 
+			if (item is HeaderedMenuItem headeredMenuItem && ReferenceEquals(headeredMenuItem.Header, source))
 				headeredMenuItem.ClearValue(HeaderedMenuItem.HeaderProperty);
 		}
 
@@ -76,7 +74,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		public static MenuItemGenerator GetGenerator(DependencyObject element)
 		{
-			return (MenuItemGenerator) element.GetValue(GeneratorProperty);
+			return (MenuItemGenerator)element.GetValue(GeneratorProperty);
 		}
 
 		private void OnItemTemplateChanged()
@@ -86,11 +84,16 @@ namespace Zaaml.UI.Controls.Menu
 			OnGeneratorChanged();
 		}
 
+		private void OnItemTemplateSelectorPropertyChangedPrivate(DataTemplateSelector oldValue, DataTemplateSelector newValue)
+		{
+			_generatorDataTemplateHelper.DataTemplateSelector = ItemTemplateSelector;
+
+			OnGeneratorChanged();
+		}
+
 		private static void SetGenerator(DependencyObject element, MenuItemGenerator value)
 		{
 			element.SetValue(GeneratorPropertyKey, value);
 		}
-
-		#endregion
 	}
 }

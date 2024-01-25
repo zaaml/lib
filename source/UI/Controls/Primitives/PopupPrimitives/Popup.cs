@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
 using System.Windows.Threading;
+using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
@@ -48,9 +49,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		private DependencyObject _logicalChild;
 		private PopupTreeMode _treeMode = PopupTreeMode.Visual;
 
-		public event EventHandler Closed;
-		public event EventHandler Opened;
-
 		public Popup()
 		{
 			PopupSource = new PopupSource(this);
@@ -67,9 +65,26 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			IsTabStop = false;
 		}
 
+		public PopupPlacement ActualPlacement
+		{
+			get
+			{
+				var placement = Placement ?? NullPlacement;
+
+				if (placement != null)
+					return placement;
+
+				NullPlacement = new NullPlacement(this);
+
+				placement = NullPlacement;
+
+				return placement;
+			}
+		}
+
 		public FrameworkElement Child
 		{
-			get => (FrameworkElement) GetValue(ChildProperty);
+			get => (FrameworkElement)GetValue(ChildProperty);
 			set => SetValue(ChildProperty, value);
 		}
 
@@ -77,11 +92,11 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public bool IsHidden
 		{
-			get => (bool) GetValue(IsHiddenProperty);
-			set => SetValue(IsHiddenProperty, value);
+			get => (bool)GetValue(IsHiddenProperty);
+			set => SetValue(IsHiddenProperty, value.Box());
 		}
 
-		private bool IsOpenAttached => ReferenceEquals(PopupSource.ReadLocalBinding(PopupSource.IsOpenProperty)?.Source, this);
+		private bool IsOpenAttached => ReferenceEquals(PopupSource.ReadLocalBinding(System.Windows.Controls.Primitives.Popup.IsOpenProperty)?.Source, this);
 
 		internal DependencyObject LogicalChild
 		{
@@ -103,6 +118,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		protected override IEnumerator LogicalChildren => _logicalChild != null ? EnumeratorUtils.Concat(_logicalChild, base.LogicalChildren) : base.LogicalChildren;
 
+		private PopupPlacement NullPlacement { get; set; }
+
 		private bool OpeningLocked { get; set; }
 
 		internal IPopupOwner Owner { get; set; }
@@ -111,7 +128,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public PopupPlacementOptions PlacementOptions
 		{
-			get => (PopupPlacementOptions) GetValue(PlacementOptionsProperty);
+			get => (PopupPlacementOptions)GetValue(PlacementOptionsProperty);
 			set => SetValue(PlacementOptionsProperty, value);
 		}
 
@@ -121,8 +138,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public bool StaysOpen
 		{
-			get => (bool) GetValue(StaysOpenProperty);
-			set => SetValue(StaysOpenProperty, value);
+			get => (bool)GetValue(StaysOpenProperty);
+			set => SetValue(StaysOpenProperty, value.Box());
 		}
 
 		internal PopupTreeMode TreeMode
@@ -145,11 +162,29 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 					_treeMode = value;
 
 				if (_treeMode == PopupTreeMode.Detached)
-					Panel.SetBinding(DataContextProperty, new Binding {Path = new PropertyPath(DataContextProperty), Source = this});
+					Panel.SetBinding(DataContextProperty, new Binding { Path = new PropertyPath(DataContextProperty), Source = this });
 				else
 					Panel.ClearValue(DataContextProperty);
 			}
 		}
+
+		public event EventHandler IsOpenChanged;
+		public event EventHandler PlacementChanged;
+
+		public bool IsOpen
+		{
+			get => (bool)GetValue(IsOpenProperty);
+			set => SetValue(IsOpenProperty, value.Box());
+		}
+
+		public PopupPlacement Placement
+		{
+			get => (PopupPlacement)GetValue(PlacementProperty);
+			set => SetValue(PlacementProperty, value);
+		}
+
+		public event EventHandler Closed;
+		public event EventHandler Opened;
 
 		protected override void ApplyTemplateOverride()
 		{
@@ -168,8 +203,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			if (PresentationCoreUtils.IsInDesignMode)
 				return;
 
-			PopupSource.ClearValue(PopupSource.IsOpenProperty);
-			PopupSource.SetBinding(PopupSource.IsOpenProperty, new Binding {Path = new PropertyPath(IsOpenProperty), Source = this, Mode = BindingMode.TwoWay});
+			PopupSource.ClearValue(System.Windows.Controls.Primitives.Popup.IsOpenProperty);
+			PopupSource.SetBinding(System.Windows.Controls.Primitives.Popup.IsOpenProperty, new Binding { Path = new PropertyPath(IsOpenProperty), Source = this, Mode = BindingMode.TwoWay });
 		}
 
 		public void Close()
@@ -225,12 +260,12 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public static bool GetHitTestVisible(DependencyObject element)
 		{
-			return (bool) element.GetValue(HitTestVisibleProperty);
+			return (bool)element.GetValue(HitTestVisibleProperty);
 		}
 
 		public static Thickness GetInflate(DependencyObject element)
 		{
-			return (Thickness) element.GetValue(InflateProperty);
+			return (Thickness)element.GetValue(InflateProperty);
 		}
 
 		internal void InvalidatePlacement()
@@ -257,7 +292,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		private void OnClosed()
 		{
 			Closed?.Invoke(this, EventArgs.Empty);
-			Placement?.OnPopupClosedInt();
+			ActualPlacement.OnPopupClosedInternal();
 
 			Panel.OnPopupClosed();
 
@@ -293,7 +328,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		{
 			InvalidatePlacement();
 
-			Placement?.OnPopupOpenedInt();
+			ActualPlacement.OnPopupOpenedInternal();
 
 			Opened?.Invoke(this, EventArgs.Empty);
 		}
@@ -305,13 +340,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private void OnPlacementChanged(PopupPlacement oldPlacement, PopupPlacement newPlacement)
 		{
+			if (ReferenceEquals(oldPlacement, newPlacement))
+				return;
+
 			Panel?.InvalidatePlacement();
 
-			if (oldPlacement != null)
-				oldPlacement.Popup = null;
-
-			if (newPlacement != null)
-				newPlacement.Popup = this;
+			oldPlacement?.DetachPopup(this);
+			newPlacement?.AttachPopup(this);
 
 			PlacementChanged?.Invoke(this, EventArgs.Empty);
 		}
@@ -350,21 +385,6 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			TemplateRoot.Popup = null;
 
 			base.UndoTemplateOverride();
-		}
-
-		public event EventHandler IsOpenChanged;
-		public event EventHandler PlacementChanged;
-
-		public bool IsOpen
-		{
-			get => (bool) GetValue(IsOpenProperty);
-			set => SetValue(IsOpenProperty, value);
-		}
-
-		public PopupPlacement Placement
-		{
-			get => (PopupPlacement) GetValue(PlacementProperty);
-			set => SetValue(PlacementProperty, value);
 		}
 	}
 

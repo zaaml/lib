@@ -12,17 +12,15 @@ namespace Zaaml.Text
 {
 	internal abstract class LexemeSource<TToken> : IDisposable, IEnumerable<Lexeme<TToken>> where TToken : unmanaged, Enum
 	{
-		protected LexemeSource(TextSource textSource, IServiceProvider serviceProvider)
+		protected LexemeSource(TextSpan textSourceSpan, LexemeSourceOptions options)
 		{
-			TextSource = textSource;
-			ServiceProvider = serviceProvider;
+			TextSourceSpan = textSourceSpan;
+			Options = options;
 		}
 
-		internal abstract int Position { get; set; }
+		public LexemeSourceOptions Options { get; }
 
-		public TextSource TextSource { get; }
-
-		public IServiceProvider ServiceProvider { get; }
+		public TextSpan TextSourceSpan { get; }
 
 		protected abstract void DisposeCore();
 
@@ -33,15 +31,15 @@ namespace Zaaml.Text
 
 		public string GetText(Lexeme<TToken> lexeme)
 		{
-			return TextSource.GetText(lexeme.Start, lexeme.End);
+			return TextSourceSpan.GetText(lexeme.Start, lexeme.End - lexeme.Start);
 		}
 
-		internal int Read(Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes)
+		internal int Read(ref int position, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength)
 		{
-			return ReadCore(lexemesBuffer, operandsBuffer, bufferOffset, bufferLength, skipLexemes);
+			return ReadCore(ref position, lexemesBuffer, operandsBuffer, bufferOffset, bufferLength);
 		}
 
-		protected abstract int ReadCore(Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength, bool skipLexemes);
+		protected abstract int ReadCore(ref int position, Lexeme<TToken>[] lexemesBuffer, int[] operandsBuffer, int bufferOffset, int bufferLength);
 
 		public Lexeme<TToken>[] ToArray()
 		{

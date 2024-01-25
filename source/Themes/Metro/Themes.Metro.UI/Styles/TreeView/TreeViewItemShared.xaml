@@ -5,6 +5,7 @@
                             xmlns:zmb="http://schemas.zaaml.com/build"
                             mc:Ignorable="zmb">
 
+  <zm:MaskThicknessConverter x:Key="LevelIndentConverter" Left="True" />
 
   <!--  Visual States  -->
   <zm:VisualStateGroupCollection x:Key="VisualStates">
@@ -12,6 +13,7 @@
     <!--  CommonStates States  -->
     <zm:VisualStateGroup Name="CommonStates">
       <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="ReadOnly" />
       <zm:VisualState Name="MouseOver" />
       <zm:VisualState Name="Disabled" />
     </zm:VisualStateGroup>
@@ -85,6 +87,7 @@
   <zm:SetterCollection x:Key="SkinSetters">
     <!--  Common States  -->
     <zm:Setter ValuePath="Normal" />
+    <zm:Setter ValuePath="ReadOnly" VisualState="ReadOnly" />
     <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
     <zm:Setter ValuePath="Disabled" VisualState="Disabled" />
 

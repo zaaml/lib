@@ -4,20 +4,17 @@
 
 namespace Zaaml.UI.Controls.Docking
 {
-  internal sealed class DockController : DockControllerBase
-  {
-    #region Ctors
+	internal sealed class DockController : DockControllerBase
+	{
+		public DockController(DockControlView controlView) : base(controlView)
+		{
+		}
 
-    public DockController(DockControlView controlView) : base(controlView)
-    {
-    }
+		protected override bool IsPreview => false;
 
-    #endregion
-
-    #region Properties
-
-    protected override bool IsPreview => false;
-
-    #endregion
-  }
+		protected override void OnItemDockStateChanged(DockItem dockItem, DockItemState oldState, DockItemState newState)
+		{
+			DockControl?.OnItemDockStateChangedInternal(dockItem, oldState, newState);
+		}
+	}
 }

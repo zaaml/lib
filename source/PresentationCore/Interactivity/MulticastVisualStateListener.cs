@@ -11,7 +11,7 @@ namespace Zaaml.PresentationCore.Interactivity
   {
     #region Fields
 
-    private readonly List<IVisualStateListener> _listeners = new List<IVisualStateListener>();
+    private readonly List<IVisualStateListener> _listeners = new();
     private bool _isActive;
 
     #endregion
@@ -64,6 +64,7 @@ namespace Zaaml.PresentationCore.Interactivity
     public void EnterState(bool useTransitions)
     {
       _isActive = true;
+
       foreach (var listener in _listeners)
         listener.EnterState(useTransitions);
     }
@@ -71,6 +72,7 @@ namespace Zaaml.PresentationCore.Interactivity
     public void LeaveState(bool useTransitions)
     {
       _isActive = false;
+
       foreach (var listener in _listeners)
         listener.LeaveState(useTransitions);
     }

@@ -3,114 +3,152 @@
 // </copyright>
 
 using System;
+using System.Threading;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Parser<TToken> : ParserBase where TToken : unmanaged, Enum
 	{
+		protected Parser(IServiceProvider serviceProvider)
+		{
+			ServiceProvider = serviceProvider;
+		}
+
+		public IServiceProvider ServiceProvider { get; }
 	}
 
-	internal abstract partial class Parser<TGrammar, TToken> : Parser<TToken> where TGrammar : Grammar<TToken> where TToken : unmanaged, Enum
+	internal partial class Parser<TGrammar, TToken> : Parser<TToken>
+		where TGrammar : Grammar<TGrammar, TToken>
+		where TToken : unmanaged, Enum
 	{
-		#region Fields
+		private static ParserAutomata _automataStatic;
 
-		private ParserAutomata _automata;
-
-		#endregion
-
-		#region Properties
+		public Parser(IServiceProvider serviceProvider) : base(serviceProvider)
+		{
+		}
 
 		protected virtual bool AllowParallel => false;
 
-		private ParserAutomata Automata => _automata ??= AutomataManager.Get<ParserAutomata>();
+		private ParserAutomata Automata => AutomataStatic;
 
-		#endregion
+		private static ParserAutomata AutomataStatic => _automataStatic ??= AutomataManager.Get<ParserAutomata>();
 
-		#region Methods
-
-		//protected TNode ParseCore<TNode>(Visitor<TNode> visitor, Grammar<TToken>.ParserRuleBase parserRule, LexemeStream<TToken> lexemeStream)
-		//{
-		//	return ParseInternal(visitor, parserRule, lexemeStream);
-		//}
-
-		//protected TResult ParseCore<TResult>(Grammar<TToken>.ParserRuleBase parserRule, LexemeStream<TToken> lexemeStream)
-		//{
-		//	return ParseInternal<TResult>(parserRule, lexemeStream);
-		//}
-
-		private protected TResult ParseInternal<TResult>(Visitor<TResult> visitor, Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource)
+		protected virtual void BuildNode(NodeContext nodeContext)
 		{
-			return Automata.Parse(visitor, parserRule, lexemeSource, CreateContext(lexemeSource), this);
 		}
 
-		private protected TResult ParseInternal<TResult>(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource)
+		internal void BuildNodeInternal(object node, TextSpan textSpan)
 		{
-			return Automata.Parse<TResult>(parserRule, lexemeSource, CreateContext(lexemeSource), this);
+			BuildNode(new NodeContext(node, textSpan));
 		}
 
-		private protected void ParseInternal(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource)
+		internal static void BuildFullDfa()
 		{
-			Automata.Parse(parserRule, lexemeSource, CreateContext(lexemeSource), this);
+			AutomataStatic.BuildFullDfa();
 		}
 
-		#endregion
-	}
-
-	internal abstract class Parser<TGrammar, TToken, TNode> : Parser<TGrammar, TToken> where TGrammar : Grammar<TToken, TNode> where TToken : unmanaged, Enum where TNode : class
-	{
-		#region Methods
-
-		protected TResult ParseCore<TResult, TRuleNode>(Visitor<TResult> visitor, Grammar<TToken, TNode>.ParserRule<TRuleNode> parserRule, LexemeSource<TToken> lexemeSource) where TRuleNode : TNode
+		protected TResult ParseCore<TResult, TNode>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> syntax, LexemeSource<TToken> lexemeSource, CancellationToken cancellationToken = default)
+			where TNode : class
 		{
-			return ParseInternal(visitor, parserRule, lexemeSource);
+			return ParseInternal(visitor, syntax, lexemeSource, cancellationToken);
 		}
 
-		protected TActualNode ParseCore<TActualNode>(Grammar<TToken, TNode>.ParserRule<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TNode
+		protected virtual TNode ParseCore<TNode>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> syntax, LexemeSource<TToken> lexemeSource, CancellationToken cancellationToken = default) where TNode : class
 		{
-			return (TActualNode) ParseInternal<TNode>(parserRule, lexemeSource);
+			return ParseInternal<TNode>(syntax, lexemeSource, cancellationToken);
 		}
 
-		protected TBaseNode ParseCore<TBaseNode, TActualNode>(Grammar<TToken, TNode>.ParserRule<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TBaseNode where TBaseNode : TNode
+		private ExternalParseResult<TNode> ParseExternal<TNode>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> syntax, LexemeSource<TToken> lexemeSource, CancellationToken cancellationToken = default) where TNode : class
 		{
-			return (TBaseNode) ParseInternal<TNode>(parserRule, lexemeSource);
+			return Automata.ParseExternal(syntax, lexemeSource, this, cancellationToken);
 		}
 
-		#endregion
-	}
-
-	internal abstract class Parser<TGrammar, TToken, TNode, TSyntaxFactory> : Parser<TGrammar, TToken> 
-		where TGrammar : Grammar<TToken, TNode, TSyntaxFactory> 
-		where TToken : unmanaged, Enum 
-		where TNode : class 
-		where TSyntaxFactory : SyntaxFactory<TNode>, new()
-	{
-		#region Methods
-
-		protected TResult ParseCore<TResult, TRuleNode>(Visitor<TResult> visitor, Grammar<TToken, TNode, TSyntaxFactory>.ParserRule<TRuleNode> parserRule, LexemeSource<TToken> lexemeSource) where TRuleNode : TNode
+		private protected TResult ParseInternal<TResult>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, CancellationToken cancellationToken = default)
 		{
-			return ParseInternal(visitor, parserRule, lexemeSource);
+			return Automata.Parse(visitor, syntax, lexemeSource, this, cancellationToken);
 		}
 
-		protected TActualNode ParseCore<TActualNode>(Grammar<TToken, TNode, TSyntaxFactory>.ParserRule<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TNode
+		private protected TResult ParseInternal<TResult>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, CancellationToken cancellationToken = default)
 		{
-			return (TActualNode) ParseInternal<TNode>(parserRule, lexemeSource);
+			return Automata.Parse<TResult>(syntax, lexemeSource, this, cancellationToken);
 		}
 
-		protected TBaseNode ParseCore<TBaseNode, TActualNode>(Grammar<TToken, TNode, TSyntaxFactory>.ParserRule<TActualNode> parserRule, LexemeSource<TToken> lexemeSource) where TActualNode : TBaseNode where TBaseNode : TNode
+		private protected void ParseInternal(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, CancellationToken cancellationToken = default)
 		{
-			return (TBaseNode) ParseInternal<TNode>(parserRule, lexemeSource);
+			Automata.Parse(syntax, lexemeSource, this, cancellationToken);
 		}
 
-		private protected override SyntaxFactory CreateSyntaxFactoryInternal()
+		public readonly ref struct SyntaxNodeParser<TNode> where TNode : class
 		{
-			return CreateSyntaxFactory();
+			public Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> Syntax { get; }
+
+			private Func<IServiceProvider, Lexer<TGrammar, TToken>> LexerFactory { get; }
+
+			private Func<IServiceProvider, Parser<TGrammar, TToken>> ParserFactory { get; }
+
+			public SyntaxNodeParser(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TNode> syntax, Func<IServiceProvider, Lexer<TGrammar, TToken>> lexerFactory, Func<IServiceProvider, Parser<TGrammar, TToken>> parserFactory)
+			{
+				Syntax = syntax;
+				LexerFactory = lexerFactory;
+				ParserFactory = parserFactory;
+			}
+
+			public TNode Parse(string nodeString, IServiceProvider serviceProvider = null, CancellationToken cancellationToken = default)
+			{
+				return Parse(new TextSpan(nodeString), serviceProvider, cancellationToken);
+			}
+
+			public TNode Parse(TextSpan text, IServiceProvider serviceProvider = null, CancellationToken cancellationToken = default)
+			{
+				using var lexemeStream = LexerFactory(serviceProvider).GetLexemeSource(text, new LexemeSourceOptions(true));
+
+				return ParserFactory(serviceProvider).ParseCore(Syntax, lexemeStream, cancellationToken);
+			}
+
+			internal ExternalParseResult<TNode> ParseExternal(TextSpan text, IServiceProvider serviceProvider = null, CancellationToken cancellationToken = default)
+			{
+				using var lexemeStream = LexerFactory(serviceProvider).GetLexemeSource(text, new LexemeSourceOptions(true));
+
+				return ParserFactory(serviceProvider).ParseExternal(Syntax, lexemeStream, cancellationToken);
+			}
 		}
 
-		protected virtual TSyntaxFactory CreateSyntaxFactory()
+		internal abstract class ExternalParseResult<TNode>
 		{
-			return new TSyntaxFactory();
 		}
 
-		#endregion
+		internal sealed class SuccessExternalParseResult<TNode> : ExternalParseResult<TNode>
+		{
+			public SuccessExternalParseResult(TNode value, int textPosition)
+			{
+				Value = value;
+				TextPosition = textPosition;
+			}
+
+			public int TextPosition { get; }
+			public TNode Value { get; }
+		}
+
+		internal sealed class ExceptionExternalParseResult<TNode> : ExternalParseResult<TNode>
+		{
+			public ExceptionExternalParseResult(Exception exception)
+			{
+				Exception = exception;
+			}
+
+			public Exception Exception { get; }
+		}
+
+		internal class ForkExternalParseResult<TNode> : ExternalParseResult<TNode>
+		{
+		}
+
+		internal delegate bool ParserPredicate();
+
+		internal delegate bool ParserPredicate<TValue>(out TValue value);
+
+		internal delegate void ParserAction();
+
+		internal delegate void ParserAction<TValue>(out TValue value);
 	}
 }

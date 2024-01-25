@@ -34,8 +34,10 @@
                   Background="{TemplateBinding Background}"
                   BorderThickness="0">
 
-            <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                     VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+            <zm:IconContentPresenter HorizontalAlignment="Stretch"
+                                     VerticalAlignment="Stretch"
+                                     HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                     VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
                                      zm:PathIcon.Brush="{TemplateBinding Foreground}"
                                      Content="{TemplateBinding Content}"
                                      ContentTemplate="{TemplateBinding ContentTemplate}"
@@ -48,8 +50,7 @@
 
           <!--  DropDown Button Part  -->
           <zm:ToggleButton x:Name="DropDownButton"
-                           Margin="{zm:TemplateBinding Path=BorderThickness,
-                                                       Converter={zm:NegateConverter}}"
+                           Margin="{zm:TemplateBinding Path=BorderThickness, Converter={zm:NegateConverter}}"
                            Padding="0"
                            VerticalContentAlignment="Stretch"
                            zm:DisableVeilControl.EnableVeil="False"
@@ -58,18 +59,16 @@
                            BorderBrush="Transparent"
                            BorderThickness="{TemplateBinding BorderThickness}"
                            ClickMode="Press"
-                           ShowContent="False"
-                           Icon="{zm:TemplateBinding Path=DropDownGlyph,
-                                                     TargetNullValue={StaticResource FallbackDropDownGlyph}}"
+                           Icon="{zm:TemplateBinding Path=DropDownGlyph, TargetNullValue={StaticResource FallbackDropDownGlyph}}"
                            IsTabStop="False"
+                           ShowContent="False"
                            Visibility="{zm:TemplateBinding Path=ShowDropDownButton, Converter={zm:VisibilityConverter}}" />
 
           <!--  Separator  -->
           <Border zm:DockPanel.Dock="{TemplateBinding DropDownButtonDock}"
                   BorderBrush="{zm:TemplateExpandoBinding Path=SplitterBrush}"
                   BorderThickness="1,1,0,0"
-                  Visibility="{zm:TemplateBinding Path=ShowSeparator,
-                                                  Converter={zm:VisibilityConverter}}" />
+                  Visibility="{zm:TemplateBinding Path=ShowSeparator, Converter={zm:VisibilityConverter}}" />
 
           <!--  PopupHost  -->
           <zm:PopupControlHost x:Name="PopupHost" />

@@ -1,0 +1,39 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+  <!--  Template  -->
+  <ControlTemplate x:Key="ArtboardItemTemplate"
+                   TargetType="zm:ArtboardItem">
+
+    <zm:ControlTemplateRoot x:Name="TemplateRoot"
+                            Background="{TemplateBinding Background}">
+
+      <!-- CanvasPresenter -->
+      <zm:ArtboardCanvasPresenter x:Name="CanvasPresenter" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ArtboardItemStyleBase" TargetType="zm:ArtboardItem">
+    <zm:Setter Property="Template" Value="{StaticResource ArtboardItemTemplate}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="ArtboardItemStyle" BasedOn="{StaticResource ArtboardItemStyleBase}"
+            TargetType="zm:ArtboardItem" Skin="Code.ArtboardItem">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Background" ValuePath="Background"/>
+    </zm:SetterGroup>
+
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ArtboardItemThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource ArtboardItemStyle}" TargetType="zm:ArtboardItem" />
+
+</zm:ThemeResourceDictionary>

@@ -4,18 +4,16 @@
 
 namespace Zaaml.PresentationCore.Interfaces
 {
-  internal interface IControl : IFrameworkElement
-  {
-    #region Properties
-
+	internal interface IControl : IFrameworkElement
+	{
 		bool Focusable { get; }
 
-    bool IsEnabled { get; }
+		bool IsEnabled { get; }
 
-    bool IsFocused { get; }
+		bool IsFocused { get; }
 
-    bool IsMouseOver { get; }
+		bool IsLoaded { get; }
 
-    #endregion
-  }
+		bool IsMouseOver { get; }
+	}
 }

@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<RootNamespace>Zaaml.Theming</RootNamespace>
+		<AssemblyName>Zaaml.Themes.Code</AssemblyName>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<TargetFrameworks>net8.0-windows;net7.0-windows;net6.0-windows;net5.0-windows;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<TargetFrameworkDir>$(TargetFramework)</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net8.0-windows'">net8.0</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net7.0-windows'">net7.0</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net6.0-windows'">net6.0</TargetFrameworkDir>
+		<TargetFrameworkDir Condition="$(TargetFramework) == 'net5.0-windows'">net5.0</TargetFrameworkDir>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<Reference Include="..\..\..\Core\bin\$(Configuration)\$(TargetFrameworkDir)\Zaaml.Core.dll" />
+		<Reference Include="..\..\..\PresentationCore\bin\$(Configuration)\$(TargetFramework)\Zaaml.PresentationCore.dll" />
+		<Reference Include="..\..\..\UI\bin\$(Configuration)\$(TargetFramework)\Zaaml.UI.dll" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="GitVersionTask" Version="5.5.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="..\ThemeParts\$(TargetFramework)\*.themepart.zip" />
+		<Resource Include="..\ThemeParts\$(TargetFramework)\*.themepart.xml" />
+	</ItemGroup>
+</Project>

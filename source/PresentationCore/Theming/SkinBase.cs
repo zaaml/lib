@@ -10,70 +10,50 @@ using Setter = Zaaml.PresentationCore.Interactivity.Setter;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  [TypeConverter(typeof(SkinTypeConverter))]
-  public abstract class SkinBase : IInteractivityVisitor
-  {
-    #region Ctors
+	[TypeConverter(typeof(SkinTypeConverter))]
+	public abstract class SkinBase : InheritanceContextObject, IInteractivityVisitor
+	{
+		internal SkinBase()
+		{
+		}
 
-    internal SkinBase()
-    {
-    }
+		internal abstract IEnumerable<KeyValuePair<string, object>> Resources { get; }
 
-    #endregion
+		protected abstract object GetValue(string key);
 
-    #region Properties
+		internal object GetValueInternal(string key)
+		{
+			return GetValue(key);
+		}
 
-    internal abstract IEnumerable<KeyValuePair<string, object>> Resources { get; }
+		internal object GetValueInternal(ThemeResourceKey key)
+		{
+			return key.IsEmpty ? null : GetValueInternal(key.Key);
+		}
 
-    #endregion
+		protected virtual void OnAttached(FrameworkElement frameworkElement)
+		{
+		}
 
-    #region  Methods
+		internal void OnAttachedInternal(FrameworkElement frameworkElement)
+		{
+			OnAttached(frameworkElement);
+		}
 
-    protected abstract object GetValue(string key);
+		protected virtual void OnDetached(FrameworkElement frameworkElement)
+		{
+		}
 
-    internal object GetValueInternal(string key)
-    {
-      return GetValue(key);
-    }
+		internal void OnDetachedInternal(FrameworkElement frameworkElement)
+		{
+			OnDetached(frameworkElement);
+		}
 
-    internal object GetValueInternal(ThemeResourceKey key)
-    {
-      return key.IsEmpty ? null : GetValueInternal(key.Key);
-    }
+		void IInteractivityVisitor.Visit(InteractivityObject interactivityObject)
+		{
+			var setter = interactivityObject as Setter;
 
-    protected virtual void OnAttached(FrameworkElement frameworkElement)
-    {
-    }
-
-    internal void OnAttachedInternal(FrameworkElement frameworkElement)
-    {
-      OnAttached(frameworkElement);
-    }
-
-    protected virtual void OnDetached(FrameworkElement frameworkElement)
-    {
-    }
-
-    internal void OnDetachedInternal(FrameworkElement frameworkElement)
-    {
-      OnDetached(frameworkElement);
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IInteractivityVisitor
-
-    void IInteractivityVisitor.Visit(InteractivityObject interactivityObject)
-    {
-      var setter = interactivityObject as Setter;
-
-      setter?.UpdateSkin(this);
-    }
-
-    #endregion
-
-    #endregion
-  }
+			setter?.UpdateSkin(this);
+		}
+	}
 }

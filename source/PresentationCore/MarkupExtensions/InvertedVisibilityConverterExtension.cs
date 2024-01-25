@@ -7,15 +7,11 @@ using Zaaml.PresentationCore.Converters;
 
 namespace Zaaml.PresentationCore.MarkupExtensions
 {
-  public class InvertedVisibilityConverterExtension : MarkupExtensionBase
-  {
-    #region  Methods
-
-    public override object ProvideValue(IServiceProvider serviceProvider)
-    {
-      return VisibilityConverter.TrueToCollapsedVisibility;
-    }
-
-    #endregion
-  }
+	public class InvertedVisibilityConverterExtension : MarkupExtensionBase
+	{
+		public override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			return VisibilityConverter.TrueToCollapsedVisibility;
+		}
+	}
 }

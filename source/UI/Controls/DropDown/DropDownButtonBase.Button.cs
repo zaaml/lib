@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
@@ -75,13 +76,13 @@ namespace Zaaml.UI.Controls.DropDown
 		public bool ShowContent
 		{
 			get => (bool) GetValue(ShowContentProperty);
-			set => SetValue(ShowContentProperty, value);
+			set => SetValue(ShowContentProperty, value.Box());
 		}
 
 		public bool ShowIcon
 		{
 			get => (bool) GetValue(ShowIconProperty);
-			set => SetValue(ShowIconProperty, value);
+			set => SetValue(ShowIconProperty, value.Box());
 		}
 
 		protected virtual void OnClick()

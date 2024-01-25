@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.Docking
       set => SetValue(DockContentProperty, value);
     }
 
-    private AutoHideTabViewControlTemplateContract TemplateContract => (AutoHideTabViewControlTemplateContract) TemplateContractInternal;
+    private AutoHideTabViewControlTemplateContract TemplateContract => (AutoHideTabViewControlTemplateContract) TemplateContractCore;
 
     #endregion
 
@@ -96,7 +96,7 @@ namespace Zaaml.UI.Controls.Docking
 
     private AutoHideTabViewItemsPresenter GetItemsPresenter(AutoHideTabViewItem item)
     {
-      return GetItemsPresenter(AutoHideLayout.GetDockSide(item.DockItem));
+      return GetItemsPresenter(AutoHideLayout.GetDock(item.DockItem));
     }
 
     private AutoHideTabViewItemsPresenter GetItemsPresenter(Dock dockSide)
@@ -128,10 +128,10 @@ namespace Zaaml.UI.Controls.Docking
       }
     }
 
-    public void OnItemDockSideChanged(AutoHideTabViewItem item, Dock oldDockSide, Dock newDockSide)
+    public void OnItemDockChanged(AutoHideTabViewItem item, Dock oldSide, Dock newSide)
     {
-      GetItemsPresenter(oldDockSide)?.RemoveItem(item);
-      GetItemsPresenter(newDockSide)?.AddItem(item);
+      GetItemsPresenter(oldSide)?.RemoveItem(item);
+      GetItemsPresenter(newSide)?.AddItem(item);
     }
 
     protected override void OnTemplateContractAttached()

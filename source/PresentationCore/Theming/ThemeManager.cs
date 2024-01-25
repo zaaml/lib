@@ -10,7 +10,6 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
-using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Reflection;
 using Zaaml.Core.Weak.Collections;
@@ -25,23 +24,23 @@ namespace Zaaml.PresentationCore.Theming
 	{
 		private static ThemeManagerBehavior _behavior;
 		private static Theme _applicationTheme;
-		private static readonly WeakLinkedList<IThemeChangeListener> ThemeChangeListeners = new WeakLinkedList<IThemeChangeListener>();
-		private static readonly ResourceDictionary ApplicationResourceDictionary = new ResourceDictionary();
-		private static readonly WeakLinkedList<ResourceDictionary> ResourceDictionaries = new WeakLinkedList<ResourceDictionary>();
-		private static readonly Dictionary<string, ThemeResourceReference> ThemeResourceReferences = new Dictionary<string, ThemeResourceReference>();
+		private static readonly WeakLinkedList<IThemeChangeListener> ThemeChangeListeners = new();
+		private static readonly ResourceDictionary ApplicationResourceDictionary = new();
+		private static readonly WeakLinkedList<ResourceDictionary> ResourceDictionaries = new();
+		private static readonly Dictionary<string, ThemeResourceReference> ThemeResourceReferences = new();
 
 		static ThemeManager()
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(FrameCounter).TypeHandle);
 
 			GCObserver = new GarbageCollectorObserver();
-			GCObserver.GarbageCollected += (sender, args) => CleanUpResourceInheritanceParentImpl();
+			GCObserver.GarbageCollected += (_, _) => CleanUpResourceInheritanceParentImpl();
 
 			CompositionTarget.Rendering += CompositionTargetOnRendering;
 
 			// Activate mouse service
 			// ReSharper disable once UnusedVariable
-			var hostPoint = MouseInternal.ScreenPosition;
+			var hostPoint = MouseInternal.ScreenLogicalPosition;
 		}
 
 		internal static ThemeManagerBehavior ActualBehavior => Behavior ?? DefaultThemeManagerBehavior.Instance;
@@ -170,7 +169,9 @@ namespace Zaaml.PresentationCore.Theming
 
 		private static GarbageCollectorObserver GCObserver { get; }
 
-		public static ThemeManagerInstance Instance { get; } = new ThemeManagerInstance();
+		private static Dictionary<SkinDictionary, GenericThemeSkin> ImplicitSkinDictionary { get; } = new();
+
+		public static ThemeManagerInstance Instance { get; } = new();
 
 		internal static bool IsApplicationThemeChanging { get; private set; }
 
@@ -182,7 +183,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		internal static bool IsStatic { get; private set; }
 
-		internal static WeakLinkedList<IThemeChangeListener> TempListeners { get; } = new WeakLinkedList<IThemeChangeListener>();
+		internal static WeakLinkedList<IThemeChangeListener> TempListeners { get; } = new();
 
 		private static void ActivateApplicationTheme()
 		{
@@ -208,7 +209,7 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			using var serviceProvider = TargetServiceProvider.GetServiceProvider(dependencyObject, property);
 
-			var value = new ThemeResourceExtension {Key = themeResourceKey}.ProvideValue(serviceProvider);
+			var value = new ThemeResourceExtension { Key = themeResourceKey }.ProvideValue(serviceProvider);
 
 			if (value is Binding binding)
 				dependencyObject.SetBinding(property, binding);
@@ -225,12 +226,8 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			foreach (var value in ThemeResourceReferences.Values.Select(r => r.Value).OfType<DependencyObject>())
 			{
-				var brush = value as Brush;
-#if !SILVERLIGHT
-				if (brush != null && brush.IsFrozen)
-					continue;
-#endif
-				brush.ResetInheritanceParent();
+				if (value is Brush { IsFrozen: false } brush)
+					brush.ResetInheritanceParent();
 			}
 		}
 
@@ -295,19 +292,9 @@ namespace Zaaml.PresentationCore.Theming
 			return keyword == ThemeKeyword.Undefined ? null : string.Concat("Zaaml.ThemeManager.Keywords.", keyword.ToString());
 		}
 
-		internal static ThemeResourceReference GetThemeReference(string key, bool create)
+		internal static ThemeSkinBase GetSkin(SkinDictionary skinDictionary)
 		{
-			return GetThemeReferenceImpl(key, create);
-		}
-
-		internal static ThemeResourceReference GetThemeReference(string key)
-		{
-			return GetThemeReferenceImpl(key, true);
-		}
-
-		internal static ThemeResourceReference GetThemeReference(ThemeKeyword keyword)
-		{
-			return GetThemeReferenceImpl(GetKeyFromKeyword(keyword), true);
+			return ImplicitSkinDictionary.GetValueOrCreate(skinDictionary, d => new GenericThemeSkin(d));
 		}
 
 		private static ThemeResourceReference GetThemeReferenceImpl(string key, bool create)
@@ -315,9 +302,28 @@ namespace Zaaml.PresentationCore.Theming
 			return ThemeResourceReferences.GetValueOrCreateOrDefault(key, create, CreateThemeResourceReference);
 		}
 
+		internal static ThemeResourceReference GetThemeResourceReference(string key, bool create)
+		{
+			return GetThemeReferenceImpl(key, create);
+		}
+
+		internal static ThemeResourceReference GetThemeResourceReference(string key)
+		{
+			return GetThemeReferenceImpl(key, true);
+		}
+
+		internal static ThemeResourceReference GetThemeResourceReference(ThemeKeyword keyword)
+		{
+			return GetThemeReferenceImpl(GetKeyFromKeyword(keyword), true);
+		}
+
 		internal static ThemeManagerStyle GetThemeStyle(Type targetType)
 		{
 			return ThemeStyleBinder.Instance.GetThemeStyle(targetType);
+		}
+
+		public static void LoadThemePart<TThemePart>() where TThemePart : ThemePart
+		{
 		}
 
 		private static void OnCurrentThemeChanged()
@@ -332,6 +338,7 @@ namespace Zaaml.PresentationCore.Theming
 			if (IsStatic == false)
 				ThemeChangeListeners.Remove(listener);
 		}
+
 
 		public static event EventHandler CurrentThemeChanged;
 	}
@@ -382,5 +389,9 @@ namespace Zaaml.PresentationCore.Theming
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
+	}
+
+	public abstract class ThemePart
+	{
 	}
 }

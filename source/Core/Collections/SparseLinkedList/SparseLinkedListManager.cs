@@ -9,38 +9,31 @@ namespace Zaaml.Core.Collections
 {
 	internal class SparseLinkedListManager<T>
 	{
-		public SparseLinkedListManager(SparseMemoryManager<T> sparseMemoryManager)
+		public SparseLinkedListManager(SparseMemoryAllocator<T> sparseMemoryAllocator)
 		{
-			SparseMemoryManager = sparseMemoryManager;
+			SparseMemoryAllocator = sparseMemoryAllocator;
 		}
 
-		private Stack<SparseLinkedListBase<T>.GapNode> GapNodePool { get; } = new Stack<SparseLinkedListBase<T>.GapNode>();
+		private Stack<SparseLinkedListBase<T>.VoidNode> VoidNodePool { get; } = new();
 
-		private Stack<SparseLinkedListBase<T>.RealizedNode> RealizedNodePool { get; } = new Stack<SparseLinkedListBase<T>.RealizedNode>();
+		private Stack<SparseLinkedListBase<T>.RealizedNode> RealizedNodePool { get; } = new();
 
-		public SparseMemoryManager<T> SparseMemoryManager { get; }
+		public SparseMemoryAllocator<T> SparseMemoryAllocator { get; }
 
-		public SparseMemorySpan<T> Allocate()
+		public MemorySpan<T> Allocate()
 		{
-			return SparseMemoryManager.Allocate();
+			return SparseMemoryAllocator.Allocate();
 		}
 
-		public SparseLinkedListBase<T>.GapNode GetGapNode()
+		public int NodeCapacity => SparseMemoryAllocator.NodeCapacity;
+
+		public SparseLinkedListBase<T>.VoidNode GetVoidNode()
 		{
-			var gapNode = GapNodePool.Count > 0 ? GapNodePool.Pop() : new SparseLinkedListBase<T>.GapNode();
+			var voidNode = VoidNodePool.Count > 0 ? VoidNodePool.Pop() : new SparseLinkedListBase<T>.VoidNode();
 
-			MountNode(gapNode);
+			MountNode(voidNode);
 
-			return gapNode;
-		}
-
-		private static void MountNode(SparseLinkedListBase<T>.NodeBase node)
-		{
-			Debug.Assert(node.Size == -1);
-
-			node.Next = null;
-			node.Prev = null;
-			node.Size = 0;
+			return voidNode;
 		}
 
 		public SparseLinkedListBase<T>.RealizedNode GetRealizedNode()
@@ -50,9 +43,18 @@ namespace Zaaml.Core.Collections
 				: new SparseLinkedListBase<T>.RealizedNode();
 
 			MountNode(realizedNode);
-			realizedNode.Mount(SparseMemoryManager.Allocate());
+			realizedNode.Mount(SparseMemoryAllocator.Allocate());
 
 			return realizedNode;
+		}
+
+		private static void MountNode(SparseLinkedListBase<T>.NodeBase node)
+		{
+			Debug.Assert(node.Size == -1);
+
+			node.Next = null;
+			node.Prev = null;
+			node.Size = 0;
 		}
 
 		protected virtual void OnNodeReleased(SparseLinkedListBase<T>.NodeBase node)
@@ -69,8 +71,8 @@ namespace Zaaml.Core.Collections
 
 			node.Release();
 
-			if (node is SparseLinkedListBase<T>.GapNode gapNode)
-				GapNodePool.Push(gapNode);
+			if (node is SparseLinkedListBase<T>.VoidNode voidNode)
+				VoidNodePool.Push(voidNode);
 			else if (node is SparseLinkedListBase<T>.RealizedNode realizedNode)
 				RealizedNodePool.Push(realizedNode);
 

@@ -7,33 +7,20 @@ using Zaaml.UI.Panels.Flexible;
 
 namespace Zaaml.UI.Panels.Interfaces
 {
-  internal interface IFlexPanel : IOrientedPanel
-  {
-    #region Properties
+	internal interface IFlexPanel : IOrientedPanel
+	{
+		IFlexDistributor Distributor { get; }
 
-    IFlexDistributor Distributor { get; }
+		bool HasHiddenChildren { get; set; }
 
-    bool HasHiddenChildren { get; set; }
+		double Spacing { get; }
 
-    double Spacing { get; }
+		FlexStretch Stretch { get; }
 
-    FlexStretch Stretch { get; }
+		FlexElement GetFlexElement(UIElement child);
 
-    #endregion
+		bool GetIsHidden(UIElement child);
 
-    #region  Methods
-
-    FlexElement GetFlexElement(UIElement child);
-
-    bool GetIsHidden(UIElement child);
-
-    void SetIsHidden(UIElement child, bool value);
-
-    #endregion
-  }
-
-  internal interface IFlexPanelEx
-  {
-		bool AllowMeasureInArrange { get; }
-  }
+		void SetIsHidden(UIElement child, bool value);
+	}
 }

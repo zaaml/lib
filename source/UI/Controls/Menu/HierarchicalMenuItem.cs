@@ -9,6 +9,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -68,7 +69,7 @@ namespace Zaaml.UI.Controls.Menu
 		public bool HasSubmenu
 		{
 			get => (bool) GetValue(HasSubmenuProperty);
-			protected set => this.SetReadOnlyValue(HasSubmenuPropertyKey, value);
+			protected set => this.SetReadOnlyValue(HasSubmenuPropertyKey, value.Box());
 		}
 
 		internal bool IsLevelFocused
@@ -94,13 +95,13 @@ namespace Zaaml.UI.Controls.Menu
 		public bool IsSubmenuEnabled
 		{
 			get => (bool) GetValue(IsSubmenuEnabledProperty);
-			set => SetValue(IsSubmenuEnabledProperty, value);
+			set => SetValue(IsSubmenuEnabledProperty, value.Box());
 		}
 
 		public bool IsSubmenuOpen
 		{
 			get => (bool) GetValue(IsSubmenuOpenProperty);
-			set => SetValue(IsSubmenuOpenProperty, value);
+			set => SetValue(IsSubmenuOpenProperty, value.Box());
 		}
 
 		internal override IMenuItemCollection ItemsCore => MenuItemCollection.Empty;
@@ -149,7 +150,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		internal Popup SubmenuPopup => TemplateContract.SubmenuPopup;
 
-		private HierarchicalMenuItemTemplateContract TemplateContract => (HierarchicalMenuItemTemplateContract) TemplateContractInternal;
+		private HierarchicalMenuItemTemplateContract TemplateContract => (HierarchicalMenuItemTemplateContract) TemplateContractCore;
 
 		#endregion
 

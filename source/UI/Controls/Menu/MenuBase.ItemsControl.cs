@@ -55,7 +55,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		protected override IEnumerator LogicalChildren => ItemCollection.LogicalChildren;
 
-		private MenuBaseTemplateContract TemplateContract => (MenuBaseTemplateContract) TemplateContractInternal;
+		private MenuBaseTemplateContract TemplateContract => (MenuBaseTemplateContract) TemplateContractCore;
 
 		#endregion
 

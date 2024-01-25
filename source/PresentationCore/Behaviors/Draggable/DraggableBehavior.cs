@@ -60,7 +60,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 			set => SetValue(AdvisorProperty, value);
 		}
 
-		private IDraggableAdvisor CurrentAdvisor { get; set; }
+		protected IDraggableAdvisor ActualAdvisor { get; private set; }
 
 		public Vector DragDelta { get; set; }
 
@@ -110,7 +110,7 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 			return element.GetAncestorsAndSelf(MixedTreeEnumerationStrategy.VisualThenLogicalInstance).Select(GetElementAdvisor).FirstOrDefault(a => a != null);
 		}
 
-		private IDraggableAdvisor GetElementAdvisor(DependencyObject dependencyObject)
+		protected IDraggableAdvisor GetElementAdvisor(DependencyObject dependencyObject)
 		{
 			if (dependencyObject is IDraggableAdvisorProvider advisorProvider)
 				return advisorProvider.GetAdvisor(ActualElement);
@@ -154,36 +154,32 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 
 			RaiseDragEnding();
 
-			CurrentAdvisor.OnDragEnd(ActualElement, this);
 			OnDragEnded();
 
 			IsDragging = false;
-			CurrentAdvisor = null;
+			ActualAdvisor = null;
 		}
 
 		internal void OnHandleDragMove()
 		{
-			if (CurrentAdvisor == null)
+			if (ActualAdvisor == null)
 				return;
 
 			UpdatePosition();
-			CurrentAdvisor.OnDragMove(ActualElement, this);
 
 			OnDragMove();
 		}
 
 		internal void OnHandleDragStarted()
 		{
-			CurrentAdvisor = GetActualAdvisor();
+			ActualAdvisor = GetActualAdvisor();
 
-			if (CurrentAdvisor == null)
+			if (ActualAdvisor == null)
 				return;
 
 			IsDragging = true;
 
-			CurrentAdvisor.OnDragStart(ActualElement, this);
-
-			ElementOrigin = CurrentAdvisor.GetPosition(ActualElement);
+			ElementOrigin = ActualAdvisor.GetPosition(ActualElement);
 
 			OnDragStarted();
 		}
@@ -242,11 +238,19 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 
 		protected void UpdatePosition()
 		{
+			if (IsDragging == false || ActualAdvisor == null)
+				return;
+
 			var dragInfo = DragInfo;
 
 			DragDelta = PointUtils.SubtractPoints(dragInfo.CurrentLocation, dragInfo.OriginLocation);
 
-			CurrentAdvisor?.SetPosition(ActualElement, PointUtils.AddVector(ElementOrigin, DragDelta));
+			SetPosition(PointUtils.AddVector(ElementOrigin, DragDelta));
+		}
+
+		protected virtual void SetPosition(Point position)
+		{
+			ActualAdvisor.SetPosition(ActualElement, position);
 		}
 
 		internal static event EventHandler GlobalDragEnded;

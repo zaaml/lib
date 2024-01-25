@@ -10,86 +10,74 @@ using System.Windows.Markup;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  [ContentProperty("Actions")]
-  public abstract class ActionTriggerBase : TriggerBase
-  {
-    #region Fields
+	[ContentProperty("Actions")]
+	public abstract class ActionTriggerBase : TriggerBase
+	{
+		private TriggerActionCollection _actions;
+		private DelayAction _delayTrigger;
 
-    private TriggerActionCollection _actions;
-    private DelayAction _delayTrigger;
+		public TriggerActionCollection Actions => _actions ??= new TriggerActionCollection(this);
 
-    #endregion
+		protected IEnumerable<TriggerActionBase> ActualActions => _actions ?? Enumerable.Empty<TriggerActionBase>();
 
-    #region Properties
+		private DelayAction ActualDelayAction => _delayTrigger ??= new DelayAction(InvokeCore, TimeSpan.Zero);
 
-    public TriggerActionCollection Actions => _actions ??= new TriggerActionCollection(this);
+		internal sealed override IEnumerable<InteractivityObject> Children => base.Children.Concat(ActualActions);
 
-    protected IEnumerable<TriggerActionBase> ActualActions => _actions ?? Enumerable.Empty<TriggerActionBase>();
+		public Duration Delay
+		{
+			get => _delayTrigger?.Delay ?? default(Duration);
+			set
+			{
+				if (Delay == value)
+					return;
 
-    private DelayAction ActualDelayAction => _delayTrigger ??= new DelayAction(InvokeCore, TimeSpan.Zero);
+				ActualDelayAction.Delay = value.HasTimeSpan ? value.TimeSpan : TimeSpan.Zero;
+			}
+		}
 
-    internal sealed override IEnumerable<InteractivityObject> Children => base.Children.Concat(ActualActions);
+		protected internal override void CopyMembersOverride(InteractivityObject source)
+		{
+			base.CopyMembersOverride(source);
 
-    public Duration Delay
-    {
-      get => _delayTrigger?.Delay ?? default(Duration);
-      set
-      {
-        if (Delay == value)
-          return;
+			var sourceTrigger = (ActionTriggerBase)source;
 
-        ActualDelayAction.Delay = value.HasTimeSpan ? value.TimeSpan : TimeSpan.Zero;
-      }
-    }
+			_actions = sourceTrigger._actions?.DeepCloneCollection<TriggerActionCollection, TriggerActionBase>(this);
 
-    #endregion
+			Delay = sourceTrigger.Delay;
+		}
 
-    #region  Methods
+		protected void Invoke()
+		{
+			if (IsLoaded == false)
+				return;
 
-    protected internal override void CopyMembersOverride(InteractivityObject source)
-    {
-      base.CopyMembersOverride(source);
+			if (_delayTrigger == null || _delayTrigger.Delay.Equals(TimeSpan.Zero))
+				InvokeCore();
+			else
+				_delayTrigger.Invoke();
+		}
 
-      var sourceTrigger = (ActionTriggerBase) source;
-      
-      _actions = sourceTrigger._actions?.DeepCloneCollection<TriggerActionCollection, TriggerActionBase>(this);
+		protected virtual void InvokeCore()
+		{
+			foreach (var action in ActualActions)
+				action.Invoke();
+		}
 
-      Delay = sourceTrigger.Delay;
-    }
+		internal override void LoadCore(IInteractivityRoot root)
+		{
+			foreach (var action in ActualActions)
+				action.Load(root);
 
-    protected void Invoke()
-    {
-      if (IsLoaded == false)
-	      return;
+			base.LoadCore(root);
+		}
 
-      if (_delayTrigger == null || _delayTrigger.Delay.Equals(TimeSpan.Zero))
-        InvokeCore();
-      else
-        _delayTrigger.Invoke();
-    }
+		internal override void UnloadCore(IInteractivityRoot root)
+		{
+			foreach (var action in ActualActions)
+				action.Unload(root);
 
-    protected virtual void InvokeCore()
-    {
-      foreach (var action in ActualActions)
-        action.Invoke();
-    }
-
-    internal override void LoadCore(IInteractivityRoot root)
-    {
-      foreach (var action in ActualActions)
-        action.Load(root);
-
-      base.LoadCore(root);
-    }
-
-    internal override void UnloadCore(IInteractivityRoot root)
-    {
-      foreach (var action in ActualActions)
-        action.Unload(root);
-
-      base.UnloadCore(root);
-    }
-
-    #endregion
-  }
+			base.UnloadCore(root);
+		}
+	}
 }

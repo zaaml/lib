@@ -13,25 +13,13 @@ namespace Zaaml.PresentationCore.Theming
 {
 	public sealed class SkinResourceExtension : MarkupExtensionBase
 	{
-		#region Properties
-
 		public string Key { get; set; }
-
-		#endregion
-
-		#region  Methods
 
 		public override object ProvideValue(IServiceProvider serviceProvider)
 		{
-			object target;
-			object targetProperty;
-			bool reflected;
+			GetTarget(serviceProvider, out var target, out var targetProperty, out _);
 
-			GetTarget(serviceProvider, out target, out targetProperty, out reflected);
-
-			var targetProxy = target as ISkinResourceKey;
-
-			if (targetProxy != null)
+			if (target is ISkinResourceKey targetProxy)
 			{
 				var propertyName = (targetProperty as PropertyInfo)?.Name;
 
@@ -46,23 +34,15 @@ namespace Zaaml.PresentationCore.Theming
 			if (propertyInfo != null)
 				return RuntimeUtils.CreateDefaultValue(propertyInfo.PropertyType);
 
-			var dependencyProperty = targetProperty as DependencyProperty;
-
-			if (dependencyProperty != null)
+			if (targetProperty is DependencyProperty dependencyProperty)
 				return RuntimeUtils.CreateDefaultValue(dependencyProperty.GetPropertyType());
 
 			return null;
 		}
-
-		#endregion
 	}
 
 	public interface ISkinResourceKey
 	{
-		#region  Methods
-
 		void SetResourceKey(string propertyName, string key);
-
-		#endregion
 	}
 }

@@ -12,8 +12,6 @@ namespace Zaaml.UI.Controls.Menu
 {
 	public static class ContextMenuService
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty ContextMenuProperty = DPM.RegisterAttached<ContextMenu>
 		("ContextMenu", typeof(ContextMenuService),
 			DPM.StaticCallback<FrameworkElement, ContextMenu>(OnContextMenuPropertyChanged));
@@ -21,10 +19,6 @@ namespace Zaaml.UI.Controls.Menu
 		public static readonly DependencyProperty ContextMenuSelectorProperty = DPM.RegisterAttached<ContextMenuSelector>
 		("ContextMenuSelector", typeof(ContextMenuService),
 			DPM.StaticCallback<FrameworkElement, ContextMenuSelector>(OnContextMenuSelectorPropertyChanged));
-
-		#endregion
-
-		#region  Methods
 
 		public static ContextMenu GetContextMenu(FrameworkElement element)
 		{
@@ -39,13 +33,13 @@ namespace Zaaml.UI.Controls.Menu
 		private static void OnContextMenuPropertyChanged(FrameworkElement frameworkElement, ContextMenu oldMenu, ContextMenu newMenu)
 		{
 			SharedItemHelper.Share(frameworkElement, oldMenu, newMenu);
-			PopupControlService.OnPopupControllerSelectorChanged(frameworkElement, oldMenu?.PopupController, newMenu?.PopupController);
+			ContextPopupControlService.OnPopupControllerSelectorChanged(frameworkElement, oldMenu?.PopupController, newMenu?.PopupController);
 		}
 
 		private static void OnContextMenuSelectorPropertyChanged(FrameworkElement frameworkElement, ContextMenuSelector oldMenuSelector, ContextMenuSelector newMenuSelector)
 		{
 			SharedItemHelper.Share(frameworkElement, oldMenuSelector, newMenuSelector);
-			PopupControlService.OnPopupControllerSelectorChanged(frameworkElement, oldMenuSelector, newMenuSelector);
+			ContextPopupControlService.OnPopupControllerSelectorChanged(frameworkElement, oldMenuSelector, newMenuSelector);
 		}
 
 		public static void SetContextMenu(FrameworkElement element, ContextMenu value)
@@ -57,7 +51,5 @@ namespace Zaaml.UI.Controls.Menu
 		{
 			element.SetValue(ContextMenuSelectorProperty, value);
 		}
-
-		#endregion
 	}
 }

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Data.Hierarchy;
 
 namespace Zaaml.UI.Controls.TreeView.Data
@@ -10,10 +11,13 @@ namespace Zaaml.UI.Controls.TreeView.Data
 	internal sealed class TreeViewDataFilter : IHierarchyViewFilter<TreeViewData, TreeViewItemDataCollection, TreeViewItemData>
 	{
 		private ITreeViewItemFilter _treeViewFilter;
+		private readonly FilterServiceProvider _filterServiceProvider;
 
 		public TreeViewDataFilter(TreeViewData treeViewData)
 		{
 			TreeViewData = treeViewData;
+			
+			_filterServiceProvider = new FilterServiceProvider(this);
 		}
 
 		public ITreeViewItemFilter Filter
@@ -61,9 +65,26 @@ namespace Zaaml.UI.Controls.TreeView.Data
 
 		public bool Pass(TreeViewItemData viewItemData)
 		{
-			return _treeViewFilter.Pass(viewItemData.Data);
+			return _treeViewFilter.Pass(viewItemData.Data, _filterServiceProvider);
 		}
 
 		public bool IsEnabled { get; private set; }
+
+		private sealed class FilterServiceProvider : IServiceProvider, IItemsControlProvider
+		{
+			public TreeViewDataFilter TreeViewDataFilter { get; }
+
+			public FilterServiceProvider(TreeViewDataFilter treeViewDataFilter)
+			{
+				TreeViewDataFilter = treeViewDataFilter;
+			}
+
+			public object GetService(Type serviceType)
+			{
+				return serviceType == typeof(IItemsControlProvider) ? this : null;
+			}
+
+			public ItemsControlBase ItemsControl => TreeViewDataFilter?.TreeViewData?.TreeViewControl;
+		}
 	}
 }

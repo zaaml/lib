@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -11,30 +12,14 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Editors.Core
 {
-	public enum EditingResult
-	{
-		Commit,
-		Cancel
-	}
-
-	public sealed class EditingEndedEventArgs : EventArgs
-	{
-		internal static readonly EditingEndedEventArgs CommitArgs = new EditingEndedEventArgs(EditingResult.Commit);
-		internal static readonly EditingEndedEventArgs CancelArgs = new EditingEndedEventArgs(EditingResult.Cancel);
-
-		private EditingEndedEventArgs(EditingResult result)
-		{
-			Result = result;
-		}
-
-		public EditingResult Result { get; }
-	}
-
 	[TemplateContractType(typeof(EditorBaseTemplateContract))]
 	public abstract class EditorBase : TemplateContractControl
 	{
 		private static readonly DependencyPropertyKey IsEditingPropertyKey = DPM.RegisterReadOnly<bool, EditorBase>
 			("IsEditing", s => s.OnIsEditingPropertyChangedPrivate);
+
+		public static readonly DependencyProperty IsReadOnlyProperty = DPM.Register<bool, EditorBase>
+			("IsReadOnly");
 
 		public static readonly DependencyProperty IsEditingProperty = IsEditingPropertyKey.DependencyProperty;
 
@@ -44,10 +29,21 @@ namespace Zaaml.UI.Controls.Editors.Core
 		public bool IsEditing
 		{
 			get => (bool) GetValue(IsEditingProperty);
-			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value);
+			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value.Box());
+		}
+
+		public bool IsReadOnly
+		{
+			get => (bool) GetValue(IsReadOnlyProperty);
+			set => SetValue(IsReadOnlyProperty, value.Box());
 		}
 
 		public bool BeginEdit()
+		{
+			return BeginEditCore();
+		}
+
+		private protected bool BeginEditCore()
 		{
 			if (IsEditing)
 				return false;
@@ -66,12 +62,17 @@ namespace Zaaml.UI.Controls.Editors.Core
 
 		public bool CancelEdit()
 		{
+			return CancelEditCore();
+		}
+
+		private protected bool CancelEditCore(bool force = false)
+		{
 			if (IsEditing == false)
 				return false;
 
 			var cancelResult = OnCancelEdit();
 
-			if (cancelResult == false)
+			if (cancelResult == false && force == false)
 				return false;
 
 			IsEditing = false;
@@ -88,12 +89,17 @@ namespace Zaaml.UI.Controls.Editors.Core
 
 		public bool CommitEdit()
 		{
+			return CommitEditCore();
+		}
+
+		private protected bool CommitEditCore(bool force = false)
+		{
 			if (IsEditing == false)
 				return false;
 
 			var commitResult = OnCommitEdit();
 
-			if (commitResult == false)
+			if (commitResult == false && force == false)
 				return false;
 
 			IsEditing = false;
@@ -146,9 +152,5 @@ namespace Zaaml.UI.Controls.Editors.Core
 
 			UpdateVisualState(true);
 		}
-	}
-
-	public abstract class EditorBaseTemplateContract : TemplateContract
-	{
 	}
 }

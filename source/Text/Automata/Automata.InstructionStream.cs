@@ -3,41 +3,29 @@
 // </copyright>
 
 using System;
-using System.Buffers;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Zaaml.Core;
+using Zaaml.Core.Reflection;
 using Zaaml.Core.Utils;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Methods
-
-		private protected virtual Pool<InstructionStream> CreateInstructionQueuePool()
-		{
-			return new Pool<InstructionStream>(p => new InstructionStream(p));
-		}
-
-		#endregion
-
-		#region Nested Types
+		private protected abstract Pool<InstructionStream> CreateInstructionStreamPool();
 
 		private protected partial class InstructionStream : PoolSharedObject<InstructionStream>
 		{
-			#region Static Fields and Constants
-
-			private const int PageCapacity = 1024;
+			public static readonly MethodInfo PeekInstructionMethodInfo = typeof(InstructionStream).GetMethod(nameof(PeekInstruction), BF.IPNP);
 			protected const int PageIndexShift = 12;
 			protected const int PageSize = 1 << PageIndexShift;
 			protected const int LocalIndexMask = PageSize - 1;
+			protected const int InvalidInstructionOperand = 0;
 
 			protected static readonly InstructionPage NullPage;
 
-			#endregion
-
-			#region Fields
-
+			protected int Position;
 			protected Exception Exception;
 			protected bool Finished;
 			protected int HeadPage;
@@ -45,17 +33,16 @@ namespace Zaaml.Text
 			protected int PageCount;
 			protected InstructionPage[] Pages;
 
-			#endregion
-
-			#region Ctors
-
 			static InstructionStream()
 			{
 				var instructions = new TInstruction[PageSize];
 				var operands = new int[PageSize];
 
-				for (var i = 0; i < PageSize; i++)
-					operands[i] = int.MinValue;
+#if NETCOREAPP
+				Array.Fill(operands, 0, PageSize, InvalidInstructionOperand);
+#else
+				Array.Clear(operands, 0, PageSize);
+#endif
 
 				NullPage = new InstructionPage(instructions, operands, 0, PageSize)
 				{
@@ -65,31 +52,23 @@ namespace Zaaml.Text
 
 			public InstructionStream(Pool<InstructionStream> pool) : base(pool)
 			{
-				Pages = new InstructionPage[8];
+				Pages = new InstructionPage[64];
 
 				ArrayUtils.Fill(Pages, NullPage);
 			}
 
 			public InstructionStream() : base(null)
 			{
-				Pages = new InstructionPage[8];
+				Pages = new InstructionPage[64];
 
 				ArrayUtils.Fill(Pages, NullPage);
 			}
-
-			#endregion
-
-			#region Properties
 
 			public int StartInstructionPointer { get; set; }
 
 			public int StartPosition { get; set; }
 
-			#endregion
-
-			#region Methods
-
-			public virtual InstructionStream Advance(int instructionPointer, Automata<TInstruction, TOperand> automata)
+			public virtual InstructionStream Advance(int position, int instructionPointer, Automata<TInstruction, TOperand> automata)
 			{
 				throw new NotImplementedException();
 			}
@@ -124,25 +103,6 @@ namespace Zaaml.Text
 				}
 			}
 
-			protected override void OnReleased()
-			{
-				CleanPages();
-				DisposeParallel();
-				InstructionReader.Dispose();
-				//ArrayPool<InstructionPage>.Shared.Return(Pages, true);
-				//Pages = null;
-				HeadPage = 0;
-				PageCount = 0;
-				Finished = false;
-				Exception = null;
-				StartPosition = 0;
-				InstructionReader = null;
-				StartInstructionPointer = 0;
-				NullPage.ReferenceCount = int.MaxValue;
-
-				base.OnReleased();
-			}
-
 			protected void EnsurePagesCapacity(int pageIndex)
 			{
 				if (pageIndex < Pages.Length)
@@ -153,6 +113,68 @@ namespace Zaaml.Text
 				// TODO Pages array from pool. May we resize it ?
 				Array.Resize(ref Pages, Pages.Length * 2);
 				ArrayUtils.Fill(Pages, NullPage, pageLength, Pages.Length - pageLength);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void FetchOperand(int instructionPointer)
+			{
+				var pageIndex = instructionPointer >> PageIndexShift;
+				var pageOffset = instructionPointer & LocalIndexMask;
+				var operand = Pages[pageIndex].OperandsBuffer[pageOffset];
+
+				if (operand == InvalidInstructionOperand)
+					LoadPage(pageIndex);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public int FetchPeekOperand(int instructionPointer)
+			{
+				var pageIndex = instructionPointer >> PageIndexShift;
+				var pageOffset = instructionPointer & LocalIndexMask;
+				var operand = Pages[pageIndex].OperandsBuffer[pageOffset];
+
+				if (operand > 0)
+					return operand;
+
+				operand = LoadPage(pageIndex).OperandsBuffer[pageOffset];
+
+				return operand > 0 ? operand : InvalidInstructionOperand;
+			}
+
+			public TInstruction FetchPeekInstruction(int instructionPointer)
+			{
+				var pageIndex = instructionPointer >> PageIndexShift;
+				var pageOffset = instructionPointer & LocalIndexMask;
+				var operand = Pages[pageIndex].OperandsBuffer[pageOffset];
+
+				if (operand > 0)
+					return Pages[pageIndex].InstructionsBuffer[pageOffset];
+
+				operand = LoadPage(pageIndex).OperandsBuffer[pageOffset];
+
+				return operand > 0 ? Pages[pageIndex].InstructionsBuffer[pageOffset] : default;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public int FetchReadOperand(ref int instructionPointer)
+			{
+				var pageIndex = instructionPointer >> PageIndexShift;
+				var pageOffset = instructionPointer & LocalIndexMask;
+				var operand = Pages[pageIndex].OperandsBuffer[pageOffset];
+
+				instructionPointer++;
+
+				if (operand > 0)
+					return operand;
+
+				operand = LoadPage(pageIndex).OperandsBuffer[pageOffset];
+
+				if (operand > 0)
+					return operand;
+
+				instructionPointer--;
+
+				return InvalidInstructionOperand;
 			}
 
 			public virtual int GetPosition(int instructionPointer)
@@ -176,14 +198,8 @@ namespace Zaaml.Text
 				{
 					page = Pages[pageIndex];
 
-					if (page.PageLength < PageSize)
-					{
-						LoadPosition();
-
-						page.PageLength += InstructionReader.ReadPage(page.PageLength, PageSize, page.InstructionsBuffer, page.OperandsBuffer);
-
-						SavePosition();
-					}
+					if (page.PageLength < PageSize) 
+						page.PageLength += InstructionReader.ReadPage(ref Position, page.PageLength, PageSize, page.InstructionsBuffer, page.OperandsBuffer);
 
 					return page;
 				}
@@ -204,11 +220,7 @@ namespace Zaaml.Text
 
 				return page;
 			}
-
-			protected virtual void LoadPosition()
-			{
-			}
-
+			
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void LockPointer(int instructionPointer)
 			{
@@ -231,59 +243,87 @@ namespace Zaaml.Text
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Move(ref int instructionPointer)
 			{
-				loop:
-
-				var operand = Pages[instructionPointer >> PageIndexShift].OperandsBuffer[instructionPointer & LocalIndexMask];
+				var pageIndex = instructionPointer >> PageIndexShift;
+				var pageOffset = instructionPointer & LocalIndexMask;
+				var operand = Pages[pageIndex].OperandsBuffer[pageOffset];
 
 				instructionPointer++;
 
-				if (operand >= 0)
+				if (operand != InvalidInstructionOperand)
 					return;
 
-				if (operand == int.MinValue)
-				{
+				operand = LoadPage(pageIndex).OperandsBuffer[pageOffset];
+
+				if (operand == InvalidInstructionOperand)
 					instructionPointer--;
-
-					operand = LoadPage(instructionPointer >> PageIndexShift).OperandsBuffer[instructionPointer & LocalIndexMask];
-
-					if (operand == int.MinValue)
-						return;
-				}
-
-				goto loop;
-			}
-
-			public void Move(int count, ref int instructionPointer)
-			{
-				for (var i = 0; i < count; i++)
-				{
-					loop:
-
-					var operand = Pages[instructionPointer >> PageIndexShift].OperandsBuffer[instructionPointer & LocalIndexMask];
-
-					instructionPointer++;
-
-					if (operand >= 0)
-						continue;
-
-					if (operand == int.MinValue)
-					{
-						instructionPointer--;
-
-						operand = LoadPage(instructionPointer >> PageIndexShift).OperandsBuffer[instructionPointer & LocalIndexMask];
-
-						if (operand == int.MinValue)
-							return;
-					}
-
-					goto loop;
-				}
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public ref TInstruction PeekInstruction(int instructionPointer)
+			public void Move(ref int instructionPointer, int count)
+			{
+#if AUTOMATA_VAR_INSTRUCTION_SIZE
+				for (var i = 0; i < count; i++)
+				{
+					var pageIndex = instructionPointer >> PageIndexShift;
+					var pageOffset = instructionPointer & LocalIndexMask;
+					var operand = Pages[pageIndex].OperandsBuffer[pageOffset];
+
+					instructionPointer++;
+
+					if (operand > 0)
+						continue;
+
+					operand = LoadPage(pageIndex).OperandsBuffer[pageOffset];
+
+					if (operand > 0)
+						continue;
+
+					instructionPointer--;
+
+					return;
+				}
+#else
+				instructionPointer += count;
+#endif
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public int Move(int instructionPointer, int count)
+			{
+				Move(ref instructionPointer, count);
+
+				return instructionPointer;
+			}
+
+			protected override void OnReleased()
+			{
+				CleanPages();
+				DisposeParallel();
+				InstructionReader.Dispose();
+
+				HeadPage = 0;
+				PageCount = 0;
+				Finished = false;
+				Exception = null;
+				Position = 0;
+				StartPosition = 0;
+				InstructionReader = null;
+				StartInstructionPointer = 0;
+				NullPage.ReferenceCount = int.MaxValue;
+
+				base.OnReleased();
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public ref TInstruction PeekInstructionRef(int instructionPointer)
 			{
 				return ref Pages[instructionPointer >> PageIndexShift].InstructionsBuffer[instructionPointer & LocalIndexMask];
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public TInstruction PeekInstruction(int instructionPointer)
+			{
+				return Pages[instructionPointer >> PageIndexShift].InstructionsBuffer[instructionPointer & LocalIndexMask];
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -303,11 +343,52 @@ namespace Zaaml.Text
 				return Pages[instructionPointer >> PageIndexShift].OperandsBuffer[instructionPointer & LocalIndexMask];
 			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public int PrefetchReadOperand(ref int instructionPointer, int fetchLength)
+			{
+				var fetchEndPointer = instructionPointer + fetchLength;
+				var fetchPageIndex = fetchEndPointer >> PageIndexShift;
+				var fetchPageOffset = fetchEndPointer & LocalIndexMask;
+				var operand = Pages[fetchPageIndex].OperandsBuffer[fetchPageOffset];
+				var pageIndex = instructionPointer >> PageIndexShift;
+				var pageOffset = instructionPointer & LocalIndexMask;
+
+				if (operand == InvalidInstructionOperand)
+					LoadPage(fetchPageIndex);
+
+				operand = Pages[pageIndex].OperandsBuffer[pageOffset];
+
+				if (operand == InvalidInstructionOperand)
+					return InvalidInstructionOperand;
+
+				instructionPointer++;
+
+				return operand;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public ReadOnlySpan<int> PrefetchReadOperandSpan(int instructionPointer, int fetchLength)
+			{
+				var fetchEndPointer = instructionPointer + fetchLength;
+				var fetchPageIndex = fetchEndPointer >> PageIndexShift;
+				var fetchPageOffset = fetchEndPointer & LocalIndexMask;
+				var fetchOperand = Pages[fetchPageIndex].OperandsBuffer[fetchPageOffset];
+				var pageIndex = instructionPointer >> PageIndexShift;
+				var pageOffset = instructionPointer & LocalIndexMask;
+
+				if (fetchOperand == InvalidInstructionOperand)
+					LoadPage(fetchPageIndex);
+
+				var span = Pages[pageIndex].OperandsBuffer.AsSpan(pageOffset);
+
+				return fetchLength < span.Length ? span.Slice(0, fetchLength) : span;
+			}
+
 			private InstructionPage ReadNextPage(int pageIndex)
 			{
 				var pageLength = ReadNextPage(out var instructions, out var operands);
 
-				ArrayUtils.Fill(operands, int.MinValue, pageLength, PageSize - pageLength);
+				ArrayUtils.Fill(operands, InvalidInstructionOperand, pageLength, PageSize - pageLength);
 
 				return new InstructionPage(instructions, operands, pageIndex, pageLength);
 			}
@@ -343,36 +424,23 @@ namespace Zaaml.Text
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public int ReadOperand(ref int instructionPointer)
 			{
-				loop:
+				var pageIndex = instructionPointer >> PageIndexShift;
+				var pageOffset = instructionPointer & LocalIndexMask;
+				var operand = Pages[pageIndex].OperandsBuffer[pageOffset];
 
-				var page = Pages[instructionPointer >> PageIndexShift];
-				var operand = page.OperandsBuffer[instructionPointer & LocalIndexMask];
+				if (operand == InvalidInstructionOperand)
+					return InvalidInstructionOperand;
 
 				instructionPointer++;
 
-				if (operand >= 0)
-					return operand;
-
-				if (operand == int.MinValue)
-				{
-					instructionPointer--;
-
-					operand = LoadPage(instructionPointer >> PageIndexShift).OperandsBuffer[instructionPointer & LocalIndexMask];
-
-					if (operand == int.MinValue)
-						return -1;
-				}
-
-				goto loop;
+				return operand;
 			}
 
 			protected InstructionPageStruct ReadPageCore()
 			{
 				try
 				{
-					LoadPosition();
-
-					var count = InstructionReader.ReadPage(PageSize, out var instructions, out var operands);
+					var count = InstructionReader.ReadPage(ref Position, PageSize, out var instructions, out var operands);
 					var lexemesPage = new InstructionPageStruct(instructions, operands, count);
 
 					if (count < PageSize)
@@ -387,14 +455,6 @@ namespace Zaaml.Text
 
 					return new InstructionPageStruct(null, null, 0);
 				}
-				finally
-				{
-					SavePosition();
-				}
-			}
-
-			protected virtual void SavePosition()
-			{
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -403,23 +463,13 @@ namespace Zaaml.Text
 				Pages[instructionPointer >> PageIndexShift].ReferenceCount--;
 			}
 
-			#endregion
-
-			#region Nested Types
-
 			protected sealed class InstructionPage
 			{
-				#region Fields
-
 				public readonly TInstruction[] InstructionsBuffer;
 				public readonly int[] OperandsBuffer;
 				public readonly int PageIndex;
 				public int PageLength;
 				public int ReferenceCount;
-
-				#endregion
-
-				#region Ctors
 
 				public InstructionPage(TInstruction[] instructionsBuffer, int[] operandsBuffer, int pageIndex, int pageLength)
 				{
@@ -429,11 +479,9 @@ namespace Zaaml.Text
 					PageLength = pageLength;
 					ReferenceCount = 1;
 				}
-
-				#endregion
 			}
 
-			protected struct InstructionPageStruct
+			protected readonly struct InstructionPageStruct
 			{
 				public InstructionPageStruct(TInstruction[] instructionsBuffer, int[] operandsBuffer, int instructionsCount)
 				{
@@ -447,9 +495,15 @@ namespace Zaaml.Text
 				public readonly int InstructionsCount;
 			}
 
-			#endregion
-		}
+			public virtual string Dump(int position, int length)
+			{
+				return null;
+			}
 
-		#endregion
+			public virtual string Dump(int position)
+			{
+				return null;
+			}
+		}
 	}
 }

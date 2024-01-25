@@ -35,7 +35,7 @@ namespace Zaaml.UI.Controls.PropertyView
 		}
 	}
 
-	public abstract class PropertyDescriptor<TTarget, TValue> : PropertyDescriptor<TValue>, IPropertyItemFactory<TTarget>, IPropertyItemFactory
+	public abstract class PropertyDescriptor<TTarget, TValue> : PropertyDescriptor<TValue>, IPropertyItemFactory
 	{
 		protected PropertyDescriptor(PropertyDescriptorProvider provider) : base(provider)
 		{
@@ -52,11 +52,6 @@ namespace Zaaml.UI.Controls.PropertyView
 		PropertyItem IPropertyItemFactory.CreatePropertyItem(object propertyObject, PropertyItem parentItem)
 		{
 			return new PropertyItem<TTarget, TValue>((TTarget) propertyObject, this, parentItem);
-		}
-
-		PropertyItem IPropertyItemFactory<TTarget>.CreatePropertyItem(TTarget propertyObject, PropertyItem parentItem)
-		{
-			return new PropertyItem<TTarget, TValue>(propertyObject, this, parentItem);
 		}
 	}
 }

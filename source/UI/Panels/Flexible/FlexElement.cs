@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core.Extensions;
@@ -13,470 +14,470 @@ using Zaaml.PresentationCore.PropertyCore.Extensions;
 
 namespace Zaaml.UI.Panels.Flexible
 {
-  public struct FlexElement
-  {
-    #region Static Fields and Constants
+	public struct FlexElement
+	{
+		private const double DefaultMaxLength = double.MaxValue;
+		private const double DefaultMinLength = 0.0;
+		private const FlexStretchDirection DefaultStretchDirection = FlexStretchDirection.Both;
+		private const FlexOverflowBehavior DefaultOverflowBehavior = FlexOverflowBehavior.None;
 
-    private static readonly FlexLength DefaultLength = FlexLength.Auto;
-    private const double DefaultMaxLength = double.MaxValue;
-    private const double DefaultMinLength = 0.0;
-    private const FlexStretchDirection DefaultStretchDirection = FlexStretchDirection.Both;
-    private const FlexOverflowBehavior DefaultOverflowBehavior = FlexOverflowBehavior.None;
+		private static readonly FlexLength DefaultLength = FlexLength.Auto;
 
-    public static readonly FlexElement Default = new FlexElement(DefaultMinLength, DefaultMaxLength)
-    {
-      Length = DefaultLength,
-      StretchDirection = DefaultStretchDirection,
-      OverflowBehavior = DefaultOverflowBehavior
-    };
-
-    #endregion
-
-    // ReSharper disable once UnusedParameter.Local
-    internal FlexElement(double minLength, double maxLength, bool clamp) : this()
-    {
-      EnsureInitialized();
-
-      _minLength = minLength;
-      _maxLength = maxLength.Clamp(_minLength, double.PositiveInfinity);
-    }
-
-    public FlexElement(double minLength, double maxLength) : this()
-    {
-      EnsureInitialized();
-
-      if (minLength > maxLength)
-        throw new ArgumentOutOfRangeException();
-
-      _minLength = minLength;
-      _maxLength = maxLength;
-    }
-
-    #region Fields
-
-    private double _actualLength;
-    private double _desiredLength;
-    private short _expandPriority;
-    private double _maxLength;
-    private double _minLength;
-    private double _lengthValue;
-    private ushort _packedValue;
-    private short _shrinkPriority;
-
-    #endregion
-
-    #region Properties
-
-    internal bool CanExpand
-    {
-      get
-      {
-        if (LengthUnitType == FlexLengthUnitType.Star)
-          return true;
-
-        var stretchDirection = StretchDirection;
-        return stretchDirection == FlexStretchDirection.Both || stretchDirection == FlexStretchDirection.Expand;
-      }
-    }
-
-    internal bool CanShrink
-    {
-      get
-      {
-        if (LengthUnitType == FlexLengthUnitType.Star)
-          return true;
-
-        var stretchDirection = StretchDirection;
-        return stretchDirection == FlexStretchDirection.Both || stretchDirection == FlexStretchDirection.Shrink;
-      }
-    }
-
-    public bool IsStar => LengthUnitType == FlexLengthUnitType.Star;
-
-    public bool IsFixed => IsStar == false;
-
-    public bool CanDistribute(FlexDistributeDirection direction)
-    {
-      if (StretchDirection == FlexStretchDirection.None && IsStar == false)
-        return false;
-
-      if (direction == FlexDistributeDirection.Expand)
-        return ActualLength < MaxLength && (CanExpand || IsStar);
-
-      return ActualLength > MinLength && (CanShrink || IsStar);
-    }
-
-    public void Fill(double actualLength)
-    {
-      EnsureInitialized();
-
-      var length = Length;
-      actualLength = actualLength.Clamp(_minLength, _maxLength);
-
-      if (length.IsStar)
-        _actualLength = actualLength;
-      else
-      {
-        var desiredLength = DesiredLength;
-
-        if (actualLength.IsCloseTo(desiredLength))
-          _actualLength = desiredLength;
-        else if (actualLength.IsGreaterThan(desiredLength))
-          _actualLength = CanExpand ? actualLength : desiredLength;
-        else
-          _actualLength = CanShrink ? actualLength : desiredLength;
-      }
-    }
-
-    public double ActualLength
-    {
-      get => _actualLength;
-      set => _actualLength = value.Clamp(MinLength, MaxLength);
-    }
-
-    public double DesiredLength
-    {
-      get
-      {
-        var length = Length;
-        if (length.IsStar)
-          return ActualLength;
-
-        return length.IsAuto ? _desiredLength : length.Value;
-      }
-
-      private set => _desiredLength = value.Clamp(MinLength, MaxLength);
-    }
-
-    // ReSharper disable once ConvertToAutoProperty
-    public short ExpandPriority
-    {
-      get => _expandPriority;
-      set => _expandPriority = value;
-    }
-
-    public bool IsRound
-    {
-      get => PackedDefinition.IsRound.GetValue(_packedValue);
-      private set => PackedDefinition.IsRound.SetValue(ref _packedValue, value);
-    }
-
-	  public Orientation Orientation
+		public static readonly FlexElement Default = new(DefaultMinLength, DefaultMaxLength)
 		{
-		  get => PackedDefinition.IsHorizontal.GetValue(_packedValue) ? Orientation.Horizontal : Orientation.Vertical;
-		  private set => PackedDefinition.IsHorizontal.SetValue(ref _packedValue, value == Orientation.Horizontal);
-	  }
+			Length = DefaultLength,
+			StretchDirection = DefaultStretchDirection,
+			OverflowBehavior = DefaultOverflowBehavior
+		};
 
-		private FlexLengthUnitType LengthUnitType
-    {
-      get => PackedDefinition.LengthUnitType.GetValue(_packedValue);
-      set => PackedDefinition.LengthUnitType.SetValue(ref _packedValue, value);
+		private double _actualLength;
+		private double _desiredLength;
+		private short _expandPriority;
+		private double _lengthValue;
+		private double _maxLength;
+		private double _minLength;
+		private ushort _packedValue;
+		private short _shrinkPriority;
+
+		// ReSharper disable once UnusedParameter.Local
+		internal FlexElement(double minLength, double maxLength, bool clamp) : this()
+		{
+			Debug.Assert(clamp);
+
+			EnsureInitialized();
+
+			_minLength = minLength;
+			_maxLength = maxLength.Clamp(_minLength, double.PositiveInfinity);
 		}
 
-    private bool IsInitialized
-    {
-      get => PackedDefinition.IsInitialized.GetValue(_packedValue);
-      set => PackedDefinition.IsInitialized.SetValue(ref _packedValue, value);
-    }
+		public FlexElement(double minLength, double maxLength) : this()
+		{
+			EnsureInitialized();
 
+			if (minLength > maxLength)
+				throw new ArgumentOutOfRangeException();
 
+			_minLength = minLength;
+			_maxLength = maxLength;
+		}
 
-    private void EnsureInitialized()
-    {
-      if (IsInitialized)
-        return;
+		public double ActualLength
+		{
+			get => _actualLength;
+			set => _actualLength = value.Clamp(MinLength, MaxLength);
+		}
 
-      Initilize();
+		internal double ActualMaxLength => CanExpand ? MaxLength : DesiredLength;
 
-      IsInitialized = true;
-    }
+		internal double ActualMinLength => CanShrink ? MinLength : DesiredLength;
 
-    private void Initilize()
-    {
-      _maxLength = DefaultMaxLength;
-      _lengthValue = DefaultLength.Value;
-      LengthUnitType = DefaultLength.UnitType;
-    }
+		internal bool CanExpand
+		{
+			get
+			{
+				if (LengthUnitType == FlexLengthUnitType.Star)
+					return true;
 
-    internal double ActualMaxLength => CanExpand ? MaxLength : DesiredLength;
+				var stretchDirection = StretchDirection;
 
-    internal double ActualMinLength => CanShrink ? MinLength : DesiredLength;
+				return stretchDirection == FlexStretchDirection.Both || stretchDirection == FlexStretchDirection.Expand;
+			}
+		}
 
-    public double MaxLength
-    {
-      get
-      {
-        EnsureInitialized();
-        return _maxLength;
-      }
-      set
-      {
-        EnsureInitialized();
+		internal bool CanShrink
+		{
+			get
+			{
+				if (LengthUnitType == FlexLengthUnitType.Star)
+					return true;
 
-        if (MinLength > value)
-          throw new ArgumentOutOfRangeException();
+				var stretchDirection = StretchDirection;
 
-        _maxLength = value;
-      }
-    }
+				return stretchDirection == FlexStretchDirection.Both || stretchDirection == FlexStretchDirection.Shrink;
+			}
+		}
 
-    public double MinLength
-    {
-      get => _minLength;
-      set
-      {
-        if (value > MaxLength)
-          throw new ArgumentOutOfRangeException();
+		public double DesiredLength
+		{
+			get
+			{
+				var length = Length;
 
-        _minLength = value;
-      }
-    }
+				if (length.IsStar)
+					return ActualLength;
 
-    // ReSharper disable once ConvertToAutoProperty
-    public FlexLength Length
-    {
-      get
-      {
-        EnsureInitialized();
-        return new FlexLength(_lengthValue, LengthUnitType);
-      }
-      set
-      {
-        EnsureInitialized();
-        _lengthValue = value.Value;
-        LengthUnitType = value.UnitType;
-      }
-    }
+				return length.IsAuto ? _desiredLength : length.Value;
+			}
 
-    public FlexOverflowBehavior OverflowBehavior
-    {
-      get => PackedDefinition.OverflowBehavior.GetValue(_packedValue);
-      set => PackedDefinition.OverflowBehavior.SetValue(ref _packedValue, value);
-    }
+			private set => _desiredLength = value.Clamp(MinLength, MaxLength);
+		}
 
-    // ReSharper disable once ConvertToAutoProperty
-    public short ShrinkPriority
-    {
-      get => _shrinkPriority;
-      set => _shrinkPriority = value;
-    }
+		// ReSharper disable once ConvertToAutoProperty
+		public short ExpandPriority
+		{
+			get => _expandPriority;
+			set => _expandPriority = value;
+		}
 
-    public FlexStretchDirection StretchDirection
-    {
-      get => PackedDefinition.StretchDirection.GetValue(_packedValue);
-      set => PackedDefinition.StretchDirection.SetValue(ref _packedValue, value);
-    }
+		public double FixedLength => IsStar ? 0.0 : (Length.IsAuto ? DesiredLength : Length.Value);
 
-    public double FixedLength => IsStar ? 0.0 : (Length.IsAuto ? DesiredLength : Length.Value);
+		public bool IsFixed => IsStar == false;
 
-    #endregion
+		private bool IsInitialized
+		{
+			get => PackedDefinition.IsInitialized.GetValue(_packedValue);
+			set => PackedDefinition.IsInitialized.SetValue(ref _packedValue, value);
+		}
 
-    #region  Methods
+		public bool IsRound
+		{
+			get => PackedDefinition.IsRound.GetValue(_packedValue);
+			private set => PackedDefinition.IsRound.SetValue(ref _packedValue, value);
+		}
 
-    public FlexElement Clone()
-    {
-      return this;
-    }
+		public bool IsStar => LengthUnitType == FlexLengthUnitType.Star;
 
-    public FlexElement WithRounding(bool useLayoutRaounding)
-    {
-      var clone = this;
+		// ReSharper disable once ConvertToAutoProperty
+		public FlexLength Length
+		{
+			get
+			{
+				EnsureInitialized();
 
-      clone.IsRound = useLayoutRaounding;
-      if (useLayoutRaounding)
-        clone.RoundImpl();
+				return new FlexLength(_lengthValue, LengthUnitType);
+			}
+			set
+			{
+				EnsureInitialized();
 
-      return clone;
-    }
+				_lengthValue = value.Value;
+				LengthUnitType = value.UnitType;
+			}
+		}
 
-    public short GetPriority(FlexDistributeDirection priority)
-    {
-      return priority == FlexDistributeDirection.Expand ? ExpandPriority : ShrinkPriority;
-    }
+		private FlexLengthUnitType LengthUnitType
+		{
+			get => PackedDefinition.LengthUnitType.GetValue(_packedValue);
+			set => PackedDefinition.LengthUnitType.SetValue(ref _packedValue, value);
+		}
+
+		public double MaxLength
+		{
+			get
+			{
+				EnsureInitialized();
+
+				return _maxLength;
+			}
+			set
+			{
+				EnsureInitialized();
+
+				if (MinLength > value)
+					throw new ArgumentOutOfRangeException();
+
+				_maxLength = value;
+			}
+		}
+
+		public double MinLength
+		{
+			get => _minLength;
+			set
+			{
+				if (value > MaxLength)
+					throw new ArgumentOutOfRangeException();
+
+				_minLength = value;
+			}
+		}
+
+		public Orientation Orientation
+		{
+			get => PackedDefinition.IsHorizontal.GetValue(_packedValue) ? Orientation.Horizontal : Orientation.Vertical;
+			private set => PackedDefinition.IsHorizontal.SetValue(ref _packedValue, value == Orientation.Horizontal);
+		}
+
+		public FlexOverflowBehavior OverflowBehavior
+		{
+			get => PackedDefinition.OverflowBehavior.GetValue(_packedValue);
+			set => PackedDefinition.OverflowBehavior.SetValue(ref _packedValue, value);
+		}
+
+		// ReSharper disable once ConvertToAutoProperty
+		public short ShrinkPriority
+		{
+			get => _shrinkPriority;
+			set => _shrinkPriority = value;
+		}
+
+		public FlexStretchDirection StretchDirection
+		{
+			get => PackedDefinition.StretchDirection.GetValue(_packedValue);
+			set => PackedDefinition.StretchDirection.SetValue(ref _packedValue, value);
+		}
+
+		public bool CanDistribute(FlexDistributeDirection direction)
+		{
+			if (StretchDirection == FlexStretchDirection.None && IsStar == false)
+				return false;
+
+			if (direction == FlexDistributeDirection.Expand)
+				return ActualLength < MaxLength && (CanExpand || IsStar);
+
+			return ActualLength > MinLength && (CanShrink || IsStar);
+		}
+
+		public FlexElement Clone()
+		{
+			return this;
+		}
+
+		private void EnsureInitialized()
+		{
+			if (IsInitialized)
+				return;
+
+			Initialize();
+
+			IsInitialized = true;
+		}
+
+		public void Fill(double actualLength)
+		{
+			EnsureInitialized();
+
+			var length = Length;
+
+			actualLength = actualLength.Clamp(_minLength, _maxLength);
+
+			if (length.IsStar)
+				_actualLength = actualLength;
+			else
+			{
+				var desiredLength = DesiredLength;
+
+				if (actualLength.IsCloseTo(desiredLength))
+					_actualLength = desiredLength;
+				else if (actualLength.IsGreaterThan(desiredLength))
+					_actualLength = CanExpand ? actualLength : desiredLength;
+				else
+					_actualLength = CanShrink ? actualLength : desiredLength;
+			}
+		}
+
+		public short GetPriority(FlexDistributeDirection priority)
+		{
+			return priority == FlexDistributeDirection.Expand ? ExpandPriority : ShrinkPriority;
+		}
+
+		private void Initialize()
+		{
+			_maxLength = DefaultMaxLength;
+			_lengthValue = DefaultLength.Value;
+			LengthUnitType = DefaultLength.UnitType;
+		}
 
 		private void RoundImpl()
-    {
-      EnsureInitialized();
+		{
+			EnsureInitialized();
 
-      IsRound = true;
+			IsRound = true;
 
-      _minLength = _minLength.LayoutRound(Orientation, RoundingMode.FromZero);
-      _maxLength = _maxLength.LayoutRound(Orientation, RoundingMode.ToZero);
+			_minLength = _minLength.LayoutRound(Orientation, RoundingMode.FromZero);
+			_maxLength = _maxLength.LayoutRound(Orientation, RoundingMode.ToZero);
 
-      if (_minLength > _maxLength)
-        _maxLength = _minLength;
+			if (_minLength > _maxLength)
+				_maxLength = _minLength;
 
-      _actualLength = _actualLength.Clamp(_minLength, _maxLength);
-      _desiredLength = _desiredLength.Clamp(_minLength, _maxLength);
-    }
+			_actualLength = _actualLength.Clamp(_minLength, _maxLength);
+			_desiredLength = _desiredLength.Clamp(_minLength, _maxLength);
+		}
 
-    public void SetLengths(double minLength, double maxLength)
-    {
-      SetLengths(minLength, maxLength, DesiredLength, ActualLength);
-    }
+		public void SetLengths(double minLength, double maxLength)
+		{
+			SetLengths(minLength, maxLength, DesiredLength, ActualLength);
+		}
 
-    public void SetLengths(double minLength, double maxLength, double desiredLength, double currentLength)
-    {
-      if (_minLength > _maxLength)
-        throw new ArgumentOutOfRangeException();
+		public void SetLengths(double minLength, double maxLength, double desiredLength, double currentLength)
+		{
+			if (_minLength > _maxLength)
+				throw new ArgumentOutOfRangeException();
 
-      _minLength = minLength;
-      _maxLength = maxLength;
+			_minLength = minLength;
+			_maxLength = maxLength;
 
-      _desiredLength = desiredLength.Clamp(_minLength, _maxLength);
-      _actualLength = currentLength.Clamp(_minLength, _maxLength);
+			_desiredLength = desiredLength.Clamp(_minLength, _maxLength);
+			_actualLength = currentLength.Clamp(_minLength, _maxLength);
 
-      IsInitialized = true;
+			IsInitialized = true;
 
-      if (IsRound)
-        RoundImpl();
-    }
+			if (IsRound)
+				RoundImpl();
+		}
 
-    public override string ToString()
-    {
-      return $"Cur={ActualLength}, Min={MinLength}, Max={MaxLength}, Desired={DesiredLength}";
-    }
+		public override string ToString()
+		{
+			return $"Cur={ActualLength}, Min={MinLength}, Max={MaxLength}, Desired={DesiredLength}";
+		}
 
-    public FlexElement WithUIElement(UIElement element, Orientation orientation)
-    {
-      var clone = this;
+		public FlexElement WithActualLength(double actualLength)
+		{
+			var clone = this;
 
-      var minLength = MinLength;
-      var maxLength = Math.Max(minLength, MaxLength);
+			clone.ActualLength = actualLength;
 
-      var freChild = element as FrameworkElement;
-      if (freChild != null)
-      {
-        double freMinSize;
-        double freMaxSize;
+			return clone;
+		}
 
-        if (freChild.TryGetNonDefaultValue(orientation == Orientation.Horizontal ? FrameworkElement.MinWidthProperty : FrameworkElement.MinHeightProperty, out freMinSize))
-          minLength = Math.Min(freMinSize, minLength);
+		public FlexElement WithDesiredLength(double desiredLength)
+		{
+			var clone = this;
 
-        if (freChild.TryGetNonDefaultValue(orientation == Orientation.Horizontal ? FrameworkElement.MaxWidthProperty : FrameworkElement.MaxHeightProperty, out freMaxSize))
-          maxLength = Math.Max(minLength, Math.Max(freMaxSize, maxLength));
-      }
+			clone.DesiredLength = desiredLength;
 
-      var desired = element.DesiredSize.AsOriented(orientation).Direct;
+			return clone;
+		}
 
-      clone.SetLengths(minLength, maxLength, desired, desired);
+		public FlexElement WithExpandPriority(short expandPriority)
+		{
+			var clone = this;
 
-      return clone;
-    }
+			clone.ExpandPriority = expandPriority;
 
-    public FlexElement WithDesiredLength(double desiredLength)
-    {
-      var clone = this;
-      clone.DesiredLength = desiredLength;
-      return clone;
-    }
+			return clone;
+		}
 
-    public FlexElement WithActualLength(double actualLength)
-    {
-      var clone = this;
-      clone.ActualLength = actualLength;
-      return clone;
-    }
+		public FlexElement WithLength(FlexLength length)
+		{
+			var clone = this;
 
-    public FlexElement WithLength(FlexLength length)
-    {
-      var clone = this;
-      clone.Length = length;
-      return clone;
-    }
+			clone.Length = length;
 
-	  public FlexElement WithOrientation(Orientation orientation)
-	  {
-		  var clone = this;
-		  clone.Orientation = orientation;
-		  return clone;
-	  }
+			return clone;
+		}
 
-		public FlexElement WithExpandPriority(short sxpandPriority)
-    {
-      var clone = this;
-      clone.ExpandPriority = sxpandPriority;
-      return clone;
-    }
+		public FlexElement WithMaxLength(double maxLength)
+		{
+			var clone = this;
 
-    public FlexElement WithMaxLength(double maxLength)
-    {
-      var clone = this;
-      clone.MaxLength = maxLength;
-      return clone;
-    }
+			clone.MaxLength = maxLength;
 
-    public FlexElement WithMinMaxLength(double minLength, double maxLength)
-    {
-      var clone = this;
+			return clone;
+		}
 
-      clone.SetLengths(minLength, maxLength);
+		public FlexElement WithMinLength(double minLength)
+		{
+			var clone = this;
 
-      return clone;
-    }
+			clone.MinLength = minLength;
 
-    public FlexElement WithMinLength(double minLength)
-    {
-      var clone = this;
-      clone.MinLength = minLength;
-      return clone;
-    }
+			return clone;
+		}
 
-    public FlexElement WithOverflowBehavior(FlexOverflowBehavior overflowBehavior)
-    {
-      var clone = this;
-      clone.OverflowBehavior = overflowBehavior;
-      return clone;
-    }
+		public FlexElement WithMinMaxLength(double minLength, double maxLength)
+		{
+			var clone = this;
 
-    public FlexElement WithShrinkPriority(short shrinkPriority)
-    {
-      var clone = this;
-      clone.ShrinkPriority = shrinkPriority;
-      return clone;
-    }
+			clone.SetLengths(minLength, maxLength);
 
-    public FlexElement WithStretchDirection(FlexStretchDirection stretchDirection)
-    {
-      var clone = this;
-      clone.StretchDirection = stretchDirection;
-      return clone;
-    }
+			return clone;
+		}
 
-    #endregion
+		public FlexElement WithOrientation(Orientation orientation)
+		{
+			var clone = this;
 
-    #region  Nested Types
+			clone.Orientation = orientation;
 
-    private static class PackedDefinition
-    {
-      #region Static Fields and Constants
+			return clone;
+		}
 
-      public static readonly PackedBoolItemDefinition IsRound;
-      public static readonly PackedBoolItemDefinition IsHorizontal;
-      public static readonly PackedBoolItemDefinition IsInitialized;
-      public static readonly PackedEnumItemDefinition<FlexLengthUnitType> LengthUnitType;
-      public static readonly PackedEnumItemDefinition<FlexStretchDirection> StretchDirection;
-      public static readonly PackedEnumItemDefinition<FlexOverflowBehavior> OverflowBehavior;
+		public FlexElement WithOverflowBehavior(FlexOverflowBehavior overflowBehavior)
+		{
+			var clone = this;
 
-      #endregion
+			clone.OverflowBehavior = overflowBehavior;
 
-      #region Ctors
+			return clone;
+		}
 
-      static PackedDefinition()
-      {
-        var allocator = new PackedValueAllocator();
+		public FlexElement WithRounding(bool useLayoutRounding)
+		{
+			var clone = this;
 
-        IsRound = allocator.AllocateBoolItem();
-        IsHorizontal= allocator.AllocateBoolItem();
-        IsInitialized = allocator.AllocateBoolItem();
-        LengthUnitType = allocator.AllocateEnumItem<FlexLengthUnitType>();
-        StretchDirection = allocator.AllocateEnumItem<FlexStretchDirection>();
-        OverflowBehavior = allocator.AllocateEnumItem<FlexOverflowBehavior>();
-      }
+			clone.IsRound = useLayoutRounding;
 
-      #endregion
-    }
+			if (useLayoutRounding)
+				clone.RoundImpl();
 
-    #endregion
-  }
+			return clone;
+		}
+
+		public FlexElement WithShrinkPriority(short shrinkPriority)
+		{
+			var clone = this;
+
+			clone.ShrinkPriority = shrinkPriority;
+
+			return clone;
+		}
+
+		public FlexElement WithStretchDirection(FlexStretchDirection stretchDirection)
+		{
+			var clone = this;
+
+			clone.StretchDirection = stretchDirection;
+
+			return clone;
+		}
+
+		public FlexElement WithUIElement(UIElement element, Orientation orientation)
+		{
+			var clone = this;
+
+			var minLength = MinLength;
+			var maxLength = Math.Max(minLength, MaxLength);
+
+			if (element.Visibility == Visibility.Collapsed)
+				clone.StretchDirection = FlexStretchDirection.None;
+
+			if (element is FrameworkElement freChild)
+			{
+				if (freChild.TryGetNonDefaultValue(orientation == Orientation.Horizontal ? FrameworkElement.MinWidthProperty : FrameworkElement.MinHeightProperty, out double freMinSize))
+					minLength = Math.Min(freMinSize, minLength);
+
+				if (freChild.TryGetNonDefaultValue(orientation == Orientation.Horizontal ? FrameworkElement.MaxWidthProperty : FrameworkElement.MaxHeightProperty, out double freMaxSize))
+					maxLength = Math.Max(minLength, Math.Max(freMaxSize, maxLength));
+			}
+
+			var desired = element.DesiredSize.AsOriented(orientation).Direct;
+
+			clone.SetLengths(minLength, maxLength, desired, desired);
+
+			return clone;
+		}
+
+		private static class PackedDefinition
+		{
+			public static readonly PackedBoolItemDefinition IsRound;
+			public static readonly PackedBoolItemDefinition IsHorizontal;
+			public static readonly PackedBoolItemDefinition IsInitialized;
+			public static readonly PackedEnumItemDefinition<FlexLengthUnitType> LengthUnitType;
+			public static readonly PackedEnumItemDefinition<FlexStretchDirection> StretchDirection;
+			public static readonly PackedEnumItemDefinition<FlexOverflowBehavior> OverflowBehavior;
+
+			static PackedDefinition()
+			{
+				var allocator = new PackedValueAllocator();
+
+				IsRound = allocator.AllocateBoolItem();
+				IsHorizontal = allocator.AllocateBoolItem();
+				IsInitialized = allocator.AllocateBoolItem();
+				LengthUnitType = allocator.AllocateEnumItem<FlexLengthUnitType>();
+				StretchDirection = allocator.AllocateEnumItem<FlexStretchDirection>();
+				OverflowBehavior = allocator.AllocateEnumItem<FlexOverflowBehavior>();
+			}
+		}
+	}
 }

@@ -1,4 +1,4 @@
-// <copyright file="DocumentItem.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="DocumentDockItem.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -6,54 +6,38 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public class DocumentDockItem : DockItem
-  {
-    #region Ctors
+	public class DocumentDockItem : DockItem
+	{
+		static DocumentDockItem()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<DocumentDockItem>();
+		}
 
-    static DocumentDockItem()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<DocumentDockItem>();
-    }
+		public DocumentDockItem()
+		{
+			this.OverrideStyleKey<DocumentDockItem>();
+		}
 
-    internal DocumentDockItem(DockItemState dockState) : base(dockState)
-    {
-    }
+		public override DockItemKind Kind => DockItemKind.DocumentDockItem;
 
-    public DocumentDockItem() : base(DockItemState.Document)
-    {
-      this.OverrideStyleKey<DocumentDockItem>();
-    }
+		internal override DockTabViewItem CreateDockTabViewItem()
+		{
+			return new DockTabViewItem(this);
+		}
 
-    #endregion
+		protected internal override DockItemLayout CreateItemLayout()
+		{
+			return new DocumentDockItemLayout(this);
+		}
 
-    #region Properties
+		protected override DockItem CreatePreviewItem(DockItemState dockState)
+		{
+			return new DocumentDockItem { DockState = dockState };
+		}
 
-    public override DockItemKind Kind => DockItemKind.Document;
-
-    #endregion
-
-    #region  Methods
-
-    internal override DockTabViewItem CreateDockTabViewItem()
-    {
-      return new DockTabViewItem(this);
-    }
-
-    protected internal override DockItemLayout CreateItemLayout()
-    {
-      return new DocumentDockItemLayout(this);
-    }
-
-    protected override DockItem CreatePreviewItem(DockItemState dockState)
-    {
-      return new DocumentDockItem(dockState);
-    }
-
-    protected override bool IsDockStateAllowed(DockItemState state)
-    {
-      return state == DockItemState.Float || state == DockItemState.Document || state == DockItemState.Hidden;
-    }
-
-    #endregion
-  }
+		protected override bool IsDockStateAllowed(DockItemState state)
+		{
+			return state == DockItemState.Float || state == DockItemState.Document || state == DockItemState.Hidden;
+		}
+	}
 }

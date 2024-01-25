@@ -10,109 +10,97 @@ using Zaaml.PresentationCore.TemplateCore;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class FloatLayoutView : BaseLayoutView<FloatLayout>
-  {
-    #region Ctors
+	public sealed class FloatLayoutView : BaseLayoutView<FloatLayout>
+	{
+		public FloatLayoutView()
+		{
+			Controller = new FloatingDockWindowController(this);
+		}
 
-    public FloatLayoutView()
-    {
-      Controller = new FloatingDockWindowController(this);
-    }
+		private HashSet<DockItem> AddQueue { get; } = new();
 
-    #endregion
+		private FloatingDockWindowController Controller { get; }
 
-    #region Properties
+		private HashSet<DockItem> RemoveQueue { get; } = new();
 
-    private HashSet<DockItem> AddQueue { get; } = new HashSet<DockItem>();
+		private HashSet<DockItem> UpdateQueue { get; } = new();
 
-    private FloatingDockWindowController Controller { get; }
+		protected internal override void ArrangeItems()
+		{
+		}
 
-    private HashSet<DockItem> RemoveQueue { get; } = new HashSet<DockItem>();
+		protected override Size ArrangeOverride(Size arrangeBounds)
+		{
+			if (AddQueue.Any() || RemoveQueue.Any())
+				InvalidateMeasure();
 
-    private HashSet<DockItem> UpdateQueue { get; } = new HashSet<DockItem>();
+			return base.ArrangeOverride(arrangeBounds);
+		}
 
-    #endregion
+		protected override TemplateContract CreateTemplateContract()
+		{
+			return new FloatLayoutControlTemplateContract();
+		}
 
-    #region  Methods
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			// Remove windows
+			foreach (var dockItem in RemoveQueue)
+				Controller.DetachWindow(dockItem);
 
-    protected internal override void ArrangeItems()
-    {
-    }
+			// Add windows
+			foreach (var dockItem in AddQueue)
+				Controller.AttachWindow(dockItem);
 
-    protected override Size ArrangeOverride(Size arrangeBounds)
-    {
-      if (AddQueue.Any() || RemoveQueue.Any())
-        InvalidateMeasure();
+			// Update windows
+			foreach (var dockItem in UpdateQueue)
+				Controller.UpdateWindow(dockItem);
 
-      return base.ArrangeOverride(arrangeBounds);
-    }
+			Controller.ArrangeWindows();
 
-    protected override TemplateContract CreateTemplateContract()
-    {
-      return new FloatLayoutControlTemplateContract();
-    }
+			AddQueue.Clear();
+			RemoveQueue.Clear();
+			UpdateQueue.Clear();
 
-    protected override Size MeasureOverride(Size availableSize)
-    {
-      // Remove windows
-      foreach (var dockItem in RemoveQueue)
-        Controller.DetachWindow(dockItem);
+			return base.MeasureOverride(availableSize);
+		}
 
-      // Add windows
-      foreach (var dockItem in AddQueue)
-        Controller.AttachWindow(dockItem);
+		protected override void OnItemAdded(DockItem dockItem)
+		{
+			if (RemoveQueue.Remove(dockItem) == false)
+				AddQueue.Add(dockItem);
+			else
+				UpdateQueue.Add(dockItem);
 
-      // Update windows
-      foreach (var dockItem in UpdateQueue)
-        Controller.UpdateWindow(dockItem);
+			dockItem.FloatingWindow?.AttachContent();
 
-      Controller.ArrangeWindows();
+			InvalidateMeasure();
+		}
 
-      AddQueue.Clear();
-      RemoveQueue.Clear();
-      UpdateQueue.Clear();
+		protected override void OnItemRemoved(DockItem dockItem)
+		{
+			UpdateQueue.Remove(dockItem);
 
-      return base.MeasureOverride(availableSize);
-    }
+			if (AddQueue.Remove(dockItem) == false)
+				RemoveQueue.Add(dockItem);
 
-    protected override void OnItemAdded(DockItem dockItem)
-    {
-      if (RemoveQueue.Remove(dockItem) == false)
-        AddQueue.Add(dockItem);
-      else
-        UpdateQueue.Add(dockItem);
+			dockItem.FloatingWindow?.DetachContent();
 
-      dockItem.FloatingWindow?.AttachContent();
+			InvalidateMeasure();
+		}
 
-      InvalidateMeasure();
-    }
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-    protected override void OnItemRemoved(DockItem dockItem)
-    {
-      UpdateQueue.Remove(dockItem);
+			AddQueue.AddRange(Items.Except(RemoveQueue));
+		}
 
-      if (AddQueue.Remove(dockItem) == false)
-        RemoveQueue.Add(dockItem);
+		protected override void OnTemplateContractDetaching()
+		{
+			RemoveQueue.AddRange(Items.Except(AddQueue));
 
-      dockItem.FloatingWindow?.DetachContent();
-
-      InvalidateMeasure();
-    }
-
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
-
-      AddQueue.AddRange(Items.Except(RemoveQueue));
-    }
-
-    protected override void OnTemplateContractDetaching()
-    {
-      RemoveQueue.AddRange(Items.Except(AddQueue));
-
-      base.OnTemplateContractDetaching();
-    }
-
-    #endregion
-  }
+			base.OnTemplateContractDetaching();
+		}
+	}
 }

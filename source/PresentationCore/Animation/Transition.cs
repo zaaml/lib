@@ -8,112 +8,129 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Media.Animation;
+using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.MarkupExtensions;
+using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Animation
 {
-  [TypeConverter(typeof(TransitionTypeConverter))]
-  [ContentProperty(nameof(EasingFunction))]
-  public class Transition
-  {
-    #region Properties
+	[TypeConverter(typeof(TransitionTypeConverter))]
+	[ContentProperty(nameof(EasingFunction))]
+	public sealed class Transition : AssetBase
+	{
+		public static readonly DependencyProperty BeginTimeProperty = DPM.Register<TimeSpan?, Transition>
+			("BeginTime", TimeSpan.Zero);
 
-    public TimeSpan BeginTime { get; set; }
+		public static readonly DependencyProperty DurationProperty = DPM.Register<Duration, Transition>
+			("Duration", Duration.Automatic);
 
-    public Duration Duration { get; set; }
+		public static readonly DependencyProperty EasingFunctionProperty = DPM.Register<IEasingFunction, Transition>
+			("EasingFunction");
 
-    public IEasingFunction EasingFunction { get; set; }
+		public static readonly DependencyProperty AccelerationRatioProperty = DPM.Register<double, Transition>
+			("AccelerationRatio", 0.0);
 
-    #endregion
+		public static readonly DependencyProperty DecelerationRatioProperty = DPM.Register<double, Transition>
+			("DecelerationRatio", 0.0);
 
-    #region  Methods
+		public static readonly DependencyProperty SpeedRatioProperty = DPM.Register<double, Transition>
+			("SpeedRatio", 1.0);
 
-    internal static bool TryParse(string strValue, out Transition transition)
-    {
-      transition = null;
+		public double AccelerationRatio
+		{
+			get => (double)GetValue(AccelerationRatioProperty);
+			set => SetValue(AccelerationRatioProperty, value);
+		}
 
-      if (TimeSpan.TryParse(strValue, CultureInfo.InvariantCulture, out var timeSpan))
-      {
-        transition = new Transition
-        {
-          Duration = timeSpan
-        };
+		public TimeSpan? BeginTime
+		{
+			get => (TimeSpan?)GetValue(BeginTimeProperty);
+			set => SetValue(BeginTimeProperty, value);
+		}
 
-        return true;
-      }
-      return false;
-    }
+		public double DecelerationRatio
+		{
+			get => (double)GetValue(DecelerationRatioProperty);
+			set => SetValue(DecelerationRatioProperty, value);
+		}
 
-    #endregion
-  }
+		public Duration Duration
+		{
+			get => (Duration)GetValue(DurationProperty);
+			set => SetValue(DurationProperty, value);
+		}
 
-  public sealed class TransitionExtension : MarkupExtensionBase
-  {
-    #region Fields
+		public IEasingFunction EasingFunction
+		{
+			get => (IEasingFunction)GetValue(EasingFunctionProperty);
+			set => SetValue(EasingFunctionProperty, value);
+		}
 
-    private Transition _transition;
+		public double SpeedRatio
+		{
+			get => (double)GetValue(SpeedRatioProperty);
+			set => SetValue(SpeedRatioProperty, value);
+		}
 
-    #endregion
+		internal static bool TryParse(string strValue, out Transition transition)
+		{
+			transition = null;
 
-    #region Properties
+			if (TimeSpan.TryParse(strValue, CultureInfo.InvariantCulture, out var timeSpan) == false)
+				return false;
 
-    private Transition ActualTransition => _transition ??= new Transition();
+			transition = new Transition
+			{
+				Duration = timeSpan
+			};
 
-    public TimeSpan BeginTime
-    {
-      get => _transition?.BeginTime ?? default(TimeSpan);
-      set => ActualTransition.BeginTime = value;
-    }
+			return true;
+		}
+	}
 
-    public Duration Duration
-    {
-      get => _transition?.Duration ?? default(Duration);
+	public sealed class TransitionExtension : MarkupExtensionBase
+	{
+		private Transition _transition;
 
-      set => ActualTransition.Duration = value;
-    }
+		private Transition ActualTransition => _transition ??= new Transition();
 
-    public IEasingFunction EasingFunction
-    {
-      get => _transition?.EasingFunction;
-      set => ActualTransition.EasingFunction = value;
-    }
+		public TimeSpan BeginTime
+		{
+			get => _transition?.BeginTime ?? default(TimeSpan);
+			set => ActualTransition.BeginTime = value;
+		}
 
-    #endregion
+		public Duration Duration
+		{
+			get => _transition?.Duration ?? default(Duration);
+			set => ActualTransition.Duration = value;
+		}
 
-    #region  Methods
+		public IEasingFunction EasingFunction
+		{
+			get => _transition?.EasingFunction;
+			set => ActualTransition.EasingFunction = value;
+		}
 
-    public override object ProvideValue(IServiceProvider serviceProvider)
-    {
-      return _transition;
-    }
+		public override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			return _transition;
+		}
+	}
 
-    #endregion
-  }
+	internal sealed class TransitionTypeConverter : TypeConverter
+	{
+		public override bool CanConvertFrom(ITypeDescriptorContext td, Type t)
+		{
+			return t == typeof(string);
+		}
 
-  internal sealed class TransitionTypeConverter : TypeConverter
-  {
-    #region  Methods
+		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		{
+			if (value is not string strValue)
+				return base.ConvertFrom(context, culture, value);
 
-    public override bool CanConvertFrom(ITypeDescriptorContext td, Type t)
-    {
-      return t == typeof(string);
-    }
-
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-      var strValue = value as string;
-
-      if (strValue == null)
-        return base.ConvertFrom(context, culture, value);
-
-      Transition transition;
-
-      if (Transition.TryParse(strValue, out transition))
-        return transition;
-
-      return base.ConvertFrom(context, culture, value);
-    }
-
-    #endregion
-  }
+			return Transition.TryParse(strValue, out var transition) ? transition : base.ConvertFrom(context, culture, value);
+		}
+	}
 }

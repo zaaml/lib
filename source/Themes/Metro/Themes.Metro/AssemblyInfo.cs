@@ -7,8 +7,7 @@ using System.Windows.Markup;
 using Zaaml.PresentationCore.Theming;
 using System.Windows;
 using Zaaml.Core;
-using Zaaml.Theming;
-
+using Zaaml.MetroThemeImplementation;
 
 [assembly: XmlnsPrefix("http://schemas.zaaml.com/xaml", "zm")]
 

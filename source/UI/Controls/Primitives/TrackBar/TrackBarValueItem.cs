@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore.Extensions;
@@ -29,6 +30,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			this.OverrideStyleKey<TrackBarValueItem>();
 
+			Panel.SetZIndex(this, 10000);
 			PreserveValue = true;
 		}
 
@@ -46,7 +48,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		public double Value
 		{
-			get => (double) GetValue(ValueProperty);
+			get => (double)GetValue(ValueProperty);
 			set => SetValue(ValueProperty, value);
 		}
 
@@ -59,7 +61,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			{
 				SuspendValueHandler = true;
 
-				Value = ClampValue(PreserveValue ? _valueCache : Value);
+				this.SetCurrentValueInternal(ValueProperty, ClampValue(PreserveValue ? _valueCache : Value));
 			}
 			finally
 			{

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.UI.Controls.Interfaces;
 using Zaaml.PresentationCore.Extensions;
@@ -18,9 +19,9 @@ namespace Zaaml.UI.Controls.Primitives
 		  object isChecked;
 
 			if (item.IsChecked == true)
-			  isChecked = item.IsThreeState ? null : KnownBoxes.BoolFalse;
+			  isChecked = item.IsThreeState ? null : BooleanBoxes.False;
 			else
-			  isChecked = item.IsChecked.HasValue ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse;
+			  isChecked = item.IsChecked.HasValue ? BooleanBoxes.True : BooleanBoxes.False;
 
       item.SetCurrentValueInternal(item.IsCheckedPropertyInt, isChecked);
     }

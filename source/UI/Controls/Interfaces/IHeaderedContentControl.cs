@@ -4,6 +4,8 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 
 namespace Zaaml.UI.Controls.Interfaces
 {
@@ -74,6 +76,8 @@ namespace Zaaml.UI.Controls.Interfaces
 	internal interface IIconContentItemsControl : IContentItemsControl
 	{
 		string ItemIconMember { get; }
+
+		IIconSelector ItemIconSelector { get; }
 	}
 
 	internal interface IHeaderedIconContentItemsControl : IIconContentItemsControl

@@ -6,12 +6,8 @@ using System.Windows.Data;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public sealed class TemplateSkinBindingExtension : SkinBindingBaseExtension
-  {
-    #region Properties
-
-    protected override RelativeSource Source => XamlConstants.TemplatedParent;
-
-    #endregion
-  }
+	public sealed class TemplateSkinBindingExtension : SkinBindingBaseExtension
+	{
+		protected override RelativeSource Source => XamlConstants.TemplatedParent;
+	}
 }

@@ -114,17 +114,17 @@ namespace Zaaml.PresentationCore.Extensions
       return RectUtils.LayoutRound(rect, roundingMode);
     }
 
-    public static Rect Offset(this Rect rect, double offsetX, double offsetY)
+    public static Rect WithOffset(this Rect rect, double offsetX, double offsetY)
     {
       return RectUtils.Offset(rect, offsetX, offsetY);
     }
 
-    public static Rect Offset(this Rect rect, Point offset)
+    public static Rect WithOffset(this Rect rect, Point offset)
     {
       return RectUtils.Offset(rect, offset);
     }
 
-    public static Rect Offset(this Rect rect, OrientedPoint offset)
+    public static Rect WithOffset(this Rect rect, OrientedPoint offset)
     {
       return RectUtils.Offset(rect, offset);
     }
@@ -162,6 +162,14 @@ namespace Zaaml.PresentationCore.Extensions
     internal static Rect WithHeight(this Rect rect, double height)
     {
 	    rect.Height = height;
+
+	    return rect;
+    }
+
+    internal static Rect WithSize(this Rect rect, Size size)
+    {
+	    rect.Width = size.Width;
+	    rect.Height = size.Height;
 
 	    return rect;
     }

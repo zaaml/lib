@@ -21,6 +21,7 @@ using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Binding = System.Windows.Data.Binding;
 using NativeSetter = System.Windows.Setter;
+using TemplateBindingExtension = Zaaml.PresentationCore.Data.MarkupExtensions.TemplateBindingExtension;
 
 // TODO Priority calculation: style trigger setter should have higher priority then style setter
 
@@ -34,45 +35,37 @@ using NativeSetter = System.Windows.Setter;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  public sealed partial class Setter : PropertyValueSetter, IValueConverter, IVisualStateListener
-  {
-    #region Static Fields and Constants
+	public sealed partial class Setter : PropertyValueSetter, IValueConverter, IVisualStateListener
+	{
+		private static readonly PropertyInfo SetterValuePropertyInfo = typeof(NativeSetter).GetProperty("Value");
 
-    private static readonly PropertyInfo SetterValuePropertyInfo = typeof(NativeSetter).GetProperty("Value");
+		static Setter()
+		{
+			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
+		}
 
-    #endregion
+		private InteractivityObject CloneSource
+		{
+			get => MutableData?.GetType() == GetType() ? (InteractivityObject)MutableData : null;
+			set => MutableData = value;
+		}
 
-    #region Ctors
+		private bool IsVisualStateObserverAttached
+		{
+			get => PackedDefinition.IsVisualStateObserverAttached.GetValue(PackedValue);
+			set => PackedDefinition.IsVisualStateObserverAttached.SetValue(ref PackedValue, value);
+		}
 
-    static Setter()
-    {
-      RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
-    }
+		private RuntimeSetter RuntimeSetter => RuntimeTransitionStore as RuntimeSetter;
 
-    #endregion
+		private bool UseTransitions
+		{
+			get => PackedDefinition.UseTransitions.GetValue(PackedValue);
+			set => PackedDefinition.UseTransitions.SetValue(ref PackedValue, value);
+		}
 
-    #region Properties
-
-    private bool IsVisualStateObserverAttached
-    {
-      get => PackedDefinition.IsVisualStateObserverAttached.GetValue(PackedValue);
-      set => PackedDefinition.IsVisualStateObserverAttached.SetValue(ref PackedValue, value);
-    }
-
-    private RuntimeSetter RuntimeSetter => RuntimeTransitionStore as RuntimeSetter;
-
-    private bool UseTransitions
-    {
-      get => PackedDefinition.UseTransitions.GetValue(PackedValue);
-      set => PackedDefinition.UseTransitions.SetValue(ref PackedValue, value);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected override bool ApplyCore()
-    {
+		protected override bool ApplyCore()
+		{
 #if INTERACTIVITY_DEBUG
 			if (Debug)
 			{
@@ -80,520 +73,488 @@ namespace Zaaml.PresentationCore.Interactivity
 #endif
 			using var context = Context.Get(this);
 
-	    var actualTarget = context.Target;
+			var actualTarget = context.Target;
 
-	    if (actualTarget == null)
-		    return false;
+			if (actualTarget == null)
+				return false;
 
-	    var actualProperty = context.Property;
+			var actualProperty = context.Property;
 
-	    if (actualProperty == null)
-		    return false;
+			if (actualProperty == null)
+				return false;
 
-	    var runtimeSetter = RuntimeSetter;
+			var runtimeSetter = RuntimeSetter;
 
-	    if (runtimeSetter == null)
-	    {
-		    runtimeSetter = CreateRuntimeSetter();
-		    runtimeSetter.Priority = CalcActualPriority();
+			if (runtimeSetter == null)
+			{
+				runtimeSetter = CreateRuntimeSetter();
+				runtimeSetter.Priority = CalcActualPriority();
 
-		    runtimeSetter.Transition = Transition;
-		    RuntimeTransitionStore = runtimeSetter;
-	    }
+				runtimeSetter.Transition = Transition;
+				RuntimeTransitionStore = runtimeSetter;
+			}
 
-	    var useTransitions = UseTransitions;
+			var useTransitions = UseTransitions;
 
-	    runtimeSetter.EnterTransitionContext(useTransitions);
+			runtimeSetter.EnterTransitionContext(useTransitions);
 
-	    runtimeSetter.Transition = ActualTransition;
-	    runtimeSetter.AssignValueOrProvider(context, false);
+			runtimeSetter.Transition = ActualTransition;
+			runtimeSetter.AssignValueOrProvider(context, false);
 
-	    runtimeSetter.Apply(EffectiveValue.GetEffectiveValue(actualTarget, actualProperty));
-	    runtimeSetter.EffectiveValue.KeepAlive = ActualVisualState != null;
+			runtimeSetter.Apply(EffectiveValue.GetEffectiveValue(actualTarget, actualProperty));
+			runtimeSetter.EffectiveValue.KeepAlive = ActualVisualState != null;
 
-	    runtimeSetter.LeaveTransitionContext(useTransitions);
+			runtimeSetter.LeaveTransitionContext(useTransitions);
 
-	    return true;
-    }
+			return true;
+		}
 
-    private void AttachVisualStateObserver(IServiceProvider root = null)
-    {
-      if (ActualVisualState == null) 
-	      return;
+		private void AttachVisualStateObserver(IServiceProvider root = null)
+		{
+			if (ActualVisualState == null)
+				return;
 
-      IsEnabled = false;
+			IsEnabled = false;
 
-      var vso = root?.GetService<IVisualStateObserver>() ?? GetService<IVisualStateObserver>();
-      vso?.AttachListener(this);
+			var vso = root?.GetService<IVisualStateObserver>() ?? GetService<IVisualStateObserver>();
+			vso?.AttachListener(this);
 
-      IsVisualStateObserverAttached = true;
-    }
+			IsVisualStateObserverAttached = true;
+		}
 
-    private uint CalcActualPriority()
-    {
-      return RuntimeSetter.MergePriorityOrder(ActualPriority, Index);
-    }
+		private uint CalcActualPriority()
+		{
+			return RuntimeSetter.MergePriorityOrder(ActualPriority, Index);
+		}
 
-    protected override InteractivityObject CreateInstance()
-    {
-      return new Setter();
-    }
+		protected internal override void CopyMembersOverride(InteractivityObject source)
+		{
+			base.CopyMembersOverride(source);
 
-    internal NativeSetter CreateNativeStyleSetter(Type targetType)
-    {
+			var setterSource = (Setter)source;
+			var cloneSource = setterSource.CloneSource;
+
+			if (cloneSource != null)
+				CloneSource = cloneSource;
+		}
+
+		protected override InteractivityObject CreateInstance()
+		{
+			return new Setter();
+		}
+
+		internal NativeSetter CreateNativeStyleSetter(Type targetType)
+		{
 #if INTERACTIVITY_DEBUG
-      if (Debug)
-        return null;
+			if (Debug)
+				return null;
 #endif
 
-      if (string.IsNullOrEmpty(ActualVisualState) == false)
-        return null;
+			if (string.IsNullOrEmpty(ActualVisualState) == false)
+				return null;
 
-      var dependencyProperty = ResolveProperty(targetType);
+			var dependencyProperty = ResolveProperty(targetType);
 
-      if (dependencyProperty == null)
-      {
-        LogService.LogWarning($"Unable resolve property for setter: {this}");
+			if (dependencyProperty == null)
+			{
+				LogService.LogWarning($"Unable resolve property for setter: {this}");
 
-        return null;
-      }
+				return null;
+			}
 
-      var themeResourceKey = ActualThemeResourceKey;
+			var themeResourceKey = ActualThemeResourceKey;
 
-      if (themeResourceKey.IsEmpty == false)
-      {
-        var nativeSetter = new NativeSetter
-        {
-          Property = dependencyProperty
-        };
+			if (themeResourceKey.IsEmpty == false)
+			{
+				var nativeSetter = new NativeSetter
+				{
+					Property = dependencyProperty
+				};
 
-        BindingMarkupExtension extension = null;
+				BindingMarkupExtension extension = null;
 
-        switch (ActualValuePathSource)
-        {
-          case ValuePathSource.ThemeResource:
-            extension = new ThemeResourceExtension {Key = themeResourceKey.Key};
-            break;
-          case ValuePathSource.Skin:
-            extension = new SelfBindingExtension {Path = new PropertyPath(Extension.ActualSkinProperty), Converter = SkinResourceConverter.Instance, ConverterParameter = themeResourceKey};
-            break;
-          case ValuePathSource.TemplateSkin:
-	          extension = new Data.MarkupExtensions.TemplateBindingExtension {Path = new PropertyPath(Extension.ActualSkinProperty), Converter = SkinResourceConverter.Instance, ConverterParameter = themeResourceKey};
-	          break;
-          case ValuePathSource.TemplateExpando:
-            extension = new TemplateExpandoBindingExtension {Path = themeResourceKey.Key};
-            break;
-          case ValuePathSource.Expando:
-            extension = new SelfExpandoBindingExtension {Path = themeResourceKey.Key};
-            break;
-        }
+				switch (ActualValuePathSource)
+				{
+					case ValuePathSource.ThemeResource:
+						extension = new ThemeResourceExtension { Key = themeResourceKey.Key };
+						break;
+					case ValuePathSource.Skin:
+						extension = new SelfBindingExtension { Path = new PropertyPath(Extension.ActualSkinProperty), Converter = SkinResourceConverter.Instance, ConverterParameter = themeResourceKey };
+						break;
+					case ValuePathSource.TemplateSkin:
+						extension = new TemplateBindingExtension { Path = new PropertyPath(Extension.ActualSkinProperty), Converter = SkinResourceConverter.Instance, ConverterParameter = themeResourceKey };
+						break;
+					case ValuePathSource.TemplateExpando:
+						extension = new TemplateExpandoBindingExtension { Path = themeResourceKey.Key };
+						break;
+					case ValuePathSource.Expando:
+						extension = new SelfExpandoBindingExtension { Path = themeResourceKey.Key };
+						break;
+				}
 
-        if (extension != null)
-          nativeSetter.Value = extension.GetBinding(nativeSetter, SetterValuePropertyInfo);
+				if (extension != null)
+					nativeSetter.Value = extension.GetBinding(nativeSetter, SetterValuePropertyInfo);
 
-        return nativeSetter;
-      }
+				return nativeSetter;
+			}
 
-      var value = Value;
+			var value = Value;
 
-      if (value is MarkupExtension markupExtension)
-      {
-        var nativeSetter = new NativeSetter
-        {
-          Property = dependencyProperty
-        };
+			if (value is MarkupExtension markupExtension)
+			{
+				var nativeSetter = new NativeSetter
+				{
+					Property = dependencyProperty
+				};
 
-        if (markupExtension is BindingMarkupExtension bindingMarkupExtension)
-          nativeSetter.Value = bindingMarkupExtension.GetBinding(nativeSetter, SetterValuePropertyInfo);
-        else if (markupExtension is BindingBase)
-          nativeSetter.Value = markupExtension;
-        else
-          using (var serviceProvider = TargetServiceProvider.GetServiceProvider(nativeSetter, SetterValuePropertyInfo))
-            nativeSetter.Value = markupExtension.ProvideValue(serviceProvider);
+				if (markupExtension is BindingMarkupExtension bindingMarkupExtension)
+					nativeSetter.Value = bindingMarkupExtension.GetBinding(nativeSetter, SetterValuePropertyInfo);
+				else if (markupExtension is BindingBase)
+					nativeSetter.Value = markupExtension;
+				else
+					using (var serviceProvider = TargetServiceProvider.GetServiceProvider(nativeSetter, SetterValuePropertyInfo))
+						nativeSetter.Value = markupExtension.ProvideValue(serviceProvider);
 
-        return nativeSetter;
-      }
+				return nativeSetter;
+			}
 
-      var convertedValue = XamlStaticConverter.TryConvertValue(value, dependencyProperty.GetPropertyType());
+			var convertedValue = XamlStaticConverter.TryConvertValue(value, dependencyProperty.GetPropertyType());
 
-      if (convertedValue.IsFailed)
-      {
-        LogService.LogWarning($"Unable convert value for setter: {this}");
+			if (convertedValue.IsFailed)
+			{
+				LogService.LogWarning($"Unable convert value for setter: {this}");
 
-        return null;
-      }
+				return null;
+			}
 
-      return new NativeSetter
-      {
-        Property = dependencyProperty,
-        Value = convertedValue.Result
-      };
-    }
+			return new NativeSetter
+			{
+				Property = dependencyProperty,
+				Value = convertedValue.Result
+			};
+		}
 
-    private RuntimeSetter CreateRuntimeSetter()
-    {
-      IRuntimeSetterFactory factory = null;
+		private RuntimeSetter CreateRuntimeSetter()
+		{
+			IRuntimeSetterFactory factory = null;
 
-      var current = Parent;
+			var current = Parent;
 
-      while (current != null)
-      {
-        factory = current as IRuntimeSetterFactory;
+			while (current != null)
+			{
+				factory = current as IRuntimeSetterFactory;
 
-        if (factory != null)
-          break;
+				if (factory != null)
+					break;
 
-        current = current.Parent;
-      }
+				current = current.Parent;
+			}
 
-      return factory?.CreateSetter() ?? new DefaultRuntimeSetter();
-    }
+			return factory?.CreateSetter() ?? new DefaultRuntimeSetter();
+		}
 
-    private void DetachVisualStateObserver()
-    {
-      if (IsVisualStateObserverAttached)
-        GetService<IVisualStateObserver>()?.DetachListener(this);
+		private void DetachVisualStateObserver()
+		{
+			if (IsVisualStateObserverAttached)
+				GetService<IVisualStateObserver>()?.DetachListener(this);
 
-      IsEnabled = true;
-      IsVisualStateObserverAttached = false;
-    }
+			IsEnabled = true;
+			IsVisualStateObserverAttached = false;
+		}
 
-    internal Setter Flatten()
-    {
-      var copy = DeepClone<Setter>();
+		internal Setter Flatten()
+		{
+			var copy = DeepClone<Setter>();
 
-      copy.FlattenProperties(this);
+			copy.FlattenProperties(this);
 
-      copy.CloneSource = copy;
+			copy.CloneSource = copy;
 
-      return copy;
-    }
+			return copy;
+		}
 
-    private object GetRuntimeValue(Context context)
-    {
-      var value = context.Value;
+		private object GetRuntimeValue(Context context)
+		{
+			var value = context.Value;
 
-      if (string.IsNullOrEmpty(context.ValuePath) == false && (context.ValuePathSource == ValuePathSource.Skin || context.ValuePathSource == ValuePathSource.TemplateSkin))
-        return GetSkinValue(context.ValuePathSource);
+			if (string.IsNullOrEmpty(context.ValuePath) == false && (context.ValuePathSource == ValuePathSource.Skin || context.ValuePathSource == ValuePathSource.TemplateSkin))
+				return GetSkinValue(context.ValuePathSource);
 
-      if (value is BindingMarkupExtension bindingMarkupExtension)
-        value = bindingMarkupExtension.GetBinding(context.Target, context.Property);
+			if (value is BindingMarkupExtension bindingMarkupExtension)
+				value = bindingMarkupExtension.GetBinding(context.Target, context.Property);
 
-      var binding = value as Binding;
+			var binding = value as Binding;
 
-      if (binding == null)
-        return value;
+			if (binding == null)
+				return value;
 
-      if (binding.Mode == BindingMode.TwoWay)
-        throw new NotSupportedException();
+			if (binding.Mode == BindingMode.TwoWay)
+				throw new NotSupportedException();
 
-      if (binding.Source == null && binding.RelativeSource == null && binding.ElementName == null)
-      {
-        binding = binding.CloneBinding();
-        binding.RelativeSource = XamlConstants.Self;
-      }
+			if (binding.Source == null && binding.RelativeSource == null && binding.ElementName == null)
+			{
+				binding = binding.CloneBinding();
+				binding.RelativeSource = XamlConstants.Self;
+			}
 
-      return binding;
-    }
+			return binding;
+		}
 
-    protected internal override void CopyMembersOverride(InteractivityObject source)
-    {
-      base.CopyMembersOverride(source);
+		private ISetterValueProvider GetRuntimeValueProvider(Context context)
+		{
+			ISetterValueProvider resolvedValueProvider = null;
 
-      var setterSource = (Setter) source;
-      var cloneSource = setterSource.CloneSource;
+			try
+			{
+				if (IsInStyle)
+				{
+					var styleSetterSource = (Setter)CloneSource;
 
-      if (cloneSource != null)
-        CloneSource = cloneSource;
-    }
+					if (styleSetterSource != null)
+					{
+						resolvedValueProvider = ValueResolver.ResolveValueProvider(styleSetterSource);
 
-    private InteractivityObject CloneSource
-    {
-      get => MutableData?.GetType() == GetType() ? (InteractivityObject)MutableData : null;
-      set => MutableData = value;
-    }
+						if (resolvedValueProvider != null)
+							return resolvedValueProvider;
+					}
+				}
 
-    private ISetterValueProvider GetRuntimeValueProvider(Context context)
-    {
-      ISetterValueProvider resolvedValueProvider = null;
+				resolvedValueProvider = ValueResolver.ResolveValueProvider(this);
 
-      try
-      {
-        if (IsInStyle)
-        {
-          var styleSetterSource = (Setter) CloneSource;
+				if (resolvedValueProvider != null)
+					return resolvedValueProvider;
 
-          if (styleSetterSource != null)
-          {
-            resolvedValueProvider = ValueResolver.ResolveValueProvider(styleSetterSource);
+				var actualValuePath = context.ValuePath;
 
-            if (resolvedValueProvider != null)
-              return resolvedValueProvider;
-          }
-        }
+				resolvedValueProvider = string.IsNullOrEmpty(actualValuePath) == false ? GetValuePathProvider(context) : context.Value as ISetterValueProvider;
 
-        resolvedValueProvider = ValueResolver.ResolveValueProvider(this);
+				return resolvedValueProvider;
+			}
+			finally
+			{
+				if (resolvedValueProvider is ThemeResourceReference || resolvedValueProvider is ThemeResourceExtension)
+					context.InteractivityRoot.InteractivityService.EnsureThemeListener();
 
-        if (resolvedValueProvider != null)
-          return resolvedValueProvider;
+				if (context.ValuePathSource == ValuePathSource.Skin || context.ValuePathSource == ValuePathSource.TemplateSkin)
+				{
+					var elementRoot = context.InteractivityRoot as ElementRoot;
 
-        var actualValuePath = context.ValuePath;
+					elementRoot?.EnsureSkinListener();
+				}
+			}
+		}
 
-        resolvedValueProvider = string.IsNullOrEmpty(actualValuePath) == false ? GetValuePathProvider(context) : context.Value as ISetterValueProvider;
+		private SkinBase GetSkin(ValuePathSource valuePathSource)
+		{
+			var interactivityRoot = Root;
+			var frameworkElementRoot = interactivityRoot as ElementRoot;
 
-        return resolvedValueProvider;
-      }
-      finally
-      {
-        if (resolvedValueProvider is ThemeResourceReference || resolvedValueProvider is ThemeResourceExtension)
-          context.InteractivityRoot.InteractivityService.EnsureThemeListener();
-
-        if (context.ValuePathSource == ValuePathSource.Skin || context.ValuePathSource == ValuePathSource.TemplateSkin)
-        {
-          var elementRoot = context.InteractivityRoot as ElementRoot;
-
-          elementRoot?.EnsureSkinListener();
-        }
-      }
-    }
-
-    private SkinBase GetSkin(ValuePathSource valuePathSource)
-    {
-      var interactivityRoot = Root;
-      var frameworkElementRoot = interactivityRoot as ElementRoot;
-
-      if (valuePathSource == ValuePathSource.TemplateSkin)
-	      return Extension.GetActualSkin(frameworkElementRoot?.TemplatedParent);
+			if (valuePathSource == ValuePathSource.TemplateSkin)
+				return Extension.GetActualSkin(frameworkElementRoot?.TemplatedParent);
 
 			if (valuePathSource == ValuePathSource.Skin)
 				return Extension.GetActualSkin(interactivityRoot.InteractivityTarget);
 
 			return null;
-    }
+		}
 
-    private object GetSkinValue(ValuePathSource valuePathSource)
-    {
-      var skin = GetSkin(valuePathSource);
+		private object GetSkinValue(ValuePathSource valuePathSource)
+		{
+			var skin = GetSkin(valuePathSource);
 
-      return skin?.GetValueInternal(ActualThemeResourceKey);
-    }
+			return skin?.GetValueInternal(ActualThemeResourceKey);
+		}
 
-    private ISetterValueProvider GetValuePathProvider(Context context)
-    {
-      var actualValuePathSource = ActualValuePathSource;
+		private ISetterValueProvider GetValuePathProvider(Context context)
+		{
+			var actualValuePathSource = ActualValuePathSource;
 
-      switch (actualValuePathSource)
-      {
-        case ValuePathSource.ThemeResource:
-          return ThemeManager.GetThemeReference(context.ValuePath);
-        case ValuePathSource.Skin:
-          return null;
-        case ValuePathSource.TemplateSkin:
-	        return null;
-        case ValuePathSource.TemplateExpando:
-          return new ExpandoValueProvider(InteractivityTarget.GetTemplatedParent(), context.ValuePath);
-        case ValuePathSource.Expando:
-          return new ExpandoValueProvider(ActualTarget, context.ValuePath);
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+			switch (actualValuePathSource)
+			{
+				case ValuePathSource.ThemeResource:
+					return ThemeManager.GetThemeResourceReference(context.ValuePath);
+				case ValuePathSource.Skin:
+					return null;
+				case ValuePathSource.TemplateSkin:
+					return null;
+				case ValuePathSource.TemplateExpando:
+					return new ExpandoValueProvider(InteractivityTarget.GetTemplatedParent(), context.ValuePath);
+				case ValuePathSource.Expando:
+					return new ExpandoValueProvider(ActualTarget, context.ValuePath);
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
 
-    internal override void LoadCore(IInteractivityRoot root)
-    {
-      base.LoadCore(root);
+		internal override void LoadCore(IInteractivityRoot root)
+		{
+			base.LoadCore(root);
 
-      AttachVisualStateObserver(root);
-    }
+			AttachVisualStateObserver(root);
+		}
 
-    protected override void OnActualPriorityChanged(short oldPriority, short newPriority)
-    {
-      base.OnActualPriorityChanged(oldPriority, newPriority);
+		protected override void OnActualPriorityChanged(short oldPriority, short newPriority)
+		{
+			base.OnActualPriorityChanged(oldPriority, newPriority);
 
-      if (RuntimeSetter != null)
-        RuntimeSetter.Priority = CalcActualPriority();
-    }
+			if (RuntimeSetter != null)
+				RuntimeSetter.Priority = CalcActualPriority();
+		}
 
-    protected override void OnActualPropertyChanged(DependencyProperty oldProperty, DependencyProperty newProperty)
-    {
-      RuntimeSetter?.ResetValueProvider();
+		protected override void OnActualPropertyChanged(DependencyProperty oldProperty, DependencyProperty newProperty)
+		{
+			RuntimeSetter?.ResetValueProvider();
 
-      base.OnActualPropertyChanged(oldProperty, newProperty);
-    }
+			base.OnActualPropertyChanged(oldProperty, newProperty);
+		}
 
-    protected override void OnActualTargetChanged(DependencyObject oldTarget, DependencyObject newTarget)
-    {
-      RuntimeSetter?.ResetValueProvider();
+		protected override void OnActualTargetChanged(DependencyObject oldTarget, DependencyObject newTarget)
+		{
+			RuntimeSetter?.ResetValueProvider();
 
-      base.OnActualTargetChanged(oldTarget, newTarget);
-    }
+			base.OnActualTargetChanged(oldTarget, newTarget);
+		}
 
-    protected override void OnActualValueChanged(object oldValue, object newValue)
-    {
-      UpdateEffectiveValue();
+		protected override void OnActualValueChanged(object oldValue, object newValue)
+		{
+			UpdateEffectiveValue();
 
-      base.OnActualValueChanged(oldValue, newValue);
-    }
+			base.OnActualValueChanged(oldValue, newValue);
+		}
 
-    protected override void OnActualValuePathChanged(string oldValuePath, string newValuePath)
-    {
-      UpdateEffectiveValue();
+		protected override void OnActualValuePathChanged(string oldValuePath, string newValuePath)
+		{
+			UpdateEffectiveValue();
 
-      base.OnActualValuePathChanged(oldValuePath, newValuePath);
-    }
+			base.OnActualValuePathChanged(oldValuePath, newValuePath);
+		}
 
-    protected override void OnActualValuePathSourceChanged(ValuePathSource oldValuePathSource, ValuePathSource newValuePathSource)
-    {
-      UpdateEffectiveValue();
+		protected override void OnActualValuePathSourceChanged(ValuePathSource oldValuePathSource, ValuePathSource newValuePathSource)
+		{
+			UpdateEffectiveValue();
 
-      base.OnActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
-    }
+			base.OnActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
+		}
 
-    protected override void OnActualVisualStateChanged(string oldVisualState, string newVisualState)
-    {
-      base.OnActualVisualStateChanged(oldVisualState, newVisualState);
+		protected override void OnActualVisualStateChanged(string oldVisualState, string newVisualState)
+		{
+			base.OnActualVisualStateChanged(oldVisualState, newVisualState);
 
-      DetachVisualStateObserver();
-      AttachVisualStateObserver();
-    }
+			DetachVisualStateObserver();
+			AttachVisualStateObserver();
+		}
 
-    internal Setter Optimize()
-    {
-      var expandoProperty = ExpandoProperty;
+		internal Setter Optimize()
+		{
+			var expandoProperty = ExpandoProperty;
 
-      if (string.IsNullOrEmpty(expandoProperty) == false)
-        Property = DependencyPropertyManager.GetExpandoProperty(expandoProperty);
+			if (string.IsNullOrEmpty(expandoProperty) == false)
+				Property = DependencyPropertyManager.GetExpandoProperty(expandoProperty);
 
-      return this;
-    }
+			return this;
+		}
 
-    protected override void UndoCore()
-    {
-      if (RuntimeSetter == null)
-        return;
+		protected override void UndoCore()
+		{
+			if (RuntimeSetter == null)
+				return;
 
-      RuntimeSetter.Undo();
+			RuntimeSetter.Undo();
 
-      var valueProvider = RuntimeSetter.ValueProvider;
+			var valueProvider = RuntimeSetter.ValueProvider;
 
-      if (valueProvider != null && valueProvider.IsShared() == false && valueProvider.IsLongLife() == false)
-        RuntimeSetter.ValueProvider = null;
-    }
+			if (valueProvider != null && valueProvider.IsShared() == false && valueProvider.IsLongLife() == false)
+				RuntimeSetter.ValueProvider = null;
+		}
 
-    internal override void UnloadCore(IInteractivityRoot root)
-    {
-      var runtimeSetter = RuntimeSetter;
+		internal override void UnloadCore(IInteractivityRoot root)
+		{
+			var runtimeSetter = RuntimeSetter;
 
-      if (runtimeSetter != null)
-      {
-        runtimeSetter.Dispose();
-        RuntimeTransitionStore = IsTransitionSet ? runtimeSetter.Transition : null;
-      }
+			if (runtimeSetter != null)
+			{
+				runtimeSetter.Dispose();
+				RuntimeTransitionStore = IsTransitionSet ? runtimeSetter.Transition : null;
+			}
 
-      DetachVisualStateObserver();
+			DetachVisualStateObserver();
 
-      base.UnloadCore(root);
-    }
+			base.UnloadCore(root);
+		}
 
-    private void UpdateEffectiveValue()
-    {
-	    using var context = Context.Get(this);
+		private void UpdateEffectiveValue()
+		{
+			using var context = Context.Get(this);
 
-	    RuntimeSetter?.AssignValueOrProvider(context, true);
-    }
+			RuntimeSetter?.AssignValueOrProvider(context, true);
+		}
 
-    internal void UpdateSkin(SkinBase newSkin)
-    {
-      if (RuntimeSetter == null)
-        return;
+		internal void UpdateSkin(SkinBase newSkin)
+		{
+			if (RuntimeSetter == null)
+				return;
 
-      var actualValuePathSource = ActualValuePathSource;
+			var actualValuePathSource = ActualValuePathSource;
 
-      if (actualValuePathSource == ValuePathSource.Skin || actualValuePathSource == ValuePathSource.TemplateSkin)
+			if (actualValuePathSource == ValuePathSource.Skin || actualValuePathSource == ValuePathSource.TemplateSkin)
 				RuntimeSetter.Value = GetSkinValue(actualValuePathSource);
-    }
+		}
 
-    internal void UpdateThemeResources()
-    {
-      if (RuntimeSetter == null)
-        return;
+		internal void UpdateThemeResources()
+		{
+			if (RuntimeSetter == null)
+				return;
 
-      var valueProvider = RuntimeSetter.ValueProvider;
+			var valueProvider = RuntimeSetter.ValueProvider;
 
-      if (valueProvider is ThemeResourceExtension themeResourceExtension)
-        themeResourceExtension.UpdateThemeResource();
-      else if (valueProvider is ThemeResourceReference == false)
-        return;
+			if (valueProvider is ThemeResourceExtension themeResourceExtension)
+				themeResourceExtension.UpdateThemeResource();
+			else if (valueProvider is ThemeResourceReference == false)
+				return;
 
-      RuntimeSetter.OnProviderValueChanged();
-    }
+			RuntimeSetter.OnProviderValueChanged();
+		}
 
-    #endregion
+		object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			var actualPropertyType = ActualPropertyType;
 
-    #region Interface Implementations
+			return actualPropertyType == null ? value : value.XamlConvert(actualPropertyType);
+		}
 
-    #region IValueConverter
+		object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotSupportedException();
+		}
 
-    object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      var actualPropertyType = ActualPropertyType;
+		string IVisualStateListener.VisualStateName => ActualVisualState;
 
-      return actualPropertyType == null ? value : value.XamlConvert(actualPropertyType);
-    }
+		void IVisualStateListener.EnterState(bool useTransitions)
+		{
+			UseTransitions = useTransitions;
+			IsEnabled = true;
+			UseTransitions = false;
+		}
 
-    object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      throw new NotSupportedException();
-    }
+		void IVisualStateListener.LeaveState(bool useTransitions)
+		{
+			UseTransitions = useTransitions;
+			IsEnabled = false;
+			UseTransitions = false;
+		}
 
-    #endregion
+		private static class PackedDefinition
+		{
+			public static readonly PackedBoolItemDefinition IsVisualStateObserverAttached;
+			public static readonly PackedBoolItemDefinition UseTransitions;
 
-    #region IVisualStateListener
+			static PackedDefinition()
+			{
+				var allocator = GetAllocator<Setter>();
 
-    string IVisualStateListener.VisualStateName => ActualVisualState;
-
-    void IVisualStateListener.EnterState(bool useTransitions)
-    {
-      UseTransitions = useTransitions;
-      IsEnabled = true;
-      UseTransitions = false;
-    }
-
-    void IVisualStateListener.LeaveState(bool useTransitions)
-    {
-      UseTransitions = useTransitions;
-      IsEnabled = false;
-      UseTransitions = false;
-    }
-
-    #endregion
-
-    #endregion
-
-    #region  Nested Types
-
-    private static class PackedDefinition
-    {
-      #region Static Fields and Constants
-
-      public static readonly PackedBoolItemDefinition IsVisualStateObserverAttached;
-      public static readonly PackedBoolItemDefinition UseTransitions;
-
-      #endregion
-
-      #region Ctors
-
-      static PackedDefinition()
-      {
-        var allocator = GetAllocator<Setter>();
-
-        IsVisualStateObserverAttached = allocator.AllocateBoolItem();
-        UseTransitions = allocator.AllocateBoolItem();
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+				IsVisualStateObserverAttached = allocator.AllocateBoolItem();
+				UseTransitions = allocator.AllocateBoolItem();
+			}
+		}
+	}
 }

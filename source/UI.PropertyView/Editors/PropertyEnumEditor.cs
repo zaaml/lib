@@ -12,18 +12,19 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 	public class PropertyEnumEditor<TEnum> : PropertyDropDownListViewEditor<TEnum> where TEnum : struct, Enum
 	{
 		private static readonly Type EnumType = typeof(TEnum);
+		private static readonly ReadOnlyCollection<PropertyListViewItemSource<TEnum>> StaticItems;
 
-		public PropertyEnumEditor()
+		static PropertyEnumEditor()
 		{
 			var propertyDropDownListViewItems = new List<PropertyListViewItemSource<TEnum>>();
 
 			foreach (TEnum value in Enum.GetValues(EnumType))
 				propertyDropDownListViewItems.Add(new PropertyListViewItemSource<TEnum>(value, Enum.GetName(EnumType, value)));
 
-			Items = new ReadOnlyCollection<PropertyListViewItemSource<TEnum>>(propertyDropDownListViewItems);
+			StaticItems = new ReadOnlyCollection<PropertyListViewItemSource<TEnum>>(propertyDropDownListViewItems);
 		}
 
-		protected override IReadOnlyCollection<PropertyListViewItemSource<TEnum>> Items { get; }
+		protected override IReadOnlyCollection<PropertyListViewItemSource<TEnum>> Items => StaticItems;
 
 		protected override PropertyListViewItemSource<TEnum> GetItemByValue(TEnum value)
 		{

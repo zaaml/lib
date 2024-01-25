@@ -18,7 +18,6 @@ namespace Zaaml.UI.Controls.ScrollView
 	{
 		private Size _actualViewport;
 		private FrameworkElement _child;
-		private Vector _offset;
 		private byte _packedValue;
 		private Thickness _padding;
 		private double _scaleX = 1.0;
@@ -26,7 +25,6 @@ namespace Zaaml.UI.Controls.ScrollView
 		private IScrollViewPanel _scrollClient;
 		private ScrollInfo _scrollInfo;
 		public event EventHandler<ScrollInfoChangedEventArgs> ScrollInfoChanged;
-		public event EventHandler<OffsetChangedEventArgs> OffsetChanged;
 
 		internal ScrollViewPanelBase()
 		{
@@ -127,7 +125,7 @@ namespace Zaaml.UI.Controls.ScrollView
 
 		private Vector Offset
 		{
-			get => IsScrollClient ? _offset : ScrollClient.Offset;
+			get => IsScrollClient ? _scrollInfo.Offset : ScrollClient.Offset;
 			set
 			{
 				var oldOffset = Offset;
@@ -136,12 +134,7 @@ namespace Zaaml.UI.Controls.ScrollView
 					return;
 
 				if (IsScrollClient)
-				{
-					_offset = ScrollInfo.ClampOffset(value);
-
-					OnOffsetChanged(oldOffset, _offset);
-					OnOffsetChanged(new OffsetChangedEventArgs(oldOffset, _offset));
-				}
+					ScrollInfo = ScrollInfo.WithOffset(value);
 				else
 					ScrollClient.Offset = value;
 			}
@@ -216,10 +209,7 @@ namespace Zaaml.UI.Controls.ScrollView
 					return;
 
 				if (_scrollClient != null)
-				{
 					_scrollClient.ScrollInfoChanged -= OnScrollClientScrollInfoChanged;
-					_scrollClient.OffsetChanged -= OnScrollClientOffsetChanged;
-				}
 
 				_scrollClient = value;
 
@@ -230,14 +220,13 @@ namespace Zaaml.UI.Controls.ScrollView
 					_scrollClient.Offset = Offset;
 
 					_scrollClient.ScrollInfoChanged += OnScrollClientScrollInfoChanged;
-					_scrollClient.OffsetChanged += OnScrollClientOffsetChanged;
 				}
 			}
 		}
 
 		private ScrollInfo ScrollInfo
 		{
-			get => IsScrollClient ? _scrollInfo : new ScrollInfo { Extent = ScrollClient.Extent, Viewport = ScrollClient.Viewport };
+			get => IsScrollClient ? _scrollInfo : new ScrollInfo(ScrollClient.Offset, ScrollClient.Viewport, ScrollClient.Extent);
 			set
 			{
 				if (!IsScrollClient)
@@ -250,8 +239,7 @@ namespace Zaaml.UI.Controls.ScrollView
 
 				_scrollInfo = value;
 
-				OnScrollInfoChanged(oldScrollInfo, _scrollInfo);
-				OnScrollInfoChanged(new ScrollInfoChangedEventArgs(oldScrollInfo, _scrollInfo));
+				OnScrollInfoChangedPrivate(new ScrollInfoChangedEventArgs(oldScrollInfo, _scrollInfo));
 			}
 		}
 
@@ -422,13 +410,7 @@ namespace Zaaml.UI.Controls.ScrollView
 			extent.Width += padding.Width();
 			extent.Height += padding.Height();
 
-			var scrollInfo = new ScrollInfo
-			{
-				Extent = extent,
-				Viewport = availableSize
-			};
-
-			return scrollInfo;
+			return new ScrollInfo(Offset, availableSize, extent);
 		}
 
 		private ScrollInfo CalculateScrollInfo()
@@ -454,11 +436,20 @@ namespace Zaaml.UI.Controls.ScrollView
 			return new Point(offset.X + bounds.TranslateX - roundBounds.TranslateX, offset.Y + bounds.TranslateY - roundBounds.TranslateY);
 		}
 
+		internal void UpdateScrollInfoInternal()
+		{
+			if (IsScrollClient)
+				UpdateScrollInfo();
+			else
+				ScrollClient.UpdateScrollInfo();
+		}
+
 		public virtual void ExecuteScrollCommand(ScrollCommandKind command)
 		{
 			if (IsScrollClient == false)
 			{
 				ScrollClient.ExecuteScrollCommand(command);
+
 				return;
 			}
 
@@ -498,6 +489,11 @@ namespace Zaaml.UI.Controls.ScrollView
 			var offset = CoerceRoundOffset(ScrollInfo.ClampOffset(Offset));
 
 			return GetChildBounds(offset.X, offset.Y, ScaleX, ScaleY);
+		}
+
+		internal Point GetViewportPoint(Point localPoint)
+		{
+			return Transform.Transform.Transform(localPoint);
 		}
 
 		private void InvalidatePresenterArrange()
@@ -569,27 +565,12 @@ namespace Zaaml.UI.Controls.ScrollView
 			Zoom(viewportPoint, newZoom);
 		}
 
-		internal Point GetViewportPoint(Point localPoint)
-		{
-			return Transform.Transform.Transform(localPoint);
-		}
-
 		internal void OnMouseZoom(MouseEventArgs mouseEventArgs, double newZoom)
 		{
 			var mousePoint = mouseEventArgs.GetPosition(this);
 			var viewportPoint = Transform.Transform.Transform(mousePoint);
 
 			Zoom(viewportPoint, newZoom);
-		}
-
-		private void OnOffsetChanged(OffsetChangedEventArgs e)
-		{
-			OffsetChanged?.Invoke(this, e);
-		}
-
-		protected virtual void OnOffsetChanged(Vector oldOffset, Vector newOffset)
-		{
-			UpdateTransform();
 		}
 
 		private void OnScaleChanged()
@@ -599,24 +580,18 @@ namespace Zaaml.UI.Controls.ScrollView
 			InvalidatePresenterArrange();
 		}
 
-		private void OnScrollClientOffsetChanged(object sender, OffsetChangedEventArgs e)
-		{
-			OnOffsetChanged(e.OldOffset, e.NewOffset);
-			OnOffsetChanged(e);
-		}
-
 		private void OnScrollClientScrollInfoChanged(object sender, ScrollInfoChangedEventArgs e)
 		{
-			OnScrollInfoChanged(e.OldInfo, e.NewInfo);
+			OnScrollInfoChangedPrivate(e);
+		}
+
+		protected void OnScrollInfoChangedPrivate(ScrollInfoChangedEventArgs e)
+		{
+			UpdateTransform();
 			OnScrollInfoChanged(e);
 		}
 
-		protected virtual void OnScrollInfoChanged(ScrollInfo oldScrollInfo, ScrollInfo scrollInfo)
-		{
-			UpdateTransform();
-		}
-
-		private void OnScrollInfoChanged(ScrollInfoChangedEventArgs e)
+		protected void OnScrollInfoChanged(ScrollInfoChangedEventArgs e)
 		{
 			ScrollInfoChanged?.Invoke(this, e);
 		}
@@ -717,12 +692,6 @@ namespace Zaaml.UI.Controls.ScrollView
 			OnScaleChanged();
 		}
 
-		event EventHandler<OffsetChangedEventArgs> IScrollViewPanel.OffsetChanged
-		{
-			add => OffsetChanged += value;
-			remove => OffsetChanged -= value;
-		}
-
 		event EventHandler<ScrollInfoChangedEventArgs> IScrollViewPanel.ScrollInfoChanged
 		{
 			add => ScrollInfoChanged += value;
@@ -739,6 +708,11 @@ namespace Zaaml.UI.Controls.ScrollView
 		{
 			get => CanVerticallyScroll;
 			set => CanVerticallyScroll = value;
+		}
+
+		void IScrollViewPanel.UpdateScrollInfo()
+		{
+			UpdateScrollInfo();
 		}
 
 		Size IScrollViewPanel.Extent => Extent;

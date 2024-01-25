@@ -8,10 +8,17 @@ using Zaaml.UI.Controls.Interfaces;
 namespace Zaaml.UI.Controls.Core
 {
 	internal class DelegateIconContentItemGeneratorImplementation<TItem, TGenerator> : DefaultIconContentItemGeneratorImplementation<TItem, TGenerator>
-		where TItem : FrameworkElement, IIconContentControl, new() where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
+		where TItem : FrameworkElement, IIconContentControl, new()
+		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
 		public DelegateIconContentItemGeneratorImplementation(IIconContentItemsControl itemsControl)
-			: base(itemsControl.ItemIconMember, itemsControl.ItemContentMember, itemsControl.ItemContentTemplate, itemsControl.ItemContentTemplateSelector, itemsControl.ItemContentStringFormat)
+			: base(
+				itemsControl.ItemIconMember,
+				itemsControl.ItemIconSelector,
+				itemsControl.ItemContentMember,
+				itemsControl.ItemContentTemplate,
+				itemsControl.ItemContentTemplateSelector,
+				itemsControl.ItemContentStringFormat)
 		{
 			ItemsControlCore = itemsControl;
 		}
@@ -41,6 +48,11 @@ namespace Zaaml.UI.Controls.Core
 		public void OnItemIconMemberChanged()
 		{
 			ItemIconMember = ItemsControlCore.ItemIconMember;
+		}
+		
+		public void OnItemIconSelectorChanged()
+		{
+			ItemIconSelector = ItemsControlCore.ItemIconSelector;
 		}
 	}
 }

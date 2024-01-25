@@ -8,95 +8,79 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  [TemplateContractType(typeof(AutoHideLayoutViewTemplateContract))]
-  public class AutoHideLayoutView : BaseLayoutView<AutoHideLayout>
-  {
-    #region Ctors
+	[TemplateContractType(typeof(AutoHideLayoutViewTemplateContract))]
+	public class AutoHideLayoutView : BaseLayoutView<AutoHideLayout>
+	{
+		static AutoHideLayoutView()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<AutoHideLayoutView>();
+		}
 
-    static AutoHideLayoutView()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<AutoHideLayoutView>();
-    }
+		public AutoHideLayoutView()
+		{
+			this.OverrideStyleKey<AutoHideLayoutView>();
+		}
 
-    public AutoHideLayoutView()
-    {
-      this.OverrideStyleKey<AutoHideLayoutView>();
-    }
+		private AutoHideTabViewControl TabViewControl => TemplateContract.AutoHideTabViewControl;
 
-    #endregion
+		private AutoHideLayoutViewTemplateContract TemplateContract => (AutoHideLayoutViewTemplateContract)TemplateContractInternal;
 
-    #region Properties
+		protected internal override void ArrangeItems()
+		{
+		}
 
-    private AutoHideTabViewControl TabViewControl => TemplateContract.AutoHideTabViewControl;
+		private void AttachItem(DockItem item)
+		{
+			item.TabViewItem.Content = item;
+			TabViewControl?.AddItem(item);
+		}
 
-    private AutoHideLayoutViewTemplateContract TemplateContract => (AutoHideLayoutViewTemplateContract) TemplateContractInternal;
+		protected override TemplateContract CreateTemplateContract()
+		{
+			return new AutoHideLayoutViewTemplateContract();
+		}
 
-    #endregion
+		private void DetachItem(DockItem item)
+		{
+			item.TabViewItem.Content = null;
+			TabViewControl?.RemoveItem(item);
+		}
 
-    #region  Methods
+		internal override bool IsItemVisible(DockItem item)
+		{
+			return item.TabViewItem.IsSelected;
+		}
 
-    protected internal override void ArrangeItems()
-    {
-    }
+		protected override void OnItemAdded(DockItem item)
+		{
+			AttachItem(item);
+		}
 
-    private void AttachItem(DockItem item)
-    {
-      item.TabViewItem.Content = item;
-      TabViewControl?.AddItem(item);
-    }
+		protected override void OnItemRemoved(DockItem item)
+		{
+			DetachItem(item);
+		}
 
-    protected override TemplateContract CreateTemplateContract()
-    {
-      return new AutoHideLayoutViewTemplateContract();
-    }
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-    private void DetachItem(DockItem item)
-    {
-      item.TabViewItem.Content = null;
-      TabViewControl?.RemoveItem(item);
-    }
+			foreach (var item in Items)
+				AttachItem(item);
+		}
 
-    internal override bool IsItemVisible(DockItem item)
-    {
-      return item.TabViewItem.IsSelected;
-    }
+		protected override void OnTemplateContractDetaching()
+		{
+			foreach (var item in Items)
+				DetachItem(item);
 
-    protected override void OnItemAdded(DockItem item)
-    {
-      AttachItem(item);
-    }
+			base.OnTemplateContractDetaching();
+		}
+	}
 
-    protected override void OnItemRemoved(DockItem item)
-    {
-      DetachItem(item);
-    }
-
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
-
-      foreach (var item in Items)
-        AttachItem(item);
-    }
-
-    protected override void OnTemplateContractDetaching()
-    {
-      foreach (var item in Items)
-        DetachItem(item);
-
-      base.OnTemplateContractDetaching();
-    }
-
-    #endregion
-  }
-
-  internal sealed class AutoHideLayoutViewTemplateContract : TemplateContract
-  {
-    #region Properties
-
-    [TemplateContractPart(Required = true)]
-    public AutoHideTabViewControl AutoHideTabViewControl { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
+	internal sealed class AutoHideLayoutViewTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = true)]
+		public AutoHideTabViewControl AutoHideTabViewControl { get; [UsedImplicitly] private set; }
+	}
 }

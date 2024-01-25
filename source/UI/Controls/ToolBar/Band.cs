@@ -10,38 +10,26 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.ToolBar
 {
-  internal class Band
-  {
-    #region Fields
+	internal class Band
+	{
+		public readonly List<ToolBarControl> ToolBars;
+		public Size DesiredSize;
 
-    public readonly List<ToolBarControl> ToolBars;
-    public Size DesiredSize;
+		public Band()
+		{
+			ToolBars = new List<ToolBarControl>();
+		}
 
-    #endregion
+		public Band(IEnumerable<ToolBarControl> toolBars)
+		{
+			ToolBars = toolBars.ToList();
+		}
 
-    #region Ctors
-
-    public Band()
-    {
-      ToolBars = new List<ToolBarControl>();
-    }
-
-    public Band(IEnumerable<ToolBarControl> toolBars)
-    {
-      ToolBars = toolBars.ToList();
-    }
-
-    #endregion
-
-    #region  Methods
-
-    internal Rect GetHostBox()
-    {
-      return ToolBars.Any()
-        ? new Rect(ToolBars.First().GetScreenBox().GetTopLeft(), ToolBars.Last().GetScreenBox().GetBottomRight())
-        : XamlConstants.ZeroRect;
-    }
-
-    #endregion
-  }
+		internal Rect GetScreenBox()
+		{
+			return ToolBars.Any()
+				? new Rect(ToolBars.First().GetScreenLogicalBox().GetTopLeft(), ToolBars.Last().GetScreenLogicalBox().GetBottomRight())
+				: XamlConstants.ZeroRect;
+		}
+	}
 }

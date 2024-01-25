@@ -6,13 +6,13 @@ using System;
 using System.Collections;
 using System.Collections.Specialized;
 using Zaaml.Core.Packed;
-using Zaaml.UI.Utils;
 
 // ReSharper disable StaticMemberInGenericType
 
 namespace Zaaml.UI.Data.Hierarchy
 {
-	internal abstract class HierarchyNodeView<THierarchy, TNodeCollection, TNode>
+	// ReSharper disable once PartialTypeWithSinglePart
+	internal abstract partial class HierarchyNodeView<THierarchy, TNodeCollection, TNode> : IDisposable
 		where THierarchy : HierarchyView<THierarchy, TNodeCollection, TNode>
 		where TNodeCollection : HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode>
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
@@ -30,6 +30,9 @@ namespace Zaaml.UI.Data.Hierarchy
 		{
 			get
 			{
+				if (Hierarchy == null)
+					return 0;
+
 				if (Hierarchy.IsFilteredInternal == false || Hierarchy.FilteringStrategyInternal.CanHideParent == false)
 					return Level;
 
@@ -52,6 +55,9 @@ namespace Zaaml.UI.Data.Hierarchy
 		{
 			get
 			{
+				if (Hierarchy == null)
+					return null;
+
 				if (Hierarchy.IsFilteredInternal == false || Hierarchy.FilteringStrategyInternal.CanHideParent == false)
 					return Parent;
 
@@ -68,7 +74,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		public int FlatCount { get; private set; }
 
-		public THierarchy Hierarchy { get; }
+		public THierarchy Hierarchy { get; private set; }
 
 		private bool IsActualExpandedField
 		{
@@ -86,9 +92,18 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		public bool IsExpanded
 		{
-			get => Hierarchy.IsFilteredInternal ? IsFilterExpandedField : IsExpandedField;
+			get
+			{
+				if (Hierarchy == null)
+					return false;
+
+				return Hierarchy.IsFilteredInternal ? IsFilterExpandedField : IsExpandedField;
+			}
 			set
 			{
+				if (Hierarchy == null)
+					return;
+
 				if (IsExpanded == value)
 					return;
 
@@ -98,29 +113,6 @@ namespace Zaaml.UI.Data.Hierarchy
 					Collapse();
 
 				UpdateActualIsExpanded();
-			}
-		}
-
-		internal void SetIsExpanded(bool value, ExpandCollapseMode mode)
-		{
-			if (mode == ExpandCollapseMode.Auto)
-				IsExpanded = value;
-			else
-			{
-				if (mode == ExpandCollapseMode.Default)
-				{
-					if (Hierarchy.IsFilteredInternal == false)
-						IsExpanded = value;
-					else
-						IsExpandedField = value;
-				}
-				else
-				{
-					if (Hierarchy.IsFilteredInternal)
-						IsExpanded = value;
-					else
-						IsFilterExpandedField = value;
-				}
 			}
 		}
 
@@ -138,11 +130,15 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		public bool IsLoaded => Nodes != null;
 
+#if TEST
+		internal int Level { get; }
+#else
 		private int Level { get; }
+#endif
 
 		public TNodeCollection Nodes { get; private set; }
 
-		public TNode Parent { get; }
+		public TNode Parent { get; private set; }
 
 		internal bool PassedFilterField
 		{
@@ -173,6 +169,9 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		public void CollapseRecursive(ExpandCollapseMode mode)
 		{
+			if (Hierarchy == null)
+				return;
+
 			CollapseRecursiveImpl(mode, Hierarchy.ExpandCollapseStructureChange(mode));
 		}
 
@@ -185,7 +184,7 @@ namespace Zaaml.UI.Data.Hierarchy
 				VisibleFlatCount = 0;
 				VisibleFlatCountCache = 0;
 			}
-			
+
 			if (Nodes == null)
 				return;
 
@@ -211,7 +210,7 @@ namespace Zaaml.UI.Data.Hierarchy
 				return false;
 
 			Nodes = CreateNodeCollectionCore();
-			Nodes.Source = Hierarchy.GetDataNodes((TNode)this);
+			Nodes.Source = Hierarchy.GetDataNodes((TNode) this);
 
 			return true;
 		}
@@ -241,6 +240,9 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		public void ExpandRecursive(ExpandCollapseMode mode)
 		{
+			if (Hierarchy == null)
+				return;
+
 			ExpandRecursiveImpl(mode, Hierarchy.ExpandCollapseStructureChange(mode));
 		}
 
@@ -261,12 +263,19 @@ namespace Zaaml.UI.Data.Hierarchy
 				VisibleFlatCount = flatCount;
 				VisibleFlatCountCache = flatCount;
 			}
-			
+
 			return flatCount;
 		}
 
 		internal bool FindRecursive(object nodeData, out TNode result)
 		{
+			if (Hierarchy == null)
+			{
+				result = null;
+
+				return false;
+			}
+
 			var isLoaded = CreateNodes();
 
 			FlatCount = 0;
@@ -306,7 +315,7 @@ namespace Zaaml.UI.Data.Hierarchy
 			return found;
 		}
 
-		internal void HandleAdd(int newIndex, IList newItems)
+		private void HandleAdd(int newIndex, IList newItems)
 		{
 			if (newItems == null)
 				return;
@@ -325,10 +334,10 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		private void HandleCount(int flatCount, int visibleCount)
 		{
-			HandleCount(Hierarchy.FindIndex((TNode)this) + 1, flatCount, visibleCount);
+			HandleCount(Hierarchy.FindIndex((TNode) this) + 1, flatCount, visibleCount);
 		}
 
-		private void HandleCount(int flatIndex, int flatCount, int visibleCount)
+		private bool HandleAncestorsCount(int flatCount, int visibleCount)
 		{
 			var isExpanded = true;
 			var current = ActualParent;
@@ -347,6 +356,13 @@ namespace Zaaml.UI.Data.Hierarchy
 
 				current = current.ActualParent;
 			}
+
+			return isExpanded;
+		}
+
+		private void HandleCount(int flatIndex, int flatCount, int visibleCount)
+		{
+			var isExpanded = HandleAncestorsCount(flatCount, visibleCount);
 
 			if (isExpanded && visibleCount != 0)
 				Hierarchy.OnDescendantVisibleFlatCountChanged(flatIndex, visibleCount);
@@ -384,7 +400,7 @@ namespace Zaaml.UI.Data.Hierarchy
 		{
 			var flatCount = FlatCount;
 			var visibleFlatCount = VisibleFlatCount;
-
+			
 			Nodes.HandleReset();
 
 			FlatCount = 0;
@@ -392,11 +408,16 @@ namespace Zaaml.UI.Data.Hierarchy
 
 			LoadNodesRange(0, Nodes.Count);
 
-			Hierarchy.ResetNode((TNode)this, FlatCount - flatCount, VisibleFlatCount - visibleFlatCount);
+			var flatIndex = Hierarchy.FindIndex((TNode)this, true);
+
+			HandleCount(flatIndex + 1, FlatCount - flatCount, VisibleFlatCount - visibleFlatCount);
 		}
 
 		public bool IsAncestorOf(TNode node)
 		{
+			if (Hierarchy == null)
+				return false;
+
 			var current = node;
 
 			while (current != null)
@@ -412,11 +433,17 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		public bool IsDescendantOf(TNode node)
 		{
-			return node.IsAncestorOf((TNode)this);
+			if (Hierarchy == null)
+				return false;
+
+			return node.IsAncestorOf((TNode) this);
 		}
 
 		public void LoadNodes()
 		{
+			if (Hierarchy == null)
+				return;
+
 			if (CreateNodes() == false)
 				return;
 
@@ -558,6 +585,32 @@ namespace Zaaml.UI.Data.Hierarchy
 			}
 		}
 
+		internal void SetIsExpanded(bool value, ExpandCollapseMode mode)
+		{
+			if (Hierarchy == null)
+				return;
+
+			if (mode == ExpandCollapseMode.Auto)
+				IsExpanded = value;
+			else
+			{
+				if (mode == ExpandCollapseMode.Default)
+				{
+					if (Hierarchy.IsFilteredInternal == false)
+						IsExpanded = value;
+					else
+						IsExpandedField = value;
+				}
+				else
+				{
+					if (Hierarchy.IsFilteredInternal)
+						IsExpanded = value;
+					else
+						IsFilterExpandedField = value;
+				}
+			}
+		}
+
 		private void SetIsExpandedField(bool value, ExpandCollapseMode mode = ExpandCollapseMode.Auto)
 		{
 			if (mode == ExpandCollapseMode.Auto)
@@ -598,6 +651,15 @@ namespace Zaaml.UI.Data.Hierarchy
 		private void UpdateActualIsExpanded()
 		{
 			IsActualExpandedField = IsExpanded;
+		}
+
+		public virtual void Dispose()
+		{
+			Hierarchy = null;
+			Parent = null;
+
+			if (Nodes != null)
+				Nodes.Source = null;
 		}
 
 		private static class PackedDefinition

@@ -5,6 +5,7 @@
 using System;
 using System.Globalization;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
 using ZaamlLocalization = Zaaml.UI.Localization;
@@ -68,7 +69,7 @@ namespace Zaaml.UI.Controls.ValidationSummary
 		public bool IsActive
 		{
 			get => (bool) GetValue(IsActiveProperty);
-			set => SetValue(IsActiveProperty, value);
+			set => SetValue(IsActiveProperty, value.Box());
 		}
 
 		public ValidationSummaryItemType ItemType

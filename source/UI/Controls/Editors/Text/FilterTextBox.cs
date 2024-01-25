@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
@@ -102,13 +103,13 @@ namespace Zaaml.UI.Controls.Editors.Text
 		public bool ActualShowWatermark
 		{
 			get => (bool) GetValue(ActualShowWatermarkProperty);
-			private set => this.SetReadOnlyValue(ActualShowWatermarkPropertyKey, value);
+			private set => this.SetReadOnlyValue(ActualShowWatermarkPropertyKey, value.Box());
 		}
 
 		public bool AutoComplete
 		{
 			get => (bool) GetValue(AutoCompleteProperty);
-			set => SetValue(AutoCompleteProperty, value);
+			set => SetValue(AutoCompleteProperty, value.Box());
 		}
 
 		public string AutoCompleteText
@@ -146,19 +147,19 @@ namespace Zaaml.UI.Controls.Editors.Text
 		public bool IsCaseSensitive
 		{
 			get => (bool) GetValue(IsCaseSensitiveProperty);
-			set => SetValue(IsCaseSensitiveProperty, value);
+			set => SetValue(IsCaseSensitiveProperty, value.Box());
 		}
 
 		public bool IsInEditState
 		{
 			get => (bool) GetValue(IsInEditStateProperty);
-			private set => this.SetReadOnlyValue(IsInEditStatePropertyKey, value);
+			private set => this.SetReadOnlyValue(IsInEditStatePropertyKey, value.Box());
 		}
 
 		public bool ShowWatermark
 		{
 			get => (bool) GetValue(ShowWatermarkProperty);
-			set => SetValue(ShowWatermarkProperty, value);
+			set => SetValue(ShowWatermarkProperty, value.Box());
 		}
 
 		public object TailContent
@@ -173,7 +174,7 @@ namespace Zaaml.UI.Controls.Editors.Text
 			set => SetValue(TailContentTemplateProperty, value);
 		}
 
-		private FilterTextBoxTemplateContract TemplateContract => (FilterTextBoxTemplateContract) TemplateContractInternal;
+		private FilterTextBoxTemplateContract TemplateContract => (FilterTextBoxTemplateContract) TemplateContractCore;
 
 		private string TypedText => AutoCompleteTextBox?.TypedText;
 

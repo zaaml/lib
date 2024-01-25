@@ -10,13 +10,13 @@ namespace Zaaml.Expressions
 {
 	internal partial class ExpressionEngine
 	{
-		private Dictionary<string, ExpressionMethodInfo> Methods { get; } = new Dictionary<string, ExpressionMethodInfo>();
+		private Dictionary<string, ExpressionMethodInfo> Methods { get; } = new();
 
 		public Func<IExpressionScope, T> Compile<T>(string expressionString)
 		{
 			var expressionCompiler = new ExpressionCompiler<T>(this);
 
-			return expressionCompiler.Compile(ExpressionGrammar.Parser.Expr(expressionString));
+			return expressionCompiler.Compile(ExpressionGrammar.Expr.Parse(expressionString));
 		}
 
 		internal ExpressionMethodInfo GetMethod(string name)

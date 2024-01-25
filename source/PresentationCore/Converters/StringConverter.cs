@@ -5,66 +5,47 @@
 using System;
 using System.Globalization;
 using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 
 namespace Zaaml.PresentationCore.Converters
 {
-  public sealed class StringConverter : BaseValueConverter
-  {
-    #region Static Fields and Constants
+	public sealed class StringConverter : BaseValueConverter
+	{
+		public static readonly StringConverter IsNullOrEmpty = new(Kind.IsNullOrEmpty);
+		public static readonly StringConverter IsNullOrWhiteSpace = new(Kind.IsNullOrWhiteSpace);
 
-    public static readonly StringConverter IsNullOrEmpty = new StringConverter(Kind.IsNullOrEmpty);
-    public static readonly StringConverter IsNullOrWhiteSpace = new StringConverter(Kind.IsNullOrWhiteSpace);
+		private readonly Kind _kind;
 
-    #endregion
+		private StringConverter(Kind kind)
+		{
+			_kind = kind;
+		}
 
-    #region Fields
-
-    private readonly Kind _kind;
-
-    #endregion
-
-    #region Ctors
-
-    private StringConverter(Kind kind)
-    {
-      _kind = kind;
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      throw new InvalidOperationException("StringConverter can only be used OneWay.");
-    }
+		protected override object ConvertBackCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new InvalidOperationException("StringConverter can only be used OneWay.");
+		}
 
 
-    protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      var stringValue = (string) value;
+		protected override object ConvertCore(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			var stringValue = (string)value;
 
-      switch (_kind)
-      {
-        case Kind.IsNullOrEmpty:
-          return stringValue.IsNullOrEmpty() ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse;
-        case Kind.IsNullOrWhiteSpace:
-          return stringValue.IsNullOrWhiteSpace() ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse;
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+			switch (_kind)
+			{
+				case Kind.IsNullOrEmpty:
+					return stringValue.IsNullOrEmpty() ? BooleanBoxes.True : BooleanBoxes.False;
+				case Kind.IsNullOrWhiteSpace:
+					return stringValue.IsNullOrWhiteSpace() ? BooleanBoxes.True : BooleanBoxes.False;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
 
-    #endregion
-
-    #region  Nested Types
-
-    private enum Kind
-    {
-      IsNullOrEmpty,
-      IsNullOrWhiteSpace
-    }
-
-    #endregion
-  }
+		private enum Kind
+		{
+			IsNullOrEmpty,
+			IsNullOrWhiteSpace
+		}
+	}
 }

@@ -2,65 +2,50 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Data;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  internal partial class PreviewPresenter
-  {
-    #region Static Fields and Constants
-
-    public static readonly DependencyProperty PreviewProperty = DPM.Register<Preview, PreviewPresenter>
-      ("Preview");
-
-		private static readonly Lazy<PreviewPresenter> LazyInstance = new Lazy<PreviewPresenter>(() => new PreviewPresenter());
-
-		#endregion
-
-		#region Ctors
+	internal partial class PreviewPresenter
+	{
+		public static readonly DependencyProperty PreviewProperty = DPM.Register<Preview, PreviewPresenter>
+			("Preview", p => p.OnPreviewChanged);
 
 		public PreviewPresenter()
-    {
-      PlatformCtor();
+		{
+			PlatformCtor();
 
-      PreviewElement.SetBinding(DockItemPreviewElement.GeometryProperty, new Binding("Preview.Geometry") {Source = this});
-    }
+			PreviewElement.SetBinding(DockItemPreviewElement.GeometryProperty, new Binding("Preview.Geometry") {Source = this});
+		}
 
-    #endregion
+		public Preview Preview
+		{
+			set => SetValue(PreviewProperty, value);
+			get => (Preview) GetValue(PreviewProperty);
+		}
 
-    #region Properties
+		private DockItemPreviewElement PreviewElement { get; } = new();
 
-    public Preview Preview
-    {
-      set => SetValue(PreviewProperty, value);
-      get => (Preview) GetValue(PreviewProperty);
-    }
+		partial void HideImpl();
 
-    private DockItemPreviewElement PreviewElement { get; } = new DockItemPreviewElement();
+		public void HidePresenter()
+		{
+			HideImpl();
+		}
 
-    #endregion
+		private void OnPreviewChanged(Preview oldPreview, Preview newPreview)
+		{
+		}
 
-    #region  Methods
+		partial void PlatformCtor();
 
-    partial void HideImpl();
+		partial void ShowImpl();
 
-    public void HidePresenter()
-    {
-      HideImpl();
-    }
-
-    partial void PlatformCtor();
-
-    partial void ShowImpl();
-
-    public void ShowPresenter()
-    {
-      ShowImpl();
-    }
-
-    #endregion
-  }
+		public void ShowPresenter()
+		{
+			ShowImpl();
+		}
+	}
 }

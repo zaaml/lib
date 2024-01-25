@@ -15,8 +15,6 @@ namespace Zaaml.UI.Controls.TabView
 	[TemplateContractType(typeof(TabViewItemsPresenterTemplateContract))]
 	public class TabViewItemsPresenter : ScrollableItemsPresenterBase<TabViewControl, TabViewItem, TabViewItemCollection, TabViewItemsPanel>
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty FooterProperty = DPM.Register<object, TabViewItemsPresenter>
 			("Footer");
 
@@ -34,10 +32,6 @@ namespace Zaaml.UI.Controls.TabView
 
 		public static readonly DependencyProperty TabViewControlProperty = TabViewControlPropertyKey.DependencyProperty;
 
-		#endregion
-
-		#region Ctors
-
 		static TabViewItemsPresenter()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<TabViewItemsPresenter>();
@@ -48,10 +42,6 @@ namespace Zaaml.UI.Controls.TabView
 			this.OverrideStyleKey<TabViewItemsPresenter>();
 		}
 
-		#endregion
-
-		#region Properties
-
 		public object Footer
 		{
 			get => GetValue(FooterProperty);
@@ -60,7 +50,7 @@ namespace Zaaml.UI.Controls.TabView
 
 		public DataTemplate FooterTemplate
 		{
-			get => (DataTemplate) GetValue(FooterTemplateProperty);
+			get => (DataTemplate)GetValue(FooterTemplateProperty);
 			set => SetValue(FooterTemplateProperty, value);
 		}
 
@@ -74,19 +64,15 @@ namespace Zaaml.UI.Controls.TabView
 
 		public DataTemplate HeaderTemplate
 		{
-			get => (DataTemplate) GetValue(HeaderTemplateProperty);
+			get => (DataTemplate)GetValue(HeaderTemplateProperty);
 			set => SetValue(HeaderTemplateProperty, value);
 		}
 
 		public TabViewControl TabViewControl
 		{
-			get => (TabViewControl) GetValue(TabViewControlProperty);
+			get => (TabViewControl)GetValue(TabViewControlProperty);
 			internal set => this.SetReadOnlyValue(TabViewControlPropertyKey, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		private void AttachItemsHost()
 		{
@@ -124,8 +110,6 @@ namespace Zaaml.UI.Controls.TabView
 
 			base.OnItemsHostDetaching();
 		}
-
-		#endregion
 	}
 
 	public class TabViewItemsPresenterTemplateContract : ItemsPresenterBaseTemplateContract<TabViewItemsPanel, TabViewItem>

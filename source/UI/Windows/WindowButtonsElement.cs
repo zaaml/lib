@@ -50,7 +50,7 @@ namespace Zaaml.UI.Windows
       set => SetValue(ButtonStyleProperty, value);
     }
 
-    private WindowButtonsElementTemplateContract TemplateContract => (WindowButtonsElementTemplateContract) TemplateContractInternal;
+    private WindowButtonsElementTemplateContract TemplateContract => (WindowButtonsElementTemplateContract) TemplateContractCore;
 
     protected WindowButtonsPresenter ButtonsPresenter => TemplateContract.ButtonsPresenter;
 

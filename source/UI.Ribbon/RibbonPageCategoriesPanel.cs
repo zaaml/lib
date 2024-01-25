@@ -59,10 +59,12 @@ namespace Zaaml.UI.Controls.Ribbon
         if (found == false && string.IsNullOrEmpty(pageCategory.Header))
         {
           Offset += pageCategory.PagesSize.Width;
+
           continue;
         }
 
         found = true;
+
         _elements.Add(pageCategory);
       }
 

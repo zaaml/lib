@@ -7,83 +7,63 @@ using System.Collections;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public partial class SkinDictionary : IDictionary
-  {
-    #region Properties
+	public partial class SkinDictionary : IDictionary
+	{
+		private IDictionary DictionaryInterface => Dictionary;
 
-    private IDictionary DictionaryInterface => Dictionary;
+		void ICollection.CopyTo(Array array, int index)
+		{
+			DictionaryInterface.CopyTo(array, index);
+		}
 
-    #endregion
+		int ICollection.Count => DictionaryInterface.Count;
 
-    #region Interface Implementations
+		object ICollection.SyncRoot => DictionaryInterface.SyncRoot;
 
-    #region ICollection
+		bool ICollection.IsSynchronized => DictionaryInterface.IsSynchronized;
 
-    void ICollection.CopyTo(Array array, int index)
-    {
-      DictionaryInterface.CopyTo(array, index);
-    }
+		bool IDictionary.Contains(object key)
+		{
+			return ContainsKeyCore((string) key);
+		}
 
-    int ICollection.Count => DictionaryInterface.Count;
+		void IDictionary.Add(object key, object value)
+		{
+			AddCore((string) key, value);
+		}
 
-    object ICollection.SyncRoot => DictionaryInterface.SyncRoot;
+		void IDictionary.Clear()
+		{
+			ClearCore();
+		}
 
-    bool ICollection.IsSynchronized => DictionaryInterface.IsSynchronized;
+		IDictionaryEnumerator IDictionary.GetEnumerator()
+		{
+			return DictionaryInterface.GetEnumerator();
+		}
 
-    #endregion
+		void IDictionary.Remove(object key)
+		{
+			RemoveCore((string) key);
+		}
 
-    #region IDictionary
+		object IDictionary.this[object key]
+		{
+			get => GetCore((string) key);
+			set => SetCore((string) key, value);
+		}
 
-    bool IDictionary.Contains(object key)
-    {
-      return ContainsKeyCore((string) key);
-    }
+		ICollection IDictionary.Keys => DictionaryInterface.Keys;
 
-    void IDictionary.Add(object key, object value)
-    {
-      AddCore((string) key, value);
-    }
+		ICollection IDictionary.Values => DictionaryInterface.Values;
 
-    void IDictionary.Clear()
-    {
-      ClearCore();
-    }
+		bool IDictionary.IsReadOnly => DictionaryInterface.IsReadOnly;
 
-    IDictionaryEnumerator IDictionary.GetEnumerator()
-    {
-      return DictionaryInterface.GetEnumerator();
-    }
+		bool IDictionary.IsFixedSize => DictionaryInterface.IsFixedSize;
 
-    void IDictionary.Remove(object key)
-    {
-      RemoveCore((string) key);
-    }
-
-    object IDictionary.this[object key]
-    {
-      get => GetCore((string) key);
-      set => SetCore((string) key, value);
-    }
-
-    ICollection IDictionary.Keys => DictionaryInterface.Keys;
-
-    ICollection IDictionary.Values => DictionaryInterface.Values;
-
-    bool IDictionary.IsReadOnly => DictionaryInterface.IsReadOnly;
-
-    bool IDictionary.IsFixedSize => DictionaryInterface.IsFixedSize;
-
-    #endregion
-
-    #region IEnumerable
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-      return ((IEnumerable) DictionaryInterface).GetEnumerator();
-    }
-
-    #endregion
-
-    #endregion
-  }
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return ((IEnumerable) DictionaryInterface).GetEnumerator();
+		}
+	}
 }

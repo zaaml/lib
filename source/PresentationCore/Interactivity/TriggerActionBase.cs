@@ -6,8 +6,6 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public abstract class TriggerActionBase : InteractivityObject
 	{
-		#region  Methods
-
 		internal void Invoke()
 		{
 			if (IsLoaded)
@@ -15,7 +13,5 @@ namespace Zaaml.PresentationCore.Interactivity
 		}
 
 		protected abstract void InvokeCore();
-
-		#endregion
 	}
 }

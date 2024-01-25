@@ -5,6 +5,7 @@
 using System;
 using System.Windows;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -69,33 +70,31 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			VerticalAlignment = VerticalAlignment.Top;
 			HorizontalAlignment = HorizontalAlignment.Left;
 
-#if !SILVERLIGHT
 			Focusable = true;
-#endif
 			IsTabStop = false;
 		}
 
 		public bool ActualIsOpen
 		{
-			get => (bool) GetValue(ActualIsOpenProperty);
-			private set => this.SetReadOnlyValue(ActualIsOpenPropertyKey, value);
+			get => (bool)GetValue(ActualIsOpenProperty);
+			private set => this.SetReadOnlyValue(ActualIsOpenPropertyKey, value.Box());
 		}
 
 		public bool AllowMotionAnimation
 		{
-			get => (bool) GetValue(AllowMotionAnimationProperty);
-			set => SetValue(AllowMotionAnimationProperty, value);
+			get => (bool)GetValue(AllowMotionAnimationProperty);
+			set => SetValue(AllowMotionAnimationProperty, value.Box());
 		}
 
 		public bool AllowOpacityAnimation
 		{
-			get => (bool) GetValue(AllowOpacityAnimationProperty);
-			set => SetValue(AllowOpacityAnimationProperty, value);
+			get => (bool)GetValue(AllowOpacityAnimationProperty);
+			set => SetValue(AllowOpacityAnimationProperty, value.Box());
 		}
 
 		public PopupBorderStyle BorderStyle
 		{
-			get => (PopupBorderStyle) GetValue(BorderStyleProperty);
+			get => (PopupBorderStyle)GetValue(BorderStyleProperty);
 			set => SetValue(BorderStyleProperty, value);
 		}
 
@@ -105,8 +104,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public bool DropShadow
 		{
-			get => (bool) GetValue(DropShadowProperty);
-			set => SetValue(DropShadowProperty, value);
+			get => (bool)GetValue(DropShadowProperty);
+			set => SetValue(DropShadowProperty, value.Box());
 		}
 
 		public Popup Popup
@@ -117,41 +116,41 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public PopupLength PopupHeight
 		{
-			get => (PopupLength) GetValue(PopupHeightProperty);
+			get => (PopupLength)GetValue(PopupHeightProperty);
 			set => SetValue(PopupHeightProperty, value);
 		}
 
 		public PopupLength PopupMaxHeight
 		{
-			get => (PopupLength) GetValue(PopupMaxHeightProperty);
+			get => (PopupLength)GetValue(PopupMaxHeightProperty);
 			set => SetValue(PopupMaxHeightProperty, value);
 		}
 
 		public PopupLength PopupMaxWidth
 		{
-			get => (PopupLength) GetValue(PopupMaxWidthProperty);
+			get => (PopupLength)GetValue(PopupMaxWidthProperty);
 			set => SetValue(PopupMaxWidthProperty, value);
 		}
 
 		public PopupLength PopupMinHeight
 		{
-			get => (PopupLength) GetValue(PopupMinHeightProperty);
+			get => (PopupLength)GetValue(PopupMinHeightProperty);
 			set => SetValue(PopupMinHeightProperty, value);
 		}
 
 		public PopupLength PopupMinWidth
 		{
-			get => (PopupLength) GetValue(PopupMinWidthProperty);
+			get => (PopupLength)GetValue(PopupMinWidthProperty);
 			set => SetValue(PopupMinWidthProperty, value);
 		}
 
 		public PopupLength PopupWidth
 		{
-			get => (PopupLength) GetValue(PopupWidthProperty);
+			get => (PopupLength)GetValue(PopupWidthProperty);
 			set => SetValue(PopupWidthProperty, value);
 		}
 
-		private PopupContentPresenterTemplateContract TemplateContract => (PopupContentPresenterTemplateContract) TemplateContractInternal;
+		private PopupContentPresenterTemplateContract TemplateContract => (PopupContentPresenterTemplateContract)TemplateContractInternal;
 
 		private double GetSize(PopupLength popupLength, SizePart sizePart, double autoSize)
 		{
@@ -166,7 +165,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			if (popupLength.RelativeElement.Equals("Target", StringComparison.OrdinalIgnoreCase))
 			{
-				if (Popup.Placement?.ActualPlacement is RelativePlacementBase relativePlacement && relativePlacement.Target != null)
+				if (Popup.ActualPlacement is RelativePlacementBase relativePlacement && relativePlacement.Target != null)
 					return popupLength.Value * GetSizePart(relativePlacement.Target.RenderSize, sizePart);
 			}
 

@@ -42,9 +42,9 @@ namespace Zaaml.Core.Collections
 					return;
 				}
 
-				var cursor = NavigateTo(index);
+				ref var cursor = ref NavigateTo(index);
 
-				if (targetList.Count == 0)
+				if (targetList.LongCount == 0)
 				{
 					var left = new LinkedListStruct(this);
 					var right = new LinkedListStruct(targetList);

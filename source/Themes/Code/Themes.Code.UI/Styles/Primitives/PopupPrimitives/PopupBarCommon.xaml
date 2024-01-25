@@ -1,0 +1,29 @@
+﻿<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:System="clr-namespace:System;assembly=mscorlib">
+
+  <System:String x:Key="MenuArrowGlyph">M 0 0 L 0 7 L 4 3.5 Z</System:String>
+  
+  <Style x:Key="PopupBarItemBorderStyle" TargetType="Border">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="Padding" Value="4,0" />
+    <Setter Property="MinHeight" Value="26" />
+  </Style>
+  
+  <ControlTemplate x:Key="ToggleSubBarButton" TargetType="ToggleButton">
+    <Border Background="{TemplateBinding Background}">
+      <Path Fill="{TemplateBinding Foreground}" 
+            Stretch="Uniform" 
+            Width="12" 
+            Height="12" 
+            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+            Data="{Binding Source={StaticResource MenuArrowGlyph}, BindsDirectlyToSource=True}" />
+    </Border>
+  </ControlTemplate>
+
+</ResourceDictionary>

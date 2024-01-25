@@ -9,14 +9,8 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	internal static class VisualStateMap
 	{
-		#region Static Fields and Constants
-
-		private static readonly List<string> StateList = new List<string>(2048) {"Unset"};
-		private static readonly Dictionary<string, uint> StateIndexMap = new Dictionary<string, uint>();
-
-		#endregion
-
-		#region  Methods
+		private static readonly List<string> StateList = new(2048) { "Unset" };
+		private static readonly Dictionary<string, uint> StateIndexMap = new();
 
 		public static uint GetStateIndex(string stateName)
 		{
@@ -28,7 +22,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (currentIndex != 0u)
 				return currentIndex;
 
-			StateIndexMap[stateName] = currentIndex = (uint) StateList.Count;
+			StateIndexMap[stateName] = currentIndex = (uint)StateList.Count;
 			StateList.Add(stateName);
 
 			return currentIndex;
@@ -36,9 +30,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		public static string GetStateName(uint index)
 		{
-			return StateList[(int) index];
+			return StateList[(int)index];
 		}
-
-		#endregion
 	}
 }

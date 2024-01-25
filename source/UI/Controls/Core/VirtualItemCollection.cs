@@ -19,7 +19,8 @@ namespace Zaaml.UI.Controls.Core
 	internal partial class VirtualItemCollection<T> : IVirtualItemCollection where T : FrameworkElement
 	{
 		private const int NonGeneratedVersion = -1;
-		private readonly List<IItemCollectionObserver<T>> _observers = new List<IItemCollectionObserver<T>>();
+
+		private readonly List<IItemCollectionObserver<T>> _observers = new();
 
 		private ItemGenerator<T> _generator;
 		private uint _packedValue;
@@ -31,11 +32,21 @@ namespace Zaaml.UI.Controls.Core
 			TempGeneratedItems = new GeneratedItemList(LinkedListManager);
 			NextGeneratedItems = new GeneratedItemList(LinkedListManager);
 			PrevGeneratedItems = new GeneratedItemList(LinkedListManager);
+
+			EnsureVoidRange();
 		}
 
-		private GeneratedItemIndexPair CurrentAttachDetachItemPair { get; set; }
+		private void EnsureVoidRange()
+		{
+			NextGeneratedItems.EnsureVoidRange();
+			PrevGeneratedItems.EnsureVoidRange();
+		}
 
-		private Stack<GeneratedItem> GeneratedItemPool { get; } = new Stack<GeneratedItem>();
+		private GeneratedIndexItemPair CurrentAttachDetachIndexItemPair { get; set; }
+
+		private AttachDetachOperation CurrentOperation { get; set; } = AttachDetachOperation.None;
+
+		private Stack<GeneratedItem> GeneratedItemPool { get; } = new();
 
 		private int GeneratorVersion { get; set; }
 
@@ -53,17 +64,15 @@ namespace Zaaml.UI.Controls.Core
 
 		private SparseLinkedListManager<GeneratedItem> LinkedListManager { get; }
 
-		private Dictionary<T, GeneratedItem> LockedItemDictionary { get; } = new Dictionary<T, GeneratedItem>();
+		private Dictionary<T, GeneratedItem> LockedItemDictionary { get; } = new();
 
-		private Dictionary<object, GeneratedItem> LockedSourceDictionary { get; } = new Dictionary<object, GeneratedItem>();
+		private Dictionary<object, GeneratedItem> LockedSourceDictionary { get; } = new();
 
 		private GeneratedItemList NextGeneratedItems { get; set; }
 
 		private GeneratedItemList PrevGeneratedItems { get; set; }
 
-		private SparseLinkedListBase<GeneratedItem>.RealizedNode RealizedNodePool { get; set; }
-
-		private Stack<GeneratedItem> RecyclePool { get; } = new Stack<GeneratedItem>();
+		private Stack<GeneratedItem> RecyclePool { get; } = new();
 
 		private int SourceVersion { get; set; }
 
@@ -91,9 +100,13 @@ namespace Zaaml.UI.Controls.Core
 
 		private void AttachItem(int index, GeneratedItem generatedItem)
 		{
+			if (CurrentOperation != AttachDetachOperation.None)
+				throw new InvalidOperationException();
+
 			try
 			{
-				CurrentAttachDetachItemPair = new GeneratedItemIndexPair(generatedItem, index);
+				CurrentOperation = AttachDetachOperation.Attach;
+				CurrentAttachDetachIndexItemPair = new GeneratedIndexItemPair(index, generatedItem);
 
 				ItemHost?.OnItemAttaching(generatedItem.Item);
 
@@ -108,7 +121,8 @@ namespace Zaaml.UI.Controls.Core
 			}
 			finally
 			{
-				CurrentAttachDetachItemPair = GeneratedItemIndexPair.Empty;
+				CurrentOperation = AttachDetachOperation.None;
+				CurrentAttachDetachIndexItemPair = GeneratedIndexItemPair.Empty;
 			}
 		}
 
@@ -117,13 +131,13 @@ namespace Zaaml.UI.Controls.Core
 			if (generatedItem.GeneratorVersion == NonGeneratedVersion)
 				return true;
 
-			return generatedItem.Item != null && (ReferenceEquals(generatedItem.Generator, generator) && generatedItem.GeneratorVersion == GeneratorVersion);
+			return generatedItem.Item != null && ReferenceEquals(generatedItem.Generator, generator) && generatedItem.GeneratorVersion == GeneratorVersion;
 		}
 
 		private void ClearRecyclePool()
 		{
 			while (RecyclePool.Count > 0)
-				ReleaseItem(RecyclePool.Pop(), false);
+				ReleaseItem(PopFromPool(), false);
 		}
 
 		private GeneratedItem CreateGeneratedItem()
@@ -138,9 +152,13 @@ namespace Zaaml.UI.Controls.Core
 
 		private void DetachItem(int index, GeneratedItem generatedItem)
 		{
+			if (CurrentOperation != AttachDetachOperation.None)
+				throw new InvalidOperationException();
+
 			try
 			{
-				CurrentAttachDetachItemPair = new GeneratedItemIndexPair(generatedItem, index);
+				CurrentOperation = AttachDetachOperation.Detach;
+				CurrentAttachDetachIndexItemPair = new GeneratedIndexItemPair(index, generatedItem);
 
 				ItemHost?.OnItemDetaching(generatedItem.Item);
 
@@ -149,116 +167,56 @@ namespace Zaaml.UI.Controls.Core
 				OnGeneratedItemDetached(index, generatedItem.Item);
 
 				if (ReferenceEquals(generatedItem.Item, generatedItem.Source) == false)
+				{
 					generatedItem.Generator.DetachItemCore(generatedItem.Item, generatedItem.Source);
+					generatedItem.Source = default;
+				}
 
 				ItemHost?.OnItemDetached(generatedItem.Item);
 			}
 			finally
 			{
-				CurrentAttachDetachItemPair = GeneratedItemIndexPair.Empty;
+				CurrentOperation = AttachDetachOperation.None;
+				CurrentAttachDetachIndexItemPair = GeneratedIndexItemPair.Empty;
 			}
 		}
 
-		private void EnsureCount()
+		private static IEnumerable<GeneratedIndexItemPair> EnumerateRealizedItems(GeneratedItemList generatedItems)
 		{
-			var count = IndexedSource.Count;
-
-			NextGeneratedItems.EnsureCount(count);
-			PrevGeneratedItems.EnsureCount(count);
+			foreach (var indexValuePair in generatedItems.EnumerateRealizedValues())
+				yield return indexValuePair;
 		}
 
-		private static IEnumerable<GeneratedItemIndexPair> EnumerateRealizedItems(GeneratedItemList generatedItems)
+		private static IEnumerable<GeneratedIndexItemPair> EnumerateRealizedItems(GeneratedItemList generatedItems, int index, int count)
 		{
-			var currentNode = generatedItems.Head;
-			var currentNodeOffset = 0L;
-
-			if (currentNode.IsEmpty)
-				yield break;
-
-			while (currentNode.IsEmpty == false)
-			{
-				if (currentNode.IsRealized)
-				{
-					for (var i = 0; i < currentNode.Count; i++)
-					{
-						var generatedItem = currentNode[i];
-
-						if (generatedItem != null)
-							yield return new GeneratedItemIndexPair(generatedItem, (int) (currentNodeOffset + i));
-					}
-				}
-
-				currentNodeOffset += currentNode.Count;
-				currentNode = currentNode.Next;
-			}
+			foreach (var indexValuePair in generatedItems.EnumerateRealizedValues(index, count))
+				yield return indexValuePair;
 		}
 
-		private IEnumerable<GeneratedItemIndexPair> EnumerateRealizedItems(GeneratedItemList generatedItems, int index, int count)
+		private static GeneratedIndexItemPair FindGeneratedItem(T item, GeneratedItemList generatedItems)
 		{
-			var currentNode = generatedItems.FindNode(index, out var currentNodeOffset);
-
-			if (currentNode.IsEmpty)
-				yield break;
-
-			var firstIndex = index - currentNodeOffset;
-			var currentIndex = 0L;
-
-			while (currentNode.IsEmpty == false && currentIndex < count)
-			{
-				if (currentNode.IsRealized)
-				{
-					for (var i = (int) firstIndex; i < currentNode.Count && currentIndex < count; i++, currentIndex++)
-					{
-						var generatedItem = currentNode[i];
-
-						if (generatedItem != null)
-							yield return new GeneratedItemIndexPair(generatedItem, (int) (currentNodeOffset + i));
-					}
-				}
-				else
-					currentIndex += currentNodeOffset - firstIndex;
-
-				firstIndex = 0;
-
-				currentNodeOffset += currentNode.Count;
-				currentNode = currentNode.Next;
-			}
+			return generatedItems.FindRealizedValue(g => g != null && ReferenceEquals(g.Item, item));
+		}
+		
+		private static GeneratedIndexItemPair FindGeneratedItemSource(object source, GeneratedItemList generatedItems)
+		{
+			return generatedItems.FindRealizedValue(g => g != null && EqualSource(g.Source, source));
 		}
 
-		private static GeneratedItemIndexPair FindGeneratedItem(T item, GeneratedItemList generatedItems)
+		private static bool EqualSource(object source1, object source2)
 		{
-			var currentNode = generatedItems.Head;
-			var currentNodeOffset = 0L;
-
-			while (currentNode.IsEmpty == false)
-			{
-				if (currentNode.IsRealized)
-				{
-					for (var i = 0; i < currentNode.Count; i++)
-					{
-						var generatedItem = currentNode[i];
-
-						if (generatedItem != null && ReferenceEquals(generatedItem.Item, item))
-							return new GeneratedItemIndexPair(generatedItem, (int) (currentNodeOffset + i));
-					}
-				}
-
-				currentNodeOffset += currentNode.Count;
-				currentNode = currentNode.Next;
-			}
-
-			return GeneratedItemIndexPair.Empty;
+			return Equals(source1, source2);
 		}
 
-		private GeneratedItemIndexPair FindGeneratedItem(T item)
+		private GeneratedIndexItemPair FindGeneratedItem(T item)
 		{
-			if (CurrentAttachDetachItemPair.Item != null && ReferenceEquals(item, CurrentAttachDetachItemPair.Item.Item))
-				return CurrentAttachDetachItemPair;
+			if (CurrentAttachDetachIndexItemPair.Item != null && ReferenceEquals(item, CurrentAttachDetachIndexItemPair.Item.Item))
+				return CurrentAttachDetachIndexItemPair;
 
 			return FindGeneratedItem(item, IsGenerating ? NextGeneratedItems : PrevGeneratedItems);
 		}
 
-		private GeneratedItemIndexPair FindGeneratedItemEverywhere(T item)
+		private GeneratedIndexItemPair FindGeneratedItemEverywhere(T item)
 		{
 			var generatedItem = FindGeneratedItem(item, PrevGeneratedItems);
 
@@ -273,7 +231,7 @@ namespace Zaaml.UI.Controls.Core
 			return FindGeneratedItem(item, TempGeneratedItems);
 		}
 
-		private GeneratedItem Generate(ItemGenerator<T> generator, int index, object source, out GeneratedItemSource generatedItemSource, out bool attach)
+		private GeneratedItem Generate(ItemGenerator<T> generator, object source, out GeneratedItemSource generatedItemSource, out bool attach)
 		{
 			generatedItemSource = GeneratedItemSource.New;
 
@@ -292,7 +250,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				if (CanReuse(lockedItem, generator))
 				{
-					Debug.Assert(ReferenceEquals(source, lockedItem.Source));
+					Debug.Assert(EqualSource(source, lockedItem.Source));
 					Debug.Assert(lockedItem.IsAttached);
 
 					lockedItem.Mount(lockedItem.Item, lockedItem.Source, generator, GeneratorVersion, Version);
@@ -304,6 +262,9 @@ namespace Zaaml.UI.Controls.Core
 				}
 
 				RemoveLockedSource(lockedItem);
+
+				if (lockedItem.IsAttached)
+					ReleaseItem(lockedItem, true);
 			}
 
 			var poolItem = GetFromPool(generator);
@@ -332,7 +293,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			while (RecyclePool.Count > 0)
 			{
-				var recycleGeneratedItem = RecyclePool.Pop();
+				var recycleGeneratedItem = PopFromPool();
 
 				if (IsLocked(recycleGeneratedItem))
 					continue;
@@ -344,13 +305,6 @@ namespace Zaaml.UI.Controls.Core
 			return null;
 		}
 
-		private IEnumerable<T> VirtualGetGeneratedItems()
-		{
-			var generatedItems = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
-
-			return generatedItems.Where(g => g != null).Select(g => g.Item).Where(i => i != null);
-		}
-
 		private GeneratedItem GetLockedGeneratedItemFromSource(object source)
 		{
 			return source != null && LockedSourceDictionary.TryGetValue(source, out var generatedItem) ? generatedItem : null;
@@ -360,8 +314,8 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var itemsCount = items.Count;
 
-			PrevGeneratedItems.InsertCleanRange(index, itemsCount);
-			NextGeneratedItems.InsertCleanRange(index, itemsCount);
+			PrevGeneratedItems.InsertVoidRange(index, itemsCount);
+			NextGeneratedItems.InsertVoidRange(index, itemsCount);
 		}
 
 		private static bool IsLocked(GeneratedItem generatedItem)
@@ -369,14 +323,23 @@ namespace Zaaml.UI.Controls.Core
 			return generatedItem.IsLocked;
 		}
 
-		private void ObservableSourceOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		private void OnGeneratorChanged(object sender, EventArgs e)
 		{
-			ObservableSourceOnCollectionChangedPrivate(e);
+			GeneratorVersion++;
+
+			ClearRecyclePool();
 		}
 
-		private void ObservableSourceOnCollectionChangedPrivate(NotifyCollectionChangedEventArgs e)
+		private void OnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			OnSourceCollectionChangedPrivate(e);
+		}
+
+		private void OnSourceCollectionChangedPrivate(NotifyCollectionChangedEventArgs e)
 		{
 			SourceVersion++;
+
+			EnsureVoidRange();
 
 			switch (e.Action)
 			{
@@ -418,105 +381,68 @@ namespace Zaaml.UI.Controls.Core
 					throw new ArgumentOutOfRangeException();
 			}
 
-			EnsureCount();
+			EnsureVoidRange();
 
-			ObservableSourceOnCollectionChanged(e);
+			OnSourceCollectionChanged(e);
 		}
 
-		private void OnGeneratorChanged(object sender, EventArgs e)
+		private GeneratedItem PopFromPool()
 		{
-			GeneratorVersion++;
+			if (RecyclePool.Count > 0)
+			{
+				var generatedItem = RecyclePool.Pop();
 
-			ClearRecyclePool();
+				generatedItem.IsInPool = false;
+
+				return generatedItem;
+			}
+
+			return null;
 		}
 
-		private void PushIntoPool(GeneratedItem item)
+		private void PushIntoPool(GeneratedItem generatedItem)
 		{
-			RecyclePool.Push(item);
+			generatedItem.IsInPool = true;
+
+			RecyclePool.Push(generatedItem);
 		}
 
-		private void PushIntoTempItems(GeneratedItem item)
+		private void PushIntoTempItems(GeneratedItem generatedItem)
 		{
-			Debug.Assert(item != null);
-			Debug.Assert(item.IsInTemp == false);
+			Debug.Assert(generatedItem != null);
+			Debug.Assert(generatedItem.IsInTemp == false);
 
-			item.IsInTemp = true;
+			if (generatedItem.IsLocked)
+				return;
 
-			TempGeneratedItems.Add(item);
-		}
+			if (generatedItem.IsInTemp)
+				return;
 
-		private T VirtualRealize(int index)
-		{
-			var generator = Generator;
+			generatedItem.IsInTemp = true;
 
-			if (generator == null)
-				return null;
-
-			var isGenerating = IsGenerating;
-			var nextItems = isGenerating ? NextGeneratedItems : PrevGeneratedItems;
-			var prevItems = isGenerating ? PrevGeneratedItems : NextGeneratedItems;
-
-			var generatedItem = nextItems[index];
-
-			if (generatedItem?.Item != null)
-			{
-				Debug.Assert(generatedItem.CollectionVersion == Version);
-
-				return generatedItem.Item;
-			}
-
-			generatedItem = prevItems[index];
-
-			if (isGenerating)
-				prevItems[index] = null;
-
-			if (generatedItem != null && CanReuse(generatedItem, generator) == false)
-			{
-				ReleaseItem(generatedItem, false);
-				generatedItem = null;
-			}
-
-			var source = IndexedSource[index];
-
-			if (generatedItem != null && IsLocked(generatedItem))
-			{
-				if (ReferenceEquals(generatedItem.Source, source) == false)
-				{
-					ReleaseItem(generatedItem, true);
-					RemoveLockedSource(generatedItem);
-
-					generatedItem = null;
-				}
-			}
-
-			if (generatedItem != null)
-			{
-				generatedItem.CollectionVersion = Version;
-				nextItems[index] = generatedItem;
-
-				return generatedItem.Item;
-			}
-
-			generatedItem = Generate(generator, index, source, out var generatedItemSource, out var attach);
-
-			RemoveFromTemp(generatedItem);
-
-			generatedItem.CollectionVersion = Version;
-
-			nextItems[index] = generatedItem;
-
-			if (attach)
-				AttachItem(index, generatedItem);
-
-			return generatedItem.Item;
+			TempGeneratedItems.Add(generatedItem);
 		}
 
 		private void ReleaseItem(GeneratedItem generatedItem, bool pushIntoPool)
 		{
+			if (generatedItem.IsAttached == false)
+			{
+				if (Debugger.IsAttached) 
+					Debugger.Break();
+
+				generatedItem.Release();
+
+				return;
+			}
+
 			DetachItem(-1, generatedItem);
 
 			if (ReferenceEquals(generatedItem.Item, generatedItem.Source))
+			{
+				generatedItem.Release();
+
 				return;
+			}
 
 			if (pushIntoPool && IsRecycling)
 				PushIntoPool(generatedItem);
@@ -557,15 +483,18 @@ namespace Zaaml.UI.Controls.Core
 			generatedItem.IsInTemp = false;
 		}
 
+		private void RemoveFromTemp(int index)
+		{
+			var generatedItem = TempGeneratedItems[index];
+
+			TempGeneratedItems[index] = null;
+
+			generatedItem.IsInTemp = false;
+		}
+
 		private void RemoveLockedSource(GeneratedItem generatedItem)
 		{
-			if (LockedSourceDictionary.ContainsKey(generatedItem.Source))
-				LockedSourceDictionary.Remove(generatedItem.Source);
-			else
-			{
-				if (generatedItem.IsAttached)
-					ReleaseItem(generatedItem, true);
-			}
+			LockedSourceDictionary.Remove(generatedItem.Source);
 		}
 
 		private void RemoveRange(int index, ICollection items)
@@ -605,9 +534,14 @@ namespace Zaaml.UI.Controls.Core
 			PrevGeneratedItems.Clear();
 			NextGeneratedItems.Clear();
 
-			EnsureCount();
+			EnsureVoidRange();
 
 			SuspendReleaseGeneratedItems = false;
+		}
+
+		private T VirtualEnsureItem(int index)
+		{
+			return GetItemFromIndex(index) ?? VirtualRealize(index);
 		}
 
 		private void VirtualEnterGeneration()
@@ -629,63 +563,42 @@ namespace Zaaml.UI.Controls.Core
 			TempGeneratedItems.Clear();
 
 			SuspendReleaseGeneratedItems = false;
-
-			EnsureCount();
 		}
 
-		private void VirtualLeaveGeneration()
+		private T VirtualGetCurrent(int index)
 		{
-			var items = PrevGeneratedItems;
+			var count = IndexedSource.Count;
 
-			PrevGeneratedItems = NextGeneratedItems;
-			NextGeneratedItems = items;
+			if (count == 0 || index < 0 || index >= count)
+				return null;
 
-			items.Clear();
+			var nextItems = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
 
-			EnsureCount();
-
-			Version++;
-			IsGenerating = false;
+			return nextItems[index]?.Item;
 		}
 
-		private void VirtualLockItem(T item)
+		private IEnumerable<T> VirtualGetGeneratedItems()
 		{
-			if (LockedItemDictionary.TryGetValue(item, out var lockedItem) == false)
-			{
-				var generatedItem = FindGeneratedItemEverywhere(item).Item;
+			var generatedItems = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
 
-				if (generatedItem == null)
-					return;
-
-				generatedItem.Lock();
-				LockedItemDictionary.Add(item, generatedItem);
-				AddLockedSource(generatedItem);
-			}
-			else
-			{
-				lockedItem.Lock();
-			}
+			return generatedItems.EnumerateRealizedValues().Select(i => i.Value).Where(g => g != null).Select(g => g.Item).Where(i => i != null);
 		}
 
-		private void VirtualUnlockItem(T item)
+		private int VirtualGetIndexFromItem(T item)
 		{
-			if (LockedItemDictionary.TryGetValue(item, out var generatedItem) == false)
-				LogService.LogWarning($"Item {item} is not locked.");
-			else
-			{
-				if (generatedItem.Unlock() == false)
-					return;
+			return FindGeneratedItem(item).Index;
+		}
 
-				LockedItemDictionary.Remove(item);
-				RemoveLockedSource(generatedItem);
-			}
+		private int VirtualGetIndexFromSource(object source)
+		{
+			return IndexedSource.IndexOf(source);
 		}
 
 		private T VirtualGetItemFromIndex(int index)
 		{
 			var items = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
 
-			if (index < 0 || index >= items.Count)
+			if (index < 0 || index >= items.LongCount)
 				return null;
 
 			var generatedItem = items[index];
@@ -704,42 +617,158 @@ namespace Zaaml.UI.Controls.Core
 			return null;
 		}
 
-		private int VirtualGetIndexFromSource(object source)
-		{
-			return IndexedSource.IndexOf(source);
-		}
-
 		private object VirtualGetSourceFromIndex(int index)
 		{
 			return IndexedSource[index];
 		}
 
-		private int VirtualGetIndexFromItem(T item)
+		private void VirtualLeaveGeneration()
 		{
-			return FindGeneratedItem(item).Index;
+			var items = PrevGeneratedItems;
+
+			PrevGeneratedItems = NextGeneratedItems;
+			NextGeneratedItems = items;
+
+			items.Clear();
+			EnsureVoidRange();
+
+			Version++;
+			IsGenerating = false;
 		}
 
-		private T VirtualGetCurrent(int index)
+		private void VirtualLockItem(T item)
 		{
-			var count = IndexedSource.Count;
-			
-			if (index >= 0 && index < count && count > 0)
+			if (LockedItemDictionary.TryGetValue(item, out var lockedItem) == false)
 			{
-				var nextItems = IsGenerating ? NextGeneratedItems : PrevGeneratedItems;
+				var generatedItem = FindGeneratedItemEverywhere(item).Item;
 
-				return nextItems[index].Item;
+				if (generatedItem == null)
+					return;
+
+				RemoveFromTemp(generatedItem);
+
+				generatedItem.Lock();
+				LockedItemDictionary.Add(item, generatedItem);
+				AddLockedSource(generatedItem);
+			}
+			else
+			{
+				lockedItem.Lock();
+			}
+		}
+
+		private T VirtualRealize(int index)
+		{
+			var generator = Generator;
+
+			if (generator == null)
+				return null;
+
+			var isGenerating = IsGenerating;
+			var nextItems = isGenerating ? NextGeneratedItems : PrevGeneratedItems;
+			var prevItems = isGenerating ? PrevGeneratedItems : NextGeneratedItems;
+
+			var generatedItem = nextItems[index];
+
+			if (generatedItem?.Item != null)
+			{
+				Debug.Assert(generatedItem.CollectionVersion == Version);
+
+				return generatedItem.Item;
 			}
 
-			return null;
+			generatedItem = prevItems[index];
+
+			if (isGenerating)
+				prevItems[index] = null;
+
+			if (generatedItem != null && CanReuse(generatedItem, generator) == false)
+			{
+				ReleaseItem(generatedItem, false);
+
+				generatedItem = null;
+			}
+
+			var source = IndexedSource[index];
+
+			if (generatedItem != null && IsLocked(generatedItem))
+			{
+				if (EqualSource(generatedItem.Source, source) == false)
+				{
+					RemoveLockedSource(generatedItem);
+
+					if (generatedItem.IsAttached)
+						ReleaseItem(generatedItem, true);
+
+					generatedItem = null;
+				}
+			}
+
+			if (generatedItem != null)
+			{
+				Debug.Assert(EqualSource(generatedItem.Source, source));
+
+				generatedItem.CollectionVersion = Version;
+				nextItems[index] = generatedItem;
+
+				return generatedItem.Item;
+			}
+
+			generatedItem = Generate(generator, source, out var generatedItemSource, out var attach);
+
+			// TODO Review
+			Debug.Assert(generatedItem.IsInTemp == false);
+			//RemoveFromTemp(generatedItem);
+
+			generatedItem.CollectionVersion = Version;
+
+			nextItems[index] = generatedItem;
+
+			if (attach)
+			{
+				if (isGenerating == false)
+				{
+					var tempItem = FindGeneratedItemSource(generatedItem.Source, TempGeneratedItems);
+
+					if (tempItem.IsEmpty == false)
+					{
+						RemoveFromTemp(tempItem.Index);
+
+						ReleaseItem(tempItem.Item, true);
+					}
+				}
+
+				AttachItem(index, generatedItem);
+			}
+
+			return generatedItem.Item;
 		}
 
-		private T VirtualEnsureItem(int index)
+		private void VirtualUnlockItem(T item)
 		{
-			return GetItemFromIndex(index) ?? VirtualRealize(index);
-		}
-	}
+			if (LockedItemDictionary.TryGetValue(item, out var generatedItem) == false)
+				LogService.LogWarning($"Item {item} is not locked.");
+			else
+			{
+				if (generatedItem.Unlock() == false)
+					return;
 
-	internal class VirtualItemCollection<TControl, T> : VirtualItemCollection<T> where T : FrameworkElement
-	{
+				LockedItemDictionary.Remove(item);
+
+				RemoveLockedSource(generatedItem);
+
+				if (generatedItem.IsAttached && generatedItem.IsInPool == false && FindGeneratedItem(generatedItem.Item).IsEmpty) 
+					PushIntoTempItems(generatedItem);
+			}
+		}
+
+		public event NotifyCollectionChangedEventHandler SourceCollectionChanged;
+
+		private enum AttachDetachOperation
+		{
+			None,
+			Attach,
+			Detach
+		}
 	}
 }

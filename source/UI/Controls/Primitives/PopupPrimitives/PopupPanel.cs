@@ -22,14 +22,11 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		private Point _calculatedOffset;
 		private Rect _calculatedRect;
 		private bool _firstMeasure = true;
-
 		private Size _lastMeasureSize;
 		private Point _offset;
 		private Popup _popup;
 
 		private Point _popupCoerceOffset;
-
-		internal event EventHandler ArrangedInternal;
 
 		internal PopupPanel(Popup popup)
 		{
@@ -38,7 +35,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			UseLayoutRounding = true;
 		}
 
-		internal Point ActualOffset => _calculatedOffset.Offset(Offset);
+		internal Point ActualOffset => _calculatedOffset.WithOffset(Offset);
 
 		internal Size ActualSize { get; private set; }
 
@@ -81,12 +78,16 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private PopupSource PopupSource => Popup?.PopupSource;
 
+		LayoutContext ILayoutContextPanel.Context => LayoutContext;
+
+		internal event EventHandler ArrangedInternal;
+
 		private void ApplyOffset()
 		{
 			if (Popup == null || Popup.IsHidden)
 				return;
 
-			var calculatedOffset = _calculatedOffset.Offset(Offset);
+			var calculatedOffset = _calculatedOffset.WithOffset(Offset);
 
 			if (PopupSource.HorizontalOffset.IsCloseTo(calculatedOffset.X, XamlConstants.LayoutComparisonPrecision) == false)
 				PopupSource.HorizontalOffset = calculatedOffset.X;
@@ -100,7 +101,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			if (Popup?.IsOpen != true)
 				return XamlConstants.ZeroSize;
 
-			var finalRect = finalSize.Rect().Offset(_popupCoerceOffset);
+			var finalRect = finalSize.Rect().WithOffset(_popupCoerceOffset);
 
 			finalRect.Width += Math.Abs(_popupCoerceOffset.X);
 			finalRect.Height += Math.Abs(_popupCoerceOffset.Y);
@@ -187,7 +188,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		internal bool IsWithinPopup(Point screePoint)
 		{
-			var screenBox = this.GetScreenBox();
+			var screenBox = this.GetScreenLogicalBox();
 			var inflated = screenBox.GetInflated(CalcInflate(Child).Negate());
 
 			return inflated.Contains(screePoint);
@@ -261,14 +262,14 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private Size MeasurePass(ref MeasureContext measureContext)
 		{
-			for (var i = 0; i < 3; i++)
+			const int maxPassCount = 3;
+
+			for (var i = 0; i < maxPassCount; i++)
 			{
 				var child = Child;
 				var childDesiredSize = measureContext.DesiredContentSize;
 				var arrangeSize = childDesiredSize.Rect().GetInflated(measureContext.Inflate.Negate()).Size();
 				var arrangeRect = measureContext.PopupPlacement.Arrange(arrangeSize);
-
-				DefaultPlacement.Release();
 
 				if (arrangeRect.IsEmpty)
 				{
@@ -283,7 +284,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 				MeasureChild(child, finalMeasureSize, false);
 
-				if (child.DesiredSize.IsCloseTo(measureContext.DesiredContentSize) == false)
+				if (i + 1 < maxPassCount && child.DesiredSize.IsCloseTo(measureContext.DesiredContentSize) == false)
 				{
 					measureContext = new MeasureContext(this, child.DesiredSize);
 
@@ -343,17 +344,13 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			InvalidateMeasure();
 		}
 
-		LayoutContext ILayoutContextPanel.Context => LayoutContext;
-
 		private readonly struct MeasureContext
 		{
 			public MeasureContext(PopupPanel panel, Size desiredContentSize)
 			{
-				var popup = panel.Popup;
-
+				PopupPlacement = panel.Popup.ActualPlacement;
 				DesiredContentSize = desiredContentSize;
 				Inflate = panel.CalcInflate();
-				PopupPlacement = popup.Placement ?? DefaultPlacement.GetDefault(popup);
 				ScreenBounds = PopupPlacement.ScreenBoundsCore;
 			}
 
@@ -363,32 +360,10 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			public readonly Thickness Inflate;
 		}
 
-		private class DefaultPlacement : PopupPlacement
-		{
-			private static readonly DefaultPlacement Instance = new DefaultPlacement();
-
-			protected override Rect ArrangeOverride(Size desiredSize)
-			{
-				return RectUtils.CalcAlignBox(ScreenBoundsCore, desiredSize.Rect(), HorizontalAlignment.Left, VerticalAlignment.Top);
-			}
-
-			public static PopupPlacement GetDefault(Popup popup)
-			{
-				Instance.Popup = popup;
-
-				return Instance;
-			}
-
-			public static void Release()
-			{
-				Instance.Popup = null;
-			}
-		}
-
 		private sealed class PopupLayoutContext : LayoutContext
 		{
+			private readonly List<UIElement> _invalidMeasureElements = new();
 			private MeasureContextPass _measureContextPassCore;
-			private readonly List<UIElement> _invalidMeasureElements = new List<UIElement>();
 
 			public PopupLayoutContext(PopupPanel popupPanel)
 			{
@@ -397,7 +372,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			public override ArrangeContextPass ArrangeContextPass => ArrangeContextPassCore;
 
-			public ArrangeContextPass ArrangeContextPassCore { get; set; }
+			public ArrangeContextPass ArrangeContextPassCore { get; }
 
 			public bool IsMeasureInvalidated { get; set; }
 
@@ -437,7 +412,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 			public void UpdateInvalidElements()
 			{
-				foreach (var invalidMeasureElement in _invalidMeasureElements) 
+				foreach (var invalidMeasureElement in _invalidMeasureElements)
 					invalidMeasureElement.InvalidateAncestorsMeasure(PopupPanel);
 
 				_invalidMeasureElements.Clear();

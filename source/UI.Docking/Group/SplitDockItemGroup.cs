@@ -1,8 +1,7 @@
-// <copyright file="SplitGroup.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="SplitDockItemGroup.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -13,84 +12,57 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class SplitDockItemGroup : DockItemGroup<SplitLayout>
-  {
-    #region Static Fields and Constants
+	public sealed class SplitDockItemGroup : DockItemGroup<SplitLayout>
+	{
+		public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, SplitDockItemGroup>
+			("Orientation", Orientation.Horizontal);
 
-    public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, SplitDockItemGroup>
-      ("Orientation", Orientation.Horizontal);
+		static SplitDockItemGroup()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<SplitDockItemGroup>();
+		}
 
-    #endregion
+		internal SplitDockItemGroup()
+		{
+			this.OverrideStyleKey<SplitDockItemGroup>();
 
-    #region Ctors
+			Layout.SetBinding(SplitLayout.OrientationProperty, new Binding
+			{
+				Source = this,
+				Path = new PropertyPath(OrientationProperty),
+				Mode = BindingMode.TwoWay
+			});
+		}
 
-    static SplitDockItemGroup()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<SplitDockItemGroup>();
-    }
+		public override DockItemGroupKind GroupKind => DockItemGroupKind.Split;
 
-    internal SplitDockItemGroup() : this(DockItemState.Float)
-    {
-    }
+		public override DockItemKind Kind => DockItemKind.SplitDockItemGroup;
 
-    internal SplitDockItemGroup(DockItemState dockState) : base(dockState)
-    {
-      this.OverrideStyleKey<SplitDockItemGroup>();
+		protected override BaseLayoutView<SplitLayout> LayoutView => SplitLayoutView;
 
-      Layout.SetBinding(SplitLayout.OrientationProperty, new Binding
-      {
-        Source = this,
-        Path = new PropertyPath(OrientationProperty),
-        Mode = BindingMode.TwoWay
-      });
-    }
+		public Orientation Orientation
+		{
+			get => (Orientation)GetValue(OrientationProperty);
+			set => SetValue(OrientationProperty, value);
+		}
 
-    #endregion
+		private SplitLayoutView SplitLayoutView => TemplateContract.SplitLayoutView;
 
-    #region Properties
+		private SplitDockItemGroupTemplateContract TemplateContract => (SplitDockItemGroupTemplateContract)TemplateContractInternal;
 
-    public override DockItemGroupKind GroupKind => DockItemGroupKind.Split;
+		protected internal override DockItemLayout CreateItemLayout()
+		{
+			return new SplitDockItemGroupLayout(this) { Orientation = Orientation };
+		}
 
-    public override DockItemKind Kind => DockItemKind.SplitGroup;
+		protected override DockItem CreatePreviewItem(DockItemState dockState)
+		{
+			return new SplitDockItemGroup { DockState = dockState };
+		}
 
-    protected override BaseLayoutView<SplitLayout> LayoutView => SplitLayoutView;
-
-    public Orientation Orientation
-    {
-      get => (Orientation) GetValue(OrientationProperty);
-      set => SetValue(OrientationProperty, value);
-    }
-
-    private SplitLayoutView SplitLayoutView => TemplateContract.SplitLayoutView;
-
-    private SplitDockItemGroupTemplateContract TemplateContract => (SplitDockItemGroupTemplateContract) TemplateContractInternal;
-
-    #endregion
-
-    #region  Methods
-
-    protected override void ApplyLayoutOverride()
-    {
-      base.ApplyLayoutOverride();
-
-      ShowTitle = ActualLayoutKind == LayoutKind.Float && ActualDescendants().Count() > 1;
-    }
-
-    protected internal override DockItemLayout CreateItemLayout()
-    {
-      return new SplitDockItemGroupLayout(this) {Orientation = Orientation};
-    }
-
-    protected override DockItem CreatePreviewItem(DockItemState dockState)
-    {
-      return new SplitDockItemGroup(dockState);
-    }
-
-    protected override TemplateContract CreateTemplateContract()
-    {
-      return new SplitDockItemGroupTemplateContract();
-    }
-
-    #endregion
-  }
+		protected override TemplateContract CreateTemplateContract()
+		{
+			return new SplitDockItemGroupTemplateContract();
+		}
+	}
 }

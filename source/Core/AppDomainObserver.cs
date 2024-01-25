@@ -12,16 +12,10 @@ namespace Zaaml.Core
 {
 	internal sealed class AppDomainObserver
 	{
-		#region Fields
-
 		private readonly Action<IEnumerable<Assembly>> _assemblyAction;
 		private readonly AppDomain _domain;
-		private readonly HashSet<Assembly> _processedAssemblies = new HashSet<Assembly>();
-		private int _prevCount = -1;
-
-		#endregion
-
-		#region Ctors
+		private readonly HashSet<Assembly> _processedAssemblies = new();
+		private readonly HashSet<Assembly> _unprocessedAssemblies = new();
 
 		public AppDomainObserver(Action<IEnumerable<Assembly>> assemblyAction) : this(AppDomain.CurrentDomain, assemblyAction)
 		{
@@ -31,26 +25,25 @@ namespace Zaaml.Core
 		{
 			_domain = domain;
 			_assemblyAction = assemblyAction;
+			_domain.AssemblyLoad += DomainOnAssemblyLoad;
+			_unprocessedAssemblies.AddRange(_domain.GetAssemblies());
 		}
 
-		#endregion
-
-		#region Methods
+		private void DomainOnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
+		{
+			_unprocessedAssemblies.Add(args.LoadedAssembly);
+		}
 
 		public void Update()
 		{
-			var assemblies = _domain.GetAssemblies();
-
-			if (assemblies.Length == _prevCount)
+			if (_unprocessedAssemblies.Count == 0)
 				return;
 
-			var newAssemblies = assemblies.Except(_processedAssemblies).ToList();
+			var newAssemblies = _unprocessedAssemblies.Except(_processedAssemblies).ToList();
 
-			_processedAssemblies.AddRange(newAssemblies);
+			_processedAssemblies.UnionWith(_unprocessedAssemblies);
+			_unprocessedAssemblies.Clear();
 			_assemblyAction(newAssemblies);
-			_prevCount = assemblies.Length;
 		}
-
-		#endregion
 	}
 }

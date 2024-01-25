@@ -2,18 +2,15 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
-using Zaaml.PresentationCore.Data;
-using Zaaml.PresentationCore.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.PresentationCore.Assets
 {
-	public sealed class MaskThickness : AssetBase
+	public sealed class MaskThickness : ThicknessAssetBase
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty LeftProperty = DPM.Register<bool, MaskThickness>
 			("Left", true, b => b.OnLeftChanged);
 
@@ -27,42 +24,23 @@ namespace Zaaml.PresentationCore.Assets
 			("Bottom", true, b => b.OnBottomChanged);
 
 		public static readonly DependencyProperty EnabledThicknessProperty = DPM.Register<Thickness, MaskThickness>
-			("EnabledThickness", b => b.RaiseActualThicknessChanged);
+			("EnabledThickness", b => b.UpdateActualThickness);
 
 		public static readonly DependencyProperty DisabledThicknessProperty = DPM.Register<Thickness, MaskThickness>
-			("DisabledThickness", b => b.RaiseActualThicknessChanged);
-
-		private static readonly DependencyPropertyKey ActualThicknessPropertyKey = DPM.RegisterReadOnly<Thickness, MaskThickness>
-			("ActualThickness");
+			("DisabledThickness", b => b.UpdateActualThickness);
 
 		public static readonly DependencyProperty InvertProperty = DPM.Register<bool, MaskThickness>
-			("Invert", false, b => b.RaiseActualThicknessChanged);
+			("Invert", false, b => b.UpdateActualThickness);
 
 		public static readonly DependencyProperty FlagsProperty = DPM.Register<MaskThicknessFlags, MaskThickness>
 			("Flags", MaskThicknessFlags.All, b => b.OnFlagsChanged);
 
-		public static readonly DependencyProperty ActualThicknessProperty = ActualThicknessPropertyKey.DependencyProperty;
-
-		#endregion
-
-		#region Fields
-
 		private bool _suspend;
-
-		#endregion
-
-		#region Properties
-
-		public Thickness ActualThickness
-		{
-			get => (Thickness) GetValue(ActualThicknessProperty);
-			private set => this.SetReadOnlyValue(ActualThicknessPropertyKey, value);
-		}
 
 		public bool Bottom
 		{
 			get => (bool) GetValue(BottomProperty);
-			set => SetValue(BottomProperty, value);
+			set => SetValue(BottomProperty, value.Box());
 		}
 
 		public Thickness DisabledThickness
@@ -86,45 +64,31 @@ namespace Zaaml.PresentationCore.Assets
 		public bool Invert
 		{
 			get => (bool) GetValue(InvertProperty);
-			set => SetValue(InvertProperty, value);
+			set => SetValue(InvertProperty, value.Box());
 		}
 
 		public bool Left
 		{
 			get => (bool) GetValue(LeftProperty);
-			set => SetValue(LeftProperty, value);
+			set => SetValue(LeftProperty, value.Box());
 		}
 
 		public bool Right
 		{
 			get => (bool) GetValue(RightProperty);
-			set => SetValue(RightProperty, value);
+			set => SetValue(RightProperty, value.Box());
 		}
 
 		public bool Top
 		{
 			get => (bool) GetValue(TopProperty);
-			set => SetValue(TopProperty, value);
-		}
-
-		#endregion
-
-		#region  Methods
-
-		private void DisableFlag(MaskThicknessFlags flag)
-		{
-			Flags &= ~flag;
-		}
-
-		private void EnableFlag(MaskThicknessFlags flag)
-		{
-			Flags |= flag;
+			set => SetValue(TopProperty, value.Box());
 		}
 
 		private void OnBottomChanged(bool oldBottom, bool newBottom)
 		{
 			if (_suspend == false)
-				SetFlag(newBottom, MaskThicknessFlags.Bottom);
+				Flags = Flags.WithFlagValue(MaskThicknessFlags.Bottom, newBottom);
 		}
 
 		private void OnFlagsChanged(MaskThicknessFlags oldFlags, MaskThicknessFlags newFlags)
@@ -145,71 +109,34 @@ namespace Zaaml.PresentationCore.Assets
 			{
 				_suspend = false;
 
-				RaiseActualThicknessChanged();
+				UpdateActualThickness();
 			}
 		}
 
 		private void OnLeftChanged(bool oldLeft, bool newLeft)
 		{
 			if (_suspend == false)
-				SetFlag(newLeft, MaskThicknessFlags.Left);
+				Flags = Flags.WithFlagValue(MaskThicknessFlags.Left, newLeft);
 		}
 
 		private void OnRightChanged(bool oldRight, bool newRight)
 		{
 			if (_suspend == false)
-				SetFlag(newRight, MaskThicknessFlags.Right);
+				Flags = Flags.WithFlagValue(MaskThicknessFlags.Right, newRight);
 		}
 
 		private void OnTopChanged(bool oldTop, bool newTop)
 		{
 			if (_suspend == false)
-				SetFlag(newTop, MaskThicknessFlags.Top);
+				Flags = Flags.WithFlagValue(MaskThicknessFlags.Top, newTop);
 		}
 
-		private void RaiseActualThicknessChanged()
+		private void UpdateActualThickness()
 		{
-			var disabledThickness = DisabledThickness;
-			var enabledThickness = EnabledThickness;
-			var invert = Invert;
-			var trueThickness = invert ? disabledThickness : enabledThickness;
-			var falseThickness = invert ? enabledThickness : disabledThickness;
+			var actualThickness = ThicknessUtils.Compose(EnabledThickness, DisabledThickness, Invert, Flags);
 
-			if (Left == false)
-				trueThickness.Left = falseThickness.Left;
-
-			if (Top == false)
-				trueThickness.Top = falseThickness.Top;
-
-			if (Right == false)
-				trueThickness.Right = falseThickness.Right;
-
-			if (Bottom == false)
-				trueThickness.Bottom = falseThickness.Bottom;
-
-			if (ActualThickness != trueThickness)
-				ActualThickness = trueThickness;
+			if (ActualThickness != actualThickness)
+				ActualThickness = actualThickness;
 		}
-
-		private void SetFlag(bool value, MaskThicknessFlags flag)
-		{
-			if (value)
-				EnableFlag(flag);
-			else
-				DisableFlag(flag);
-		}
-
-		#endregion
-	}
-
-	[Flags]
-	public enum MaskThicknessFlags
-	{
-		None = 0,
-		Left = 1,
-		Top = 2,
-		Right = 4,
-		Bottom = 8,
-		All = Left | Top | Right | Bottom
 	}
 }

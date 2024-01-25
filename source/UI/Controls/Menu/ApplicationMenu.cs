@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
 
@@ -29,7 +30,7 @@ namespace Zaaml.UI.Controls.Menu
 		public bool IsOpen
 		{
 			get => (bool) GetValue(IsOpenProperty);
-			set => SetValue(IsOpenProperty, value);
+			set => SetValue(IsOpenProperty, value.Box());
 		}
 
 		#endregion

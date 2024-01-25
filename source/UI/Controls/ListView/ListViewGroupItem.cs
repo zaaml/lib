@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.ListView
@@ -15,7 +16,7 @@ namespace Zaaml.UI.Controls.ListView
 		public bool IsExpanded
 		{
 			get => (bool) GetValue(IsExpandedProperty);
-			set => SetValue(IsExpandedProperty, value);
+			set => SetValue(IsExpandedProperty, value.Box());
 		}
 
 		private void OnIsExpandedPropertyChangedPrivate(bool oldValue, bool newValue)

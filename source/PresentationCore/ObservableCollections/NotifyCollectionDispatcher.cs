@@ -7,40 +7,47 @@ using System.Collections.Specialized;
 
 namespace Zaaml.PresentationCore.ObservableCollections
 {
-  internal abstract class NotifyCollectionDispatcher<T>
-  {
-    #region  Methods
+	internal abstract class NotifyCollectionDispatcher<T>
+	{
+		protected virtual void OnCollectionChangedCore(NotifyCollectionChangedEventArgs e)
+		{
+			switch (e.Action)
+			{
+				case NotifyCollectionChangedAction.Add:
+					if (e.NewItems != null)
+						foreach (T item in e.NewItems)
+							OnItemAdded(item);
 
-    protected virtual void OnCollectionChangedCore(NotifyCollectionChangedEventArgs e)
-    {
-      switch (e.Action)
-      {
-        case NotifyCollectionChangedAction.Add:
-          foreach (T item in e.NewItems)
-            OnItemAdded(item);
-          break;
-        case NotifyCollectionChangedAction.Remove:
-          foreach (T item in e.OldItems)
-            OnItemRemoved(item);
-          break;
-        case NotifyCollectionChangedAction.Replace:
-          foreach (T item in e.OldItems)
-            OnItemRemoved(item);
-          foreach (T item in e.NewItems)
-            OnItemAdded(item);
-          break;
-        case NotifyCollectionChangedAction.Reset:
-          OnReset();
-          break;
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+					break;
+				case NotifyCollectionChangedAction.Remove:
+					if (e.OldItems != null)
+						foreach (T item in e.OldItems)
+							OnItemRemoved(item);
 
-    protected abstract void OnItemAdded(T item);
-    protected abstract void OnItemRemoved(T item);
-    protected abstract void OnReset();
+					break;
+				case NotifyCollectionChangedAction.Replace:
+					if (e.OldItems != null)
+						foreach (T item in e.OldItems)
+							OnItemRemoved(item);
 
-    #endregion
-  }
+					if (e.NewItems != null)
+						foreach (T item in e.NewItems)
+							OnItemAdded(item);
+					break;
+				case NotifyCollectionChangedAction.Reset:
+
+					OnReset();
+
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		protected abstract void OnItemAdded(T item);
+
+		protected abstract void OnItemRemoved(T item);
+
+		protected abstract void OnReset();
+	}
 }

@@ -11,12 +11,6 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 	{
 		Point GetPosition(UIElement element);
 
-		void OnDragEnd(UIElement element, DraggableBehavior draggableBehavior);
-
-		void OnDragMove(UIElement element, DraggableBehavior draggableBehavior);
-
-		void OnDragStart(UIElement element, DraggableBehavior draggableBehavior);
-
 		void SetPosition(UIElement element, Point value);
 	}
 
@@ -36,18 +30,6 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 		public void SetPosition(UIElement element, Point value)
 		{
 		}
-
-		public void OnDragEnd(UIElement element, DraggableBehavior draggableBehavior)
-		{
-		}
-
-		public void OnDragMove(UIElement element, DraggableBehavior draggableBehavior)
-		{
-		}
-
-		public void OnDragStart(UIElement element, DraggableBehavior draggableBehavior)
-		{
-		}
 	}
 
 	internal interface IDraggableAdvisorProvider
@@ -57,36 +39,9 @@ namespace Zaaml.PresentationCore.Behaviors.Draggable
 
 	internal abstract class DraggableAdvisorBase : IDraggableAdvisor
 	{
-		protected virtual void OnDragEnd(UIElement element, DraggableBehavior draggableBehavior)
-		{
-		}
-
-		protected virtual void OnDragMove(UIElement element, DraggableBehavior draggableBehavior)
-		{
-		}
-
-		protected virtual void OnDragStart(UIElement element, DraggableBehavior draggableBehavior)
-		{
-		}
-
 		public abstract Point GetPosition(UIElement element);
 
 		public abstract void SetPosition(UIElement element, Point value);
-
-		void IDraggableAdvisor.OnDragEnd(UIElement element, DraggableBehavior draggableBehavior)
-		{
-			OnDragEnd(element, draggableBehavior);
-		}
-
-		void IDraggableAdvisor.OnDragMove(UIElement element, DraggableBehavior draggableBehavior)
-		{
-			OnDragMove(element, draggableBehavior);
-		}
-
-		void IDraggableAdvisor.OnDragStart(UIElement element, DraggableBehavior draggableBehavior)
-		{
-			OnDragStart(element, draggableBehavior);
-		}
 	}
 
 	internal class DelegateDraggableAdvisor<T> : DraggableAdvisorBase where T : UIElement

@@ -13,7 +13,7 @@ namespace Zaaml.Core.Collections
 		public struct Enumerator : IEnumerator<T>
 		{
 			private SparseLinkedListBase<T> _list;
-			private int _structureVersion;
+			private ulong _structureVersion;
 			private NodeBase _currentNode;
 			private int _currentNodeIndex;
 			private T _current;
@@ -30,7 +30,7 @@ namespace Zaaml.Core.Collections
 			public void Dispose()
 			{
 				_list = null;
-				_structureVersion = -1;
+				_structureVersion = ulong.MaxValue;
 			}
 
 			private void Verify()
@@ -39,7 +39,7 @@ namespace Zaaml.Core.Collections
 					throw new InvalidOperationException("Enumerator has been disposed.");
 
 				if (_structureVersion != _list.StructureVersion)
-					throw new InvalidOperationException("List has changed.");
+					throw new InvalidOperationException("List has been changed.");
 			}
 
 			public bool MoveNext()

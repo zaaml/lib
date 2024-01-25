@@ -11,15 +11,9 @@ namespace Zaaml.UI.Controls.BackstageView
 {
 	internal sealed class BackstageViewHost
 	{
-		#region Type: Fields
-
 		private readonly OverlayItemPresenter _overlayItemPresenter;
 		private bool _isOpen;
 		private OverlayContentControl _overlayLayer;
-
-		#endregion
-
-		#region Ctors
 
 		public BackstageViewHost(BackstageViewControl backstageViewControl)
 		{
@@ -30,10 +24,6 @@ namespace Zaaml.UI.Controls.BackstageView
 				Content = backstageViewControl
 			};
 		}
-
-		#endregion
-
-		#region Properties
 
 		public BackstageViewControl BackstageViewControl { get; }
 
@@ -69,10 +59,6 @@ namespace Zaaml.UI.Controls.BackstageView
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		private void Close()
 		{
 			OverlayLayer = null;
@@ -82,7 +68,5 @@ namespace Zaaml.UI.Controls.BackstageView
 		{
 			OverlayLayer = BackstageViewControl.GetLogicalAncestorsAndSelf().OfType<FrameworkElement>().Select(OverlayContentControl.GetOverlay).LastOrDefault(a => a != null);
 		}
-
-		#endregion
 	}
 }

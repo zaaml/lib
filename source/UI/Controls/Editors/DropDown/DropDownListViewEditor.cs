@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
@@ -18,6 +19,9 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 	{
 		public static readonly DependencyProperty IsTextEditableProperty = DPM.Register<bool, DropDownListViewEditor>
 			("IsTextEditable", false);
+
+		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<DropDownEditableSelectorDisplayMode, DropDownListViewEditor>
+			("DisplayMode", DropDownEditableSelectorDisplayMode.TextEditor);
 
 		public static readonly DependencyProperty ListViewControlProperty = DPM.Register<ListViewControl, DropDownListViewEditor>
 			("ListViewControl");
@@ -34,12 +38,18 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 			this.OverrideStyleKey<DropDownListViewEditor>();
 		}
 
+		public DropDownEditableSelectorDisplayMode DisplayMode
+		{
+			get => (DropDownEditableSelectorDisplayMode) GetValue(DisplayModeProperty);
+			set => SetValue(DisplayModeProperty, value);
+		}
+
 		private DropDownListViewControl DropDownListViewControl => TemplateContract.DropDownListViewControl;
 
 		public bool IsTextEditable
 		{
 			get => (bool) GetValue(IsTextEditableProperty);
-			set => SetValue(IsTextEditableProperty, value);
+			set => SetValue(IsTextEditableProperty, value.Box());
 		}
 
 		public ListViewControl ListViewControl
@@ -48,7 +58,7 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 			set => SetValue(ListViewControlProperty, value);
 		}
 
-		private DropDownListViewEditorTemplateContract TemplateContract => (DropDownListViewEditorTemplateContract) TemplateContractInternal;
+		private DropDownListViewEditorTemplateContract TemplateContract => (DropDownListViewEditorTemplateContract) TemplateContractCore;
 
 		private void DropDownListViewControlOnEditingEnded(object sender, EditingEndedEventArgs e)
 		{

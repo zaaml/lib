@@ -7,25 +7,19 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.Primitives
 {
-  public sealed class LayoutTransformer : ContentControl
-  {
-    #region Ctors
+	public sealed class LayoutTransformer : ContentControl
+	{
+		static LayoutTransformer()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<LayoutTransformer>();
+		}
 
-    static LayoutTransformer()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<LayoutTransformer>();
-    }
+		public LayoutTransformer()
+		{
+			this.OverrideStyleKey<LayoutTransformer>();
 
-    public LayoutTransformer()
-    {
-      this.OverrideStyleKey<LayoutTransformer>();
-
-      IsTabStop = false;
-#if !SILVERLIGHT
-      Focusable = false;
-#endif
-    }
-
-    #endregion
-  }
+			IsTabStop = false;
+			Focusable = false;
+		}
+	}
 }

@@ -1,0 +1,145 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="NavigationViewItemShared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <ControlTemplate x:Key="NavigationViewHeaderedIconItemPresenterTemplate"
+                   TargetType="zm:NavigationViewHeaderedIconItemPresenter">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <!--  CommonStatesBorder  -->
+      <Border Background="{TemplateBinding Background}"
+              BorderThickness="0">
+
+        <zm:DockPanel x:Name="DockPanel"
+                      Margin="0,10,0,10">
+
+          <!--  Icon  -->
+          <zm:SharedSizeContentControl x:Name="IconHost"
+                                       zm:DockPanel.Dock="Left"
+                                       ShareHeight="False"
+                                       SharedSizeKey="Icon">
+            <zm:Panel>
+              <zm:IconPresenter Margin="8,0,8,0"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                Icon="{zm:TemplateBinding Path=NavigationViewItem.Icon,
+                                                          TargetNullValue={StaticResource FallbackIcon}}"
+                                Visibility="{zm:SelfBinding Path=Icon,
+                                                            Converter={zm:VisibilityConverter}}" />
+
+              <!--  Selection line  -->
+              <Border x:Name="SelectionLine"
+                      Width="2"
+                      Height="24"
+                      Margin="2,0"
+                      HorizontalAlignment="Left"
+                      zm:DockPanel.Dock="Left"
+                      Background="{zm:TemplateSkinBinding SkinPath=SelectionLineBackground}"
+                      Visibility="Collapsed">
+                <zm:Extension.Setters>
+                  <zm:Setter VisualState="Selected" Property="Visibility" Value="Visible" />
+                </zm:Extension.Setters>
+              </Border>
+            </zm:Panel>
+          </zm:SharedSizeContentControl>
+
+          <!--  Content  -->
+          <zm:SharedSizeContentControl x:Name="ContentHost"
+                                       ShareHeight="False"
+                                       SharedSizeKey="Content">
+            <zm:ContentPresenter Margin="0,0,0,0"
+                                 HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                 VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                 zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                 Content="{zm:TemplateBinding Path=NavigationViewItem.Header}" />
+          </zm:SharedSizeContentControl>
+
+
+          <zm:Panel x:Name="GlyphPanel"
+                    Width="40"
+                    Height="20"
+                    zm:DockPanel.Dock="Right"
+                    Visibility="{zm:TemplateBinding Path=NavigationViewItem,
+                                                    Converter={zm:IsSubclassOfVisibilityConverter Type=zm:NavigationViewMenuItem}}">
+            <!--  Menu Glyph  -->
+            <zm:PathIcon HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         Style="{zm:TemplateSkinBinding SkinPath=MenuGlyph.Style}">
+              <zm:Extension.Setters>
+                <zm:SetterGroup ValuePath="MenuGlyph" ValuePathSource="TemplateSkin" Property="Data">
+                  <zm:Setter ValuePath="Collapsed" VisualState="Collapsed" />
+                  <zm:Setter ValuePath="Expanded" VisualState="Expanded" />
+                </zm:SetterGroup>
+              </zm:Extension.Setters>
+            </zm:PathIcon>
+          </zm:Panel>
+
+          <zm:Extension.Triggers>
+
+            <zm:DataTrigger Binding="{zm:TemplateBinding Path=NavigationViewItem.DisplayMode}" Value="Compact">
+              <zm:Setter TargetName="ContentHost" Property="Visibility" Value="Collapsed" />
+              <zm:Setter TargetName="GlyphPanel" Property="zm:DockPanel.Dock" Value="Bottom" />
+              <zm:Setter TargetName="IconHost" Property="zm:DockPanel.Dock" Value="Top" />
+              <zm:Setter TargetName="DockPanel" Property="HorizontalAlignment" Value="Left" />
+
+              <zm:DataTrigger.Triggers>
+                <zm:DataTrigger Binding="{zm:ElementBinding ElementName=GlyphPanel, Path=Visibility}" Value="Visible">
+                  <zm:Setter TargetName="DockPanel" Property="Margin" Value="0,10,0,0" />
+                </zm:DataTrigger>
+              </zm:DataTrigger.Triggers>
+            </zm:DataTrigger>
+
+          </zm:Extension.Triggers>
+        </zm:DockPanel>
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="NavigationViewHeaderedIconItemPresenterBaseStyle" TargetType="zm:NavigationViewHeaderedIconItemPresenter">
+    <zm:Setter Property="MinHeight" Value="40" />
+    <zm:Setter Property="FontSize" Value="14" />
+    <zm:Setter Property="HorizontalAlignment" Value="Stretch" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Center" />
+    <zm:Setter Property="Template" Value="{StaticResource NavigationViewHeaderedIconItemPresenterTemplate}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="NavigationViewHeaderedIconItemPresenterStyle" BasedOn="{StaticResource NavigationViewHeaderedIconItemPresenterBaseStyle}" Skin="Metro.NavigationView.NavigationViewHeaderedIconItemPresenter" TargetType="zm:NavigationViewHeaderedIconItemPresenter">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!--  Foreground  -->
+      <zm:SetterGroup ValuePath="Foreground" Property="Foreground">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="Normal" VisualState="Disabled" />
+        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter ValuePath="Pressed" VisualState="Pressed" />
+      </zm:SetterGroup>
+
+      <!--  Background  -->
+      <zm:SetterGroup ValuePath="Background" Property="Background">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="Normal" VisualState="Disabled" />
+        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter ValuePath="Pressed" VisualState="Pressed" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="NavigationViewHeaderedIconItemPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource NavigationViewHeaderedIconItemPresenterStyle}" TargetType="zm:NavigationViewHeaderedIconItemPresenter" />
+
+</zm:ThemeResourceDictionary>

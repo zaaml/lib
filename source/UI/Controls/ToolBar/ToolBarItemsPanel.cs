@@ -109,7 +109,7 @@ namespace Zaaml.UI.Controls.ToolBar
 		{
 			var overflowBehavior = Children.Count > 0 && ReferenceEquals(child, Children[0]) ? FlexOverflowBehavior.Pin : FlexOverflowBehavior.Hide;
 
-			return child.GetFlexElement(this).WithStretchDirection(FlexStretchDirection.None).WithOverflowBehavior(overflowBehavior);
+			return child.GetFlexElement(this, ActualOrientation).WithStretchDirection(FlexStretchDirection.None).WithOverflowBehavior(overflowBehavior);
 		}
 
 		bool IFlexPanel.GetIsHidden(UIElement child) => GetIsOverflow(child);

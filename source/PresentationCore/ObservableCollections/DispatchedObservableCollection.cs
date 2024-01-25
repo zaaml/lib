@@ -8,45 +8,33 @@ using Zaaml.Core;
 
 namespace Zaaml.PresentationCore.ObservableCollections
 {
-  public class DispatchedObservableCollection<T> : ObservableCollection<T>
-  {
-    #region Fields
+	public class DispatchedObservableCollection<T> : ObservableCollection<T>
+	{
+		[UsedImplicitly] private readonly ObservableCollectionDispatcher<T> _dispatcher;
 
-    [UsedImplicitly] private readonly ObservableCollectionDispatcher<T> _dispatcher;
+		public DispatchedObservableCollection()
+		{
+			_dispatcher = this.Dispatch(OnItemAdded, OnItemRemoved);
+		}
 
-    #endregion
+		public DispatchedObservableCollection(IEnumerable<T> collection)
+			: base(collection)
+		{
+			_dispatcher = this.Dispatch(OnItemAdded, OnItemRemoved);
+		}
 
-    #region Ctors
+		public DispatchedObservableCollection(List<T> list)
+			: base(list)
+		{
+			_dispatcher = this.Dispatch(OnItemAdded, OnItemRemoved);
+		}
 
-    public DispatchedObservableCollection()
-    {
-      _dispatcher = this.Dispatch(OnItemAdded, OnItemRemoved);
-    }
+		protected virtual void OnItemAdded(T item)
+		{
+		}
 
-    public DispatchedObservableCollection(IEnumerable<T> collection)
-      : base(collection)
-    {
-      _dispatcher = this.Dispatch(OnItemAdded, OnItemRemoved);
-    }
-
-    public DispatchedObservableCollection(List<T> list)
-      : base(list)
-    {
-      _dispatcher = this.Dispatch(OnItemAdded, OnItemRemoved);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected virtual void OnItemAdded(T item)
-    {
-    }
-
-    protected virtual void OnItemRemoved(T item)
-    {
-    }
-
-    #endregion
-  }
+		protected virtual void OnItemRemoved(T item)
+		{
+		}
+	}
 }

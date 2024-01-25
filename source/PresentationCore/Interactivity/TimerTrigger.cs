@@ -11,37 +11,56 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class TimerTrigger : ActionTriggerBase
 	{
-		private readonly DispatcherTimer _timer = new DispatcherTimer();
+		private readonly DispatcherTimer _timer = new();
 		private long _currentInvokeCount;
+		private bool _isActive = true;
+		private long _repeatCount = long.MaxValue;
 
 		public TimerTrigger()
 		{
-			_timer.Tick += (sender, args) =>
-			{
-				Invoke();
-
-				_currentInvokeCount++;
-
-				if (_currentInvokeCount >= RepeatCount)
-					IsActive = false;
-			};
+			_timer.Tick += OnTimerOnTick;
 		}
 
-		[BindingProxy(PropertyChangedCallback = "t.OnIntervalChanged")]
-		public TimeSpan Interval { get; set; }
+		public TimeSpan Interval
+		{
+			get => _timer.Interval;
+			set => _timer.Interval = value;
+		}
 
-		[BindingProxy(PropertyChangedCallback = "t.OnIsActiveChanged")]
-		public bool IsActive { get; set; } = true;
+		public bool IsActive
+		{
+			get => _isActive;
+			set
+			{
+				if (_isActive == value)
+					return;
+
+				_isActive = value;
+
+				UpdateTimer();
+			}
+		}
 
 		[TypeConverter(typeof(LongTypeConverter))]
-		[BindingProxy(PropertyChangedCallback = "t.OnRepeatCountChanged")]
-		public long RepeatCount { get; set; } = long.MaxValue;
+		public long RepeatCount
+		{
+			get => _repeatCount;
+			set
+			{
+				if (_repeatCount == value)
+					return;
+
+				_repeatCount = value;
+
+				OnRepeatCountChanged();
+			}
+		}
 
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var timerTriggerSource = (TimerTrigger) source;
+			var timerTriggerSource = (TimerTrigger)source;
 
 			Interval = timerTriggerSource.Interval;
 		}
@@ -53,18 +72,8 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		internal override void LoadCore(IInteractivityRoot root)
 		{
-			UpdateTimer();
-
 			base.LoadCore(root);
-		}
 
-		private void OnIntervalChanged()
-		{
-			_timer.Interval = Interval;
-		}
-
-		private void OnIsActiveChanged()
-		{
 			UpdateTimer();
 		}
 
@@ -77,6 +86,16 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		private void OnRepeatCountChanged()
 		{
+			if (_currentInvokeCount >= RepeatCount)
+				IsActive = false;
+		}
+
+		private void OnTimerOnTick(object sender, EventArgs args)
+		{
+			Invoke();
+
+			_currentInvokeCount++;
+
 			if (_currentInvokeCount >= RepeatCount)
 				IsActive = false;
 		}
@@ -109,7 +128,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			else
 			{
 				_timer.Stop();
-				
+
 				ResetTimer();
 			}
 		}
@@ -124,7 +143,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
-			return long.TryParse((string) value, out var longValue) ? longValue : 0L;
+			return long.TryParse((string)value, out var longValue) ? longValue : 0L;
 		}
 	}
 }

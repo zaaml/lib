@@ -7,177 +7,147 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  public abstract class ConditionBase : InteractivityObject, IConditionalTrigger
-  {
-    #region Ctors
+	public abstract class ConditionBase : InteractivityObject, IConditionalTrigger
+	{
+		static ConditionBase()
+		{
+			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
+		}
 
-    static ConditionBase()
-    {
-      RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
-    }
+		public bool Invert
+		{
+			get => PackedDefinition.Invert.GetValue(PackedValue);
+			set
+			{
+				if (Invert == value)
+					return;
 
-    #endregion
+				PackedDefinition.Invert.SetValue(ref PackedValue, value);
 
-    #region Properties
+				UpdateConditionState();
+			}
+		}
 
-    public bool Invert
-    {
-      get => PackedDefinition.Invert.GetValue(PackedValue);
-      set
-      {
-        if (Invert == value)
-          return;
+		internal bool IsEnabled
+		{
+			get => PackedDefinition.IsEnabled.GetValue(PackedValue);
+			set
+			{
+				if (IsEnabled == value)
+					return;
 
-        PackedDefinition.Invert.SetValue(ref PackedValue, value);
+				PackedDefinition.IsEnabled.SetValue(ref PackedValue, value);
+				OnIsEnabledIntChanged();
+			}
+		}
 
-        UpdateConditionState();
-      }
-    }
+		private bool IsInitializing
+		{
+			get => PackedDefinition.IsInitializing.GetValue(PackedValue);
+			set => PackedDefinition.IsInitializing.SetValue(ref PackedValue, value);
+		}
 
-    internal bool IsEnabled
-    {
-      get => PackedDefinition.IsEnabled.GetValue(PackedValue);
-      set
-      {
-        if (IsEnabled == value)
-          return;
+		public bool IsOpen
+		{
+			get => PackedDefinition.IsOpen.GetValue(PackedValue);
+			private set
+			{
+				if (IsOpen == value)
+					return;
 
-        PackedDefinition.IsEnabled.SetValue(ref PackedValue, value);
-        OnIsEnabledIntChanged();
-      }
-    }
+				PackedDefinition.IsOpen.SetValue(ref PackedValue, value);
+				OnIsOpenChanged();
+			}
+		}
 
-    private bool IsInitializing
-    {
-      get => PackedDefinition.IsInitializing.GetValue(PackedValue);
-      set => PackedDefinition.IsInitializing.SetValue(ref PackedValue, value);
-    }
+		private bool ApplyInvert(bool value)
+		{
+			return Invert ? !value : value;
+		}
 
-    public bool IsOpen
-    {
-      get => PackedDefinition.IsOpen.GetValue(PackedValue);
-      private set
-      {
-        if (IsOpen == value)
-          return;
+		protected internal override void CopyMembersOverride(InteractivityObject source)
+		{
+			base.CopyMembersOverride(source);
 
-        PackedDefinition.IsOpen.SetValue(ref PackedValue, value);
-        OnIsOpenChanged();
-      }
-    }
+			var conditionSource = (ConditionBase)source;
 
-    #endregion
+			PackedDefinition.Invert.SetValue(ref PackedValue, conditionSource.Invert);
+		}
 
-    #region  Methods
+		internal virtual void Deinitialize(IInteractivityRoot root)
+		{
+		}
 
-    private bool ApplyInvert(bool value)
-    {
-      return Invert ? !value : value;
-    }
+		internal virtual void Initialize(IInteractivityRoot root)
+		{
+		}
 
-    protected internal override void CopyMembersOverride(InteractivityObject source)
-    {
-      base.CopyMembersOverride(source);
+		internal sealed override void LoadCore(IInteractivityRoot root)
+		{
+			base.LoadCore(root);
 
-      var conditionSource = (ConditionBase) source;
-      
-      PackedDefinition.Invert.SetValue(ref PackedValue, conditionSource.Invert);
-    }
+			IsInitializing = true;
 
-    internal virtual void Deinitialize(IInteractivityRoot root)
-    {
-    }
+			Initialize(root);
 
-    internal virtual void Initialize(IInteractivityRoot root)
-    {
-    }
+			IsInitializing = false;
 
-    internal sealed override void LoadCore(IInteractivityRoot root)
-    {
-      base.LoadCore(root);
+			UpdateConditionState();
+		}
 
-      IsInitializing = true;
+		protected virtual void OnIsEnabledIntChanged()
+		{
+		}
 
-      Initialize(root);
+		private void OnIsOpenChanged()
+		{
+			UpdateConditionalTrigger();
 
-      IsInitializing = false;
+			(Parent as IConditionalTrigger)?.UpdateConditionalTrigger();
+		}
 
-      UpdateConditionState();
-    }
+		internal sealed override void UnloadCore(IInteractivityRoot root)
+		{
+			Deinitialize(root);
 
-    protected virtual void OnIsEnabledIntChanged()
-    {
-    }
+			base.UnloadCore(root);
+		}
 
-    private void OnIsOpenChanged()
-    {
-      UpdateConditionalTrigger();
-      (Parent as IConditionalTrigger)?.UpdateConditionalTrigger();
-    }
+		protected virtual void UpdateConditionalTrigger()
+		{
+		}
 
-    internal sealed override void UnloadCore(IInteractivityRoot root)
-    {
-      Deinitialize(root);
-      base.UnloadCore(root);
-    }
+		protected void UpdateConditionState()
+		{
+			if (IsInitializing || IsLoaded == false)
+				return;
 
-    protected virtual void UpdateConditionalTrigger()
-    {
-    }
+			IsOpen = ApplyInvert(UpdateConditionStateCore());
+		}
 
-    protected void UpdateConditionState()
-    {
-      if (IsInitializing || IsLoaded == false)
-        return;
+		protected abstract bool UpdateConditionStateCore();
 
-      IsOpen = ApplyInvert(UpdateConditionStateCore());
-    }
+		void IConditionalTrigger.UpdateConditionalTrigger()
+		{
+			UpdateConditionalTrigger();
+		}
 
-    protected abstract bool UpdateConditionStateCore();
+		private static class PackedDefinition
+		{
+			public static readonly PackedBoolItemDefinition IsEnabled;
+			public static readonly PackedBoolItemDefinition IsOpen;
+			public static readonly PackedBoolItemDefinition IsInitializing;
+			public static readonly PackedBoolItemDefinition Invert;
 
-    #endregion
+			static PackedDefinition()
+			{
+				var allocator = GetAllocator<ConditionBase>();
 
-    #region Interface Implementations
-
-    #region IConditionalTrigger
-
-    void IConditionalTrigger.UpdateConditionalTrigger()
-    {
-      UpdateConditionalTrigger();
-    }
-
-    #endregion
-
-    #endregion
-
-    #region  Nested Types
-
-    private static class PackedDefinition
-    {
-      #region Static Fields and Constants
-
-      public static readonly PackedBoolItemDefinition IsEnabled;
-      public static readonly PackedBoolItemDefinition IsOpen;
-      public static readonly PackedBoolItemDefinition IsInitializing;
-      public static readonly PackedBoolItemDefinition Invert;
-
-      #endregion
-
-      #region Ctors
-
-      static PackedDefinition()
-      {
-        var allocator = GetAllocator<ConditionBase>();
-
-        IsEnabled = allocator.AllocateBoolItem();
-        IsOpen = allocator.AllocateBoolItem();
-        IsInitializing = allocator.AllocateBoolItem();
-        Invert = allocator.AllocateBoolItem();
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+				IsEnabled = allocator.AllocateBoolItem();
+				IsOpen = allocator.AllocateBoolItem();
+				IsInitializing = allocator.AllocateBoolItem();
+				Invert = allocator.AllocateBoolItem();
+			}
+		}
+	}
 }

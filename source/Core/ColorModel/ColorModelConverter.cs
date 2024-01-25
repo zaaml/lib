@@ -61,15 +61,19 @@ namespace Zaaml.Core.ColorModel
 
       if (t < 0.0)
         t += 1.0;
+      
       if (t > 1.0)
         t -= 1.0;
 
       if (t < 1.0 / 6.0)
         return p + qp * 6.0 * t;
+      
       if (t >= 1.0 / 6.0 && t < 0.5)
         return q;
+      
       if (t >= 0.5 && t < 2.0 / 3.0)
         return p + qp * 6.0 * (2.0 / 3.0 - t);
+
       return p;
     }
 
@@ -86,26 +90,19 @@ namespace Zaaml.Core.ColorModel
       var f = (h / 60.0) - hn;
 
       var p = v * (1.0 - s);
-      var q = v * (1.0 - (f * s));
-      var t = v * (1.0 - ((1.0 - f) * s));
+      var q = v * (1.0 - f * s);
+      var t = v * (1.0 - (1.0 - f) * s);
 
-      switch (hi)
+      return hi switch
       {
-        case 0:
-          return RgbColor.FromRgb(a, v, t, p);
-        case 1:
-          return RgbColor.FromRgb(a, q, v, p);
-        case 2:
-          return RgbColor.FromRgb(a, p, v, t);
-        case 3:
-          return RgbColor.FromRgb(a, p, q, v);
-        case 4:
-          return RgbColor.FromRgb(a, t, p, v);
-        case 5:
-          return RgbColor.FromRgb(a, v, p, q);
-        default:
-          return RgbColor.FromRgb(a, 0.0, 0.0, 0.0);
-      }
+	      0 => RgbColor.FromRgb(a, v, t, p),
+	      1 => RgbColor.FromRgb(a, q, v, p),
+	      2 => RgbColor.FromRgb(a, p, v, t),
+	      3 => RgbColor.FromRgb(a, p, q, v),
+	      4 => RgbColor.FromRgb(a, t, p, v),
+	      5 => RgbColor.FromRgb(a, v, p, q),
+	      _ => RgbColor.FromRgb(a, 0.0, 0.0, 0.0)
+      };
     }
 
     private static double MaxRgb(RgbColor rgbColor)
@@ -120,10 +117,7 @@ namespace Zaaml.Core.ColorModel
 
     public static HslColor RgbColorToHslColor(RgbColor rgbColor)
     {
-      double rgbMax;
-      double rgbMin;
-
-      var hue = GetHue(rgbColor, out rgbMax, out rgbMin);
+	    var hue = GetHue(rgbColor, out var rgbMax, out var rgbMin);
       var lightness = 0.5 * (rgbMax + rgbMin);
 
       var d = rgbMax - rgbMin;
@@ -145,10 +139,7 @@ namespace Zaaml.Core.ColorModel
 
     public static HsvColor RgbColorToHsvColor(RgbColor rgbColor)
     {
-      double rgbMax;
-      double rgbMin;
-
-      var hue = GetHue(rgbColor, out rgbMax, out rgbMin);
+	    var hue = GetHue(rgbColor, out var rgbMax, out var rgbMin);
       var value = rgbMax;
       var saturation = Equals(rgbMax, 0.0) ? 0.0 : 1.0 - rgbMin / rgbMax;
 
@@ -164,14 +155,16 @@ namespace Zaaml.Core.ColorModel
     {
       if (val <= 0.0)
         return 0;
+     
       if (val <= 0.0031308)
         return (byte) (byte.MaxValue * val * 12.9200000762939 + 0.5);
+      
       if (val < 1.0)
         return (byte) (byte.MaxValue * (1.05499994754791 * Math.Pow(val, 5.0 / 12.0) - 0.0549999997019768) + 0.5);
+
       return byte.MaxValue;
     }
-
-
+		
     public static RgbColor sRgbToRgb(sRgbColor srgb)
     {
       return new RgbColor(srgb.A / (double) byte.MaxValue, sRgbToScRgb(srgb.R), sRgbToScRgb(srgb.G), sRgbToScRgb(srgb.B));
@@ -180,12 +173,16 @@ namespace Zaaml.Core.ColorModel
     private static double sRgbToScRgb(byte bval)
     {
       var num = bval / (double) byte.MaxValue;
+
       if (num <= 0.0)
         return 0.0;
+      
       if (num <= 0.04045)
         return num / 12.92;
+      
       if (num < 1.0)
         return Math.Pow((num + 0.055) / 1.055, 2.4);
+      
       return 1f;
     }
 

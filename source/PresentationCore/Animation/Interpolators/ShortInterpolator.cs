@@ -4,43 +4,31 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace Zaaml.PresentationCore.Animation.Interpolators
+namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class ShortInterpolator : InterpolatorBase<short>
-  {
-    #region Static Fields and Constants
+	public sealed class ShortInterpolator : PrimitiveInterpolator<short>
+	{
+		public static readonly ShortInterpolator Instance = new();
 
-    public static ShortInterpolator Instance = new ShortInterpolator();
+		private ShortInterpolator()
+		{
+		}
 
-    #endregion
+		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
+		protected internal override short EvaluateCore(short start, short end, double progress)
+		{
+			if (progress == 0.0)
+				return start;
 
-    #region Ctors
+			if (progress == 1.0)
+				return end;
 
-    private ShortInterpolator()
-    {
-    }
+			var addend = (double)(end - start);
 
-    #endregion
+			addend *= progress;
+			addend += addend > 0.0 ? 0.5 : -0.5;
 
-    #region  Methods
-
-    [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-    protected internal override short EvaluateCore(short start, short end, double progress)
-    {
-      if (progress == 0.0)
-        return start;
-
-      if (progress == 1.0)
-        return end;
-
-      var addend = (double) (end - start);
-
-      addend *= progress;
-      addend += addend > 0.0 ? 0.5 : -0.5;
-
-      return (short) (start + (short) addend);
-    }
-
-    #endregion
-  }
+			return (short)(start + (short)addend);
+		}
+	}
 }

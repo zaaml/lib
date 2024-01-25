@@ -3,91 +3,58 @@
 // </copyright>
 
 using System;
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Zaaml.Text
 {
-	internal partial class Grammar<TToken> where TToken : unmanaged, Enum
+	internal abstract partial class Grammar<TGrammar, TToken>
 	{
-		#region Static Fields and Constants
+		internal IEnumerable<ParserGrammar.NodeSyntax> NodeCollection => ParserGrammar.NodeCollection;
 
-		private static Type _grammarType;
+		internal IEnumerable<ParserGrammar.FragmentSyntax> ParserSyntaxFragmentCollection => ParserGrammar.FragmentCollection;
 
-		#endregion
-
-		#region Methods
-
-		protected static ParserFragment CreateParserFragment()
+		public partial class ParserGrammar
 		{
-			var parserFragment = new ParserFragment(false);
+			private static readonly Dictionary<string, NodeSyntax> NodeDictionary = new();
+			private static readonly Dictionary<string, FragmentSyntax> FragmentDictionary = new();
+			private static readonly Dictionary<int, Production> ProductionDictionary = new();
 
-			CreatedParserFragments.Add(parserFragment);
+			internal static IEnumerable<NodeSyntax> NodeCollection => NodeDictionary.Values;
 
-			return parserFragment;
-		}
+			internal static IEnumerable<FragmentSyntax> FragmentCollection => FragmentDictionary.Values;
 
-		protected static ParserRule CreateParserRule([CallerMemberName] string name = null)
-		{
-			var parserRule = new ParserRule
+			internal static IEnumerable<Production> ProductionCollection => ProductionDictionary.Values;
+
+			public void Seal()
 			{
-				Name = name
-			};
-
-			CreatedParserRules.Add(parserRule);
-
-			return parserRule;
-		}
-
-		private static Type GetGrammarType()
-		{
-			if (_grammarType != null)
-				return _grammarType;
-
-			var stackTrace = new StackTrace();
-
-			for (var i = 0; i < stackTrace.FrameCount; i++)
-			{
-				var frame = stackTrace.GetFrame(i);
-				var methodBase = frame.GetMethod();
-				var ci = methodBase as ConstructorInfo;
-
-				if (ci == null)
-					continue;
-
-				var declaringType = ci.DeclaringType;
-
-				if (declaringType == null)
-					continue;
-
-				if (!typeof(Grammar<TToken>).IsAssignableFrom(declaringType) || declaringType.TypeInitializer != ci)
-					continue;
-
-				_grammarType = declaringType;
-
-				break;
 			}
 
-			return _grammarType;
-		}
+			protected static ExternalTokenSymbol<TExternalGrammar, TExternalToken> ExternalLexer<TExternalGrammar, TExternalToken>(Grammar<TExternalGrammar, TExternalToken>.LexerGrammar.TokenSyntax externalToken)
+				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+				where TExternalToken : unmanaged, Enum
+			{
+				return new ExternalTokenSymbol<TExternalGrammar, TExternalToken>(externalToken);
+			}
 
-		protected static SubLexerEntry<TSubToken> SubLexer<TSubToken>(Grammar<TSubToken>.TokenRule subLexerRule) where TSubToken : unmanaged, Enum
-		{
-			return new SubLexerEntry<TSubToken>(subLexerRule);
-		}
+			private protected static void RegisterFragmentSyntax(FragmentSyntax fragment)
+			{
+				FragmentDictionary.Add(fragment.Name, fragment);
+			}
 
-		protected static SubParserEntry<TSubToken, TSubNode, TSubNodeBase> SubParser<TSubToken, TSubNode, TSubNodeBase>(Grammar<TSubToken, TSubNodeBase>.ParserRule<TSubNode> subParserRule)
-			where TSubToken : unmanaged, Enum where TSubNode : TSubNodeBase where TSubNodeBase : class
-		{
-			return new SubParserEntry<TSubToken, TSubNode, TSubNodeBase>(subParserRule);
-		}
+			private protected static void RegisterNodeSyntax(NodeSyntax node)
+			{
+				NodeDictionary.Add(node.Name, node);
+			}
 
-		protected static SubParserEntry<TSubToken> SubParser<TSubToken>(Grammar<TSubToken>.ParserRule subParserRule) where TSubToken : unmanaged, Enum
-		{
-			return new SubParserEntry<TSubToken>(subParserRule);
-		}
+			private protected static int RegisterParserSyntaxProduction(Production parserSyntaxProduction)
+			{
+				var index = ProductionDictionary.Count;
 
-		#endregion
+				ProductionDictionary.Add(index, parserSyntaxProduction);
+
+				return index;
+			}
+		}
 	}
 }

@@ -9,17 +9,11 @@ namespace Zaaml.PresentationCore.Theming
 {
 	public abstract class SkinnedTheme : Theme
 	{
-		#region Ctors
-
 		protected SkinnedTheme()
 		{
 			LazyStaticTheme = new Lazy<StaticTheme>(() => new StaticTheme(this));
 			SkinResourceManager = new SkinResourceManager(this);
 		}
-
-		#endregion
-
-		#region Properties
 
 		internal Theme BaseTheme => BaseThemeCore;
 
@@ -39,10 +33,6 @@ namespace Zaaml.PresentationCore.Theming
 
 		protected internal sealed override ThemeResourceDictionary ThemeResourceDictionary => BaseThemeCore.ThemeResourceDictionary;
 
-		#endregion
-
-		#region  Methods
-
 		internal void AddThemeResourceInternal(ThemeResource themeResource)
 		{
 			SkinResourceManager.AddThemeResource(themeResource);
@@ -56,7 +46,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		private static void BindThemeResource(ThemeResource themeResource)
 		{
-			BindThemeResource(ThemeManager.GetThemeReference(themeResource.ActualKey, false), themeResource);
+			BindThemeResource(ThemeManager.GetThemeResourceReference(themeResource.ActualKey, false), themeResource);
 		}
 
 		protected internal override void BindThemeResource(ThemeResourceReference thereResourceReference)
@@ -133,9 +123,7 @@ namespace Zaaml.PresentationCore.Theming
 			if (ProcessedResourceDictionaries.Contains(resourceDictionary))
 				return;
 
-			var skinResourceDictionary = resource.ResourceDictionary as ThemeSkinResourceDictionary;
-
-			if (skinResourceDictionary != null)
+			if (resource.ResourceDictionary is ThemeSkinResourceDictionary skinResourceDictionary)
 				ProcessSkinResourceDictionary(skinResourceDictionary);
 		}
 
@@ -143,7 +131,5 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			return base.ShouldProcessXamlResource(resource) || MasterTheme.ShouldProcessXamlResource(resource);
 		}
-
-		#endregion
 	}
 }

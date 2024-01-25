@@ -23,11 +23,6 @@
 
     <zm:ControlTemplateRoot VisualStateGroups="{StaticResource WindowFramePresenterVisualStates}">
 
-      <!--  Shadow  -->
-      <zm:ShadowChrome Margin="-24"
-                       Visibility="{zm:TemplateBinding Path=DropShadow,
-                                                       Converter={zm:VisibilityConverter}}" />
-
       <!--  Border  -->
       <Border Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"

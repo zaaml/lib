@@ -17,8 +17,8 @@ namespace Zaaml.UI.Controls.Docking
 	[TemplateContractType(typeof(AutoHideDockItemPresenterTemplateContract))]
 	public sealed class AutoHideDockItemPresenter : TemplateContractControl
 	{
-		private static readonly PropertyPath AutoHideWidthPropertyPath = new PropertyPath(AutoHideLayout.AutoHideWidthProperty);
-		private static readonly PropertyPath AutoHideHeightPropertyPath = new PropertyPath(AutoHideLayout.AutoHideHeightProperty);
+		private static readonly PropertyPath AutoHideWidthPropertyPath = new PropertyPath(AutoHideLayout.WidthProperty);
+		private static readonly PropertyPath AutoHideHeightPropertyPath = new PropertyPath(AutoHideLayout.HeightProperty);
 
 		private bool _isAttached;
 
@@ -53,7 +53,7 @@ namespace Zaaml.UI.Controls.Docking
 			}
 		}
 
-		private AutoHideDockItemPresenterTemplateContract TemplateContract => (AutoHideDockItemPresenterTemplateContract) TemplateContractInternal;
+		private AutoHideDockItemPresenterTemplateContract TemplateContract => (AutoHideDockItemPresenterTemplateContract) TemplateContractCore;
 
 		private void ArrangeContentPresenter()
 		{
@@ -63,13 +63,13 @@ namespace Zaaml.UI.Controls.Docking
 			DockItemGrid.ColumnDefinitions.Clear();
 			DockItemGrid.RowDefinitions.Clear();
 
-			var dockSide = AutoHideLayout.GetDockSide(DockItem);
+			var dockSide = AutoHideLayout.GetDock(DockItem);
 
 			if (dockSide == Dock.Left || dockSide == Dock.Right)
 			{
 				var itemColumn = new ColumnDefinition
 				{
-					Width = new GridLength(AutoHideLayout.GetAutoHideWidth(DockItem))
+					Width = new GridLength(AutoHideLayout.GetWidth(DockItem))
 				};
 
 				itemColumn.SetBinding(ColumnDefinition.WidthProperty, new Binding {Path = AutoHideWidthPropertyPath, Source = DockItem, Mode = BindingMode.TwoWay, Converter = XamlConverter.Instance});
@@ -91,7 +91,7 @@ namespace Zaaml.UI.Controls.Docking
 			{
 				var itemRow = new RowDefinition
 				{
-					Height = new GridLength(AutoHideLayout.GetAutoHideHeight(DockItem))
+					Height = new GridLength(AutoHideLayout.GetHeight(DockItem))
 				};
 
 				itemRow.SetBinding(RowDefinition.HeightProperty, new Binding {Path = AutoHideHeightPropertyPath, Source = DockItem, Mode = BindingMode.TwoWay, Converter = XamlConverter.Instance});
@@ -121,7 +121,7 @@ namespace Zaaml.UI.Controls.Docking
 			IsAttached = false;
 		}
 
-		public void OnItemDockSideChanged(Dock oldDockSide, Dock newDockSide)
+		public void OnItemDockChanged(Dock oldSide, Dock newSide)
 		{
 			ArrangeContentPresenter();
 		}

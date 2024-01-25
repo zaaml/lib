@@ -6,48 +6,55 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Zaaml.PresentationCore;
-using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  internal partial class PreviewPresenter : Window
-  {
-    #region  Methods
+	internal partial class PreviewPresenter : Window
+	{
+		private RenderDelayAction _hideDelayAction;
+		private RenderDelayAction _showDelayAction;
 
-    partial void HideImpl()
-    {
-      Dispatcher.BeginInvoke(DispatcherPriority.Render, Hide);
-    }
+		partial void HideImpl()
+		{
+			_showDelayAction.Revoke();
 
-    partial void PlatformCtor()
-    {
-      ShowActivated = false;
-      AllowsTransparency = true;
-      Topmost = true;
-      WindowStyle = WindowStyle.None;
+			if (IsVisible)
+				_hideDelayAction.Invoke();
+		}
 
-      Background = new SolidColorBrush(Colors.Transparent);
+		partial void PlatformCtor()
+		{
+			ShowActivated = false;
+			AllowsTransparency = true;
+			Topmost = true;
+			WindowStyle = WindowStyle.None;
 
-      Content = PreviewElement;
-      ShowInTaskbar = false;
+			Background = Brushes.Transparent;
 
-      WindowState = WindowState.Normal;
-      IsHitTestVisible = false;
+			Content = PreviewElement;
+			ShowInTaskbar = false;
 
-      SizeToContent = SizeToContent.Manual;
-      WindowStartupLocation = WindowStartupLocation.Manual;
+			WindowState = WindowState.Normal;
+			IsHitTestVisible = false;
 
-      Left = 0;
-      Top = 0;
-      Width = Screen.VirtualScreenSize.Width;
-      Height = Screen.VirtualScreenSize.Height;
-    }
+			SizeToContent = SizeToContent.Manual;
+			WindowStartupLocation = WindowStartupLocation.Manual;
 
-    partial void ShowImpl()
-    {
-      Dispatcher.BeginInvoke(DispatcherPriority.Render, Show);
-    }
+			Left = 0;
+			Top = 0;
+			Width = Screen.VirtualScreenSize.Width;
+			Height = Screen.VirtualScreenSize.Height;
 
-    #endregion
-  }
+			_hideDelayAction = new RenderDelayAction(Hide, 3);
+			_showDelayAction = new RenderDelayAction(Show, 1);
+		}
+
+		partial void ShowImpl()
+		{
+			_hideDelayAction.Revoke();
+
+			if (IsVisible == false)
+				_showDelayAction.Invoke();
+		}
+	}
 }

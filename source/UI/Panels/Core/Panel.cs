@@ -38,10 +38,10 @@ namespace Zaaml.UI.Panels.Core
 		#region Properties
 
 #if DEBUG
-		public bool Debug
+		public bool DebugPanel
 		{
-			get => PackedDefinition.Debug.GetValue(_packedValue);
-			set => PackedDefinition.Debug.SetValue(ref _packedValue, value);
+			get => PackedDefinition.DebugPanel.GetValue(_packedValue);
+			set => PackedDefinition.DebugPanel.SetValue(ref _packedValue, value);
 		}
 #endif
 
@@ -174,7 +174,7 @@ namespace Zaaml.UI.Panels.Core
 		{
 			#region Static Fields and Constants
 
-			public static readonly PackedBoolItemDefinition Debug;
+			public static readonly PackedBoolItemDefinition DebugPanel;
 
 			#endregion
 
@@ -184,7 +184,7 @@ namespace Zaaml.UI.Panels.Core
 			{
 				var allocator = new PackedValueAllocator();
 
-				Debug = allocator.AllocateBoolItem();
+				DebugPanel = allocator.AllocateBoolItem();
 			}
 
 			#endregion

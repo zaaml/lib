@@ -3,118 +3,54 @@
 // </copyright>
 
 using System;
-using System.Windows;
-#if SILVERLIGHT
-using System.ComponentModel;
-#else
 using System.Globalization;
-#endif
+using System.Windows;
 using NativeBinding = System.Windows.Data.Binding;
-
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
 	public abstract class PathBindingBase : BindingBaseExtension
 	{
-		#region Fields
+		private static readonly PropertyPathConverter PathConverter = new();
 
-		private object _path;
-
-		#endregion
-
-		#region Properties
-
-		public object Path
-		{
-			get { return _path; }
-			set
-			{
-				_path = value;
-
-#if SILVERLIGHT
-				var strPath = _path as string;
-				if (strPath == null)
-					return;
-				
-				if (strPath.IndexOf('(') == -1) return;
-
-				_prebuildBinding = new NativeBinding();
-				var isupportInitialize = (ISupportInitialize) _prebuildBinding;
-				isupportInitialize.BeginInit();
-				_prebuildBinding.Path = new PropertyPath(strPath);
-				isupportInitialize.EndInit();
-#endif
-			}
-		}
-
-		#endregion
-
-#if !SILVERLIGHT
-		private static readonly PropertyPathConverter PathConverter = new PropertyPathConverter();
-#endif
-
-		#region  Methods
-
-		protected override void FinalizeXamlInitializationCore(IServiceProvider serviceProvider)
-		{
-			base.FinalizeXamlInitializationCore(serviceProvider);
-			Path = EvaluatePropertyPath(serviceProvider);
-		}
+		public object Path { get; set; }
 
 		private PropertyPath EvaluatePropertyPath(IServiceProvider serviceProvider)
 		{
-			var propertyPath = Path as PropertyPath;
-			if (propertyPath != null)
+			if (Path is PropertyPath propertyPath)
 				return propertyPath;
 
-			var stringPath = Path as string;
 			var dpPath = Path as DependencyProperty;
 
-			if (stringPath != null)
+			if (Path is string stringPath)
 			{
-#if SILVERLIGHT
-        return new PropertyPath(stringPath);
-#else
-				using (var typeDescriptorContext = TypeDescriptorContext.FromServiceProvider(serviceProvider))
-					return (PropertyPath) PathConverter.ConvertFrom(typeDescriptorContext, CultureInfo.CurrentCulture, stringPath);
-#endif
+				using var typeDescriptorContext = TypeDescriptorContext.FromServiceProvider(serviceProvider);
+
+				return (PropertyPath)PathConverter.ConvertFrom(typeDescriptorContext, CultureInfo.CurrentCulture, stringPath);
 			}
 
 			return dpPath != null ? new PropertyPath(dpPath) : null;
 		}
 
+		protected override void FinalizeXamlInitializationCore(IServiceProvider serviceProvider)
+		{
+			base.FinalizeXamlInitializationCore(serviceProvider);
+
+			Path = EvaluatePropertyPath(serviceProvider);
+		}
+
 		protected override NativeBinding GetBindingCore(IServiceProvider serviceProvider)
 		{
-#if SILVERLIGHT
-			if (_prebuildBinding != null)
-			{
-				if (_isInitialized == false)
-				{
-          InitSource(_prebuildBinding);
-          InitBinding(_prebuildBinding);
-					_isInitialized = true;
-				}
-
-				return _prebuildBinding;
-			}
-#endif
 			var actualPath = EvaluatePropertyPath(serviceProvider);
 
-			var binding = actualPath != null ? new NativeBinding {Path = actualPath} : new NativeBinding {BindsDirectlyToSource = true};
+			var binding = actualPath != null ? new NativeBinding { Path = actualPath } : new NativeBinding { BindsDirectlyToSource = true };
 
 			InitSource(binding);
-
 			InitBinding(binding);
+
 			return binding;
 		}
 
 		protected abstract void InitSource(NativeBinding binding);
-
-		#endregion
-
-#if SILVERLIGHT
-		private NativeBinding _prebuildBinding;
-		private bool _isInitialized;
-#endif
 	}
 }

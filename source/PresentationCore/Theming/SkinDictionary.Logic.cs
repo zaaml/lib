@@ -12,24 +12,14 @@ namespace Zaaml.PresentationCore.Theming
 {
 	public partial class SkinDictionary
 	{
-		#region Static Fields and Constants
-
-		internal static readonly DelegateTreeEnumeratorAdvisor<KeyValuePair<string, object>> ResourceTreeAdvisor = new DelegateTreeEnumeratorAdvisor<KeyValuePair<string, object>>(GetChildResourceEnumerator);
-		internal static readonly DelegateTreeEnumeratorAdvisor<SkinDictionary> SkinDictionaryTreeAdvisor = new DelegateTreeEnumeratorAdvisor<SkinDictionary>(GetChildSkinDictionaryEnumerator);
-
-		#endregion
-
-		#region Properties
+		internal static readonly DelegateTreeEnumeratorAdvisor<KeyValuePair<string, object>> ResourceTreeAdvisor = new(GetChildResourceEnumerator);
+		internal static readonly DelegateTreeEnumeratorAdvisor<SkinDictionary> SkinDictionaryTreeAdvisor = new(GetChildSkinDictionaryEnumerator);
 
 		public string DeferredKey { get; set; }
 
-		internal bool IsAbsoluteKey => DeferredKey.StartsWith("~/") == false;
+		internal bool IsAbsoluteKey => DeferredKey != null && IsPathAbsolute(DeferredKey);
 
 		public bool IsDeferred => DeferredKey != null;
-
-		#endregion
-
-		#region  Methods
 
 		private void AddCore(KeyValuePair<string, object> item)
 		{
@@ -135,6 +125,13 @@ namespace Zaaml.PresentationCore.Theming
 			return value;
 		}
 
+		private static bool IsPathAbsolute(string path)
+		{
+			var trimmedPath = path.TrimStart();
+
+			return (trimmedPath.StartsWith("/") || trimmedPath.StartsWith("../")) == false;
+		}
+
 		internal void Merge(KeyValuePair<string, object> keyValuePair, SkinDictionaryMergeFlags mergeFlags)
 		{
 			Merge(keyValuePair.Key, keyValuePair.Value, mergeFlags);
@@ -146,9 +143,7 @@ namespace Zaaml.PresentationCore.Theming
 
 			if (skinValue == null)
 			{
-				object currentValue;
-
-				if (TryGetValueCore(key, out currentValue) && AllowOverride(mergeFlags) == false)
+				if (TryGetValueCore(key, out _) && AllowOverride(mergeFlags) == false)
 					throw new InvalidOperationException("Duplicate key");
 
 				SetCore(key, value);
@@ -170,11 +165,9 @@ namespace Zaaml.PresentationCore.Theming
 							throw new InvalidOperationException("Duplicate key");
 
 						current.SetDictionaryValue(key, value);
-						
+
 						return;
 					}
-
-					currentSkinValue.BasedOnFlags = skinValue.BasedOnFlags;
 
 					foreach (var basedOn in skinValue.BasedOn)
 					{
@@ -200,8 +193,10 @@ namespace Zaaml.PresentationCore.Theming
 				skinValue.Key = key;
 			}
 
-			if (value is SkinDictionaryProcessor skinProcessor)
-				Processors.Add(skinProcessor);
+			//if (value is SkinDictionaryProcessor skinProcessor)
+			//	Processors.Add(skinProcessor);
+			//else if (value is SkinResourceGenerator skinResourceGenerator)
+			//	Generators.Add(skinResourceGenerator);
 		}
 
 		private void OnValueRemoved(string key, object value)
@@ -212,8 +207,10 @@ namespace Zaaml.PresentationCore.Theming
 				skinValue.Key = null;
 			}
 
-			if (value is SkinDictionaryProcessor skinProcessor)
-				Processors.Remove(skinProcessor);
+			//if (value is SkinDictionaryProcessor skinProcessor)
+			//	Processors.Remove(skinProcessor);
+			//else if (value is SkinResourceGenerator skinResourceGenerator)
+			//	Generators.Remove(skinResourceGenerator);
 		}
 
 		private bool RemoveCore(KeyValuePair<string, object> item)
@@ -243,11 +240,9 @@ namespace Zaaml.PresentationCore.Theming
 					return false;
 			}
 
-			object value;
-
 			key = keyParts[keyParts.Count - 1];
 
-			if (current.Dictionary.TryGetValue(key, out value) == false)
+			if (current.Dictionary.ContainsKey(key) == false)
 				return false;
 
 			current.RemoveDictionaryValue(key);
@@ -294,7 +289,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		private bool TryGetValueCore(string key, out object value)
 		{
-			if (key.StartsWith("~/"))
+			if (IsPathAbsolute(key) == false)
 				return TryGetValueRelative(key, out value);
 
 			var themeKey = new ThemeResourceKey(key);
@@ -329,13 +324,15 @@ namespace Zaaml.PresentationCore.Theming
 
 		private bool TryGetValueRelative(string key, out object value)
 		{
-			var current = Parent;
+			var current = this;
+			var currentKey = key;
 
-			key = key.Substring(2);
+			if (currentKey.StartsWith("/"))
+				currentKey = currentKey.Substring(1);
 
-			while (key.StartsWith("../") && current != null)
+			while (currentKey.StartsWith("../") && current != null)
 			{
-				key = key.Substring(2);
+				currentKey = currentKey.Substring(3);
 				current = current.Parent;
 			}
 
@@ -346,9 +343,9 @@ namespace Zaaml.PresentationCore.Theming
 				return false;
 			}
 
-			key = key.Trim('/');
+			currentKey = currentKey.TrimEnd('/');
 
-			var themeKey = new ThemeResourceKey(key);
+			var themeKey = new ThemeResourceKey(currentKey);
 			var keyParts = themeKey.KeyParts;
 
 			for (var iKeyPart = 0; iKeyPart < keyParts.Count - 1; iKeyPart++)
@@ -365,12 +362,10 @@ namespace Zaaml.PresentationCore.Theming
 				return false;
 			}
 
-			key = keyParts[keyParts.Count - 1];
+			currentKey = keyParts[keyParts.Count - 1];
 
-			return current.TryGetValueCore(key, out value);
+			return current.TryGetValueCore(currentKey, out value);
 		}
-
-		#endregion
 	}
 
 	internal enum SkinDictionaryMergeFlags

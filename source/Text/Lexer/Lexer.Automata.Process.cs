@@ -8,51 +8,21 @@ namespace Zaaml.Text
 {
 	internal partial class Lexer<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private protected partial class LexerAutomata
 		{
-			#region Nested Types
-
 			public abstract class LexerProcess : IDisposable
 			{
-				#region Ctors
-
-				protected LexerProcess(TextSource textSource)
+				protected LexerProcess(TextSpan textSourceSpan)
 				{
-					TextSource = textSource;
+					TextSourceSpan = textSourceSpan;
 				}
 
-				#endregion
+				public TextSpan TextSourceSpan { get; }
 
-				#region Properties
-
-				public abstract int TextPointer { get; set; }
-
-				public TextSource TextSource { get; }
-
-				#endregion
-
-				#region Methods
-
-				public abstract int Run(Lexeme<TToken>[] lexemes, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes);
-
-				#endregion
-
-				#region Interface Implementations
-
-				#region IDisposable
+				public abstract int Run(ref int textPointer, Lexeme<TToken>[] lexemes, int[] operands, int lexemesBufferOffset, int lexemesBufferSize, bool skipLexemes);
 
 				public abstract void Dispose();
-
-				#endregion
-
-				#endregion
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

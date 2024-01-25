@@ -7,83 +7,83 @@ using NativeBinding = System.Windows.Data.Binding;
 
 namespace Zaaml.PresentationCore.Data
 {
-  internal struct BindingSource
-  {
-    #region Fields
+	internal struct BindingSource
+	{
+		#region Fields
 
-    private ActualSource _actualSource;
-    private object _sourceStore;
+		private ActualSource _actualSource;
+		private object _sourceStore;
 
-    #endregion
+		#endregion
 
-    #region Properties
+		#region Properties
 
-    public string ElementName
-    {
-      get => _actualSource == ActualSource.ElementName ? (string) _sourceStore : null;
-      set
-      {
-        _sourceStore = value;
-        _actualSource = ActualSource.ElementName;
-      }
-    }
+		public string ElementName
+		{
+			get => _actualSource == ActualSource.ElementName ? (string)_sourceStore : null;
+			set
+			{
+				_sourceStore = value;
+				_actualSource = ActualSource.ElementName;
+			}
+		}
 
-    public bool BindsDirectlyToSource { get; set; }
+		public bool BindsDirectlyToSource { get; set; }
 
-    public RelativeSource RelativeSource
-    {
-      get => _actualSource == ActualSource.RelativeSource ? (RelativeSource) _sourceStore : null;
-      set
-      {
-        _sourceStore = value;
-        _actualSource = ActualSource.RelativeSource;
-      }
-    }
+		public RelativeSource RelativeSource
+		{
+			get => _actualSource == ActualSource.RelativeSource ? (RelativeSource)_sourceStore : null;
+			set
+			{
+				_sourceStore = value;
+				_actualSource = ActualSource.RelativeSource;
+			}
+		}
 
-    public object Source
-    {
-      get => _actualSource == ActualSource.Source ? _sourceStore : null;
-      set
-      {
-        _sourceStore = value;
-        _actualSource = ActualSource.Source;
-      }
-    }
+		public object Source
+		{
+			get => _actualSource == ActualSource.Source ? _sourceStore : null;
+			set
+			{
+				_sourceStore = value;
+				_actualSource = ActualSource.Source;
+			}
+		}
 
-    #endregion
+		#endregion
 
-    #region  Methods
+		#region Methods
 
-    public void InitSource(NativeBinding binding)
-    {
-      switch (_actualSource)
-      {
-        case ActualSource.None:
-          break;
-        case ActualSource.RelativeSource:
-          binding.RelativeSource = RelativeSource;
-          break;
-        case ActualSource.ElementName:
-          binding.ElementName = ElementName;
-          break;
-        case ActualSource.Source:
-          binding.Source = Source;
-          break;
-      }
-    }
+		public void InitSource(NativeBinding binding)
+		{
+			switch (_actualSource)
+			{
+				case ActualSource.None:
+					break;
+				case ActualSource.RelativeSource:
+					binding.RelativeSource = RelativeSource;
+					break;
+				case ActualSource.ElementName:
+					binding.ElementName = ElementName;
+					break;
+				case ActualSource.Source:
+					binding.Source = Source;
+					break;
+			}
+		}
 
-    #endregion
+		#endregion
 
-    #region  Nested Types
+		#region Nested Types
 
-    private enum ActualSource
-    {
-      None,
-      RelativeSource,
-      ElementName,
-      Source
-    }
+		private enum ActualSource
+		{
+			None,
+			RelativeSource,
+			ElementName,
+			Source
+		}
 
-    #endregion
-  }
+		#endregion
+	}
 }

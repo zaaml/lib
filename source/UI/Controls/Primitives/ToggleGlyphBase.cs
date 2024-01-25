@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Interfaces;
 
@@ -65,8 +66,8 @@ namespace Zaaml.UI.Controls.Primitives
 
     public bool IsReadOnly
     {
-      get => (bool) GetValue(IsReadOnlyProperty);
-      set => SetValue(IsReadOnlyProperty, value);
+	    get => (bool)GetValue(IsReadOnlyProperty);
+	    set => SetValue(IsReadOnlyProperty, value.Box());
     }
 
     #endregion

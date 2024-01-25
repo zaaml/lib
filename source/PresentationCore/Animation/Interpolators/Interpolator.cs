@@ -8,35 +8,56 @@ using System.Windows;
 using System.Windows.Media;
 using Zaaml.Core.Extensions;
 
-namespace Zaaml.PresentationCore.Animation.Interpolators
+namespace Zaaml.PresentationCore.Animation
 {
 	public static class Interpolator
-  {
-    #region Static Fields and Constants
+	{
+		private static readonly Dictionary<Type, IInterpolator> Interpolators = new()
+		{
+			{ typeof(double), DoubleInterpolator.Instance },
+			{ typeof(byte), ByteInterpolator.Instance },
+			{ typeof(short), ShortInterpolator.Instance },
+			{ typeof(int), IntInterpolator.Instance },
+			{ typeof(long), LongInterpolator.Instance },
+			{ typeof(bool), BoolInterpolator.Instance },
+			{ typeof(decimal), DecimalInterpolator.Instance },
+			{ typeof(float), SingleInterpolator.Instance },
+			{ typeof(Point), PointInterpolator.Instance },
+			{ typeof(Size), SizeInterpolator.Instance },
+			{ typeof(Rect), RectInterpolator.Instance },
+			{ typeof(Color), ColorInterpolator.Instance },
+			{ typeof(Matrix), MatrixInterpolator.Instance },
+			{ typeof(TranslateTransform), TranslateTransformInterpolator.Instance },
+			{ typeof(RotateTransform), RotateTransformInterpolator.Instance },
+			{ typeof(ScaleTransform), ScaleTransformInterpolator.Instance },
+			{ typeof(SkewTransform), SkewTransformInterpolator.Instance },
+			{ typeof(MatrixTransform), MatrixTransformInterpolator.Instance },
+			{ typeof(SolidColorBrush), SolidColorBrushInterpolator.Instance },
+		};
 
-    private static readonly Dictionary<Type, IInterpolator> Interpolators = new Dictionary<Type, IInterpolator>
-    {
-      {typeof(double), DoubleInterpolator.Instance},
-      {typeof(Point), PointInterpolator.Instance},
-      {typeof(Size), SizeInterpolator.Instance},
-      {typeof(Rect), RectInterpolator.Instance},
-      {typeof(Color), ColorInterpolator.Instance}
-    };
+		public static IInterpolator GetInterpolator(Type targetType)
+		{
+			return Interpolators.GetValueOrDefault(targetType);
+		}
 
-    #endregion
+		public static Interpolator<T> GetInterpolator<T>()
+		{
+			return (Interpolator<T>)GetInterpolator(typeof(T));
+		}
+	}
 
-    #region  Methods
+	public abstract class Interpolator<T> : IInterpolator<T>
+	{
+		protected internal abstract void EvaluateCore(ref T value, T start, T end, double progress);
 
-    public static IInterpolator GetInterpolator(Type targetType)
-    {
-      return Interpolators.GetValueOrDefault(targetType);
-    }
+		public void Evaluate(ref T value, T start, T end, double progress)
+		{
+			EvaluateCore(ref value, start, end, progress.Clamp(0.0, 1.0));
+		}
 
-    public static IInterpolator<T> GetInterpolator<T>()
-    {
-      return GetInterpolator(typeof(T)) as IInterpolator<T>;
-    }
-
-    #endregion
-  }
+		IAnimationValue IInterpolator.CreateAnimationValue()
+		{
+			return this.CreateAnimationValue();
+		}
+	}
 }

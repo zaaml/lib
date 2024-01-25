@@ -13,7 +13,7 @@
               Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="{TemplateBinding BorderThickness}">
-        <Grid>
+        <zm:Panel>
           <ContentPresenter x:Name="ContentPresenter"
                             Content="{zm:TemplateBinding Path=Content}"
                             ContentTemplate="{x:Null}"
@@ -29,7 +29,7 @@
                                                             Converter={zm:VisibilityConverter},
                                                             FallbackValue={zm:Collapsed},
                                                             TargetNullValue={zm:Collapsed}}" />
-        </Grid>
+        </zm:Panel>
       </Border>
 
     </zm:ControlTemplateRoot>

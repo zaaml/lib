@@ -78,7 +78,7 @@ namespace Zaaml.UI.Controls.Ribbon
       set => SetValue(RibbonProperty, value);
     }
 
-    private RibbonPresenterTemplateContract TemplateContract => (RibbonPresenterTemplateContract) TemplateContractInternal;
+    private RibbonPresenterTemplateContract TemplateContract => (RibbonPresenterTemplateContract)TemplateContractCore;
 
     public object Title
     {

@@ -9,71 +9,45 @@ using System.Collections.Specialized;
 
 namespace Zaaml.PresentationCore.ObservableCollections
 {
-  internal class ObservableCollectionWrapper<T> : ICollection, INotifyCollectionChanged
-  {
-    #region Fields
+	internal class ObservableCollectionWrapper<T> : ICollection, INotifyCollectionChanged
+	{
+		private readonly ICollection _collection;
 
-    private readonly ICollection _collection;
+		public ObservableCollectionWrapper(ObservableCollection<T> observableCollection)
+		{
+			_collection = observableCollection;
 
-    #endregion
+			observableCollection.CollectionChanged += (_, args) => OnCollectionChanged(args);
+		}
 
-    #region Ctors
+		public ObservableCollectionWrapper(ICollection collection, INotifyCollectionChanged notifier)
+		{
+			_collection = collection;
 
-    public ObservableCollectionWrapper(ObservableCollection<T> observableCollection)
-    {
-      _collection = observableCollection;
-      observableCollection.CollectionChanged += (sender, args) => OnCollectionChanged(args);
-    }
+			notifier.CollectionChanged += (_, args) => OnCollectionChanged(args);
+		}
 
-    public ObservableCollectionWrapper(ICollection collection, INotifyCollectionChanged notifier)
-    {
-      _collection = collection;
-      notifier.CollectionChanged += (sender, args) => OnCollectionChanged(args);
-    }
+		protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+		{
+			CollectionChanged?.Invoke(this, e);
+		}
 
-    #endregion
+		int ICollection.Count => _collection.Count;
 
-    #region  Methods
+		bool ICollection.IsSynchronized => _collection.IsSynchronized;
 
-    protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
-    {
-      CollectionChanged?.Invoke(this, e);
-    }
+		object ICollection.SyncRoot => _collection.SyncRoot;
 
-    #endregion
+		void ICollection.CopyTo(Array array, int index)
+		{
+			_collection.CopyTo(array, index);
+		}
 
-    #region Interface Implementations
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return _collection.GetEnumerator();
+		}
 
-    #region ICollection
-
-    int ICollection.Count => _collection.Count;
-
-    bool ICollection.IsSynchronized => _collection.IsSynchronized;
-
-    object ICollection.SyncRoot => _collection.SyncRoot;
-
-    void ICollection.CopyTo(Array array, int index)
-    {
-      _collection.CopyTo(array, index);
-    }
-
-    #endregion
-
-    #region IEnumerable
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-      return _collection.GetEnumerator();
-    }
-
-    #endregion
-
-    #region INotifyCollectionChanged
-
-    public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-    #endregion
-
-    #endregion
-  }
+		public event NotifyCollectionChangedEventHandler CollectionChanged;
+	}
 }

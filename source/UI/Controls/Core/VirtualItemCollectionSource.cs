@@ -43,7 +43,7 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private VirtualItemCollection<TControl, TItem> VirtualCollection { get; }
+		private VirtualItemCollection<TItem> VirtualCollection { get; }
 
 		public override void Dispose()
 		{
@@ -99,7 +99,7 @@ namespace Zaaml.UI.Controls.Core
 			VirtualCollection.UnlockItem(item);
 		}
 
-		private class VirtualItemCollection : VirtualItemCollection<TControl, TItem>
+		private class VirtualItemCollection : VirtualItemCollection<TItem>
 		{
 			public VirtualItemCollection(ItemCollectionBase<TControl, TItem> itemCollection)
 			{
@@ -108,9 +108,9 @@ namespace Zaaml.UI.Controls.Core
 
 			private ItemCollectionBase<TControl, TItem> ItemCollection { get; }
 
-			protected override void ObservableSourceOnCollectionChanged(NotifyCollectionChangedEventArgs e)
+			protected override void OnSourceCollectionChanged(NotifyCollectionChangedEventArgs e)
 			{
-				base.ObservableSourceOnCollectionChanged(e);
+				base.OnSourceCollectionChanged(e);
 
 				ItemCollection.OnSourceCollectionChanged(e);
 			}
@@ -137,10 +137,12 @@ namespace Zaaml.UI.Controls.Core
 
 		UIElement GetCurrent(int index);
 
-		int GetIndexFromItem(FrameworkElement frameworkElement);
+		int GetIndexFromItem(UIElement frameworkElement);
 
 		void LeaveGeneration();
 
 		UIElement Realize(int index);
+
+		event NotifyCollectionChangedEventHandler SourceCollectionChanged;
 	}
 }

@@ -4,272 +4,129 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using Zaaml.Core.Reflection;
 
 namespace Zaaml.Text
 {
 	internal abstract class Grammar
 	{
-		#region Static Fields and Constants
-
-		private static readonly Dictionary<Type, Grammar> Grammars = new Dictionary<Type, Grammar>();
-
-		#endregion
-
-		#region Ctors
+		private static readonly Dictionary<Type, Grammar> Grammars = new();
 
 		protected Grammar()
 		{
 			Grammars[GetType()] = this;
 		}
 
-		#endregion
-
-		#region Methods
-
-		public static Grammar<TToken> Get<TToken>(Type grammarType) where TToken : unmanaged, Enum
+		public static Grammar<TGrammar, TToken> Get<TGrammar, TToken>()
+			where TGrammar : Grammar<TGrammar, TToken>
+			where TToken : unmanaged, Enum
 		{
+			var grammarType = typeof(TGrammar);
+
 			RuntimeHelpers.RunClassConstructor(grammarType.TypeHandle);
 
 			if (Grammars.TryGetValue(grammarType, out var grammarBase))
-			{
-				var grammar = (Grammar<TToken>) grammarBase;
-
-				grammar.Build();
-
-				return grammar;
-			}
+				return (TGrammar)grammarBase;
 
 			{
-				var grammar = (Grammar<TToken>) Activator.CreateInstance(grammarType, true);
-
-				grammar.Build();
+				var grammar = (Grammar<TGrammar, TToken>)Activator.CreateInstance(grammarType, true);
 
 				Grammars[grammarType] = grammar;
 
 				return grammar;
 			}
 		}
-
-		public static TGrammar Get<TGrammar, TToken>() where TGrammar : Grammar<TToken> where TToken : unmanaged, Enum
-		{
-			return (TGrammar) Get<TToken>(typeof(TGrammar));
-		}
-
-		#endregion
 	}
 
-	internal abstract partial class Grammar<TToken> : Grammar where TToken : unmanaged, Enum
+	internal abstract class Grammar<TGrammar> : Grammar
+		where TGrammar : Grammar
 	{
-		#region Static Fields and Constants
+	}
 
-		// ReSharper disable once StaticMemberInGenericType
-		private static readonly int EnumTokenCodeOffset;
-
-		#endregion
-
-		#region Fields
-
-		private readonly Dictionary<string, ParserRule> _parserRuleDictionary = new Dictionary<string, ParserRule>();
-		private readonly Dictionary<string, TokenFragment> _tokenFragmentDictionary = new Dictionary<string, TokenFragment>();
-		private readonly Dictionary<string, TokenRule> _tokenRuleDictionary = new Dictionary<string, TokenRule>();
-		private bool _isBuilt;
-		private int _tokenCounter;
-
-		#endregion
-
-		#region Ctors
-
-		static Grammar()
-		{
-			foreach (int value in Enum.GetValues(typeof(TToken)))
-				EnumTokenCodeOffset = Math.Max(EnumTokenCodeOffset, value);
-
-			EnumTokenCodeOffset++;
-		}
+	internal abstract partial class Grammar<TGrammar, TToken> : Grammar<TGrammar>
+		where TGrammar : Grammar<TGrammar, TToken>
+		where TToken : unmanaged, Enum
+	{
+		private Func<IServiceProvider, Lexer<TGrammar, TToken>> _lexerFactoryDelegate;
+		private Func<IServiceProvider, Parser<TGrammar, TToken>> _parserFactoryDelegate;
 
 		// ReSharper disable once EmptyConstructor
-		internal Grammar()
+		internal Grammar(TToken undefinedToken, LexerGrammar lexerGrammar, ParserGrammar parserGrammar)
 		{
+			UndefinedToken = undefinedToken;
+			LexerGrammarInstance = lexerGrammar;
+			ParserGrammarInstance = parserGrammar;
 		}
 
-		#endregion
+		public LexerGrammar LexerGrammarInstance { get; }
 
-		#region Properties
+		public ParserGrammar ParserGrammarInstance { get; }
 
-		protected EmptyEntry Empty => EmptyEntry.Instance;
+		public TToken UndefinedToken { get; }
 
-		internal IEnumerable<ParserRule> ParserRules => _parserRuleDictionary.Values;
-
-		internal IEnumerable<TokenFragment> TokenFragments => _tokenFragmentDictionary.Values;
-
-		internal IEnumerable<TokenRule> TokenRules => _tokenRuleDictionary.Values;
-
-		#endregion
-
-		#region Methods
-
-		internal void Build()
+		private Func<IServiceProvider, Lexer<TGrammar, TToken>> CreateLexerFactoryDelegate()
 		{
-			if (_isBuilt)
-				return;
+			var grammarType = GetType();
+			var lexerFactoryMethodInfo = grammarType.GetMethod("LexerFactory", BF.SPNP);
 
-			_isBuilt = true;
+			if (lexerFactoryMethodInfo == null)
+				throw new InvalidOperationException("Can not find LexerFactory");
 
-			foreach (var tokenFragment in CreatedTokenFragments)
-			{
-				tokenFragment.TokenCode = GetTokenCode(tokenFragment);
-
-				_tokenFragmentDictionary.Add(tokenFragment.Name, tokenFragment);
-			}
-
-			foreach (var tokenRule in CreatedTokenRules)
-			{
-				if (tokenRule?.Pattern == null)
-					continue;
-
-				tokenRule.TokenCode = GetTokenCode(tokenRule);
-
-				_tokenRuleDictionary.Add(tokenRule.Name, tokenRule);
-			}
-
-			foreach (var parserRule in CreatedParserRules)
-			{
-				_parserRuleDictionary.Add(parserRule.Name, parserRule);
-			}
+#if NET5_0_OR_GREATER
+			return lexerFactoryMethodInfo.CreateDelegate<Func<IServiceProvider, Lexer<TGrammar, TToken>>>();
+#else
+			return (Func<IServiceProvider, Lexer<TGrammar, TToken>>)lexerFactoryMethodInfo.CreateDelegate(typeof(Func<IServiceProvider, Lexer<TGrammar, TToken>>));
+#endif
 		}
 
-		private int GetTokenCode(object tokenEntry)
+		private Func<IServiceProvider, Parser<TGrammar, TToken>> CreateParserFactoryDelegate()
 		{
-			if (tokenEntry is TokenRule tokenRule)
-				return (int) (object) tokenRule.Token;
+			var grammarType = GetType();
+			var parserFactoryMethodInfo = grammarType.GetMethod("ParserFactory", BF.SPNP);
 
-			return EnumTokenCodeOffset + _tokenCounter++;
+			if (parserFactoryMethodInfo == null)
+				throw new InvalidOperationException("Can not find ParserFactory");
+
+#if NET5_0_OR_GREATER
+			return parserFactoryMethodInfo.CreateDelegate<Func<IServiceProvider, Parser<TGrammar, TToken>>>();
+
+#else
+			return (Func<IServiceProvider, Parser<TGrammar, TToken>>)parserFactoryMethodInfo.CreateDelegate(typeof(Func<IServiceProvider, Parser<TGrammar, TToken>>));			
+#endif
 		}
 
-		#endregion
-
-		#region Nested Types
-
-		protected sealed class EmptyEntry
+		internal Func<IServiceProvider, Lexer<TGrammar, TToken>> GetLexerFactory()
 		{
-			#region Static Fields and Constants
-
-			internal static readonly EmptyEntry Instance = new EmptyEntry();
-
-			#endregion
-
-			#region Ctors
-
-			private EmptyEntry()
-			{
-			}
-
-			#endregion
-
-			#region Methods
-
-			public static implicit operator ParserProduction(EmptyEntry entry)
-			{
-				return ParserProduction.Empty;
-			}
-
-			#endregion
+			return _lexerFactoryDelegate ??= CreateLexerFactoryDelegate();
 		}
 
-		#endregion
+		internal Func<IServiceProvider, Parser<TGrammar, TToken>> GetParserFactory()
+		{
+			return _parserFactoryDelegate ??= CreateParserFactoryDelegate();
+		}
 	}
 
-	internal abstract class Grammar<TToken, TNode> : Grammar<TToken> where TToken : unmanaged, Enum where TNode : class
+
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+	public sealed class ExternalParserAttribute : Attribute
 	{
-		#region Methods
-
-		protected static ParserRule<TActualNode> CreateParserRule<TActualNode>([CallerMemberName] string name = null) where TActualNode : TNode
+		public ExternalParserAttribute(Type parserType)
 		{
-			var parserRule = new ParserRule<TActualNode>
-			{
-				Name = name
-			};
-
-			CreatedParserRules.Add(parserRule);
-
-			return parserRule;
+			ParserType = parserType;
 		}
 
-		#endregion
-
-		#region Nested Types
-
-		protected internal sealed class ParserRule<TActualNode> : ParserRule where TActualNode : TNode
-		{
-			#region Ctors
-
-			internal ParserRule()
-			{
-			}
-
-			#endregion
-
-			#region Properties
-
-			public new Grammar<TToken, TNode> Grammar => (Grammar<TToken, TNode>) base.Grammar;
-
-			#endregion
-
-			public void Bind<TResultNode>(ParserProduction parserProduction) where TResultNode : TActualNode
-			{
-				parserProduction.Name = typeof(TResultNode).Name;
-				parserProduction.Binding = ConstructorParserProductionBinding.Bind<TResultNode>();
-
-				Productions.Add(parserProduction);
-			}
-
-			public void BindReturn<TResultNode, TBaseNode>(Grammar<TToken, TBaseNode>.ParserRule<TResultNode> rule) where TResultNode : TBaseNode where TBaseNode : class
-			{
-				var transition = new ParserProduction(new ParserEntry[] { rule })
-				{
-					Name = typeof(TResultNode).Name,
-					Binding = ConstructorParserProductionBinding.Bind<TResultNode>(),
-					Unwrap = true
-				};
-
-				Productions.Add(transition);
-			}
-		}
-
-		#endregion
+		public Type ParserType { get; }
 	}
 
-	internal abstract partial class Grammar<TToken, TNode, TSyntaxFactory> : Grammar<TToken> where TToken : unmanaged, Enum where TNode : class where TSyntaxFactory : SyntaxFactory<TNode>
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+	public sealed class ExternalLexerAttribute : Attribute
 	{
-		protected static ParserRule<TActualNode> CreateParserRule<TActualNode>([CallerMemberName] string name = null) where TActualNode : TNode
+		public ExternalLexerAttribute(Type lexerType)
 		{
-			var parserRule = new ParserRule<TActualNode>
-			{
-				Name = name
-			};
-
-			CreatedParserRules.Add(parserRule);
-
-			return parserRule;
+			LexerType = lexerType;
 		}
 
-		protected internal sealed partial  class ParserRule<TActualNode> : ParserRule where TActualNode : TNode
-		{
-			#region Ctors
-
-			internal ParserRule()
-			{
-			}
-
-			#endregion
-
-			#region Properties
-
-			public new Grammar<TToken, TNode, TSyntaxFactory> Grammar => (Grammar<TToken, TNode, TSyntaxFactory>)base.Grammar;
-
-			#endregion
-		}
+		public Type LexerType { get; }
 	}
 }

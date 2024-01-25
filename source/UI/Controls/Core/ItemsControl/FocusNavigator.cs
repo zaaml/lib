@@ -60,21 +60,29 @@ namespace Zaaml.UI.Controls.Core
 
 		internal bool IsLogical { get; set; }
 
-		protected bool ApplyFocus(TItem item)
+		protected bool ApplyFocus(TItem item, bool forceKeyboardFocus)
 		{
 			if (IsLogical)
 			{
 				var focusScope = FocusManager.GetFocusScope(item);
 
 				if (focusScope == null)
-					return FocusHelper.Focus(item);
+				{
+					if (forceKeyboardFocus || FocusHelper.IsKeyboardFocusWithin(ControlCore))
+						return FocusHelper.Focus(item);
+
+					return true;
+				}
 
 				FocusManager.SetFocusedElement(focusScope, item);
 
 				return ReferenceEquals(FocusManager.GetFocusedElement(focusScope), item);
 			}
 
-			return FocusHelper.Focus(item);
+			if (forceKeyboardFocus || FocusHelper.IsKeyboardFocusWithin(ControlCore))
+				return FocusHelper.Focus(item);
+
+			return true;
 		}
 
 		protected virtual void OnItemAttached(TItem item)
@@ -154,7 +162,7 @@ namespace Zaaml.UI.Controls.Core
 
 		protected ScrollViewControl ScrollView => ScrollableControl?.ScrollView;
 
-		protected void FocusItem(TItem item)
+		protected void FocusItem(TItem item, bool forceKeyboardFocus)
 		{
 			var controlItem = item;
 
@@ -167,7 +175,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				if (controlItem.IsVisualDescendantOf(Control))
 				{
-					if (ApplyFocus(item))
+					if (ApplyFocus(item, forceKeyboardFocus))
 						return;
 				}
 

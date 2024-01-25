@@ -4,7 +4,5 @@
 
 namespace Zaaml.Text
 {
-	internal interface ILexerAutomataContextInterface
-	{
-	}
+
 }

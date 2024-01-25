@@ -14,6 +14,8 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewControl.VirtualItemCollection.AttachObserver(this);
 		}
 
+		public override int Count => ListViewControl.ListViewData?.IndexedSource.Count ?? 0;
+
 		public override bool HasSource => ListViewControl.SourceCollection != null;
 
 		public ListViewControl ListViewControl { get; }
@@ -44,7 +46,23 @@ namespace Zaaml.UI.Controls.ListView
 			return ListViewControl.CanSelectValueInternal(value);
 		}
 
-		public override int Count => ListViewControl.ListViewData?.IndexedSource.Count ?? 0;
+		public override int GetIndexOfSource(object source)
+		{
+			return ListViewControl.ListViewData?.IndexedSource.IndexOf(source) ?? -1;
+		}
+
+		public override object GetSource(int index)
+		{
+			return ListViewControl.ListViewData?.IndexedSource[index];
+		}
+
+		public override object GetValue(ListViewItem item, object source)
+		{
+			if (item != null && source == null)
+				return item.Value;
+
+			return ListViewControl.GetValueInternal(null, source);
+		}
 
 		public override bool TryGetItem(int index, bool ensure, out ListViewItem item)
 		{
@@ -62,16 +80,6 @@ namespace Zaaml.UI.Controls.ListView
 			item = ensure ? viewItemCollection.EnsureItem(index) : viewItemCollection.GetItemFromIndex(index);
 
 			return item != null;
-		}
-
-		public override int GetIndexOfSource(object source)
-		{
-			return ListViewControl.ListViewData?.IndexedSource.IndexOf(source) ?? -1;
-		}
-
-		public override object GetSource(int index)
-		{
-			return ListViewControl.ListViewData?.IndexedSource[index];
 		}
 
 		public override bool TryGetItem(object source, bool ensure, out ListViewItem item)

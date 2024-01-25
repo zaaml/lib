@@ -6,10 +6,12 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Markup;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
@@ -70,38 +72,38 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
 		public bool ActualShowIcon
 		{
-			get => (bool) GetValue(ActualShowIconProperty);
+			get => (bool)GetValue(ActualShowIconProperty);
 			private set => this.SetReadOnlyValue(ActualShowIconPropertyKey, value);
 		}
 
 		public BreadCrumbControl BreadCrumbControl
 		{
-			get => (BreadCrumbControl) GetValue(BreadCrumbControlProperty);
+			get => (BreadCrumbControl)GetValue(BreadCrumbControlProperty);
 			internal set => this.SetReadOnlyValue(BreadCrumbControlPropertyKey, value);
 		}
 
 		public bool HasItems
 		{
-			get => (bool) GetValue(HasItemsProperty);
-			private set => this.SetReadOnlyValue(HasItemsPropertyKey, value);
+			get => (bool)GetValue(HasItemsProperty);
+			private set => this.SetReadOnlyValue(HasItemsPropertyKey, value.Box());
 		}
 
 		public ElementVisibility IconVisibility
 		{
-			get => (ElementVisibility) GetValue(IconVisibilityProperty);
-			set => SetValue(IconVisibilityProperty, value);
+			get => (ElementVisibility)GetValue(IconVisibilityProperty);
+			set => SetValue(IconVisibilityProperty, value.Box());
 		}
 
 		public bool IsMenuOpen
 		{
-			get => (bool) GetValue(IsMenuOpenProperty);
-			set => SetValue(IsMenuOpenProperty, value);
+			get => (bool)GetValue(IsMenuOpenProperty);
+			set => SetValue(IsMenuOpenProperty, value.Box());
 		}
 
 		public bool IsSelected
 		{
-			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			get => (bool)GetValue(IsSelectedProperty);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 
 		internal IBreadCrumbItemsOwner Owner
@@ -124,7 +126,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
 		public BreadCrumbItem ParentItem
 		{
-			get => (BreadCrumbItem) GetValue(ParentItemProperty);
+			get => (BreadCrumbItem)GetValue(ParentItemProperty);
 			private set => this.SetReadOnlyValue(ParentItemPropertyKey, value);
 		}
 
@@ -166,7 +168,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
 		private object OnCoerceIsMenuOpenChanged(object o)
 		{
-			if ((bool) o && HasItems == false)
+			if ((bool)o && HasItems == false)
 				return false;
 
 			return o;
@@ -247,7 +249,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 		{
 			base.OnTemplateContractAttached();
 
-			SplitButton = (SplitButton) GetTemplateChild("SplitButton");
+			SplitButton = (SplitButton)GetTemplateChild("SplitButton");
 		}
 
 		protected override void OnTemplateContractDetaching()
@@ -280,7 +282,7 @@ namespace Zaaml.UI.Controls.BreadCrumb
 
 		public BreadCrumbItemCollection ItemCollection
 		{
-			get => (BreadCrumbItemCollection) GetValue(ItemCollectionProperty);
+			get => (BreadCrumbItemCollection)GetValue(ItemCollectionProperty);
 			private set => this.SetReadOnlyValue(ItemCollectionPropertyKey, value);
 		}
 

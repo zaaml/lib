@@ -8,8 +8,6 @@ namespace Zaaml.UI.Controls.Core
 {
 	internal interface IItemGenerator<T> where T : FrameworkElement
 	{
-		#region  Methods
-
 		void AttachItem(T item, object source);
 
 		T CreateItem(object source);
@@ -17,7 +15,5 @@ namespace Zaaml.UI.Controls.Core
 		void DetachItem(T item, object source);
 
 		void DisposeItem(T item, object source);
-
-		#endregion
 	}
 }

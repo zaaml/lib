@@ -18,8 +18,8 @@ namespace Zaaml.UI.Controls.Artboard
 	[TemplateContractType(typeof(ArtboardScrollViewControlTemplateContract))]
 	public sealed class ArtboardScrollViewControl : ScrollViewControlBase<ArtboardScrollViewPresenter, ArtboardScrollViewPanel>
 	{
-		private static readonly DependencyPropertyKey ArtboardPropertyKey = DPM.RegisterReadOnly<ArtboardControl, ArtboardScrollViewControl>
-			("Artboard", default, d => d.OnArtboardPropertyChangedPrivate);
+		private static readonly DependencyPropertyKey ArtboardControlPropertyKey = DPM.RegisterReadOnly<ArtboardControl, ArtboardScrollViewControl>
+			("ArtboardControl", default, d => d.OnArtboardPropertyChangedPrivate);
 
 		public static readonly DependencyProperty TopContentProperty = DPM.Register<object, ArtboardScrollViewControl>
 			("TopContent");
@@ -27,7 +27,7 @@ namespace Zaaml.UI.Controls.Artboard
 		public static readonly DependencyProperty BottomContentProperty = DPM.Register<object, ArtboardScrollViewControl>
 			("BottomContent");
 
-		public static readonly DependencyProperty ArtboardProperty = ArtboardPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ArtboardControlProperty = ArtboardControlPropertyKey.DependencyProperty;
 
 		private static readonly List<double> ZoomTable = new List<double>
 		{
@@ -67,10 +67,10 @@ namespace Zaaml.UI.Controls.Artboard
 			this.OverrideStyleKey<ArtboardScrollViewControl>();
 		}
 
-		public ArtboardControl Artboard
+		public ArtboardControl ArtboardControl
 		{
-			get => (ArtboardControl) GetValue(ArtboardProperty);
-			internal set => this.SetReadOnlyValue(ArtboardPropertyKey, value);
+			get => (ArtboardControl) GetValue(ArtboardControlProperty);
+			internal set => this.SetReadOnlyValue(ArtboardControlPropertyKey, value);
 		}
 
 		private ArtboardScrollViewPanel ArtboardScrollViewPanel => (ArtboardScrollViewPanel) ScrollViewPanelCore;
@@ -83,22 +83,18 @@ namespace Zaaml.UI.Controls.Artboard
 
 		private Point LocalOffset { get; set; }
 
-		private protected override bool PreserveHorizontalOffset => false;
-
-		private protected override bool PreserveVerticalOffset => false;
-
 		protected override ScrollViewPanelBase ScrollViewPanelCore => ScrollViewPresenterInternal?.ScrollViewPanel;
 
 		private ArtboardScrollViewPresenter ScrollViewPresenter => TemplateContract.ScrollViewPresenter;
 
-		private ArtboardScrollViewControlTemplateContract TemplateContract => (ArtboardScrollViewControlTemplateContract) TemplateContractInternal;
+		private ArtboardScrollViewControlTemplateContract TemplateContract => (ArtboardScrollViewControlTemplateContract)TemplateContractCore;
 
 		public object TopContent
 		{
 			get => GetValue(TopContentProperty);
 			set => SetValue(TopContentProperty, value);
 		}
-		
+
 		public double Zoom
 		{
 			get => (double) GetValue(ZoomProperty);
@@ -307,7 +303,7 @@ namespace Zaaml.UI.Controls.Artboard
 
 			LocalOffset = new Point(-transformedBounds.X, -transformedBounds.Y);
 
-			Artboard?.UpdateScrollPanelOffset(LocalOffset.X, LocalOffset.Y);
+			ArtboardControl?.UpdateScrollPanelOffset(LocalOffset.X, LocalOffset.Y);
 		}
 
 		protected override void UpdateScroll()
@@ -316,6 +312,5 @@ namespace Zaaml.UI.Controls.Artboard
 
 			UpdateOffset();
 		}
-
 	}
 }

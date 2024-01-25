@@ -10,6 +10,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Markup;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -75,7 +76,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override bool AutoPreserveEditorText => TreeViewControl?.ActualItemsFilter == null;
 
-		private DefaultTreeViewItemTextFilter DefaultFilter { get; set; }
+		private TreeViewItemTextFilter DefaultFilter { get; set; }
 
 		private DropDownTreeViewSelectionPresenter DefaultSelectionPresenter => _defaultSelectionPresenter ??= CreteDefaultSelectionPresenter();
 
@@ -90,7 +91,7 @@ namespace Zaaml.UI.Controls.DropDown
 		public bool PreserveExpandedNodes
 		{
 			get => (bool) GetValue(PreserveExpandedNodesProperty);
-			set => SetValue(PreserveExpandedNodesProperty, value);
+			set => SetValue(PreserveExpandedNodesProperty, value.Box());
 		}
 
 		protected override ScrollViewControl ScrollView => TreeViewControl?.ScrollViewInternal;
@@ -109,7 +110,7 @@ namespace Zaaml.UI.Controls.DropDown
 
 		protected override FrameworkElement SelectionPresenterCore => SelectionPresenter;
 
-		private DropDownTreeViewTemplateContract TemplateContract => (DropDownTreeViewTemplateContract) TemplateContractInternal;
+		private DropDownTreeViewTemplateContract TemplateContract => (DropDownTreeViewTemplateContract) TemplateContractCore;
 
 		public TreeViewControl TreeViewControl
 		{
@@ -162,7 +163,7 @@ namespace Zaaml.UI.Controls.DropDown
 			return base.MeasureOverride(availableSize);
 		}
 
-		internal override void OnIsDropDownOpenChangedInternal()
+		private protected override void OnIsDropDownOpenChangedInternal()
 		{
 			try
 			{
@@ -236,25 +237,25 @@ namespace Zaaml.UI.Controls.DropDown
 				oldTreeViewControl.ItemsDefaultFilter = DefaultFilter = null;
 				oldTreeViewControl.ItemMouseButtonUp -= OnTreeViewItemMouseButtonUp;
 				oldTreeViewControl.ItemIsExpandedChanged -= OnItemIsExpandedChanged;
-				oldTreeViewControl.ItemClickMode = ClickMode.Release;
+				oldTreeViewControl.ItemClickMode = ItemClickMode.Release;
 				oldTreeViewControl.FocusItemOnMouseHover = false;
 				oldTreeViewControl.SelectItemOnFocus = true;
 				oldTreeViewControl.PreserveMinSize = false;
-				oldTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Default;
+				oldTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Auto;
 
 				ClearValue(ItemFilterProperty);
 			}
 
 			if (newTreeViewControl != null)
 			{
-				newTreeViewControl.ItemsDefaultFilter = DefaultFilter = new DefaultTreeViewItemTextFilter(newTreeViewControl);
+				newTreeViewControl.ItemsDefaultFilter = DefaultFilter = new TreeViewItemTextFilter();
 				newTreeViewControl.ItemMouseButtonUp += OnTreeViewItemMouseButtonUp;
 				newTreeViewControl.ItemIsExpandedChanged += OnItemIsExpandedChanged;
-				newTreeViewControl.ItemClickMode = ClickMode.Release;
+				newTreeViewControl.ItemClickMode = ItemClickMode.Release;
 				newTreeViewControl.FocusItemOnMouseHover = true;
 				newTreeViewControl.SelectItemOnFocus = false;
 				newTreeViewControl.PreserveMinSize = true;
-				newTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Top;
+				newTreeViewControl.DefaultBringIntoViewMode = BringIntoViewMode.Begin;
 
 				this.BindProperties(ItemFilterProperty, newTreeViewControl, TreeViewControl.ItemsFilterProperty, targetNullValue: DefaultFilter);
 			}

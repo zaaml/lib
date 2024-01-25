@@ -158,13 +158,15 @@ namespace Zaaml.PresentationCore.Converters
 
     public static Color ConvertString(string colorString)
     {
-      return ColorUtils.ConvertFromString(colorString);
+			// TODO Why not exception here ?
+      return ColorUtils.TryConvertFromString(colorString, out var color) ? color : default;
     }
 
     public static Color ConvertString(string colorString, IFormatProvider formatProvider)
     {
-      return ColorUtils.ConvertFromString(colorString, formatProvider);
-    }
+	    // TODO Why not exception here ?
+			return ColorUtils.TryConvertFromString(colorString, formatProvider, out var color) ? color : default;
+		}
 
     #endregion
   }

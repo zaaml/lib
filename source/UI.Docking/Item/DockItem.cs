@@ -7,12 +7,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Xml.Linq;
 using Zaaml.Core;
-using Zaaml.Core.Extensions;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
@@ -22,968 +23,882 @@ using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.Primitives.ContentPrimitives;
+#if !NETCOREAPP
+using Zaaml.Core.Extensions;
+#endif
 
 namespace Zaaml.UI.Controls.Docking
 {
-  [DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
-  [DebuggerTypeProxy(typeof(DockItemDebugView))]
-  public class DockItem : TemplateContractContentControl, INotifyPropertyChanging, INotifyPropertyChanged, ISelectionStateControl, IActiveStateControl
-  {
-    #region Static Fields and Constants
+	[DebuggerDisplay("{" + nameof(DebuggerDisplay) + ",nq}")]
+	[DebuggerTypeProxy(typeof(DockItemDebugView))]
+	public class DockItem : TemplateContractContentControl, INotifyPropertyChanging, INotifyPropertyChanged, ISelectionStateControl, IActiveStateControl, ILayoutPropertyChangeListener
+	{
+		private static readonly DockItemSelectionScope DummySelectionScope = new();
+		private static readonly DockItemSelectionScope DummyPreviewSelectionScope = new();
+
+		private static readonly DependencyProperty NameInternalProperty = DPM.Register<string, DockItem>
+			("NameInternal", d => d.OnNameChanged);
+
+		public static readonly DependencyProperty TitleProperty = DPM.Register<string, DockItem>
+			("Title", string.Empty, _ => OnTitleChanged, _ => OnCoerceTitle);
 
-    private const DockItemState AllStates = DockItemState.AutoHide | DockItemState.Hidden |
-                                            DockItemState.Float | DockItemState.Dock |
-                                            DockItemState.Document;
+		public static readonly DependencyProperty IconProperty = DPM.Register<IconBase, DockItem>
+			("Icon", i => i.LogicalChildMentor.OnLogicalChildPropertyChanged);
+
+		public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, DockItem>
+			("IsSelected", d => d.OnIsSelectedChangedPrivate);
+
+		public static readonly DependencyProperty ShowTitleProperty = DPM.Register<bool, DockItem>
+			("ShowTitle");
+
+		public static readonly DependencyProperty DockStateProperty = DPM.Register<DockItemState, DockItem>
+			("DockState", DockItemState.Hidden, d => d.OnDockStatePropertyChanged, d => d.CoerceDockStateProperty);
+
+		private static readonly DependencyPropertyKey ActualLayoutPropertyKey = DPM.RegisterReadOnly<BaseLayout, DockItem>
+			("ActualLayout", d => d.OnActualLayoutPropertyChanged);
+
+		private static readonly DependencyPropertyKey DockControlPropertyKey = DPM.RegisterReadOnly<DockControl, DockItem>
+			("DockControl", d => d.OnDockControlPropertyChangedPrivate);
+
+		public static readonly DependencyProperty DockControlProperty = DockControlPropertyKey.DependencyProperty;
+
+		public DockControl DockControl
+		{
+			get => (DockControl)GetValue(DockControlProperty);
+			private set => this.SetReadOnlyValue(DockControlPropertyKey, value);
+		}
+
+		private void OnDockControlPropertyChangedPrivate(DockControl oldValue, DockControl newValue)
+		{
+		}
+
+		internal void AttachDockControlInternal(DockControl dockControl)
+		{
+			if (ReferenceEquals(DockControl, null) == false)
+				throw new InvalidOperationException("DockControl is already attached.");
+
+			AttachDockControlCore(dockControl);
+		}
+
+		protected virtual void AttachDockControlCore(DockControl dockControl)
+		{
+			DockControl = dockControl;
+		}
+
+		protected virtual void DetachDockControlCore(DockControl dockControl)
+		{
+			DockControl = null;
+		}
+
+		internal void DetachDockControlInternal(DockControl dockControl)
+		{
+			if (ReferenceEquals(DockControl, dockControl) == false)
+				throw new InvalidOperationException("DockControl is not attached.");
+
+			DetachDockControlCore(dockControl);
+		}
+
+		public static readonly DependencyProperty ActualLayoutProperty = ActualLayoutPropertyKey.DependencyProperty;
+		private bool _attachToView = true;
+
+		private AutoHideTabViewItem _autoHideTabViewItem;
+		private DockControllerBase _controller;
+		private FloatingDockWindow _floatingWindow;
+
+		private ConditionalWeakTable<BaseLayout, LayoutOrderIndex> _layoutIndexDictionary = new();
+		private FloatingDockWindow _previewFloatingWindow;
+		private DockItem _previewItem;
+		private int _suspendIsSelectedChangedHandler;
+
+		private bool _syncSideProperty;
+		private DockTabViewItem _tabViewItem;
+		public event EventHandler<DockItemStateChangedEventArgs> DockStateChanged;
+		public event EventHandler IsSelectedChanged;
+		internal event EventHandler<PropertyValueChangedEventArgs> LayoutPropertyChanged;
+		internal event EventHandler RequestUpdateVisualState;
+		internal event EventHandler IsLockedChanged;
+
+		static DockItem()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<DockItem>();
+			FocusVisualStyleProperty.OverrideMetadata(typeof(DockItem), new FrameworkPropertyMetadata(null));
+		}
+
+		public DockItem()
+		{
+			this.OverrideStyleKey<DockItem>();
+
+			foreach (var layoutProperty in FullLayout.LayoutProperties)
+				this.AddValueChanged(layoutProperty, OnLayoutPropertyChanged);
 
-    public static readonly DependencyProperty AllowedDockStatesProperty = DPM.Register<DockItemState, DockItem>
-      ("AllowedDockStates", AllStates);
+			DragOutBehavior = new DragOutBehavior
+			{
+				DragOutCommand = new RelayCommand(OnDragOutCommandExecuted)
+			};
+
+			this.BindProperties(NameInternalProperty, this, NameProperty, BindingMode.TwoWay);
 
-    private static readonly DockItemSelectionScope DummySelectionScope = new DockItemSelectionScope();
-    private static readonly DockItemSelectionScope DummyPreviewSelectionScope = new DockItemSelectionScope();
+			LayoutUpdated += OnLayoutUpdated;
+		}
 
-    private static readonly DependencyProperty NameInternalProperty = DPM.Register<string, DockItem>
-      ("NameInternal", d => d.OnNameChanged);
+		public BaseLayout ActualLayout
+		{
+			get => (BaseLayout) GetValue(ActualLayoutProperty);
+			private set => this.SetReadOnlyValue(ActualLayoutPropertyKey, value);
+		}
+
+		internal LayoutKind ActualLayoutKind => ActualLayout?.LayoutKind ?? LayoutKind.Hidden;
 
-    public static readonly DependencyProperty TitleProperty = DPM.Register<string, DockItem>
-      ("Title", string.Empty, d => OnTitleChanged, d => OnCoerceTitle);
+		internal DockItemSelectionScope ActualSelectionScope
+		{
+			get
+			{
+				if (Controller != null)
+					return Controller.SelectionScope;
 
-    public static readonly DependencyProperty IconProperty = DPM.Register<IconBase, DockItem>
-      ("Icon", i => i.LogicalChildMentor.OnLogicalChildPropertyChanged);
+				return IsPreview ? DummyPreviewSelectionScope : DummySelectionScope;
+			}
+		}
 
-    public static readonly DependencyProperty IsSelectedProperty = DPM.Register<bool, DockItem>
-      ("IsSelected", d => d.OnIsSelectedChangedPrivate);
+		internal bool AttachToView
+		{
+			get => _attachToView;
+			set
+			{
+				if (_attachToView == value)
+					return;
 
-    public static readonly DependencyProperty ShowTitleProperty = DPM.Register<bool, DockItem>
-      ("ShowTitle");
+				_attachToView = value;
 
-    #endregion
+				OnAttachToViewChanged();
+			}
+		}
 
-    #region Fields
+		internal AutoHideTabViewItem AutoHideTabViewItem => _autoHideTabViewItem ??= CreateAutoHideTabViewItem();
 
-    private BaseLayout _actualLayout;
-    private AutoHideTabViewItem _autoHideTabViewItem;
-    private DockControllerBase _controller;
-    private DockItemState _dockState;
-    private FloatingDockWindow _floatingWindow;
-    private bool _isArranged;
-    private bool _isItemLayoutValid;
-    private bool _isMeasured;
-    private FloatingDockWindow _previewFloatingWindow;
-    private DockItem _previewItem;
-    private int _suspendIsSelectedChangedHandler;
-    private DockTabViewItem _tabViewItem;
-    protected internal event EventHandler ActualItemChanged;
-    public event EventHandler<DockItemStateChangedEventArgs> DockStateChanged;
-    public event EventHandler<DockItemStateChangingEventArgs> DockStateChanging;
-    internal event EventHandler LayoutInvalidated;
-    public event EventHandler IsSelectedChanged;
-    internal event EventHandler<PropertyValueChangedEventArgs> LayoutPropertyChanged;
-    internal event EventHandler RequestUpdateVisualState;
-    internal event EventHandler IsLockedChanged;
+		internal DockItemContentPresenter ContentPresenter => TemplateContract.ContentPresenter;
 
-    #endregion
+		internal DockControllerBase Controller
+		{
+			get => _controller;
+			set
+			{
+				if (ReferenceEquals(_controller, value))
+					return;
 
-    #region Ctors
+				if (_controller != null)
+					DetachController(_controller);
 
-    static DockItem()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<DockItem>();
-    }
+				_controller = value;
 
-    public DockItem() : this(DockItemState.Float)
-    {
-    }
+				if (_controller != null)
+					AttachController(_controller);
 
-    protected DockItem(DockItemState dockState)
-    {
-      this.OverrideStyleKey<DockItem>();
+				UpdateActualLayout();
+			}
+		}
 
-      _dockState = dockState;
+		internal virtual string DebuggerDisplay
+		{
+			get
+			{
+				var dockItemLayout = CreateItemLayout();
 
-      foreach (var layoutProperty in FullLayout.LayoutProperties)
-        this.AddValueChanged(layoutProperty, OnLayoutPropertyChanged);
+				LayoutSettings.CopySettings(this, dockItemLayout, FullLayout.LayoutProperties);
 
-      DragOutBehavior = new DragOutBehavior
-      {
-        DragOutCommand = new RelayCommand(OnDragOutCommandExecuted)
-      };
+				return dockItemLayout.Xml.ToString();
+			}
+		}
 
-      this.BindProperties(NameInternalProperty, this, NameProperty, BindingMode.TwoWay);
+		public DockItemState DockState
+		{
+			get => (DockItemState) GetValue(DockStateProperty);
+			set => SetValue(DockStateProperty, value);
+		}
 
-      LayoutUpdated += OnLayoutUpdated;
-    }
+		private DragOutBehavior DragOutBehavior { get; }
 
-    #endregion
+		internal bool EnqueueSyncDragPosition { get; set; }
 
-    #region Properties
+		internal FloatingDockWindow FloatingWindow
+		{
+			get => _floatingWindow;
+			set
+			{
+				if (ReferenceEquals(_floatingWindow, value))
+					return;
 
-    protected internal virtual DockItem ActualItem => this;
+				_floatingWindow = value;
 
-    public BaseLayout ActualLayout
-    {
-      get => _actualLayout;
-      internal set
-      {
-        if (ReferenceEquals(_actualLayout, value))
-          return;
+				if (_floatingWindow == null)
+					Unlock();
+				else
+					Lock();
+			}
+		}
 
-        if (_actualLayout != null)
-          DetachLayoutPrivate(_actualLayout);
+		internal Point? HeaderMousePosition { get; private set; }
 
-        _actualLayout = value;
+		internal DockItemHeaderPresenter HeaderPresenter => TemplateContract.HeaderPresenter;
 
-        if (_actualLayout != null)
-          AttachLayoutPrivate(_actualLayout);
+		public IconBase Icon
+		{
+			get => (IconBase) GetValue(IconProperty);
+			set => SetValue(IconProperty, value);
+		}
 
-        OnPropertyChanged("ActualLayout");
-        OnPropertyChanged("ActualLayoutKind");
-      }
-    }
+		internal bool IsActuallyVisible => ActualLayout?.IsVisible(this) == true;
 
-    public LayoutKind ActualLayoutKind => ActualLayout?.LayoutKind ?? LayoutKind.Hidden;
+		internal virtual bool IsActualSelected => IsSelected;
 
-    internal DockItemSelectionScope ActualSelectionScope
-    {
-      get
-      {
-        if (Controller != null)
-          return Controller.SelectionScope;
+		internal bool IsLocked => LockCount > 0;
 
-        return IsPreview ? DummyPreviewSelectionScope : DummySelectionScope;
-      }
-    }
+		public bool IsPreview { get; internal set; }
 
-    public DockItemState AllowedDockStates
-    {
-      get => (DockItemState) GetValue(AllowedDockStatesProperty);
-      set => SetValue(AllowedDockStatesProperty, value);
-    }
+		internal bool IsRoot => ReferenceEquals(Root, this);
 
-    internal AutoHideTabViewItem AutoHideTabViewItem => _autoHideTabViewItem ??= CreateAutoHideTabViewItem();
+		internal bool IsRootItem => GetParentGroup(DockState) == null;
 
-    internal DockItemContentPresenter ContentPresenter => TemplateContract.ContentPresenter;
+		public bool IsSelected
+		{
+			get => (bool) GetValue(IsSelectedProperty);
+			set => SetValue(IsSelectedProperty, value.Box());
+		}
 
-    internal DockControllerBase Controller
-    {
-      get => _controller;
-      set
-      {
-        if (ReferenceEquals(_controller, value))
-          return;
+		internal HashSet<DockItemCollection> ItemCollections { get; } = new();
 
-        if (_controller != null)
-          DetachController(_controller);
+		internal Dictionary<DockItemState, DockItemGroup> ItemGroups { get; } = new();
 
-        _controller = value;
+		internal XElement ItemLayoutXml
+		{
+			get
+			{
+				var itemLayout = CreateItemLayout();
 
-        if (_controller != null)
-          AttachController(_controller);
+				itemLayout.GetLayout(this);
 
-        InvalidateItemArrange();
-      }
-    }
+				return itemLayout.Xml;
+			}
+		}
 
-    internal virtual string DebuggerDisplay
-    {
-      get
-      {
-        var dockItemLayout = CreateItemLayout();
+		public virtual DockItemKind Kind => DockItemKind.DockItem;
 
-        LayoutSettings.CopySettings(ActualItem ?? this, dockItemLayout, FullLayout.LayoutProperties);
+		private int LockCount { get; set; }
 
-        return dockItemLayout.Xml.ToString();
-      }
-    }
+		internal DockItemGroup ParentDockGroup => GetParentGroup(DockState);
 
-    internal virtual DockControl DockControl { get; set; }
+		internal FloatingDockWindow PreviewFloatingWindow
+		{
+			get => _previewFloatingWindow;
+			set
+			{
+				if (ReferenceEquals(_previewFloatingWindow, value))
+					return;
 
-    public DockItemState DockState
-    {
-      get => _dockState;
-      set
-      {
-        if (_dockState == value)
-          return;
+				_previewFloatingWindow = value;
 
-        OnDockStateChangingInternal(value);
+				if (_previewFloatingWindow == null)
+					Unlock();
+				else
+					Lock();
+			}
+		}
 
-        var oldState = _dockState;
-        _dockState = value;
+		internal DockItem PreviewItem
+		{
+			get
+			{
+				if (IsPreview)
+					return null;
 
-        ScreenBox = this.GetScreenBox();
+				return _previewItem ??= InitPreviewItem(CreatePreviewPrivate());
+			}
+		}
 
-        OnDockStateChangedInternal(oldState);
-      }
-    }
+		internal DockItem Root => EnumerateAncestors().LastOrDefault() ?? this;
 
-    private DragOutBehavior DragOutBehavior { get; }
+		public bool ShowTitle
+		{
+			get => (bool) GetValue(ShowTitleProperty);
+			set => SetValue(ShowTitleProperty, value.Box());
+		}
 
-    internal bool EnqueueSyncDragPosition { get; set; }
+		internal DockTabViewItem TabViewItem => _tabViewItem ??= CreateDockTabViewItem();
 
-		internal Rect ScreenBox { get; private set; }
+		private DockItemTemplateContract TemplateContract => (DockItemTemplateContract) TemplateContractInternal;
 
-    internal FloatingDockWindow FloatingWindow
-    {
-      get => _floatingWindow;
-      set
-      {
-        if (ReferenceEquals(_floatingWindow, value))
-          return;
+		public string Title
+		{
+			get => (string) GetValue(TitleProperty);
+			set => SetValue(TitleProperty, value);
+		}
 
-        _floatingWindow = value;
+		protected override Size ArrangeOverride(Size arrangeBounds)
+		{
+			var arrangeOverride = base.ArrangeOverride(arrangeBounds);
 
-        if (_floatingWindow == null)
-          Unlock();
-        else
-          Lock();
-      }
-    }
+			Controller?.OnItemArranged(this);
 
-    internal Point? HeaderMousePosition { get; private set; }
+			return arrangeOverride;
+		}
 
-    internal DockItemHeaderPresenter HeaderPresenter => TemplateContract.HeaderPresenter;
+		internal virtual void AttachController(DockControllerBase controller)
+		{
+		}
 
-    public IconBase Icon
-    {
-      get => (IconBase) GetValue(IconProperty);
-      set => SetValue(IconProperty, value);
-    }
+		internal void AttachGroup(DockItemState state, DockItemGroup dockGroup)
+		{
+			DetachGroup(state);
 
-    internal bool IsActuallyVisible => ActualLayout?.IsVisible(this) == true;
+			ItemGroups[state] = dockGroup;
 
-    internal virtual bool IsActualSelected => IsSelected;
+			UpdateActualLayout();
+		}
 
-    internal bool IsArranged
-    {
-      get => _isArranged;
-      private set
-      {
-        if (_isArranged == value)
-          return;
+		protected internal bool CanSetDockState(DockItemState state)
+		{
+			return IsDockStateAllowed(state);
+		}
 
-        _isArranged = value;
+		internal void ClearLayoutIndex(BaseLayout layout)
+		{
+			SetLayoutIndex(layout, null);
+		}
 
-        if (_isArranged)
-          Controller?.OnItemArranged(this);
-      }
-    }
+		private DockItemState CoerceDockStateProperty(DockItemState dockItemState)
+		{
+			return CanSetDockState(dockItemState) ? dockItemState : DockState;
+		}
 
-    internal bool IsItemLayoutValid
-    {
-      get => _isItemLayoutValid;
-      private set
-      {
-        if (_isItemLayoutValid == value)
-          return;
+		internal void CopyTargetLayoutIndex(DockItem dockItem)
+		{
+			var targetLayout = GetTargetLayout();
 
-        _isItemLayoutValid = value;
+			if (targetLayout != null)
+				dockItem.SetLayoutIndex(targetLayout, GetLayoutIndex(targetLayout));
+		}
 
-        if (_isItemLayoutValid)
-          return;
+		internal void CopyTargetLayoutSettings(DockItem target)
+		{
+			GetTargetLayout()?.CopyLayoutSetting(this, target);
+		}
 
-        IsMeasured = false;
-        IsArranged = false;
+		internal virtual AutoHideTabViewItem CreateAutoHideTabViewItem()
+		{
+			return new AutoHideTabViewItem(this);
+		}
 
-        OnItemArrangeInvalidated();
-      }
-    }
+		internal virtual DockTabViewItem CreateDockTabViewItem()
+		{
+			return new DockTabViewItem(this);
+		}
 
-    internal bool IsLayoutComplete => IsMeasured && IsArranged;
+		protected internal virtual DockItemLayout CreateItemLayout()
+		{
+			return new DockItemLayout(this);
+		}
 
-    internal bool IsLocked => LockCount > 0;
+		protected virtual DockItem CreatePreviewItem(DockItemState dockState)
+		{
+			return new DockItem {DockState = dockState};
+		}
 
-    internal bool IsMeasured
-    {
-      get => _isMeasured;
-      private set
-      {
-        if (_isMeasured == value)
-          return;
+		private DockItem CreatePreviewPrivate()
+		{
+			var dockItem = CreatePreviewItem(DockState);
 
-        _isMeasured = value;
+			dockItem.IsPreview = true;
 
-        if (_isMeasured)
-          Controller?.OnItemMeasured(this);
-      }
-    }
+			return dockItem;
+		}
 
-    public bool IsPreview { get; internal set; }
+		protected override TemplateContract CreateTemplateContract()
+		{
+			return new DockItemTemplateContract();
+		}
 
-    internal bool IsRoot => ReferenceEquals(Root, this);
+		internal virtual void DetachController(DockControllerBase controller)
+		{
+		}
 
-    public bool IsSelected
-    {
-      get => (bool) GetValue(IsSelectedProperty);
-      set => SetValue(IsSelectedProperty, value);
-    }
+		internal void DetachGroup(DockItemState state)
+		{
+			DetachGroup(GetParentGroup(state));
+		}
 
-    internal HashSet<DockItemCollection> ItemCollections { get; } = new HashSet<DockItemCollection>();
+		internal void DetachGroup(DockItemGroup dockGroup)
+		{
+			foreach (var kv in ItemGroups.Where(kv => ReferenceEquals(kv.Value, dockGroup)))
+			{
+				ItemGroups.Remove(kv.Key);
 
-    internal Dictionary<DockItemState, DockItemGroup> ItemGroups { get; } = new Dictionary<DockItemState, DockItemGroup>();
+				break;
+			}
 
-    internal XElement ItemLayoutXml
-    {
-      get
-      {
-        var itemLayout = CreateItemLayout();
+			UpdateActualLayout();
+		}
 
-        itemLayout.GetLayout(this);
+		internal void DragOutInternal(Point dragOrigin)
+		{
+			HeaderMousePosition = dragOrigin;
+			Controller?.OnDragOutItemInternal(this);
+		}
 
-        return itemLayout.Xml;
-      }
-    }
+		internal bool IsDragMove { get; set; }
 
-    public virtual DockItemKind Kind => DockItemKind.DockItem;
+		internal void EnqueueDragMove()
+		{
+			IsDragMove = true;
+		}
 
-    private int LockCount { get; set; }
+		internal IEnumerable<DockItemGroup> EnumerateAncestors()
+		{
+			var parentContainer = ParentDockGroup;
 
-    internal DockItemGroup ParentDockGroup => GetParentGroup(DockState);
+			while (parentContainer != null)
+			{
+				yield return parentContainer;
 
-    internal FloatingDockWindow PreviewFloatingWindow
-    {
-      get => _previewFloatingWindow;
-      set
-      {
-        if (ReferenceEquals(_previewFloatingWindow, value))
-          return;
+				parentContainer = parentContainer.ParentDockGroup;
+			}
+		}
 
-        _previewFloatingWindow = value;
+		internal IEnumerable<DockItem> EnumerateDescendants(bool self = false)
+		{
+			if (self)
+				yield return this;
 
-        if (_previewFloatingWindow == null)
-          Unlock();
-        else
-          Lock();
-      }
-    }
+			if (this is not DockItemGroup groupItem)
+				yield break;
 
-    internal DockItem PreviewItem
-    {
-      get
-      {
-        if (IsPreview)
-          return null;
+			foreach (var child in groupItem.Items)
+			{
+				if (child is DockItemGroup childGroup)
+					foreach (var childOfChild in childGroup.EnumerateDescendants())
+						yield return childOfChild;
 
-        return _previewItem ?? (_previewItem = InitPreviewItem(CreatePreviewPrivate()));
-      }
-    }
+				yield return child;
+			}
+		}
 
-    internal DockItem Root => EnumerateAncestors().LastOrDefault() ?? this;
+		internal static IEnumerable<DockItemState> EnumerateDockStates()
+		{
+			yield return DockItemState.Float;
+			yield return DockItemState.Dock;
+			yield return DockItemState.Document;
+			yield return DockItemState.AutoHide;
+			yield return DockItemState.Hidden;
+		}
 
-    public bool ShowTitle
-    {
-      get => (bool) GetValue(ShowTitleProperty);
-      set => SetValue(ShowTitleProperty, value);
-    }
+		internal IEnumerable<DockItem> EnumerateItems()
+		{
+			return EnumerateDescendants(true);
+		}
 
-    internal DockTabViewItem TabViewItem => _tabViewItem ?? (_tabViewItem = CreateDockTabViewItem());
+		internal IEnumerable<DockItem> EnumerateVisibleDescendants()
+		{
+			return EnumerateDescendants().Where(w => w.IsActuallyVisible);
+		}
 
-    private DockItemTemplateContract TemplateContract => (DockItemTemplateContract) TemplateContractInternal;
+		internal int? GetLayoutIndex(BaseLayout layout)
+		{
+			return _layoutIndexDictionary.TryGetValue(layout, out var index) ? index?.Value : null;
+		}
 
-    public string Title
-    {
-      get => (string) GetValue(TitleProperty);
-      set => SetValue(TitleProperty, value);
-    }
+		internal DockItemGroup GetParentGroup(DockItemState dockState)
+		{
+			ItemGroups.TryGetValue(dockState, out var dockGroup);
 
-    #endregion
+			return dockGroup;
+		}
 
-    #region  Methods
+		internal BaseLayout GetTargetLayout()
+		{
+			return ItemGroups.GetValueOrDefault(DockState)?.Layout ?? Controller?.GetTargetLayout(this);
+		}
 
-    internal void Lock()
-    {
-      LockCount++;
+		protected virtual DockItem InitPreviewItem(DockItem previewItem)
+		{
+			previewItem.Name = Name;
 
-      if (LockCount == 1)
-        IsLockedChanged?.Invoke(this, EventArgs.Empty);
-    }
+			previewItem.SetBinding(IconProperty, new Binding {Source = this, Path = new PropertyPath(IconProperty)});
+			previewItem.SetBinding(TitleProperty, new Binding {Source = this, Path = new PropertyPath(TitleProperty)});
 
-    internal void ApplyLayout()
-    {
-      if (IsItemLayoutValid)
-        return;
+			LayoutSettings.CopySettings(this, previewItem, FullLayout.LayoutProperties);
 
-      ApplyLayoutOverride();
-    }
+			return previewItem;
+		}
 
-    protected virtual void ApplyLayoutOverride()
-    {
-      ActualLayout = GetTargetLayout(true);
-    }
+		protected virtual bool IsDockStateAllowed(DockItemState state)
+		{
+			return true;
+		}
 
-    protected override Size ArrangeOverride(Size arrangeBounds)
-    {
-      var arrangeOverride = base.ArrangeOverride(arrangeBounds);
+		internal void Lock()
+		{
+			LockCount++;
 
-      if (IsItemLayoutValid)
-        IsArranged = true;
+			if (LockCount == 1)
+				IsLockedChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-      return arrangeOverride;
-    }
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			var measureOverride = base.MeasureOverride(availableSize);
 
-    internal virtual void AttachController(DockControllerBase controller)
-    {
-    }
+			Controller?.OnItemMeasured(this);
 
-    internal void AttachGroup(DockItemState state, DockItemGroup dockGroup)
-    {
-      DetachGroup(GetParentGroup(state));
+			return measureOverride;
+		}
+
+		protected virtual void OnActualLayoutChanged(BaseLayout oldLayout, BaseLayout newLayout)
+		{
+		}
 
-      ItemGroups[state] = dockGroup;
-      InvalidateItemArrange();
-    }
+		private void OnActualLayoutPropertyChanged(BaseLayout oldLayout, BaseLayout newLayout)
+		{
+			oldLayout?.Items.Remove(this);
+			newLayout?.Items.Add(this);
 
-    private void AttachLayoutPrivate(BaseLayout layout)
-    {
-      layout.Items.Add(this);
-    }
+			OnActualLayoutChanged(oldLayout, newLayout);
+		}
 
-    protected internal bool CanSetDockState(DockItemState state)
-    {
-      return IsDockStateAllowed(state) && state != DockState;
-    }
+		private protected virtual void OnAttachToViewChanged()
+		{
+			ActualLayout?.OnItemAttachToViewChangedInternal(this);
+		}
 
-    internal void CopyTargetLayoutSettings(DockItem target)
-    {
-      GetTargetLayout(false)?.CopyLayoutSetting(this, target);
-    }
+		internal void OnBeginDragMoveInternal()
+		{
+			Controller?.OnBeginDragMoveInternal(this);
+		}
 
-    internal virtual AutoHideTabViewItem CreateAutoHideTabViewItem()
-    {
-      return new AutoHideTabViewItem(this);
-    }
+		private static object OnCoerceTitle(object title)
+		{
+			return title as string ?? string.Empty;
+		}
 
-    internal virtual DockTabViewItem CreateDockTabViewItem()
-    {
-      return new DockTabViewItem(this);
-    }
+		protected virtual void OnDockStateChanged(DockItemState oldState, DockItemState newState)
+		{
+			DockStateChanged?.Invoke(this, new DockItemStateChangedEventArgs(this, oldState, newState));
+		}
+
+		internal virtual void OnDockStateChangedInternal(DockItemState oldState, DockItemState newState)
+		{
+			Controller?.OnItemDockStateChangedInternal(this, oldState, newState);
 
-    protected internal virtual DockItemLayout CreateItemLayout()
-    {
-      return new DockItemLayout(this);
-    }
+			OnDockStateChanged(oldState, newState);
+		}
 
-    protected virtual DockItem CreatePreviewItem(DockItemState dockState)
-    {
-      return new DockItem(dockState);
-    }
+		private void OnDockStatePropertyChanged(DockItemState oldState, DockItemState newState)
+		{
+			OnDockStateChangedInternal(oldState, newState);
+			UpdateActualLayout();
+		}
 
-    private DockItem CreatePreviewPrivate()
-    {
-      var dockItem = CreatePreviewItem(DockState);
+		internal void OnDragMoveInternal()
+		{
+			Controller?.OnDragMoveInternal(this);
+		}
 
-      dockItem.IsPreview = true;
+		private void OnDragOutCommandExecuted()
+		{
+			DragOutInternal(DragOutBehavior.OriginMousePosition);
+		}
 
-      return dockItem;
-    }
+		internal void OnEndDragMoveInternal()
+		{
+			HeaderMousePosition = null;
 
-    protected override TemplateContract CreateTemplateContract()
-    {
-      return new DockItemTemplateContract();
-    }
+			Controller?.OnEndDragMoveInternal(this);
+		}
+
+		internal void OnGotKeyboardFocusInternal()
+		{
+			OnIsKeyboardFocusWithinChangedPrivate();
+		}
 
-    internal virtual void DetachController(DockControllerBase controller)
-    {
-    }
+		protected override void OnIsKeyboardFocusWithinChanged(DependencyPropertyChangedEventArgs e)
+		{
+			base.OnIsKeyboardFocusWithinChanged(e);
 
-    internal void DetachGroup(DockItemGroup dockGroup)
-    {
-      foreach (var kv in ItemGroups.Where(kv => ReferenceEquals(kv.Value, dockGroup)))
-      {
-        ItemGroups.Remove(kv.Key);
-        InvalidateItemArrange();
+			OnIsKeyboardFocusWithinChangedPrivate();
+		}
 
-        break;
-      }
-    }
+		private void OnIsKeyboardFocusWithinChangedPrivate()
+		{
+			if (DockItemFocusHelper.IsKeyboardFocusWithin(this))
+				Select();
 
-    private void DetachLayoutPrivate(BaseLayout layout)
-    {
-      layout.Items.Remove(this);
-    }
+			UpdateVisualState(true);
+		}
 
-    internal void DragOutInternal(Point dragOrigin)
-    {
-      HeaderMousePosition = dragOrigin;
-      Controller?.OnDragOutItemInternal(this);
-    }
+		protected virtual void OnIsSelectedChanged()
+		{
+			IsSelectedChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    internal IEnumerable<DockItemGroup> EnumerateAncestors()
-    {
-      var parentContainer = ParentDockGroup;
+		private void OnIsSelectedChangedPrivate()
+		{
+			if (_suspendIsSelectedChangedHandler > 0)
+				return;
 
-      while (parentContainer != null)
-      {
-        yield return parentContainer;
+			var isSelected = IsSelected;
 
-        parentContainer = parentContainer.ParentDockGroup;
-      }
-    }
-
-    internal IEnumerable<DockItem> EnumerateDescendants(bool self = false)
-    {
-      if (self)
-        yield return this;
-
-      var groupItem = this as DockItemGroup;
-
-      if (groupItem == null)
-        yield break;
-
-      foreach (var child in groupItem.Items)
-      {
-        var childGroup = child as DockItemGroup;
-
-        if (childGroup != null)
-          foreach (var childOfChild in childGroup.EnumerateDescendants())
-            yield return childOfChild;
-
-        yield return child;
-      }
-    }
-
-    internal static IEnumerable<DockItemState> EnumerateDockStates()
-    {
-      yield return DockItemState.Float;
-      yield return DockItemState.Dock;
-      yield return DockItemState.Document;
-      yield return DockItemState.AutoHide;
-      yield return DockItemState.Hidden;
-    }
-
-    internal IEnumerable<DockItem> EnumerateItems()
-    {
-      return EnumerateDescendants(true);
-    }
-
-    internal IEnumerable<DockItem> EnumerateVisibleDescendants()
-    {
-      return EnumerateDescendants().Where(w => w.IsActuallyVisible);
-    }
-
-    internal DockItemGroup GetParentGroup(DockItemState winDockState)
-    {
-      DockItemGroup dockGroup;
-
-      ItemGroups.TryGetValue(winDockState, out dockGroup);
-
-      return dockGroup;
-    }
-
-    internal BaseLayout GetTargetLayout(bool arrange)
-    {
-      return GetTargetLayout(this, arrange);
-    }
-
-    internal virtual BaseLayout GetTargetLayout(DockItem item, bool arrange)
-    {
-      return ItemGroups.GetValueOrDefault(DockState)?.GetItemTargetLayout(item, arrange) ?? Controller?.GetTargetLayout(this, arrange);
-    }
-
-    protected virtual DockItem InitPreviewItem(DockItem previewItem)
-    {
-      previewItem.Name = Name;
-
-      previewItem.SetBinding(IconProperty, new Binding {Source = this, Path = new PropertyPath(IconProperty)});
-      previewItem.SetBinding(TitleProperty, new Binding {Source = this, Path = new PropertyPath(TitleProperty)});
-
-      LayoutSettings.CopySettings(this, previewItem, FullLayout.LayoutProperties);
-
-      return previewItem;
-    }
-
-    internal void InvalidateItemArrange()
-    {
-      IsItemLayoutValid = false;
-    }
-
-    protected virtual bool IsDockStateAllowed(DockItemState state)
-    {
-      return true;
-    }
-
-    protected override Size MeasureOverride(Size availableSize)
-    {
-      var measureOverride = base.MeasureOverride(availableSize);
-
-      if (IsItemLayoutValid)
-        IsMeasured = true;
-
-      return measureOverride;
-    }
-
-    protected virtual void OnActualItemChanged()
-    {
-      ActualItemChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    protected virtual void OnActualLayoutChanged(BaseLayout oldLayout)
-    {
-    }
-
-    internal void OnBeginDragMoveInternal()
-    {
-      Controller?.OnBeginDragMoveInternal(this);
-    }
-
-    private static object OnCoerceTitle(object title)
-    {
-      return title as string ?? string.Empty;
-    }
-
-    protected virtual void OnDockStateChanged(DockItemState oldState)
-    {
-      DockStateChanged?.Invoke(this, new DockItemStateChangedEventArgs(oldState));
-
-      OnPropertyChanged(nameof(DockState));
-
-      InvalidateItemArrange();
-    }
-
-    internal virtual void OnDockStateChangedInternal(DockItemState oldState)
-    {
-      OnDockStateChanged(oldState);
-
-      Controller?.OnDockStateChanged(this, oldState);
-    }
-
-    protected virtual void OnDockStateChanging(DockItemState newState)
-    {
-      if (IsDockStateAllowed(newState) == false)
-        throw new Exception($"{nameof(DockState)} '{newState}' is not allowed for DockItem type '{GetType().Name}'");
-
-      DockStateChanging?.Invoke(this, new DockItemStateChangingEventArgs(newState));
-
-      OnPropertyChanging(nameof(DockState));
-    }
-
-    internal virtual void OnDockStateChangingInternal(DockItemState newState)
-    {
-      Controller?.OnDockStateChanging(this, newState);
-
-      OnDockStateChanging(newState);
-    }
-
-    internal void OnDragMoveInternal()
-    {
-      Controller?.OnDragMoveInternal(this);
-    }
-
-    private void OnDragOutCommandExecuted()
-    {
-      DragOutInternal(DragOutBehavior.OriginMousePosition);
-    }
-
-    internal void OnEndDragMoveInternal()
-    {
-      HeaderMousePosition = null;
-
-      Controller?.OnEndDragMoveInternal(this);
-    }
-
-    internal void OnGotKeyboardFocusInternal()
-    {
-      OnIsKeyboardFocusWithinChangedPrivate();
-    }
-
-    protected override void OnIsKeyboardFocusWithinChanged(DependencyPropertyChangedEventArgs e)
-    {
-      base.OnIsKeyboardFocusWithinChanged(e);
-
-      OnIsKeyboardFocusWithinChangedPrivate();
-    }
-
-    private void OnIsKeyboardFocusWithinChangedPrivate()
-    {
-      if (DockItemFocusHelper.IsKeyboardFocusWithin(this))
-        Select();
-
-      UpdateVisualState(true);
-    }
-
-    protected virtual void OnIsSelectedChanged()
-    {
-      IsSelectedChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnIsSelectedChangedPrivate()
-    {
-      if (_suspendIsSelectedChangedHandler > 0)
-        return;
-
-      var isSelected = IsSelected;
-
-      if (isSelected)
-      {
-        TabViewItem.IsSelected = true;
-        ActualSelectionScope.SelectedItem = this;
-      }
-
-      if (isSelected != IsSelected)
-        return;
-
-      OnIsSelectedChanged();
-
-      UpdateVisualState(true);
-    }
-
-    protected virtual void OnItemArrangeInvalidated()
-    {
-      Controller?.InvalidateItemArrange();
-    }
-
-    protected virtual void OnLayoutInvalidated()
-    {
-      LayoutInvalidated?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnLayoutPropertyChanged(object sender, PropertyValueChangedEventArgs e)
-    {
-      LayoutPropertyChanged?.Invoke(this, e);
-    }
-
-    private void OnLayoutUpdated(object sender, EventArgs e)
-    {
-      ProcessFocusQueue();
-    }
-
-    internal void OnLostKeyboardFocusInternal()
-    {
-      OnIsKeyboardFocusWithinChangedPrivate();
-    }
-
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-      base.OnMouseLeftButtonDown(e);
-
-      if (e.Handled)
-        return;
-
-      Select();
-
-      //e.Handled = true;
-    }
-
-    private void OnNameChanged(string prevName)
-    {
-      foreach (var itemCollection in ItemCollections)
-        itemCollection.OnItemNameChanged(this, prevName);
-
-      if (_previewItem != null)
-        _previewItem.Name = Name;
-    }
-
-#if !SILVERLIGHT
-    protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-      Keyboard.Focus(this);
-    }
-#endif
-
-    protected virtual void OnPropertyChanged(string propertyName)
-    {
-      PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected virtual void OnPropertyChanging(string propertyName)
-    {
-      PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
-    }
-
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
-
-      DragOutBehavior.Target = HeaderPresenter;
-
-      if (HeaderPresenter != null)
-        HeaderPresenter.OwnItem = this;
-    }
-
-    protected override void OnTemplateContractDetaching()
-    {
-      if (HeaderPresenter != null)
-        HeaderPresenter.OwnItem = null;
-
-      DragOutBehavior.Target = null;
-
-      base.OnTemplateContractDetaching();
-    }
-
-    private static void OnTitleChanged()
-    {
-    }
-
-    internal void PostApplyLayout()
-    {
-      if (IsItemLayoutValid)
-        return;
-
-      PostApplyLayoutOverride();
-
-      IsItemLayoutValid = true;
-    }
-
-    protected virtual void PostApplyLayoutOverride()
-    {
-    }
-
-    internal virtual void PreApplyLayout()
-    {
-      if (IsItemLayoutValid)
-        return;
-
-      PreApplyLayoutOverride();
-    }
-
-    protected virtual void PreApplyLayoutOverride()
-    {
-    }
-
-    private void ProcessFocusQueue()
-    {
-      if (Controller == null || ReferenceEquals(this, Controller.EnqueueFocusItem) == false)
-        return;
-
-      if (DockState == DockItemState.Float)
-        FloatingWindow?.Activate();
-      else if (DockState == DockItemState.AutoHide)
-      {
-        AutoHideTabViewItem.IsOpen = true;
-      }
-      else if (ActualLayout is TabLayoutBase)
-        TabViewItem.Focus();
-
-      if (Focus())
-        Controller.EnqueueFocusItem = null;
-    }
-
-    internal void PushCurrentLayout(DockItem targetItem)
-    {
-      var actualSource = ActualItem ?? this;
-      var actualTarget = targetItem.ActualItem ?? targetItem;
-      var targetLayout = actualSource.GetTargetLayout(false);
-
-      if (targetLayout == null)
-        return;
-
-      targetLayout.CopyLayoutSetting(actualSource, actualTarget);
-      targetLayout.CopyLayoutSetting(actualSource, DockItemLayoutMentorService.FromItem(actualTarget).Layout);
-    }
-
-    internal void Unlock()
-    {
-      LockCount--;
-
-      if (LockCount == 0)
-        IsLockedChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    internal virtual void RemoveFromLayout()
-    {
-      ActualLayout = null;
-    }
-
-    internal void Select()
-    {
-      SelectImpl(false);
-    }
-
-    internal void SelectAndFocus()
-    {
-      SelectImpl(true);
-    }
-
-    private void SelectImpl(bool focus)
-    {
-      if (this is DockItemGroup)
-        return;
-
-      ActualSelectionScope.SelectedItem = this;
-
-      if (focus)
-      {
-        if (Controller != null && (IsItemLayoutValid == false || Focus() == false))
-          Controller.EnqueueFocusItem = this;
-      }
-    }
-
-    internal void SetIsSelected(bool isSelected, bool suspend)
-    {
-      if (suspend)
-        _suspendIsSelectedChangedHandler++;
-
-      IsSelected = isSelected;
-
-      if (suspend)
-        _suspendIsSelectedChangedHandler--;
-    }
-
-    public override string ToString()
-    {
-      return $"{base.ToString()}: {Title}";
-    }
-
-    protected override void UpdateVisualState(bool useTransitions)
-    {
-      base.UpdateVisualState(useTransitions);
-
-      RequestUpdateVisualState?.Invoke(this, EventArgs.Empty);
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IActiveStateControl
-
-    bool IActiveStateControl.IsActive => DockItemFocusHelper.IsKeyboardFocusWithin(this);
-
-    #endregion
-
-    #region INotifyPropertyChanged
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    #endregion
-
-    #region INotifyPropertyChanging
-
-    public event PropertyChangingEventHandler PropertyChanging;
-
-    #endregion
-
-    #region ISelectionStateControl
-
-    bool ISelectionStateControl.IsSelected => IsActualSelected;
-
-    #endregion
-
-    #endregion
-
-    #region  Nested Types
-
-    internal sealed class DockItemDebugView
-    {
-      #region Ctors
-
-      public DockItemDebugView(DockItem dockItem)
-      {
-        var dockItemLayout = dockItem.CreateItemLayout();
-
-        LayoutSettings.CopySettings(dockItem.ActualItem ?? dockItem, dockItemLayout, FullLayout.LayoutProperties);
-
-        Xml = dockItemLayout.Xml;
-      }
-
-      #endregion
-
-      #region Properties
-
-      public XElement Xml { get; }
-
-      #endregion
-    }
-
-    #endregion
-  }
+			if (isSelected)
+			{
+				TabViewItem.IsSelected = true;
+				ActualSelectionScope.SelectedItem = this;
+			}
+
+			if (isSelected != IsSelected)
+				return;
+
+			OnIsSelectedChanged();
+
+			UpdateVisualState(true);
+		}
+
+		private void OnLayoutPropertyChanged(object sender, PropertyValueChangedEventArgs e)
+		{
+			LayoutPropertyChanged?.Invoke(this, e);
+		}
+
+		private protected virtual void OnLayoutPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			SyncSideProperty(e);
+		}
+
+		private void OnLayoutUpdated(object sender, EventArgs e)
+		{
+			ProcessFocusQueue();
+		}
+
+		internal void OnLostKeyboardFocusInternal()
+		{
+			OnIsKeyboardFocusWithinChangedPrivate();
+		}
+
+		protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			base.OnMouseLeftButtonDown(e);
+
+			if (e.Handled)
+				return;
+
+			Select();
+		}
+
+		private void OnNameChanged(string prevName)
+		{
+			foreach (var itemCollection in ItemCollections)
+				itemCollection.OnItemNameChanged(this, prevName);
+
+			if (_previewItem != null)
+				_previewItem.Name = Name;
+		}
+
+		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			Keyboard.Focus(this);
+		}
+
+		protected virtual void OnPropertyChanged(string propertyName)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
+
+		protected virtual void OnPropertyChanging(string propertyName)
+		{
+			PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propertyName));
+		}
+
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
+
+			DragOutBehavior.Target = HeaderPresenter;
+
+			if (HeaderPresenter != null)
+				HeaderPresenter.OwnItem = this;
+		}
+
+		protected override void OnTemplateContractDetaching()
+		{
+			if (HeaderPresenter != null)
+				HeaderPresenter.OwnItem = null;
+
+			DragOutBehavior.Target = null;
+
+			base.OnTemplateContractDetaching();
+		}
+
+		private static void OnTitleChanged()
+		{
+		}
+
+		private void ProcessFocusQueue()
+		{
+			if (Controller == null || ReferenceEquals(this, Controller.EnqueueFocusItem) == false)
+				return;
+
+			if (DockState == DockItemState.Float)
+				FloatingWindow?.Activate();
+			else if (DockState == DockItemState.AutoHide)
+			{
+				AutoHideTabViewItem.IsOpen = true;
+			}
+			else if (ActualLayout is TabLayoutBase)
+				TabViewItem.Focus();
+
+			if (Focus())
+				Controller.EnqueueFocusItem = null;
+		}
+
+		internal void ResetLayout()
+		{
+			LayoutSettings.ClearSettings(this, FullLayout.LayoutProperties);
+
+			_layoutIndexDictionary = new();
+		}
+
+		internal void Select()
+		{
+			SelectImpl(false);
+		}
+
+		internal void SelectAndFocus()
+		{
+			SelectImpl(true);
+		}
+
+		private void SelectImpl(bool focus)
+		{
+			if (this is DockItemGroup)
+				return;
+
+			ActualSelectionScope.SelectedItem = this;
+
+			if (focus)
+			{
+				if (Controller != null && Focus() == false)
+					Controller.EnqueueFocusItem = this;
+			}
+		}
+
+		internal void SetIsSelected(bool isSelected, bool suspend)
+		{
+			if (suspend)
+				_suspendIsSelectedChangedHandler++;
+
+			IsSelected = isSelected;
+
+			if (suspend)
+				_suspendIsSelectedChangedHandler--;
+		}
+
+		internal void SetLayoutIndex(BaseLayout layout, int? index)
+		{
+			if (index.HasValue)
+			{
+				if (_layoutIndexDictionary.TryGetValue(layout, out var layoutIndex))
+				{
+					if (layoutIndex != null)
+						layoutIndex.Value = index.Value;
+					else
+						_layoutIndexDictionary.Add(layout, new LayoutOrderIndex(index.Value));
+				}
+				else
+				{
+					_layoutIndexDictionary.Add(layout, new LayoutOrderIndex(index.Value));
+				}
+			}
+			else
+				_layoutIndexDictionary.Remove(layout);
+		}
+
+		internal void SetNewLayoutIndex(BaseLayout layout)
+		{
+			SetLayoutIndex(layout, layout.GetNewLayoutIndex());
+		}
+
+		private void SyncSideProperty(DependencyPropertyChangedEventArgs e)
+		{
+			if (_syncSideProperty)
+				return;
+
+			if (e.Property != AutoHideLayout.DockProperty && e.Property != DockLayout.DockProperty)
+				return;
+
+			_syncSideProperty = true;
+
+			var property = e.Property == AutoHideLayout.DockProperty ? DockLayout.DockProperty : AutoHideLayout.DockProperty;
+
+			SetCurrentValue(property, e.NewValue);
+
+			_syncSideProperty = false;
+		}
+
+		public override string ToString()
+		{
+			return $"{base.ToString()}: {Title}";
+		}
+
+		internal void Unlock()
+		{
+			LockCount--;
+
+			if (LockCount == 0)
+				IsLockedChanged?.Invoke(this, EventArgs.Empty);
+		}
+
+		private void UpdateActualLayout()
+		{
+			ActualLayout = GetTargetLayout();
+		}
+
+		protected override void UpdateVisualState(bool useTransitions)
+		{
+			base.UpdateVisualState(useTransitions);
+
+			RequestUpdateVisualState?.Invoke(this, EventArgs.Empty);
+		}
+
+		bool IActiveStateControl.IsActive => DockItemFocusHelper.IsKeyboardFocusWithin(this);
+
+		void ILayoutPropertyChangeListener.OnLayoutPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			OnLayoutPropertyChanged(e);
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		public event PropertyChangingEventHandler PropertyChanging;
+
+		bool ISelectionStateControl.IsSelected => IsActualSelected;
+
+		internal sealed class DockItemDebugView
+		{
+			public DockItemDebugView(DockItem dockItem)
+			{
+				var dockItemLayout = dockItem.CreateItemLayout();
+
+				LayoutSettings.CopySettings(dockItem, dockItemLayout, FullLayout.LayoutProperties);
+
+				Xml = dockItemLayout.Xml;
+			}
+
+			public XElement Xml { get; }
+		}
+
+		private sealed class LayoutOrderIndex
+		{
+			public LayoutOrderIndex(int value)
+			{
+				Value = value;
+			}
+
+			public int Value { get; set; }
+		}
+	}
 }

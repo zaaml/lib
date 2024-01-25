@@ -7,21 +7,13 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  internal sealed class HiddenLayout : BaseLayout
-  {
-    #region Ctors
+	public sealed class HiddenLayout : BaseLayout
+	{
+		static HiddenLayout()
+		{
+			RegisterLayoutProperties<HiddenLayout>(Enumerable.Empty<DependencyProperty>());
+		}
 
-    static HiddenLayout()
-    {
-      RegisterLayoutProperties<HiddenLayout>(Enumerable.Empty<DependencyProperty>());
-    }
-
-    #endregion
-
-    #region Properties
-
-    public override LayoutKind LayoutKind => LayoutKind.Hidden;
-
-    #endregion
-  }
+		public override LayoutKind LayoutKind => LayoutKind.Hidden;
+	}
 }

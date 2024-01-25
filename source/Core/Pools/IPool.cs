@@ -8,9 +8,9 @@ namespace Zaaml.Core.Pools
 	{
 		#region Methods
 
-		T Get();
+		T Rent();
 
-		void Release(T item);
+		void Return(T item);
 
 		#endregion
 	}

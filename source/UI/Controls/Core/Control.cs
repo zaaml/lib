@@ -17,6 +17,9 @@ namespace Zaaml.UI.Controls.Core
 {
 	public partial class Control : NativeControl, IControl, ILogicalOwner, ILogicalMentorOwner, IDependencyPropertyChangedInvocator
 	{
+		public static readonly DependencyProperty CornerRadiusProperty = DPM.Register<CornerRadius, Control>
+			("CornerRadius", d => d.OnCornerRadiusPropertyChangedPrivate);
+
 		private LogicalChildMentor<Control> _logicalChildMentor;
 
 		internal event DependencyPropertyChangedEventHandler DependencyPropertyChangedInternal;
@@ -26,6 +29,12 @@ namespace Zaaml.UI.Controls.Core
 			PlatformCtor();
 
 			IsEnabledChanged += (sender, args) => OnIsEnabledChanged();
+		}
+
+		public CornerRadius CornerRadius
+		{
+			get => (CornerRadius) GetValue(CornerRadiusProperty);
+			set => SetValue(CornerRadiusProperty, value);
 		}
 
 		private protected LogicalChildMentor LogicalChildMentor => _logicalChildMentor ??= LogicalChildMentor.Create(this);
@@ -52,6 +61,15 @@ namespace Zaaml.UI.Controls.Core
 			base.OnApplyTemplate();
 
 			UpdateVisualState(false);
+		}
+
+		protected virtual void OnCornerRadiusChanged(CornerRadius oldValue, CornerRadius newValue)
+		{
+		}
+
+		private void OnCornerRadiusPropertyChangedPrivate(CornerRadius oldValue, CornerRadius newValue)
+		{
+			OnCornerRadiusChanged(oldValue, newValue);
 		}
 
 		private protected virtual void OnDependencyPropertyChangedInternal(DependencyPropertyChangedEventArgs args)

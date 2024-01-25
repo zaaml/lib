@@ -15,7 +15,7 @@ using Panel = Zaaml.UI.Panels.Core.Panel;
 
 namespace Zaaml.UI.Panels
 {
-	public class FlexPanel : Panel, IFlexPanel, IFlexPanelEx
+	public class FlexPanel : Panel, IFlexPanel
 	{
 		public static readonly DependencyProperty DistributorProperty = DPM.Register<IFlexDistributor, FlexPanel>
 			("Distributor", FlexDistributor.Equalizer, p => p.InvalidateMeasure);
@@ -37,8 +37,8 @@ namespace Zaaml.UI.Panels
 		private static readonly DependencyPropertyKey IsHiddenPropertyKey = DPM.RegisterAttachedReadOnly<bool, FlexPanel>
 			("IsHidden", false, OnIsHiddenChanged);
 
-		public static readonly DependencyProperty GenericDefinitionProperty = DPM.Register<FlexDefinition, FlexPanel>
-			("GenericDefinition", p => p.OnGenericDefinitionChanged);
+		public static readonly DependencyProperty FlexDefinitionProperty = DPM.Register<FlexDefinition, FlexPanel>
+			("FlexDefinition", p => p.OnGenericDefinitionChanged);
 
 		public static readonly DependencyProperty DefinitionSelectorProperty = DPM.Register<FlexDefinitionSelector, FlexPanel>
 			("DefinitionSelector", p => p.OnDefinitionSelectorChanged);
@@ -54,26 +54,24 @@ namespace Zaaml.UI.Panels
 
 		static FlexPanel()
 		{
-#if !SILVERLIGHT
 			DefaultStyleKeyProperty.OverrideMetadata(typeof(FlexPanel), new FrameworkPropertyMetadata(typeof(FlexPanel)));
-#endif
 		}
 
 		public FlexDefinitionSelector DefinitionSelector
 		{
-			get => (FlexDefinitionSelector) GetValue(DefinitionSelectorProperty);
+			get => (FlexDefinitionSelector)GetValue(DefinitionSelectorProperty);
 			set => SetValue(DefinitionSelectorProperty, value);
 		}
 
-		public FlexDefinition GenericDefinition
+		public FlexDefinition FlexDefinition
 		{
-			get => (FlexDefinition) GetValue(GenericDefinitionProperty);
-			set => SetValue(GenericDefinitionProperty, value);
+			get => (FlexDefinition)GetValue(FlexDefinitionProperty);
+			set => SetValue(FlexDefinitionProperty, value);
 		}
 
 		public bool HasHiddenChildren
 		{
-			get => (bool) GetValue(HasHiddenChildrenProperty);
+			get => (bool)GetValue(HasHiddenChildrenProperty);
 			private set => this.SetReadOnlyValue(HasHiddenChildrenPropertyKey, value);
 		}
 
@@ -149,17 +147,17 @@ namespace Zaaml.UI.Panels
 
 		private FlexPanelLayout CreateLayout()
 		{
-			return new FlexPanelLayout(this);
+			return new FlexPanelLayoutAdvanced(this);
 		}
 
 		protected virtual FlexElement GetFlexElement(UIElement child)
 		{
-			return child.GetFlexElement(this, DefinitionSelector?.Select(this, child) ?? GenericDefinition);
+			return child.GetFlexElement(this, Orientation, DefinitionSelector?.Select(this, child) ?? FlexDefinition);
 		}
 
 		public static bool GetIsHidden(DependencyObject element)
 		{
-			return (bool) element.GetValue(IsHiddenPropertyKey.DependencyProperty);
+			return (bool)element.GetValue(IsHiddenPropertyKey.DependencyProperty);
 		}
 
 		protected override Size MeasureOverrideCore(Size availableSize)
@@ -209,6 +207,8 @@ namespace Zaaml.UI.Panels
 		private void OnDefinitionChanged(object sender, EventArgs eventArgs)
 		{
 			InvalidateMeasure();
+
+			//FlexPanelLayout.InvalidateFlexMeasure(this);
 		}
 
 		private void OnDefinitionSelectorChanged(FlexDefinitionSelector oldSelector, FlexDefinitionSelector newSelector)
@@ -294,28 +294,35 @@ namespace Zaaml.UI.Panels
 
 		public IFlexDistributor Distributor
 		{
-			get => (IFlexDistributor) GetValue(DistributorProperty);
+			get => (IFlexDistributor)GetValue(DistributorProperty);
 			set => SetValue(DistributorProperty, value);
 		}
 
 		public FlexStretch Stretch
 		{
-			get => (FlexStretch) GetValue(StretchProperty);
+			get => (FlexStretch)GetValue(StretchProperty);
 			set => SetValue(StretchProperty, value);
 		}
 
 		public double Spacing
 		{
-			get => (double) GetValue(SpacingProperty);
+			get => (double)GetValue(SpacingProperty);
 			set => SetValue(SpacingProperty, value);
 		}
 
 		public Orientation Orientation
 		{
-			get => (Orientation) GetValue(OrientationProperty);
+			get => (Orientation)GetValue(OrientationProperty);
 			set => SetValue(OrientationProperty, value);
 		}
 
-		bool IFlexPanelEx.AllowMeasureInArrange => true;
+		private sealed class FlexPanelLayoutAdvanced : FlexPanelLayout
+		{
+			public FlexPanelLayoutAdvanced(FlexPanel panel) : base(panel)
+			{
+			}
+
+			private protected override bool AllowMeasureInArrange => true;
+		}
 	}
 }

@@ -41,6 +41,8 @@ namespace Zaaml.UI.Controls.Core
 
 		internal virtual IItemCollection<TItem> ItemCollectionOverride => ItemCollection;
 
+		internal virtual bool HasSource => ItemCollectionOverride.SourceCollection != null;
+
 		internal int ItemsCount => ItemCollectionOverride.ActualCount;
 
 		protected TPresenter ItemsPresenter => TemplateContract.ItemsPresenter;
@@ -55,7 +57,7 @@ namespace Zaaml.UI.Controls.Core
 			set => ItemCollectionOverride.SourceCollection = value;
 		}
 
-		private ItemsControlBaseTemplateContract<TPresenter> TemplateContract => (ItemsControlBaseTemplateContract<TPresenter>) TemplateContractInternal;
+		private ItemsControlBaseTemplateContract<TPresenter> TemplateContract => (ItemsControlBaseTemplateContract<TPresenter>) TemplateContractCore;
 
 		internal int CoerceIndex(int index)
 		{

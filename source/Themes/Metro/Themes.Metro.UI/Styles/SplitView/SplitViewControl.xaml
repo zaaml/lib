@@ -1,0 +1,184 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  PanelHorizontalAlignmentConverter  -->
+  <zm:SwitchConverter x:Key="PanelHorizontalAlignmentConverter">
+    <zm:Case Key="Left" Value="Left" />
+    <zm:Case Key="Right" Value="Right" />
+    <zm:Default Value="Stretch" />
+  </zm:SwitchConverter>
+
+  <!--  PanelVerticalAlignmentConverter  -->
+  <zm:SwitchConverter x:Key="PanelVerticalAlignmentConverter">
+    <zm:Case Key="Top" Value="Top" />
+    <zm:Case Key="Bottom" Value="Bottom" />
+    <zm:Default Value="Stretch" />
+  </zm:SwitchConverter>
+
+  <!--  DockConverter  -->
+  <zm:SwitchConverter x:Key="DockConverter">
+    <zm:Case Key="Left" Value="Left" />
+    <zm:Case Key="Top" Value="Top" />
+    <zm:Case Key="Right" Value="Right" />
+    <zm:Case Key="Bottom" Value="Bottom" />
+  </zm:SwitchConverter>
+
+  <!--  OrientationConverter  -->
+  <zm:SwitchConverter x:Key="OrientationConverter">
+    <zm:Case Key="Left" Value="Horizontal" />
+    <zm:Case Key="Top" Value="Vertical" />
+    <zm:Case Key="Right" Value="Horizontal" />
+    <zm:Case Key="Bottom" Value="Vertical" />
+  </zm:SwitchConverter>
+
+  <!--  ShadowSideConverter  -->
+  <zm:SwitchConverter x:Key="ShadowSideConverter">
+    <zm:Case Key="Left" Value="Right" />
+    <zm:Case Key="Top" Value="Bottom" />
+    <zm:Case Key="Right" Value="Left" />
+    <zm:Case Key="Bottom" Value="Top" />
+  </zm:SwitchConverter>
+
+  <!--  Transition  -->
+  <zm:Transition x:Key="LengthAnimationTransition"
+                 Duration="0:0:0.25">
+    <zm:Transition.EasingFunction>
+      <ExponentialEase EasingMode="EaseOut"
+                       Exponent="7" />
+    </zm:Transition.EasingFunction>
+  </zm:Transition>
+
+  <!-- Init AnimationCommand -->
+  <zm:CompositeAnimationCommand x:Key="InitCommand">
+    <zm:BeginAnimationCommand />
+    <zm:SeekAnimationCommand RelativeTime="1" />
+  </zm:CompositeAnimationCommand>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="SplitViewControlTemplate"
+                   TargetType="zm:SplitViewControl">
+    <zm:ControlTemplateRoot>
+      <zm:DockPanel>
+
+        <zm:Extension.Animations>
+          <zm:DoubleAnimation x:Name="LengthAnimation"
+                              Invert="{zm:TemplateBinding Path=IsPaneOpen, Converter={zm:NegateConverter}}"
+                              Transition="{StaticResource LengthAnimationTransition}"
+                              InitCommand="{StaticResource InitCommand}"
+                              From="0"
+                              To="{zm:TemplateBinding Path=OpenPaneLength}" />
+
+          <zm:DoubleAnimation x:Name="ShadowOpacityAnimation"
+                              Invert="{zm:TemplateBinding Path=IsPaneOpen, Converter={zm:NegateConverter}}"
+                              Transition="{StaticResource LengthAnimationTransition}"
+                              InitCommand="{StaticResource InitCommand}"
+                              From="0"
+                              To="0.33" />
+        </zm:Extension.Animations>
+
+        <zm:Extension.Assets>
+          <!--  DockThickness  -->
+          <zm:DockThickness x:Name="DockThickness"
+                            Dock="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource DockConverter}}" />
+
+          <!--  PanePanelSize  -->
+          <zm:OrientedSizeAsset x:Name="PanePanelSize"
+                                Direct="{zm:ElementBinding ElementName=LengthAnimation, Path=Current}"
+                                Indirect="NaN"
+                                Orientation="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource OrientationConverter}}" />
+          <!--  PanePresenterSize  -->
+          <zm:OrientedSizeAsset x:Name="PanePresenterSize"
+                                Direct="{zm:TemplateBinding Path=OpenPaneLength}"
+                                Indirect="NaN"
+                                Orientation="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource OrientationConverter}}" />
+
+        </zm:Extension.Assets>
+
+        <!--  ContentPresenter  -->
+        <zm:SplitViewContentPresenter x:Name="ContentPresenter"
+                                      Margin="{zm:ElementBinding ElementName=DockThickness, Path=ActualThickness}" />
+
+        <!--  Pane Panel  -->
+        <zm:Panel x:Name="PanePanel"
+                  Width="{zm:ElementBinding ElementName=PanePanelSize, Path=ActualWidth}"
+                  Height="{zm:ElementBinding ElementName=PanePanelSize, Path=ActualHeight}"
+                  HorizontalAlignment="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource PanelHorizontalAlignmentConverter}}"
+                  VerticalAlignment="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource PanelVerticalAlignmentConverter}}"
+                  Background="{TemplateBinding PaneBackground}">
+
+          <!--  Shadow  -->
+          <zm:ShadowChrome
+            Side="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource ShadowSideConverter}}"
+            ShadowOpacity="{zm:ElementBinding ElementName=ShadowOpacityAnimation, Path=Current}"
+            Visibility="{zm:TemplateBinding Path=ShowPaneShadow, Converter={zm:VisibilityConverter}}" />
+
+          <!--  PanePresenter  -->
+          <zm:SplitViewPanePresenter x:Name="PanePresenter"
+                                     Width="{zm:ElementBinding ElementName=PanePresenterSize, Path=ActualWidth}"
+                                     Height="{zm:ElementBinding ElementName=PanePresenterSize, Path=ActualHeight}"
+                                     Content="{TemplateBinding Pane}" />
+
+          <zm:Extension.Triggers>
+
+            <!--  DisplayMode Trigger  -->
+            <zm:SwitchDataTrigger Binding="{zm:TemplateBinding Path=DisplayMode}">
+
+              <!--  Inline  -->
+              <zm:CaseTrigger Value="Inline">
+                <zm:Setter Property="zm:DockPanel.Dock"
+                           Value="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource DockConverter}}" />
+              </zm:CaseTrigger>
+
+              <!--  Overlay  -->
+              <zm:CaseTrigger Value="Overlay" />
+
+              <!--  CompactInline  -->
+              <zm:CaseTrigger Value="CompactInline">
+                <zm:Setter Property="zm:DockPanel.Dock"
+                           Value="{zm:TemplateBinding Path=PanePlacement, Converter={StaticResource DockConverter}}" />
+                <zm:Setter TargetName="LengthAnimation" Property="From"
+                           Value="{zm:TemplateBinding Path=CompactPaneLength}" />
+              </zm:CaseTrigger>
+
+              <!--  CompactOverlay  -->
+              <zm:CaseTrigger Value="CompactOverlay">
+                <zm:Setter TargetName="DockThickness" Property="ThicknessValue"
+                           Value="{zm:TemplateBinding Path=CompactPaneLength}" />
+                <zm:Setter TargetName="LengthAnimation" Property="From"
+                           Value="{zm:TemplateBinding Path=CompactPaneLength}" />
+              </zm:CaseTrigger>
+            </zm:SwitchDataTrigger>
+
+            <!-- Pane Animation -->
+            <zm:PropertyChangeTrigger Source="{zm:TemplateBinding}" Property="IsPaneOpen">
+              <zm:RunAnimationCommand Command="{zm:Static Member=zm:AnimationCommand.Begin}"
+                                      Animation="{zm:ElementBinding ElementName=LengthAnimation}" />
+              <zm:RunAnimationCommand Command="{zm:Static Member=zm:AnimationCommand.Begin}"
+                                      Animation="{zm:ElementBinding ElementName=ShadowOpacityAnimation}" />
+            </zm:PropertyChangeTrigger>
+
+          </zm:Extension.Triggers>
+        </zm:Panel>
+      </zm:DockPanel>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="SplitViewControlBaseStyle" TargetType="zm:SplitViewControl">
+    <zm:Setter Property="Template" Value="{StaticResource SplitViewControlTemplate}" />
+    <zm:Setter Property="PaneBackground" Value="{zm:ThemeResource Keyword=ControlBackgroundBrush}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="SplitViewControlStyle" BasedOn="{StaticResource SplitViewControlBaseStyle}"
+            Skin="Metro.SplitViewControl" TargetType="zm:SplitViewControl" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="SplitViewControlThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource SplitViewControlStyle}" TargetType="zm:SplitViewControl" />
+
+</zm:ThemeResourceDictionary>

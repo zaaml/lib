@@ -9,6 +9,7 @@ using System.Windows;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -102,7 +103,7 @@ namespace Zaaml.UI.Controls.Ribbon
     public bool IsDropDownOpen
     {
       get => (bool) GetValue(IsDropDownOpenProperty);
-      set => SetValue(IsDropDownOpenProperty, value);
+      set => SetValue(IsDropDownOpenProperty, value.Box());
     }
 
     internal bool IsFinalMeasure
@@ -145,7 +146,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
     private RibbonItemsPresenter RibbonItemsPresenter => TemplateContract.ItemsPresenter;
 
-    private RibbonGroupTemplateContract TemplateContract => (RibbonGroupTemplateContract) TemplateContractInternal;
+    private RibbonGroupTemplateContract TemplateContract => (RibbonGroupTemplateContract)TemplateContractCore;
 
     #endregion
 

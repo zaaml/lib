@@ -7,27 +7,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.Core.Trees;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
-	internal abstract class HierarchyView
+	// ReSharper disable once PartialTypeWithSinglePart
+	internal abstract partial class HierarchyView
 	{
-		public virtual int FlatCount { get; protected set; }
-
-		public virtual int VisibleFlatCount { get; protected set; }
-
-		public abstract int FindDataIndex(object data);
-
-		public abstract object GetData(int index);
-
-		public abstract IEnumerator<object> GetDataEnumerator();
 	}
 
-	internal abstract partial class HierarchyView<THierarchy, TNodeCollection, TNode> : HierarchyView, ITreeEnumeratorAdvisor<TNode>, IDisposable
+	internal abstract class HierarchyView<TNode> : HierarchyView where TNode : class
+	{
+		public abstract TreeFlatCursor<TNode> CursorCore { get; }
+	}
+
+	internal abstract partial class HierarchyView<THierarchy, TNodeCollection, TNode> : HierarchyView<TNode>, ITreeEnumeratorAdvisor<TNode>, IDisposable
 		where THierarchy : HierarchyView<THierarchy, TNodeCollection, TNode>
 		where TNodeCollection : HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode>
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
@@ -43,12 +39,14 @@ namespace Zaaml.UI.Data.Hierarchy
 		protected HierarchyView()
 		{
 			Cursor = new NodeCursor((THierarchy) this);
-			DataPlainListView = new HierarchyDataPlainListView(this);
+			FlatListViewCore = new HierarchyFlatListView<TNode>(this);
 		}
+
+		public override TreeFlatCursor<TNode> CursorCore => Cursor;
 
 		private NodeCursor Cursor { get; }
 
-		public HierarchyDataPlainListView DataPlainListView { get; }
+		protected HierarchyFlatListView<TNode> FlatListViewCore { get; }
 
 		protected abstract IHierarchyViewFilter<THierarchy, TNodeCollection, TNode> FilterCore { get; }
 
@@ -58,16 +56,18 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		internal IHierarchyViewFilter<THierarchy, TNodeCollection, TNode> FilterInternal => FilterCore;
 
-		public override int FlatCount
+		public int FlatCount
 		{
 			get => _flatCount;
-			protected set
+			private set
 			{
 				_flatCount = value;
 
 				ResetCursor();
 			}
 		}
+
+		internal IndexedEnumerable IndexedSource { get; private set; } = IndexedEnumerable.Empty;
 
 		private bool IsFilteredCache
 		{
@@ -100,8 +100,6 @@ namespace Zaaml.UI.Data.Hierarchy
 			}
 		}
 
-		internal IndexedEnumerable IndexedSource { get; private set; } = IndexedEnumerable.Empty;
-
 		private bool SuspendCollectionChange
 		{
 			get => PackedDefinition.SuspendCollectionChange.GetValue(_packedValue);
@@ -114,10 +112,10 @@ namespace Zaaml.UI.Data.Hierarchy
 			private set => PackedDefinition.SuspendExpansion.SetValue(ref _packedValue, value);
 		}
 
-		public override int VisibleFlatCount
+		public int VisibleFlatCount
 		{
 			get => _visibleFlatCount;
-			protected set
+			private set
 			{
 				_visibleFlatCount = value;
 
@@ -247,14 +245,9 @@ namespace Zaaml.UI.Data.Hierarchy
 			}
 		}
 
-		public override int FindDataIndex(object data)
-		{
-			return Cursor.FindDataIndex(data);
-		}
-
 		public int FindIndex(TNode treeNode)
 		{
-			return Cursor.FindIndex(treeNode);
+			return Cursor.IndexOf(treeNode);
 		}
 
 		public int FindIndex(TNode treeNode, bool resetCursor)
@@ -262,7 +255,7 @@ namespace Zaaml.UI.Data.Hierarchy
 			if (resetCursor)
 				ResetCursor();
 
-			return Cursor.FindIndex(treeNode);
+			return Cursor.IndexOf(treeNode);
 		}
 
 		public TNode FindNode(object nodeData)
@@ -302,16 +295,6 @@ namespace Zaaml.UI.Data.Hierarchy
 			return result;
 		}
 
-		public override object GetData(int index)
-		{
-			return Cursor.NavigateTo(index).Data;
-		}
-
-		public override IEnumerator<object> GetDataEnumerator()
-		{
-			return TreeEnumerator.GetEnumerator(Nodes, this).Enumerate().Select(t => t.Data).GetEnumerator();
-		}
-
 		internal IEnumerable GetDataNodes(TNode node)
 		{
 			return GetDataNodesCore(node);
@@ -321,7 +304,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		public TNode GetNode(int index)
 		{
-			return Cursor.NavigateTo(index);
+			return Cursor.ElementAt(index);
 		}
 
 		private void HandleAdd(int newIndex, IList newItems)
@@ -371,7 +354,8 @@ namespace Zaaml.UI.Data.Hierarchy
 			var visibleFlatCount = VisibleFlatCount;
 			var count = oldItems.Count;
 			var index = oldIndex;
-
+			var raiseIndex = FindIndex(Nodes[index]);
+			
 			for (var i = index; i < index + count; i++)
 			{
 				var node = Nodes[i];
@@ -380,13 +364,13 @@ namespace Zaaml.UI.Data.Hierarchy
 				VisibleFlatCount -= node.VisibleFlatCount + 1;
 			}
 
-			var raiseIndex = FindIndex(Nodes[index]);
-
 			Nodes.HandleRemove(oldIndex, oldItems);
 
 			SuspendCollectionChange = false;
 
-			RaiseChange(raiseIndex, VisibleFlatCount - visibleFlatCount);
+			var raiseCount = visibleFlatCount - VisibleFlatCount;
+
+			RaiseChange(raiseIndex, raiseCount);
 		}
 
 		private void HandleReset()
@@ -516,8 +500,7 @@ namespace Zaaml.UI.Data.Hierarchy
 				return;
 
 			// TODO SelectionController exception
-			//DataPlainListView.RaiseChange(index, count);
-			DataPlainListView.RaiseReset();
+			FlatListViewCore.RaiseChange(index, count);
 		}
 
 		internal void RaiseReset()
@@ -527,7 +510,7 @@ namespace Zaaml.UI.Data.Hierarchy
 			if (SuspendCollectionChange)
 				return;
 
-			DataPlainListView.RaiseReset();
+			FlatListViewCore.RaiseReset();
 		}
 
 		private void Rebuild()
@@ -566,22 +549,8 @@ namespace Zaaml.UI.Data.Hierarchy
 				Rebuild();
 			}
 
-			ResetCursor();
 			RaiseReset();
 		}
-		//private void DebugCount()
-		//{
-		//	var flatVis = VisibleFlatCount;
-
-		//	Rebuild();
-
-		//	var flatVis1 = VisibleFlatCount;
-
-		//	ResetCursor();
-
-		//	var flatVis2 = Cursor.CalculateCount();
-		//	var flatVis3 = Cursor.CalculateBackCount();
-		//}
 
 		internal void ResetCursor()
 		{

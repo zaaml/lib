@@ -4,6 +4,8 @@
 
 using System.Collections.Specialized;
 using Zaaml.Core;
+using Zaaml.Core.Collections;
+using Zaaml.Core.Collections.Specialized;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -183,10 +185,12 @@ namespace Zaaml.UI.Controls.Core
 		{
 			VerifySafe();
 
+			var forceReset = e is NotifyCollectionChangedEventArgsEx { OriginalChangedItems: IRepeatCollection };
+
 			if (e.Action == NotifyCollectionChangedAction.Move)
 			{
 			}
-			else if (e.Action == NotifyCollectionChangedAction.Reset)
+			else if (e.Action == NotifyCollectionChangedAction.Reset || forceReset)
 			{
 				if (SupportsIndex)
 				{
@@ -283,8 +287,15 @@ namespace Zaaml.UI.Controls.Core
 		{
 			using (SelectionHandlingScope)
 			{
-				if (SelectedItem != null || SelectedSource != null)
-					SelectValueSafe(GetValue(SelectedItem, SelectedSource));
+				var item = SelectionResume.Item;
+				var source = SelectionResume.Source;
+
+				if (item == null && source == null)
+					return;
+
+				var value = GetValue(item, source);
+
+				SelectionResume = SelectionResume.WithValue(value);
 			}
 		}
 	}

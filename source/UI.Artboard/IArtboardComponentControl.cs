@@ -8,13 +8,9 @@ namespace Zaaml.UI.Controls.Artboard
 	{
 		ArtboardControl Artboard { get; set; }
 
-		double DesignHeight { get; set; }
+		double ScrollOffsetX { get; set; }
 
-		double DesignWidth { get; set; }
-
-		double OffsetX { get; set; }
-
-		double OffsetY { get; set; }
+		double ScrollOffsetY { get; set; }
 
 		double Zoom { get; set; }
 	}

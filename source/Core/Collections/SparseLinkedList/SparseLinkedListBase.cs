@@ -14,24 +14,19 @@ namespace Zaaml.Core.Collections
 #if TEST
 		private const int DefaultCapacity = 4;
 #else
-		protected const int DefaultCapacity = 16;
+		private const int DefaultCapacity = 16;
 #endif
 
-		public SparseLinkedListBase() : this(0, new SparseLinkedListManager<T>(new SparseMemoryManager<T>(DefaultCapacity)))
+		protected SparseLinkedListBase() : this(0, new SparseLinkedListManager<T>(new SparseMemoryAllocator<T>(DefaultCapacity)))
 		{
 		}
 
-		public SparseLinkedListBase(int count) : this(count,
-			new SparseLinkedListManager<T>(new SparseMemoryManager<T>(DefaultCapacity)))
-		{
-		}
-
-		protected SparseLinkedListBase(int count, SparseLinkedListManager<T> manager)
+		protected SparseLinkedListBase(long count, SparseLinkedListManager<T> manager)
 		{
 			Manager = manager;
 
-			HeadNode = Manager.GetGapNode();
-			TailNode = Manager.GetGapNode();
+			HeadNode = GetVoidNode();
+			TailNode = GetVoidNode();
 
 			LongCount = count;
 
@@ -42,51 +37,88 @@ namespace Zaaml.Core.Collections
 
 		public SparseLinkedListNode<T> Tail => new SparseLinkedListNode<T>(TailNode, this);
 
-		internal int StructureVersion { get; private set; }
+		internal ulong StructureVersion { get; private set; }
 
-		protected GapNode HeadNode { get; private set; }
+		internal ulong ActualStructureVersion { get; private set; }
 
-		protected int NodeCapacity => Manager.SparseMemoryManager.NodeCapacity;
+		protected VoidNode HeadNode { get; private set; }
+
+		protected int NodeCapacity => Manager.SparseMemoryAllocator.NodeCapacity;
 
 		private SparseLinkedListManager<T> Manager { get; }
 
-		protected GapNode TailNode { get; private set; }
-
-		private NodeCursor Cursor
+		private RealizedNode GetRealizedNode()
 		{
-			get
-			{
-				if (_cursor.IsEmpty || _cursor.StructureVersion != StructureVersion || StructureChangeCount > 0)
-					_cursor = new NodeCursor(0, this, HeadNode, 0);
-
-				return _cursor;
-			}
-			set => _cursor = value;
+			return Manager.GetRealizedNode();
 		}
 
-		private NodeCursor HeadCursor => new NodeCursor(0, this, HeadNode, 0);
+		private VoidNode GetVoidNode()
+		{
+			return Manager.GetVoidNode();
+		}
 
-		private NodeCursor TailCursor =>
-			new NodeCursor(LongCount > 0 ? LongCount - 1 : 0, this, TailNode, LongCount - TailNode.Size);
+		private void ReleaseNode(NodeBase node)
+		{
+			Manager.ReleaseNode(node);
+		}
+
+		private ref NodeCursor GetCursor()
+		{
+			if (_cursor.IsEmpty || _cursor.StructureVersion != StructureVersion)
+				_cursor = new NodeCursor(0, this, HeadNode, 0);
+
+			return ref _cursor;
+		}
+
+		protected VoidNode TailNode { get; private set; }
+
+		private ref NodeCursor GetHeadCursor()
+		{
+			_cursor = new NodeCursor(0, this, HeadNode, 0);
+
+			return ref _cursor;
+		}
+
+		private ref NodeCursor GetTailCursor()
+		{
+			_cursor = new(LongCount - TailNode.Size, this, TailNode, LongCount - TailNode.Size);
+
+			return ref _cursor;
+		}
 
 		public long LongCount { get; private set; }
 
-		[PublicAPI] public int Count => (int) LongCount;
+		[PublicAPI]
+		public int Count => (int) LongCount;
 
 		private void InitHeadTail()
 		{
+			var count = LongCount;
+
+			LongCount = 0;
+
+			InitImpl(count);
+		}
+
+		protected void InitImpl(long count)
+		{
+			if (LongCount != 0)
+				throw new InvalidOperationException();
+
 			EnterStructureChange();
 
 			HeadNode.Next = TailNode;
 			TailNode.Prev = HeadNode;
 
-			HeadNode.Size = Count;
+			HeadNode.Size = count;
 			TailNode.Size = 0;
+
+			LongCount = count;
 
 			LeaveStructureChange();
 		}
 
-		private protected void VerifyStructureImpl()
+		private void VerifyStructureImpl()
 		{
 			if (HeadNode == null || TailNode == null)
 				throw new InvalidOperationException();
@@ -95,6 +127,9 @@ namespace Zaaml.Core.Collections
 				throw new InvalidOperationException();
 
 			if (HeadNode.Prev != null || TailNode.Next != null)
+				throw new InvalidOperationException();
+
+			if (HeadNode.Next is VoidNode && ReferenceEquals(HeadNode.Next, TailNode) == false)
 				throw new InvalidOperationException();
 
 			if (ReferenceEquals(HeadNode.Next, TailNode))
@@ -122,7 +157,7 @@ namespace Zaaml.Core.Collections
 					if (ReferenceEquals(next.Prev, current) == false)
 						throw new InvalidOperationException();
 
-					if (next is GapNode && current is GapNode)
+					if (next is VoidNode && current is VoidNode)
 					{
 						throw new InvalidOperationException();
 					}
@@ -132,25 +167,25 @@ namespace Zaaml.Core.Collections
 			}
 		}
 
-		[Conditional("TEST")]
+		[Conditional("COLLECTION_VERIFY_STRUCTURE")]
 		private protected void VerifyStructure()
 		{
 			VerifyStructureImpl();
 		}
 
 		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-		private protected void VerifyIndex(int index, bool insert = false)
+		private protected void VerifyIndex(long index, bool insert = false)
 		{
-			if (index == 0 && Count == 0)
+			if (index == 0 && LongCount == 0)
 				return;
 
-			if (index < 0 || index > Count || index == Count && insert == false)
+			if (index < 0 || index > LongCount || index == LongCount && insert == false)
 				throw new IndexOutOfRangeException(nameof(index));
 		}
 
-		private protected void VerifyRange(int index, int count)
+		private protected void VerifyRange(long index, long count)
 		{
-			if (index == 0 && Count == 0 && count == 0)
+			if (index == 0 && LongCount == 0 && count == 0)
 				return;
 
 			if (index < 0)
@@ -159,38 +194,45 @@ namespace Zaaml.Core.Collections
 			if (count < 0)
 				throw new IndexOutOfRangeException(nameof(count));
 
-			if (index >= Count)
+			if (index >= LongCount)
 				throw new IndexOutOfRangeException(nameof(index));
 
-			if (index + count > Count)
+			if (index + count > LongCount)
 				throw new IndexOutOfRangeException(nameof(count));
 		}
 
-		private void DeallocateItems(SparseMemorySpan<T> sparseMemorySpan)
+		private void DeallocateItems(MemorySpan<T> sparseMemorySpan)
 		{
-			sparseMemorySpan.Release();
+			sparseMemorySpan.Dispose();
 		}
 
-		private protected int FindImpl(T item)
+		private protected long FindImpl(T item)
 		{
 			var equalityComparer = EqualityComparer<T>.Default;
-			var enumerator = new Enumerator(this);
-			var index = 0;
+			var nodeOffset = 0L;
+			NodeBase currentNode = HeadNode;
 
-			while (enumerator.MoveNext())
+			while (currentNode != null)
 			{
-				var current = enumerator.Current;
+				if (currentNode is RealizedNode realizedNode)
+				{
+					var span = realizedNode.Span;
 
-				if (equalityComparer.Equals(current, item))
-					return index;
+					for (var i = 0; i < span.Length; i++)
+					{
+						if (equalityComparer.Equals(item, span[i]))
+							return i + nodeOffset;
+					}
+				}
 
-				index++;
+				nodeOffset += currentNode.Size;
+				currentNode = currentNode.Next;
 			}
 
 			return -1;
 		}
 
-		public SparseLinkedListNode<T> FindNode(int index, out long offset)
+		public SparseLinkedListNode<T> FindNode(long index, out long offset)
 		{
 			var node = FindNodeImpl(index, out offset);
 
@@ -199,47 +241,59 @@ namespace Zaaml.Core.Collections
 
 		private NodeBase FindNodeImpl(long index, out long offset)
 		{
-			var cursor = NavigateTo(index);
+			ref var cursor = ref NavigateTo(index);
 
 			offset = cursor.NodeOffset;
 
 			return cursor.Node;
 		}
 
-		private NodeBase FindNodeImpl(long index)
+		private ref NodeCursor NavigateTo(long index)
 		{
-			return NavigateTo(index).Node;
+			ref var cursor = ref GetCursor();
+
+			cursor.NavigateTo(index);
+
+			return ref cursor;
 		}
 
-		private NodeCursor NavigateTo(long index)
+		private ref NodeCursor NavigateTo(long index, bool realize)
 		{
-			var cursor = Cursor.NavigateTo(index);
+			ref var cursor = ref GetCursor();
 
-			Cursor = cursor;
+			cursor.NavigateTo(index);
 
-			return cursor;
-		}
-
-		private NodeCursor NavigateTo(long index, bool realize)
-		{
-			var cursor = Cursor.NavigateTo(index);
-
-			if (realize) 
+			if (realize)
 				EnsureRealizedNode(ref cursor, index, false);
 
-			Cursor = cursor;
+			return ref cursor;
+		}
 
-			return cursor;
+		private ref NodeCursor NavigateToInsert(long index)
+		{
+			if (LongCount == 0 || ReferenceEquals(HeadNode.Next, TailNode))
+				return ref GetHeadCursor();
+
+			ref var tailCursor = ref GetTailCursor();
+
+			if (tailCursor.Contains(index))
+				return ref tailCursor;
+
+			ref var cursor = ref GetCursor();
+
+			cursor.NavigateToInsert(index);
+
+			return ref cursor;
 		}
 
 		private protected T GetItemImpl(long index)
 		{
-			var cursor = NavigateTo(index);
+			ref var cursor = ref NavigateTo(index);
 
 			return cursor.Node.GetItem(ref cursor);
 		}
 
-		private SparseMemorySpan<T> AllocateItems()
+		private MemorySpan<T> AllocateItems()
 		{
 			return Manager.Allocate();
 		}
@@ -266,10 +320,10 @@ namespace Zaaml.Core.Collections
 			LeaveStructureChange();
 		}
 
-		private void RemoveEmptyGapNode(GapNode gapNode)
+		private void RemoveEmptyVoidNode(VoidNode voidNode)
 		{
-			if (gapNode.Size == 0 && ReferenceEquals(gapNode, HeadNode) == false &&  ReferenceEquals(gapNode, TailNode) == false)
-				RemoveNode(gapNode);
+			if (voidNode.Size == 0 && ReferenceEquals(voidNode, HeadNode) == false && ReferenceEquals(voidNode, TailNode) == false)
+				RemoveNode(voidNode);
 		}
 
 		private void RemoveNode(NodeBase node)
@@ -280,20 +334,101 @@ namespace Zaaml.Core.Collections
 			var prev = node.Prev;
 			var next = node.Next;
 
-			if (prev != null)
-				prev.Next = next;
-
-			if (next != null)
-				next.Prev = prev;
+			prev.Next = next;
+			next.Prev = prev;
 
 			ReleaseNode(node);
 		}
 
 		private protected void SetItemImpl(long index, T value)
 		{
-			var cursor = NavigateTo(index, true);
+			ref var cursor = ref NavigateTo(index, true);
 
 			cursor.Node.SetItem(ref cursor, value);
 		}
+
+		private protected void CopyToImpl(T[] array, int arrayIndex)
+		{
+			if (array.Length - arrayIndex < LongCount)
+				throw new InvalidOperationException("Insufficient array length");
+
+			CopyToImpl(array.AsSpan(arrayIndex));
+		}
+
+		private protected void CopyToImpl(Span<T> span)
+		{
+			CopyToImpl(0, LongCount, span);
+		}
+
+		private protected void CopyToImplSafe(Span<T> span)
+		{
+			CopyToImplSafe(0, LongCount, span);
+		}
+
+		private protected void CopyToImpl(long offset, long length, Span<T> span)
+		{
+			if (span.Length < length)
+				throw new InvalidOperationException("Insufficient span length");
+
+			if (offset + length > LongCount || offset < 0)
+				throw new ArgumentOutOfRangeException();
+
+			CopyToImplSafe(offset, length, span);
+		}
+
+		private void CopyToImplSafe(long offset, long length, Span<T> span)
+		{
+			var index = 0;
+			NodeBase current = HeadNode;
+
+			if (offset > 0)
+			{
+				long currentOffset = 0;
+
+				while (currentOffset + current.Size < offset)
+				{
+					currentOffset += current.Size;
+					current = current.Next;
+				}
+
+				var localOffset = (int) (offset - currentOffset);
+				var copyLength = (int) Math.Min(current.Size - localOffset, length);
+				var targetSpan = span.Slice(index, copyLength);
+
+				if (current is RealizedNode realizedNode)
+				{
+					var sourceSpan = realizedNode.Span.Slice(localOffset, copyLength);
+
+					sourceSpan.CopyTo(targetSpan);
+				}
+				else
+					targetSpan.Clear();
+
+				length -= copyLength;
+				index += copyLength;
+				current = current.Next;
+			}
+
+			while (current != null && length > 0)
+			{
+				var copyLength = (int) Math.Min(current.Size, length);
+				var targetSpan = span.Slice(index, copyLength);
+
+				if (current is RealizedNode realizedNode)
+				{
+					var sourceSpan = realizedNode.Span.Slice(0, copyLength);
+
+					sourceSpan.CopyTo(targetSpan);
+				}
+				else
+					targetSpan.Clear();
+
+				index += copyLength;
+				length -= copyLength;
+				current = current.Next;
+			}
+		}
+
+		private protected bool IsVoidImpl => ReferenceEquals(HeadNode.Next, TailNode);
 	}
 }

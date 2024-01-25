@@ -1,0 +1,79 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Visual States -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!-- CommonStates States -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!-- SelectionStates States -->
+    <zm:VisualStateGroup Name="SelectionStates">
+      <zm:VisualState Name="Selected" />
+      <zm:VisualState Name="Unselected" />
+    </zm:VisualStateGroup>
+
+    <!-- ActiveStates States -->
+    <zm:VisualStateGroup Name="ActiveStates">
+      <zm:VisualState Name="Active" />
+      <zm:VisualState Name="Inactive" />
+    </zm:VisualStateGroup>
+
+    <!-- CalendarButtonFocusStates States -->
+    <zm:VisualStateGroup Name="CalendarButtonFocusStates">
+      <zm:VisualState Name="CalendarButtonUnfocused" />
+      <zm:VisualState Name="CalendarButtonFocused" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!-- Skin Setter -->
+  <zm:SetterCollection x:Key="SkinSetter">
+
+    <!-- Foreground -->
+    <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
+      <zm:Setter ValuePath="Normal" />
+      <zm:Setter VisualState="Active" ValuePath="Normal" />
+      <zm:Setter VisualState="Inactive" ValuePath="Inactive" />
+
+      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="2"/>
+      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="2"/>
+
+      <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="3" />
+    </zm:SetterGroup>
+
+    <!-- Background -->
+    <zm:SetterGroup Property="Background" ValuePath="Background">
+      <zm:Setter ValuePath="Normal" />
+      <zm:Setter VisualState="Inactive" ValuePath="Inactive" />
+
+      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="1"/>
+      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="1"/>
+
+      <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="2" />
+    </zm:SetterGroup>
+
+    <!-- BorderBrush -->
+    <zm:SetterGroup Property="BorderBrush"  ValuePath="BorderBrush">
+      <zm:Setter ValuePath="Normal" />
+      <zm:Setter VisualState="Inactive" ValuePath="Inactive"  />
+
+      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="1" />
+      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="1" />
+
+      <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="2" />
+
+      <zm:Setter VisualState="CalendarButtonFocused" ValuePath="Focused" Priority="3" />
+    </zm:SetterGroup>
+
+  </zm:SetterCollection>
+
+</zm:ThemeResourceDictionary>

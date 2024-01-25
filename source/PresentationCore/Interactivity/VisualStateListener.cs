@@ -106,10 +106,12 @@ namespace Zaaml.PresentationCore.Interactivity
 				if (_visualStateGroup != null)
 				{
 					var vg = _visualStateGroup;
+
 					_visualGroupHandlersDisposer = new DisposableList
 					(
 						this.CreateWeakEventListener<VisualStateListenerBase, VisualStateChangedEventArgs>
 							((t, o, e) => t.OnVisualStateChanging(), h => vg.CurrentStateChanging += h, h => vg.CurrentStateChanging -= h),
+
 						this.CreateWeakEventListener<VisualStateListenerBase, VisualStateChangedEventArgs>
 							((t, o, e) => t.OnVisualStateChanged(e), h => vg.CurrentStateChanged += h, h => vg.CurrentStateChanged -= h)
 					);

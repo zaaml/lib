@@ -9,25 +9,15 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class TriggerValue : PropertyValueActionBase
 	{
-		#region Fields
-
 		private object _localValue;
 
-		#endregion
-
-		#region Properties
-
 		public Duration SustainDelay { get; set; }
-
-		#endregion
-
-		#region  Methods
 
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var sourceTriggerPropertyValue = (TriggerValue) source;
+			var sourceTriggerPropertyValue = (TriggerValue)source;
 
 			SustainDelay = sourceTriggerPropertyValue.SustainDelay;
 		}
@@ -65,7 +55,5 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			_localValue = null;
 		}
-
-		#endregion
 	}
 }

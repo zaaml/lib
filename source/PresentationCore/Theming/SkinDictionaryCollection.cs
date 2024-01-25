@@ -11,45 +11,42 @@ using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  [TypeConverter(typeof(SkinDictionaryCollectionTypeConverter))]
-  public sealed class SkinDictionaryCollection : Collection<SkinDictionary>
-  {
-    #region Properties
+	[TypeConverter(typeof(SkinDictionaryCollectionTypeConverter))]
+	public sealed class SkinDictionaryCollection : Collection<SkinDictionary>
+	{
+		internal SkinDictionary Owner { get; set; }
+	}
 
-    internal SkinDictionary Owner { get; set; }
+	public sealed class SkinDictionaryCollectionTypeConverter : TypeConverter
+	{
+		private static readonly char[] Delimiters = { ',', ' ', '|' };
 
-    #endregion
-  }
+		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		{
+			return sourceType == typeof(string) || typeof(SkinDictionary).IsAssignableFrom(sourceType);
+		}
 
-  public sealed class SkinDictionaryCollectionTypeConverter : TypeConverter
-  {
-    #region Static Fields and Constants
+		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		{
+			if (value is string strValue)
+			{
+				var result = new SkinDictionaryCollection();
 
-    private static readonly char[] Delimiters = { ',', ' ', '|' };
+				result.AddRange(strValue.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries).Select(key => new SkinDictionary { DeferredKey = key }));
 
-    #endregion
+				return result;
+			}
 
-    #region  Methods
+			if (value is SkinDictionary skinDictionary)
+			{
+				var result = new SkinDictionaryCollection();
 
-    public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-    {
-      return sourceType == typeof(string);
-    }
+				result.AddRange(skinDictionary);
 
-    public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-    {
-      var strValue = value as string;
+				return result;
+			}
 
-      if (strValue == null)
-        throw new InvalidOperationException("Expected string value");
-
-      var result = new SkinDictionaryCollection();
-
-      result.AddRange(strValue.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries).Select(key => new SkinDictionary { DeferredKey = key }));
-
-      return result;
-    }
-
-    #endregion
-  }
+			return null;
+		}
+	}
 }

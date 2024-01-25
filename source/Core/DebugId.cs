@@ -28,7 +28,7 @@ namespace Zaaml.Core
 			return new DebugId<T>(id, name ?? typeof(T).ToString());
 		}
 
-		private static readonly Dictionary<Type, int> IdCounterDictionary = new Dictionary<Type, int>();
+		private static readonly Dictionary<Type, int> IdCounterDictionary = new();
 
 		public int Id { get; }
 

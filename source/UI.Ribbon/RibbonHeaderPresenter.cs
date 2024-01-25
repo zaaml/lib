@@ -111,7 +111,7 @@ namespace Zaaml.UI.Controls.Ribbon
       internal set => this.SetReadOnlyValue(RibbonPropertyKey, value);
     }
 
-    private RibbonHeaderPresenterTemplateContract TemplateContract => (RibbonHeaderPresenterTemplateContract) TemplateContractInternal;
+    private RibbonHeaderPresenterTemplateContract TemplateContract => (RibbonHeaderPresenterTemplateContract)TemplateContractCore;
 
     public object Title
     {

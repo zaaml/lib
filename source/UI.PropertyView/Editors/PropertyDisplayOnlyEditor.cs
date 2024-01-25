@@ -35,25 +35,46 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 			private set => this.SetReadOnlyValue(TextValuePropertyKey, value);
 		}
 
+		private bool TextValueDirty { get; set; }
+
+		private void InvalidateTextValue()
+		{
+			TextValueDirty = true;
+
+			InvalidateMeasure();
+		}
+
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			UpdateTextValue();
+
+			return base.MeasureOverride(availableSize);
+		}
+
 		protected override void OnPropertyItemChanged(PropertyItem oldValue, PropertyItem newValue)
 		{
 			base.OnPropertyItemChanged(oldValue, newValue);
 
-			UpdateTextValue();
+			InvalidateTextValue();
 		}
 
 		protected override void OnPropertyItemValueChanged()
 		{
 			base.OnPropertyItemValueChanged();
 
-			UpdateTextValue();
+			InvalidateTextValue();
 		}
 
 		private void UpdateTextValue()
 		{
+			if (TextValueDirty == false)
+				return;
+
 			var propertyItem = PropertyItem;
 
 			TextValue = propertyItem != null ? propertyItem.RawValueInternal?.ToString() : string.Empty;
+
+			TextValueDirty = false;
 		}
 	}
 }

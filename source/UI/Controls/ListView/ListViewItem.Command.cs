@@ -69,7 +69,7 @@ namespace Zaaml.UI.Controls.ListView
 
 		bool IManagedCommandItem.CanClick => IsEnabled;
 
-		ClickMode IManagedCommandItem.ClickMode => ListViewControl?.ItemClickMode ?? ClickMode.Release;
+		ItemClickMode IManagedCommandItem.ClickMode => ListViewControl?.ItemClickMode ?? ItemClickMode.DoubleClick;
 
 		bool IManagedCommandItem.IsMouseOver => IsMouseOver;
 

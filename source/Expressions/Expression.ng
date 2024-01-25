@@ -1,0 +1,45 @@
+namespace Zaaml.Expressions
+{
+	[SyntaxNode(BaseClassName = "ExpressionNode", NameSuffix = "Node", Visitor = true)]
+  internal grammar Expression
+  {
+    lexer
+    {
+      syntax fragment Int => '0'..'9'+;
+
+      syntax token Double => Int "." Int | Int;
+
+      syntax token Identifier => ('a'..'z' | 'A'..'Z')+;
+
+      syntax trivia Whitespace => (' '|'\r'|'\t')+;
+    }
+
+    parser
+    {
+      syntax node Expr
+			{
+				production ExprPlus => Term '+' Expr;
+				production ExprMinus => Term '-' Expr;
+				production ExprTerm => Term;
+			}
+
+			syntax node Term
+			{
+				production TermMul => Factor '*' Term;
+				production TermDiv => Factor '/' Term;
+				production TermFactor => Factor;
+			}
+
+			syntax node Factor
+			{
+				production FactorCallArgs => Identifier '(' Expr (','Expr)* ')';
+				production FactorCallEmpty => Identifier '(' ')';
+				production FactorParameter => Identifier;
+				production FactorExpr => '(' Expr ')';
+				production FactorNumber => Number;
+			}
+			
+			syntax node Number => Double;
+    }
+  }
+}

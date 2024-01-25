@@ -60,54 +60,49 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
     internal NativeBinding GetBinding(object target, object targetProperty)
     {
-      using (var serviceProvider = TargetServiceProvider.GetServiceProvider(target, targetProperty))
-        return GetBinding(serviceProvider);
+	    using var serviceProvider = TargetServiceProvider.GetServiceProvider(target, targetProperty);
+
+	    return GetBinding(serviceProvider);
     }
 
     private object GetDefaultValue(object targetProperty)
     {
       var propertyType = GetPropertyType(targetProperty);
+
       return propertyType == null ? null : RuntimeUtils.CreateDefaultValue(propertyType);
     }
 
     protected object GetSafeTarget(IServiceProvider serviceProvider)
     {
-      object target;
-      object targetProperty;
-      bool reflected;
-
-      return GetTarget(serviceProvider, out target, out targetProperty, out reflected) == false ? null : target;
+	    return GetTarget(serviceProvider, out var target, out _, out _) == false ? null : target;
     }
 
     private object ProvideSetterValue(IServiceProvider serviceProvider)
     {
       FinalizeXamlInitializationCore(serviceProvider);
+
       return this;
     }
 
     public sealed override object ProvideValue(IServiceProvider serviceProvider)
     {
-      object target;
-      object targetProperty;
-      bool reflected;
-
-      if (GetTarget(serviceProvider, out target, out targetProperty, out reflected) == false)
+	    if (GetTarget(serviceProvider, out var target, out var targetProperty, out var reflected) == false)
       {
         FinalizeXamlInitializationCore(serviceProvider);
+
         return this;
       }
 
-      var dependencyObjectTarget = target as DependencyObject;
-      var dependencyProperty = targetProperty as DependencyProperty;
+	    var dependencyProperty = targetProperty as DependencyProperty;
 
-      if (reflected && dependencyObjectTarget != null)
+      if (reflected && target is DependencyObject dependencyObjectTarget)
       {
         dependencyObjectTarget.SetBinding(dependencyProperty, GetBinding(serviceProvider));
+
         throw new XamlMarkupInstalException();
       }
 
-      var nativeSetter = target as NativeSetter;
-      if (nativeSetter != null)
+      if (target is NativeSetter nativeSetter)
       {
         if (SupportNativeSetter)
           return ProvideSetterValue(serviceProvider);
@@ -115,8 +110,7 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
         throw new InvalidOperationException($"{GetType().Name} markup extension does not support native setters");
       }
 
-      var setter = target as SetterBase;
-      return setter != null ? ProvideSetterValue(serviceProvider) : ProvideValueCore(target, targetProperty, serviceProvider);
+      return target is SetterBase setter ? ProvideSetterValue(serviceProvider) : ProvideValueCore(target, targetProperty, serviceProvider);
     }
 
     protected virtual object ProvideValueCore(object target, object targetProperty, IServiceProvider serviceProvider)
@@ -130,11 +124,13 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
         if (target?.GetType().Name == "SharedDp")
         {
           FinalizeXamlInitializationCore(serviceProvider);
+
           return this;
         }
       }
 
       var binding = GetBinding(serviceProvider);
+
       if (serviceProvider is InteractivityObject)
         return binding;
 

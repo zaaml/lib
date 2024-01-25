@@ -1,0 +1,304 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Visual States  -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="ReadOnly" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Pressed" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="ArtboardControlTemplate"
+                   TargetType="zm:ArtboardControl">
+    <zm:ControlTemplateRoot x:Name="TemplateRoot"
+                            Background="{TemplateBinding Background}"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <zm:PixelSnapper>
+        <Grid Margin="{TemplateBinding BorderThickness}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+
+          <Border Background="{zm:TemplateExpandoBinding Path=Ruler.Background}" />
+
+          <!--  Horizontal ruler  -->
+          <zm:ArtboardRuler x:Name="HorizontalRuler"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            BorderThickness="0,0,0,1"
+                            FontSize="10.5"
+                            Model="{Binding ElementName=RulerModelSelector, Path=SelectedValue}"
+                            Orientation="Horizontal"
+                            SyncGridStep="320" 
+                            Visibility="{zm:TemplateBinding Path=ShowRulers, Converter={zm:VisibilityConverter}}"/>
+
+          <!--  Vertical ruler  -->
+          <zm:ArtboardRuler x:Name="VerticalRuler"
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            VerticalAlignment="Stretch"
+                            BorderThickness="0,0,1,0"
+                            FontSize="11"
+                            Model="{Binding ElementName=RulerModelSelector, Path=SelectedValue}"
+                            Orientation="Vertical"
+                            SyncGridStep="320"
+                            Visibility="{zm:TemplateBinding Path=ShowRulers, Converter={zm:VisibilityConverter}}"/>
+
+          <!--  ScrollView  -->
+          <zm:ArtboardScrollViewControl x:Name="ScrollView"
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        zm:DisableVeilControl.EnableVeil="False"
+                                        HorizontalScrollBarVisibility="Visible"
+                                        VerticalScrollBarVisibility="Visible"
+                                        Zoom="{zm:TemplateBinding Path=Zoom,
+                                                                  Mode=TwoWay}">
+
+            <zm:ArtboardScrollViewControl.BottomContent>
+              <zm:Panel ClipToBounds="True"
+                        Visibility="{zm:TemplateBinding Path=ShowTransparentBackground, Converter={zm:VisibilityConverter}}"
+                        UseLayoutRounding="False">
+
+                <!--  PatternBrushControl  -->
+                <zm:PatternBrushControl IsHitTestVisible="False">
+                  <zm:DataTemplateBackgroundPattern Template="{zm:ThemeResource Key=Code.Artboard.Background.Pattern}" />
+                </zm:PatternBrushControl>
+              </zm:Panel>
+            </zm:ArtboardScrollViewControl.BottomContent>
+
+            <zm:ArtboardItemsPresenter x:Name="ItemsPresenter" />
+
+            <zm:ArtboardScrollViewControl.TopContent>
+              <zm:Panel ClipToBounds="True"
+                        UseLayoutRounding="False">
+
+                <!--  GridLineControl  -->
+                <zm:ArtboardGridLineControl x:Name="GridLineControl"
+                                            IsHitTestVisible="False"
+                                            Model="{Binding ElementName=GridLineModelSelector, Path=SelectedValue}"
+                                            SyncGridStep="320"
+                                            Visibility="{zm:TemplateBinding Path=ShowGrid,
+                                                                            Converter={zm:VisibilityConverter}}" />
+                <!--  Adorner  -->
+                <zm:ArtboardAdornerPresenter x:Name="AdornerPresenter" />
+
+              </zm:Panel>
+            </zm:ArtboardScrollViewControl.TopContent>
+          </zm:ArtboardScrollViewControl>
+
+          <!--  VerticalSnapGuidePresenter  -->
+          <zm:ArtboardSnapGuidePresenter x:Name="VerticalSnapGuidePresenter"
+                                         Grid.Row="0"
+                                         Grid.RowSpan="2"
+                                         Grid.Column="1"
+                                         Margin="0,0,0,17" />
+
+          <!--  HorizontalSnapGuidePresenter  -->
+          <zm:ArtboardSnapGuidePresenter x:Name="HorizontalSnapGuidePresenter"
+                                         Grid.Row="1"
+                                         Grid.Column="0"
+                                         Grid.ColumnSpan="2"
+                                         Margin="0,0,17,0" />
+
+        </Grid>
+      </zm:PixelSnapper>
+
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl />
+
+      <zm:Extension.Assets>
+
+        <!--  GridLineModelSelector  -->
+        <zm:ArtboardGridLineModelSelector x:Name="GridLineModelSelector"
+                                          Zoom="{zm:TemplateBinding Path=Zoom}">
+          <zm:ArtboardGridLineModel zm:ZoomSelector.SelectZoom="0"
+                                    GridSize="320">
+            <zm:ArtboardGridLine Step="1"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.SmallStep}" />
+            <zm:ArtboardGridLine Step="4"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.MiddleStep}" />
+            <zm:ArtboardGridLine Step="16"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.LargeStep}" />
+          </zm:ArtboardGridLineModel>
+
+          <zm:ArtboardGridLineModel zm:ZoomSelector.SelectZoom="0.1"
+                                    GridSize="80">
+            <zm:ArtboardGridLine Step="1"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.SmallStep}" />
+            <zm:ArtboardGridLine Step="4"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.MiddleStep}" />
+            <zm:ArtboardGridLine Step="16"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.LargeStep}" />
+          </zm:ArtboardGridLineModel>
+
+          <zm:ArtboardGridLineModel zm:ZoomSelector.SelectZoom="0.4"
+                                    GridSize="20">
+            <zm:ArtboardGridLine Step="1"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.SmallStep}" />
+            <zm:ArtboardGridLine Step="4"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.MiddleStep}" />
+            <zm:ArtboardGridLine Step="16"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.LargeStep}" />
+          </zm:ArtboardGridLineModel>
+
+          <zm:ArtboardGridLineModel zm:ZoomSelector.SelectZoom="1.6"
+                                    GridSize="5">
+            <zm:ArtboardGridLine Step="1"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.SmallStep}" />
+            <zm:ArtboardGridLine Step="4"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.MiddleStep}" />
+            <zm:ArtboardGridLine Step="16"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.LargeStep}" />
+          </zm:ArtboardGridLineModel>
+
+          <zm:ArtboardGridLineModel zm:ZoomSelector.SelectZoom="9.6"
+                                    GridSize="1">
+            <zm:ArtboardGridLine Step="1"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.SmallStep}" />
+            <zm:ArtboardGridLine Step="5"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.MiddleStep}" />
+            <zm:ArtboardGridLine Step="20"
+                                 Stroke="{zm:ThemeResource Key=Code.ArtboardGridLineControl.LargeStep}" />
+          </zm:ArtboardGridLineModel>
+        </zm:ArtboardGridLineModelSelector>
+
+        <!--  RulerModelSelector  -->
+        <zm:ArtboardRulerModelSelector x:Name="RulerModelSelector"
+                                       Zoom="{zm:TemplateBinding Path=Zoom}">
+          <zm:ArtboardRulerModel zm:ZoomSelector.SelectZoom="0.0"
+                                 GridSize="160">
+            <zm:TickMarkDefinition Size="5"
+                                   Step="1"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.SmallTick}" />
+            <zm:TickMarkDefinition Size="10"
+                                   Step="4"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.MiddleTick}" />
+            <zm:TickMarkDefinition ShowLabel="True"
+                                   Size="20"
+                                   Step="16"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.LargeTick}" />
+          </zm:ArtboardRulerModel>
+
+          <zm:ArtboardRulerModel zm:ZoomSelector.SelectZoom="0.05"
+                                 GridSize="80">
+            <zm:TickMarkDefinition Size="5"
+                                   Step="1"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.SmallTick}" />
+            <zm:TickMarkDefinition Size="10"
+                                   Step="4"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.MiddleTick}" />
+            <zm:TickMarkDefinition ShowLabel="True"
+                                   Size="20"
+                                   Step="16"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.LargeTick}" />
+          </zm:ArtboardRulerModel>
+
+          <zm:ArtboardRulerModel zm:ZoomSelector.SelectZoom="0.25"
+                                 GridSize="20">
+            <zm:TickMarkDefinition Size="5"
+                                   Step="1"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.SmallTick}" />
+            <zm:TickMarkDefinition Size="10"
+                                   Step="4"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.MiddleTick}" />
+            <zm:TickMarkDefinition ShowLabel="True"
+                                   Size="20"
+                                   Step="16"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.LargeTick}" />
+          </zm:ArtboardRulerModel>
+
+          <zm:ArtboardRulerModel zm:ZoomSelector.SelectZoom="1"
+                                 GridSize="5">
+            <zm:TickMarkDefinition Size="5"
+                                   Step="1"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.SmallTick}" />
+            <zm:TickMarkDefinition Size="10"
+                                   Step="4"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.MiddleTick}" />
+            <zm:TickMarkDefinition ShowLabel="True"
+                                   Size="20"
+                                   Step="16"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.LargeTick}" />
+          </zm:ArtboardRulerModel>
+
+          <zm:ArtboardRulerModel zm:ZoomSelector.SelectZoom="4"
+                                 GridSize="1">
+            <zm:TickMarkDefinition Size="5"
+                                   Step="1"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.SmallTick}" />
+            <zm:TickMarkDefinition Size="10"
+                                   Step="5"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.MiddleTick}" />
+            <zm:TickMarkDefinition ShowLabel="True"
+                                   Size="20"
+                                   Step="20"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.LargeTick}" />
+          </zm:ArtboardRulerModel>
+
+          <zm:ArtboardRulerModel zm:ZoomSelector.SelectZoom="16"
+                                 GridSize="1">
+            <zm:TickMarkDefinition Size="5"
+                                   Step="1"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.SmallTick}" />
+            <zm:TickMarkDefinition Size="10"
+                                   Step="2"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.MiddleTick}" />
+            <zm:TickMarkDefinition ShowLabel="True"
+                                   Size="20"
+                                   Step="10"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.LargeTick}" />
+          </zm:ArtboardRulerModel>
+
+          <zm:ArtboardRulerModel zm:ZoomSelector.SelectZoom="64"
+                                 GridSize="1">
+            <zm:TickMarkDefinition ShowLabel="True"
+                                   Size="20"
+                                   Step="1"
+                                   Stroke="{zm:ThemeResource Key=Code.ArtboardRuler.LargeTick}" />
+          </zm:ArtboardRulerModel>
+        </zm:ArtboardRulerModelSelector>
+      </zm:Extension.Assets>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ArtboardControlStyleBase" TargetType="zm:ArtboardControl">
+    <zm:Setter Property="Background" Value="Transparent" />
+    <zm:Setter Property="Template" Value="{StaticResource ArtboardControlTemplate}" />
+
+
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="ArtboardControlStyle" BasedOn="{StaticResource ArtboardControlStyleBase}" TargetType="zm:ArtboardControl">
+    <zm:SetterGroup ValuePathSource="ThemeResource">
+      <zm:Setter ExpandoProperty="Background" ValuePath="Code.Artboard.Background" />
+      <zm:Setter ExpandoProperty="Background.Pattern.EvenColor" ValuePath="Code.Artboard.Background.Pattern.EvenColor" />
+      <zm:Setter ExpandoProperty="Background.Pattern.OddColor" ValuePath="Code.Artboard.Background.Pattern.OddColor" />
+
+      <zm:Setter ValuePath="Code.Artboard.DesignBackground" Property="DesignBackground" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ArtboardControlStyleThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ArtboardControlStyle}" TargetType="zm:ArtboardControl" />
+
+</zm:ThemeResourceDictionary>

@@ -23,16 +23,16 @@ namespace Zaaml.Core.Collections
 			public LinkedListStruct(SparseLinkedListManager<T> listManager)
 			{
 				ListManager = listManager;
-				HeadNode = ListManager.GetGapNode();
-				TailNode = ListManager.GetGapNode();
+				HeadNode = ListManager.GetVoidNode();
+				TailNode = ListManager.GetVoidNode();
 				HeadNode.Next = TailNode;
 				TailNode.Prev = HeadNode;
 				LongCount = 0;
 			}
 
-			public GapNode TailNode { get; set; }
+			public VoidNode TailNode { get; set; }
 
-			public GapNode HeadNode { get; set; }
+			public VoidNode HeadNode { get; set; }
 
 			public long LongCount { get; set; }
 
@@ -62,14 +62,14 @@ namespace Zaaml.Core.Collections
 				var nodeSplitCount = (int) (cursor.Node.Size - nodeSplitIndex);
 				var targetListTail = targetList.TailNode;
 
-				if (cursor.Node is GapNode gapNode)
+				if (cursor.Node is VoidNode voidNode)
 				{
-					if (ReferenceEquals(HeadNode, gapNode))
+					if (ReferenceEquals(HeadNode, voidNode))
 					{
 						// Target
 						targetList.HeadNode.Size = nodeSplitCount;
-						targetList.HeadNode.Next = gapNode.Next;
-						gapNode.Next.Prev = targetList.HeadNode;
+						targetList.HeadNode.Next = voidNode.Next;
+						voidNode.Next.Prev = targetList.HeadNode;
 						targetList.TailNode = TailNode;
 
 						// Source
@@ -80,19 +80,19 @@ namespace Zaaml.Core.Collections
 						HeadNode.Size = index;
 						TailNode.Size = 0;
 					}
-					else if (ReferenceEquals(TailNode, gapNode))
+					else if (ReferenceEquals(TailNode, voidNode))
 					{
 						TailNode.Size -= nodeSplitCount;
 						targetList.HeadNode.Size += nodeSplitCount;
 					}
 					else
 					{
-						var prevNode = gapNode.Prev;
+						var prevNode = voidNode.Prev;
 
 						// Target
 						targetList.HeadNode.Size = nodeSplitCount;
-						targetList.HeadNode.Next = gapNode.Next;
-						gapNode.Next.Prev = targetList.HeadNode;
+						targetList.HeadNode.Next = voidNode.Next;
+						voidNode.Next.Prev = targetList.HeadNode;
 						targetList.TailNode = TailNode;
 
 						// Source
@@ -102,7 +102,7 @@ namespace Zaaml.Core.Collections
 						prevNode.Next = TailNode;
 						TailNode.Size = nodeSplitIndex;
 
-						ListManager.ReleaseNode(gapNode);
+						ListManager.ReleaseNode(voidNode);
 					}
 				}
 				else if (nodeSplitIndex == 0)
@@ -115,7 +115,7 @@ namespace Zaaml.Core.Collections
 					node.Prev = targetList.HeadNode;
 					targetList.TailNode = TailNode;
 
-					if (prev is GapNode prevGapNode)
+					if (prev is VoidNode prevVoidNode)
 					{
 						if (ReferenceEquals(HeadNode, prev))
 						{
@@ -125,7 +125,7 @@ namespace Zaaml.Core.Collections
 						}
 						else
 						{
-							TailNode = prevGapNode;
+							TailNode = prevVoidNode;
 							TailNode.Next = null;
 
 							ListManager.ReleaseNode(targetListTail);
@@ -196,7 +196,7 @@ namespace Zaaml.Core.Collections
 						sourceList.HeadNode.Next.Prev = TailNode;
 						TailNode = sourceList.TailNode;
 
-						sourceList.TailNode = ListManager.GetGapNode();
+						sourceList.TailNode = ListManager.GetVoidNode();
 						sourceList.HeadNode.Next = sourceList.TailNode;
 						sourceList.TailNode.Prev = sourceList.HeadNode;
 					}

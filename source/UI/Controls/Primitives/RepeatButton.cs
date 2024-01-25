@@ -41,7 +41,7 @@ namespace Zaaml.UI.Controls.Primitives
       DefaultStyleKeyHelper.OverrideStyleKey<RepeatButton>();
 
 #if !SILVERLIGHT
-      ClickModeProperty.OverrideMetadata(typeof(RepeatButton), new PropertyMetadataXm(ClickMode.Press));
+      ClickModeProperty.OverrideMetadata(typeof(RepeatButton), new ZPropertyMetadata(ClickMode.Press));
 #endif
     }
 

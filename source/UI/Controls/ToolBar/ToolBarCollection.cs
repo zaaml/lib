@@ -7,14 +7,10 @@ using Zaaml.PresentationCore.ObservableCollections;
 
 namespace Zaaml.UI.Controls.ToolBar
 {
-  public sealed class ToolBarCollection : DelegateDependencyObjectCollection<ToolBarControl>
-  {
-    #region Ctors
-
-    internal ToolBarCollection(Action<ToolBarControl> onItemAdded, Action<ToolBarControl> onItemRemoved) : base(onItemAdded, onItemRemoved)
-    {
-    }
-
-    #endregion
-  }
+	public sealed class ToolBarCollection : DelegateDependencyObjectCollection<ToolBarControl>
+	{
+		internal ToolBarCollection(Action<ToolBarControl> onItemAdded, Action<ToolBarControl> onItemRemoved) : base(onItemAdded, onItemRemoved)
+		{
+		}
+	}
 }

@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using System.Windows.Controls;
 using Zaaml.PresentationCore.Interfaces;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
@@ -11,7 +12,7 @@ using Zaaml.UI.Panels.Interfaces;
 
 namespace Zaaml.UI.Panels
 {
-	internal abstract class VirtualPanelLayoutBase<TPanel> : ScrollPanelLayoutBase<TPanel> 
+	internal abstract class VirtualPanelLayoutBase<TPanel> : ScrollPanelLayoutBase<TPanel>
 		where TPanel : IPanel, IScrollViewPanel, IVirtualPanel
 	{
 		protected VirtualPanelLayoutBase(TPanel panel) : base(panel)
@@ -22,8 +23,9 @@ namespace Zaaml.UI.Panels
 
 		protected IVirtualItemCollection Source => Panel.VirtualSource;
 
-		public virtual void BringIntoView(BringIntoViewRequest request)
+		public virtual bool BringIntoView(BringIntoViewRequest request)
 		{
+			return false;
 		}
 	}
 
@@ -34,9 +36,27 @@ namespace Zaaml.UI.Panels
 		PartiallyVisible
 	}
 
+	internal static class ItemLayoutInformationVisibilityExtensions
+	{
+		public static bool IsVisible(this ItemLayoutInformationVisibility visibility)
+		{
+			return visibility == ItemLayoutInformationVisibility.Visible;
+		}
+
+		public static bool IsInvisible(this ItemLayoutInformationVisibility visibility)
+		{
+			return visibility == ItemLayoutInformationVisibility.Invisible;
+		}
+
+		public static bool IsPartiallyVisible(this ItemLayoutInformationVisibility visibility)
+		{
+			return visibility == ItemLayoutInformationVisibility.PartiallyVisible;
+		}
+	}
+
 	internal readonly struct ItemLayoutInformation
 	{
-		public static readonly ItemLayoutInformation Empty = new ItemLayoutInformation(null, Rect.Empty, Rect.Empty);
+		public static readonly ItemLayoutInformation Empty = new(null, Rect.Empty, Rect.Empty);
 
 		public ItemLayoutInformation(FrameworkElement item, Rect boundingBox, Rect panelBox)
 		{
@@ -58,10 +78,64 @@ namespace Zaaml.UI.Panels
 				if (IsEmpty)
 					return ItemLayoutInformationVisibility.Invisible;
 
-				if (RectUtils.IntersectsWith(PanelBox, BoundingBox) == false)
+				var panelBox = PanelBox;
+				var boundingBox = BoundingBox;
+
+				if (RectUtils.IntersectsWith(panelBox, boundingBox) == false)
 					return ItemLayoutInformationVisibility.Invisible;
 
-				if (RectUtils.Contains(PanelBox, BoundingBox))
+				if (RectUtils.Contains(panelBox, boundingBox))
+					return ItemLayoutInformationVisibility.Visible;
+
+				return ItemLayoutInformationVisibility.PartiallyVisible;
+			}
+		}
+
+		public ItemLayoutInformationVisibility GetVisibility(Orientation orientation)
+		{
+			return orientation == Orientation.Vertical ? VerticalVisibility : HorizontalVisibility;
+		}
+
+		public ItemLayoutInformationVisibility VerticalVisibility
+		{
+			get
+			{
+				if (IsEmpty)
+					return ItemLayoutInformationVisibility.Invisible;
+
+				var panelBox = PanelBox;
+				var boundingBox = BoundingBox;
+
+				boundingBox.X = panelBox.X;
+				boundingBox.Width = panelBox.Width;
+
+				if (RectUtils.IntersectsWith(panelBox, boundingBox) == false)
+					return ItemLayoutInformationVisibility.Invisible;
+
+				if (RectUtils.Contains(panelBox, boundingBox))
+					return ItemLayoutInformationVisibility.Visible;
+
+				return ItemLayoutInformationVisibility.PartiallyVisible;
+			}
+		}
+
+		public ItemLayoutInformationVisibility HorizontalVisibility
+		{
+			get
+			{
+				if (IsEmpty)
+					return ItemLayoutInformationVisibility.Invisible;
+
+				var panelBox = PanelBox;
+				var boundingBox = BoundingBox;
+
+				boundingBox.Y = panelBox.Y;
+				boundingBox.Height = panelBox.Height;
+
+				if (RectUtils.IntersectsWith(panelBox, boundingBox) == false)
+					return ItemLayoutInformationVisibility.Invisible;
+
+				if (RectUtils.Contains(panelBox, boundingBox))
 					return ItemLayoutInformationVisibility.Visible;
 
 				return ItemLayoutInformationVisibility.PartiallyVisible;

@@ -1,8 +1,8 @@
-<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
-                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
                             xmlns:zmb="http://schemas.zaaml.com/build"
                             mc:Ignorable="d zmb">
 
@@ -10,10 +10,10 @@
     <ResourceDictionary Source="ValidationSummaryCommon.xaml" />
   </zm:ThemeResourceDictionary.MergedDictionaries>
 
-  <!-- Visual States -->
+  <!--  Visual States  -->
   <zm:VisualStateGroupCollection x:Key="VisualStates">
 
-    <!-- CommonStates States -->
+    <!--  CommonStates States  -->
     <zm:VisualStateGroup Name="CommonStates">
       <zm:VisualState Name="Normal" />
       <zm:VisualState Name="ReadOnly" />
@@ -22,7 +22,7 @@
       <zm:VisualState Name="Disabled" />
     </zm:VisualStateGroup>
 
-    <!-- ValidationStates States -->
+    <!--  ValidationStates States  -->
     <zm:VisualStateGroup Name="ValidationStates">
       <zm:VisualState Name="Valid" />
       <zm:VisualState Name="InvalidFocused" />
@@ -32,56 +32,54 @@
     </zm:VisualStateGroup>
   </zm:VisualStateGroupCollection>
 
-  <!-- Template -->
-  <ControlTemplate x:Key="ValidationSummaryTemplate" TargetType="zm:ValidationSummaryControl">
-    <zm:ControlTemplateRoot Background="Transparent" 
+  <!--  Template  -->
+  <ControlTemplate x:Key="ValidationSummaryTemplate"
+                   TargetType="zm:ValidationSummaryControl">
+    <zm:ControlTemplateRoot Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
 
       <Border x:Name="Content"
-              Visibility="{zm:TemplateBinding Path=HasDisplayedErrors, Converter={zm:VisibilityConverter}}"
+              Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}" 
-              Background="{TemplateBinding Background}">
+              BorderThickness="{TemplateBinding BorderThickness}"
+              Visibility="{zm:TemplateBinding Path=HasDisplayedErrors,
+                                              Converter={zm:VisibilityConverter}}">
 
         <zm:Extension.Setters>
-          <zm:Setter Property="Visibility" VisualState="Empty" Value="Collapsed" />
+          <zm:Setter VisualState="Empty" Property="Visibility" Value="Collapsed" />
         </zm:Extension.Setters>
 
-        <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-          </Grid.RowDefinitions>
+        <zm:DockPanel>
 
-          <!-- Header -->
-          <ContentControl x:Name="HeaderContentControl" 
-                          ContentTemplate="{TemplateBinding HeaderTemplate}"
-                          Content="{TemplateBinding Header}" 
-                          IsTabStop="False"
+          <!--  Header  -->
+          <ContentControl x:Name="HeaderContentControl"
                           HorizontalContentAlignment="Stretch"
-                          VerticalContentAlignment="Center" />
+                          VerticalContentAlignment="Center"
+                          zm:DockPanel.Dock="Top"
+                          Content="{TemplateBinding Header}"
+                          ContentTemplate="{TemplateBinding HeaderTemplate}"
+                          IsTabStop="False" />
 
-          <!-- Summary -->
-          <ListBox x:Name="SummaryListBox" 
-                   Grid.Row="1" 
-                   Background="{x:Null}" 
-                   BorderThickness="0" 
-                   Height="Auto" 
-                   ItemContainerStyle="{TemplateBinding ErrorStyle}" 
-                   Style="{TemplateBinding SummaryListBoxStyle}" 
-                   Padding="{TemplateBinding Padding}" 
-                   Foreground="{TemplateBinding Foreground}" 
-                   ItemTemplate="{TemplateBinding ErrorItemTemplate}" />
-        </Grid>
+          <!--  Summary  -->
+          <ListBox x:Name="SummaryListBox"
+                   Height="Auto"
+                   Padding="{TemplateBinding Padding}"
+                   Background="{x:Null}"
+                   BorderThickness="0"
+                   Foreground="{TemplateBinding Foreground}"
+                   ItemContainerStyle="{TemplateBinding ErrorStyle}"
+                   ItemTemplate="{TemplateBinding ErrorItemTemplate}"
+                   Style="{TemplateBinding SummaryListBoxStyle}" />
+        </zm:DockPanel>
       </Border>
 
-      <!-- Disabled Veil -->
+      <!--  Disabled Veil  -->
       <zm:DisableVeilControl />
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
-  <!-- Base Style -->
+  <!--  Base Style  -->
   <zm:Style x:Key="ValidationSummaryStyle" TargetType="zm:ValidationSummaryControl">
     <zm:Setter Property="IsTabStop" Value="False" />
     <zm:Setter Property="Background" Value="{zm:ThemeResource Key=Metro.StandardControls.ValidationSummary.Background}" />
@@ -95,10 +93,10 @@
     <zm:Setter Property="Foreground" Value="{zm:ThemeResource Keyword=ApplicationForegroundBrush}" />
   </zm:Style>
 
-  <!-- Base Skinned Style -->
-  <zm:Style x:Key="ValidationSummarySkinnedStyle" TargetType="zm:ValidationSummaryControl" BasedOn="{StaticResource ValidationSummaryStyle}" />
+  <!--  Base Skinned Style  -->
+  <zm:Style x:Key="ValidationSummarySkinnedStyle" BasedOn="{StaticResource ValidationSummaryStyle}" TargetType="zm:ValidationSummaryControl" />
 
-  <!-- Theme Styles -->
-  <zm:ThemeStyle x:Key="ValidationSummaryBaseXm" TargetType="zm:ValidationSummaryControl" BasedOn="{StaticResource ValidationSummarySkinnedStyle}" zmb:Deferred="True" />
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="ValidationSummaryBaseXm" zmb:Deferred="True" BasedOn="{StaticResource ValidationSummarySkinnedStyle}" TargetType="zm:ValidationSummaryControl" />
 
 </zm:ThemeResourceDictionary>

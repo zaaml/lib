@@ -17,14 +17,8 @@ namespace Zaaml.UI.Controls.Core
 {
 	internal sealed class IndexedEnumerable : IEnumerable
 	{
-		#region Static Fields and Constants
-		
 		private static readonly object[] EmptyArray = new object[0];
 		public static readonly IndexedEnumerable Empty = new IndexedEnumerable(EmptyArray);
-
-		#endregion
-
-		#region Fields
 
 		private int _cachedCount = -1;
 		private int _cachedIndex = -1;
@@ -38,12 +32,7 @@ namespace Zaaml.UI.Controls.Core
 		private MethodInfo _reflectedIndexOf;
 		private PropertyInfo _reflectedItemAt;
 
-		#endregion
-
-		#region Ctors
-
-		internal IndexedEnumerable(IEnumerable collection)
-			: this(collection ?? EmptyArray, null)
+		internal IndexedEnumerable(IEnumerable collection) : this(collection ?? EmptyArray, null)
 		{
 		}
 
@@ -56,13 +45,9 @@ namespace Zaaml.UI.Controls.Core
 			if (List != null || ReadOnlyList != null)
 				return;
 
-			if (collection is INotifyCollectionChanged icc) 
+			if (collection is INotifyCollectionChanged icc)
 				CollectionChangedEventManager.AddHandler(icc, OnCollectionChanged);
 		}
-
-		#endregion
-
-		#region Properties
 
 		internal ICollection Collection { get; private set; }
 
@@ -163,12 +148,8 @@ namespace Zaaml.UI.Controls.Core
 		}
 
 		internal IList List { get; private set; }
-		
+
 		internal IReadOnlyList<object> ReadOnlyList { get; private set; }
-
-		#endregion
-
-		#region  Methods
 
 		private void CacheCurrentItem(int index, object item)
 		{
@@ -197,7 +178,7 @@ namespace Zaaml.UI.Controls.Core
 					if (index < array.Length)
 					{
 						list[index] = item;
-						
+
 						++index;
 					}
 					else
@@ -243,7 +224,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				if (advisor.IsEnumeratorValid)
 					return _enumeratorVersion;
-				
+
 				UseNewEnumerator();
 
 				return _enumeratorVersion;
@@ -325,7 +306,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				try
 				{
-					value = (int) _reflectedIndexOf.Invoke(Enumerable, new[] { item });
+					value = (int) _reflectedIndexOf.Invoke(Enumerable, new[] {item});
 					isNativeValue = true;
 				}
 				catch (MethodAccessException)
@@ -398,7 +379,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				try
 				{
-					value = _reflectedItemAt.GetValue(Enumerable, new object[] { index });
+					value = _reflectedItemAt.GetValue(Enumerable, new object[] {index});
 					isNativeValue = true;
 				}
 				catch (MethodAccessException)
@@ -410,8 +391,7 @@ namespace Zaaml.UI.Controls.Core
 
 			return isNativeValue;
 		}
-
-
+		
 		internal int IndexOf(object item)
 		{
 			if (GetNativeIndexOf(item, out var index))
@@ -435,7 +415,7 @@ namespace Zaaml.UI.Controls.Core
 				if (Equals(_enumerator.Current, item))
 				{
 					index = i;
-					
+
 					break;
 				}
 
@@ -506,13 +486,13 @@ namespace Zaaml.UI.Controls.Core
 			Collection = collection as ICollection;
 			List = collection as IList;
 			ReadOnlyList = collection as IReadOnlyList<object>;
-			
+
 			CollectionView = collection as CollectionView;
 
 			if (List == null && CollectionView == null)
 			{
 				var srcType = collection.GetType();
-				var mi = srcType.GetMethod("IndexOf", new[] { typeof(object) });
+				var mi = srcType.GetMethod("IndexOf", new[] {typeof(object)});
 
 				if (mi != null && mi.ReturnType == typeof(int))
 					_reflectedIndexOf = mi;
@@ -569,35 +549,17 @@ namespace Zaaml.UI.Controls.Core
 			_cachedItem = null;
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IEnumerable
-
 		public IEnumerator GetEnumerator()
 		{
 			return new FilteredEnumerator(this, Enumerable, FilterCallback);
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private class FilteredEnumerator : IEnumerator, IDisposable, IIndexedEnumerableAdvisor
 		{
-			#region Fields
-
 			private readonly IEnumerable _enumerable;
 			private readonly Predicate<object> _filterCallback;
 			private readonly IndexedEnumerable _indexedEnumerable;
 			private IEnumerator _enumerator;
-
-			#endregion
-
-			#region Ctors
 
 			public FilteredEnumerator(IndexedEnumerable indexedEnumerable, IEnumerable enumerable, Predicate<object> filterCallback)
 			{
@@ -606,12 +568,6 @@ namespace Zaaml.UI.Controls.Core
 				_filterCallback = filterCallback;
 				_indexedEnumerable = indexedEnumerable;
 			}
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region IDisposable
 
 			public void Dispose()
 			{
@@ -622,17 +578,10 @@ namespace Zaaml.UI.Controls.Core
 				_enumerator = null;
 			}
 
-			#endregion
-
-			#region IEnumerator
-
 			void IEnumerator.Reset()
 			{
 				if (_indexedEnumerable.Enumerable == null)
-				{
-					//throw new InvalidOperationException(SR.Get(SRID.EnumeratorVersionChanged));
 					throw new InvalidOperationException();
-				}
 
 				Dispose();
 
@@ -644,18 +593,13 @@ namespace Zaaml.UI.Controls.Core
 				bool returnValue;
 
 				if (_indexedEnumerable.Enumerable == null)
-				{
-					//throw new InvalidOperationException(SR.Get(SRID.EnumeratorVersionChanged));
 					throw new InvalidOperationException();
-				}
 
 				if (_filterCallback == null)
-				{
 					returnValue = _enumerator.MoveNext();
-				}
 				else
 				{
-					while ((returnValue = _enumerator.MoveNext()) && !_filterCallback(_enumerator.Current))
+					while ((returnValue = _enumerator.MoveNext()) && _filterCallback(_enumerator.Current) == false)
 					{
 					}
 				}
@@ -665,16 +609,10 @@ namespace Zaaml.UI.Controls.Core
 
 			object IEnumerator.Current => _enumerator.Current;
 
-			#endregion
-
-			#endregion
-
 			public bool IsEnumeratorValid => _enumerator is IIndexedEnumerableAdvisor advisor && advisor.IsEnumeratorValid;
 		}
-
-		#endregion
 	}
-	
+
 	internal interface IIndexedEnumerableAdvisor
 	{
 		bool IsEnumeratorValid { get; }

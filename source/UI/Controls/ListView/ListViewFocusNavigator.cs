@@ -29,12 +29,12 @@ namespace Zaaml.UI.Controls.ListView
 				if (ReferenceEquals(_listViewData, value))
 					return;
 
-				if (_listViewData?.DataPlainListView is INotifyCollectionChanged oldListView)
+				if (_listViewData?.FlatListView is INotifyCollectionChanged oldListView)
 					oldListView.CollectionChanged -= OnPlainListViewCollectionChanged;
 
 				_listViewData = value;
 
-				if (_listViewData?.DataPlainListView is INotifyCollectionChanged newListView)
+				if (_listViewData?.FlatListView is INotifyCollectionChanged newListView)
 					newListView.CollectionChanged += OnPlainListViewCollectionChanged;
 			}
 		}

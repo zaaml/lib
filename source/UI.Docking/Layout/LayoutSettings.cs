@@ -32,18 +32,18 @@ namespace Zaaml.UI.Controls.Docking
 
     #region  Methods
 
-    public static void ClearSettings(DependencyObject depObj, List<DependencyProperty> dependencyProperties)
+    public static void ClearSettings(DependencyObject depObj, IEnumerable<DependencyProperty> dependencyProperties)
     {
       foreach (var depProperty in dependencyProperties)
         depObj.ClearValue(depProperty);
     }
 
-    public void ClearSettings(List<DependencyProperty> dependencyProperties)
+    public void ClearSettings(IEnumerable<DependencyProperty> dependencyProperties)
     {
       ClearSettings(this, dependencyProperties);
     }
 
-    public static void CopySettings(DependencyObject source, DependencyObject target, IEnumerable<DependencyProperty> dependencyProperties, bool merge = false)
+    public static void CopySettings(DependencyObject source, DependencyObject target, IEnumerable<DependencyProperty> dependencyProperties)
     {
       if (source == null || target == null || ReferenceEquals(source, target))
         return;
@@ -52,8 +52,20 @@ namespace Zaaml.UI.Controls.Docking
       {
         if (source.HasLocalValue(property))
           target.SetValue(property, source.GetValue(property));
-        else if (merge == false)
+        else
           target.ClearValue(property);
+      }
+    }
+
+    public static void MergeSettings(DependencyObject source, DependencyObject target, IEnumerable<DependencyProperty> dependencyProperties)
+    {
+      if (source == null || target == null || ReferenceEquals(source, target))
+        return;
+
+      foreach (var property in dependencyProperties)
+      {
+        if (source.HasLocalValue(property))
+          target.SetValue(property, source.GetValue(property));
       }
     }
 

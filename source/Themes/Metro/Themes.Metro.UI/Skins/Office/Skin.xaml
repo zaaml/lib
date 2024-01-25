@@ -758,7 +758,7 @@
     </zm:SkinDictionary>
 
     <!-- ScrollViewer -->
-    <zm:SkinDictionary x:Key="ScrollViewer"  BasedOn="Metro.Shared.ScrollViewer" />
+    <zm:SkinDictionary x:Key="ScrollViewControl"  BasedOn="Metro.Shared.ScrollViewer" />
 
     <!-- ScrollBar -->
     <zm:SkinDictionary x:Key="ScrollBar" BasedOn="Metro.Shared.ScrollBar">
@@ -791,17 +791,189 @@
 
     </zm:SkinDictionary>
 
+    <!-- ItemGridCell -->
+    <zm:SkinDictionary x:Key="ItemGridCell">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FFCDD5CD" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
+    <!-- ItemGridColumnHeader -->
+    <zm:SkinDictionary x:Key="ItemGridColumnHeader">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#FFF0F0F0" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFC5C5C5" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FFADADAD" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFADADAD" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Focused" Color="#FF0072C6" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
+    <!-- ItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="ItemGridHeaderElement">
+
+      <!-- Foreground -->
+      <zm:SkinDictionary x:Key="Foreground">
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- Background -->
+      <zm:SkinDictionary x:Key="Background">
+        <SolidColorBrush x:Key="Normal" Color="#FFF0F0F0" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFC5C5C5" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- BorderBrush -->
+      <zm:SkinDictionary x:Key="BorderBrush">
+        <SolidColorBrush x:Key="Normal" Color="#FFADADAD" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFADADAD" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
+    <!-- ColorEditorControl -->
+    <zm:SkinDictionary x:Key="ColorEditorControl">
+
+      <SolidColorBrush x:Key="Foreground" Color="#E3000000" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="Background" Color="#FFFFFFFF" zmb:Skin="Office" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#FFADADAD" zmb:Skin="Office" />
+
+    </zm:SkinDictionary>
+
+    <!-- DropDownColorEditorControl -->
+    <zm:SkinDictionary x:Key="DropDownColorEditorControl">
+
+      <SolidColorBrush x:Key="Background" Color="#FFFFFFFF" zmb:Skin="Office" />
+
+    </zm:SkinDictionary>
+
+    <!-- ColorRectangleEditorControl -->
+    <zm:SkinDictionary x:Key="ColorRectangleEditorControl">
+
+      <SolidColorBrush x:Key="XYControllerItemStroke" Color="#FFBBBBBB" />
+
+    </zm:SkinDictionary>
+
+    <!-- ColorChannelSlider -->
+    <zm:SkinDictionary x:Key="ColorChannelSlider">
+
+      <SolidColorBrush x:Key="ThumbStroke" Color="#FFBBBBBB" />
+
+      <DataTemplate x:Key="TransparentPattern" zmb:Skin="Office">
+        <Grid Width="8" Height="8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="4"/>
+          </Grid.ColumnDefinitions>
+
+          <Grid.RowDefinitions>
+            <RowDefinition Height="4"/>
+            <RowDefinition Height="4"/>
+          </Grid.RowDefinitions>
+
+          <!-- Even -->
+          <Rectangle Grid.Column="0" Grid.Row="0" Fill="#FFFFFFFF" />
+          <!-- Odd -->
+          <Rectangle Grid.Column="1" Grid.Row="0" Fill="#FF888888" />
+          <!-- Even -->
+          <Rectangle Grid.Column="1" Grid.Row="1" Fill="#FFFFFFFF" />
+          <!-- Odd -->
+          <Rectangle Grid.Column="0" Grid.Row="1" Fill="#FF888888" />
+        </Grid>
+      </DataTemplate>
+
+    </zm:SkinDictionary>
+
+    <!-- ColorPresenter -->
+    <zm:SkinDictionary x:Key="ColorPresenter">
+
+      <DataTemplate x:Key="TransparentPattern" zmb:Skin="Office">
+        <Grid Width="8" Height="8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="4"/>
+          </Grid.ColumnDefinitions>
+
+          <Grid.RowDefinitions>
+            <RowDefinition Height="4"/>
+            <RowDefinition Height="4"/>
+          </Grid.RowDefinitions>
+
+          <!-- Even -->
+          <Rectangle Grid.Column="0" Grid.Row="0" Fill="#FFFFFFFF" />
+          <!-- Odd -->
+          <Rectangle Grid.Column="1" Grid.Row="0" Fill="#FF888888" />
+          <!-- Even -->
+          <Rectangle Grid.Column="1" Grid.Row="1" Fill="#FFFFFFFF" />
+          <!-- Odd -->
+          <Rectangle Grid.Column="0" Grid.Row="1" Fill="#FF888888" />
+        </Grid>
+      </DataTemplate>
+
+    </zm:SkinDictionary>
+
     <!-- ListView -->
     <zm:SkinDictionary x:Key="ListView" BasedOn="Metro.Shared.ListView"/>
 
     <!-- ListViewItem -->
     <zm:SkinDictionary x:Key="ListViewItem" BasedOn="Metro.Shared.ListViewItem"/>
 
+    <!-- ListViewItemGridCell -->
+    <zm:SkinDictionary x:Key="ListViewItemGridCell" BasedOn="Metro.ItemGridCell"/>
+
+    <!-- ListViewItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="ListViewItemGridCellElement" BasedOn="Metro.ItemGridCell" />
+
+    <!-- ListViewItemGridColumnHeader -->
+    <zm:SkinDictionary x:Key="ListViewItemGridColumnHeader" BasedOn="Metro.ItemGridColumnHeader" />
+
+    <!-- ListViewItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="ListViewItemGridHeaderElement" BasedOn="Metro.ItemGridHeaderElement" />
+
     <!-- TreeView -->
     <zm:SkinDictionary x:Key="TreeView" BasedOn="Metro.Shared.ListView"/>
 
     <!-- TreeViewItem -->
-    <zm:SkinDictionary x:Key="TreeViewItem" BasedOn="Metro.Shared.ListViewItem"/>
+    <zm:SkinDictionary x:Key="TreeViewItem" BasedOn="Metro.Shared.ListViewItem" />
+
+    <!-- TreeViewItemGridCell -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridCell" BasedOn="Metro.ItemGridCell"/>
+
+    <!-- TreeViewItemGridCellElement -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridCellElement" BasedOn="Metro.ItemGridCell" />
+
+    <!-- TreeViewItemGridColumnHeader -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridColumnHeader" BasedOn="Metro.ItemGridColumnHeader" />
+
+    <!-- TreeViewItemGridHeaderElement -->
+    <zm:SkinDictionary x:Key="TreeViewItemGridHeaderElement" BasedOn="Metro.ItemGridHeaderElement" />
 
     <!-- DropDownListView -->
     <zm:SkinDictionary x:Key="DropDownListViewControl" BasedOn="Metro.Shared.DropDownItemsControl" />

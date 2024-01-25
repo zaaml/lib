@@ -48,19 +48,14 @@
       <Border Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="{TemplateBinding BorderThickness}">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
+        <zm:DockPanel>
 
-          <ContentPresenter Grid.Column="0"
-                            VerticalAlignment="Stretch"
-                            Content="{TemplateBinding HeadContent}"
-                            ContentTemplate="{TemplateBinding HeadContentTemplate}" />
+          <zm:ContentPresenter zm:DockPanel.Dock="Left"
+                               VerticalAlignment="Stretch"
+                               Content="{TemplateBinding HeadContent}"
+                               ContentTemplate="{TemplateBinding HeadContentTemplate}" />
 
-          <Grid Grid.Column="1">
+          <zm:Panel>
 
 
             <zm:AutoCompleteTextBox x:Name="AutoCompleteTextBox"
@@ -85,13 +80,13 @@
               </zm:Extension.Triggers>
             </zm:AutoCompleteTextBox>
 
-            <ContentPresenter x:Name="SelectedItemPresenter"
-                              Margin="4,2,4,2"
-                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                              Content="{TemplateBinding SelectedItem}"
-                              ContentTemplate="{TemplateBinding SelectedItemTemplate}"
-                              IsHitTestVisible="False"
-                              Visibility="Collapsed">
+            <zm:ContentPresenter x:Name="SelectedItemPresenter"
+                                 Margin="4,2,4,2"
+                                 VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                 Content="{TemplateBinding SelectedItem}"
+                                 ContentTemplate="{TemplateBinding SelectedItemTemplate}"
+                                 IsHitTestVisible="False"
+                                 Visibility="Collapsed">
               <zm:Extension.Triggers>
                 <zm:MultiTrigger>
                   <zm:MultiTrigger.Conditions>
@@ -102,17 +97,15 @@
                   <zm:Setter Property="Visibility" Value="Visible" />
                 </zm:MultiTrigger>
               </zm:Extension.Triggers>
-            </ContentPresenter>
-          </Grid>
+            </zm:ContentPresenter>
+          </zm:Panel>
 
-          <ContentPresenter Grid.Column="2"
-                            VerticalAlignment="Stretch"
-                            Content="{TemplateBinding TailContent}"
-                            ContentTemplate="{TemplateBinding TailContentTemplate}" />
+          <zm:ContentPresenter zm:DockPanel.Dock="Right"
+                               VerticalAlignment="Stretch"
+                               Content="{TemplateBinding TailContent}"
+                               ContentTemplate="{TemplateBinding TailContentTemplate}" />
 
           <zm:PopupBar x:Name="PopupBar"
-                       Grid.Column="0"
-                       Grid.ColumnSpan="2"
                        AllowMotionAnimation="False"
                        AllowOpacityAnimation="False"
                        BorderStyle="Border"
@@ -128,10 +121,10 @@
 
             <zm:DockPanel>
 
-              <ContentPresenter zm:DockPanel.Dock="Top"
-                                HorizontalAlignment="Stretch"
-                                Content="{TemplateBinding PopupHeader}"
-                                ContentTemplate="{TemplateBinding PopupHeaderTemplate}" />
+              <zm:ContentPresenter HorizontalAlignment="Stretch"
+                                   zm:DockPanel.Dock="Top"
+                                   Content="{TemplateBinding PopupHeader}"
+                                   ContentTemplate="{TemplateBinding PopupHeaderTemplate}" />
 
               <ListBox x:Name="DropDownListBox"
                        BorderThickness="0"
@@ -139,14 +132,14 @@
                        ItemsSource="{TemplateBinding ActualDropDownISourceCollection}"
                        SelectionMode="Single" />
 
-              <ContentPresenter zm:DockPanel.Dock="Bottom"
-                                HorizontalAlignment="Stretch"
-                                Content="{TemplateBinding PopupFooter}"
-                                ContentTemplate="{TemplateBinding PopupFooterTemplate}" />
+              <zm:ContentPresenter HorizontalAlignment="Stretch"
+                                   zm:DockPanel.Dock="Bottom"
+                                   Content="{TemplateBinding PopupFooter}"
+                                   ContentTemplate="{TemplateBinding PopupFooterTemplate}" />
             </zm:DockPanel>
 
           </zm:PopupBar>
-        </Grid>
+        </zm:DockPanel>
       </Border>
 
       <zm:Control x:Name="DummyFocus"

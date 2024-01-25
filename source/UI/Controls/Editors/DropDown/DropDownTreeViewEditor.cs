@@ -4,6 +4,7 @@
 
 using System;
 using System.Windows;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
@@ -19,6 +20,9 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 		public static readonly DependencyProperty IsTextEditableProperty = DPM.Register<bool, DropDownTreeViewEditor>
 			("IsTextEditable", false);
 
+		public static readonly DependencyProperty DisplayModeProperty = DPM.Register<DropDownEditableSelectorDisplayMode, DropDownTreeViewEditor>
+			("DisplayMode", DropDownEditableSelectorDisplayMode.TextEditor);
+
 		public static readonly DependencyProperty TreeViewControlProperty = DPM.Register<TreeViewControl, DropDownTreeViewEditor>
 			("TreeViewControl");
 
@@ -32,15 +36,21 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 			this.OverrideStyleKey<DropDownTreeViewEditor>();
 		}
 
+		public DropDownEditableSelectorDisplayMode DisplayMode
+		{
+			get => (DropDownEditableSelectorDisplayMode) GetValue(DisplayModeProperty);
+			set => SetValue(DisplayModeProperty, value);
+		}
+
 		private DropDownTreeViewControl DropDownTreeViewControl => TemplateContract.DropDownTreeViewControl;
 
 		public bool IsTextEditable
 		{
 			get => (bool) GetValue(IsTextEditableProperty);
-			set => SetValue(IsTextEditableProperty, value);
+			set => SetValue(IsTextEditableProperty, value.Box());
 		}
 
-		private DropDownTreeViewEditorTemplateContract TemplateContract => (DropDownTreeViewEditorTemplateContract) TemplateContractInternal;
+		private DropDownTreeViewEditorTemplateContract TemplateContract => (DropDownTreeViewEditorTemplateContract) TemplateContractCore;
 
 		public TreeViewControl TreeViewControl
 		{

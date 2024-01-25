@@ -2,71 +2,104 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Windows;
+using System.Windows.Markup;
 using Zaaml.Core.Extensions;
+using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public sealed class Skin : SkinBase
-  {
-    #region Fields
+	[ContentProperty(nameof(SkinDictionary))]
+	public abstract class ThemeSkinBase : SkinBase
+	{
+		private static readonly SkinDictionary NullDictionary = new();
 
-    private readonly Dictionary<string, object> _dictionary = new Dictionary<string, object>();
+		public static readonly DependencyProperty SkinDictionaryProperty = DPM.Register<SkinDictionary, ThemeSkinBase>
+			("SkinDictionary", default, d => d.OnDictionaryPropertyChangedPrivate, d => d.CoerceDictionary);
 
-    #endregion
+		private SkinDictionary _frozenDictionary = NullDictionary;
 
-    #region Ctors
+		protected ThemeSkinBase()
+		{
+		}
 
-    internal Skin()
-    {
-    }
+		internal ThemeSkinBase(SkinDictionary frozenDictionary)
+		{
+			_frozenDictionary = frozenDictionary;
+		}
 
-    #endregion
+		public SkinDictionary SkinDictionary
+		{
+			get => (SkinDictionary)GetValue(SkinDictionaryProperty);
+			set => SetValue(SkinDictionaryProperty, value);
+		}
 
-    #region Properties
+		private bool IsFrozenDictionary => ReferenceEquals(_frozenDictionary, NullDictionary) == false;
 
-    internal override IEnumerable<KeyValuePair<string, object>> Resources => _dictionary;
+		internal override IEnumerable<KeyValuePair<string, object>> Resources => _frozenDictionary.ShallowResources;
 
-    internal string ActualKey { get; set; }
+		protected abstract Theme Theme { get; }
 
-    #endregion
+		internal Theme ThemeInternal => Theme;
 
-    #region  Methods
+		private SkinDictionary CoerceDictionary(SkinDictionary dictionary)
+		{
+			VerifyChange();
 
-    protected override object GetValue(string key)
-    {
-      return _dictionary.GetValueOrDefault(key);
-    }
+			return dictionary;
+		}
 
-    internal void AddValueInternal(string key, object value)
-    {
-      _dictionary[key] = value;
-    }
+		protected override object GetValue(string key)
+		{
+			return _frozenDictionary.GetValueOrDefault(key);
+		}
 
-    internal void Flatten()
-    {
-      foreach (var kv in Resources.Where(r => r.Value is Skin).ToList())
-      {
-        var key = kv.Key;
-        var childSkin = (Skin) kv.Value;
+		protected override void OnAttached(FrameworkElement frameworkElement)
+		{
+			base.OnAttached(frameworkElement);
 
-        childSkin.Flatten();
+			if (IsFrozenDictionary)
+				return;
 
-        foreach (var keyValuePair in childSkin.Resources)
-        {
-          var actual = keyValuePair.WithParentKey(key).Key;
+			var dictionary = SkinDictionary ?? NullDictionary;
 
-          _dictionary[actual] = keyValuePair.Value;
-        }
-      }
-    }
+			_frozenDictionary = Theme?.Freeze(dictionary) ?? dictionary.AsFrozen();
+		}
 
-    public override string ToString()
-    {
-      return ActualKey;
-    }
+		private void OnDictionaryPropertyChangedPrivate(SkinDictionary oldValue, SkinDictionary newValue)
+		{
+		}
 
-    #endregion
-  }
+		private void VerifyChange()
+		{
+			if (IsFrozenDictionary)
+				throw new InvalidOperationException("Skin is frozen and can not be modified");
+		}
+	}
+
+	public abstract class ThemeSkin<TTheme> : ThemeSkinBase
+		where TTheme : Theme
+	{
+		protected ThemeSkin(TTheme theme)
+		{
+			Theme = theme;
+		}
+
+		protected override Theme Theme { get; }
+	}
+
+	public sealed class GenericThemeSkin : ThemeSkinBase
+	{
+		public GenericThemeSkin()
+		{
+		}
+
+		public GenericThemeSkin(SkinDictionary frozenDictionary) : base(frozenDictionary)
+		{
+		}
+
+		protected override Theme Theme => null;
+	}
 }

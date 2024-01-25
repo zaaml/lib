@@ -1,0 +1,238 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:SwitchConverter x:Key="HorizontalAlignmentConverter">
+    <zm:Case Key="LeftBottom" Value="Left" />
+    <zm:Case Key="LeftCenter" Value="Left" />
+    <zm:Case Key="LeftTop" Value="Left" />
+
+    <zm:Case Key="TopLeft" Value="Left" />
+    <zm:Case Key="TopCenter" Value="Center" />
+    <zm:Case Key="TopRight" Value="Right" />
+
+    <zm:Case Key="RightTop" Value="Right" />
+    <zm:Case Key="RightCenter" Value="Right" />
+    <zm:Case Key="RightBottom" Value="Right" />
+
+    <zm:Case Key="BottomRight" Value="Right" />
+    <zm:Case Key="BottomCenter" Value="Center" />
+    <zm:Case Key="BottomLeft" Value="Left" />
+  </zm:SwitchConverter>
+
+  <zm:SwitchConverter x:Key="VerticalAlignmentConverter">
+    <zm:Case Key="LeftBottom" Value="Bottom" />
+    <zm:Case Key="LeftCenter" Value="Center" />
+    <zm:Case Key="LeftTop" Value="Top" />
+
+    <zm:Case Key="TopLeft" Value="Top" />
+    <zm:Case Key="TopCenter" Value="Top" />
+    <zm:Case Key="TopRight" Value="Top" />
+
+    <zm:Case Key="RightTop" Value="Top" />
+    <zm:Case Key="RightCenter" Value="Center" />
+    <zm:Case Key="RightBottom" Value="Bottom" />
+
+    <zm:Case Key="BottomRight" Value="Bottom" />
+    <zm:Case Key="BottomCenter" Value="Bottom" />
+    <zm:Case Key="BottomLeft" Value="Bottom" />
+  </zm:SwitchConverter>
+
+  <zm:SwitchConverter x:Key="SideConverter">
+    <zm:Case Key="TopLeft" Value="Top" />
+    <zm:Case Key="TopCenter" Value="Top" />
+    <zm:Case Key="TopRight" Value="Top" />
+
+    <zm:Case Key="BottomRight" Value="Bottom" />
+    <zm:Case Key="BottomCenter" Value="Bottom" />
+    <zm:Case Key="BottomLeft" Value="Bottom" />
+
+    <zm:Case Key="LeftBottom" Value="Left" />
+    <zm:Case Key="LeftCenter" Value="Left" />
+    <zm:Case Key="LeftTop" Value="Left" />
+
+    <zm:Case Key="RightTop" Value="Right" />
+    <zm:Case Key="RightCenter" Value="Right" />
+    <zm:Case Key="RightBottom" Value="Right" />
+
+    <zm:Default Value="Undefined" />
+  </zm:SwitchConverter>
+
+  <ControlTemplate x:Key="PopupPresenterNoneTemplate"
+                   TargetType="zm:PopupContentPresenter">
+    <ContentPresenter x:Name="ContentPresenter" />
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="PopupPresenterBorderTemplate"
+                   TargetType="zm:PopupContentPresenter">
+    <zm:ControlTemplateRoot>
+
+      <!--  Shadow  -->
+      <zm:PopupShadowChrome ShadowSize="16"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Visibility="{zm:TemplateBinding Path=DropShadow,
+                                                            Converter={zm:VisibilityConverter}}" />
+
+      <!--  ContentHost  -->
+      <zm:ClipBorder x:Name="ContentHost"
+              Margin="12"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{TemplateBinding CornerRadius}">
+
+        <zm:ContentPresenter x:Name="ContentPresenter" />
+
+      </zm:ClipBorder>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="PopupPresenterArrowBorderTemplate"
+                   TargetType="zm:PopupContentPresenter">
+    <zm:ControlTemplateRoot>
+
+      <!--  Shadow  -->
+      <zm:PopupShadowChrome ShadowSize="16"
+                            Visibility="{zm:TemplateBinding Path=DropShadow,
+                                                            Converter={zm:VisibilityConverter}}" />
+
+      <zm:Panel Margin="12">
+
+        <!--  ContentHost  -->
+        <Border x:Name="ContentHost"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}">
+
+          <zm:ContentPresenter x:Name="ContentPresenter" />
+
+        </Border>
+
+
+      </zm:Panel>
+
+      <zm:Panel Margin="12">
+        <!--  Arrow  -->
+        <zm:Panel x:Name="Arrow"
+                  HorizontalAlignment="{zm:TemplateBinding Path=Popup.(zm:SnapPlacement.ActualSnapPoint),
+                                                           Converter={StaticResource HorizontalAlignmentConverter},
+                                                           TargetNullValue=Stretch,
+                                                           FallbackValue=Stretch}"
+                  VerticalAlignment="{zm:TemplateBinding Path=Popup.(zm:SnapPlacement.ActualSnapPoint),
+                                                         Converter={StaticResource VerticalAlignmentConverter},
+                                                         TargetNullValue=Stretch,
+                                                         FallbackValue=Stretch}">
+
+          <Path Data="{zm:ExpandoBinding Path=ArrowGeometry,
+                                         ElementName=Arrow}"
+                Fill="{TemplateBinding Background}"
+                Stretch="Fill"
+                Stroke="{TemplateBinding BorderBrush}"
+                StrokeThickness="1" />
+
+          <Path Data="{zm:ExpandoBinding Path=ArrowGeometry,
+                                         ElementName=Arrow}"
+                Fill="{TemplateBinding Background}"
+                Stretch="Fill"
+                StrokeThickness="0">
+            <Path.RenderTransform>
+              <TranslateTransform x:Name="InnerPathTransform" />
+            </Path.RenderTransform>
+          </Path>
+        </zm:Panel>
+      </zm:Panel>
+
+      <zm:Extension.Triggers>
+        <zm:SwitchDataTrigger Binding="{zm:TemplateBinding Path=Popup.(zm:SnapPlacement.ActualSnapPoint), Converter={StaticResource SideConverter}}">
+          <!--  Left Side  -->
+          <zm:CaseTrigger Value="Left">
+            <zm:SetterGroup TargetName="Arrow">
+              <zm:Setter Property="Margin" Value="-12,10,0,10" />
+              <zm:Setter Property="Width" Value="12" />
+              <zm:Setter Property="Height" Value="24" />
+              <zm:Setter ExpandoProperty="ArrowGeometry" Value="F1 M 16,32L 0,16L 16,0" />
+            </zm:SetterGroup>
+
+            <zm:Setter TargetName="InnerPathTransform" Property="X" Value="1" />
+          </zm:CaseTrigger>
+
+          <!--  Top Side  -->
+          <zm:CaseTrigger Value="Top">
+            <zm:SetterGroup TargetName="Arrow">
+              <zm:Setter Property="Margin" Value="10,-12,10,0" />
+              <zm:Setter Property="Width" Value="24" />
+              <zm:Setter Property="Height" Value="12" />
+              <zm:Setter ExpandoProperty="ArrowGeometry" Value="F1 M 32,16L 16,0L 0,16" />
+            </zm:SetterGroup>
+
+            <zm:Setter TargetName="InnerPathTransform" Property="Y" Value="1" />
+          </zm:CaseTrigger>
+
+          <!--  Right Side  -->
+          <zm:CaseTrigger Value="Right">
+            <zm:SetterGroup TargetName="Arrow">
+              <zm:Setter Property="Margin" Value="0,10,-12,10" />
+              <zm:Setter Property="Width" Value="12" />
+              <zm:Setter Property="Height" Value="24" />
+              <zm:Setter ExpandoProperty="ArrowGeometry" Value="F1 M 0,32L 16,16L 0,0" />
+            </zm:SetterGroup>
+
+            <zm:Setter TargetName="InnerPathTransform" Property="X" Value="-1" />
+          </zm:CaseTrigger>
+
+          <!--  Bottom Side  -->
+          <zm:CaseTrigger Value="Bottom">
+            <zm:SetterGroup TargetName="Arrow">
+              <zm:Setter Property="Margin" Value="10,0,10,-12" />
+              <zm:Setter Property="Width" Value="24" />
+              <zm:Setter Property="Height" Value="12" />
+              <zm:Setter ExpandoProperty="ArrowGeometry" Value="F1 M 32,0L 16,16L 0,0" />
+            </zm:SetterGroup>
+
+            <zm:Setter TargetName="InnerPathTransform" Property="Y" Value="-1" />
+          </zm:CaseTrigger>
+        </zm:SwitchDataTrigger>
+      </zm:Extension.Triggers>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <zm:SwitchConverter x:Key="AdjustmentConverter">
+    <zm:Case Key="ArrowBorder" Value="12" />
+    <zm:Default Value="0" />
+  </zm:SwitchConverter>
+
+  <!--  Template Converter  -->
+  <zm:SwitchConverter x:Key="TemplateConverter">
+    <zm:Case Key="None" Value="{StaticResource PopupPresenterNoneTemplate}" />
+    <zm:Case Key="Border" Value="{StaticResource PopupPresenterBorderTemplate}" />
+    <zm:Case Key="ArrowBorder" Value="{StaticResource PopupPresenterArrowBorderTemplate}" />
+  </zm:SwitchConverter>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="PopupContentPresenterBaseStyle" TargetType="zm:PopupContentPresenter">
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=BorderStyle, Converter={StaticResource TemplateConverter}}" />
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="zm:Popup.Inflate" Value="12" />
+
+    <zm:Setter Property="{zm:DependencyProperty Property=zm:SnapPlacement.AttachedAdjustment}" Value="{zm:SelfBinding Path=BorderStyle, Converter={StaticResource AdjustmentConverter}}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="PopupContentPresenterStyle" BasedOn="{StaticResource PopupContentPresenterBaseStyle}" Skin="Code.PopupBar" TargetType="zm:PopupContentPresenter">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="Background" Property="Background" />
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="PopupContentPresenterThemeStyle" BasedOn="{StaticResource PopupContentPresenterStyle}" TargetType="zm:PopupContentPresenter" />
+
+</zm:ThemeResourceDictionary>

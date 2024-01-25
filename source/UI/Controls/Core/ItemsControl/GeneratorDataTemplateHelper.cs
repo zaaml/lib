@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using Zaaml.PresentationCore.Data;
 
@@ -11,9 +12,9 @@ namespace Zaaml.UI.Controls.Core
 {
 	internal class GeneratorDataTemplateHelper<TItemBase, TItem> where TItemBase : FrameworkElement where TItem : TItemBase, new()
 	{
+		private readonly Dictionary<DataTemplate, DataTemplateBindingHelper> _bindingHelpers = new();
 		private DataTemplate _dataTemplate;
-
-		private DataTemplateBindingHelper _dataTemplateBindingHelper;
+		private DataTemplateSelector _dataTemplateSelector;
 
 		public DataTemplate DataTemplate
 		{
@@ -24,7 +25,18 @@ namespace Zaaml.UI.Controls.Core
 					return;
 
 				_dataTemplate = value;
-				_dataTemplateBindingHelper = new DataTemplateBindingHelper(_dataTemplate);
+			}
+		}
+
+		public DataTemplateSelector DataTemplateSelector
+		{
+			get => _dataTemplateSelector;
+			set
+			{
+				if (ReferenceEquals(_dataTemplateSelector, value))
+					return;
+
+				_dataTemplateSelector = value;
 			}
 		}
 
@@ -32,17 +44,38 @@ namespace Zaaml.UI.Controls.Core
 		{
 			item.SetValue(FrameworkElement.DataContextProperty, source);
 
-			_dataTemplateBindingHelper?.EnsureBinding(item);
+			GetDataTemplateBindingHelper(source)?.EnsureBinding(item);
+		}
+
+		private DataTemplateBindingHelper GetDataTemplateBindingHelper(object source)
+		{
+			var template = SelectTemplate(source);
+
+			if (template == null)
+				return null;
+
+			if (_bindingHelpers.TryGetValue(template, out var bindingHelper) == false)
+				_bindingHelpers[template] = bindingHelper = new DataTemplateBindingHelper(template);
+
+			return bindingHelper;
 		}
 
 		public TItemBase Load(object source)
 		{
-			var itemTemplate = DataTemplate;
+			var itemTemplate = SelectTemplate(source);
 
 			if (itemTemplate == null)
 				return new TItem();
 
-			return (TItem) DataTemplate.LoadContent();
+			return (TItemBase)itemTemplate.LoadContent();
+		}
+
+		internal DataTemplate SelectTemplate(object source)
+		{
+			if (_dataTemplateSelector != null)
+				return _dataTemplateSelector.SelectTemplate(source, null) ?? _dataTemplate;
+
+			return _dataTemplate;
 		}
 	}
 

@@ -1,41 +1,29 @@
-// <copyright file="TabGroupLayout.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="TabDockItemGroupLayout.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public sealed class TabDockItemGroupLayout : DockItemGroupLayout
-  {
-    #region Ctors
+	public sealed class TabDockItemGroupLayout : DockItemGroupLayout
+	{
+		public TabDockItemGroupLayout(TabDockItemGroup groupItem)
+			: base(groupItem)
+		{
+		}
 
-    public TabDockItemGroupLayout(TabDockItemGroup groupItem)
-      : base(groupItem)
-    {
-    }
+		public TabDockItemGroupLayout()
+		{
+		}
 
-    public TabDockItemGroupLayout()
-    {
-    }
+		internal TabDockItemGroupLayout(TabDockItemGroupLayout groupLayout, DockItemLayoutCloneMode mode) : base(groupLayout, mode)
+		{
+		}
 
-    internal TabDockItemGroupLayout(TabDockItemGroupLayout groupLayout, DockItemLayoutCloneMode mode) : base(groupLayout, mode)
-    {
-    }
+		internal override DockItemGroupKind GroupKind => DockItemGroupKind.Tab;
 
-    #endregion
-
-    #region Properties
-
-    internal override DockItemGroupKind GroupKind => DockItemGroupKind.Tab;
-
-    #endregion
-
-    #region  Methods
-
-    internal override DockItemLayout CloneCore(DockItemLayoutCloneMode mode)
-    {
-      return new TabDockItemGroupLayout(this, mode);
-    }
-
-    #endregion
-  }
+		internal override DockItemLayout CloneCore(DockItemLayoutCloneMode mode)
+		{
+			return new TabDockItemGroupLayout(this, mode);
+		}
+	}
 }

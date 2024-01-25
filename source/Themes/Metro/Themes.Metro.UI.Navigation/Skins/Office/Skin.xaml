@@ -1,0 +1,114 @@
+<zm:ThemeSkinResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:s="clr-namespace:System;assembly=mscorlib"
+    xmlns:zm="http://schemas.zaaml.com/xaml"
+    xmlns:zmb="http://schemas.zaaml.com/build"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    mc:Ignorable="zmb"
+    Name="Office">
+
+  <zm:SkinDictionary x:Key="Metro">
+
+    <zm:SkinDictionary x:Key="NavigationView">
+
+      <!-- NavigationViewControl -->
+      <zm:SkinDictionary x:Key="NavigationViewControl">
+
+        <SolidColorBrush x:Key="PaneBackground" Color="#FFE5E5E5" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="PaneForeground" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Background" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Foreground" Color="#E3000000" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+      <!-- NavigationViewHeaderedIconItem -->
+      <zm:SkinDictionary x:Key="NavigationViewItemSeparator">
+        <SolidColorBrush x:Key="Brush" Color="#FFB9B9B9" zmb:Skin="Office" />
+      </zm:SkinDictionary>
+
+        <!-- NavigationViewHeaderedIconItem -->
+      <zm:SkinDictionary x:Key="NavigationViewHeaderedIconItem">
+
+        <SolidColorBrush x:Key="SelectionLineBackground" Color="#FF2576C4" zmb:Skin="Office" />
+
+        <zm:SkinDictionary x:Key="Input">
+          <Color x:Key="BackgroundBase">#00000000</Color>
+        </zm:SkinDictionary>
+
+        <!-- Foreground -->
+        <zm:SkinDictionary x:Key="Foreground">
+          <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Pressed" Color="#E3000000" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Selected" Color="#E3000000" zmb:Skin="Office" />
+        </zm:SkinDictionary>
+
+        <!-- Background -->
+        <zm:SkinDictionary x:Key="Background">
+
+          <zm:SkinDictionary.Generators>
+            <zm:SolidColorBrushGenerator ColorExpression="Shade(BaseColor, Shade)" 
+                                         ExpressionScope="BaseColor:$(~/Input.BackgroundBase)">
+              <zm:SkinResourceTemplate x:Key="Normal" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0" />
+              <zm:SkinResourceTemplate x:Key="MouseOver" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.2" />
+              <zm:SkinResourceTemplate x:Key="Pressed" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.3" />
+              <zm:SkinResourceTemplate x:Key="Checked" zm:SolidColorBrushGenerator.ExpressionScope="Shade:0.25" />
+            </zm:SolidColorBrushGenerator>
+          </zm:SkinDictionary.Generators>
+        </zm:SkinDictionary>
+
+        <!-- Glyph -->
+        <zm:SkinDictionary x:Key="MenuGlyph">
+
+          <!-- IconStyle -->
+          <Style x:Key="Style" TargetType="zm:PathIcon">
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="9" />
+            <Setter Property="Stretch" Value="Fill" />
+            <Setter Property="BrushMode" Value="Stroke" />
+            <Setter Property="Stroke" Value="#E3000000" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="StrokeLineJoin" Value="Miter" />
+          </Style>
+
+          <s:String x:Key="Expanded">M1,9L10,2 19,9</s:String>
+          <s:String x:Key="Collapsed">M19,2L10,9 1,2</s:String>
+
+        </zm:SkinDictionary>
+
+      </zm:SkinDictionary>
+
+      <!-- NavigationViewHeaderedIconItemPresenter -->
+      <zm:SkinDictionary x:Key="NavigationViewHeaderedIconItemPresenter" BasedOn="Metro.NavigationView.NavigationViewHeaderedIconItem" />
+
+      <!-- NavigationViewCommandItem -->
+      <zm:SkinDictionary x:Key="NavigationViewCommandItem" BasedOn="Metro.NavigationView.NavigationViewHeaderedIconItem" />
+
+      <!-- NavigationViewMenuItem -->
+      <zm:SkinDictionary x:Key="NavigationViewMenuItem" BasedOn="Metro.NavigationView.NavigationViewHeaderedIconItem" />
+
+      <!-- NavigationViewItem -->
+      <zm:SkinDictionary x:Key="NavigationViewItem" BasedOn="Metro.NavigationView.NavigationViewHeaderedIconItem" />
+
+      <!-- NavigationViewItemsPresenter -->
+      <zm:SkinDictionary x:Key="NavigationViewItemsPresenter">
+
+        <SolidColorBrush x:Key="Foreground" Color="#E3000000" />
+        <SolidColorBrush x:Key="Background" Color="#FFE5E5E5" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#FFE5E5E5" />
+
+      </zm:SkinDictionary>
+
+      <!-- NavigationViewContentPresenter -->
+      <zm:SkinDictionary x:Key="NavigationViewContentPresenter">
+
+        <SolidColorBrush x:Key="Foreground" Color="#E3000000" />
+        <SolidColorBrush x:Key="Background" Color="#FFFFFFFF" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#FFFFFFFF" />
+
+      </zm:SkinDictionary>
+
+    </zm:SkinDictionary>
+
+  </zm:SkinDictionary>
+</zm:ThemeSkinResourceDictionary>  

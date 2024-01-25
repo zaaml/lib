@@ -2,18 +2,19 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls.Primitives;
+using System.Windows.Interop;
 using System.Windows.Media;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore;
-using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
 	public sealed partial class Popup
 	{
-		private static readonly Brush TransparentBrush = Colors.Transparent.ToSolidColorBrush().AsFrozen();
+		private static readonly Brush TransparentBrush = Brushes.Transparent;
 
 		private byte _packedValue;
 
@@ -27,6 +28,23 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		{
 			get => PackedDefinition.HandleMouseEvents.GetValue(_packedValue);
 			set => PackedDefinition.HandleMouseEvents.SetValue(ref _packedValue, value);
+		}
+
+		internal HwndSource HwndSource
+		{
+			get
+			{
+				foreach (var hwndSource in PresentationSource.CurrentSources.OfType<HwndSource>())
+				{
+					if (hwndSource.RootVisual is FrameworkElement frameworkElement &&
+					    ReferenceEquals(frameworkElement.Parent, PopupSource))
+					{
+						return hwndSource;
+					}
+				}
+
+				return null;
+			}
 		}
 
 		protected override Size MeasureOverride(Size availableSize)

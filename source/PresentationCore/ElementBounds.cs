@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Media;
+using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore
@@ -124,7 +125,7 @@ namespace Zaaml.PresentationCore
 
     public double RelativeCenterX
     {
-      get => (_centerX - _x) / _width;
+      get => _width.IsZero()  ? _x : (_centerX - _x) / _width;
       set => _centerX = value * _width + _x;
     }
 
@@ -140,7 +141,7 @@ namespace Zaaml.PresentationCore
 
     public double RelativeCenterY
     {
-      get => (_centerY - _y) / _height;
+      get => _width.IsZero() ? _y :  (_centerY - _y) / _height;
       set => _centerY = value * _height + _y;
     }
 

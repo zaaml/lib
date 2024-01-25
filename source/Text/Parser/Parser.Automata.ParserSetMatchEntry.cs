@@ -2,43 +2,62 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System.Linq;
+using System.Collections.Generic;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private sealed partial class ParserAutomata
 		{
-			#region Nested Types
-
 			private sealed class ParserSetMatchEntry : SetMatchEntry, IParserEntry
 			{
-				#region Ctors
-
-				public ParserSetMatchEntry(Grammar<TToken>.TokenRuleSet grammarEntry) : base(grammarEntry.TokenRules.Select(CreateLexerEntry))
+				public ParserSetMatchEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol grammarEntry)
+					: base(CreateMatches(grammarEntry.Token))
 				{
-					ParserEntryData = new ParserEntryData(EnsureName(grammarEntry), this);
+					GrammarSymbol = grammarEntry;
 				}
 
-				#endregion
 
-				#region Interface Implementations
+				public ParserSetMatchEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol grammarEntry)
+					: base(CreateMatches(grammarEntry.Tokens))
+				{
+					GrammarSymbol = grammarEntry;
+				}
 
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserEntry
+				private static IEnumerable<PrimitiveMatchEntry> CreateMatches(Grammar<TGrammar, TToken>.LexerGrammar.TokenSyntax tokenSyntax)
+				{
+					foreach (var tokenGroup in tokenSyntax.TokenGroups)
+						yield return new OperandMatchEntry(tokenGroup.Token);
+				}
 
-				public ParserEntryData ParserEntryData { get; }
+				private static IEnumerable<PrimitiveMatchEntry> CreateMatches(Grammar<TGrammar, TToken>.LexerGrammar.TokenSyntax[] tokenSyntaxCollection)
+				{
+					foreach (var tokenSyntax in tokenSyntaxCollection)
+					foreach (var tokenGroup in tokenSyntax.TokenGroups)
+						yield return new OperandMatchEntry(tokenGroup.Token);
+				}
 
-				#endregion
+				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
-				#endregion
+				public ProductionArgument ProductionArgument { get; set; }
+				
+				public Entry Clone()
+				{
+					if (GrammarSymbol is Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol symbol)
+						return new ParserSetMatchEntry(symbol)
+						{
+							Source = this
+						};
+
+					return new ParserSetMatchEntry((Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol)GrammarSymbol)
+					{
+						Source = this
+					};
+				}
+
+				public IParserEntry Source { get; private set; }
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

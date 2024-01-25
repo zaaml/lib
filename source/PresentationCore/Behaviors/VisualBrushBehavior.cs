@@ -35,7 +35,7 @@ namespace Zaaml.PresentationCore.Behaviors
 
     #region Fields
 
-    private IDisposable _renderingDisposer;
+    private CompositionRenderingObserver _renderingObserver;
 
     #endregion
 
@@ -71,13 +71,12 @@ namespace Zaaml.PresentationCore.Behaviors
 
     private void AttachRendering()
     {
-      _renderingDisposer = _renderingDisposer.DisposeExchange
-        (this.CreateWeakEventListener((t, o, e) => t.OnRendering(), h => CompositionTarget.Rendering += h, h => CompositionTarget.Rendering -= h));
+	    _renderingObserver = new CompositionRenderingObserver(OnRendering);
     }
 
     private void DetachRendering()
     {
-      _renderingDisposer = _renderingDisposer.DisposeExchange();
+	    _renderingObserver = _renderingObserver.DisposeExchange();
     }
 
     protected override void OnAttached()

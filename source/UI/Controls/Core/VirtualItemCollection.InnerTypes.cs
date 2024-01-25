@@ -28,6 +28,8 @@ namespace Zaaml.UI.Controls.Core
 
 			public bool IsInTemp;
 
+			public bool IsInPool;
+
 			public T Item;
 
 			private int LockCount;
@@ -114,9 +116,9 @@ namespace Zaaml.UI.Controls.Core
 			Virtual
 		}
 		
-		private readonly struct GeneratedItemIndexPair
+		private readonly struct GeneratedIndexItemPair
 		{
-			public GeneratedItemIndexPair(GeneratedItem item, int index)
+			public GeneratedIndexItemPair(int index, GeneratedItem item)
 			{
 				Item = item;
 				Index = index;
@@ -126,9 +128,14 @@ namespace Zaaml.UI.Controls.Core
 
 			public readonly int Index;
 
-			public static readonly GeneratedItemIndexPair Empty = new GeneratedItemIndexPair(null, -1);
+			public static readonly GeneratedIndexItemPair Empty = new(-1, null);
 
 			public bool IsEmpty => Index == -1;
+
+			public static implicit operator GeneratedIndexItemPair(SparseLinkedList<GeneratedItem>.IndexValuePair indexValuePair)
+			{
+				return new((int) indexValuePair.Index, indexValuePair.Value);
+			}
 		}
 
 		private static class PackedDefinition
@@ -149,31 +156,24 @@ namespace Zaaml.UI.Controls.Core
 
 		private sealed class GeneratedItemList : SparseLinkedList<GeneratedItem>
 		{
-			public GeneratedItemList(SparseLinkedListManager<GeneratedItem> linkedListManager) : base(0, linkedListManager)
+			public GeneratedItemList(SparseLinkedListManager<GeneratedItem> linkedListManager) : base(linkedListManager)
 			{
 			}
 
-			public new GeneratedItem this[int index]
+			public void EnsureVoidRange()
 			{
-				get => index >= Count ? null : base[index];
-				set
-				{
-					EnsureCount(index + 1);
+				var voidDelta = int.MaxValue - LongCount;
 
-					base[index] = value;
-				}
-			}
-
-			public void EnsureCount(int count)
-			{
-				if (count > Count)
-					AddCleanRange(count - Count);
+				if (voidDelta > 0)
+					AddVoidRange(voidDelta);
+				else if (voidDelta < 0) 
+					RemoveRange(LongCount + voidDelta, -voidDelta);
 			}
 		}
 
 		private sealed class SparseLinkedListManager : SparseLinkedListManager<GeneratedItem>
 		{
-			public SparseLinkedListManager(VirtualItemCollection<T> virtualSource) : base(new SparseMemoryManager<GeneratedItem>(16))
+			public SparseLinkedListManager(VirtualItemCollection<T> virtualSource) : base(new SparseMemoryAllocator<GeneratedItem>(16))
 			{
 				VirtualSource = virtualSource;
 			}

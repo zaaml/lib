@@ -1,0 +1,21 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Styles.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <!--  CameraGeometry  -->
+  <Geometry x:Key="CameraGeometry">M23.02,17C23.02,18.04,22.06,19,21.02,19L3,19C1.88,19,1,18.04,1,17L1,5.95C1,4.83,1.88,3.95,3,3.95L7.01,3.95 9.01,0.99 15.01,0.99 17.01,3.95 21.02,3.95C22.06,3.95,23.02,4.83,23.02,5.95L23.02,17z M15.97,11C15.97,13.16 14.21,15 11.97,15 9.73,15 7.97,13.16 7.97,11 7.97,8.75 9.73,6.99 11.97,6.99 14.21,6.99 15.97,8.75 15.97,11z M0,0Z M24,24Z</Geometry>
+
+  <!--  CameraPathIconRaw  -->
+  <zm:PathIcon x:Key="CameraPathIconRaw"
+               Data="{StaticResource CameraGeometry}" />
+
+  <!--  CameraPathIcon  -->
+  <zm:PathIcon x:Key="CameraPathIcon"
+               Data="{StaticResource CameraGeometry}"
+               Style="{StaticResource _PathIconStyle_Stroke_Size_24_StrokeThickness_2_StrokeLineJoin_Round}" />
+
+</ResourceDictionary>

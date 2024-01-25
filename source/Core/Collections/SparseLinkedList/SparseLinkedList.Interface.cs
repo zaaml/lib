@@ -25,45 +25,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		internal SparseLinkedList(int count, SparseLinkedListManager<T> listManager) : base(count, listManager)
-		{
-			VerifyStructure();
-		}
-
-		[PublicAPI]
-		public SparseLinkedList(int count) : base(count)
-		{
-			VerifyStructure();
-		}
-
-		[PublicAPI]
-		public void Clear()
-		{
-			Lock();
-
-			ClearImpl();
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public void Add(T item)
-		{
-			Lock();
-
-			Version++;
-
-			AddImpl(item);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public T this[int index]
+		public T this[long index]
 		{
 			get
 			{
@@ -94,52 +56,6 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public void Insert(int index, T item)
-		{
-			Lock();
-
-			VerifyIndex(index, true);
-
-			Version++;
-
-			InsertImpl(index, item);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public void RemoveAt(int index)
-		{
-			Lock();
-
-			VerifyIndex(index);
-
-			Version++;
-
-			RemoveAtImpl(index);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public void AddCleanRange(int count)
-		{
-			Lock();
-
-			Version++;
-
-			AddCleanRangeImpl(count);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
 		public void AddRange(IEnumerable<T> collection)
 		{
 			Lock();
@@ -147,38 +63,6 @@ namespace Zaaml.Core.Collections
 			Version++;
 
 			AddRangeImpl(collection);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public void CleanAt(int index)
-		{
-			Lock();
-
-			VerifyIndex(index);
-
-			Version++;
-
-			CleanAtImpl(index);
-
-			VerifyStructure();
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public void CleanRange(int index, int count)
-		{
-			Lock();
-
-			VerifyRange(index, count);
-
-			Version++;
-
-			CleanRangeImpl(index, count);
 
 			VerifyStructure();
 
@@ -198,17 +82,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public void CopyTo(T[] array, int arrayIndex)
-		{
-			Lock();
-
-			CopyToImpl(array, arrayIndex);
-
-			Unlock();
-		}
-
-		[PublicAPI]
-		public int IndexOf(T item)
+		public long IndexOf(T item)
 		{
 			Lock();
 
@@ -220,7 +94,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public void InsertCleanRange(int index, int count)
+		public void Insert(long index, T item)
 		{
 			Lock();
 
@@ -228,7 +102,7 @@ namespace Zaaml.Core.Collections
 
 			Version++;
 
-			InsertCleanRangeImpl(index, count);
+			InsertImpl(index, item);
 
 			VerifyStructure();
 
@@ -236,7 +110,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public void InsertRange(int index, IEnumerable<T> collection)
+		public void InsertRange(long index, IEnumerable<T> collection)
 		{
 			Lock();
 
@@ -249,6 +123,24 @@ namespace Zaaml.Core.Collections
 			VerifyStructure();
 
 			Unlock();
+		}
+
+		[PublicAPI]
+		internal void Merge(SparseLinkedList<T> list)
+		{
+			Lock();
+			list.Lock();
+
+			Version++;
+			list.Version++;
+
+			MergeImpl(list);
+
+			VerifyStructure();
+			list.VerifyStructure();
+
+			Unlock();
+			list.Unlock();
 		}
 
 		[PublicAPI]
@@ -275,7 +167,23 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		public void RemoveRange(int index, int count)
+		public void RemoveAt(long index)
+		{
+			Lock();
+
+			VerifyIndex(index);
+
+			Version++;
+
+			RemoveAtImpl(index);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void RemoveRange(long index, long count)
 		{
 			Lock();
 
@@ -291,7 +199,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		internal void SplitAt(int index, SparseLinkedList<T> targetList)
+		internal void SplitAt(long index, SparseLinkedList<T> targetList)
 		{
 			Lock();
 			targetList.Lock();
@@ -311,7 +219,7 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		internal void Swap(int index, SparseLinkedList<T> list)
+		internal void Swap(long index, SparseLinkedList<T> list)
 		{
 			Lock();
 			list.Lock();
@@ -331,21 +239,138 @@ namespace Zaaml.Core.Collections
 		}
 
 		[PublicAPI]
-		internal void Merge(SparseLinkedList<T> list)
+		public void Clear()
 		{
 			Lock();
-			list.Lock();
 
-			Version++;
-			list.Version++;
-
-			MergeImpl(list);
+			ClearImpl();
 
 			VerifyStructure();
-			list.VerifyStructure();
 
 			Unlock();
-			list.Unlock();
 		}
+
+		[PublicAPI]
+		public void Add(T item)
+		{
+			Lock();
+
+			Version++;
+
+			AddImpl(item);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void AddVoidRange(long count)
+		{
+			Lock();
+
+			Version++;
+
+			AddVoidRangeImpl(count);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void AddVoid()
+		{
+			Lock();
+
+			Version++;
+
+			AddVoidRangeImpl(1);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void VoidAt(long index)
+		{
+			Lock();
+
+			VerifyIndex(index);
+
+			Version++;
+
+			VoidAtImpl(index);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void VoidRange(long index, long count)
+		{
+			Lock();
+
+			VerifyRange(index, count);
+
+			Version++;
+
+			VoidRangeImpl(index, count);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void Void()
+		{
+			Lock();
+
+			Version++;
+
+			VoidRangeImpl(0, LongCount);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void InsertVoidRange(long index, long count)
+		{
+			Lock();
+
+			VerifyIndex(index, true);
+
+			Version++;
+
+			InsertVoidRangeImpl(index, count);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public void InsertVoid(long index)
+		{
+			Lock();
+
+			VerifyIndex(index, true);
+
+			Version++;
+
+			InsertVoidRangeImpl(index, 1);
+
+			VerifyStructure();
+
+			Unlock();
+		}
+
+		[PublicAPI]
+		public bool IsVoid => IsVoidImpl;
 	}
 }

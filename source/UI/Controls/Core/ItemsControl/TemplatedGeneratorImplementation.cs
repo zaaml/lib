@@ -1,4 +1,4 @@
-﻿// <copyright file="DefaultTemplatedGeneratorImpl.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="TemplatedGeneratorImplementation.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -9,23 +9,13 @@ namespace Zaaml.UI.Controls.Core
 {
 	internal class TemplatedGeneratorImplementation<TItem> : IItemGenerator<TItem> where TItem : FrameworkElement, new()
 	{
-		#region Fields
-
-		private readonly GeneratorDataTemplateHelper<TItem, TItem> _generatorDataTemplateHelper = new GeneratorDataTemplateHelper<TItem, TItem>();
+		private readonly GeneratorDataTemplateHelper<TItem, TItem> _generatorDataTemplateHelper = new();
 		private DataTemplate _itemTemplate;
-
-		#endregion
-
-		#region Ctors
 
 		public TemplatedGeneratorImplementation(ItemGenerator<TItem> generator)
 		{
 			Generator = generator;
 		}
-
-		#endregion
-
-		#region Properties
 
 		public ItemGenerator<TItem> Generator { get; }
 
@@ -45,12 +35,6 @@ namespace Zaaml.UI.Controls.Core
 				Generator.OnGeneratorChangedInt();
 			}
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IItemGenerator<TItem>
 
 		public void AttachItem(TItem item, object source)
 		{
@@ -81,9 +65,5 @@ namespace Zaaml.UI.Controls.Core
 		public void DisposeItem(TItem item, object source)
 		{
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

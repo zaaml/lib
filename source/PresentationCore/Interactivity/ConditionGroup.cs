@@ -11,28 +11,20 @@ namespace Zaaml.PresentationCore.Interactivity
 	[ContentProperty("Conditions")]
 	public abstract class ConditionGroup : ConditionBase
 	{
-		#region Fields
-
 		private ConditionCollection _conditions;
-
-		#endregion
-
-		#region Properties
 
 		private IEnumerable<ConditionBase> ActualConditions => _conditions ?? Enumerable.Empty<ConditionBase>();
 
-		public ConditionCollection Conditions => _conditions ?? (_conditions = new ConditionCollection(this));
+		public ConditionCollection Conditions => _conditions ??= new ConditionCollection(this);
 
 		protected abstract ConditionLogicalOperator LogicalOperator { get; }
-
-		#endregion
-
-		#region  Methods
 
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
-			var conditionGroupSource = (ConditionGroup) source;
+
+			var conditionGroupSource = (ConditionGroup)source;
+
 			_conditions = conditionGroupSource._conditions?.DeepCloneCollection<ConditionCollection, ConditionBase>(conditionGroupSource);
 		}
 
@@ -70,17 +62,12 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (_conditions == null || _conditions.Count == 0)
 				return true;
 
-			switch (LogicalOperator)
+			return LogicalOperator switch
 			{
-				case ConditionLogicalOperator.And:
-					return _conditions.All(c => c.IsOpen);
-				case ConditionLogicalOperator.Or:
-					return _conditions.Any(c => c.IsOpen);
-      }
-
-			return true;
+				ConditionLogicalOperator.And => _conditions.All(c => c.IsOpen),
+				ConditionLogicalOperator.Or => _conditions.Any(c => c.IsOpen),
+				_ => true
+			};
 		}
-
-		#endregion
 	}
 }

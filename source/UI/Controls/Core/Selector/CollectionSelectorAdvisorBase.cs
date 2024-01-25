@@ -57,6 +57,8 @@ namespace Zaaml.UI.Controls.Core
 
 		#region ISelectorAdvisor<T>
 
+		public abstract object GetValue(T item, object source);
+
 		public abstract object GetSource(T item);
 
 		public abstract void Unlock(T item);
@@ -142,7 +144,7 @@ namespace Zaaml.UI.Controls.Core
 				TryGetItem(i, false, out var item);
 
 				var source = GetSource(i);
-				var itemValue = SelectorCore.GetValue(item, source);
+				var itemValue = GetValue(item, source);
 
 				if (CompareValues(itemValue, value))
 					return i;

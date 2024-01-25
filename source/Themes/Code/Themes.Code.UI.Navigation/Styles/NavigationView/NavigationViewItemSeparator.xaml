@@ -1,0 +1,46 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="NavigationViewItemSeparatorTemplate"
+                   TargetType="zm:NavigationViewItemSeparator">
+    <zm:ControlTemplateRoot Background="Transparent">
+
+      <Border Margin="10,2"
+              HorizontalAlignment="Stretch"
+              BorderBrush="{TemplateBinding Background}"
+              BorderThickness="0,1,0,0" />
+
+      <zm:Extension.Triggers>
+
+        <zm:DataTrigger Binding="{zm:TemplateBinding Path=DisplayMode}" Value="Compact">
+          <zm:Setter Property="Width" Value="40" />
+          <zm:Setter Property="HorizontalAlignment" Value="Left" />
+        </zm:DataTrigger>
+
+      </zm:Extension.Triggers>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="NavigationViewItemSeparatorBaseStyle" TargetType="zm:NavigationViewItemSeparator">
+    <zm:Setter Property="Template" Value="{StaticResource NavigationViewItemSeparatorTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="NavigationViewItemSeparatorStyle" BasedOn="{StaticResource NavigationViewItemSeparatorBaseStyle}" Skin="Code.NavigationView.NavigationViewItemSeparator" TargetType="zm:NavigationViewItemSeparator">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <!--  Background  -->
+      <zm:Setter ValuePath="Brush" Property="Background" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="NavigationViewItemSeparatorThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource NavigationViewItemSeparatorStyle}" TargetType="zm:NavigationViewItemSeparator" />
+
+</zm:ThemeResourceDictionary>

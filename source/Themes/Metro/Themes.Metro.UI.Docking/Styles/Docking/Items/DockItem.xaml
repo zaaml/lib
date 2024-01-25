@@ -12,7 +12,7 @@
 
   <!-- Template triggers -->
   <zm:TriggerCollection x:Key="TriggerCollection">
-    <zm:DataTrigger Binding="{zm:TemplateBinding Path=ActualLayoutKind, Converter={StaticResource IsRawContentConverter}}" Value="False">
+    <zm:DataTrigger Binding="{zm:TemplateBinding Path=ActualLayout.LayoutKind, Converter={StaticResource IsRawContentConverter}}" Value="False">
       <zm:Setter TargetName="Border" Property="Visibility" Value="Visible" />
       <zm:Setter TargetName="Border" Property="BorderThickness" Value="{zm:TemplateBinding Path=BorderThickness}" />
       <zm:Setter TargetName="HeaderPresenter" Property="Visibility" Value="Visible" />

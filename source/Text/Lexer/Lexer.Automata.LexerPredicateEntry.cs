@@ -2,6 +2,9 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+
+using System;
+
 namespace Zaaml.Text
 {
 	internal partial class Lexer<TGrammar, TToken>
@@ -10,7 +13,15 @@ namespace Zaaml.Text
 		{
 			private sealed class LexerPredicateEntry : PredicateEntry
 			{
-				public LexerPredicateEntry(Grammar<TToken>.LexerPredicate grammarEntry) : base(CreatePredicateDelegate(grammarEntry.PredicateEntry))
+				public LexerPredicateEntry(Grammar<TGrammar, TToken>.LexerGrammar.PredicateSymbol symbol) 
+					: base(CreatePredicateDelegate(symbol.PredicateEntry))
+				{
+				}
+			}
+
+			private sealed class LexerPredicateEntry<TResult> : PredicateEntry<TResult>
+			{
+				public LexerPredicateEntry(Grammar<TGrammar, TToken>.LexerGrammar.Symbol symbol, Func<AutomataContext, PredicateResult<TResult>> predicate) : base(predicate)
 				{
 				}
 			}

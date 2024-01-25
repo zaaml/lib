@@ -13,7 +13,7 @@ namespace Zaaml.PresentationCore.Snapping
 	{
 		private static readonly char[] Separators = { ',', ' ' };
 
-		public static readonly SnapAdjustment ZeroAdjustment = new SnapAdjustment();
+		public static readonly SnapAdjustment ZeroAdjustment = new();
 		public double SideOffset { get; set; }
 		public double CornerOffset { get; set; }
 

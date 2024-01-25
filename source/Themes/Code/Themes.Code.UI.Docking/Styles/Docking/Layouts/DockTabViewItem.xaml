@@ -1,0 +1,20 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            mc:Ignorable="zmb">
+
+  <!-- Base Style -->
+  <zm:Style x:Key="DockTabViewItemBaseStyle" TargetType="zm:DockTabViewItem" BasedOn="{zm:ThemeStyle TargetType=zm:TabViewItem}">
+    <zm:Setter Property="Height" Value="32" />
+    <zm:Setter Property="BorderThickness" Value="0" />
+  </zm:Style>
+
+  <!-- Style -->
+  <zm:Style x:Key="DockTabViewItemStyle" TargetType="zm:DockTabViewItem" BasedOn="{StaticResource DockTabViewItemBaseStyle}" />
+
+    <!-- Theme Style -->
+  <zm:ThemeStyle x:Key="DockTabViewItemThemeStyle" TargetType="zm:DockTabViewItem" BasedOn="{StaticResource DockTabViewItemStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

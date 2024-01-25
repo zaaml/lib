@@ -7,36 +7,38 @@ using System.IO;
 
 namespace Zaaml.Text
 {
-	internal abstract class TextSource : IDisposable
+	public abstract class TextSource
 	{
-		#region Properties
-
-		public abstract int TextLength { get; }
-
-		#endregion
-
-		#region Methods
+		public abstract int Length { get; }
 
 		public abstract TextReader CreateReader();
 
-		public abstract char GetChar(int textPointer);
+		public abstract char GetChar(int offset);
 
-		public abstract ReadOnlySpan<char> GetSpan(int start, int end);
+		public abstract string GetText();
 
-		public abstract string GetText(int start, int end);
+		public abstract string GetText(int start);
 
-		public abstract TextSource Slice(int offset);
+		public abstract string GetText(int start, int length);
 
-		#endregion
+		public abstract ReadOnlyMemory<char> GetTextMemory();
 
-		#region Interface Implementations
+		public abstract ReadOnlyMemory<char> GetTextMemory(int start);
 
-		#region IDisposable
+		public abstract ReadOnlyMemory<char> GetTextMemory(int start, int length);
 
-		public abstract void Dispose();
+		public abstract TextSpan GetTextSpan();
 
-		#endregion
+		public abstract TextSpan GetTextSpan(int start);
 
-		#endregion
+		public abstract TextSpan GetTextSpan(int start, int length);
+
+		public abstract void WriteTo(TextWriter textWriter);
+
+		public abstract int IndexOf(char c);
+
+		public abstract int IndexOf(char c, int startIndex);
+		
+		public abstract int IndexOf(char c, int startIndex, int count);
 	}
 }

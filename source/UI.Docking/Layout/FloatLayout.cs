@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Xml.Linq;
+using Zaaml.Core;
 using Zaaml.PresentationCore.Converters;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -17,32 +18,39 @@ namespace Zaaml.UI.Controls.Docking
 {
 	public sealed class FloatLayout : BaseLayout
 	{
-		public static readonly DependencyProperty FloatLeftProperty = DPM.RegisterAttached<double, FloatLayout>
-			("FloatLeft", OnFloatLayoutPropertyChanged);
+		internal static readonly double DefaultWidth = 640;
+		internal static readonly double DefaultHeight= 480;
 
-		public static readonly DependencyProperty FloatTopProperty = DPM.RegisterAttached<double, FloatLayout>
-			("FloatTop", OnFloatLayoutPropertyChanged);
+		public static readonly DependencyProperty LeftProperty = DPM.RegisterAttached<double, FloatLayout>
+			("Left", OnLeftPropertyChanged);
 
-		public static readonly DependencyProperty FloatWidthProperty = DPM.RegisterAttached<double, FloatLayout>
-			("FloatWidth", 200, OnFloatLayoutPropertyChanged);
+		public static readonly DependencyProperty TopProperty = DPM.RegisterAttached<double, FloatLayout>
+			("Top", OnTopPropertyChanged);
 
-		public static readonly DependencyProperty FloatHeightProperty = DPM.RegisterAttached<double, FloatLayout>
-			("FloatHeight", 200, OnFloatLayoutPropertyChanged);
+		public static readonly DependencyProperty WidthProperty = DPM.RegisterAttached<double, FloatLayout>
+			("Width", DefaultWidth, OnWidthPropertyChanged);
 
-		private static readonly List<DependencyProperty> FloatLayoutProperties = new List<DependencyProperty>
+		public static readonly DependencyProperty HeightProperty = DPM.RegisterAttached<double, FloatLayout>
+			("Height", DefaultHeight, OnHeightPropertyChanged);
+
+		public static readonly DependencyProperty OrderProperty = DPM.RegisterAttached<int, FloatLayout>
+			("Order", 0, OnOrderPropertyChanged);
+
+		private static readonly List<DependencyProperty> FloatLayoutProperties = new()
 		{
-			FloatLeftProperty,
-			FloatTopProperty,
-			FloatWidthProperty,
-			FloatHeightProperty
+			LeftProperty,
+			TopProperty,
+			WidthProperty,
+			HeightProperty,
+			OrderProperty
 		};
 
-		private static readonly List<DependencyProperty> FloatLayoutSizeProperties = new List<DependencyProperty>
+		private static readonly List<DependencyProperty> FloatLayoutSizeProperties = new()
 		{
-			FloatLeftProperty,
-			FloatTopProperty,
-			FloatWidthProperty,
-			FloatHeightProperty
+			LeftProperty,
+			TopProperty,
+			WidthProperty,
+			HeightProperty
 		};
 
 		static FloatLayout()
@@ -51,48 +59,59 @@ namespace Zaaml.UI.Controls.Docking
 			RegisterLayoutSerializer<FloatLayout>(new FloatLayoutSerializer());
 		}
 
-		internal FloatLayoutView FloatLayoutView => (FloatLayoutView) View;
+		internal FloatLayoutView FloatLayoutView => (FloatLayoutView)View;
 
 		public override LayoutKind LayoutKind => LayoutKind.Float;
 
 		public void BringWindowToFront(DockItem item)
 		{
-			SetDockItemIndex(item, IndexProvider.NewIndex);
+			//SetNewIndex(item);
+			throw Error.Refactoring;
 		}
 
-		public static double GetFloatHeight(DependencyObject depObj)
+		protected override int GetDockItemOrder(DockItem dockItem)
 		{
-			return (double) depObj.GetValue(FloatHeightProperty);
+			return GetOrder(dockItem);
 		}
 
-		public static double GetFloatLeft(DependencyObject depObj)
+		public static double GetHeight(DependencyObject depObj)
 		{
-			return (double) depObj.GetValue(FloatLeftProperty);
+			return (double)depObj.GetValue(HeightProperty);
 		}
 
-		public static Point GetFloatPosition(DependencyObject depObj)
+		public static double GetLeft(DependencyObject depObj)
 		{
-			return new Point(GetFloatLeft(depObj), GetFloatTop(depObj));
+			return (double)depObj.GetValue(LeftProperty);
 		}
 
-		public static Rect GetFloatRect(DependencyObject depObj)
+		public static int GetOrder(DependencyObject depObj)
 		{
-			return new Rect(GetFloatPosition(depObj), GetFloatSize(depObj));
+			return (int)depObj.GetValue(OrderProperty);
 		}
 
-		public static Size GetFloatSize(DependencyObject depObj)
+		public static Point GetPosition(DependencyObject depObj)
 		{
-			return new Size(GetFloatWidth(depObj), GetFloatHeight(depObj));
+			return new Point(GetLeft(depObj), GetTop(depObj));
 		}
 
-		public static double GetFloatTop(DependencyObject depObj)
+		public static Rect GetRect(DependencyObject depObj)
 		{
-			return (double) depObj.GetValue(FloatTopProperty);
+			return new Rect(GetPosition(depObj), GetSize(depObj));
 		}
 
-		public static double GetFloatWidth(DependencyObject depObj)
+		public static Size GetSize(DependencyObject depObj)
 		{
-			return (double) depObj.GetValue(FloatWidthProperty);
+			return new Size(GetWidth(depObj), GetHeight(depObj));
+		}
+
+		public static double GetTop(DependencyObject depObj)
+		{
+			return (double)depObj.GetValue(TopProperty);
+		}
+
+		public static double GetWidth(DependencyObject depObj)
+		{
+			return (double)depObj.GetValue(WidthProperty);
 		}
 
 		private static void OnFloatLayoutPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -103,54 +122,94 @@ namespace Zaaml.UI.Controls.Docking
 			OnLayoutPropertyChanged(d, e);
 		}
 
-		public static void SetFloatHeight(DependencyObject depObj, double value)
+		private static void OnHeightPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			depObj.SetValue(FloatHeightProperty, value);
+			OnFloatLayoutPropertyChanged(d, e);
 		}
 
-		public static void SetFloatLeft(DependencyObject depObj, double value)
+		private void OnItemOrderChanged(DockItem dockItem)
 		{
-			depObj.SetValue(FloatLeftProperty, value);
 		}
 
-		public static void SetFloatPosition(DependencyObject depObj, Point position)
+		private static void OnLeftPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			SetFloatLeft(depObj, position.X);
-			SetFloatTop(depObj, position.Y);
+			OnFloatLayoutPropertyChanged(d, e);
 		}
 
-		public static void SetFloatRect(DependencyObject depObj, Rect box)
+		private static void OnOrderChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
 		{
-			SetFloatPosition(depObj, box.GetTopLeft());
-			SetFloatSize(depObj, box.Size());
+			if (depObj is not DockItem dockItem)
+				return;
+
+			var floatLayout = dockItem.ActualLayout as FloatLayout;
+
+			floatLayout?.OnItemOrderChanged(dockItem);
 		}
 
-		public static void SetFloatSize(DependencyObject depObj, Size size)
+		private static void OnOrderPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			SetFloatWidth(depObj, size.Width);
-			SetFloatHeight(depObj, size.Height);
+			OnOrderChanged(d, e);
+			OnLayoutPropertyChanged(d, e);
 		}
 
-		public static void SetFloatTop(DependencyObject depObj, double value)
+		private static void OnTopPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			depObj.SetValue(FloatTopProperty, value);
+			OnFloatLayoutPropertyChanged(d, e);
+		}
+
+		private static void OnWidthPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			OnFloatLayoutPropertyChanged(d, e);
+		}
+
+		public static void SetHeight(DependencyObject depObj, double value)
+		{
+			depObj.SetValue(HeightProperty, value);
+		}
+
+		public static void SetLeft(DependencyObject depObj, double value)
+		{
+			depObj.SetValue(LeftProperty, value);
+		}
+
+		public static void SetOrder(DependencyObject depObj, int orderIndex)
+		{
+			depObj.SetValue(OrderProperty, orderIndex);
+		}
+
+		public static void SetPosition(DependencyObject depObj, Point position)
+		{
+			SetLeft(depObj, position.X);
+			SetTop(depObj, position.Y);
+		}
+
+		public static void SetPosition(DependencyObject depObj, double x, double y)
+		{
+			depObj.SetValue(LeftProperty, x);
+			depObj.SetValue(TopProperty, y);
+		}
+
+		public static void SetRect(DependencyObject depObj, Rect box)
+		{
+			SetPosition(depObj, box.GetTopLeft());
+			SetSize(depObj, box.Size());
+		}
+
+		public static void SetSize(DependencyObject depObj, Size size)
+		{
+			SetWidth(depObj, size.Width);
+			SetHeight(depObj, size.Height);
+		}
+
+		public static void SetTop(DependencyObject depObj, double value)
+		{
+			depObj.SetValue(TopProperty, value);
 		}
 
 		[TypeConverter(typeof(NullableTypeConverter<double>))]
-		public static void SetFloatWidth(DependencyObject depObj, double? value)
+		public static void SetWidth(DependencyObject depObj, double? value)
 		{
-			depObj.SetValue(FloatWidthProperty, value);
-		}
-
-		public static void SetLocation(DependencyObject depObj, double x, double y)
-		{
-			depObj.SetValue(FloatLeftProperty, x);
-			depObj.SetValue(FloatTopProperty, y);
-		}
-
-		public static void SetLocation(DependencyObject depObj, Point location)
-		{
-			SetLocation(depObj, location.X, location.Y);
+			depObj.SetValue(WidthProperty, value);
 		}
 
 		private sealed class FloatLayoutSerializer : LayoutSerializer
@@ -161,9 +220,9 @@ namespace Zaaml.UI.Controls.Docking
 			{
 				if (FloatLayoutSizeProperties.Any(l => ShouldSerializeProperty(LayoutType, dependencyObject, l)))
 				{
-					var propertyName = FormatProperty(LayoutType, "FloatRect");
+					var propertyName = FormatProperty(LayoutType, "Rect");
 
-					element.Add(new XAttribute(propertyName, GetFloatRect(dependencyObject).ToString(CultureInfo.InvariantCulture)));
+					element.Add(new XAttribute(propertyName, GetRect(dependencyObject).ToString(CultureInfo.InvariantCulture)));
 				}
 			}
 		}

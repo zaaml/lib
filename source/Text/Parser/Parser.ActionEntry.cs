@@ -6,28 +6,16 @@ using System;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TToken> : ParserBase where TToken : unmanaged, Enum
+	internal abstract partial class Parser<TToken>
 	{
-		#region Nested Types
-
 		public class ActionEntry
 		{
-			#region Ctors
-
-			public ActionEntry(Action<ParserContext> action)
+			public ActionEntry(Action<Parser<TToken>> action)
 			{
 				Action = action;
 			}
 
-			#endregion
-
-			#region Properties
-
-			public Action<ParserContext> Action { get; }
-
-			#endregion
+			public Action<Parser<TToken>> Action { get; }
 		}
-
-		#endregion
 	}
 }

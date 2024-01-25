@@ -10,6 +10,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.Platform;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
@@ -123,8 +124,8 @@ namespace Zaaml.UI.Controls.TaskBar
 
     public bool IsVisible
     {
-      get => (bool) GetValue(IsVisibleProperty);
-      set => SetValue(IsVisibleProperty, value);
+	    get => (bool)GetValue(IsVisibleProperty);
+	    set => SetValue(IsVisibleProperty, value.Box());
     }
 
     internal IntPtr NativeHandle => _dispatcher.Handle;

@@ -2,27 +2,21 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
+using System.Collections.Generic;
 using Zaaml.Core;
 
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		protected class QuantifierEntry : Entry
 		{
-			#region Fields
-
 			public readonly QuantifierKind Kind;
 			public readonly int Maximum;
 			public readonly int Minimum;
 			public readonly QuantifierMode Mode;
 			public readonly PrimitiveEntry PrimitiveEntry;
-
-			#endregion
-
-			#region Ctors
 
 			public QuantifierEntry(PrimitiveEntry primitiveEntry, QuantifierKind kind, QuantifierMode mode)
 			{
@@ -55,15 +49,57 @@ namespace Zaaml.Text
 				Minimum = minimum;
 			}
 
-			#endregion
+			protected override string DebuggerDisplay => $"{PrimitiveEntry}{GetQuantifierKindString(Kind, Minimum, Maximum)}";
 
-			#region Properties
+			public static IEqualityComparer<QuantifierEntry> EqualityComparer => QuantifierEntryEqualityComparer.Instance;
 
-			protected override string DebuggerDisplay => "Quantifier";
+			protected Interval<int> Interval => new(Minimum, IntervalEndPoint.Closed, Maximum, Maximum == int.MaxValue ? IntervalEndPoint.Unbounded : IntervalEndPoint.Closed);
 
-			#endregion
+			private string GetQuantifierKindString(QuantifierKind kind, int minimum, int maximum)
+			{
+				return kind switch
+				{
+					QuantifierKind.Generic => $"{{{minimum},{maximum}}}",
+					QuantifierKind.ZeroOrOne => "?",
+					QuantifierKind.ZeroOrMore => "*",
+					QuantifierKind.OneOrMore => "+",
+					_ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+				};
+			}
+
+			private sealed class QuantifierEntryEqualityComparer : IEqualityComparer<QuantifierEntry>
+			{
+				public static readonly QuantifierEntryEqualityComparer Instance = new();
+
+				private QuantifierEntryEqualityComparer()
+				{
+				}
+
+				public bool Equals(QuantifierEntry x, QuantifierEntry y)
+				{
+					if (ReferenceEquals(x, y)) return true;
+					if (ReferenceEquals(x, null)) return false;
+					if (ReferenceEquals(y, null)) return false;
+					if (x.GetType() != y.GetType()) return false;
+
+					return x.Kind == y.Kind && x.Maximum == y.Maximum && x.Minimum == y.Minimum && x.Mode == y.Mode && EntryEqualityComparer.Instance.Equals(x.PrimitiveEntry, y.PrimitiveEntry);
+				}
+
+				public int GetHashCode(QuantifierEntry obj)
+				{
+					unchecked
+					{
+						var hashCode = (int)obj.Kind;
+
+						hashCode = (hashCode * 397) ^ obj.Maximum;
+						hashCode = (hashCode * 397) ^ obj.Minimum;
+						hashCode = (hashCode * 397) ^ (int)obj.Mode;
+						hashCode = (hashCode * 397) ^ EntryEqualityComparer.Instance.GetHashCode(obj.PrimitiveEntry);
+
+						return hashCode;
+					}
+				}
+			}
 		}
-
-		#endregion
 	}
 }

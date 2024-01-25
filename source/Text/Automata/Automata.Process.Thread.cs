@@ -4,166 +4,346 @@
 
 // ReSharper disable ForCanBeConvertedToForeach
 
+using System;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using Zaaml.Core;
+using Zaaml.Core.Extensions;
+using Zaaml.Core.Reflection;
+
 namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		partial class Process
 		{
-			#region Nested Types
-
-			private struct Thread
+			private protected partial struct Thread
 			{
-				public static readonly Thread Empty = new Thread();
+				public static readonly FieldInfo StackField = typeof(Thread).GetField(nameof(Stack), BF.IPNP);
 
-				#region Fields
-
-				public PredicateResultQueue PredicateResultQueue;
-				public ExecutionPathQueue ExecutionQueue;
-				public ExecutionPathQueue StartExecutionQueue;
-				public Node CurrentNode;
-				public int InstructionPointer;
-				public ThreadParent Parent;
+				public Node Node;
+				public DfaState Dfa;
 				public AutomataStack Stack;
-				public AutomataContextState ContextState;
-				public InstructionStream InstructionStream;
+				public PrecedenceContext Precedence;
+				public ExecutionRailNode ExecutionRailNode;
 
-				public ulong[] DfaTrails;
-				public int DfaTrailIndex;
-
-				#endregion
-
-				public Thread(Node node, InstructionStream instructionStream, AutomataContextState contextState) : this()
+				public Thread(Node node, AutomataStack stack)
 				{
-					CurrentNode = node;
-					InstructionPointer = InstructionStream.InitializeInstructionPointer();
-					InstructionStream = instructionStream.AddReference();
-					ContextState = contextState;
+					Dfa = default;
+					Node = node;
+					Stack = stack;
+					Precedence = null;
+					ExecutionRailNode = ExecutionRailNode.Empty;
 				}
 
-				public Thread(ThreadParent parent, Node node, InstructionStream instructionStream, int instructionPointer, AutomataContextState contextState) : this()
+				public Thread(Node node, AutomataStack stack, PrecedenceContext precedence)
 				{
-					CurrentNode = node;
-					InstructionPointer = instructionPointer;
-					ContextState = contextState;
-					InstructionStream = instructionStream.AddReference();
+					Dfa = default;
+					node.EnsureSafe();
 
-					InstructionStream.LockPointer(InstructionPointer);
-
-					if (parent == null)
-						return;
-
-					Parent = parent;
-					Parent.AddReference();
+					Node = node;
+					Stack = stack;
+					Precedence = precedence;
+					ExecutionRailNode = ExecutionRailNode.Empty;
 				}
 
-				public Thread(ThreadParent parent, Node node, InstructionStream instructionStream, int instructionPointer, AutomataContextState contextState, ulong[] dfaTrails, int dfaTrailIndex) : this()
+				public Thread(Node node, AutomataStack stack, ExecutionRailNode executionRailNode)
 				{
-					CurrentNode = node;
-					InstructionPointer = instructionPointer;
-					ContextState = contextState;
-					InstructionStream = instructionStream.AddReference();
-
-					InstructionStream.LockPointer(InstructionPointer);
-
-					DfaTrails = dfaTrails;
-					DfaTrailIndex = dfaTrailIndex;
-
-					if (parent == null)
-						return;
-
-					Parent = parent;
-					Parent.AddReference();
+					Dfa = default;
+					Node = node;
+					Stack = stack;
+					Precedence = null;
+					ExecutionRailNode = executionRailNode;
 				}
 
-				#region Methods
-
-				public void EnsureStartExecutionQueue()
+				public Thread(DfaState dfa, Node node, AutomataStack stack, PrecedenceContext precedence, ExecutionRailNode executionRailNode)
 				{
-					StartExecutionQueue ??= Parent.ExecutionQueue.Pool.Get().AddReference();
+					Dfa = dfa;
+					Node = node;
+					Stack = stack;
+					Precedence = precedence;
+					ExecutionRailNode = executionRailNode;
 				}
 
-				public void EnqueueStartPath(ExecutionPath executionPath)
+				public void Dispose()
 				{
-					StartExecutionQueue.List.Add(executionPath);
+					Stack.Dispose();
+					Precedence.Dispose();
+					ExecutionRailNode.Dispose();
 				}
 
-				public void EnqueuePath(ExecutionPath executionPath)
+				private ThreadStatusKind Run(ref ThreadContext context, ReadOnlySpan<int> executionPaths)
 				{
-					ExecutionQueue.List.Add(executionPath);
-				}
+					context.InstructionStream.UnlockPointer(context.InstructionStreamPointer);
 
-				public void EnqueuePredicateResult(PredicateResult predicateResult)
-				{
-					PredicateResultQueue ??= Parent.PredicateResultQueue.Pool.Get().AddReference();
-					PredicateResultQueue.Queue.Enqueue(predicateResult);
-				}
-
-				#endregion
-
-				public ref TInstruction Instruction => ref InstructionStream.PeekInstruction(InstructionPointer);
-
-				public int InstructionOperand => InstructionStream.PeekOperand(InstructionPointer);
-
-				public int InstructionStreamPosition => InstructionStream.GetPosition(InstructionPointer);
-
-				public ref TInstruction GetInstructionOperand(out int operand)
-				{
-					return ref InstructionStream.PeekInstructionOperand(InstructionPointer, out operand);
-				}
-
-				public bool OwnStack => Stack != null && ReferenceEquals(Stack, Parent?.Stack) == false;
-
-				public bool OwnPredicateResult => PredicateResultQueue != null && ReferenceEquals(PredicateResultQueue, Parent?.PredicateResultQueue) == false;
-
-				public bool OwnExecutionQueue => ExecutionQueue != null;
-
-				public void Dispose(Process process)
-				{
-					if (Parent == null)
+					for (var index = 0; index < executionPaths.Length; index++)
 					{
-						Stack?.ReleaseReference();
-						ExecutionQueue?.ReleaseReference();
-						PredicateResultQueue?.ReleaseReference();
-					}
-					else
-					{
-						if (ReferenceEquals(Stack, Parent.Stack) == false)
-							Stack?.ReleaseReference();
+						var executionPath = executionPaths[index];
 
-						if (ReferenceEquals(ExecutionQueue, Parent.ExecutionQueue) == false)
-							ExecutionQueue?.ReleaseReference();
+						Node = context.Execute(executionPath);
 
-						if (ReferenceEquals(PredicateResultQueue, Parent.PredicateResultQueue) == false)
-							PredicateResultQueue?.ReleaseReference();
+						switch (Node.ThreadStatusKind)
+						{
+							case ThreadStatusKind.Run:
+								continue;
 
-						Parent.ReleaseReference();
+							case ThreadStatusKind.Fork:
+
+								context.InstructionStream.LockPointer(context.InstructionStreamPointer);
+
+								return ForkThreadNode((ForkNode)Node, executionPaths.Slice(index + 1), ref context);
+
+							default:
+
+								context.InstructionStream.LockPointer(context.InstructionStreamPointer);
+
+								return Node.ThreadStatusKind;
+						}
 					}
 
-					InstructionStream.UnlockPointer(InstructionPointer);
+					context.InstructionStream.LockPointer(context.InstructionStreamPointer);
 
-					StartExecutionQueue?.ReleaseReference();
-					InstructionStream.ReleaseReference();
+					return Node.ThreadStatusKind;
+				}
 
-					process.Context.DisposeContextStateInternal(ContextState);
+				private bool TryEnterPrecedence(int precedenceEnterNodeId)
+				{
+					var precedenceEnterNode = (PrecedenceEnterNode)Node.Automata._nodeRegistry[precedenceEnterNodeId];
 
-					DfaTrails = null;
-					DfaTrailIndex = -1;
+					return Precedence.TryEnter(precedenceEnterNode.Precedence);
+				}
 
-					Stack = null;
-					Parent = null;
-					ContextState = null;
-					ExecutionQueue = null;
-					InstructionStream = null;
-					StartExecutionQueue = null;
+				private bool TryEnterPrecedenceCode(int precedenceCode)
+				{
+					return Precedence.TryEnterCode(precedenceCode);
+				}
+
+				private void LeavePrecedenceCode(int precedenceCode)
+				{
+					Precedence.LeaveCode(precedenceCode);
+				}
+
+				private void LeavePrecedence(int precedenceEnterNodeId)
+				{
+					var precedenceLeaveNode = (PrecedenceLeaveNode)Node.Automata._nodeRegistry[precedenceEnterNodeId];
+
+					Precedence.Leave(precedenceLeaveNode.Precedence);
+				}
+
+				private ThreadStatusKind ForkThreadNode(ForkNode forkNode, ReadOnlySpan<int> executionPaths, ref ThreadContext context)
+				{
+					throw Error.Refactoring;
+
+					//var forkPredicateResult = (IForkPredicateResult)forkNode.PredicateResult;
+					//var startNode = forkNode.PredicateNode;
+					//var processResources = context.Process._processResources;
+					//var forkPaths = processResources.ExecutionPathSpanAllocator.Allocate(executionPaths.Length * 2 + 2);
+					//var forkPathsSpan = forkPaths.Span;
+					//var forkPathsHead = 0;
+
+					//for (var i = 0; i <= 1; i++)
+					//{
+					//	var predicateEntry = i == 0 ? forkPredicateResult.First : forkPredicateResult.Second;
+					//	var predicateNode = processResources.ForkPredicateNodePool.Rent().Mount(predicateEntry);
+					//	var predicateExecutionPath = processResources.ForkExecutionPathPool.Rent().Mount(startNode, predicateNode);
+
+					//	predicateNode.CopyLookup(forkNode);
+
+					//	forkPathsSpan[forkPathsHead++] = predicateExecutionPath.Id;
+
+					//	foreach (var executionPath in executionPaths)
+					//		forkPathsSpan[forkPathsHead++] = executionPath;
+					//}
+
+					//forkNode.Release();
+
+					//return context.Process.ForkThread(ref this, ref context, forkPaths, forkPathsHead);
+				}
+
+				public ThreadStatusKind Run(ref ThreadContext context)
+				{
+					var startExecutionRailNode = ExecutionRailNode;
+					var startExecutionRail = startExecutionRailNode.ExecutionRail;
+					var pointer = context.InstructionStreamPointer;
+					var position = context.InstructionStreamPosition;
+					var startNode = Node;
+					
+					ExecutionRailNodeStat runStat = default;
+
+					if (startExecutionRail.IsEmpty == false)
+					{
+						try
+						{
+							var entryStatus = Run(ref context, startExecutionRail.SpanSafe);
+
+							Dfa = startExecutionRailNode.Dfa;
+
+							runStat = startExecutionRailNode.RunStat;
+							
+							if (entryStatus != ThreadStatusKind.Run)
+							{
+								if (entryStatus == ThreadStatusKind.Block)
+									return ThreadStatusKind.Block;
+
+								if (entryStatus == ThreadStatusKind.Finished && context.Process._processKind == ProcessKind.SubProcess)
+									return entryStatus;
+
+								return context.FetchInstructionOperand == 0 ? entryStatus : ThreadStatusKind.Unexpected;
+							}
+						}
+						finally
+						{
+							ExecutionRailNode = ExecutionRailNode.DisposeExchange(ExecutionRailNode.Empty);
+						}
+					}
+
+					var process = context.Process;
+					var transitionBuilder = process._nfaTransitionBuilder;
+					var executionRailBuilder = process._executionRailBuilder;
+
+					runStat?.Run();
+
+					while (true)
+					{
+						if (context.IsCompleteBlock)
+							return ThreadStatusKind.Block;
+
+						switch (executionRailBuilder.Build(ref this, ref context, transitionBuilder))
+						{
+							case 0:
+#if false
+								var executionTrace = DumpTrace(ref this, ref context);
+								context.InstructionStream.Dump(position, context.InstructionStreamPosition - position)
+#endif
+								var backtrackingLength = context.InstructionStreamPointer - pointer;
+
+								runStat?.Fail(backtrackingLength);
+
+#if false
+								DumpTrace(ref this, ref context);
+#endif
+
+								Dfa = default;
+
+								process._telemetry?.Backtracking(backtrackingLength);
+
+								return Node.ThreadStatusKind == ThreadStatusKind.Finished ? ThreadStatusKind.Finished : ThreadStatusKind.Unexpected;
+
+							case 1:
+#if false
+								var fp = DumpPath(ref this, ref context, executionPaths.ExecutionRail);
+#endif
+
+								Dfa = executionRailBuilder.Dfa;
+
+								var executionPaths = executionRailBuilder.ExecutionRail.SpanSafe;
+								
+								if (Run(ref context, executionPaths) == ThreadStatusKind.Run)
+									continue;
+
+								if (Node.ThreadStatusKind == ThreadStatusKind.Finished && context.Process._processKind == ProcessKind.SubProcess)
+									return ThreadStatusKind.Finished;
+
+								return context.FetchInstructionOperand == 0 ? Node.ThreadStatusKind : ThreadStatusKind.Unexpected;
+
+							default:
+
+								process._telemetry?.Fork();
+
+								var executionRailList = executionRailBuilder.DetachRailList();
+
+								Dfa = default;
+
+#if false
+								var fp = DumpForkPaths(ref this, ref context, executionRailList);
+#endif
+								return process.ForkThread(ref this, ref context, executionRailList);
+						}
+					}
+				}
+
+				private int GetBacktrackingLength(ref ThreadContext context)
+				{
+					if (context.Index == 0)
+						return context.InstructionStreamPointer;
+
+					ref var prevContext = ref context.Process._threads.PrevContext();
+
+					return context.InstructionStreamPointer - prevContext.InstructionStreamPointer;
+				}
+
+				[UsedImplicitly]
+				private static string DumpTrace(ref Thread thread, ref ThreadContext context)
+				{
+					if (context.Index > 0)
+					{
+						ref var prevContext = ref context.Process._threads.PrevContext();
+						ref var prevThread = ref context.Process._threads.PrevThread();
+						var prevPosition = prevContext.InstructionStreamPosition;
+						var currPosition = context.InstructionStreamPosition;
+						var prevPointer = prevContext.InstructionStreamPointer;
+						var currPointer = context.InstructionStreamPointer;
+
+						var text = context.InstructionStream.Dump(prevPosition, currPosition - prevPosition);
+					}
+
+					var prevInstructionPointer = context.Index == 0 ? 0 : context.Process._threads.PrevContext().ExecutionStreamPointer;
+					var executionTrace = context.ExecutionStream.GetSpan(prevInstructionPointer, context.ExecutionStreamPointer - prevInstructionPointer);
+					var contextExecutionPathRegistry = context.ExecutionPathRegistry;
+
+					return string.Join("\r\n", executionTrace.ToArray().SelectMany(e => contextExecutionPathRegistry[e].Nodes).Select(n => n.ToString()));
+				}
+
+				[UsedImplicitly]
+				private static string DumpForkPaths(ref Thread thread, ref ThreadContext context, ExecutionRailList executionPaths)
+				{
+					var stringBuilder = new StringBuilder();
+					var count = executionPaths.Count;
+
+					for (var i = 0; i < count; i++)
+					{
+						executionPaths = executionPaths.MoveNext(out var railNode);
+
+						stringBuilder.Append($"ForkPath: {i + 1}\r\n");
+						stringBuilder.Append(DumpPath(ref thread, ref context, railNode.ExecutionRail));
+						stringBuilder.Append("\r\n--------------------------------------------------------------\r\n");
+					}
+
+					return stringBuilder.ToString();
+				}
+
+				[UsedImplicitly]
+				private static string DumpPath(ref Thread thread, ref ThreadContext context, MemorySpan<int> executionPath)
+				{
+					var contextExecutionPathRegistry = context.ExecutionPathRegistry;
+
+					return string.Join("\r\n", executionPath.SpanSafe.ToArray().SelectMany(e => contextExecutionPathRegistry[e].Nodes).Select(n => n.ToString()));
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public void StackForkExchange(ref Thread threadSource)
+				{
+					Stack.Unfork(threadSource.Stack);
+					Precedence.Unfork(threadSource.Precedence);
+
+					(Stack, threadSource.Stack) = (threadSource.Stack, Stack);
+					(Precedence, threadSource.Precedence) = (threadSource.Precedence, Precedence);
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public Thread Fork(ExecutionRailNode executionRailNode)
+				{
+					var stack = Stack;
+					var precedence = Precedence;
+
+					Stack = stack.Fork();
+					Precedence = precedence.Fork();
+
+					return new Thread(Dfa, Node, stack, precedence, executionRailNode);
 				}
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

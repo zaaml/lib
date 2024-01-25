@@ -3,16 +3,13 @@
 // </copyright>
 
 using System.Windows.Media;
-using Zaaml.PresentationCore.Animation.Interpolators;
 
 namespace Zaaml.PresentationCore.Animation
 {
-  public sealed class MatrixAnimation : PrimitiveAnimationBase<Matrix>
-  {
-    #region Properties
-
-    private protected override IInterpolator<Matrix> Interpolator => MatrixInterpolator.Instance;
-
-    #endregion
-  }
+	public sealed class MatrixAnimation : PrimitiveAnimation<Matrix>
+	{
+		public MatrixAnimation() : base(MatrixInterpolator.Instance)
+		{
+		}
+	}
 }

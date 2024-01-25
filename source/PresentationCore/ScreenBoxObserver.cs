@@ -8,85 +8,62 @@ using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore
 {
-  internal partial class ScreenBoxObserver : IDisposable
-  {
-    #region Fields
+	internal partial class ScreenBoxObserver : IDisposable
+	{
+		private readonly Action _notifyCallback;
+		private Rect _screenBox;
 
-    private readonly Action _notifyCallback;
-    private Rect _screenBox;
+		public ScreenBoxObserver(FrameworkElement frameworkElement, Action notifyCallback)
+		{
+			_screenBox = frameworkElement.GetScreenLogicalBox();
+			_notifyCallback = notifyCallback;
 
-    #endregion
+			FrameworkElement = frameworkElement;
+			FrameworkElement.LayoutUpdated += FrameworkElementOnLayoutUpdated;
 
-    #region Ctors
+			PlatformCtor();
+			UpdateScreenBox();
+		}
 
-    public ScreenBoxObserver(FrameworkElement frameworkElement, Action notifyCallback)
-    {
-      _screenBox = frameworkElement.GetScreenBox();
-      _notifyCallback = notifyCallback;
+		public FrameworkElement FrameworkElement { get; private set; }
 
-      FrameworkElement = frameworkElement;
-      FrameworkElement.LayoutUpdated += FrameworkElementOnLayoutUpdated;
+		public bool IsDisposed => FrameworkElement == null;
 
-      PlatformCtor();
-    }
+		public Rect ScreenBox
+		{
+			get => _screenBox;
+			private set
+			{
+				if (_screenBox.IsCloseTo(value))
+					return;
 
-    #endregion
+				_screenBox = value;
+				_notifyCallback();
+			}
+		}
 
-    #region Properties
+		private void FrameworkElementOnLayoutUpdated(object sender, EventArgs eventArgs)
+		{
+			UpdateScreenBox();
+		}
 
-    public FrameworkElement FrameworkElement { get; private set; }
+		partial void PlatformCtor();
 
-    public bool IsDisposed => FrameworkElement == null;
+		private void UpdateScreenBox()
+		{
+			if (FrameworkElement == null)
+				return;
 
-    public Rect ScreenBox
-    {
-      get => _screenBox;
-      private set
-      {
-        if (_screenBox.IsCloseTo(value))
-          return;
+			ScreenBox = FrameworkElement.GetScreenLogicalBox();
+		}
 
-        _screenBox = value;
-        _notifyCallback();
-      }
-    }
+		public void Dispose()
+		{
+			if (IsDisposed)
+				return;
 
-    #endregion
-
-    #region  Methods
-
-    private void FrameworkElementOnLayoutUpdated(object sender, EventArgs eventArgs)
-    {
-      UpdateScreenBox();
-    }
-
-    partial void PlatformCtor();
-
-    private void UpdateScreenBox()
-    {
-      if (FrameworkElement == null)
-        return;
-
-      ScreenBox = FrameworkElement.GetScreenBox();
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IDisposable
-
-    public void Dispose()
-    {
-      if (IsDisposed)
-        return;
-
-      FrameworkElement.LayoutUpdated -= FrameworkElementOnLayoutUpdated;
-      FrameworkElement = null;
-    }
-
-    #endregion
-
-    #endregion
-  }
+			FrameworkElement.LayoutUpdated -= FrameworkElementOnLayoutUpdated;
+			FrameworkElement = null;
+		}
+	}
 }

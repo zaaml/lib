@@ -25,7 +25,7 @@ namespace Zaaml.UI.Controls.Core
 
 		public override int Count => GeneratedItems.Count;
 
-		private List<GeneratedItem> GeneratedItems { get; set; } = new List<GeneratedItem>();
+		private List<GeneratedItem> GeneratedItems { get; set; } = new();
 
 		public override IEnumerable Source
 		{
@@ -64,11 +64,11 @@ namespace Zaaml.UI.Controls.Core
 
 			GeneratedItems = new List<GeneratedItem>();
 
-			var index = 0;
-
-			foreach (var element in processList)
+			for (var index = processList.Count - 1; index >= 0; index--)
 			{
-				ItemCollection.DetachGeneratedItem(index++, element.Item);
+				var element = processList[index];
+
+				ItemCollection.DetachGeneratedItem(index, element.Item);
 
 				DisposeItem(element);
 			}

@@ -75,7 +75,7 @@
                             Visibility="{zm:TemplateBinding Path=DropShadow,
                                                             Converter={zm:VisibilityConverter}}" />
 
-      <Grid Margin="12">
+      <zm:Panel Margin="12">
 
         <!--  ContentHost  -->
         <Border x:Name="ContentHost"
@@ -86,7 +86,7 @@
           <zm:ContentPresenter x:Name="ContentPresenter" />
 
         </Border>
-      </Grid>
+      </zm:Panel>
 
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -100,7 +100,7 @@
                             Visibility="{zm:TemplateBinding Path=DropShadow,
                                                             Converter={zm:VisibilityConverter}}" />
 
-      <Grid Margin="12">
+      <zm:Panel Margin="12">
 
         <!--  ContentHost  -->
         <Border x:Name="ContentHost"
@@ -113,19 +113,19 @@
         </Border>
 
 
-      </Grid>
+      </zm:Panel>
 
-      <Grid Margin="12">
+      <zm:Panel Margin="12">
         <!--  Arrow  -->
-        <Grid x:Name="Arrow"
-              HorizontalAlignment="{zm:TemplateBinding Path=Popup.(zm:SnapPlacement.ActualSnapPoint),
-                                                       Converter={StaticResource HorizontalAlignmentConverter},
-                                                       TargetNullValue=Stretch,
-                                                       FallbackValue=Stretch}"
-              VerticalAlignment="{zm:TemplateBinding Path=Popup.(zm:SnapPlacement.ActualSnapPoint),
-                                                     Converter={StaticResource VerticalAlignmentConverter},
-                                                     TargetNullValue=Stretch,
-                                                     FallbackValue=Stretch}">
+        <zm:Panel x:Name="Arrow"
+                  HorizontalAlignment="{zm:TemplateBinding Path=Popup.(zm:SnapPlacement.ActualSnapPoint),
+                                                           Converter={StaticResource HorizontalAlignmentConverter},
+                                                           TargetNullValue=Stretch,
+                                                           FallbackValue=Stretch}"
+                  VerticalAlignment="{zm:TemplateBinding Path=Popup.(zm:SnapPlacement.ActualSnapPoint),
+                                                         Converter={StaticResource VerticalAlignmentConverter},
+                                                         TargetNullValue=Stretch,
+                                                         FallbackValue=Stretch}">
 
           <Path Data="{zm:ExpandoBinding Path=ArrowGeometry,
                                          ElementName=Arrow}"
@@ -143,8 +143,8 @@
               <TranslateTransform x:Name="InnerPathTransform" />
             </Path.RenderTransform>
           </Path>
-        </Grid>
-      </Grid>
+        </zm:Panel>
+      </zm:Panel>
 
       <zm:Extension.Triggers>
         <zm:SwitchDataTrigger Binding="{zm:TemplateBinding Path=Popup.(zm:SnapPlacement.ActualSnapPoint), Converter={StaticResource SideConverter}}">

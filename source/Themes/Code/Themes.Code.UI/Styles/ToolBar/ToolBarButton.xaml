@@ -1,0 +1,65 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="/Zaaml.Themes.Code;component/Styles/Button/Button.Shared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="ToolBarButtonBaseTemplate"
+                   TargetType="zm:ToolBarButtonBase">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+      <!--  Face  -->
+      <Border Padding="{TemplateBinding Padding}"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+
+        <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                 VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                 zm:PathIcon.Brush="{TemplateBinding Foreground}"
+                                 Content="{TemplateBinding Content}"
+                                 ContentTemplate="{TemplateBinding ContentTemplate}"
+                                 Icon="{TemplateBinding Icon}"
+                                 IconDistance="{TemplateBinding IconDistance}"
+                                 IconDock="{TemplateBinding IconDock}"
+                                 ShowContent="{TemplateBinding ShowContent}"
+                                 ShowIcon="{TemplateBinding ShowIcon}" />
+
+      </Border>
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ToolBarButtonBaseStyle" TargetType="zm:ToolBarButtonBase">
+    <zm:Setter Property="Padding" Value="3" />
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Center" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Center" />
+    <zm:Setter Property="Template" Value="{StaticResource ToolBarButtonBaseTemplate}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+
+    <zm:Setter Property="zm:Extension.Skin" Value="{zm:SelfBinding Path=ToolBar.(zm:Extension.ActualSkin), Converter={zm:Static Member=zm:SkinResourceConverter.Instance}, ConverterParameter=ToolBarButton}" />
+
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ToolBarButtonStyle" BasedOn="{StaticResource ToolBarButtonBaseStyle}" Skin="Code.ToolBarButton" TargetType="zm:ToolBarButtonBase">
+
+    <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePathSource="Skin" />
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ToolBarButtonThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ToolBarButtonStyle}" TargetType="zm:ToolBarButton" />
+  <zm:ThemeStyle x:Key="ToolBarToggleButtonThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ToolBarButtonStyle}" TargetType="zm:ToolBarToggleButton" />
+
+</zm:ThemeResourceDictionary>

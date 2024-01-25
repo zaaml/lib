@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 
@@ -45,7 +46,7 @@ namespace Zaaml.UI.Controls.DropDown
 		public bool ShowDropDownGlyph
 		{
 			get => (bool)GetValue(ShowDropDownGlyphProperty);
-			set => SetValue(ShowDropDownGlyphProperty, value);
+			set => SetValue(ShowDropDownGlyphProperty, value.Box());
 		}
 
 		protected override void OnClick()

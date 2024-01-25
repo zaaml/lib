@@ -4,23 +4,24 @@
 	<PropertyGroup>
 		<OutputType>library</OutputType>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
+		<Configurations>Debug;Release;Test</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFramework>net5.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="$(Publish) == 'true'">
-		<GeneratePackageOnBuild >true</GeneratePackageOnBuild>
-		<TargetFrameworks>net5.0;netcoreapp3.1;net48</TargetFrameworks>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<TargetFrameworks>net8.0;net7.0;net6.0;net5.0;net48;netstandard2.0</TargetFrameworks>
 		<TargetFramework></TargetFramework>
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="5.5.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+	  <PackageReference Include="GitVersion.MsBuild" Version="5.12.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>

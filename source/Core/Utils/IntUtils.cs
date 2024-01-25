@@ -29,6 +29,15 @@ namespace Zaaml.Core.Utils
       return Clamp(value, range.Minimum, range.Maximum);
     }
 
+    public static void UpdateMinMax(ref int min, ref int max, int value)
+    {
+			if (value < min)
+				min = value;
+
+			if (value > max)
+				max = value;
+    }
+
     #endregion
   }
 }

@@ -14,14 +14,8 @@ namespace Zaaml.PresentationCore.Theming
 {
 	internal sealed class SkinResourceManager
 	{
-		#region Fields
-
 		private readonly SkinnedTheme _theme;
-		private readonly Dictionary<string, ThemeResource> _themeResources = new Dictionary<string, ThemeResource>(StringComparer.OrdinalIgnoreCase);
-
-		#endregion
-
-		#region Ctors
+		private readonly Dictionary<string, ThemeResource> _themeResources = new(StringComparer.OrdinalIgnoreCase);
 
 		public SkinResourceManager()
 		{
@@ -32,11 +26,7 @@ namespace Zaaml.PresentationCore.Theming
 			_theme = theme;
 		}
 
-		#endregion
-
-		#region Properties
-
-		private SkinDictionary Root { get; } = new SkinDictionary();
+		private SkinDictionary Root { get; } = new();
 
 		public HashSet<string> UnresolvedDependencies
 		{
@@ -50,10 +40,6 @@ namespace Zaaml.PresentationCore.Theming
 			}
 		}
 
-		#endregion
-
-		#region  Methods
-
 		public void AddThemeResource(ThemeResource themeResource)
 		{
 			AddThemeResource(new KeyValuePair<string, object>(themeResource.ActualKey, themeResource.Value));
@@ -63,14 +49,11 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			var key = themeResourceKeyValuePair.Key;
 			var value = themeResourceKeyValuePair.Value;
-			var themeResourceValue = value as ThemeResource;
 
-			if (themeResourceValue != null)
+			if (value is ThemeResource themeResourceValue)
 				value = themeResourceValue.Value;
 
-			var themeKeywordGroup = value as ThemeKeywordGroup;
-
-			if (themeKeywordGroup != null)
+			if (value is ThemeKeywordGroup themeKeywordGroup)
 				foreach (var themeKeyword in themeKeywordGroup)
 					AddThemeResource(new KeyValuePair<string, object>(themeKeyword.ActualKey, themeKeyword.Value));
 
@@ -85,7 +68,7 @@ namespace Zaaml.PresentationCore.Theming
 
 		private ThemeResource EnsureThemeResource(string key)
 		{
-			return new ThemeResource(this) { Key = key };
+			return new(this) {Key = key};
 		}
 
 		public IEnumerable<ThemeResource> EnumerateResources()
@@ -93,7 +76,7 @@ namespace Zaaml.PresentationCore.Theming
 			return _themeResources.Values;
 		}
 
-		private IEnumerable<KeyValuePair<string, object>> EnumerateResources(ResourceDictionary resourceDictionary)
+		private static IEnumerable<KeyValuePair<string, object>> EnumerateResources(ResourceDictionary resourceDictionary)
 		{
 			foreach (var rd in resourceDictionary.EnumerateDictionaries())
 			{
@@ -125,9 +108,7 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			foreach (var themeResource in themeResources)
 			{
-				var skinResource = themeResource.Value as SkinDictionary;
-
-				if (skinResource == null)
+				if (themeResource.Value is not SkinDictionary)
 				{
 					Root.Merge(themeResource, SkinDictionaryMergeFlags.Override);
 
@@ -137,7 +118,7 @@ namespace Zaaml.PresentationCore.Theming
 					Root.Merge(themeResource, SkinDictionaryMergeFlags.Default);
 			}
 
-			if (ResolveDependencies() == false)
+			if (Root.ResolveDependencies(Root) == false)
 				return;
 
 			var frozenRoot = Root.AsFrozen();
@@ -146,50 +127,9 @@ namespace Zaaml.PresentationCore.Theming
 				AddThemeResource(themeResourceKeyValuePair);
 		}
 
-		private bool ResolveDependencies()
-		{
-			var result = true;
-
-			TreeEnumerator.Visit(Root, SkinDictionary.SkinDictionaryTreeAdvisor, s =>
-			{
-				if (s.BasedOnInternal == null || s.BasedOnInternal.Count == 0)
-					return;
-
-				for (var index = 0; index < s.BasedOn.Count; index++)
-				{
-					var basedOn = s.BasedOn[index];
-
-					if (basedOn.IsDeferred == false || basedOn.IsAbsoluteKey == false)
-						continue;
-
-					object resolved;
-
-					if (Root.TryGetValue(basedOn.DeferredKey, out resolved) == false)
-					{
-						result = false;
-
-						continue;
-					}
-
-					var resolvedSkin = resolved as SkinDictionary;
-
-					if (resolvedSkin != null)
-						s.BasedOn[index] = resolvedSkin;
-					else
-						result = false;
-				}
-			});
-
-			return result;
-		}
-
 		private static KeyValuePair<string, object> UnwrapValue(KeyValuePair<string, object> keyValuePair)
 		{
-			var themeResourceValue = keyValuePair.Value as ThemeResource;
-
-			return themeResourceValue != null ? keyValuePair.WithValue(themeResourceValue.Value) : keyValuePair;
+			return keyValuePair.Value is ThemeResource themeResourceValue ? keyValuePair.WithValue(themeResourceValue.Value) : keyValuePair;
 		}
-
-		#endregion
 	}
 }

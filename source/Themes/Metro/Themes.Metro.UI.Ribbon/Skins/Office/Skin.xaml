@@ -24,13 +24,13 @@
     <!-- RibbonToolBar -->
     <zm:SkinDictionary x:Key="RibbonToolBar" BasedOn="Metro.Shared.ToolBar">
 
-      <SolidColorBrush x:Key="Background" Color="#FF2576C4" />
+      <SolidColorBrush x:Key="Background" Color="#FFE6E6E6" />
 
       <!-- BaseColors -->
       <zm:SkinDictionary x:Key="BaseColors">
 
         <zm:SkinDictionary x:Key="Input">
-          <Color x:Key="ForegroundBase">#FFFFFFFF</Color>
+          <Color x:Key="ForegroundBase">#E3000000</Color>
           <Color x:Key="BackgroundBase">#00FFFFFF</Color>
           <Color x:Key="BorderBrushBase">#00FFFFFF</Color>
           <Color x:Key="AccentBase">#FF0072C6</Color>
@@ -60,23 +60,23 @@
 
       <!-- Foreground -->
       <zm:SkinDictionary x:Key="Foreground">
-        <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FF2576C4" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#D3000000" zmb:Skin="Office" />
       </zm:SkinDictionary>
 
       <!-- Background -->
       <zm:SkinDictionary x:Key="Background">
-        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FFE6E6E6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#FFE6E6E6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFBFBFBF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFF0F0F0" zmb:Skin="Office" />
       </zm:SkinDictionary>
 
       <!-- BorderBrush -->
       <zm:SkinDictionary x:Key="BorderBrush">
         <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FFE6E6E6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFBFBFBF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFA6A6A6" zmb:Skin="Office" />
       </zm:SkinDictionary>
     </zm:SkinDictionary>
 
@@ -85,27 +85,23 @@
 
       <!-- Foreground -->
       <zm:SkinDictionary x:Key="Foreground">
-        <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FF2576C4" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#D3000000" zmb:Skin="Office" />
       </zm:SkinDictionary>
 
       <!-- Background -->
       <zm:SkinDictionary x:Key="Background">
-        <SolidColorBrush x:Key="Normal" Color="#30000000" zmb:Skin="Office" />
-
-        <!-- TODO Resources below not needed. Values are same as BasedOn Skin. Theme SkinResources Partial BasedOn issue (look SkinDictionary.Composition Freeze) -->
-        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FFE6E6E6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#FFE6E6E6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFBFBFBF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFF0F0F0" zmb:Skin="Office" />
       </zm:SkinDictionary>
 
       <!-- BorderBrush -->
       <zm:SkinDictionary x:Key="BorderBrush">
-        <SolidColorBrush x:Key="Normal" Color="#30000000" zmb:Skin="Office" />
-
-        <!-- TODO Resources below not needed. Values are same as BasedOn Skin. Theme SkinResources Partial BasedOn issue (look SkinDictionary.Composition Freeze) -->
-        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FFE6E6E6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFBFBFBF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFA6A6A6" zmb:Skin="Office" />
       </zm:SkinDictionary>
     </zm:SkinDictionary>
 
@@ -114,8 +110,8 @@
 
       <!-- Foreground -->
       <zm:SkinDictionary x:Key="Foreground">
-        <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
       </zm:SkinDictionary>
 
       <!-- Background -->
@@ -134,8 +130,8 @@
     <!-- RibbonGroup -->
     <zm:SkinDictionary x:Key="RibbonGroup">
       <SolidColorBrush x:Key="Foreground" Color="#FF848484" />
-      <SolidColorBrush x:Key="Background" Color="#FFE6E6E6" />
-      <SolidColorBrush x:Key="BorderBrush" Color="#FFD4D4D4" />
+      <SolidColorBrush x:Key="Background" Color="#FFF0F0F0" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#FFA6A6A6" />
     </zm:SkinDictionary>
 
     <!-- Ribbon -->
@@ -144,18 +140,18 @@
       <!-- RibbonControl -->
       <zm:SkinDictionary x:Key="RibbonControl">
 
-        <SolidColorBrush x:Key="Background" Color="#FFE6E6E6" />
-        <SolidColorBrush x:Key="BorderBrush" Color="#FFD4D4D4" />
+        <SolidColorBrush x:Key="Background" Color="#FFF0F0F0" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#FFA6A6A6" />
 
         <!-- AppButton-->
         <zm:SkinDictionary x:Key="AppButton">
 
           <!-- Foreground -->
           <zm:SkinDictionary x:Key="Foreground">
-            <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
-            <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
-            <SolidColorBrush x:Key="Pressed" Color="#FFFFFFFF" zmb:Skin="Office" />
-            <SolidColorBrush x:Key="Checked" Color="#FFFFFFFF" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Pressed" Color="#E3000000" zmb:Skin="Office" />
+            <SolidColorBrush x:Key="Checked" Color="#E3000000" zmb:Skin="Office" />
           </zm:SkinDictionary>
 
           <!-- Background -->
@@ -197,16 +193,16 @@
 
         <!-- Foreground -->
         <zm:SkinDictionary x:Key="Foreground">
-          <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
-          <SolidColorBrush x:Key="MouseOver" Color="#FFE3E3E3" zmb:Skin="Office" />
-          <SolidColorBrush x:Key="Pressed" Color="#FFE3E3E3" zmb:Skin="Office" />
-          <SolidColorBrush x:Key="Checked" Color="#FFE3E3E3" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Normal" Color="#60000000" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="MouseOver" Color="#80000000" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Pressed" Color="#A0000000" zmb:Skin="Office" />
+          <SolidColorBrush x:Key="Checked" Color="#60000000" zmb:Skin="Office" />
         </zm:SkinDictionary>
       </zm:SkinDictionary>
 
-      <SolidColorBrush x:Key="Foreground" Color="#FFFFFFFF" />
-      <SolidColorBrush x:Key="Background" Color="#FF2576C4" />
-      <SolidColorBrush x:Key="BorderBrush" Color="#FF2576C4" />
+      <SolidColorBrush x:Key="Foreground" Color="#E3000000" />
+      <SolidColorBrush x:Key="Background" Color="#FFE6E6E6" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#FF0173C7" />
 
     </zm:SkinDictionary>
 
@@ -215,26 +211,25 @@
 
       <!-- Foreground -->
       <zm:SkinDictionary x:Key="Foreground">
-        <SolidColorBrush x:Key="Normal" Color="#FFFFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="MouseOver" Color="#FFFFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FF2576C4" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#E3000000" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#E3000000" zmb:Skin="Office" />
       </zm:SkinDictionary>
 
       <!-- Background -->
       <zm:SkinDictionary x:Key="Background">
-        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#FFE6E6E6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFBFBFBF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFBFBFBF" zmb:Skin="Office" />
       </zm:SkinDictionary>
 
       <!-- BorderBrush -->
       <zm:SkinDictionary x:Key="BorderBrush">
-        <SolidColorBrush x:Key="Normal" Color="#00FFFFFF" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="MouseOver" Color="#30000000" zmb:Skin="Office" />
-        <SolidColorBrush x:Key="Selected" Color="#FFFFFFFF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Normal" Color="#FFE6E6E6" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="MouseOver" Color="#FFBFBFBF" zmb:Skin="Office" />
+        <SolidColorBrush x:Key="Selected" Color="#FFBFBFBF" zmb:Skin="Office" />
       </zm:SkinDictionary>
     </zm:SkinDictionary>
 
-    
   </zm:SkinDictionary>
 </zm:ThemeSkinResourceDictionary>

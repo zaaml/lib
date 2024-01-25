@@ -9,65 +9,53 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Behaviors
 {
-  public class ScreenBoundsBehavior : BehaviorBase
-  {
-    #region Static Fields and Constants
+	public class ScreenBoundsBehavior : BehaviorBase
+	{
+		public static readonly DependencyProperty ActualScreenBoxProperty = DPM.Register<Rect, ScreenBoundsBehavior>
+			("ActualScreenBox");
 
-    public static readonly DependencyProperty ActualScreenBoxProperty = DPM.Register<Rect, ScreenBoundsBehavior>
-      ("ActualScreenBox");
+		public static readonly DependencyProperty ActualScreenLocationProperty = DPM.Register<Point, ScreenBoundsBehavior>
+			("ActualScreenLocation");
 
-    public static readonly DependencyProperty ActualScreenLocationProperty = DPM.Register<Point, ScreenBoundsBehavior>
-      ("ActualScreenLocation");
-
-    #endregion
-
-    #region Properties
-
-    public Rect ActualScreenBox
-    {
-      get => (Rect) GetValue(ActualScreenBoxProperty);
-      set => SetValue(ActualScreenBoxProperty, value);
-    }
+		public Rect ActualScreenBox
+		{
+			get => (Rect)GetValue(ActualScreenBoxProperty);
+			set => SetValue(ActualScreenBoxProperty, value);
+		}
 
 		public Point ActualScreenLocation
-    {
-      get => (Point) GetValue(ActualScreenLocationProperty);
-      set => SetValue(ActualScreenLocationProperty, value);
-    }
+		{
+			get => (Point)GetValue(ActualScreenLocationProperty);
+			set => SetValue(ActualScreenLocationProperty, value);
+		}
 
-    #endregion
+		private void FrameworkElementOnLayoutUpdated(object sender, EventArgs eventArgs)
+		{
+			UpdateSize();
+		}
 
-    #region  Methods
+		protected override void OnAttached()
+		{
+			base.OnAttached();
 
-    private void FrameworkElementOnLayoutUpdated(object sender, EventArgs eventArgs)
-    {
-      UpdateSize();
-    }
+			FrameworkElement.LayoutUpdated += FrameworkElementOnLayoutUpdated;
 
-    protected override void OnAttached()
-    {
-      base.OnAttached();
+			UpdateSize();
+		}
 
-      FrameworkElement.LayoutUpdated += FrameworkElementOnLayoutUpdated;
+		protected override void OnDetaching()
+		{
+			FrameworkElement.LayoutUpdated -= FrameworkElementOnLayoutUpdated;
 
-      UpdateSize();
-    }
+			base.OnDetaching();
+		}
 
-    protected override void OnDetaching()
-    {
-      FrameworkElement.LayoutUpdated -= FrameworkElementOnLayoutUpdated;
+		private void UpdateSize()
+		{
+			var screenBox = FrameworkElement.GetScreenLogicalBox();
 
-      base.OnDetaching();
-    }
-
-    private void UpdateSize()
-    {
-      var screenBox = FrameworkElement.GetScreenBox();
-
-      ActualScreenLocation = screenBox.GetTopLeft();
-      ActualScreenBox = screenBox;
-    }
-
-    #endregion
-  }
+			ActualScreenLocation = screenBox.GetTopLeft();
+			ActualScreenBox = screenBox;
+		}
+	}
 }

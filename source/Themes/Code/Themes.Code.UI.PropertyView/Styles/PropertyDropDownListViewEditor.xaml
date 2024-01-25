@@ -1,0 +1,44 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            mc:Ignorable="zmb d">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="PropertyDropDownListViewEditorTemplate"
+                   TargetType="zm:PropertyDropDownListViewEditor">
+    <zm:ControlTemplateRoot>
+
+      <zm:DropDownListViewEditor x:Name="Editor"
+                                 IsTextEditable="True">
+        <zm:DropDownListViewEditor.ListViewControl>
+          <zm:ListViewControl x:Name="ListView"
+                              ItemContentMember="DisplayName" />
+        </zm:DropDownListViewEditor.ListViewControl>
+      </zm:DropDownListViewEditor>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="PropertyDropDownListViewEditorBaseStyle" TargetType="zm:PropertyDropDownListViewEditor">
+    <zm:Setter Property="Template" Value="{StaticResource PropertyDropDownListViewEditorTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="PropertyDropDownListViewEditorStyle"
+            BasedOn="{StaticResource PropertyDropDownListViewEditorBaseStyle}"
+            Skin="Code.PropertyDropDownListViewEditor" TargetType="zm:PropertyDropDownListViewEditor">
+
+    <!--  SkinSetters  -->
+    <zm:SetterGroup ValuePathSource="Skin" />
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="PropertyDropDownListViewEditorThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource PropertyDropDownListViewEditorStyle}"
+                 TargetType="zm:PropertyDropDownListViewEditor" />
+
+</zm:ThemeResourceDictionary>

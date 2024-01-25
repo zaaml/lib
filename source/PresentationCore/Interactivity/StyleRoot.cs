@@ -21,7 +21,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
     protected override void EnsureVisualStateObserver()
     {
-      RealObserver = InteractivityTarget.GetInteractivityService();
+      RealVisualStateObserver = InteractivityTarget.GetInteractivityService();
     }
 
     protected override void OnDescendantApiPropertyChanged(Stack<InteractivityObject> descendants, string propertyName)

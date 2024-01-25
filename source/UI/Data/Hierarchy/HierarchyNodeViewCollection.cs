@@ -11,32 +11,31 @@ using System.Linq;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
-	internal class HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode> : IEnumerable<TNode>
+	internal class HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode> : IReadOnlyList<TNode>
 		where THierarchy : HierarchyView<THierarchy, TNodeCollection, TNode>
 		where TNodeCollection : HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode>
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
 	{
 		private static readonly IEnumerator<TNode> EmptyEnumerator = Enumerable.Empty<TNode>().GetEnumerator();
-		private static readonly List<TNode> EmptyCollection = new List<TNode>();
-
-		private readonly Func<object, TNode> _nodeFactory;
-		private List<TNode> _collection;
-		private List<TNode> _filteredCollection;
-		private long _refreshFilterVersion;
+		private static readonly List<TNode> EmptyCollection = new();
 		private IEnumerable _source;
 
 		protected HierarchyNodeViewCollection(THierarchy hierarchy, TNode parentViewItemData, Func<object, TNode> nodeFactory)
 		{
 			Hierarchy = hierarchy;
 			ParentViewItemData = parentViewItemData;
-			_nodeFactory = nodeFactory;
+			NodeFactory = nodeFactory;
 		}
 
-		private List<TNode> ActualCollection => IsFiltered ? _filteredCollection : _collection;
+		private List<TNode> ActualCollection => IsFiltered ? FilteredCollection : Collection;
+
+		private List<TNode> Collection { get; set; }
 
 		public int Count => ActualCollection?.Count ?? 0;
 
-		internal IReadOnlyList<TNode> FilteredCollection => _filteredCollection;
+		private List<TNode> FilteredCollection { get; set; }
+
+		internal IReadOnlyList<TNode> FilteredCollectionInternal => FilteredCollection;
 
 		private THierarchy Hierarchy { get; }
 
@@ -55,7 +54,11 @@ namespace Zaaml.UI.Data.Hierarchy
 			}
 		}
 
+		private Func<object, TNode> NodeFactory { get; }
+
 		private TNode ParentViewItemData { get; }
+
+		private long RefreshFilterVersion { get; set; }
 
 		public IEnumerable Source
 		{
@@ -73,39 +76,44 @@ namespace Zaaml.UI.Data.Hierarchy
 				if (_source is INotifyCollectionChanged newNotifyCollectionChanged)
 					newNotifyCollectionChanged.CollectionChanged += OnSourceCollectionChanged;
 
-				_collection ??= new List<TNode>();
-				_collection.Clear();
-				_collection.AddRange(_source.OfType<object>().Select(_nodeFactory));
+				Collection ??= new List<TNode>();
+
+				HandleReset();
 			}
 		}
 
-		internal IReadOnlyList<TNode> SourceCollection => _collection ?? EmptyCollection;
+		internal IReadOnlyList<TNode> SourceCollection => Collection ?? EmptyCollection;
 
 		internal void HandleAdd(int newIndex, IList newItems)
 		{
 			var insertIndex = newIndex;
 
 			foreach (var item in newItems)
-				_collection.Insert(insertIndex++, _nodeFactory(item));
+				Collection.Insert(insertIndex++, NodeFactory(item));
 		}
 
 		internal void HandleMove(int oldIndex, int newIndex)
 		{
-			var oldItem = _collection[oldIndex];
-
-			_collection[oldIndex] = _collection[newIndex];
-			_collection[newIndex] = oldItem;
+			(Collection[oldIndex], Collection[newIndex]) = (Collection[newIndex], Collection[oldIndex]);
 		}
 
 		internal void HandleRemove(int oldIndex, IList oldItems)
 		{
-			_collection.RemoveRange(oldIndex, oldItems.Count);
+			for (var i = oldIndex; i < oldIndex + oldItems.Count; i++) 
+				Collection[i].Dispose();
+
+			Collection.RemoveRange(oldIndex, oldItems.Count);
 		}
 
 		internal void HandleReset()
 		{
-			_collection.Clear();
-			_collection.AddRange(_source.OfType<object>().Select(_nodeFactory));
+			foreach (var node in Collection)
+				node.Dispose();
+
+			Collection.Clear();
+
+			if (Source != null)
+				Collection.AddRange(Source.OfType<object>().Select(NodeFactory));
 		}
 
 		private void OnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -118,7 +126,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		internal void RefreshFilter(FilteringStrategy<THierarchy, TNodeCollection, TNode> filteringStrategy)
 		{
-			if (_refreshFilterVersion == Hierarchy.RefreshFilterVersion)
+			if (RefreshFilterVersion == Hierarchy.RefreshFilterVersion)
 				return;
 
 			try
@@ -126,7 +134,7 @@ namespace Zaaml.UI.Data.Hierarchy
 				if (IsFiltered == false)
 					return;
 
-				_filteredCollection ??= new List<TNode>();
+				FilteredCollection ??= new List<TNode>();
 
 				var filter = Hierarchy.FilterInternal;
 
@@ -152,14 +160,14 @@ namespace Zaaml.UI.Data.Hierarchy
 			}
 			finally
 			{
-				_refreshFilterVersion = Hierarchy.RefreshFilterVersion;
+				RefreshFilterVersion = Hierarchy.RefreshFilterVersion;
 			}
 		}
 
 		[SuppressMessage("ReSharper", "PossibleNullReferenceException")]
 		private void UpdateFilterCollection(IEnumerator<TNode> filteredItemsEnumerator)
 		{
-			if (_filteredCollection.Count > 0)
+			if (FilteredCollection.Count > 0)
 			{
 				var filterItemIndex = 0;
 				var filterCollectionChanged = false;
@@ -170,16 +178,16 @@ namespace Zaaml.UI.Data.Hierarchy
 
 					node.VisibleField = true;
 
-					if (filterItemIndex < _filteredCollection.Count)
+					if (filterItemIndex < FilteredCollection.Count)
 					{
-						if (ReferenceEquals(_filteredCollection[filterItemIndex], node))
+						if (ReferenceEquals(FilteredCollection[filterItemIndex], node))
 							filterItemIndex++;
 						else
 						{
-							if (filterItemIndex < _filteredCollection.Count)
-								_filteredCollection.RemoveRange(filterItemIndex, _filteredCollection.Count - filterItemIndex);
+							if (filterItemIndex < FilteredCollection.Count)
+								FilteredCollection.RemoveRange(filterItemIndex, FilteredCollection.Count - filterItemIndex);
 
-							_filteredCollection.Add(node);
+							FilteredCollection.Add(node);
 							filterItemIndex++;
 
 							filterCollectionChanged = true;
@@ -189,13 +197,13 @@ namespace Zaaml.UI.Data.Hierarchy
 					}
 					else
 					{
-						_filteredCollection.Add(node);
+						FilteredCollection.Add(node);
 						filterItemIndex++;
 					}
 				}
 
-				if (filterItemIndex < _filteredCollection.Count)
-					_filteredCollection.RemoveRange(filterItemIndex, _filteredCollection.Count - filterItemIndex);
+				if (filterItemIndex < FilteredCollection.Count)
+					FilteredCollection.RemoveRange(filterItemIndex, FilteredCollection.Count - filterItemIndex);
 
 				if (filterCollectionChanged)
 				{
@@ -205,7 +213,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 						node.VisibleField = true;
 
-						_filteredCollection.Add(node);
+						FilteredCollection.Add(node);
 					}
 				}
 			}
@@ -217,7 +225,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 					node.VisibleField = true;
 
-					_filteredCollection.Add(filteredItemsEnumerator.Current);
+					FilteredCollection.Add(filteredItemsEnumerator.Current);
 				}
 			}
 		}

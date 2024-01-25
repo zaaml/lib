@@ -44,10 +44,13 @@ namespace Zaaml.PresentationCore.PropertyCore
       var typeProperties = ServiceProperties.GetOrCreateValues(type);
       var weakListener = new WeakReference(listener ?? DummyListener.Instance);
       var property = typeProperties.FirstOrDefault(IsFreeImpl);
+
       if (property != null)
       {
         Target.ClearValue(property);
+
         _servicePropertyListeners.Add(property, weakListener);
+
         return property;
       }
 

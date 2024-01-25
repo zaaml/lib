@@ -11,12 +11,15 @@ namespace Zaaml.UI.Controls.Docking
 {
 	public sealed class DockItemLayoutCollection : InheritanceContextDependencyObjectCollection<DockItemLayout>
 	{
-		private readonly Dictionary<string, DockItemLayout> _dictionary = new Dictionary<string, DockItemLayout>(StringComparer.OrdinalIgnoreCase);
-		private bool _sorting;
+		private readonly Dictionary<string, DockItemLayout> _dictionary = new(StringComparer.OrdinalIgnoreCase);
 
+		internal DockItemLayoutCollection():this(null)
+		{
+		}
+		
 		internal DockItemLayoutCollection(IDockItemLayoutCollectionOwner itemsOwner)
 		{
-			ItemsOwner = itemsOwner;
+			ItemsOwner = itemsOwner ?? NullOwner.Instance;
 		}
 
 		public DockItemLayout this[string name] => _dictionary[name];
@@ -39,16 +42,13 @@ namespace Zaaml.UI.Controls.Docking
 
 			try
 			{
-				if (_sorting)
-					return;
-
 				VerifyName(dockItemLayout);
 
 				if (dockItemLayout.ItemLayoutCollections.Add(this) == false)
 					throw new InvalidOperationException();
 
-				if (string.IsNullOrEmpty(dockItemLayout.ItemName) == false)
-					_dictionary[dockItemLayout.ItemName] = dockItemLayout;
+				if (string.IsNullOrEmpty(dockItemLayout.ItemNameInternal) == false)
+					_dictionary[dockItemLayout.ItemNameInternal] = dockItemLayout;
 			}
 			finally
 			{
@@ -62,10 +62,8 @@ namespace Zaaml.UI.Controls.Docking
 
 			try
 			{
-				if (_sorting)
-					return;
-
-				_dictionary.Remove(dockItemLayout.ItemName);
+				if (string.IsNullOrEmpty(dockItemLayout.ItemNameInternal) == false)
+					_dictionary.Remove(dockItemLayout.ItemNameInternal);
 
 				if (dockItemLayout.ItemLayoutCollections.Remove(this) == false)
 					throw new InvalidOperationException();
@@ -86,25 +84,6 @@ namespace Zaaml.UI.Controls.Docking
 			this[index] = newDockItemLayout;
 		}
 
-		internal void Sort()
-		{
-			try
-			{
-				_sorting = true;
-
-				var ordered = this.OrderBy(DockItemLayout.GetIndex).ToList();
-
-				Clear();
-
-				foreach (var dockItemLayout in ordered)
-					Add(dockItemLayout);
-			}
-			finally
-			{
-				_sorting = false;
-			}
-		}
-
 		internal bool TryGetItemLayout(string name, out DockItemLayout value)
 		{
 			return _dictionary.TryGetValue(name, out value);
@@ -112,11 +91,31 @@ namespace Zaaml.UI.Controls.Docking
 
 		private void VerifyName(DockItemLayout dockItemLayout)
 		{
-			if (string.IsNullOrEmpty(dockItemLayout.ItemName))
+			if (string.IsNullOrEmpty(dockItemLayout.ItemNameInternal))
 				return;
 
-			if (_dictionary.ContainsKey(dockItemLayout.ItemName))
+			if (_dictionary.ContainsKey(dockItemLayout.ItemNameInternal))
 				throw new InvalidOperationException("DockItemLayout with the same Name already exists in this collection");
+		}
+
+		private sealed class NullOwner : IDockItemLayoutCollectionOwner
+		{
+			public static readonly NullOwner Instance = new();
+			
+			public DockItemLayoutCollection Items { get; }
+			
+			public void OnItemAdded(DockItemLayout dockItemLayout)
+			{
+			}
+
+			public void OnItemRemoved(DockItemLayout dockItemLayout)
+			{
+			}
+		}
+
+		internal IEnumerable<DockItemLayout> GetByDockState(DockItemState dockItemState)
+		{
+			return this.Where(d => d.DockState == dockItemState);
 		}
 	}
 }

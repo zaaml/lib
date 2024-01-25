@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.Core.Runtime;
 
 namespace Zaaml.PresentationCore.Utils
 {
@@ -10,7 +11,7 @@ namespace Zaaml.PresentationCore.Utils
 	{
 		public static void OverrideFocusable<TElement>(bool focusable) where TElement : UIElement
 		{
-			UIElement.FocusableProperty.OverrideMetadata(typeof(TElement), new FrameworkPropertyMetadata(focusable ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse));
+			UIElement.FocusableProperty.OverrideMetadata(typeof(TElement), new FrameworkPropertyMetadata(focusable ? BooleanBoxes.True : BooleanBoxes.False));
 		}
 	}
 }

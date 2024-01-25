@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Zaaml.Core;
+using Zaaml.Core.Collections;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -15,13 +16,7 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Fields
-
-		private readonly List<Node> _nodeRegistry = new List<Node>();
-
-		#endregion
-
-		#region Methods
+		private readonly List<Node> _nodeRegistry = new();
 
 		[UsedImplicitly]
 		private Node GetNode(int nodeId)
@@ -29,100 +24,106 @@ namespace Zaaml.Text
 			return _nodeRegistry[nodeId];
 		}
 
-		private void RegisterNode(Node node)
+		private int RegisterNode(Node node)
 		{
-			node.Id = _nodeRegistry.Count;
+			if (node is PredicateNode)
+				HasPredicates = true;
+
+			var id = _nodeRegistry.Count;
 
 			_nodeRegistry.Add(node);
+
+			return id;
 		}
 
-		#endregion
-
-		#region Nested Types
-
-		private protected class NodeBase
+		private protected abstract class Node : IEquatable<Node>
 		{
-		}
+			public const byte EnterReturn = 1;
+			public const byte Lazy = 2;
+			private const byte ReturnPathBuilding = 4;
+			private const byte SafeFlag = 8;
+			private const byte HasReturnPathSafeFlag = 16;
+			public readonly int Id;
+			public readonly SyntaxGraph SyntaxGraph;
+			public readonly ThreadStatusKind ThreadStatusKind;
 
-		[DebuggerDisplay("{" + nameof(Name) + "}")]
-		private abstract class Node : NodeBase, IEquatable<Node>
-		{
-			#region Static Fields and Constants
+			private IntTrie<DfaState> _dfaTrie;
 
-			public const int EnterReturn = 1;
-			public const int Lazy = 2;
-
-			#endregion
-
-			#region Fields
-
-			private readonly Automata<TInstruction, TOperand> _automata;
-			public readonly int Flags;
-			public readonly Graph Graph;
 			private volatile ExecutionPathLookup _executionPathLookup;
 			private volatile ExecutionPath[] _executionPaths;
 			private volatile ExecutionPath[] _finalExecutionPaths;
-			private volatile ExecutionPath _returnPath;
-			private volatile bool _buildingReturnPath;
+			private volatile ExecutionPath[] _returnPaths;
 
-			#endregion
+			public Automata<TInstruction, TOperand> Automata;
+			public DfaState Dfa;
+			public int DfaDepth = DfaBuilder.DefaultNextDepth;
+			public byte Flags;
 
-			public bool Safe;
-			public ExecutionPath ReturnPathSafe;
-			public bool HasReturnPathSafe;
-			public ExecutionPathLookup ExecutionPathLookupSafe;
-			public ExecutionPath[] ExecutionPathSafe;
-
-			#region Ctors
-
-			private Node(Automata<TInstruction, TOperand> automata)
+			private protected Node(ThreadStatusKind threadStatusKind)
 			{
-				_automata = automata;
+				Debug.Assert(threadStatusKind == ThreadStatusKind.Unexpected);
 
-				automata.RegisterNode(this);
+				ThreadStatusKind = ThreadStatusKind.Unexpected;
+			}
 
-				if (this is EnterStateNode || this is LeaveStateNode)
+			private Node(Automata<TInstruction, TOperand> automata, ThreadStatusKind threadStatusKind = ThreadStatusKind.Run)
+			{
+				Automata = automata;
+
+				Id = automata.RegisterNode(this);
+
+				if (this is EnterSyntaxNode || this is LeaveSyntaxNode)
 					Flags |= EnterReturn;
 
 				if (this is LazyNode)
 					Flags |= Lazy;
+
+				ThreadStatusKind = threadStatusKind;
 			}
 
-			protected Node(Automata<TInstruction, TOperand> automata, Graph graph) : this(automata)
+			protected Node(Automata<TInstruction, TOperand> automata, SyntaxGraph syntaxGraph, ThreadStatusKind threadStatusKind = ThreadStatusKind.Run) : this(automata, threadStatusKind)
 			{
-				Graph = graph;
-				Graph?.AddNode(this);
+				SyntaxGraph = syntaxGraph;
+				SyntaxGraph?.AddNode(this);
 			}
 
-			#endregion
+			public IntTrie<DfaState> DfaTrie => _dfaTrie ??= new IntTrie<DfaState>();
 
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public void MakeSafe()
+			private bool ReturnPathsBuilding
 			{
-				MakeSafeSynced();
-			}
-
-			private void MakeSafeSynced()
-			{
-				lock (this)
+				get { return (Flags & ReturnPathBuilding) != 0; }
+				set
 				{
-					if (Safe)
-						return;
-
-					ReturnPathSafe = ReturnPath;
-					HasReturnPathSafe = HasReturn;
-					ExecutionPathSafe = ExecutionPaths;
-					ExecutionPathLookupSafe = ExecutionPathLookup;
-					
-					Safe = true;
+					if (value)
+						Flags |= ReturnPathBuilding;
+					else
+						Flags &= unchecked((byte)~ReturnPathBuilding);
 				}
 			}
 
-			#region Properties
+			public bool HasReturnPathSafe
+			{
+				get { return (Flags & HasReturnPathSafeFlag) != 0; }
+				set
+				{
+					if (value)
+						Flags |= HasReturnPathSafeFlag;
+					else
+						Flags &= unchecked((byte)~HasReturnPathSafeFlag);
+				}
+			}
 
-			public List<Edge> OutEdges { get; } = new List<Edge>();
-
-			public List<Edge> InEdges { get; } = new List<Edge>();
+			public bool Safe
+			{
+				get { return (Flags & SafeFlag) != 0; }
+				set
+				{
+					if (value)
+						Flags |= SafeFlag;
+					else
+						Flags &= unchecked((byte)~SafeFlag);
+				}
+			}
 
 			private ExecutionPathLookup ExecutionPathLookup
 			{
@@ -136,7 +137,7 @@ namespace Zaaml.Text
 						if (_executionPathLookup != null)
 							return _executionPathLookup;
 
-						_executionPathLookup = new ExecutionPathLookup(BuildExecutionGraph());
+						_executionPathLookup = new ExecutionPathLookup(Automata, BuildExecutionGraph());
 					}
 
 					return _executionPathLookup;
@@ -162,50 +163,54 @@ namespace Zaaml.Text
 				}
 			}
 
-			public bool HasReturn => ReturnPath.IsInvalid == false;
+			public bool HasReturn => Safe ? HasReturnPathSafe : ReturnPaths.Length > 0;
 
-			public int Id;
-
-			public int Index { get; set; }
+			//public List<Edge> InEdges { get; } = new();
 
 			protected abstract string KindString { get; }
 
-			private bool LookAheadEnabled => _automata.LookAheadEnabled;
+			private bool LookAheadEnabled => Automata.LookAheadEnabled;
 
-			[UsedImplicitly] public string Name => Graph != null ? Graph.State.Name + KindString : KindString;
+			[UsedImplicitly]
+			public string Name => SyntaxGraph != null ? SyntaxGraph.Syntax.Name + KindString : KindString;
 
-			public ExecutionPath ReturnPath
+			public List<Edge> OutEdges { get; } = new();
+
+			public ExecutionPath[] ReturnPaths
 			{
 				get
 				{
-					if (_returnPath != null)
-						return _returnPath;
+					if (_returnPaths != null)
+						return _returnPaths;
 
 					lock (this)
 					{
-						if (_returnPath != null)
-							return _returnPath;
+						if (_returnPaths != null)
+							return _returnPaths;
 
-						if (_buildingReturnPath)
-							return ExecutionPath.Invalid;
+						if (ReturnPathsBuilding)
+							return Array.Empty<ExecutionPath>();
 
-						_buildingReturnPath = true;
-						_returnPath = BuildReturnPath();
-						_buildingReturnPath = false;
+						ReturnPathsBuilding = true;
+
+						_returnPaths = ExecutionPaths.Where(e => e.OutputReturn).ToArray();
+
+						ReturnPathsBuilding = false;
 					}
 
-					return _returnPath;
+					return _returnPaths;
 				}
 			}
 
-			#endregion
-
-			#region Methods
+			public bool Equals(Node other)
+			{
+				return ReferenceEquals(this, other);
+			}
 
 			private void AddEdge(Edge edge)
 			{
 				OutEdges.Add(edge);
-				edge.TargetNode.InEdges.Add(edge);
+				//edge.TargetNode.InEdges.Add(edge);
 			}
 
 			private ExecutionPath[] BuildExecutionGraph()
@@ -227,14 +232,14 @@ namespace Zaaml.Text
 
 					executionPath.PriorityIndex = index;
 
-					if (executionPath.IsPredicate)
+					if (executionPath.IsPredicate || executionPath.OutputReturn)
 						continue;
 
 					if (LookAheadEnabled)
 					{
 						var nodeSet = new HashSet<Node>(executionPath.Nodes) { this };
 
-						while (output.ExecutionPaths.Length == 1 && output.ReturnPath.IsInvalid)
+						while (output.ExecutionPaths.Length == 1 && output.ReturnPaths.Length == 0)
 						{
 							var path = output.ExecutionPaths[0];
 
@@ -258,9 +263,9 @@ namespace Zaaml.Text
 						//if (output.ExecutionPaths.Length == 0 && output.ReturnPath.IsInvalid == false) 
 						//	jointPaths.Add(output.ReturnPath);
 
-						executionPath.LookAhead = ExecutionPath.JoinPaths(jointPaths);
+						executionPath.LookAheadPath = JoinPaths(jointPaths);
 					}
-					else if (output.ExecutionPaths.Length == 0 && output.ReturnPath.IsInvalid == false)
+					else if (output.ExecutionPaths.Length == 0 && output.ReturnPaths.Length == 1)
 					{
 						//jointPaths.Add(executionPath);
 						//jointPaths.Add(output.ReturnPath);
@@ -273,78 +278,46 @@ namespace Zaaml.Text
 					}
 				}
 
-				foreach (var executionPath in executionPaths)
-				{
-					_automata.RegisterExecutionPath(executionPath);
-
-					if (executionPath.LookAhead != null)
-						_automata.RegisterExecutionPath(executionPath.LookAhead);
-				}
-
 				_finalExecutionPaths = executionPaths;
 
 				return _finalExecutionPaths;
 			}
 
-			private ExecutionPath BuildReturnPath()
+			private ExecutionPath JoinPaths(IReadOnlyList<ExecutionPath> executionPaths)
 			{
-				var returnPaths = EnumerateReturnPaths().ToList();
-				var returnPath = ExecutionPath.Invalid;
-
-				if (returnPaths.Count != 1)
-					return returnPath;
-
-				returnPath = returnPaths[0];
-
-				_automata.RegisterExecutionPath(returnPath);
-
-				return returnPath;
+				return Automata.CreateExecutionPath(executionPaths[0].PathSourceNode, executionPaths.SelectMany(p => p.Nodes).ToArray(), executionPaths.SelectMany(p => p.LookAheadMatch).Where(m => m != null).ToArray());
 			}
 
-			private static Node[] BuildRoute(EdgeDfsStack stack, Node outputNode, out int weight)
+			public void ReCalcRId(Automata<TInstruction, TOperand> automata)
 			{
-				weight = 0;
-				var routeList = new List<Node>();
+				if (_executionPaths != null)
+				{
+					foreach (var executionPath in _executionPaths)
+						executionPath.ReCalcRId(automata);
+				}
+
+				if (_returnPaths != null)
+				{
+					foreach (var executionPath in _returnPaths)
+						executionPath.ReCalcRId(automata);
+				}
+			}
+
+			private static NodeRoute BuildRoute(EdgeDfsStack stack, Node outputNode)
+			{
+				var nodes = new List<Node>();
 
 				for (var index = 1; index < stack.Count; index++)
 				{
 					ref var edgeDfs = ref stack.Array[index];
 					var node = edgeDfs.Node;
 
-					if (node.OutEdges.Count > 0)
-						weight = Math.Max(weight, node.OutEdges[edgeDfs.Index].Weight);
-
-					if (node is LeaveStateNode leaveStateNode)
-					{
-						var subGraph = leaveStateNode.SubGraph;
-
-						routeList.Add(subGraph.EnterNode);
-						routeList.Add(subGraph.Graph.BeginNode);
-						routeList.AddRange(subGraph.Graph.BeginNode.ReturnPath.Nodes);
-					}
-
-					routeList.Add(node);
+					nodes.Add(node);
 				}
 
-				{
-					var lastNode = routeList.Count > 0 ? routeList[routeList.Count - 1] : null;
+				nodes.Add(outputNode);
 
-					if (lastNode?.OutEdges.Count > 0)
-						weight = Math.Max(weight, lastNode.GetTargetNodeEdge(outputNode).Weight);
-
-					if (outputNode is LeaveStateNode leaveStateNode)
-					{
-						var subGraph = leaveStateNode.SubGraph;
-
-						routeList.Add(subGraph.EnterNode);
-						routeList.Add(subGraph.Graph.BeginNode);
-						routeList.AddRange(subGraph.Graph.BeginNode.ReturnPath.Nodes);
-					}
-
-					routeList.Add(outputNode);
-				}
-
-				return routeList.ToArray();
+				return new NodeRoute(nodes.ToArray());
 			}
 
 			public Node Connect(Node node, int weight = 0)
@@ -370,8 +343,17 @@ namespace Zaaml.Text
 				{
 					_executionPathLookup = source.ExecutionPathLookup;
 					_executionPaths = source.ExecutionPaths;
-					_returnPath = source.ReturnPath;
+					_returnPaths = source.ReturnPaths;
 				}
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void EnsureSafe()
+			{
+				if (Safe)
+					return;
+
+				MakeSafeSynced();
 			}
 
 			private ExecutionPath[] EnumerateExecutionPaths()
@@ -380,6 +362,7 @@ namespace Zaaml.Text
 				var startNode = this;
 				var nodeVisitor = new HashSet<Node>();
 				var stack = new EdgeDfsStack();
+				var subGraphStack = new Stack<SubGraph>();
 
 				stack.Push(new EdgeDfs(startNode, -1));
 
@@ -390,10 +373,10 @@ namespace Zaaml.Text
 
 					switch (peekNode)
 					{
-						case EnterStateNode enterStateNode:
+						case EnterSyntaxNode enterRuleNode:
 						{
-							var subGraph = enterStateNode.SubGraph;
-							var beginNode = subGraph.Graph.BeginNode;
+							var subGraph = enterRuleNode.SubGraph;
+							var beginNode = subGraph.SyntaxGraph.BeginNode;
 
 							if (peek.Index == -1)
 							{
@@ -407,9 +390,6 @@ namespace Zaaml.Text
 								nodeVisitor.Remove(peekNode);
 
 								stack.Pop();
-
-								if (beginNode.ReturnPath.IsInvalid == false)
-									stack.Push(new EdgeDfs(enterStateNode.SubGraph.LeaveNode, -1));
 							}
 
 							continue;
@@ -417,35 +397,75 @@ namespace Zaaml.Text
 					}
 
 					var nextEdgeIndex = peek.Index + 1;
-					var nextEdge = nextEdgeIndex < peekNode.OutEdges.Count ? peekNode.OutEdges[nextEdgeIndex] : null;
-					var nextNode = nextEdge?.TargetNode;
+					Edge? nextEdgeNull = nextEdgeIndex < peekNode.OutEdges.Count ? peekNode.OutEdges[nextEdgeIndex] : null;
+					var nextNode = nextEdgeNull?.TargetNode;
 
 					stack.Peek().Index = nextEdgeIndex;
 
 					if (nextNode != null && nodeVisitor.Add(nextNode))
 					{
-						if (nextEdge.IsMatch)
+						var nextEdge = nextEdgeNull.Value;
+						if (nextEdge.Terminal)
 						{
-							var route = BuildRoute(stack, nextNode, out var weight);
+							var route = BuildRoute(stack, nextNode);
 
-							if (route.Length > 0)
-							{
-								if (nextEdge.OperandMatch != null)
-									result.Add(new ExecutionPath(this, route, weight, nextEdge.OperandMatch));
-								else if (nextEdge.PredicateMatch != null)
-									result.Add(new ExecutionPath(this, route, weight, nextEdge.PredicateMatch));
-								else
-									throw new InvalidOperationException();
-							}
+							if (nextEdge.OperandMatch != null)
+								result.Add(Automata.CreateExecutionPath(this, route.Nodes, nextEdge.OperandMatch));
+							else if (nextEdge.PredicateMatch != null)
+								result.Add(Automata.CreateExecutionPath(this, route.Nodes, nextEdge.PredicateMatch));
+							else if (nextEdge.TargetNode is ExitSyntaxNode)
+								result.Add(Automata.CreateExecutionPath(this, route.Nodes));
 							else
 								throw new InvalidOperationException();
+
+							RemoveVisitedNode(nodeVisitor, nextNode);
+						}
+						else if (nextNode is ReturnSyntaxNode)
+						{
+							subGraphStack.Clear();
+
+							for (var index = 0; index < stack.Count - 1; index++)
+							{
+								ref var edgeDfs = ref stack.Array[index];
+								var node = edgeDfs.Node;
+
+								switch (node)
+								{
+									case EnterSyntaxNode enterRuleNode:
+										subGraphStack.Push(enterRuleNode.SubGraph);
+
+										break;
+									case ReturnSyntaxNode:
+										subGraphStack.Pop();
+
+										break;
+								}
+							}
+
+							if (subGraphStack.Count > 0)
+							{
+								var subGraph = subGraphStack.Pop();
+								var leaveNode = subGraph.LeaveNode;
+
+								if (nodeVisitor.Add(leaveNode) && ReferenceEquals(leaveNode, this) == false)
+								{
+									stack.Push(new EdgeDfs(nextNode, 0));
+									stack.Push(new EdgeDfs(leaveNode, -1));
+								}
+
+								continue;
+							}
+
+							var route = BuildRoute(stack, nextNode);
+
+							result.Add(Automata.CreateExecutionPath(this, route.Nodes));
 
 							RemoveVisitedNode(nodeVisitor, nextNode);
 						}
 						else
 							stack.Push(new EdgeDfs(nextNode, -1));
 					}
-					else if (nextEdge == null)
+					else if (nextEdgeNull == null)
 					{
 						var node = stack.Pop().Node;
 
@@ -456,71 +476,6 @@ namespace Zaaml.Text
 				return result.ToArray();
 			}
 
-			private List<ExecutionPath> EnumerateReturnPaths()
-			{
-				var result = new List<ExecutionPath>();
-				var nodeVisitor = new HashSet<Node>();
-				var stack = new EdgeDfsStack();
-
-				nodeVisitor.Add(this);
-
-				stack.Push(new EdgeDfs(this, -1));
-
-				while (stack.Count > 0)
-				{
-					ref var peek = ref stack.Peek();
-					var peekNode = peek.Node;
-
-					switch (peekNode)
-					{
-						case EnterStateNode enterStateNode:
-						{
-							var subGraph = enterStateNode.SubGraph;
-							var beginNode = subGraph.Graph.BeginNode;
-
-							if (nodeVisitor.Add(enterStateNode.SubGraph.LeaveNode) && beginNode.ReturnPath.IsInvalid == false)
-							{
-								stack.Pop();
-								stack.Push(new EdgeDfs(enterStateNode.SubGraph.LeaveNode, -1));
-
-								continue;
-							}
-
-							break;
-						}
-					}
-
-					var nextEdgeIndex = peek.Index + 1;
-					var nextEdge = nextEdgeIndex < peekNode.OutEdges.Count ? peekNode.OutEdges[nextEdgeIndex] : null;
-					var nextNode = nextEdge?.TargetNode;
-
-					stack.Peek().Index = nextEdgeIndex;
-
-					if (nextNode != null && nodeVisitor.Add(nextNode))
-					{
-						if (nextNode is ReturnStateNode)
-						{
-							var route = BuildRoute(stack, nextNode, out var weight);
-
-							if (route.Length > 0)
-								result.Add(new ExecutionPath(this, route, weight));
-
-							RemoveVisitedNode(nodeVisitor, nextNode);
-						}
-						else if (nextEdge.IsMatch == false)
-							stack.Push(new EdgeDfs(nextNode, -1));
-					}
-					else if (nextEdge == null)
-					{
-						var node = stack.Pop().Node;
-
-						RemoveVisitedNode(nodeVisitor, node);
-					}
-				}
-
-				return result;
-			}
-
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ExecutionPath[] GetExecutionPaths(int intOperand)
 			{
@@ -528,31 +483,15 @@ namespace Zaaml.Text
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public ExecutionPath[] GetExecutionPaths()
-			{
-				return ExecutionPathLookup.GetExecutionPathGroup().ExecutionPaths;
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ExecutionPath[] GetExecutionPathsFastSafe(int intOperand)
 			{
-				return ExecutionPathLookupSafe.GetExecutionPathGroupFast(intOperand).ExecutionPaths;
+				return _executionPathLookup.GetExecutionPathGroupFast(intOperand).ExecutionPaths;
 			}
 
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public ExecutionPath[] GetExecutionPathsFast()
+			public Edge? GetTargetNodeEdge(Node targetNode)
 			{
-				return ExecutionPathLookup.GetExecutionPathGroupFast().ExecutionPaths;
-			}
-
-			public Edge GetTargetNodeEdge(Node targetNode)
-			{
-				// ReSharper disable once ForCanBeConvertedToForeach
-				// ReSharper disable once LoopCanBeConvertedToQuery
-				for (var index = 0; index < OutEdges.Count; index++)
+				foreach (var edge in OutEdges)
 				{
-					var edge = OutEdges[index];
-
 					if (ReferenceEquals(edge.TargetNode, targetNode))
 						return edge;
 				}
@@ -560,93 +499,89 @@ namespace Zaaml.Text
 				return null;
 			}
 
-			private static void ProcessPath(ExecutionPath executionPath)
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void MakeSafe()
 			{
-				//foreach (var pathNode in executionPath.Nodes.OfType<EnterStateNode>())
-				//	pathNode.SubGraph.LeaveNode.BuildExecutionGraph();
+				MakeSafeSynced();
+			}
 
-				//executionPath.OriginalPath?.Output.BuildExecutionGraph();
-				//executionPath.Output.BuildExecutionGraph();
+			private void MakeSafeSynced()
+			{
+				lock (this)
+				{
+					if (Safe)
+						return;
+
+					HasReturnPathSafe = ReturnPaths.Length > 0;
+					_ = ExecutionPaths;
+					_ = ExecutionPathLookup;
+					Dfa = Automata._dfaBuilderInstance.CreateNodeDfa(this);
+					Safe = true;
+				}
 			}
 
 			private static void RemoveVisitedNode(HashSet<Node> nodeVisitor, Node node)
 			{
 				nodeVisitor.Remove(node);
 
-				if (node is EnterStateNode enterStateNode)
+				if (node is EnterSyntaxNode enterStateNode)
 					nodeVisitor.Remove(enterStateNode.SubGraph.LeaveNode);
-			}
-
-			public bool Equals(Node other)
-			{
-				return ReferenceEquals(this, other);
 			}
 
 			public override string ToString()
 			{
-				return Name;
+				return $"[{Id}] {Name}";
 			}
 
-			#endregion
+			public void SortEdges()
+			{
+				var sortedEdges = OutEdges.OrderByDescending(e => e.Weight).ToList();
 
-			#region Nested Types
+				OutEdges.Clear();
+				OutEdges.AddRange(sortedEdges);
+				OutEdges.TrimExcess();
+			}
+
+			private readonly struct NodeRoute
+			{
+				public NodeRoute(Node[] nodes)
+				{
+					Nodes = nodes;
+				}
+
+				public readonly Node[] Nodes;
+			}
 
 			private struct EdgeDfs
 			{
-				#region Ctors
-
 				public EdgeDfs(Node node, int index)
 				{
 					Node = node;
 					Index = index;
 				}
 
-				#endregion
-
-				#region Properties
-
 				public int Index;
 				public Node Node;
-
-				#endregion
-
-				#region Methods
 
 				public override string ToString()
 				{
 					return $"{Node}, {Index}";
 				}
-
-				#endregion
 			}
 
 			private class EdgeDfsStack
 			{
-				#region Static Fields and Constants
-
 				private const int DefaultCapacity = 8;
-				private static readonly EdgeDfs[] EmptyArray = new EdgeDfs[0];
-
-				#endregion
-
-				#region Fields
+				private static readonly EdgeDfs[] EmptyArray = System.Array.Empty<EdgeDfs>();
 
 				public EdgeDfs[] Array;
 				public int Count;
-
-				#endregion
-
-				#region Ctors
 
 				public EdgeDfsStack()
 				{
 					Array = EmptyArray;
 					Count = 0;
 				}
-
-				#endregion
-
-				#region Methods
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void Clear()
@@ -676,7 +611,13 @@ namespace Zaaml.Text
 					if (Count == 0)
 						Error.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_EmptyStack);
 #endif
-					return Array[--Count];
+					Count--;
+
+					var node = Array[Count];
+
+					Array[Count] = default;
+
+					return node;
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -693,32 +634,16 @@ namespace Zaaml.Text
 
 					Array[Count++] = item;
 				}
-
-				#endregion
 			}
-
-			#endregion
 		}
 
 		private sealed class NodesEqualityComparer : IEqualityComparer<ExecutionPath>
 		{
-			#region Static Fields and Constants
-
-			public static readonly NodesEqualityComparer Instance = new NodesEqualityComparer();
-
-			#endregion
-
-			#region Ctors
+			public static readonly NodesEqualityComparer Instance = new();
 
 			private NodesEqualityComparer()
 			{
 			}
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region IEqualityComparer<Automata<TInstruction,TOperand>.ExecutionPath>
 
 			public bool Equals(ExecutionPath x, ExecutionPath y)
 			{
@@ -730,12 +655,6 @@ namespace Zaaml.Text
 			{
 				return obj.Nodes.GetHashCode();
 			}
-
-			#endregion
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

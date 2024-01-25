@@ -7,27 +7,16 @@ using System.Windows;
 
 namespace Zaaml.PresentationCore.ObservableCollections
 {
-  internal static class ObservableCollectionWrapperExtensions
-  {
-    #region  Methods
+	internal static class ObservableCollectionWrapperExtensions
+	{
+		public static ObservableCollectionWrapper<T> ToWrapper<T>(this ObservableCollection<T> collection)
+		{
+			return new ObservableCollectionWrapper<T>(collection);
+		}
 
-    public static ObservableCollectionWrapper<T> ToWrapper<T>(this ObservableCollection<T> collection)
-    {
-      return new ObservableCollectionWrapper<T>(collection);
-    }
-
-#if SILVERLIGHT
-    public static ObservableCollectionWrapper<T> ToWrapper<T>(this DependencyObjectCollection<T> collection) where T : DependencyObject
-    {
-      return new ObservableCollectionWrapper<T>(collection, collection);
-    }
-#endif
-
-    public static ObservableCollectionWrapper<T> ToWrapper<T>(this DependencyObjectCollectionBase<T> collection) where T : DependencyObject
-    {
-      return new ObservableCollectionWrapper<T>(collection, collection);
-    }
-
-    #endregion
-  }
+		public static ObservableCollectionWrapper<T> ToWrapper<T>(this DependencyObjectCollectionBase<T> collection) where T : DependencyObject
+		{
+			return new ObservableCollectionWrapper<T>(collection, collection);
+		}
+	}
 }

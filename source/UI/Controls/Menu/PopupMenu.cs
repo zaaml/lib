@@ -17,8 +17,6 @@ namespace Zaaml.UI.Controls.Menu
 	[ContentProperty(nameof(ItemCollection))]
 	public partial class PopupMenu : PopupControlBase, IMenuBase
 	{
-		#region Ctors
-
 		static PopupMenu()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<PopupMenu>();
@@ -35,19 +33,11 @@ namespace Zaaml.UI.Controls.Menu
 			MenuController = new MenuController<PopupMenu>(this);
 		}
 
-		#endregion
-
-		#region Properties
-
 		internal override bool HandleFocus => true;
 
 		internal MenuController<PopupMenu> MenuController { get; }
 
-		private PopupMenuTemplateContract TemplateContract => (PopupMenuTemplateContract) TemplateContractInternal;
-
-		#endregion
-
-		#region  Methods
+		private PopupMenuTemplateContract TemplateContract => (PopupMenuTemplateContract)TemplateContractInternal;
 
 		private void EnsureOwner()
 		{
@@ -104,12 +94,6 @@ namespace Zaaml.UI.Controls.Menu
 			base.OnOpeningInternal(e);
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IMenuBase
-
 		bool IMenuBase.IsOpen
 		{
 			get => IsOpen;
@@ -119,10 +103,6 @@ namespace Zaaml.UI.Controls.Menu
 		MenuController IMenuBase.MenuController => MenuController;
 
 		PopupControlController IMenuBase.PopupController => PopupController;
-
-		#endregion
-
-		#region IMenuItemOwner
 
 		void IMenuItemOwner.AddLogicalChild(object menuItem)
 		{
@@ -147,19 +127,11 @@ namespace Zaaml.UI.Controls.Menu
 		void IMenuItemOwner.OnMenuItemRemoved(MenuItemBase menuItem)
 		{
 		}
-
-		#endregion
-
-		#endregion
 	}
 
 	public class PopupMenuTemplateContract : PopupControlBaseTemplateContract
 	{
-		#region Properties
-
 		[TemplateContractPart(Required = false)]
 		public MenuItemsPresenter ItemsPresenter { get; [UsedImplicitly] private set; }
-
-		#endregion
 	}
 }

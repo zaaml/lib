@@ -1,0 +1,78 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:gridView="clr-namespace:Zaaml.UI.Controls.Core.GridView;assembly=Zaaml.UI"
+                            mc:Ignorable="zmb">
+
+  <!--  Visual States  -->
+  <zm:VisualStateGroupCollection x:Key="VisualStates">
+
+    <!--  CommonStates States  -->
+    <zm:VisualStateGroup Name="CommonStates">
+      <zm:VisualState Name="Normal" />
+      <zm:VisualState Name="MouseOver" />
+      <zm:VisualState Name="Disabled" />
+    </zm:VisualStateGroup>
+
+    <!--  FocusStates States  -->
+    <zm:VisualStateGroup Name="FocusStates">
+      <zm:VisualState Name="Unfocused" />
+      <zm:VisualState Name="Focused" />
+    </zm:VisualStateGroup>
+  </zm:VisualStateGroupCollection>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="ListViewItemGridColumnHeaderTemplate"
+                   TargetType="zm:ListGridViewHeader">
+
+    <gridView:GridViewCellRoot VisualStateGroups="{StaticResource VisualStates}">
+      <gridView:GridViewCellPresenter x:Name="CellPresenter" />
+    </gridView:GridViewCellRoot>
+
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ListViewItemGridColumnHeaderBaseStyle" TargetType="zm:ListGridViewHeader">
+    <zm:Setter Property="Template" Value="{StaticResource ListViewItemGridColumnHeaderTemplate}" />
+    <zm:Setter Property="Padding" Value="4,2" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ListViewItemGridColumnHeaderStyle" BasedOn="{StaticResource ListViewItemGridColumnHeaderBaseStyle}"
+            Skin="Metro.ListViewItemGridColumnHeader" TargetType="zm:ListGridViewHeader">
+
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!--  Foreground  -->
+      <zm:SetterGroup ValuePath="Foreground" Property="Foreground">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="Normal" VisualState="Disabled" />
+        <zm:Setter Priority="3" ValuePath="MouseOver" VisualState="MouseOver" />
+      </zm:SetterGroup>
+
+      <!--  Background  -->
+      <zm:SetterGroup ValuePath="Background" Property="Background">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="Normal" VisualState="Disabled" />
+        <zm:Setter Priority="3" ValuePath="MouseOver" VisualState="MouseOver" />
+      </zm:SetterGroup>
+
+      <!--  BorderBrush  -->
+      <zm:SetterGroup ValuePath="BorderBrush" Property="BorderBrush">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter ValuePath="Normal" VisualState="Disabled" />
+        <zm:Setter Priority="3" ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter Priority="6" ValuePath="Focused" VisualState="Focused" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="ListViewItemGridColumnHeaderThemeStyle" zmb:Deferred="True"
+                 BasedOn="{StaticResource ListViewItemGridColumnHeaderStyle}"
+                 TargetType="zm:ListGridViewHeader" />
+
+</zm:ThemeResourceDictionary>

@@ -7,9 +7,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
-using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.UI.Controls.Interfaces;
@@ -74,7 +73,7 @@ namespace Zaaml.UI.Controls.ToolBar
     static ToolBarButtonBase()
     {
 #if !SILVERLIGHT
-      KeyboardNavigation.AcceptsReturnProperty.OverrideMetadata(typeof(ToolBarButtonBase), new FrameworkPropertyMetadata(KnownBoxes.BoolTrue));
+      KeyboardNavigation.AcceptsReturnProperty.OverrideMetadata(typeof(ToolBarButtonBase), new FrameworkPropertyMetadata(BooleanBoxes.True));
 #endif
     }
 
@@ -123,15 +122,15 @@ namespace Zaaml.UI.Controls.ToolBar
 
     public bool ShowContent
     {
-      get => (bool) GetValue(ShowContentProperty);
-      set => SetValue(ShowContentProperty, value);
+	    get => (bool)GetValue(ShowContentProperty);
+	    set => SetValue(ShowContentProperty, value.Box());
     }
 
 
     public bool ShowIcon
     {
-      get => (bool) GetValue(ShowIconProperty);
-      set => SetValue(ShowIconProperty, value);
+	    get => (bool)GetValue(ShowIconProperty);
+	    set => SetValue(ShowIconProperty, value.Box());
     }
 
     #endregion

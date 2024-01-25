@@ -1,0 +1,61 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="WindowHeaderPresenter.xaml " />
+    <zm:ThemeResourceDictionary Source="WindowFooterPresenter.xaml " />
+    <zm:ThemeResourceDictionary Source="WindowContentPresenter.xaml " />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="WindowBaseControlTemplate"
+                   TargetType="zm:WindowBase">
+    <zm:WindowTemplateRoot Margin="0"
+                           Background="{TemplateBinding Background}">
+
+      <!--  Overlay  -->
+      <zm:OverlayContentControl x:Name="Overlay">
+        <ContentControl x:Name="AdornedContentControl"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        IsTabStop="False">
+
+          <!--  WindowPresenter  -->
+          <zm:WindowPresenter x:Name="WindowPresenter"
+                              Padding="{TemplateBinding Padding}"
+                              zm:Extension.Skin="{zm:TemplateSkinBinding SkinPath=WindowPresenter}"
+                              BorderThickness="1"
+                              Content="{zm:TemplateBinding Path=Content}"
+                              ContentPresenterStyle="{TemplateBinding ContentPresenterStyle}"
+                              ContentTemplate="{zm:TemplateBinding Path=ContentTemplate}"
+                              DropShadow="{TemplateBinding DropShadow}"
+                              FooterPresenterStyle="{TemplateBinding FooterPresenterStyle}"
+                              HeaderPresenterStyle="{TemplateBinding HeaderPresenterStyle}" />
+        </ContentControl>
+      </zm:OverlayContentControl>
+    </zm:WindowTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="WindowBaseStyle" TargetType="zm:WindowBase">
+    <zm:Setter Property="HeaderPresenterStyle" Value="{StaticResource WindowHeaderPresenterStyle}" />
+    <zm:Setter Property="ContentPresenterStyle" Value="{StaticResource WindowContentPresenterStyle}" />
+    <zm:Setter Property="DropShadow" Value="True" />
+    <zm:Setter Property="Padding" Value="4" />
+    <zm:Setter Property="MinWidth" Value="200" />
+    <zm:Setter Property="MinHeight" Value="100" />
+    <zm:Setter Property="Template" Value="{StaticResource WindowBaseControlTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="WindowStyle" BasedOn="{StaticResource WindowBaseStyle}" Skin="Code.Window" TargetType="zm:WindowBase" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="WindowBaseThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource WindowStyle}" TargetType="zm:WindowBase" />
+
+</zm:ThemeResourceDictionary>

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,6 +15,11 @@ namespace Zaaml.UI.Controls.PropertyView
 	{
 		public static PropertyDescriptor CreateDescriptor(Type propertyObjectType, PropertyInfo propertyInfo, PropertyDescriptorProvider provider)
 		{
+#if NET5_0_OR_GREATER
+			if (propertyInfo.PropertyType.IsByRefLike)
+				return new EmptyPropertyInfoDescriptor(propertyInfo, provider);
+#endif
+
 			var propertyType = propertyInfo.PropertyType;
 			var genericListType = propertyType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IList<>));
 
@@ -80,7 +86,9 @@ namespace Zaaml.UI.Controls.PropertyView
 
 		public static string GetCategory(PropertyInfo propertyInfo, PropertyDescriptorProvider provider)
 		{
-			return null;
+			var categoryAttribute = propertyInfo.GetCustomAttribute<CategoryAttribute>();
+
+			return categoryAttribute?.Category;
 		}
 
 		private static Expression GetConvertedParameter(ParameterExpression parameter, Type type)
@@ -93,7 +101,9 @@ namespace Zaaml.UI.Controls.PropertyView
 
 		public static string GetDescription(PropertyInfo propertyInfo, PropertyDescriptorProvider provider)
 		{
-			return propertyInfo.Name;
+			var descriptionAttribute = propertyInfo.GetCustomAttribute<DescriptionAttribute>();
+
+			return descriptionAttribute?.Description ?? propertyInfo.Name;
 		}
 
 		public static string GetDisplayName(PropertyInfo propertyInfo, PropertyDescriptorProvider provider)

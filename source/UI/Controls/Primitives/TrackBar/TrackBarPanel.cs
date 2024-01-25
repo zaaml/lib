@@ -40,6 +40,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			set
 			{
 				_trackBar = value;
+
 				InvalidateMeasure();
 			}
 		}
@@ -121,7 +122,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			var items = trackBar.ItemCollection;
 			var itemsCount = items.Count;
 
-			ArrayUtils.EnsureArrayLength(ref _measure, itemsCount, false);
+			ArrayUtils.EnsureArrayLength(ref _measure, itemsCount);
 
 			for (var index = 0; index < itemsCount; index++)
 			{

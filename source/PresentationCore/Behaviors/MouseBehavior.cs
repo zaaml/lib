@@ -5,6 +5,7 @@
 using System.Windows;
 using System.Windows.Input;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
@@ -19,7 +20,7 @@ namespace Zaaml.PresentationCore.Behaviors
 		public bool IsMouseOver
 		{
 			get => (bool) GetValue(IsMouseOverProperty);
-			set => SetValue(IsMouseOverProperty, value);
+			set => SetValue(IsMouseOverProperty, value.Box());
 		}
 
 		private void MouseServiceOnMouseMove(object sender, MouseEventArgsInt mouseEventArgsInt)

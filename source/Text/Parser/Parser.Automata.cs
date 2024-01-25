@@ -6,378 +6,555 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Zaaml.Core.Extensions;
+using System.Threading;
+using Zaaml.Core.Converters;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken> where TGrammar : Grammar<TToken> where TToken : unmanaged, Enum
+	internal partial class Parser<TGrammar, TToken>
 	{
-		#region Nested Types
-
-		private sealed partial class ParserAutomata : ParserAutomataBase<TGrammar, TToken>
+		private sealed partial class ParserAutomata : Automata<Lexeme<TToken>, TToken>
 		{
-			#region Fields
-
-			//private readonly Parser<TGrammar, TToken> _parser;
-			private readonly HashSet<Grammar<TToken>.ParserRule> _registeredRules = new HashSet<Grammar<TToken>.ParserRule>();
+			private readonly Dictionary<Grammar<TGrammar, TToken>.ParserGrammar.Syntax, int> _precedenceDictionary = new();
 			private int _generateProductionNameCount;
-
-			#endregion
-
-			#region Ctors
 
 			public ParserAutomata(AutomataManager manager) : base(manager)
 			{
-				//_parser = parser;
-
 				var grammar = Grammar.Get<TGrammar, TToken>();
 
-				foreach (var parserRule in grammar.ParserRules)
-					RegisterParserRule(parserRule);
+				grammar.ParserGrammarInstance.Seal();
+
+				var undefinedTokenName = Enum.GetName(typeof(TToken), grammar.UndefinedToken);
+
+				foreach (TToken token in Enum.GetValues(typeof(TToken)))
+				{
+					var tokenCode = (int)EnumConverter<TToken>.Convert(token);
+
+					if (grammar.UndefinedToken.Equals(token) && Enum.GetName(typeof(TToken), token) == undefinedTokenName)
+					{
+						if (tokenCode != 0)
+							throw new InvalidOperationException("Undefined token must have value of 0.");
+
+						continue;
+					}
+
+					if (tokenCode == 0)
+						throw new InvalidOperationException("No token except of Grammar.UndefinedToken may have value of 0.");
+				}
+
+				foreach (var parserSyntax in grammar.ParserSyntaxFragmentCollection)
+					RegisterParserSyntax(parserSyntax);
+
+				foreach (var parserSyntax in grammar.NodeCollection)
+					RegisterParserSyntax(parserSyntax);
+
+				foreach (var parserSyntax in ParserSyntaxDictionary.Values)
+				{
+					EliminateLeftRecursion(parserSyntax);
+					EliminateLeftFactoring(parserSyntax);
+				}
+
+				foreach (var parserProduction in Productions)
+					parserProduction.EnsureBinder();
+
+				ProductionsArray = Productions.ToArray();
+
+				Build();
 			}
-
-			#endregion
-
-			#region Properties
 
 			protected override bool AllowParallelInstructionReader => false; //_parser.AllowParallel;
 
-			private Dictionary<Grammar<TToken>.ParserRule, ParserState> ParserStateDictionary { get; } = new Dictionary<Grammar<TToken>.ParserRule, ParserState>();
+			protected override bool LookAheadEnabled => true;
 
-			private List<ParserProduction> Productions { get; } = new List<ParserProduction>();
+			private Dictionary<Grammar<TGrammar, TToken>.ParserGrammar.Syntax, ParserSyntax> ParserSyntaxDictionary { get; } = new();
 
-			#endregion
+			private List<ParserProduction> Productions { get; } = new();
 
-			#region Methods
-
-			private static LeftRecursionClassifier Classify(ParserProduction production, ParserState parserState)
-			{
-				if (production.Entries.Length == 0)
-					return LeftRecursionClassifier.Primary;
-
-				var firstRecursion = IsRecursion(production.Entries[0], parserState);
-				var lastRecursion = IsRecursion(production.Entries[production.Entries.Length - 1], parserState);
-
-				if (production.Entries.Length == 1)
-					return firstRecursion ? LeftRecursionClassifier.Generic : LeftRecursionClassifier.Primary;
-
-				if (production.Entries.Length == 3 && IsRecursion(production.Entries[1], parserState) == false && firstRecursion && lastRecursion)
-					return LeftRecursionClassifier.Binary;
-
-				if (production.Entries.Length > 3 && firstRecursion && lastRecursion)
-					return LeftRecursionClassifier.Ternary;
-
-				if (firstRecursion && lastRecursion == false)
-					return LeftRecursionClassifier.Suffix;
-
-				if (firstRecursion == false && lastRecursion)
-					return LeftRecursionClassifier.Prefix;
-
-				return firstRecursion ? LeftRecursionClassifier.Generic : LeftRecursionClassifier.Primary;
-			}
+			private ParserProduction[] ProductionsArray { get; }
 
 			private static Action<AutomataContext> CreateActionDelegate(Parser<TToken>.ActionEntry actionEntry)
 			{
-				return c => actionEntry.Action(((ParserAutomataContextState) ((ParserAutomataContext) c).ContextStateInternal)?.ParserContext);
+				return c => actionEntry.Action(((ParserAutomataContext)c).Parser);
 			}
 
-			private Grammar<TToken>.ParserRule CreateFragmentRule(Grammar<TToken>.ParserFragment parserFragment)
+			private static ParserActionEntry CreateActionEntry(Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol actionSymbol)
 			{
-				var rule = new Grammar<TToken>.ParserRule
-				{
-					IsInline = true
-				};
+				return new ParserActionEntry(actionSymbol);
+			}
 
-				if (parserFragment.Productions.All(t => t.Entries.Length == 1 && t.Entries[0] is Grammar<TToken>.TokenRule))
+			private static IEnumerable<Entry> CreateCompositeTokenEntries(Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol tokenSymbol)
+			{
+				var grammarSyntax = tokenSymbol.Token;
+
+				if (grammarSyntax.Productions.Count > 1)
+					throw new InvalidOperationException("Composite tokens can not have multiple productions.");
+
+				var production = grammarSyntax.Productions.Single();
+
+				foreach (var lexerSymbol in production.Symbols)
 				{
-					var setEntry = new Grammar<TToken>.TokenRuleSet(parserFragment.Productions.Select(t => (Grammar<TToken>.TokenRule) t.Entries[0]).ToArray())
+					if (lexerSymbol is not Grammar<TGrammar, TToken>.LexerGrammar.TokenSymbol simpleTokenSymbol)
+						throw new InvalidOperationException("Composite token can consist of simple token array.");
+
+					var parserSymbol = new Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol(simpleTokenSymbol.Token);
+
+					yield return new ParserOperandMatchEntry(parserSymbol)
 					{
-						Name = parserFragment.Name
+						ProductionArgument = NullArgument.Instance
 					};
-
-					rule.Productions.Add(new Grammar<TToken>.ParserProduction(new Grammar<TToken>.ParserEntry[] {setEntry}));
-				}
-				else
-				{
-					foreach (var transition in parserFragment.Productions)
-						rule.Productions.Add(new Grammar<TToken>.ParserProduction(transition.Entries));
 				}
 
-				RegisterParserRule(rule);
+				var compositeOperandPredicate = new CompositeOperandPredicate(tokenSymbol);
 
-				return rule;
+				yield return new PredicateEntry(compositeOperandPredicate.Predicate);
+				yield return new CompositeOperandEntry(tokenSymbol);
 			}
 
-			private static ParserSingleMatchEntry CreateLexerEntry(Grammar<TToken>.ParserTokenRuleEntry tokenEntry)
+			private Entry CreateEnterPrecedenceEntry(Grammar<TGrammar, TToken>.ParserGrammar.EnterPrecedenceSymbol enterPrecedenceSymbol)
 			{
-				return new ParserSingleMatchEntry(EnsureName(tokenEntry), tokenEntry.TokenRule.Token);
+				var productionPrecedence = CreateProductionPrecedence(enterPrecedenceSymbol.Syntax, enterPrecedenceSymbol.Value, enterPrecedenceSymbol.Level);
+				var precedenceEntry = new EnterPrecedenceEntry(productionPrecedence);
+
+				return precedenceEntry;
 			}
 
-			private static ParserSingleMatchEntry CreateLexerEntry(Grammar<TToken>.TokenRule tokenRule)
+			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Symbol> RenameFragmentSymbols(Grammar<TGrammar, TToken>.ParserGrammar.Production production, string name)
 			{
-				return new ParserSingleMatchEntry(EnsureName(tokenRule), tokenRule.Token);
-			}
-
-			private static ParserSetMatchEntry CreateLexerSetEntry(Grammar<TToken>.TokenRuleSet tokenRuleEntrySet)
-			{
-				return new ParserSetMatchEntry(tokenRuleEntrySet);
-			}
-
-			private Entry CreateParserEntry(Grammar<TToken>.ParserEntry grammarParserEntry)
-			{
-				if (grammarParserEntry is Grammar<TToken>.ParserQuantifierEntry quantifierEntry)
+				foreach (var childSymbol in production.Symbols)
 				{
-					var primitiveEntry = (PrimitiveEntry) CreateParserEntry(quantifierEntry.PrimitiveEntry);
-
-					return new ParserQuantifierEntry(quantifierEntry, primitiveEntry, quantifierEntry.Range, quantifierEntry.Mode);
-				}
-
-				if (grammarParserEntry is Grammar<TToken>.TokenRuleSet tokenRuleEntrySet)
-					return CreateLexerSetEntry(tokenRuleEntrySet);
-
-				if (grammarParserEntry is Grammar<TToken>.TokenRule tokenRule)
-					return CreateLexerEntry(new Grammar<TToken>.ParserTokenRuleEntry(tokenRule));
-
-				if (grammarParserEntry is Grammar<TToken>.ParserTokenRuleEntry tokenRuleEntry)
-					return CreateLexerEntry(tokenRuleEntry);
-
-				if (grammarParserEntry is Grammar<TToken>.ParserRuleEntry parserRuleEntry)
-				{
-					var rule = parserRuleEntry.Rule;
-
-					if (rule.IsInline)
+					switch (childSymbol)
 					{
-						var ruleClone = new Grammar<TToken>.ParserRule
-						{
-							IsInline = true
-						};
-
-						foreach (var transition in rule.Productions)
-							ruleClone.Productions.Add(new Grammar<TToken>.ParserProduction(transition.Entries));
-
-						RegisterParserRule(ruleClone);
-
-						return new ParserStateEntry(EnsureName(parserRuleEntry), GetParserState(ruleClone), true, false);
+						case Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol childTokenSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol(childTokenSymbol.Token)
+							{
+								ArgumentName = name
+							};
+							break;
+						case Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol childTokenSetSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol(childTokenSetSymbol.Tokens)
+							{
+								ArgumentName = name
+							};
+							break;
+						case Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol nodeSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol(nodeSymbol.Node)
+							{
+								ArgumentName = name
+							};
+							break;
+						default:
+							yield return childSymbol;
+							break;
 					}
-
-					return new ParserStateEntry(EnsureName(parserRuleEntry), GetParserState(rule), false, parserRuleEntry.IsReturn);
 				}
+			}
 
-				if (grammarParserEntry is Grammar<TToken>.ParserFragment parserFragment)
+			private IEnumerable<Entry> CreateParserEntries(Grammar<TGrammar, TToken>.ParserGrammar.Symbol symbol)
+			{
+				switch (symbol)
 				{
-					var fragmentRule = CreateFragmentRule(parserFragment);
+					case Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol fragmentSymbol:
 
-					return new ParserStateEntry(EnsureName(parserFragment), GetParserState(fragmentRule), true, false);
+						if (fragmentSymbol.Fragment.Productions.Count == 1)
+						{
+							var production = fragmentSymbol.Fragment.Productions[0];
+
+							if (production.Symbols.Any(s => s is Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol recursiveFragmentSymbol && ReferenceEquals(recursiveFragmentSymbol.Fragment, fragmentSymbol.Fragment)))
+								yield return CreateParserEntry(symbol);
+							else
+							{
+								if (fragmentSymbol.ArgumentName != null)
+									foreach (var entry in RenameFragmentSymbols(production, fragmentSymbol.ArgumentName).SelectMany(CreateParserEntries))
+										yield return entry;
+								else
+									foreach (var entry in production.Symbols.SelectMany(CreateParserEntries))
+										yield return entry;
+							}
+						}
+						else
+							yield return CreateParserEntry(symbol);
+
+						break;
+
+					case Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol { Node.Precedences.Count: > 0 } nodeSymbol:
+
+						foreach (var entry in CreatePrecedenceNode(nodeSymbol))
+							yield return entry;
+
+						break;
+					case Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol { Token.Composite: true } tokenSymbol:
+						foreach (var entry in CreateCompositeTokenEntries(tokenSymbol))
+							yield return entry;
+
+						break;
+
+					default:
+
+						yield return CreateParserEntry(symbol);
+
+						break;
 				}
+			}
 
-				if (grammarParserEntry is Grammar<TToken>.ParserPredicate parserPredicate)
-					return new ParserPredicateEntry(parserPredicate);
+			private IEnumerable<Entry> CreatePrecedenceNode(Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol nodeSymbol)
+			{
+				if (nodeSymbol.Node.Precedences.Count > 1)
+					throw new NotImplementedException();
 
-				if (grammarParserEntry is Grammar<TToken>.ParserAction parserAction)
-					return new ParserActionEntry(parserAction);
+				var precedence = nodeSymbol.Node.Precedences[0];
 
-				if (grammarParserEntry is Grammar<TToken>.SubParserEntry subParserEntry)
-					return CreateSubParserEntry(subParserEntry);
+				var productionPrecedence = CreateProductionPrecedence(precedence.Syntax, precedence.Level, false);
+				var enterPrecedenceEntry = new EnterPrecedenceEntry(productionPrecedence);
+				var leavePrecedenceEntry = new LeavePrecedenceEntry(productionPrecedence);
 
-				if (grammarParserEntry is Grammar<TToken>.SubLexerEntry subLexerEntry)
-					return CreateSubLexerEntry(subLexerEntry);
+				yield return enterPrecedenceEntry;
+				yield return CreateParserEntry(nodeSymbol);
+				yield return leavePrecedenceEntry;
+			}
 
-				throw new ArgumentOutOfRangeException(nameof(grammarParserEntry));
+			private Entry CreateExternalLexerEntry(Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol externalTokenSymbol)
+			{
+				var externalGrammarType = externalTokenSymbol.ExternalGrammarType;
+				var externalTokenType = externalTokenSymbol.ExternalTokenType;
+				var typeArguments = new[] { externalGrammarType, externalTokenType };
+
+				var externalLexerMethod = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == nameof(CreateExternalLexerEntry) && m.GetGenericArguments().Length == typeArguments.Length);
+				var externalLexerGenericMethod = externalLexerMethod.MakeGenericMethod(typeArguments);
+
+				return (Entry)externalLexerGenericMethod.Invoke(this, new object[] { externalTokenSymbol });
+			}
+
+			private Entry CreateExternalLexerEntry<TExternalGrammar, TExternalToken>(Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol<TExternalGrammar, TExternalToken> externalTokenSymbol)
+				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+				where TExternalToken : unmanaged, Enum
+			{
+				var externalLexerInvokeInfo = new ExternalLexerInvokeInfo<TExternalGrammar, TExternalToken>(externalTokenSymbol);
+
+				return new ParserPredicateEntry<Lexeme<TExternalToken>>(externalTokenSymbol, c => externalLexerInvokeInfo.ExternalLex(c), ParserPredicateKind.ExternalLexer);
+			}
+
+			private Entry CreateExternalParserEntry(Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol externalNodeSymbol)
+			{
+				var externalGrammarType = externalNodeSymbol.ExternalGrammarType;
+				var externalTokenType = externalNodeSymbol.ExternalTokenType;
+
+				var typeArguments = externalNodeSymbol.ExternalNodeType == null ? new[] { externalGrammarType, externalTokenType } : new[] { externalGrammarType, externalTokenType, externalNodeSymbol.ExternalNodeType };
+
+				var externalParserMethod = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == nameof(CreateExternalParserEntry) && m.GetGenericArguments().Length == typeArguments.Length);
+				var externalParserGenericMethod = externalParserMethod.MakeGenericMethod(typeArguments.ToArray());
+
+				return (Entry)externalParserGenericMethod.Invoke(this, new object[] { externalNodeSymbol });
+			}
+
+			private Entry CreateExternalParserEntry<TExternalGrammar, TExternalToken, TExternalNode>(Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol<TExternalGrammar, TExternalToken, TExternalNode> externalNodeSymbol)
+				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken>
+				where TExternalToken : unmanaged, Enum
+				where TExternalNode : class
+			{
+				return new ExternalParserDelegate<TExternalGrammar, TExternalToken, TExternalNode>(externalNodeSymbol).PredicateEntry;
+			}
+
+			private Entry CreateExternalParserEntry<TExternalGrammar, TExternalToken>(Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol<TExternalGrammar, TExternalToken> externalNodeSymbol)
+				where TExternalGrammar : Grammar<TExternalGrammar, TExternalToken> where TExternalToken : unmanaged, Enum
+			{
+				return new ExternalParserDelegate<TExternalGrammar, TExternalToken>(externalNodeSymbol).PredicateEntry;
+			}
+
+			private protected override Pool<InstructionStream> CreateInstructionStreamPool()
+			{
+				return new Pool<InstructionStream>(p => new LexemeInstructionStream(p));
+			}
+
+			private Entry CreateLeavePrecedenceEntry(Grammar<TGrammar, TToken>.ParserGrammar.LeavePrecedenceSymbol leavePrecedenceSymbol)
+			{
+				var productionPrecedence = CreateProductionPrecedence(leavePrecedenceSymbol.Syntax, leavePrecedenceSymbol.Value, leavePrecedenceSymbol.Level);
+				var precedenceEntry = new LeavePrecedenceEntry(productionPrecedence);
+
+				return precedenceEntry;
+			}
+
+			private Entry CreateParserEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol symbol)
+			{
+				return symbol switch
+				{
+					Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol quantifierEntry => CreateQuantifierEntry(quantifierEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol syntaxTokenEntry => CreateTokenEntry(syntaxTokenEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol syntaxSetTokenEntry => CreateTokenSetEntry(syntaxSetTokenEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol syntaxNodeEntry => CreateParserSyntaxEntry(syntaxNodeEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol syntaxFragmentEntry => CreateParserSyntaxEntry(syntaxFragmentEntry),
+
+					Grammar<TGrammar, TToken>.ParserGrammar.PredicateSymbol parserPredicate => CreatePredicateEntry(parserPredicate),
+					Grammar<TGrammar, TToken>.ParserGrammar.ActionSymbol parserAction => CreateActionEntry(parserAction),
+
+					Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol externalParserEntry => CreateExternalParserEntry(externalParserEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol externalLexerEntry => CreateExternalLexerEntry(externalLexerEntry),
+					Grammar<TGrammar, TToken>.ParserGrammar.EnterPrecedenceSymbol enterPrecedenceSymbol => CreateEnterPrecedenceEntry(enterPrecedenceSymbol),
+					Grammar<TGrammar, TToken>.ParserGrammar.LeavePrecedenceSymbol leavePrecedenceSymbol => CreateLeavePrecedenceEntry(leavePrecedenceSymbol),
+
+					_ => throw new ArgumentOutOfRangeException(nameof(symbol))
+				};
+			}
+
+			private ParserSyntax CreateParserSyntax(Grammar<TGrammar, TToken>.ParserGrammar.Syntax grammarParserSyntax)
+			{
+				var parserSyntax = new ParserSyntax(grammarParserSyntax);
+
+				ParserSyntaxDictionary.Add(grammarParserSyntax, parserSyntax);
+				AddSyntax(parserSyntax, GetSyntaxProductions(grammarParserSyntax).Select(t => new ParserProduction(this, parserSyntax, grammarParserSyntax, t)).ToList());
+
+				return parserSyntax;
+			}
+
+			private ParserSyntaxEntry CreateParserSyntaxEntry(Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol fragmentSymbol)
+			{
+				var originalFragment = fragmentSymbol.Fragment;
+				var fragment = new Grammar<TGrammar, TToken>.ParserGrammar.FragmentSyntax(originalFragment.Name, true);
+
+				foreach (var production in originalFragment.Productions)
+					fragment.AddProduction(new Grammar<TGrammar, TToken>.ParserGrammar.Production(production.Symbols));
+
+				return new ParserSyntaxEntry(fragmentSymbol, GetParserSyntax(fragment));
+			}
+
+			private ParserSyntaxEntry CreateParserSyntaxEntry(Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol syntaxNode)
+			{
+				return new ParserSyntaxEntry(syntaxNode, GetParserSyntax(syntaxNode.Node));
 			}
 
 			private static Func<AutomataContext, PredicateResult> CreatePredicateDelegate(Parser<TToken>.PredicateEntry predicateEntry)
 			{
-				return c => predicateEntry.Predicate(((ParserAutomataContextState) ((ParserAutomataContext) c).ContextStateInternal).ParserContext) ? PredicateResult.True : PredicateResult.False;
+				return c => predicateEntry.Predicate(((ParserAutomataContext)c).Parser) ? PredicateResult.True : PredicateResult.False;
 			}
 
-			private Entry CreateSubLexerEntry(Grammar<TToken>.SubLexerEntry subLexerEntry)
+			private static ParserPredicateEntry CreatePredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.PredicateSymbol predicateSymbol)
 			{
-				var type = subLexerEntry.GetType();
-				var typeArguments = type.GenericTypeArguments.Skip(1).ToArray();
-				var subParserMethod = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == nameof(CreateSubLexerEntry) && m.GetGenericArguments().Length == typeArguments.Length);
-				var subParserGenericMethod = subParserMethod.MakeGenericMethod(typeArguments);
-
-				return (Entry) subParserGenericMethod.Invoke(this, new object[] {subLexerEntry});
+				return new ParserPredicateEntry(predicateSymbol);
 			}
 
-			private Entry CreateSubLexerEntry<TSubToken>(Grammar<TToken>.SubLexerEntry<TSubToken> subLexerEntry) where TSubToken : unmanaged, Enum
+			private ProcessAutomataContext CreateProcessContext(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ProcessKind processKind,
+				Parser<TGrammar, TToken> parser)
 			{
-				var subLexerInvokeInfo = new SubLexerInvokeInfo<TSubToken>(subLexerEntry);
-
-				return new ParserPredicateEntry<Lexeme<TSubToken>>(subLexerEntry, c => subLexerInvokeInfo.SubLex(c), ParserPredicateKind.SubLexer);
+				return new ProcessAutomataContext(GetParserSyntax(parserRule), lexemeSource, processKind, parser, this);
 			}
 
-			private Entry CreateSubParserEntry(Grammar<TToken>.SubParserEntry subParserEntry)
+			private PrecedencePredicate CreateProductionPrecedence(Grammar<TGrammar, TToken>.ParserGrammar.Syntax syntax, int precedence, bool level)
 			{
-				var type = subParserEntry.GetType();
-				var typeArguments = type.GenericTypeArguments.Skip(1).ToList();
-
-				typeArguments.Insert(0, subParserEntry.GrammarType);
-
-				var subParserMethod = GetType().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic).Single(m => m.Name == nameof(CreateSubParserEntry) && m.GetGenericArguments().Length == typeArguments.Count);
-				var subParserGenericMethod = subParserMethod.MakeGenericMethod(typeArguments.ToArray());
-
-				return (Entry) subParserGenericMethod.Invoke(this, new object[] {subParserEntry});
-			}
-
-			private Entry CreateSubParserEntry<TSubGrammar, TSubToken, TSubNode, TSubNodeBase>(Grammar<TToken>.SubParserEntry<TSubToken, TSubNode, TSubNodeBase> subParserEntry)
-				where TSubGrammar : Grammar<TSubToken, TSubNodeBase> where TSubToken : unmanaged, Enum where TSubNode : TSubNodeBase where TSubNodeBase : class
-			{
-				return new SubParserInvokeInfo<TSubGrammar, TSubToken, TSubNode, TSubNodeBase>(subParserEntry).PredicateEntry;
-			}
-
-			private Entry CreateSubParserEntry<TSubGrammar, TSubToken>(Grammar<TToken>.SubParserEntry<TSubToken> subParserEntry)
-				where TSubGrammar : Grammar<TSubToken> where TSubToken : unmanaged, Enum
-			{
-				return new SubParserInvokeInfo<TSubGrammar, TSubToken>(subParserEntry).PredicateEntry;
-			}
-
-			private static void EliminateLeftRecursion(ParserState parserState, List<ParserProduction> productions)
-			{
-				var hasLeftRecursion = false;
-
-				foreach (var stateProduction in productions)
+				if (_precedenceDictionary.TryGetValue(syntax, out var precedenceId) == false)
 				{
-					stateProduction.LeftRecursionClassifier = Classify(stateProduction, parserState);
+					precedenceId = CreatePrecedencePredicateId();
 
-					hasLeftRecursion |= IsLeftRecursion(stateProduction.LeftRecursionClassifier);
+					_precedenceDictionary.Add(syntax, precedenceId);
 				}
 
-				if (hasLeftRecursion == false)
-					return;
+				return new PrecedencePredicate(precedenceId, precedence, level);
+			}
 
-				var count = productions.Count;
-				var recursionState = new ParserState(null, true);
-				var index = 0;
+			private Entry CreateQuantifierEntry(Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol quantifierEntry)
+			{
+				var primitiveEntry = (PrimitiveEntry)CreateParserEntry(quantifierEntry.Symbol);
 
-				foreach (var production in productions)
+				return new ParserQuantifierEntry(quantifierEntry, primitiveEntry, quantifierEntry.Range, quantifierEntry.Mode);
+			}
+
+			private SyntaxTreeAutomataContext CreateSyntaxTreeContext(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax parserRule, LexemeSource<TToken> lexemeSource, ProcessKind processKind,
+				Parser<TGrammar, TToken> parser)
+			{
+				return new SyntaxTreeAutomataContext(GetParserSyntax(parserRule), lexemeSource, processKind, parser, this);
+			}
+
+			private static Entry CreateTokenEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol tokenSymbol)
+			{
+				var grammarSyntax = tokenSymbol.Token;
+
+				if (grammarSyntax.Composite)
+					throw new InvalidOperationException();
+
+				if (grammarSyntax.TokenGroups.Count == 1)
+					return new ParserOperandMatchEntry(tokenSymbol);
+
+				return new ParserSetMatchEntry(tokenSymbol);
+			}
+
+			private Entry CreateTokenSetEntry(Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol tokenSetSymbol)
+			{
+				if (tokenSetSymbol.Tokens.Any(t => t.Composite) == false)
+					return new ParserSetMatchEntry(tokenSetSymbol);
+
+				var tokens = tokenSetSymbol.Tokens;
+
+				tokenSetSymbol = new Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol(tokens.Where(t => t.Composite == false).ToArray())
 				{
-					if (production.LeftRecursionClassifier == LeftRecursionClassifier.Binary ||
-					    production.LeftRecursionClassifier == LeftRecursionClassifier.Ternary ||
-					    production.LeftRecursionClassifier == LeftRecursionClassifier.Prefix)
+					ArgumentName = tokenSetSymbol.ArgumentName
+				};
+
+				var fragmentSyntax = new Grammar<TGrammar, TToken>.ParserGrammar.FragmentSyntax("Internal", true);
+
+				fragmentSyntax.AddProduction(new Grammar<TGrammar, TToken>.ParserGrammar.Production(tokenSetSymbol));
+
+				foreach (var tokenSyntax in tokens.Where(t => t.Composite))
+				{
+					var compositeTokenSymbol = new Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol(tokenSyntax)
 					{
-						var assoc = production.IsRightAssoc ? 0 : 1;
-						var nextPriority = new PriorityStateEntryContext(count - index + assoc);
+						ArgumentName = tokenSetSymbol.ArgumentName
+					};
 
-						foreach (var parserStateEntry in production.Entries.Skip(1).OfType<ParserStateEntry>().Where(e => ReferenceEquals(e.State, parserState)))
-							parserStateEntry.StateEntryContext = nextPriority;
-					}
-
-					if (IsLeftRecursion(production.LeftRecursionClassifier) == false)
-						continue;
-
-					production.LeftRecursionEntry = (ParserStateEntry) production.Entries[0];
-					production.Entries[0] = ShouldPrefixPredicate(production.LeftRecursionClassifier) ? (Entry) new LeftRecursionPredicate(parserState, count - index).Entry : EpsilonEntry.Instance;
-
-					recursionState.Productions.Add(production);
-
-					index++;
+					fragmentSyntax.AddProduction(new Grammar<TGrammar, TToken>.ParserGrammar.Production(compositeTokenSymbol));
 				}
 
-				var quantifierEntry = new QuantifierEntry(new StateEntry(recursionState) { SkipStack = true }, QuantifierKind.ZeroOrMore, QuantifierMode.Greedy);
-				var primaryState = new ParserState(null, true);
+				var fragment = new Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol(fragmentSyntax);
 
-				primaryState.Productions.AddRange(productions.Where(production => IsLeftRecursion(production.LeftRecursionClassifier) == false));
-
-				productions.Clear();
-				productions.Add(new ParserProduction(new Entry[] { new StateEntry(primaryState) { SkipStack = true }, quantifierEntry }));
+				return CreateParserSyntaxEntry(fragment);
 			}
 
-			private static string EnsureName(Grammar<TToken>.ParserEntry parserEntry)
+			private VisitorAutomataContext CreateVisitorContext<TResult>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax nodeSyntax, LexemeSource<TToken> lexemeSource, ProcessKind processKind,
+				Parser<TGrammar, TToken> parser)
+			{
+				return new VisitorAutomataContext(visitor, GetParserSyntax(nodeSyntax), lexemeSource, processKind, parser, this);
+			}
+
+			private static string EnsureName(Grammar<TGrammar, TToken>.ParserGrammar.Symbol parserEntry)
 			{
 				if (parserEntry == null)
 					return null;
 
-				if (string.IsNullOrEmpty(parserEntry.Name) == false)
-					return parserEntry.Name;
+				if (string.IsNullOrEmpty(parserEntry.ArgumentName) == false)
+					return parserEntry.ArgumentName;
 
 				return parserEntry switch
 				{
-					Grammar<TToken>.ParserRuleEntry ruleEntry => ruleEntry.Rule.Name,
-					Grammar<TToken>.TokenRule tokenEntry => tokenEntry.Name,
-					Grammar<TToken>.ParserTokenRuleEntry tokenRuleEntry => tokenRuleEntry.Name ?? tokenRuleEntry.TokenRule.Name,
-					Grammar<TToken>.ParserQuantifierEntry quantifierEntry => quantifierEntry.Name ?? EnsureName(quantifierEntry.PrimitiveEntry),
-					Grammar<TToken>.SubParserEntry subParserEntry => subParserEntry.Name,
-					Grammar<TToken>.SubLexerEntry subLexerEntry => subLexerEntry.Name,
+					Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol ruleEntry => ruleEntry.ArgumentName ?? ruleEntry.Node.Name,
+					Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol tokenRuleEntry => tokenRuleEntry.ArgumentName ?? tokenRuleEntry.Token.Name,
+					Grammar<TGrammar, TToken>.ParserGrammar.QuantifierSymbol quantifierEntry => quantifierEntry.ArgumentName ?? EnsureName(quantifierEntry.Symbol),
+					Grammar<TGrammar, TToken>.ParserGrammar.ExternalNodeSymbol externalParserEntry => externalParserEntry.ArgumentName,
+					Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol externalLexerEntry => externalLexerEntry.ArgumentName,
 					_ => null
 				};
 			}
 
 			private string GenerateProductionName()
 			{
-				return $"GeneratedTransition{_generateProductionNameCount++}";
+				return $"GeneratedProduction{_generateProductionNameCount++}";
 			}
 
-			private static ParserEntryData GetParserEntryData(Entry entry)
+			private ExternalParseResult<TResult> GetForkResult<TResult>(ForkAutomataResult forkAutomataResult, SyntaxTreeAutomataContext context)
 			{
-				return ((IParserEntry) entry).ParserEntryData;
+				var firstResult = (SuccessAutomataResult)forkAutomataResult.RunFirst();
+				//var secondResult = forkAutomataResult.RunSecond();
+				var result = context.GetResult<TResult>();
+
+				return new SuccessExternalParseResult<TResult>(result, firstResult.InstructionPosition);
 			}
 
-			private ParserState GetParserState(Grammar<TToken>.ParserRule parserRule)
+			private ParserSyntax GetParserSyntax(Grammar<TGrammar, TToken>.ParserGrammar.Syntax syntax)
 			{
-				return ParserStateDictionary.GetValueOrCreate(parserRule, pr => new ParserState(pr.Name, parserRule.IsInline));
+				return ParserSyntaxDictionary.TryGetValue(syntax, out var parserSyntax) == false ? CreateParserSyntax(syntax) : parserSyntax;
 			}
 
-			private static bool IsLeftRecursion(LeftRecursionClassifier classifier)
+			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Production> GetProductions(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
 			{
-				return (classifier == LeftRecursionClassifier.Primary || classifier == LeftRecursionClassifier.Prefix) == false;
+				foreach (var production in parserSyntax.Productions)
+				{
+					if (production.ProductionBinding is Grammar<TGrammar, TToken>.ParserGrammar.ReturnNodeBinding)
+					{
+						var nodeSymbolIndex = 0;
+
+						while (production.Symbols[nodeSymbolIndex] is not Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol)
+							nodeSymbolIndex++;
+
+						var nodeSymbol = (Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol)production.Symbols[nodeSymbolIndex];
+
+						foreach (var replaceProduction in GetSyntaxProductions(nodeSymbol.Node))
+						{
+							var symbols = new List<Grammar<TGrammar, TToken>.ParserGrammar.Symbol>();
+
+							for (var i = 0; i < production.Symbols.Count; i++)
+							{
+								if (i == nodeSymbolIndex)
+									symbols.AddRange(replaceProduction.Symbols);
+								else
+									symbols.Add(production.Symbols[i]);
+							}
+
+							var replaceProductionCopy = replaceProduction.Clone(symbols);
+
+							yield return replaceProductionCopy;
+						}
+					}
+					else
+						yield return production;
+				}
 			}
 
-			private static bool IsRecursion(Entry entry, ParserState state)
+			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Production> GetSyntaxProductions(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
 			{
-				return entry is ParserStateEntry parserStateEntry && ReferenceEquals(parserStateEntry.State, state);
+#if true
+				if (parserSyntax.Productions.All(p => p.ProductionBinding is Grammar<TGrammar, TToken>.ParserGrammar.ReturnNodeBinding))
+				{
+					return GetProductions(parserSyntax);
+				}
+#endif
+
+				return parserSyntax.Productions;
 			}
 
-			public TResult Parse<TResult>(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
+			public TResult Parse<TResult>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser, CancellationToken cancellationToken = default)
 			{
-				using var context = GetParserState(parserRule).MountSyntaxTreeContext(this, lexemeSource, parserContext, parser);
+				using var context = CreateSyntaxTreeContext(syntax, lexemeSource, ProcessKind.Process, parser);
+				using var result = context.Process.Run(cancellationToken).Verify();
 
-				RunCore(lexemeSource, context);
+				return context.GetResult<TResult>();
+			}
+			
+			public void Parse(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser, CancellationToken cancellationToken = default)
+			{
+				using var context = CreateProcessContext(syntax, lexemeSource, ProcessKind.Process, parser);
+				using var result = context.Process.Run(cancellationToken).Verify();
+			}
+
+			public TResult Parse<TResult>(Visitor<TResult> visitor, Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser, CancellationToken cancellationToken = default)
+			{
+				using var context = CreateVisitorContext(visitor, syntax, lexemeSource, ProcessKind.Process, parser);
+				using var result = context.Process.Run(cancellationToken).Verify();
 
 				return context.GetResult<TResult>();
 			}
 
-			public void Parse(Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
+			public ExternalParseResult<TResult> ParseExternal<TResult>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax<TResult> syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser,
+				CancellationToken cancellationToken = default)
+				where TResult : class
 			{
-				using var context = GetParserState(parserRule).MountProcessContext(this, lexemeSource, parserContext, parser);
+				using var context = CreateSyntaxTreeContext(syntax, lexemeSource, ProcessKind.SubProcess, parser);
+				var externalResult = context.Process.Run(cancellationToken);
 
-				RunCore(lexemeSource, context);
+				try
+				{
+					return externalResult switch
+					{
+						SuccessAutomataResult successAutomataResult => new SuccessExternalParseResult<TResult>(context.GetResult<TResult>(), successAutomataResult.InstructionPosition),
+						ExceptionAutomataResult exceptionAutomataResult => new ExceptionExternalParseResult<TResult>(exceptionAutomataResult.Exception),
+						ForkAutomataResult forkAutomataResult => GetForkResult<TResult>(forkAutomataResult, context),
+						_ => throw new ArgumentOutOfRangeException()
+					};
+				}
+				finally
+				{
+					externalResult.Dispose();
+				}
 			}
 
-			public TResult Parse<TResult>(Visitor<TResult> visitor, Grammar<TToken>.ParserRule parserRule, LexemeSource<TToken> lexemeSource, ParserContext parserContext, Parser<TGrammar, TToken> parser)
+			private void RegisterParserSyntax(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
 			{
-				using var context = GetParserState(parserRule).MountVisitorContext(visitor, this, lexemeSource, parserContext, parser);
-
-				RunCore(lexemeSource, context);
-
-				return context.GetResult<TResult>();
+				GetParserSyntax(parserSyntax);
 			}
 
-			private void RegisterParserRule(Grammar<TToken>.ParserRule parserRule)
+			private int RegisterProduction(ParserProduction parserProduction)
 			{
-				if (_registeredRules.Add(parserRule) == false)
-					throw new InvalidOperationException();
+				var productionIndex = Productions.Count;
 
-				var parserState = GetParserState(parserRule);
-				var parserProductions = parserRule.Productions.Select(t => new ParserProduction(this, parserRule, t, Productions)).ToList();
+				Productions.Add(parserProduction);
 
-				//parserState.Inline |= parserRule.AggressiveInlining;
-
-				EliminateLeftRecursion(parserState, parserProductions);
-
-				AddState(parserState, parserProductions);
+				return productionIndex;
 			}
-
-			private static bool ShouldPrefixPredicate(LeftRecursionClassifier classifier)
-			{
-				return classifier == LeftRecursionClassifier.Binary ||
-				       classifier == LeftRecursionClassifier.Ternary ||
-				       classifier == LeftRecursionClassifier.Suffix;
-			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

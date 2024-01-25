@@ -48,7 +48,7 @@
                    TargetType="zm:AutoHideTabViewItem">
     <zm:ControlTemplateRoot Background="Transparent"
                             VisualStateGroups="{StaticResource VisualStates}">
-      <zm:LayoutTransformer LayoutTransform="{zm:TemplateBinding Path=DockSide, Converter={StaticResource LayoutTransformConverter}}">
+      <zm:LayoutTransformer LayoutTransform="{zm:TemplateBinding Path=Side, Converter={StaticResource LayoutTransformConverter}}">
 
         <zm:DockPanel>
 
@@ -62,7 +62,7 @@
           <zm:IconContentPresenter Margin="0,2"
                                    Content="{Binding Path=DockItem.Title, RelativeSource={RelativeSource TemplatedParent}}"
                                    Icon="{Binding Path=DockItem.Icon, RelativeSource={RelativeSource TemplatedParent}}"
-                                   RenderTransform="{zm:TemplateBinding Path=DockSide,
+                                   RenderTransform="{zm:TemplateBinding Path=Side,
                                                                         Converter={StaticResource RootTransformConverter}}"
                                    RenderTransformOrigin="0.5, 0.5" />
         </zm:DockPanel>

@@ -12,7 +12,7 @@ namespace Zaaml.UI.Controls.DropDown
 	{
 		protected virtual bool CanCloseDropDownOnRequest => true;
 
-		internal override void OnIsDropDownOpenChangedInternal()
+		private protected override void OnIsDropDownOpenChangedInternal()
 		{
 			base.OnIsDropDownOpenChangedInternal();
 

@@ -20,12 +20,10 @@ namespace Zaaml.UI.Controls.Artboard
 		};
 
 		private ArtboardControl _artboard;
-		private double _designHeight;
-		private double _designWidth;
 
-		internal event EventHandler DesignMatrixChanged;
+		internal event EventHandler MatrixChanged;
 
-		public ArtboardControl Artboard
+		public ArtboardControl ArtboardControl
 		{
 			get => _artboard;
 			internal set
@@ -43,37 +41,9 @@ namespace Zaaml.UI.Controls.Artboard
 			}
 		}
 
-		internal double DesignHeight
-		{
-			get => _designHeight;
-			set
-			{
-				if (_designHeight.IsCloseTo(value))
-					return;
+		protected Matrix FromMatrix => ScrollViewTransform.Transform.Value;
 
-				_designHeight = value;
-
-				OnDesignHeightChanged();
-			}
-		}
-
-		internal double DesignWidth
-		{
-			get => _designWidth;
-			set
-			{
-				if (_designWidth.IsCloseTo(value))
-					return;
-
-				_designWidth = value;
-
-				OnDesignWidthChanged();
-			}
-		}
-
-		protected Matrix FromDesignMatrix => ScrollViewTransform.Transform.Value;
-
-		internal double OffsetX
+		internal double ScrollOffsetX
 		{
 			get => -ScrollViewTransform.TranslateX;
 			set
@@ -84,11 +54,11 @@ namespace Zaaml.UI.Controls.Artboard
 				ScrollViewTransform.TranslateX = -value;
 
 				OnOffsetXChanged();
-				OnDesignMatrixChanged();
+				OnMatrixChanged();
 			}
 		}
 
-		internal double OffsetY
+		internal double ScrollOffsetY
 		{
 			get => -ScrollViewTransform.TranslateY;
 			set
@@ -99,11 +69,11 @@ namespace Zaaml.UI.Controls.Artboard
 				ScrollViewTransform.TranslateY = -value;
 
 				OnOffsetYChanged();
-				OnDesignMatrixChanged();
+				OnMatrixChanged();
 			}
 		}
 
-		protected Matrix ToDesignMatrix
+		protected Matrix ToMatrix
 		{
 			get
 			{
@@ -126,7 +96,7 @@ namespace Zaaml.UI.Controls.Artboard
 				ScrollViewTransform.ScaleX = ScrollViewTransform.ScaleY = value;
 
 				OnZoomChanged();
-				OnDesignMatrixChanged();
+				OnMatrixChanged();
 			}
 		}
 
@@ -138,17 +108,9 @@ namespace Zaaml.UI.Controls.Artboard
 		{
 		}
 
-		protected virtual void OnDesignHeightChanged()
+		private void OnMatrixChanged()
 		{
-		}
-
-		private void OnDesignMatrixChanged()
-		{
-			DesignMatrixChanged?.Invoke(this, EventArgs.Empty);
-		}
-
-		protected virtual void OnDesignWidthChanged()
-		{
+			MatrixChanged?.Invoke(this, EventArgs.Empty);
 		}
 
 		protected virtual void OnOffsetXChanged()
@@ -168,24 +130,24 @@ namespace Zaaml.UI.Controls.Artboard
 
 		internal Point TransformFromDesignCoordinates(Point point)
 		{
-			return FromDesignMatrix.Transform(point);
+			return FromMatrix.Transform(point);
 		}
 
 		internal Rect TransformFromDesignCoordinates(Rect rect)
 		{
-			var matrix = FromDesignMatrix;
+			var matrix = FromMatrix;
 
 			return new Rect(matrix.Transform(rect.TopLeft), matrix.Transform(rect.BottomRight));
 		}
 
 		internal Point TransformToDesignCoordinates(Point point)
 		{
-			return ToDesignMatrix.Transform(point);
+			return ToMatrix.Transform(point);
 		}
 
 		internal Rect TransformToDesignCoordinates(Rect rect)
 		{
-			var matrix = ToDesignMatrix;
+			var matrix = ToMatrix;
 
 			return new Rect(matrix.Transform(rect.TopLeft), matrix.Transform(rect.BottomRight));
 		}

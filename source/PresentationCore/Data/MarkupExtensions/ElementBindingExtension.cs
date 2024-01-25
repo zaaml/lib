@@ -6,21 +6,13 @@ using NativeBinding = System.Windows.Data.Binding;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public sealed class ElementBindingExtension : PathBindingBase
-  {
-    #region Properties
+	public sealed class ElementBindingExtension : PathBindingBase
+	{
+		public string ElementName { get; set; }
 
-    public string ElementName { get; set; }
-
-    #endregion
-
-    #region  Methods
-
-    protected override void InitSource(NativeBinding binding)
-    {
-      binding.ElementName = ElementName;
-    }
-
-    #endregion
-  }
+		protected override void InitSource(NativeBinding binding)
+		{
+			binding.ElementName = ElementName;
+		}
+	}
 }

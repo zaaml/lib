@@ -6,6 +6,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Panels;
@@ -31,8 +32,7 @@ namespace Zaaml.UI.Controls.Primitives
     #region Fields
 
     private Storyboard _currentStoryboard;
-
-    private ExpandPanel _expandPanel;
+		private ExpandPanel _expandPanel;
 
     #endregion
 
@@ -56,10 +56,10 @@ namespace Zaaml.UI.Controls.Primitives
 
     public bool IsExpanded
     {
-      get => (bool) GetValue(IsExpandedProperty);
-      set => SetValue(IsExpandedProperty, value);
+	    get => (bool)GetValue(IsExpandedProperty);
+	    set => SetValue(IsExpandedProperty, value.Box());
     }
-		
+
     public Orientation Orientation
     {
       get => (Orientation) GetValue(OrientationProperty);
@@ -85,6 +85,7 @@ namespace Zaaml.UI.Controls.Primitives
     public override void OnApplyTemplate()
     {
       base.OnApplyTemplate();
+
       _expandPanel = (ExpandPanel) GetTemplateChild("ExpandPanel");
 
       UpdatePanel(false);
@@ -120,6 +121,7 @@ namespace Zaaml.UI.Controls.Primitives
 	      return;
 
       _currentStoryboard.Completed -= OnAnimationClockCompleted;
+
       _currentStoryboard.Stop();
 
       _expandPanel.ExpandRatio = ExpandRatio;

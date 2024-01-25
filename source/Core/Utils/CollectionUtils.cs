@@ -3,18 +3,16 @@
 // </copyright>
 
 using System.Collections;
+using System.Runtime.CompilerServices;
 
 namespace Zaaml.Core.Utils
 {
-  internal static class CollectionUtils
-  {
-    #region  Methods
-
-    public static bool IsWithinRanges(int index, ICollection collection)
-    {
-      return index >= 0 && index < collection.Count;
-    }
-
-    #endregion
-  }
+	internal static class CollectionUtils
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsWithinRanges(int index, ICollection collection)
+		{
+			return index >= 0 && index < collection.Count && collection.Count > 0;
+		}
+	}
 }

@@ -41,7 +41,7 @@ namespace Zaaml.UI.Controls.Primitives
 
     public VisualCloneControl()
     {
-      TemplateInt = GenericControlTemplate.BorderTemplateInstance;
+      TemplateInternal = GenericControlTemplate.BorderTemplateInstance;
 
       _visualBrushBehavior = new VisualBrushBehavior();
       _visualBrushBehavior.BindProperties(VisualBrushBehavior.ModeProperty, this, ModeProperty);

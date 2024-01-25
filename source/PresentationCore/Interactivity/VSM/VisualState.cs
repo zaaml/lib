@@ -4,12 +4,17 @@
 
 namespace Zaaml.PresentationCore.Interactivity.VSM
 {
-  public sealed class VisualState
-  {
-    #region Properties
+	public sealed class VisualState
+	{
+		public VisualState()
+		{
+		}
 
-    public string Name { get; set; }
+		public VisualState(string name)
+		{
+			Name = name;
+		}
 
-    #endregion
-  }
+		public string Name { get; set; }
+	}
 }

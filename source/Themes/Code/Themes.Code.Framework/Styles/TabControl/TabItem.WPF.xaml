@@ -1,0 +1,105 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:zm="http://schemas.zaaml.com/xaml" 
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="TabItem.xaml"/>
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <!-- Template -->
+  <ControlTemplate x:Key="TabItemTemplate" TargetType="TabItem">
+    <zm:ControlTemplateRoot Margin="{zm:TemplateBinding Path=(zm:TabPanel.ActualTabStripPlacement), Converter={StaticResource RootMarginConverter}}"
+                            Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <Grid>
+        <Border BorderThickness="1"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}">
+
+          <ContentPresenter ContentSource="Header"
+                              Margin="{TemplateBinding Padding}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              HorizontalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              RecognizesAccessKey="True" />
+
+          <zm:Extension.Triggers>
+
+            <zm:DataTrigger Binding="{zm:TemplateBinding Path=IsSelected}" Value="True">
+              <zm:Setter Property="BorderThickness" 
+                           Value="{zm:TemplateBinding Path=(zm:TabPanel.ActualTabStripPlacement), Converter={StaticResource BorderThicknessConverter}}" />
+            </zm:DataTrigger>
+
+          </zm:Extension.Triggers>
+        </Border>
+
+        <!-- Selection Line -->
+        <zm:DockPanel>
+          <Border zm:DockPanel.Dock="{zm:TemplateBinding Path=(zm:TabPanel.ActualTabStripPlacement)}"
+                  BorderThickness="0"
+                  Padding="1"
+                  Background="{zm:TemplateExpandoBinding Path=SelectionLine}" 
+                  Visibility="{zm:TemplateBinding Path=IsSelected, Converter={zm:VisibilityConverter}}" />
+        </zm:DockPanel>
+        
+        <zm:Extension.Setters>
+          <zm:Setter Property="Margin" VisualState="Selected"  Value="{zm:TemplateBinding Path=(zm:TabPanel.ActualTabStripPlacement), Converter={StaticResource SelectionMarginConverter}}" />
+        </zm:Extension.Setters>
+      </Grid>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="TabItemBaseStyle" TargetType="TabItem">
+    <zm:Setter Property="IsTabStop" Value="False" />
+    <zm:Setter Property="Padding" Value="11,2,11,3" />
+    <zm:Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="VerticalContentAlignment" Value="Stretch" />
+    <zm:Setter Property="MinWidth" Value="5" />
+    <zm:Setter Property="MinHeight" Value="5" />
+    <zm:Setter Property="Panel.ZIndex" Value="{zm:SelfBinding Path=IsSelected, Converter={zm:TernaryConverter TrueValue=1, FalseValue=0}}" />
+    <zm:Setter Property="zm:DisableVeilControl.VeilBrush" Value="{zm:ThemeResource Key=Code.StandardControls.TabItem.DisableVeilBrush}" />
+    <zm:Setter Property="Template" Value="{StaticResource TabItemTemplate}" />
+  </zm:Style>
+
+  <!-- Base Skinned Style -->
+  <zm:Style x:Key="TabItemStyle" TargetType="TabItem" BasedOn="{StaticResource TabItemBaseStyle}" 
+            Skin="Code.StandardControls.TabItem">
+    <zm:SetterGroup ValuePathSource="Skin">
+
+      <!-- Foreground -->
+      <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
+        <zm:Setter ValuePath="Normal"/>
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Selected" ValuePath="Selected"  Priority="1"/>
+      </zm:SetterGroup>
+
+      <!-- Background -->
+      <zm:SetterGroup Property="Background" ValuePath="Background">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1"/>
+      </zm:SetterGroup>
+
+      <!-- BorderBrush -->
+      <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
+        <zm:Setter ValuePath="Normal" />
+        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1"/>
+      </zm:SetterGroup>
+
+      <!-- SelectionLine -->
+      <zm:SetterGroup ExpandoProperty="SelectionLine" ValuePath="SelectionLine">
+        <zm:Setter ValuePath="Selected" />
+        <zm:Setter VisualState="SelectedInactive"  ValuePath="SelectedInactive" />
+      </zm:SetterGroup>
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Styles -->
+  <zm:ThemeStyle x:Key="TabItemThemeStyle" TargetType="TabItem" BasedOn="{StaticResource TabItemStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

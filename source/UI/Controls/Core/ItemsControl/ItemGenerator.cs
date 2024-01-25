@@ -75,7 +75,7 @@ namespace Zaaml.UI.Controls.Core
 
 		internal static void UninstallBinding(T item, DependencyProperty property, Binding binding)
 		{
-			if (binding != null && item.ReadLocalBinding(property) == binding)
+			if (binding != null && ReferenceEquals(item.ReadLocalBinding(property), binding))
 				item.ClearValue(property);
 		}
 

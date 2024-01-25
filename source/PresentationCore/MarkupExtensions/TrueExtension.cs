@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using Zaaml.Core.Runtime;
 
 namespace Zaaml.PresentationCore.MarkupExtensions
 {
@@ -12,7 +13,7 @@ namespace Zaaml.PresentationCore.MarkupExtensions
 
     public override object ProvideValue(IServiceProvider serviceProvider)
     {
-      return KnownBoxes.BoolTrue;
+      return BooleanBoxes.True;
     }
 
     #endregion

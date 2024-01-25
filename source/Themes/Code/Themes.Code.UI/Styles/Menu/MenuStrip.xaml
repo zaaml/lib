@@ -1,0 +1,42 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="MenuStripTemplate"
+                   TargetType="zm:MenuStrip">
+    <zm:ControlTemplateRoot x:Name="ControlRoot"
+                            Background="{zm:ThemeResource Key=Code.ContextMenu.Background}">
+
+      <!--  Items Presenter Host -->
+      <zm:MenuItemsPresenterHost>
+        <zm:MenuItemsPresenter x:Name="ItemsPresenter"
+                               Padding="{TemplateBinding Padding}"
+                               BorderThickness="{TemplateBinding BorderThickness}" />
+      </zm:MenuItemsPresenterHost>
+
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="MenuStripBaseStyle" TargetType="zm:MenuStrip">
+    <zm:Setter Property="BorderThickness" Value="0" />
+    <zm:Setter Property="Padding" Value="0" />
+    <zm:Setter Property="Template" Value="{StaticResource MenuStripTemplate}" />
+    <zm:Setter Property="zm:DisableVeilControl.VeilBrush" Value="{zm:ThemeResource Key=Code.ContextMenu.VeilBrush}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="MenuStripStyle" BasedOn="{StaticResource MenuStripBaseStyle}" TargetType="zm:MenuStrip">
+    <zm:SetterGroup ValuePathSource="Skin" />
+  </zm:Style>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="MenuStripThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource MenuStripStyle}" TargetType="zm:MenuStrip" />
+
+</zm:ThemeResourceDictionary>

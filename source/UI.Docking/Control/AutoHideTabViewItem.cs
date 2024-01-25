@@ -18,224 +18,196 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  [TemplateContractType(typeof(AutoHideTabViewItemTemplateContract))]
-  public sealed class AutoHideTabViewItem : TemplateContractControl, ISelectionStateControl
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(AutoHideTabViewItemTemplateContract))]
+	public sealed class AutoHideTabViewItem : TemplateContractControl, ISelectionStateControl
+	{
+		public static readonly DependencyProperty SideProperty = DPM.Register<Dock, AutoHideTabViewItem>
+			("Side", a => a.OnDockChanged);
 
-    public static readonly DependencyProperty DockSideProperty = DPM.Register<Dock, AutoHideTabViewItem>
-      ("DockSide", a => a.OnDockSideChanged);
+		private static readonly PropertyPath PropertyPath = new(AutoHideLayout.DockProperty);
 
-    private static readonly PropertyPath PropertyPath = new PropertyPath(AutoHideLayout.DockSideProperty);
+		private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(200);
 
-    private static readonly TimeSpan Delay = TimeSpan.FromMilliseconds(200);
+		private readonly DelayAction _hideAction;
+		private readonly DelayAction _showAction;
+		private bool _isOpen;
 
-    #endregion
+		public AutoHideTabViewItem(DockItem dockItem)
+		{
+			DockItem = dockItem;
 
-    #region Fields
+			ItemPresenter = new AutoHideDockItemPresenter(this)
+			{
+				Visibility = Visibility.Collapsed
+			};
 
-    private readonly DelayAction _hideAction;
-    private readonly DelayAction _showAction;
-    private bool _isOpen;
+			SetBinding(SideProperty, new Binding { Path = PropertyPath, Source = dockItem });
 
-    #endregion
+			dockItem.IsSelectedChanged += OnIsSelectedChanged;
 
-    #region Ctors
+			_showAction = new DelayAction(Show);
+			_hideAction = new DelayAction(Hide);
 
-    public AutoHideTabViewItem(DockItem dockItem)
-    {
-      DockItem = dockItem;
+			DragOutBehavior = new DragOutBehavior
+			{
+				DragOutCommand = new RelayCommand(OnDragOutCommandExecuted),
+				ProcessHandledEvents = true,
+				Target = this
+			};
+		}
 
-      ItemPresenter = new AutoHideDockItemPresenter(this)
-      {
-        Visibility = Visibility.Collapsed
-      };
+		public AutoHideTabViewControl AutoHideTabViewControl { get; internal set; }
 
-      SetBinding(DockSideProperty, new Binding {Path = PropertyPath, Source = dockItem});
+		public DockItem DockItem { get; }
 
-      dockItem.IsSelectedChanged += OnIsSelectedChanged;
+		[UsedImplicitly]
+		private DragOutBehavior DragOutBehavior { get; }
 
-      _showAction = new DelayAction(Show);
-      _hideAction = new DelayAction(Hide);
+		public bool IsOpen
+		{
+			get => _isOpen;
+			set
+			{
+				if (_isOpen == value)
+					return;
 
-      DragOutBehavior = new DragOutBehavior
-      {
-        DragOutCommand = new RelayCommand(OnDragOutCommandExecuted),
-        ProcessHandledEvents = true,
-        Target = this
-      };
-    }
+				_isOpen = value;
 
-    #endregion
+				ItemPresenter.Visibility = _isOpen ? Visibility : Visibility.Collapsed;
 
-    #region Properties
+				if (_isOpen)
+					Panel.SetZIndex(ItemPresenter, ZIndex++);
 
-    public AutoHideTabViewControl AutoHideTabViewControl { get; internal set; }
+				UpdateVisualState(true);
+			}
+		}
 
-    public DockItem DockItem { get; }
+		internal AutoHideDockItemPresenter ItemPresenter { get; }
 
-    public Dock DockSide
-    {
-      get => (Dock) GetValue(DockSideProperty);
-      set => SetValue(DockSideProperty, value);
-    }
+		public Dock Side
+		{
+			get => (Dock)GetValue(SideProperty);
+			set => SetValue(SideProperty, value);
+		}
 
-    [UsedImplicitly]
-    private DragOutBehavior DragOutBehavior { get; }
+		private static int ZIndex { get; set; }
 
-    public bool IsOpen
-    {
-      get => _isOpen;
-      set
-      {
-        if (_isOpen == value)
-          return;
+		internal void AttachItem()
+		{
+			ItemPresenter.AttachItem();
+		}
 
-        _isOpen = value;
+		internal void DetachItem()
+		{
+			Hide();
 
-        ItemPresenter.Visibility = _isOpen ? Visibility : Visibility.Collapsed;
+			ItemPresenter.DetachItem();
+		}
 
-        if (_isOpen)
-          Panel.SetZIndex(ItemPresenter, ZIndex++);
+		private void Hide()
+		{
+			_showAction.Revoke();
+			_hideAction.Revoke();
 
-        UpdateVisualState(true);
-      }
-    }
+			IsOpen = false;
+		}
 
-    internal AutoHideDockItemPresenter ItemPresenter { get; }
+		private void OnDockChanged(Dock oldDock, Dock newDock)
+		{
+			ItemPresenter.OnItemDockChanged(oldDock, newDock);
+			AutoHideTabViewControl?.OnItemDockChanged(this, oldDock, newDock);
+		}
 
-    private static int ZIndex { get; set; }
+		private void OnDragOutCommandExecuted()
+		{
+			DockItem.DragOutInternal(DragOutBehavior.OriginMousePosition);
+		}
 
-    #endregion
+		protected override void OnGotFocus(RoutedEventArgs e)
+		{
+			base.OnGotFocus(e);
 
-    #region  Methods
+			TriggerShow(TimeSpan.Zero);
+		}
 
-    internal void AttachItem()
-    {
-      ItemPresenter.AttachItem();
-    }
+		private void OnIsSelectedChanged(object sender, EventArgs e)
+		{
+			IsOpen = DockItem.IsSelected;
+		}
 
-    internal void DetachItem()
-    {
-      Hide();
+		protected override void OnLostFocus(RoutedEventArgs e)
+		{
+			base.OnLostFocus(e);
 
-      ItemPresenter.DetachItem();
-    }
+			if (ShouldClose())
+				TriggerHide(TimeSpan.Zero);
+		}
 
-    private void Hide()
-    {
-      _showAction.Revoke();
-      _hideAction.Revoke();
+		protected override void OnMouseEnter(MouseEventArgs e)
+		{
+			base.OnMouseEnter(e);
 
-      IsOpen = false;
-    }
+			TriggerShow(Delay);
+		}
 
-    private void OnDockSideChanged(Dock oldDockSide, Dock newDockSide)
-    {
-      ItemPresenter.OnItemDockSideChanged(oldDockSide, newDockSide);
-      AutoHideTabViewControl?.OnItemDockSideChanged(this, oldDockSide, newDockSide);
-    }
+		protected override void OnMouseLeave(MouseEventArgs e)
+		{
+			base.OnMouseLeave(e);
 
-    private void OnDragOutCommandExecuted()
-    {
-      DockItem.DragOutInternal(DragOutBehavior.OriginMousePosition);
-    }
+			if (ShouldClose())
+				TriggerHide(Delay);
+		}
 
-    protected override void OnGotFocus(RoutedEventArgs e)
-    {
-      base.OnGotFocus(e);
+		protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			base.OnMouseLeftButtonDown(e);
 
-      TriggerShow(TimeSpan.Zero);
-    }
+			if (e.Handled)
+				return;
 
-    private void OnIsSelectedChanged(object sender, EventArgs e)
-    {
-      IsOpen = DockItem.IsSelected;
-    }
+			DockItem.SelectAndFocus();
+		}
 
-    protected override void OnLostFocus(RoutedEventArgs e)
-    {
-      base.OnLostFocus(e);
+		internal void OnPresenterMouseEnter(AutoHideDockItemPresenter autoHideItemPresenter)
+		{
+			TriggerShow(Delay);
+		}
 
-      if (ShouldClose())
-        TriggerHide(TimeSpan.Zero);
-    }
+		internal void OnPresenterMouseLeave(AutoHideDockItemPresenter autoHideItemPresenter)
+		{
+			if (ShouldClose())
+				TriggerHide(Delay);
+		}
 
-    protected override void OnMouseEnter(MouseEventArgs e)
-    {
-      base.OnMouseEnter(e);
+		private bool ShouldClose()
+		{
+			return DockItem.IsSelected == false && IsMouseOver == false && ItemPresenter.IsMouseOver == false && FocusHelper.IsKeyboardFocusWithin(this) == false && FocusHelper.IsKeyboardFocusWithin(ItemPresenter) == false;
+		}
 
-      TriggerShow(Delay);
-    }
+		private void Show()
+		{
+			_showAction.Revoke();
+			_hideAction.Revoke();
 
-    protected override void OnMouseLeave(MouseEventArgs e)
-    {
-      base.OnMouseLeave(e);
+			IsOpen = true;
+		}
 
-      if (ShouldClose())
-        TriggerHide(Delay);
-    }
+		private void TriggerHide(TimeSpan timeSpan)
+		{
+			_showAction.Revoke();
+			_hideAction.Invoke(timeSpan);
+		}
 
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-      base.OnMouseLeftButtonDown(e);
+		private void TriggerShow(TimeSpan timeSpan)
+		{
+			_hideAction.Revoke();
+			_showAction.Invoke(timeSpan);
+		}
 
-      if (e.Handled)
-        return;
+		bool ISelectionStateControl.IsSelected => IsOpen;
+	}
 
-      DockItem.SelectAndFocus();
-    }
-
-    internal void OnPresenterMouseEnter(AutoHideDockItemPresenter autoHideItemPresenter)
-    {
-      TriggerShow(Delay);
-    }
-
-    internal void OnPresenterMouseLeave(AutoHideDockItemPresenter autoHideItemPresenter)
-    {
-      if (ShouldClose())
-        TriggerHide(Delay);
-    }
-
-    private bool ShouldClose()
-    {
-      return DockItem.IsSelected == false && IsMouseOver == false && ItemPresenter.IsMouseOver == false && FocusHelper.IsKeyboardFocusWithin(this) == false && FocusHelper.IsKeyboardFocusWithin(ItemPresenter) == false;
-    }
-
-    private void Show()
-    {
-      _showAction.Revoke();
-      _hideAction.Revoke();
-
-      IsOpen = true;
-    }
-
-    private void TriggerHide(TimeSpan timeSpan)
-    {
-      _showAction.Revoke();
-      _hideAction.Invoke(timeSpan);
-    }
-
-    private void TriggerShow(TimeSpan timeSpan)
-    {
-      _hideAction.Revoke();
-      _showAction.Invoke(timeSpan);
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region ISelectionStateControl
-
-    bool ISelectionStateControl.IsSelected => IsOpen;
-
-    #endregion
-
-    #endregion
-  }
-
-  public sealed class AutoHideTabViewItemTemplateContract : TemplateContract
-  {
-  }
+	public sealed class AutoHideTabViewItemTemplateContract : TemplateContract
+	{
+	}
 }

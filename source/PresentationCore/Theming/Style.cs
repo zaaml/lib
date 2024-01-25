@@ -15,73 +15,59 @@ using TriggerBase = Zaaml.PresentationCore.Interactivity.TriggerBase;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  [ContentProperty("Setters")]
-  public sealed class Style : StyleBase
-  {
-    #region Fields
+	[ContentProperty("Setters")]
+	public sealed class Style : StyleBase
+	{
+		private StyleResourceDictionary _resources;
+		private StyleSetterCollection _setters;
+		private StyleTriggerCollection _triggers;
 
-    private StyleResourceDictionary _resources;
-    private StyleSetterCollection _setters;
-    private StyleTriggerCollection _triggers;
+		public StyleBase BasedOn
+		{
+			get => BasedOnCore;
+			set => BasedOnCore = value;
+		}
 
-    #endregion
+		public ResourceDictionary Resources => _resources ??= new StyleResourceDictionary(this);
 
-    #region Properties
+		public SetterCollectionBase Setters => _setters ??= new StyleSetterCollection(this);
 
-    public StyleBase BasedOn
-    {
-      get => BasedOnCore;
-      set => BasedOnCore = value;
-    }
+		protected override IEnumerable<SetterBase> SettersCore
+		{
+			get
+			{
+				var settersCore = _setters ?? Enumerable.Empty<SetterBase>();
 
-    public ResourceDictionary Resources => _resources ??= new StyleResourceDictionary(this);
+				var skin = Skin;
 
-    public SetterCollectionBase Setters => _setters ??= new StyleSetterCollection(this);
+				if (skin == null)
+					return settersCore;
 
-    protected override IEnumerable<SetterBase> SettersCore
-    {
-      get
-      {
-        var settersCore = _setters ?? Enumerable.Empty<SetterBase>();
+				var setter = new Setter
+				{
+					Property = Extension.StyleSkinProperty
+				};
 
-        var skin = Skin;
+				if (skin is DeferSkin deferSkin)
+					setter.Value = new ThemeResourceExtension { Key = deferSkin.Key, Converter = IsStyleExtensionConverter.Instance };
+				else
+					setter.Value = skin;
 
-        if (skin == null)
-          return settersCore;
+				return settersCore.Prepend(setter);
+			}
+		}
 
-        var setter = new Setter
-        {
-          Property = Extension.StyleSkinProperty,
-        };
+		[TypeConverter(typeof(SkinTypeConverter))]
+		public SkinBase Skin { get; set; }
 
-        var deferSkin = skin as DeferSkin;
+		public TriggerCollectionBase Triggers => _triggers ??= new StyleTriggerCollection(this);
 
-        if (deferSkin != null)
-          setter.Value = new ThemeResourceExtension { Key = deferSkin.Key, Converter = IsStyleExtensionConverter.Instance };
-        else
-          setter.Value = skin;
+		protected override IEnumerable<TriggerBase> TriggersCore => _triggers ?? Enumerable.Empty<TriggerBase>();
 
-        return settersCore.Prepend(setter);
-      }
-    }
-
-    [TypeConverter(typeof(SkinTypeConverter))]
-    public SkinBase Skin { get; set; }
-
-    public TriggerCollectionBase Triggers => _triggers ??= new StyleTriggerCollection(this);
-
-    protected override IEnumerable<TriggerBase> TriggersCore => _triggers ?? Enumerable.Empty<TriggerBase>();
-
-    #endregion
-
-    #region  Methods
-
-    internal void Merge(List<StyleBase> styles)
-    {
-      Setters.AddRange(MergeSetters(styles));
-      Triggers.AddRange(MergeTriggers(styles));
-    }
-
-    #endregion
-  }
+		internal void Merge(List<StyleBase> styles)
+		{
+			Setters.AddRange(MergeSetters(styles));
+			Triggers.AddRange(MergeTriggers(styles));
+		}
+	}
 }

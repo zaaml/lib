@@ -7,15 +7,27 @@ using Zaaml.PresentationCore.Converters;
 
 namespace Zaaml.PresentationCore.Extensions
 {
-  internal static class ObjectExtensions
-  {
-    #region  Methods
+	internal static class ObjectExtensions
+	{
+		public static object XamlConvert(this object value, Type targetType)
+		{
+			return XamlStaticConverter.ConvertValue(value, targetType);
+		}
 
-    public static object XamlConvert(this object value, Type targetType)
-    {
-      return XamlStaticConverter.ConvertValue(value, targetType);
-    }
+		public static bool XamlTryConvert(this object value, Type targetType, out object convertedValue)
+		{
+			var xamlConvertResult = XamlStaticConverter.TryConvertValue(value, targetType);
 
-    #endregion
-  }
+			if (xamlConvertResult.IsValid)
+			{
+				convertedValue = xamlConvertResult.Result;
+
+				return true;
+			}
+
+			convertedValue = default;
+
+			return false;
+		}
+	}
 }

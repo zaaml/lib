@@ -6,40 +6,28 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.AccordionView
 {
-  internal sealed class DefaultAccordionViewItemGenerator : AccordionViewItemGeneratorBase, IDelegatedGenerator<AccordionViewItem>
-  {
-    #region  Methods
+	internal sealed class DefaultAccordionViewItemGenerator : AccordionViewItemGeneratorBase, IDelegatedGenerator<AccordionViewItem>
+	{
+		protected override void AttachItem(AccordionViewItem item, object source)
+		{
+			Implementation.AttachItem(item, source);
+		}
 
-    protected override void AttachItem(AccordionViewItem item, object source)
-    {
-      Implementation.AttachItem(item, source);
-    }
+		protected override AccordionViewItem CreateItem(object source)
+		{
+			return Implementation.CreateItem(source);
+		}
 
-    protected override AccordionViewItem CreateItem(object source)
-    {
-      return Implementation.CreateItem(source);
-    }
+		protected override void DetachItem(AccordionViewItem item, object source)
+		{
+			Implementation.DetachItem(item, source);
+		}
 
-    protected override void DetachItem(AccordionViewItem item, object source)
-    {
-      Implementation.DetachItem(item, source);
-    }
+		protected override void DisposeItem(AccordionViewItem item, object source)
+		{
+			Implementation.DisposeItem(item, source);
+		}
 
-    protected override void DisposeItem(AccordionViewItem item, object source)
-    {
-      Implementation.DisposeItem(item, source);
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IDelegatedGenerator<AccordionViewItem>
-
-    public IItemGenerator<AccordionViewItem> Implementation { get; set; }
-
-    #endregion
-
-    #endregion
-  }
+		public IItemGenerator<AccordionViewItem> Implementation { get; set; }
+	}
 }

@@ -3,7 +3,7 @@
 // </copyright>
 
 using System.Windows;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
@@ -54,8 +54,8 @@ namespace Zaaml.UI.Controls.Primitives
 
     public bool IsExpanded
     {
-      get => (bool) GetValue(IsExpandedProperty);
-      set => SetValue(IsExpandedProperty, value);
+	    get => (bool)GetValue(IsExpandedProperty);
+	    set => SetValue(IsExpandedProperty, value.Box());
     }
 
     #endregion

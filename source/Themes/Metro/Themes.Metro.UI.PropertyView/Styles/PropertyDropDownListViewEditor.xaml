@@ -14,17 +14,8 @@
       <zm:DropDownListViewEditor x:Name="Editor"
                                  IsTextEditable="True">
         <zm:DropDownListViewEditor.ListViewControl>
-          <zm:ListViewControl x:Name="ListView">
-            <zm:ListViewControl.ItemGenerator>
-              <zm:ListViewItemGenerator>
-                <zm:ListViewItemGenerator.ItemTemplate>
-                  <zm:ListViewItemTemplate d:DataContext="{d:DesignInstance zm:PropertyListViewItemSource}">
-                    <zm:ListViewItem Content="{Binding DisplayName}" />
-                  </zm:ListViewItemTemplate>
-                </zm:ListViewItemGenerator.ItemTemplate>
-              </zm:ListViewItemGenerator>
-            </zm:ListViewControl.ItemGenerator>
-          </zm:ListViewControl>
+          <zm:ListViewControl x:Name="ListView"
+                              ItemContentMember="DisplayName" />
         </zm:DropDownListViewEditor.ListViewControl>
       </zm:DropDownListViewEditor>
 

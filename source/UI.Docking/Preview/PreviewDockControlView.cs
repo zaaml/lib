@@ -15,8 +15,8 @@ namespace Zaaml.UI.Controls.Docking
 {
 	public sealed class PreviewDockControlView : DockControlViewBase
 	{
-		private readonly Dictionary<string, Preview> _previewGeometryCache = new Dictionary<string, Preview>(StringComparer.OrdinalIgnoreCase);
-		private readonly Queue<Preview> _previewQueue = new Queue<Preview>();
+		private readonly Dictionary<string, Preview> _previewGeometryCache = new(StringComparer.OrdinalIgnoreCase);
+		private readonly Queue<Preview> _previewQueue = new();
 		private Preview _actualPreview;
 		private DropGuide _currentDropGuide;
 		private bool _isInPreviewState;
@@ -121,23 +121,23 @@ namespace Zaaml.UI.Controls.Docking
 			var winRects = new List<Rect>();
 			var tabViewItemRectDictionary = new Dictionary<Dock, List<Rect>>
 			{
-				[Dock.Left] = new List<Rect>(),
-				[Dock.Top] = new List<Rect>(),
-				[Dock.Right] = new List<Rect>(),
-				[Dock.Bottom] = new List<Rect>()
+				[Dock.Left] = new(),
+				[Dock.Top] = new(),
+				[Dock.Right] = new(),
+				[Dock.Bottom] = new()
 			};
 
 			foreach (var dockItem in PreviewItems)
 			{
 				if (dockItem.IsActuallyVisible)
-					winRects.Add(dockItem.GetScreenBox());
+					winRects.Add(dockItem.GetScreenLogicalBox());
 
 				var tabViewItem = dockItem.TabViewItem;
 
 				if (tabViewItem.TabViewControl == null)
 					continue;
 
-				var tabViewItemRect = tabViewItem.GetScreenBox();
+				var tabViewItemRect = tabViewItem.GetScreenLogicalBox();
 
 				tabViewItemRectDictionary[tabViewItem.TabViewControl.TabStripPlacement].Add(tabViewItemRect);
 			}
@@ -192,6 +192,8 @@ namespace Zaaml.UI.Controls.Docking
 		{
 			RenderPreview = null;
 			IsPresenterVisible = false;
+			
+			ClearPreviewCache();
 
 			_layout = null;
 			_isInPreviewState = false;
@@ -199,7 +201,7 @@ namespace Zaaml.UI.Controls.Docking
 
 		private static bool IsItemLayoutValid(DockItem dockItem)
 		{
-			return dockItem.IsActuallyVisible && dockItem.IsLayoutComplete && dockItem.IsArrangeValid && dockItem.IsMeasureValid;
+			return dockItem.IsActuallyVisible && dockItem.IsArrangeValid && dockItem.IsMeasureValid;
 		}
 
 		protected override Size MeasureOverride(Size availableSize)
@@ -209,7 +211,7 @@ namespace Zaaml.UI.Controls.Docking
 
 			ActualPreview = _previewQueue.Dequeue();
 
-			Controller.ApplyLayout(_layout, false);
+			Controller.ApplyLayout(_layout);
 
 			var dropTarget = ActualPreview.DropTarget != null ? Controller.DockControl.GetPreviewItem(ActualPreview.DropTarget) : null;
 			var dropSource = DragMovePreviewItem;
@@ -244,6 +246,9 @@ namespace Zaaml.UI.Controls.Docking
 			if (ActualPreview.AwaitGeometry == false)
 				return;
 
+			if (_isInPreviewState == false)
+				return;
+
 			var geometry = CreateGeometry();
 
 			if (geometry == null)
@@ -253,14 +258,12 @@ namespace Zaaml.UI.Controls.Docking
 				return;
 			}
 
-#if !SILVERLIGHT
 			if (geometry.IsEmpty())
 			{
 				InvalidateMeasure();
 
 				return;
 			}
-#endif
 
 			ActualPreview.Geometry = geometry;
 			ActualPreview = null;
@@ -314,7 +317,7 @@ namespace Zaaml.UI.Controls.Docking
 				return;
 			}
 
-			if (IsMeasureValid == false || IsArrangeValid == false || Controller.IsLayoutSuspended || Controller.IsItemLayoutValid == false)
+			if (IsMeasureValid == false || IsArrangeValid == false)
 				return;
 
 			if (PreviewItems == null || PreviewItems.Where(w => w.IsActuallyVisible).Any(w => IsItemLayoutValid(w) == false))
@@ -338,7 +341,7 @@ namespace Zaaml.UI.Controls.Docking
 
 			if (compass is LocalDropCompass)
 			{
-				var compassTarget = Controller.GetItemIfDocumentLayout(compass.PlacementTarget);
+				var compassTarget = Controller.DockControl.Controller.GetItemIfDocumentLayout(compass.PlacementTarget);
 
 				if (compassTarget == null)
 					return;

@@ -3,8 +3,8 @@
 // </copyright>
 
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-using Zaaml.Core;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -17,6 +17,7 @@ using Zaaml.UI.Controls.Primitives;
 using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Utils;
+using Control = Zaaml.UI.Controls.Core.Control;
 
 namespace Zaaml.UI.Controls.ListView
 {
@@ -41,6 +42,11 @@ namespace Zaaml.UI.Controls.ListView
 		public static readonly DependencyProperty CommandTargetProperty = DPM.Register<DependencyObject, ListViewItem>
 			("CommandTarget", d => d.OnCommandTargetChanged);
 
+		private static readonly DependencyPropertyKey ActualViewTemplatePropertyKey = DPM.RegisterReadOnly<ControlTemplate, ListViewItem>
+			("ActualViewTemplate");
+
+		public static readonly DependencyProperty ActualViewTemplateProperty = ActualViewTemplatePropertyKey.DependencyProperty;
+
 		public static readonly DependencyProperty ListViewControlProperty = ListViewControlPropertyKey.DependencyProperty;
 
 		private ListViewItemData _listViewItemData;
@@ -61,7 +67,17 @@ namespace Zaaml.UI.Controls.ListView
 			set => SetValue(CommandProperty, value);
 		}
 
+		public ControlTemplate ActualViewTemplate
+		{
+			get => (ControlTemplate) GetValue(ActualViewTemplateProperty);
+			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
+		}
+
 		internal Rect ArrangeRect { get; private set; }
+
+		private ListGridViewCellsPresenter GridViewCellsPresenter => TemplateContract.GridViewCellsPresenter;
+
+		internal ListGridViewCellsPresenter CellsPresenterInternal => GridViewCellsPresenter;
 
 		public object CommandParameter
 		{
@@ -193,6 +209,8 @@ namespace Zaaml.UI.Controls.ListView
 				UpdateGlyphPresenter();
 			else if (e.Property == ListViewControl.ItemGlyphTemplateProperty)
 				UpdateGlyphPresenter();
+			else if (e.Property == ListViewControl.ViewProperty)
+				UpdateViewTemplate();
 		}
 
 		private void OnListViewControlPropertyChangedPrivate(ListViewControl oldListView, ListViewControl newListView)
@@ -205,6 +223,8 @@ namespace Zaaml.UI.Controls.ListView
 
 			if (newListView != null)
 				newListView.DependencyPropertyChangedInternal += OnListViewControlPropertyChanged;
+
+			UpdateViewTemplate();
 
 			OnListViewControlChangedInternal(oldListView, newListView);
 		}
@@ -269,15 +289,37 @@ namespace Zaaml.UI.Controls.ListView
 			ListViewControl?.OnItemMouseButton(this, e);
 		}
 
+		protected override void OnMouseDoubleClick(MouseButtonEventArgs e)
+		{
+			if (e.Handled)
+				return;
+
+			ListViewControl?.OnItemMouseDoubleClick(this, e);
+		}
+
+		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+		{
+			base.OnPropertyChanged(e);
+
+			if (e.Property == IsMouseOverProperty)
+				UpdateZIndex();
+		}
+
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
 
 			UpdateGlyphPresenter();
+
+			if (GridViewCellsPresenter != null)
+				GridViewCellsPresenter.ListViewItem = this;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
+			if (GridViewCellsPresenter != null)
+				GridViewCellsPresenter.ListViewItem = null;
+
 			CleanGlyphPresenter();
 
 			base.OnTemplateContractDetaching();
@@ -320,6 +362,19 @@ namespace Zaaml.UI.Controls.ListView
 				GlyphPresenter.ContentTemplate = null;
 				GlyphPresenter.Content = null;
 			}
+		}
+
+		internal void UpdateViewTemplate()
+		{
+			var listViewControl = ListViewControl;
+
+			if (listViewControl == null)
+				return;
+
+			var actualViewTemplate = listViewControl.View?.GetTemplateInternal(this);
+
+			if (ReferenceEquals(ActualViewTemplate, actualViewTemplate) == false)
+				ActualViewTemplate = actualViewTemplate;
 		}
 
 		protected override void UpdateVisualState(bool useTransitions)
@@ -406,11 +461,5 @@ namespace Zaaml.UI.Controls.ListView
 
 			UpdateVisualStateImpl(true, newMouse, newFocus);
 		}
-	}
-
-	public class ListViewItemTemplateContract : IconContentControlTemplateContract
-	{
-		[TemplateContractPart(Required = true)]
-		public ListViewItemGlyphPresenter GlyphPresenter { get; [UsedImplicitly] private set; }
 	}
 }

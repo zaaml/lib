@@ -9,268 +9,240 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  internal class PopupWrapper : DependencyObject, IManagedPopupControl
-  {
-    #region Static Fields and Constants
+	internal class PopupWrapper : DependencyObject, IManagedPopupControl
+	{
+		public static readonly DependencyProperty PlacementProperty = DPM.Register<PopupPlacement, PopupWrapper>
+			("Placement", c => c.OnPlacementChanged);
 
-    public static readonly DependencyProperty PlacementProperty = DPM.Register<PopupPlacement, PopupWrapper>
-      ("Placement", c => c.OnPlacementChanged);
+		public static readonly DependencyProperty IsOpenProperty = DPM.Register<bool, PopupWrapper>
+			("IsOpen", c => c.OnIsOpenChangedInt);
 
-    public static readonly DependencyProperty IsOpenProperty = DPM.Register<bool, PopupWrapper>
-      ("IsOpen", c => c.OnIsOpenChangedInt);
+		private IPopup _popup;
+		private bool _suspendHandle;
 
-    #endregion
+		public PopupWrapper(IPopup popup)
+		{
+			_popup = popup;
 
-    #region Fields
+			AttachEvents();
+			SyncWrapper();
+		}
 
-    private IPopup _popup;
-    private bool _suspendHandle;
+		public PopupWrapper()
+		{
+		}
 
-    #endregion
+		public IPopup Popup
+		{
+			get => _popup;
+			set
+			{
+				if (ReferenceEquals(_popup, value))
+					return;
 
-    #region Ctors
+				if (_popup != null)
+				{
+					DetachEvents();
+					CleanPopup();
+				}
 
-    public PopupWrapper(IPopup popup)
-    {
-      _popup = popup;
+				_popup = value;
 
-      AttachEvents();
-      SyncWrapper();
-    }
+				if (_popup != null)
+				{
+					AttachEvents();
+					Sync();
+				}
+			}
+		}
 
-    public PopupWrapper()
-    {
-    }
+		public PopupWrapperSyncDirection SyncDirection { get; set; }
 
-    #endregion
+		private void AttachEvents()
+		{
+			_popup.IsOpenChanged += PopupOnIsOpenChanged;
+			_popup.PlacementChanged += PopupOnPlacementChanged;
+		}
 
-    #region Properties
+		private void CleanPopup()
+		{
+			if (_popup == null)
+				return;
 
-    public IPopup Popup
-    {
-      get => _popup;
-      set
-      {
-        if (ReferenceEquals(_popup, value))
-          return;
+			try
+			{
+				_suspendHandle = true;
 
-        if (_popup != null)
-        {
-          DetachEvents();
-          CleanPopup();
-        }
+				if (ReferenceEquals(_popup.Placement, this.GetValue<PopupPlacement>(PlacementProperty)))
+					_popup.Placement = null;
 
-        _popup = value;
+				_popup.IsOpen = false;
+			}
+			finally
+			{
+				_suspendHandle = false;
+			}
+		}
 
-        if (_popup != null)
-        {
-          AttachEvents();
-          Sync();
-        }
-      }
-    }
+		private void DetachEvents()
+		{
+			_popup.IsOpenChanged -= PopupOnIsOpenChanged;
+			_popup.PlacementChanged -= PopupOnPlacementChanged;
+		}
 
-    public PopupWrapperSyncDirection SyncDirection { get; set; }
+		private void OnIsOpenChangedInt()
+		{
+			if (_suspendHandle || _popup == null)
+				return;
 
-    #endregion
+			try
+			{
+				_suspendHandle = false;
 
-    #region  Methods
+				_popup.IsOpen = this.GetValue<bool>(IsOpenProperty);
+			}
+			finally
+			{
+				_suspendHandle = false;
+			}
+		}
 
-    private void AttachEvents()
-    {
-      _popup.IsOpenChanged += PopupOnIsOpenChanged;
-      _popup.PlacementChanged += PopupOnPlacementChanged;
-    }
+		private void OnPlacementChanged()
+		{
+			if (_suspendHandle || _popup == null)
+				return;
 
-    private void CleanPopup()
-    {
-      if (_popup == null)
-        return;
+			try
+			{
+				_suspendHandle = false;
 
-      try
-      {
-        _suspendHandle = true;
+				_popup.Placement = this.GetValue<PopupPlacement>(PlacementProperty);
+			}
+			finally
+			{
+				_suspendHandle = false;
+			}
+		}
 
-        if (ReferenceEquals(_popup.Placement, this.GetValue<PopupPlacement>(PlacementProperty)))
-          _popup.Placement = null;
+		private void PopupOnIsOpenChanged(object sender, EventArgs eventArgs)
+		{
+			if (_suspendHandle || _popup == null)
+				return;
 
-        _popup.IsOpen = false;
-      }
-      finally
-      {
-        _suspendHandle = false;
-      }
-    }
+			try
+			{
+				_suspendHandle = false;
 
-    private void DetachEvents()
-    {
-      _popup.IsOpenChanged -= PopupOnIsOpenChanged;
-      _popup.PlacementChanged -= PopupOnPlacementChanged;
-    }
+				SetValue(IsOpenProperty, _popup.IsOpen);
+			}
+			finally
+			{
+				_suspendHandle = false;
+			}
+		}
 
-    private void OnIsOpenChangedInt()
-    {
-      if (_suspendHandle || _popup == null)
-	      return;
-      
-      try
-      {
-        _suspendHandle = false;
-        
-        _popup.IsOpen = this.GetValue<bool>(IsOpenProperty);
-      }
-      finally
-      {
-        _suspendHandle = false;
-      }
-    }
+		private void PopupOnPlacementChanged(object sender, EventArgs eventArgs)
+		{
+			if (_suspendHandle || _popup == null)
+				return;
 
-    private void OnPlacementChanged()
-    {
-      if (_suspendHandle || _popup == null) 
-	      return;
-      
-      try
-      {
-        _suspendHandle = false;
-        
-        _popup.Placement = this.GetValue<PopupPlacement>(PlacementProperty);
-      }
-      finally
-      {
-        _suspendHandle = false;
-      }
-    }
+			try
+			{
+				_suspendHandle = false;
 
-    private void PopupOnIsOpenChanged(object sender, EventArgs eventArgs)
-    {
-      if (_suspendHandle || _popup == null) 
-	      return;
-      
-      try
-      {
-        _suspendHandle = false;
-        
-        SetValue(IsOpenProperty, _popup.IsOpen);
-      }
-      finally
-      {
-        _suspendHandle = false;
-      }
-    }
+				SetValue(PlacementProperty, _popup.Placement);
+			}
+			finally
+			{
+				_suspendHandle = false;
+			}
+		}
 
-    private void PopupOnPlacementChanged(object sender, EventArgs eventArgs)
-    {
-      if (_suspendHandle || _popup == null) 
-	      return;
-      
-      try
-      {
-        _suspendHandle = false;
-        
-        SetValue(PlacementProperty, _popup.Placement);
-      }
-      finally
-      {
-        _suspendHandle = false;
-      }
-    }
+		protected virtual void Sync()
+		{
+			switch (SyncDirection)
+			{
+				case PopupWrapperSyncDirection.None:
+					return;
 
-    protected virtual void Sync()
-    {
-      switch (SyncDirection)
-      {
-        case PopupWrapperSyncDirection.None:
-          return;
-        
-        case PopupWrapperSyncDirection.SyncWrapper:
-          SyncWrapper();
-          break;
-        
-        case PopupWrapperSyncDirection.SyncPopup:
-          SyncPopup();
-          break;
-      }
-    }
+				case PopupWrapperSyncDirection.SyncWrapper:
+					SyncWrapper();
+					break;
 
-    public void SyncPopup()
-    {
-      if (_popup == null)
-        return;
+				case PopupWrapperSyncDirection.SyncPopup:
+					SyncPopup();
+					break;
+			}
+		}
 
-      try
-      {
-        _suspendHandle = true;
+		public void SyncPopup()
+		{
+			if (_popup == null)
+				return;
 
-        _popup.Placement = this.GetValue<PopupPlacement>(PlacementProperty);
-        _popup.IsOpen = this.GetValue<bool>(IsOpenProperty);
-      }
-      finally
-      {
-        _suspendHandle = false;
-      }
-    }
+			try
+			{
+				_suspendHandle = true;
 
-    public void SyncWrapper()
-    {
-      if (_popup == null)
-        return;
+				_popup.Placement = this.GetValue<PopupPlacement>(PlacementProperty);
+				_popup.IsOpen = this.GetValue<bool>(IsOpenProperty);
+			}
+			finally
+			{
+				_suspendHandle = false;
+			}
+		}
 
-      try
-      {
-        _suspendHandle = true;
+		public void SyncWrapper()
+		{
+			if (_popup == null)
+				return;
 
-        SetValue(PlacementProperty, _popup.Placement);
-        SetValue(IsOpenProperty, _popup.IsOpen);
-      }
-      finally
-      {
-        _suspendHandle = false;
-      }
-    }
+			try
+			{
+				_suspendHandle = true;
 
-    #endregion
+				SetValue(PlacementProperty, _popup.Placement);
+				SetValue(IsOpenProperty, _popup.IsOpen);
+			}
+			finally
+			{
+				_suspendHandle = false;
+			}
+		}
 
-    #region Interface Implementations
+		void IManagedPopupControl.OnClosing(PopupCancelEventArgs e)
+		{
+		}
 
-    #region IManagedPopupControl
+		void IManagedPopupControl.OnOpening(PopupCancelEventArgs e)
+		{
+		}
 
-    void IManagedPopupControl.OnClosing(PopupCancelEventArgs e)
-    {
-    }
+		void IManagedPopupControl.OnOwnerChanged(FrameworkElement oldOwner, FrameworkElement newOwner)
+		{
+		}
 
-    void IManagedPopupControl.OnOpening(PopupCancelEventArgs e)
-    {
-    }
+		void IManagedPopupControl.OnPlacementChanged(PopupPlacement oldPlacement, PopupPlacement newPlacement)
+		{
+		}
 
-    void IManagedPopupControl.OnOwnerChanged(FrameworkElement oldOwner, FrameworkElement newOwner)
-    {
-    }
+		void IManagedPopupControl.OnOpened()
+		{
+		}
 
-    void IManagedPopupControl.OnPlacementChanged(PopupPlacement oldPlacement, PopupPlacement newPlacement)
-    {
-    }
+		void IManagedPopupControl.OnClosed()
+		{
+		}
 
-    void IManagedPopupControl.OnOpened()
-    {
-    }
+		void IManagedPopupControl.OnIsOpenChanged()
+		{
+		}
 
-    void IManagedPopupControl.OnClosed()
-    {
-    }
+		DependencyProperty IManagedPopupControl.IsOpenProperty => IsOpenProperty;
 
-    void IManagedPopupControl.OnIsOpenChanged()
-    {
-    }
+		DependencyPropertyKey IManagedPopupControl.OwnerPropertyKey => null;
 
-    DependencyProperty IManagedPopupControl.IsOpenProperty => IsOpenProperty;
-
-    DependencyPropertyKey IManagedPopupControl.OwnerPropertyKey => null;
-
-    DependencyProperty IManagedPopupControl.PlacementProperty => PlacementProperty;
-
-    #endregion
-
-    #endregion
-  }
+		DependencyProperty IManagedPopupControl.PlacementProperty => PlacementProperty;
+	}
 }

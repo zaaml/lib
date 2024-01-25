@@ -17,14 +17,44 @@
                               Padding="{TemplateBinding Padding}"
                               HorizontalContentAlignment="Stretch"
                               VerticalContentAlignment="Stretch"
+                              zm:DisableVeilControl.EnableVeil="False"
                               Background="#00FFFFFF"
                               BorderThickness="0"
-                              PreserveScrollBarVisibility="True"
                               HorizontalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.HorizontalScrollBarVisibility)}"
-                              VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}"
-                              zm:DisableVeilControl.EnableVeil="False">
+                              PreserveScrollBarVisibility="True"
+                              VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}">
           <zm:ListViewItemsPresenter x:Name="ItemsPresenter" />
         </zm:ScrollViewControl>
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  GridView Template  -->
+  <ControlTemplate x:Key="ListGridViewControlTemplate"
+                   TargetType="zm:ListViewControl">
+    <zm:ControlTemplateRoot Background="Transparent">
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+
+        <zm:DockPanel>
+
+          <zm:ListGridViewHeadersPresenter x:Name="GridViewHeadersPresenter"
+                                           zm:DockPanel.Dock="Top" />
+
+          <zm:ScrollViewControl x:Name="ScrollView"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"
+                                zm:DisableVeilControl.EnableVeil="False"
+                                Background="#00FFFFFF"
+                                BorderThickness="0"
+                                HorizontalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.HorizontalScrollBarVisibility)}"
+                                PreserveScrollBarVisibility="True"
+                                VerticalScrollBarVisibility="{zm:TemplateBinding Path=(zm:ScrollViewControl.VerticalScrollBarVisibility)}">
+            <zm:ListViewItemsPresenter x:Name="ItemsPresenter" />
+          </zm:ScrollViewControl>
+        </zm:DockPanel>
+
       </Border>
     </zm:ControlTemplateRoot>
   </ControlTemplate>
@@ -35,7 +65,8 @@
     <zm:Setter Property="zm:ScrollViewControl.HorizontalScrollBarVisibility" Value="Auto" />
     <zm:Setter Property="zm:ScrollViewControl.VerticalScrollBarVisibility" Value="Auto" />
     <zm:Setter Property="Padding" Value="{zm:SelfSkinBinding SkinPath=ScrollViewerPadding}" />
-    <zm:Setter Property="Template" Value="{StaticResource ListViewControlTemplate}" />
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualViewTemplate, TargetNullValue={StaticResource ListViewControlTemplate}}" />
+    <zm:Setter Property="zm:ListGridView.Template" Value="{StaticResource ListGridViewControlTemplate}" />
   </zm:Style>
 
   <!--  Style  -->

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Zaaml.Core;
 using Zaaml.Core.Pools;
 
@@ -14,40 +13,33 @@ namespace Zaaml.Text
 {
 	internal abstract class Automata
 	{
-		#region Ctors
-
 		protected Automata(AutomataManager manager)
 		{
 			if (manager == null)
 				throw new ArgumentNullException(nameof(manager));
 		}
 
-		#endregion
+		private protected enum ProcessKind
+		{
+			Process,
+			SubProcess
+		}
 	}
 
 	internal abstract partial class Automata<TInstruction, TOperand> : Automata where TInstruction : unmanaged where TOperand : IConvertible
 	{
-		#region Static Fields and Constants
-
-		protected static Func<TOperand, int> Converter;
+		protected static Func<TOperand, int> FromConverter;
+		protected static Func<int, TOperand> ToConverter;
 
 		// ReSharper disable once StaticMemberInGenericType
 		protected static readonly Interval<int> InstructionsRange;
 
-		#endregion
-
-		#region Fields
-
-		private readonly Dictionary<Type, ExecutionPathMethodCollection> _executionPathMethodsDictionary = new Dictionary<Type, ExecutionPathMethodCollection>();
-		private readonly Stack<Process> _processPool = new Stack<Process>();
-
-		#endregion
-
-		#region Ctors
+		private readonly DfaBuilder _dfaBuilderInstance;
 
 		static Automata()
 		{
-			Converter = operand => operand.ToInt32(CultureInfo.InvariantCulture);
+			FromConverter = ConvertFromOperandPrivate;
+			ToConverter = ConvertToOperandPrivate;
 
 			var operandType = typeof(TOperand);
 
@@ -59,204 +51,137 @@ namespace Zaaml.Text
 
 		protected Automata(AutomataManager manager) : base(manager)
 		{
-			Instance = this;
+			_dfaBuilderInstance = new DfaBuilder(this);
+
+			RegisterNode(UnexpectedNode.Instance);
+			RegisterExecutionPath(ExecutionPath.Invalid);
+			RegisterExecutionPathGroup(ExecutionPathGroup.Empty);
 		}
 
-		#endregion
+		private readonly List<ExecutionMethodBuilder> _executionMethodBuilders = new();
+		
+		private TExecutionMethodBuilder RegisterExecutionMethodBuilder<TExecutionMethodBuilder>(Func<int, TExecutionMethodBuilder> executionMethodBuilderFactory)
+			where TExecutionMethodBuilder: ExecutionMethodBuilder
+		{
+			var executionMethodBuilder = executionMethodBuilderFactory(_executionMethodBuilders.Count);
 
-		#region Properties
+			_executionMethodBuilders.Add(executionMethodBuilder);
+
+			foreach (var executionPath in _executionPathRegistry)
+				executionPath.BuildExecutionMethods(executionMethodBuilder);
+
+			return executionMethodBuilder;
+		}
 
 		protected virtual bool AllowParallelInstructionReader => false;
 
+		protected int ExecutionPathLookAheadLength { get; private set; }
+
 		protected virtual bool ForceInlineAll => false;
 
-		private static Automata<TInstruction, TOperand> Instance { get; set; }
+		protected bool HasPredicates { get; private set; }
 
 		protected virtual bool LookAheadEnabled => false;
 
-		#endregion
-
-		#region Methods
-
-		private ExecutionPathMethodCollection BuildExecutionPathMethods(IILBuilder context, Automata<TInstruction, TOperand> automata)
+		private static int ConvertFromOperand(TOperand operand)
 		{
-			return new ExecutionPathMethodCollection(context, automata);
+			return FromConverter(operand);
 		}
 
-		private static int ConvertOperand(TOperand operand)
+		private static int ConvertFromOperandPrivate(TOperand operand)
 		{
-			return Converter(operand);
+			var code = operand.ToInt32(CultureInfo.InvariantCulture);
+
+			if (code <= 0)
+				throw new InvalidOperationException("Operand code must be greater than 1.");
+
+			return code;
 		}
 
-		private Process CreateProcess<TContext>(IInstructionReader instructionReader, TContext context) where TContext : AutomataContext
+		private static TOperand ConvertToOperand(int operandCode)
 		{
-			Build();
-
-			Process process;
-
-			lock (_processPool)
-				process = _processPool.Count > 0 ? _processPool.Pop() : new Process(this);
-
-			process.Initialize(instructionReader, context);
-
-			return process;
+			return ToConverter(operandCode);
 		}
 
-		private ExecutionPathMethodCollection GetExecutionMethods(AutomataContext context)
+		private static TOperand ConvertToOperandPrivate(int operandCode)
 		{
-			var builderType = context.ILBuilderTypeInternal;
+			var operand = (TOperand)Convert.ChangeType(operandCode, typeof(TOperand));
 
-			// ReSharper disable once InconsistentlySynchronizedField
-			if (_executionPathMethodsDictionary.TryGetValue(builderType, out var executionPathMethods) == false)
+			return operand;
+		}
+
+		internal void BuildFullDfa()
+		{
+			foreach (var subGraph in SubGraphDictionary.Values)
 			{
-				lock (_executionPathMethodsDictionary)
-				{
-					if (_executionPathMethodsDictionary.TryGetValue(builderType, out executionPathMethods) == false)
-					{
-						_executionPathMethodsDictionary[builderType] = executionPathMethods = BuildExecutionPathMethods(context, this);
-					}
-
-					return executionPathMethods;
-				}
+				subGraph.BuildExecutionGraph();
 			}
 
-			return executionPathMethods;
-		}
-
-		private protected AutomataResult PartialRunCore<TContext>(IInstructionReader instructionReader, TContext context) where TContext : AutomataContext
-		{
-			var process = CreateProcess(instructionReader, context);
-
-			return process.PartialRun();
-		}
-
-		private void ReleaseProcess(Process process)
-		{
-			lock (_processPool)
-				_processPool.Push(process);
-		}
-
-		private protected void RunCore<TContext>(IInstructionReader instructionReader, TContext context) where TContext : AutomataContext
-		{
-			var process = CreateProcess(instructionReader, context);
-			var result = process.Run();
-
-			if (result is ExceptionAutomataResult exceptionResult)
+			foreach (var node in _nodeRegistry)
 			{
-				var exception = exceptionResult.Exception;
-
-				result.Dispose();
-
-				throw exception;
+				node.EnsureSafe();
 			}
 
-			result.Dispose();
+			//Build();
+
+			//var stackPool = new Process.AutomataStackPool(this, MemorySpanAllocator<int>.Shared);
+			//var dfaQueue = new Queue<DfaKeyLength>();
+
+			//foreach (var subGraph in SubGraphDictionary.Values)
+			//{
+			//	subGraph.BuildExecutionGraph();
+
+			//	var stack = stackPool.Rent();
+			//	var node = subGraph.InitNode;
+			//	var dfaKey = stack.CreateDfaKey(node);
+
+			//	if (TryGetDfa(dfaKey, out _) == false)
+			//	{
+			//		CreateDfa(dfaKey);
+
+			//		dfaQueue.Enqueue(new DfaKeyLength(dfaKey, 0));
+			//	}
+			//}
+
+			//while (dfaQueue.TryDequeue(out var dfaKeyLength))
+			//{
+			//	var dfaKey = dfaKeyLength.Key;
+			//	var dfaLength = dfaKeyLength.Length;
+			//	var dfa = GetDfa(dfaKey);
+
+			//	if (dfa.Closed == false)
+			//		continue;
+
+			//	dfa.Node.EnsureSafe();
+
+			//	foreach (var executionPath in dfa.Node.ExecutionPaths)
+			//	{
+			//		var stack = stackPool.Rent();
+
+			//		stack.Load(dfa.Stack);
+
+			//		//if (executionPath.Match != null && dfaLength >= 4)
+			//		//	continue;
+
+			//		var outNode = stack.EvalDfa(executionPath);
+			//		var outDfaKey = stack.CreateDfaKey(outNode);
+
+			//		if (TryGetDfa(outDfaKey, out _) == false)
+			//		{
+			//			CreateDfa(outDfaKey);
+
+			//			dfaQueue.Enqueue(new DfaKeyLength(outDfaKey, dfaLength + 1));
+			//		}
+			//	}
+			//}
 		}
 
-		#endregion
-
-		#region Nested Types
-
-		private sealed class ExecutionPathMethodCollection
-		{
-			#region Fields
-
-			private readonly IILBuilder _ilBuilder;
-			private readonly Automata<TInstruction, TOperand> _automata;
-			private ExecutionPathMethod[] _executionPaths;
-
-			#endregion
-
-			#region Ctors
-
-			public ExecutionPathMethodCollection(IILBuilder ilBuilder, Automata<TInstruction, TOperand> automata)
-			{
-				_ilBuilder = ilBuilder;
-				_automata = automata;
-
-				var length = 128;
-
-				while (length < automata._executionPathRegistry.Count) 
-					length *= 2;
-
-				_executionPaths = new ExecutionPathMethod[length];
-
-				for (var i = 0; i < length; i++)
-					_executionPaths[i] = new ExecutionPathMethod(_ilBuilder, automata, i);
-			}
-
-			#endregion
-
-			#region Methods
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public ExecutionPathMethod GetExecutionPathMethod(ExecutionPath executionPath)
-			{
-				return _executionPaths[executionPath.Id];
-			}
-
-			public void ResizeExecutionPaths(ExecutionPath executionPath)
-			{
-				if (executionPath.Id < _executionPaths.Length)
-					return;
-
-				var nextLength = _executionPaths.Length * 2;
-
-				while (executionPath.Id >= nextLength)
-					nextLength *= 2;
-
-				Array.Resize(ref _executionPaths, nextLength);
-
-				for (var i = 0; i < _executionPaths.Length; i++) 
-					_executionPaths[i] ??= new ExecutionPathMethod(_ilBuilder, _automata, i);
-			}
-
-			#endregion
-		}
-
-		private interface IILBuilder
-		{
-			#region Methods
-
-			Func<Process, AutomataStack, object[], Node> BuildMain(ExecutionPath executionPath, out object[] closure);
-
-			Func<Process, AutomataStack, object[], Node> BuildParallel(ExecutionPath executionPath, out object[] closure);
-
-			#endregion
-		}
 
 		private protected abstract class AutomataResult : IDisposable
 		{
-			private ReferenceCounter _referenceCounter = new ReferenceCounter();
-
-			#region Properties
+			private ReferenceCounter _referenceCounter;
 
 			protected Process Process { get; private set; }
-
-			#endregion
-
-			#region Methods
-
-			protected abstract void DisposeCore();
-
-			protected void AddReferenceInternal()
-			{
-				Process.AddReference();
-				_referenceCounter.AddReference();
-			}
-
-			protected void MountInternal(Process process)
-			{
-				Process = process;
-				process.AddReference();
-				_referenceCounter.AddReference();
-			}
-
-			#endregion
-
-			#region Interface Implementations
-
-			#region IDisposable
 
 			public void Dispose()
 			{
@@ -268,39 +193,51 @@ namespace Zaaml.Text
 				}
 			}
 
-			#endregion
+			protected void AddReferenceInternal()
+			{
+				Process.AddReference();
 
-			#endregion
+				_referenceCounter.AddReference();
+			}
+
+			protected abstract void DisposeCore();
+
+			protected void MountInternal(Process process)
+			{
+				Process = process;
+
+				process.AddReference();
+
+				_referenceCounter.AddReference();
+			}
+
+			internal AutomataResult Verify()
+			{
+				if (this is not ExceptionAutomataResult exceptionResult)
+					return this;
+
+				var exception = exceptionResult.Exception;
+
+				Dispose();
+
+				throw exception;
+			}
 		}
 
 		private protected sealed class SuccessAutomataResult : AutomataResult
 		{
-			#region Fields
-
 			private readonly IPool<SuccessAutomataResult> _pool;
-
-			#endregion
-
-			#region Ctors
 
 			public SuccessAutomataResult(IPool<SuccessAutomataResult> pool)
 			{
 				_pool = pool;
 			}
 
-			#endregion
-
-			#region Properties
-
 			public int InstructionPosition => Process.InstructionStreamPosition;
-
-			#endregion
-
-			#region Methods
 
 			protected override void DisposeCore()
 			{
-				_pool.Release(this);
+				_pool.Return(this);
 			}
 
 			public SuccessAutomataResult Mount(Process process)
@@ -309,40 +246,24 @@ namespace Zaaml.Text
 
 				return this;
 			}
-
-			#endregion
 		}
 
 		private protected sealed class ExceptionAutomataResult : AutomataResult
 		{
-			#region Fields
-
 			private readonly IPool<ExceptionAutomataResult> _pool;
-
-			#endregion
-
-			#region Ctors
 
 			public ExceptionAutomataResult(IPool<ExceptionAutomataResult> pool)
 			{
 				_pool = pool;
 			}
 
-			#endregion
-
-			#region Properties
-
 			public Exception Exception { get; private set; }
-
-			#endregion
-
-			#region Methods
 
 			protected override void DisposeCore()
 			{
 				Exception = null;
 
-				_pool.Release(this);
+				_pool.Return(this);
 			}
 
 			public ExceptionAutomataResult Mount(Exception exception, Process process)
@@ -353,34 +274,18 @@ namespace Zaaml.Text
 
 				return this;
 			}
-
-			#endregion
 		}
 
 		private protected sealed class ForkAutomataResult : AutomataResult
 		{
-			#region Fields
-
 			private readonly IPool<ForkAutomataResult> _pool;
-
-			#endregion
-
-			#region Ctors
 
 			public ForkAutomataResult(IPool<ForkAutomataResult> pool)
 			{
 				_pool = pool;
 			}
 
-			#endregion
-
-			#region Properties
-
 			public int InstructionStreamPosition { get; private set; }
-
-			#endregion
-
-			#region Methods
 
 			public ForkAutomataResult AddReference()
 			{
@@ -391,7 +296,7 @@ namespace Zaaml.Text
 
 			protected override void DisposeCore()
 			{
-				_pool.Release(this);
+				_pool.Return(this);
 			}
 
 			public ForkAutomataResult Mount(Process process)
@@ -412,10 +317,6 @@ namespace Zaaml.Text
 			{
 				return Process.ForkRunNext();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

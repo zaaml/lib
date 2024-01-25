@@ -3,10 +3,10 @@
 // </copyright>
 
 using System.Collections;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -18,8 +18,6 @@ namespace Zaaml.UI.Controls.Menu
 	[TemplateContractType(typeof(MenuBarTemplateContract))]
 	public class MenuBar : MenuBase, IManagedPopupControl
 	{
-		#region Static Fields and Constants
-
 		private static readonly DependencyProperty PlacementProperty = DPM.Register<PopupPlacement, MenuBar>
 			("Placement", c => c.Controller.OnPlacementChanged);
 
@@ -28,10 +26,6 @@ namespace Zaaml.UI.Controls.Menu
 
 		private static readonly DependencyPropertyKey OwnerPropertyKey = DPM.RegisterReadOnly<FrameworkElement, MenuBar>
 			("Owner", c => c.Controller.OnOwnerChanged);
-
-		#endregion
-
-		#region Ctors
 
 		static MenuBar()
 		{
@@ -42,11 +36,6 @@ namespace Zaaml.UI.Controls.Menu
 		{
 			this.OverrideStyleKey<MenuBar>();
 
-
-#if SILVERLIGHT
-      popup.LogicalChild = this;
-#endif
-
 			Controller = new PopupControlController<MenuBar>(this)
 			{
 				IsModalMenu = true,
@@ -54,16 +43,12 @@ namespace Zaaml.UI.Controls.Menu
 			};
 		}
 
-		#endregion
-
-		#region Properties
-
 		internal PopupControlController<MenuBar> Controller { get; }
 
 		private bool IsOpen
 		{
-			get => (bool) GetValue(IsOpenProperty);
-			set => SetValue(IsOpenProperty, value);
+			get => (bool)GetValue(IsOpenProperty);
+			set => SetValue(IsOpenProperty, value.Box());
 		}
 
 		internal override bool IsOpenCore
@@ -89,11 +74,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		internal override PopupControlController PopupController => Controller;
 
-		private MenuBarTemplateContract TemplateContract => (MenuBarTemplateContract) TemplateContractInternal;
-
-		#endregion
-
-		#region  Methods
+		private MenuBarTemplateContract TemplateContract => (MenuBarTemplateContract)TemplateContractCore;
 
 		protected override void OnTemplateContractAttached()
 		{
@@ -108,12 +89,6 @@ namespace Zaaml.UI.Controls.Menu
 
 			base.OnTemplateContractDetaching();
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IManagedPopupControl
 
 		DependencyProperty IManagedPopupControl.IsOpenProperty => IsOpenProperty;
 
@@ -152,19 +127,10 @@ namespace Zaaml.UI.Controls.Menu
 		void IManagedPopupControl.OnPlacementChanged(PopupPlacement oldPlacement, PopupPlacement newPlacement)
 		{
 		}
-
-		#endregion
-
-		#endregion
 	}
 
 	public class MenuBarTemplateContract : MenuBaseTemplateContract
 	{
-		#region Properties
-
-		[TemplateContractPart]
-		public Popup Popup { get; [UsedImplicitly] private set; }
-
-		#endregion
+		[TemplateContractPart] public Popup Popup { get; [UsedImplicitly] private set; }
 	}
 }

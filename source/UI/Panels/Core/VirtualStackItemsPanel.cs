@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,6 +17,7 @@ using Zaaml.UI.Controls.ScrollView;
 using Zaaml.UI.Panels.Interfaces;
 using Zaaml.UI.Panels.VirtualStackPanelLayout;
 using Zaaml.UI.Utils;
+using ScrollUnit = Zaaml.UI.Controls.ScrollView.ScrollUnit;
 
 namespace Zaaml.UI.Panels.Core
 {
@@ -24,11 +26,11 @@ namespace Zaaml.UI.Panels.Core
 	{
 		private IVirtualItemCollection _actualVirtualItemCollection;
 		private FlickeringReducer<TItem> _flickeringReducer;
+		private VirtualStackPanelLayoutBase _layout;
 		private IVirtualItemCollection _source;
 
 		protected VirtualStackItemsPanel()
 		{
-			Layout = new VirtualUnitStackPanelLayout(this);
 			RenderTransform = Transform.Transform;
 		}
 
@@ -41,22 +43,49 @@ namespace Zaaml.UI.Panels.Core
 					return;
 
 				if (_actualVirtualItemCollection != null)
-					DetachVirtualCollection();
+					DetachVirtualCollection(_actualVirtualItemCollection);
 
 				_actualVirtualItemCollection = value;
 
 				if (_actualVirtualItemCollection != null)
-					AttachVirtualCollection();
+					AttachVirtualCollection(_actualVirtualItemCollection);
 			}
 		}
-
-		private protected virtual int LeadingTrailingLimitCore => 2;
 
 		protected abstract int FocusedIndex { get; }
 
 		protected override bool HasLogicalOrientation => true;
 
-		private VirtualUnitStackPanelLayout Layout { get; }
+		private protected virtual VirtualPixelStackPanelLayout CreateVirtualPixelStackPanelLayout()
+		{
+			return new VirtualPixelStackPanelLayout(this);
+		}
+
+		private protected virtual VirtualUnitStackPanelLayout CreateVirtualUnitStackPanelLayout()
+		{
+			return new VirtualUnitStackPanelLayout(this);
+		}
+
+		private VirtualStackPanelLayoutBase Layout
+		{
+			get
+			{
+				var scrollUnit = ScrollUnit;
+
+				if (_layout != null && _layout.ScrollUnit == scrollUnit)
+					return _layout;
+
+				_layout = scrollUnit == ScrollUnit.Pixel ? CreateVirtualPixelStackPanelLayout() : CreateVirtualUnitStackPanelLayout();
+
+				return _layout;
+			}
+		}
+
+		internal VirtualStackPanelLayoutBase LayoutInternal => Layout;
+
+		private protected virtual ICollection<UIElement> LeadingElementsCore => null;
+
+		private protected virtual int LeadingTrailingLimitCore => 2;
 
 		protected sealed override Orientation LogicalOrientation => Orientation;
 
@@ -74,6 +103,8 @@ namespace Zaaml.UI.Panels.Core
 			}
 		}
 
+		protected virtual ScrollUnit ScrollUnit => ScrollUnit.Item;
+
 		private IScrollViewPanelLayout ScrollViewLayout => Layout;
 
 		private IVirtualItemCollection Source
@@ -90,6 +121,8 @@ namespace Zaaml.UI.Panels.Core
 			}
 		}
 
+		private protected virtual ICollection<UIElement> TrailingElementsCore => null;
+
 		private CompositeTransform Transform { get; } = new CompositeTransform();
 
 		private protected abstract IVirtualItemCollection VirtualItemCollection { get; }
@@ -103,9 +136,10 @@ namespace Zaaml.UI.Panels.Core
 			return arrangeOverride;
 		}
 
-		private void AttachVirtualCollection()
+		private void AttachVirtualCollection(IVirtualItemCollection virtualItemCollection)
 		{
-			ActualVirtualItemCollection.ItemHost = this;
+			virtualItemCollection.SourceCollectionChanged += OnVirtualItemCollectionSourceCollectionChanged;
+			virtualItemCollection.ItemHost = this;
 
 			InvalidateMeasure();
 		}
@@ -113,15 +147,14 @@ namespace Zaaml.UI.Panels.Core
 		private protected override void BringIntoView(BringIntoViewRequest<TItem> request)
 		{
 			Layout.BringIntoView(request);
-
-			ScrollView?.UpdateScrollOffsetCacheInternal();
 		}
 
 		private protected abstract FlickeringReducer<TItem> CreateFlickeringReducer();
 
-		private void DetachVirtualCollection()
+		private void DetachVirtualCollection(IVirtualItemCollection virtualItemCollection)
 		{
-			ActualVirtualItemCollection.ItemHost = null;
+			virtualItemCollection.SourceCollectionChanged -= OnVirtualItemCollectionSourceCollectionChanged;
+			virtualItemCollection.ItemHost = null;
 
 			Children.Clear();
 		}
@@ -129,6 +162,8 @@ namespace Zaaml.UI.Panels.Core
 		private protected override void EnqueueBringIntoView(BringIntoViewRequest<TItem> request)
 		{
 			Layout.EnqueueBringIntoView(request);
+
+			InvalidateMeasure();
 		}
 
 		protected override Geometry GetLayoutClip(Size layoutSlotSize)
@@ -155,18 +190,19 @@ namespace Zaaml.UI.Panels.Core
 			if (layoutContext != null)
 			{
 				availableSize = availableSize.Clamp(new Size(0, 0), layoutContext.MaxAvailableSize);
+
 				Layout.PreserveScrollInfo = layoutContext.MeasureContextPass == MeasureContextPass.MeasureToContent;
 			}
 			else
 			{
 				Layout.PreserveScrollInfo = false;
 			}
-
+			
 			var measureOverrideCore = Layout.Measure(availableSize);
 
 			if (layoutContext != null && Layout.ScrollInfoDirty)
 				layoutContext.OnDescendantMeasureDirty(this);
-
+			
 			return measureOverrideCore;
 		}
 
@@ -182,6 +218,11 @@ namespace Zaaml.UI.Panels.Core
 			base.OnMouseWheel(e);
 
 			_flickeringReducer?.OnMouseWheel();
+		}
+
+		private void OnVirtualItemCollectionSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			Layout.OnSourceCollectionChangedInternal(e);
 		}
 
 		bool IVirtualItemsHost.IsVirtualizing => true;
@@ -213,10 +254,6 @@ namespace Zaaml.UI.Panels.Core
 		}
 
 		int IVirtualStackPanel.LeadingTrailingLimit => LeadingTrailingLimitCore;
-		
-		private protected virtual ICollection<UIElement> LeadingElementsCore => null;
-		
-		private protected virtual ICollection<UIElement> TrailingElementsCore => null;
 
 		ICollection<UIElement> IVirtualStackPanel.LeadingElements => LeadingElementsCore;
 
@@ -234,12 +271,6 @@ namespace Zaaml.UI.Panels.Core
 		{
 			add => ScrollViewLayout.ScrollInfoChanged += value;
 			remove => ScrollViewLayout.ScrollInfoChanged -= value;
-		}
-
-		event EventHandler<OffsetChangedEventArgs> IScrollViewPanel.OffsetChanged
-		{
-			add => ScrollViewLayout.OffsetChanged += value;
-			remove => ScrollViewLayout.OffsetChanged -= value;
 		}
 
 		bool IScrollViewPanel.CanHorizontallyScroll
@@ -263,6 +294,11 @@ namespace Zaaml.UI.Panels.Core
 		}
 
 		Size IScrollViewPanel.Viewport => ScrollViewLayout.Viewport;
+
+		void IScrollViewPanel.UpdateScrollInfo()
+		{
+			Layout.UpdateScrollInfo();
+		}
 
 		void IScrollViewPanel.ExecuteScrollCommand(ScrollCommandKind command)
 		{

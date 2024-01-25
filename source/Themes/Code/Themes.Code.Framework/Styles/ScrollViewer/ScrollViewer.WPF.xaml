@@ -1,0 +1,92 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <!--  WPF Template  -->
+  <ControlTemplate x:Key="ScrollViewerTemplate"
+                   TargetType="ScrollViewer">
+    <zm:ControlTemplateRoot>
+
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}" />
+
+      <Grid Margin="{TemplateBinding BorderThickness}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Content  -->
+        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                CanContentScroll="{TemplateBinding CanContentScroll}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                Cursor="{TemplateBinding Cursor}" />
+
+        <!--  Vertical ScrollBar  -->
+        <ScrollBar x:Name="PART_VerticalScrollBar"
+                   Grid.Row="0"
+                   Grid.Column="1"
+                   Width="17"
+                   Margin="0"
+                   zm:DisableVeilControl.EnableVeil="False"
+                   IsTabStop="False"
+                   Maximum="{TemplateBinding ScrollableHeight}"
+                   Minimum="0"
+                   Orientation="Vertical"
+                   ViewportSize="{TemplateBinding ViewportHeight}"
+                   Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                   Value="{zm:TemplateBinding Path=VerticalOffset,
+                                              Mode=OneWay}" />
+
+        <!--  Horizontal ScrollBar  -->
+        <ScrollBar x:Name="PART_HorizontalScrollBar"
+                   Grid.Row="1"
+                   Grid.Column="0"
+                   Height="17"
+                   Margin="0"
+                   zm:DisableVeilControl.EnableVeil="False"
+                   IsTabStop="False"
+                   Maximum="{TemplateBinding ScrollableWidth}"
+                   Minimum="0"
+                   Orientation="Horizontal"
+                   ViewportSize="{TemplateBinding ViewportWidth}"
+                   Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                   Value="{zm:TemplateBinding Path=HorizontalOffset,
+                                              Mode=OneWay}" />
+      </Grid>
+
+      <!--  Disabled Veil  -->
+      <zm:DisableVeilControl />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="ScrollViewerBaseStyle" TargetType="ScrollViewer">
+    <zm:Setter Property="Template" Value="{StaticResource ScrollViewerTemplate}" />
+    <zm:Setter Property="MinWidth" Value="17" />
+    <zm:Setter Property="MinHeight" Value="17" />
+    <zm:Setter Property="IsTabStop" Value="False" />
+    <zm:Setter Property="BorderThickness" Value="0" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="ScrollViewerStyle" BasedOn="{StaticResource ScrollViewerBaseStyle}" Skin="Code.StandardControls.ScrollViewer" TargetType="ScrollViewer">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter ValuePath="BorderBrush" Property="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="ScrollViewerThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource ScrollViewerStyle}" TargetType="ScrollViewer" />
+
+</zm:ThemeResourceDictionary>

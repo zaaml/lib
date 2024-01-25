@@ -16,6 +16,8 @@
     <zm:Setter Property="Width" Value="21" />
     <zm:Setter Property="Height" Value="21" />
     <zm:Setter Property="BorderThickness" Value="0" />
+
+    <zm:Setter Property="ShowContent" Value="False" />
   </zm:Style>
 
   <!--  DockItemNativeButtonStyle  -->
@@ -29,7 +31,8 @@
     <zm:Setter Property="Width" Value="21" />
     <zm:Setter Property="Height" Value="21" />
     <zm:Setter Property="BorderThickness" Value="0" />
-  </zm:Style>
+    <zm:Setter Property="ShowContent" Value="False" />
+    </zm:Style>
 
   <!--  Visual States  -->
   <zm:VisualStateGroupCollection x:Key="DockItemHeaderPresenterVisualStates">

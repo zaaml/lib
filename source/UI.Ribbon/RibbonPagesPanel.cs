@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Panels;
 using Zaaml.UI.Panels.Core;
 using Zaaml.UI.Panels.Flexible;
@@ -11,72 +12,57 @@ using Zaaml.UI.Panels.Interfaces;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  public class RibbonPagesPanel : ItemsPanel<RibbonPage>, IFlexPanel
-  {
-    #region Ctors
+	public class RibbonPagesPanel : ItemsPanel<RibbonPage>, IFlexPanel
+	{
+		public static readonly DependencyProperty SpacingProperty = DPM.Register<double, RibbonPagesPanel>
+			("Spacing", 0.0, p => p.InvalidateMeasure);
 
-    public RibbonPagesPanel()
-    {
-      Layout = new FlexPanelLayout(this);
-    }
+		public RibbonPagesPanel()
+		{
+			Layout = new FlexPanelLayout(this);
+		}
 
-    #endregion
+		private FlexPanelLayout Layout { get; }
 
-    #region Properties
+		public double Spacing
+		{
+			get => (double) GetValue(SpacingProperty);
+			set => SetValue(SpacingProperty, value);
+		}
 
-    private FlexPanelLayout Layout { get; }
+		protected override Size ArrangeOverrideCore(Size finalSize)
+		{
+			return Layout.Arrange(finalSize);
+		}
 
-    #endregion
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			return Layout.Measure(availableSize);
+		}
 
-    #region  Methods
+		IFlexDistributor IFlexPanel.Distributor => FlexDistributor.Equalizer;
 
-    protected override Size ArrangeOverrideCore(Size finalSize)
-    {
-      return Layout.Arrange(finalSize);
-    }
+		bool IFlexPanel.HasHiddenChildren { get; set; }
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      return Layout.Measure(availableSize);
-    }
+		double IFlexPanel.Spacing => Spacing;
 
-    #endregion
+		FlexStretch IFlexPanel.Stretch => FlexStretch.Fill;
 
-    #region Interface Implementations
+		FlexElement IFlexPanel.GetFlexElement(UIElement child)
+		{
+			return child.GetFlexElement(this, Orientation.Horizontal).WithStretchDirection(FlexStretchDirection.Shrink);
+		}
 
-    #region IFlexPanel
+		bool IFlexPanel.GetIsHidden(UIElement child)
+		{
+			return FlexPanel.GetIsHidden(child);
+		}
 
-    IFlexDistributor IFlexPanel.Distributor => FlexDistributor.Equalizer;
+		void IFlexPanel.SetIsHidden(UIElement child, bool value)
+		{
+			FlexPanel.SetIsHidden(child, value);
+		}
 
-    bool IFlexPanel.HasHiddenChildren { get; set; }
-
-    double IFlexPanel.Spacing => 0.0;
-
-    FlexStretch IFlexPanel.Stretch => FlexStretch.Fill;
-
-    FlexElement IFlexPanel.GetFlexElement(UIElement child)
-    {
-      return child.GetFlexElement(this).WithStretchDirection(FlexStretchDirection.Shrink);
-    }
-
-    bool IFlexPanel.GetIsHidden(UIElement child)
-    {
-      return FlexPanel.GetIsHidden(child);
-    }
-
-    void IFlexPanel.SetIsHidden(UIElement child, bool value)
-    {
-      FlexPanel.SetIsHidden(child, value);
-    }
-
-    #endregion
-
-    #region IOrientedPanel
-
-    Orientation IOrientedPanel.Orientation => Orientation.Horizontal;
-
-    #endregion
-
-    #endregion
-  }
+		Orientation IOrientedPanel.Orientation => Orientation.Horizontal;
+	}
 }

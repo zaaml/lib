@@ -12,7 +12,7 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Core
 {
-	internal sealed class FixedTemplateContentControlController<TPanel, TChild>
+	internal class FixedTemplateContentControlController<TPanel, TChild>
 		where TPanel : Panel
 		where TChild : UIElement
 	{
@@ -38,7 +38,7 @@ namespace Zaaml.UI.Controls.Core
 					if (templateRoot != null)
 						templateRoot.Children.Remove(_child);
 					else
-						RemoveLogicalChild(_child);
+						DetachLogicalChild(_child);
 				}
 
 				_child = value;
@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.Core
 					if (templateRoot != null)
 						templateRoot.Children.Add(_child);
 					else
-						AddLogicalChild(_child);
+						AttachLogicalChild(_child);
 				}
 			}
 		}
@@ -59,7 +59,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private Panel TemplateRoot => Control.Panel;
 
-		private void AddLogicalChild(TChild child)
+		private protected virtual void AttachLogicalChild(TChild child)
 		{
 			if (Control.IsLogicalParent)
 				Control.AddLogicalChild(child);
@@ -70,7 +70,7 @@ namespace Zaaml.UI.Controls.Core
 			if (Child == null)
 				return;
 
-			RemoveLogicalChild(Child);
+			DetachLogicalChild(Child);
 
 			TemplateRoot.Children.Add(Child);
 		}
@@ -82,10 +82,10 @@ namespace Zaaml.UI.Controls.Core
 
 			Control.Panel.Children.Remove(Child);
 
-			AddLogicalChild(Child);
+			AttachLogicalChild(Child);
 		}
 
-		private void RemoveLogicalChild(TChild child)
+		private protected virtual void DetachLogicalChild(TChild child)
 		{
 			if (Control.IsLogicalParent)
 				Control.RemoveLogicalChild(child);
@@ -100,26 +100,24 @@ namespace Zaaml.UI.Controls.Core
 		TPanel Panel { get; }
 	}
 
-	[ContentProperty(nameof(Child))]
-	public abstract class FixedTemplateContentControl<TPanel, TChild> : FixedTemplateControl<TPanel>, IFixedTemplateContentControl<TPanel>
+	public abstract class FixedTemplateContentControlBase<TPanel, TChild> : FixedTemplateControl<TPanel>, IFixedTemplateContentControl<TPanel>
 		where TPanel : Panel
 		where TChild : FrameworkElement
 	{
-		public static readonly DependencyProperty ChildProperty = DPM.Register<TChild, FixedTemplateContentControl<TPanel, TChild>>
-			("Child", default, d => d.OnChildPropertyChangedPrivate);
+		private FixedTemplateContentControlController<TPanel, TChild> _controller;
 
-		protected FixedTemplateContentControl()
+		protected TChild ChildCore
 		{
-			Controller = new FixedTemplateContentControlController<TPanel, TChild>(this);
+			get => Controller.Child;
+			set => Controller.Child = value;
 		}
 
-		public TChild Child
+		private protected virtual FixedTemplateContentControlController<TPanel, TChild> CreateController()
 		{
-			get => (TChild) GetValue(ChildProperty);
-			set => SetValue(ChildProperty, value);
+			return new FixedTemplateContentControlController<TPanel, TChild>(this);
 		}
 
-		private FixedTemplateContentControlController<TPanel, TChild> Controller { get; }
+		private FixedTemplateContentControlController<TPanel, TChild> Controller => _controller ??= CreateController();
 
 		protected virtual bool IsLogicalParent => true;
 
@@ -132,11 +130,6 @@ namespace Zaaml.UI.Controls.Core
 			Controller.AttachChild();
 		}
 
-		private void OnChildPropertyChangedPrivate()
-		{
-			Controller.Child = Child;
-		}
-
 		protected override void UndoTemplateOverride()
 		{
 			Controller.DetachChild();
@@ -147,5 +140,25 @@ namespace Zaaml.UI.Controls.Core
 		TPanel IFixedTemplateContentControl<TPanel>.Panel => TemplateRoot;
 
 		bool IFixedTemplateContentControl<TPanel>.IsLogicalParent => IsLogicalParent;
+	}
+
+	[ContentProperty(nameof(Child))]
+	public abstract class FixedTemplateContentControl<TPanel, TChild> : FixedTemplateContentControlBase<TPanel, TChild>
+		where TPanel : Panel
+		where TChild : FrameworkElement
+	{
+		public static readonly DependencyProperty ChildProperty = DPM.Register<TChild, FixedTemplateContentControl<TPanel, TChild>>
+			("Child", d => d.OnChildPropertyChangedPrivate);
+
+		public TChild Child
+		{
+			get => (TChild) GetValue(ChildProperty);
+			set => SetValue(ChildProperty, value);
+		}
+
+		private void OnChildPropertyChangedPrivate()
+		{
+			ChildCore = Child;
+		}
 	}
 }

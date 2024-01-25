@@ -32,11 +32,11 @@ namespace Zaaml.UI.Controls.VisualStates
     {
       if (!control.IsEnabled)
         GoToState(control, CommonVisualStates.Disabled, useTransitions);
-      else if (control.As<IButton>().Return(b => b.IsPressed))
-        GoToState(control, CommonVisualStates.Pressed, useTransitions);
-      else if (control.As<IControl>().Return(b => b.IsMouseOver))
-        GoToState(control, CommonVisualStates.MouseOver, useTransitions);
-      else if (control.As<IReadOnlyControl>().Return(b => b.IsReadOnly))
+			else if (control is IButton { IsPressed: true })
+				GoToState(control, CommonVisualStates.Pressed, useTransitions);
+			else if (control is IControl { IsMouseOver: true })
+				GoToState(control, CommonVisualStates.MouseOver, useTransitions);
+      else if (control is IReadOnlyControl { IsReadOnly: true})
         GoToState(control, CommonVisualStates.ReadOnly, useTransitions);
       else
         GoToState(control, CommonVisualStates.Normal, useTransitions);

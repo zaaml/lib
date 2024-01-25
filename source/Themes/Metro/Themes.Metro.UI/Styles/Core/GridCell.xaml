@@ -1,0 +1,28 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            xmlns:gridView="clr-namespace:Zaaml.UI.Controls.Core.GridView;assembly=Zaaml.UI"
+                            mc:Ignorable="zmb">
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="GridCellTemplate"
+                   TargetType="gridView:GridViewCell">
+
+    <gridView:GridViewCellRoot>
+      <gridView:GridViewCellPresenter x:Name="CellPresenter" />
+    </gridView:GridViewCellRoot>
+
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="GridCellBase" TargetType="gridView:GridViewCell">
+    <zm:Setter Property="Template" Value="{StaticResource GridCellTemplate}" />
+  </zm:Style>
+
+  <!--  ThemeStyle  -->
+  <zm:ThemeStyle x:Key="GridCellThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource GridCellBase}"
+                 TargetType="gridView:GridViewCell" />
+
+</zm:ThemeResourceDictionary>

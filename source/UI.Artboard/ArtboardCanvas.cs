@@ -3,8 +3,6 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using Zaaml.Core.Weak.Collections;
 using Zaaml.PresentationCore;
@@ -37,8 +35,6 @@ namespace Zaaml.UI.Controls.Artboard
 			ResizableBehavior.SetAdvisor(this, new ArtboardCanvasResizableAdvisor(this));
 		}
 
-		private IEnumerable<UIElement> Elements => Children.OfType<UIElement>();
-
 		internal void ArrangeChild(UIElement child, bool forceMeasure = false)
 		{
 			if (forceMeasure)
@@ -47,8 +43,6 @@ namespace Zaaml.UI.Controls.Artboard
 			var rect = new Rect(new Point(GetX(child), GetY(child)), child.DesiredSize);
 
 			child.Arrange(rect);
-
-			Artboard?.ArrangeAdorners(child, rect);
 		}
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
@@ -59,33 +53,8 @@ namespace Zaaml.UI.Controls.Artboard
 			return finalSize;
 		}
 
-		private protected override void AttachArtboard(ArtboardControl artboard)
-		{
-			base.AttachArtboard(artboard);
-
-			foreach (var element in Elements)
-				AttachFactoryAdorners(element);
-		}
-
 		private void AttachElement(UIElement element)
 		{
-			AttachFactoryAdorners(element);
-
-			UpdateAdorners(element);
-		}
-
-		private void AttachFactoryAdorners(UIElement element)
-		{
-			if (Artboard == null)
-				return;
-
-			foreach (var adornerFactory in Artboard.AdornerFactories)
-				AttachFactoryAdorners(element, adornerFactory);
-		}
-
-		private static void AttachFactoryAdorners(UIElement element, ArtboardAdornerFactory adornerFactory)
-		{
-			ArtboardControl.GetAdorners(element).Add(adornerFactory.CreateAdorner());
 		}
 
 		private bool CleanChild(UIElement element)
@@ -101,47 +70,8 @@ namespace Zaaml.UI.Controls.Artboard
 			return true;
 		}
 
-		private protected override void DetachArtboard(ArtboardControl artboard)
-		{
-			foreach (var element in Elements)
-				DetachFactoryAdorners(element);
-
-			base.DetachArtboard(artboard);
-		}
-
 		private void DetachElement(UIElement element)
 		{
-			DetachFactoryAdorners(element);
-
-			UpdateAdorners(element);
-		}
-
-		private void DetachFactoryAdorners(UIElement element)
-		{
-			if (Artboard == null)
-				return;
-
-			foreach (var adornerFactory in Artboard.AdornerFactories)
-				DetachFactoryAdorners(element, adornerFactory);
-		}
-
-		private static void DetachFactoryAdorners(UIElement element, ArtboardAdornerFactory adornerFactory)
-		{
-			var adorners = ArtboardControl.GetAdornersInternal(element);
-
-			if (adorners == null)
-				return;
-
-			for (var index = 0; index < adorners.Count; index++)
-			{
-				var adorner = adorners[index];
-
-				if (ReferenceEquals(adorner.Factory, adornerFactory))
-				{
-					adorners.RemoveAt(index);
-					index--;
-				}
-			}
 		}
 
 		private static ArtboardCanvas GetCanvas(UIElement element)
@@ -189,18 +119,6 @@ namespace Zaaml.UI.Controls.Artboard
 			return new Size(0, 0);
 		}
 
-		internal void OnAdornerFactoryAdded(ArtboardAdornerFactory adornerFactory)
-		{
-			foreach (var element in Elements)
-				AttachFactoryAdorners(element, adornerFactory);
-		}
-
-		internal void OnAdornerFactoryRemoved(ArtboardAdornerFactory adornerFactory)
-		{
-			foreach (var element in Elements)
-				DetachFactoryAdorners(element, adornerFactory);
-		}
-
 		private static void OnCanvasPropertyChangedPrivate(DependencyObject dependencyObject, ArtboardCanvas oldCanvas, ArtboardCanvas newCanvas)
 		{
 			if (ReferenceEquals(oldCanvas, newCanvas))
@@ -239,17 +157,6 @@ namespace Zaaml.UI.Controls.Artboard
 		public static void SetY(DependencyObject dependencyObject, double y)
 		{
 			dependencyObject.SetValue(YProperty, y);
-		}
-
-		private static void UpdateAdorners(UIElement element)
-		{
-			var adorners = ArtboardControl.GetAdornersInternal(element);
-
-			if (adorners == null)
-				return;
-
-			foreach (var adorner in adorners)
-				adorner.UpdatePanel();
 		}
 	}
 }

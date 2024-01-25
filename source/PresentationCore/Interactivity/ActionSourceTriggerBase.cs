@@ -10,8 +10,6 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public abstract class ActionSourceTriggerBase : ActionTriggerBase, IInteractivitySourceSubject
 	{
-		#region Ctors
-
 		static ActionSourceTriggerBase()
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
@@ -21,10 +19,6 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			PackedDefinition.SubjectKind.SetValue(ref PackedValue, SubjectKind.Unspecified);
 		}
-
-		#endregion
-
-		#region Properties
 
 		protected DependencyObject ActualSource => SubjectResolver.ResolveSubject(this);
 
@@ -46,15 +40,12 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => PackedDefinition.SubjectKind.SetValue(ref PackedValue, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (ActionSourceTriggerBase) source;
+			var triggerSource = (ActionSourceTriggerBase)source;
+
 			SubjectResolver.CopyFrom(this, triggerSource);
 		}
 
@@ -65,14 +56,9 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void UnloadCore(IInteractivityRoot root)
 		{
 			SubjectResolver.UnResolveSubject(this);
+
 			base.UnloadCore(root);
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IInteractivitySubject
 
 		object IInteractivitySubject.SubjectStore { get; set; }
 
@@ -82,27 +68,14 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => SubjectKind = value;
 		}
 
-
 		void IInteractivitySubject.OnSubjectChanged(DependencyObject oldTargetSource, DependencyObject newTargetSource)
 		{
 			OnActualSourceChanged(oldTargetSource);
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedEnumItemDefinition<SubjectKind> SubjectKind;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -110,10 +83,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				SubjectKind = allocator.AllocateEnumItem<SubjectKind>();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -6,20 +6,16 @@ using System.Windows;
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-  public partial class TemplateIcon
-  {
-    #region  Methods
+	public partial class TemplateIcon
+	{
+		public static DataTemplate GetTemplate(DependencyObject dependencyObject)
+		{
+			return (DataTemplate)dependencyObject.GetValue(TemplateProperty);
+		}
 
-    public static DataTemplate GetTemplate(DependencyObject dependencyObject)
-    {
-      return (DataTemplate) dependencyObject.GetValue(TemplateProperty);
-    }
-
-    public static void SetTemplate(DependencyObject dependencyObject, DataTemplate template)
-    {
-      dependencyObject.SetValue(TemplateProperty, template);
-    }
-
-    #endregion
-  }
+		public static void SetTemplate(DependencyObject dependencyObject, DataTemplate template)
+		{
+			dependencyObject.SetValue(TemplateProperty, template);
+		}
+	}
 }

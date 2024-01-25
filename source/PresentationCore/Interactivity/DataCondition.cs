@@ -87,9 +87,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			Load(SourceValueProperty, ref _sourceValue);
 		}
 
-		private static void UpdateConditionState(InteractivityObject interactivityobject, object oldvalue, object newvalue)
+		private static void UpdateConditionState(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
-			((DataCondition) interactivityobject).UpdateConditionState();
+			((DataCondition) interactivityObject).UpdateConditionState();
 		}
 
 		protected override bool UpdateConditionStateCore()

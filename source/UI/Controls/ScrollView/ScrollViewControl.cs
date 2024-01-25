@@ -2,67 +2,42 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using Zaaml.Core;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.UI.Controls.ScrollView
 {
-  [TemplateContractType(typeof(ScrollViewControlTemplateContract))]
-  public sealed class ScrollViewControl : ScrollViewControlBase<ScrollViewPresenter, ScrollViewPanel>
-  {
-    #region Ctors
+	[TemplateContractType(typeof(ScrollViewControlTemplateContract))]
+	public sealed class ScrollViewControl : ScrollViewControlBase<ScrollViewPresenter, ScrollViewPanel>
+	{
+		static ScrollViewControl()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<ScrollViewControl>();
+		}
 
-    static ScrollViewControl()
-    {
-      DefaultStyleKeyHelper.OverrideStyleKey<ScrollViewControl>();
-    }
+		public ScrollViewControl()
+		{
+			this.OverrideStyleKey<ScrollViewControl>();
+		}
 
-    public ScrollViewControl()
-    {
-      this.OverrideStyleKey<ScrollViewControl>();
-    }
+		protected override ScrollViewPanelBase ScrollViewPanelCore => ScrollViewPresenterInternal?.ScrollViewPanel;
 
-    #endregion
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-    #region Properties
+			ScrollViewPresenterInternal.ScrollView = this;
 
-    protected override ScrollViewPanelBase ScrollViewPanelCore => ScrollViewPresenterInternal?.ScrollViewPanel;
+			UpdateScrollViewPanelInternal();
+		}
 
-    #endregion
+		protected override void OnTemplateContractDetaching()
+		{
+			ScrollViewPresenterInternal.ScrollView = null;
 
-    #region  Methods
+			UpdateScrollViewPanelInternal();
 
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
-
-      ScrollViewPresenterInternal.ScrollView = this;
-
-      UpdateScrollViewPanelInternal();
-    }
-
-    protected override void OnTemplateContractDetaching()
-    {
-      ScrollViewPresenterInternal.ScrollView = null;
-
-      UpdateScrollViewPanelInternal();
-
-      base.OnTemplateContractDetaching();
-    }
-
-    #endregion
-  }
-
-  public sealed class ScrollViewControlTemplateContract : ScrollViewControlBaseTemplateContract<ScrollViewPresenter, ScrollViewPanel>
-  {
-    #region Properties
-
-    [TemplateContractPart(Required = true)]
-    public ScrollViewPresenter ScrollViewPresenter { get; [UsedImplicitly] private set; }
-
-    protected override ScrollViewPresenter ScrollViewPresenterCore => ScrollViewPresenter;
-
-    #endregion
-  }
+			base.OnTemplateContractDetaching();
+		}
+	}
 }

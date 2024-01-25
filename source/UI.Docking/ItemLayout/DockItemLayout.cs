@@ -2,12 +2,15 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Xml.Linq;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.PropertyCore.Extensions;
 
 #pragma warning disable 108
 
@@ -22,18 +25,15 @@ namespace Zaaml.UI.Controls.Docking
 		public static readonly DependencyProperty DockStateProperty = DPM.Register<DockItemState, DockItemLayout>
 			("DockState", DockItemState.Hidden, d => d.OnDockStatePropertyChangedPrivate);
 
-		internal static readonly DependencyProperty IndexProperty = DPM.RegisterAttached<int, DockItemGroupLayout>
-			("Index");
+		protected static readonly IReadOnlyList<DependencyProperty> BasePropertiesList = new[] { DockStateProperty }.ToList().AsReadOnly();
 
-		private static readonly DependencyProperty[] Properties =
-		{
-			ItemNameProperty,
-			DockStateProperty
-		};
+		private DockControlLayout _layout;
 
 		public DockItemLayout(DockItem item)
 		{
-			ItemName = item.Name;
+			if (item.HasLocalValue(FrameworkElement.NameProperty))
+				ItemName = item.Name;
+
 			DockState = item.DockState;
 		}
 
@@ -46,61 +46,112 @@ namespace Zaaml.UI.Controls.Docking
 			CopyMembers(source, mode);
 		}
 
+		protected virtual IReadOnlyList<DependencyProperty> BaseProperties => BasePropertiesList;
+
 		public DockItemState DockState
 		{
-			get => (DockItemState) GetValue(DockStateProperty);
+			get => (DockItemState)GetValue(DockStateProperty);
 			set => SetValue(DockStateProperty, value);
 		}
 
-		internal virtual IEnumerable<DependencyProperty> FullLayoutProperties => FullLayout.LayoutProperties;
+		internal Dictionary<DockItemState, DockItemGroupLayout> ItemGroups { get; } = new();
 
-		internal HashSet<DockItemLayoutCollection> ItemLayoutCollections { get; } = new HashSet<DockItemLayoutCollection>();
+		internal HashSet<DockItemLayoutCollection> ItemLayoutCollections { get; } = new();
 
 		public string ItemName
 		{
-			get => (string) GetValue(ItemNameProperty);
+			get => (string)GetValue(ItemNameProperty);
 			set => SetValue(ItemNameProperty, value);
 		}
 
-		internal virtual DockControlLayout Layout { get; set; }
+		internal string ItemNameInternal => ItemName ?? ItemNameUnique;
 
-		internal bool SkipSerializeId { get; set; }
+		private string ItemNameUnique { get; } = "_" + Guid.NewGuid().ToString().Replace("-", "_");
 
-		internal XElement Xml
+		internal DockControlLayout Layout
 		{
-			get
+			get => _layout;
+			set
 			{
-				var elementName = XName.Get(GetType().Name, XamlConstants.XamlZMNamespace);
-				var layoutXml = new XElement(elementName, new XAttribute(XNamespace.Xmlns.GetName(XamlConstants.XamlZMPrefix), XamlConstants.XamlZMNamespace));
+				if (ReferenceEquals(_layout, value))
+					return;
 
-				foreach (var property in GetProperties())
-				{
-					if (ReferenceEquals(DependencyProperty.UnsetValue, ReadLocalValue(property)))
-						continue;
+				if (_layout != null && value != null)
+					throw new InvalidOperationException("DockItemLayout is already attached to other DockControlLayout");
 
-					var value = GetValue(property);
+				var oldLayout = _layout;
 
-					if (value == null)
-						continue;
+				_layout = value;
 
-					if (property == ItemNameProperty && SkipSerializeId)
-						continue;
-
-					var propertyName = XName.Get($"{property.GetName()}");
-
-					layoutXml.Add(new XAttribute(propertyName, value));
-				}
-
-				foreach (var layoutKind in FullLayout.EnumerateLayoutKinds())
-					BaseLayout.GetLayoutSerializer(FullLayout.GetLayoutType(layoutKind)).WriteProperties(this, layoutXml);
-
-				return layoutXml;
+				OnLayoutPropertyChangedPrivate(oldLayout, _layout);
 			}
 		}
 
-		internal DockItemLayout Clone()
+		internal XElement Xml => AsXElement(new DockItemLayoutXElementOptions());
+
+		internal virtual XElement AsXElement(DockItemLayoutXElementOptions options)
 		{
-			return CloneCore(DockItemLayoutCloneMode.Full);
+			var elementName = XName.Get(GetType().Name, XamlConstants.XamlZMNamespace);
+			var layoutXml = new XElement(elementName, new XAttribute(XNamespace.Xmlns.GetName(XamlConstants.XamlZMPrefix), XamlConstants.XamlZMNamespace));
+
+			WriteXElementProperty(layoutXml, ItemNameProperty);
+
+			if (options.BaseProperties)
+			{
+				foreach (var property in BaseProperties) 
+					WriteXElementProperty(layoutXml, property);
+			}
+
+			foreach (var layoutKind in FullLayout.EnumerateLayoutKinds())
+				BaseLayout.GetLayoutSerializer(FullLayout.GetLayoutType(layoutKind)).WriteProperties(this, layoutXml);
+
+			return layoutXml;
+		}
+
+		private void WriteXElementProperty(XElement layoutXml, DependencyProperty property)
+		{
+			if (this.HasLocalValue(property) == false)
+				return;
+
+			var value = GetValue(property);
+
+			if (value == null)
+				return;
+
+			if (property == DockStateProperty)
+			{
+				var parent = GetParentGroup(DockState);
+
+				if (parent != null && parent.DockState == DockState && ParentGroupCount == 1)
+					return;
+			}
+
+			var propertyName = XName.Get($"{property.GetName()}");
+
+			layoutXml.Add(new XAttribute(propertyName, value));
+		}
+
+		internal void AttachGroup(DockItemState state, DockItemGroupLayout dockGroup)
+		{
+			DetachGroup(state);
+
+			ItemGroups[state] = dockGroup;
+		}
+
+		internal void ClearProperties()
+		{
+			ClearProperty(ItemNameProperty);
+
+			foreach (var dependencyProperty in BaseProperties)
+				ClearProperty(dependencyProperty);
+
+			foreach (var dependencyProperty in FullLayout.LayoutProperties)
+				ClearProperty(dependencyProperty);
+		}
+
+		internal void ClearProperty(DependencyProperty dependencyProperty)
+		{
+			ClearValue(dependencyProperty);
 		}
 
 		internal DockItemLayout Clone(DockItemLayoutCloneMode mode)
@@ -125,9 +176,19 @@ namespace Zaaml.UI.Controls.Docking
 				LayoutSettings.CopySettings(source, this, FullLayout.LayoutProperties);
 		}
 
-		internal static int GetIndex(DependencyObject element)
+		internal void DetachGroup(DockItemGroupLayout dockGroup)
 		{
-			return (int) element.GetValue(IndexProperty);
+			foreach (var kv in ItemGroups.Where(kv => ReferenceEquals(kv.Value, dockGroup)))
+			{
+				ItemGroups.Remove(kv.Key);
+
+				break;
+			}
+		}
+
+		internal void DetachGroup(DockItemState state)
+		{
+			DetachGroup(GetParentGroup(state));
 		}
 
 		internal void GetLayout(DockItem item)
@@ -135,19 +196,66 @@ namespace Zaaml.UI.Controls.Docking
 			LayoutSettings.CopySettings(item, this, FullLayout.LayoutProperties);
 		}
 
-		internal virtual IEnumerable<DependencyProperty> GetProperties()
+		internal DockItemGroupLayout GetParentGroup(DockItemState dockState)
 		{
-			return Properties;
+			ItemGroups.TryGetValue(dockState, out var dockGroup);
+
+			return dockGroup;
 		}
 
-		private void OnDockStatePropertyChangedPrivate()
+		internal int ParentGroupCount
 		{
+			get
+			{
+				var count = 0;
+
+				foreach (var kv in ItemGroups)
+				{
+					if (kv.Value != null)
+						count++;
+				}
+
+				return count;
+			}
+		}
+
+		internal void MergeProperties(DockItemLayout source)
+		{
+			MergeProperty(source, ItemNameProperty);
+
+			foreach (var dependencyProperty in BaseProperties)
+				MergeProperty(source, dependencyProperty);
+
+			foreach (var dependencyProperty in FullLayout.LayoutProperties)
+				MergeProperty(source, dependencyProperty);
+		}
+
+		internal void MergeProperty(DockItemLayout source, DependencyProperty property)
+		{
+			if (source.HasLocalValue(property))
+				SetValue(property, source.GetValue(property));
+		}
+
+		protected virtual void OnDockStateChanged(DockItemState oldState, DockItemState newState)
+		{
+		}
+
+		private void OnDockStatePropertyChangedPrivate(DockItemState oldState, DockItemState newState)
+		{
+			OnDockStateChanged(oldState, newState);
 			OnLayoutPropertyChanged();
 		}
 
 		private void OnItemNamePropertyChangedPrivate()
 		{
+			if (Layout != null)
+				throw new InvalidOperationException("ItemName property cannot be changed after DockItemLayout has been attached to DockControlLayout");
+
 			OnLayoutPropertyChanged();
+		}
+
+		protected virtual void OnLayoutChanged(DockControlLayout oldLayout, DockControlLayout newLayout)
+		{
 		}
 
 		protected virtual void OnLayoutPropertyChanged()
@@ -155,9 +263,12 @@ namespace Zaaml.UI.Controls.Docking
 			Layout?.OnLayoutChanged();
 		}
 
-		internal static void SetIndex(DependencyObject element, int value)
+		private void OnLayoutPropertyChangedPrivate(DockControlLayout oldLayout, DockControlLayout newLayout)
 		{
-			element.SetValue(IndexProperty, value);
+			oldLayout?.DetachItem(this);
+			newLayout?.AttachItem(this);
+
+			OnLayoutChanged(oldLayout, newLayout);
 		}
 
 		void ILayoutPropertyChangeListener.OnLayoutPropertyChanged(DependencyPropertyChangedEventArgs e)
@@ -174,5 +285,18 @@ namespace Zaaml.UI.Controls.Docking
 
 			public XElement Xml { get; }
 		}
+	}
+
+	internal readonly struct DockItemLayoutXElementOptions
+	{
+		public DockItemLayoutXElementOptions(bool baseProperties, bool structure)
+		{
+			BaseProperties = baseProperties;
+			Structure = structure;
+		}
+
+		public bool BaseProperties { get; }
+
+		public bool Structure { get; }
 	}
 }

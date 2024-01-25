@@ -23,8 +23,6 @@ namespace Zaaml.UI.Controls.Menu
 	[TemplateContractType(typeof(RadioMenuItemGroupTemplateContract))]
 	public class RadioMenuItemGroup : MenuItemGroupBase<RadioMenuItem, RadioMenuItemsPresenterHost, RadioMenuItemsPanel>, ISelector<RadioMenuItem>, ISupportInitialize
 	{
-		#region Static Fields and Constants
-
 		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<RadioMenuItemCollection, RadioMenuItemGroup>
 			("ItemCollectionPrivate");
 
@@ -51,16 +49,8 @@ namespace Zaaml.UI.Controls.Menu
 		public static readonly DependencyProperty ItemGeneratorProperty = DPM.Register<RadioMenuItemGeneratorBase, RadioMenuItemGroup>
 			("ItemGenerator", g => g.OnItemGeneratorChanged);
 
-		#endregion
-
-		#region Fields
-
 		private byte _packedValue;
 		private MemberEvaluator _selectedValueEvaluator;
-
-		#endregion
-
-		#region Ctors
 
 		static RadioMenuItemGroup()
 		{
@@ -84,26 +74,22 @@ namespace Zaaml.UI.Controls.Menu
 			};
 		}
 
-		#endregion
-
-		#region Properties
-
 		internal bool IsInitializing
 		{
 			get => PackedDefinition.IsInitializing.GetValue(_packedValue);
 			private set => PackedDefinition.IsInitializing.SetValue(ref _packedValue, value);
 		}
 
-		public RadioMenuItemGeneratorBase ItemGenerator
-		{
-			get => (RadioMenuItemGeneratorBase) GetValue(ItemGeneratorProperty);
-			set => SetValue(ItemGeneratorProperty, value);
-		}
-
 		public RadioMenuItemCollection ItemCollection
 		{
 			get => (RadioMenuItemCollection) GetValue(ItemCollectionProperty);
 			private set => this.SetReadOnlyValue(ItemCollectionPropertyKey, value);
+		}
+
+		public RadioMenuItemGeneratorBase ItemGenerator
+		{
+			get => (RadioMenuItemGeneratorBase) GetValue(ItemGeneratorProperty);
+			set => SetValue(ItemGeneratorProperty, value);
 		}
 
 		internal override IMenuItemCollection ItemsCore => ItemCollection;
@@ -148,10 +134,6 @@ namespace Zaaml.UI.Controls.Menu
 
 		private SelectorController<RadioMenuItemGroup, RadioMenuItem> SelectorController { get; }
 
-		#endregion
-
-		#region  Methods
-
 		private void EnsureSelection()
 		{
 			if (IsInitializing == false)
@@ -172,9 +154,25 @@ namespace Zaaml.UI.Controls.Menu
 			return null;
 		}
 
+		internal object GetValueInternal(RadioMenuItem item, object source)
+		{
+			switch (SelectedValueSource)
+			{
+				case SelectedValueSource.Auto:
+					return GetItemValue(ItemCollection.HasSourceInternal ? source : item);
+				case SelectedValueSource.Item:
+					return GetItemValue(item);
+				case SelectedValueSource.Source:
+					return GetItemValue(source);
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
 		internal override void OnDisplayMemberPathChangedInternal(string oldDisplayMemberPath, string newDisplayMemberPath)
 		{
 			base.OnDisplayMemberPathChangedInternal(oldDisplayMemberPath, newDisplayMemberPath);
+
 			ItemCollection.DefaultRadioGenerator.DisplayMember = newDisplayMemberPath;
 		}
 
@@ -186,12 +184,14 @@ namespace Zaaml.UI.Controls.Menu
 		protected override void OnMenuItemAdded(MenuItemBase menuItem)
 		{
 			base.OnMenuItemAdded(menuItem);
+
 			EnsureSelection();
 		}
 
 		protected override void OnMenuItemRemoved(MenuItemBase menuItem)
 		{
 			base.OnMenuItemRemoved(menuItem);
+
 			EnsureSelection();
 		}
 
@@ -217,21 +217,17 @@ namespace Zaaml.UI.Controls.Menu
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
+
 			UpdateRadioGroup();
 		}
 
 		private void UpdateRadioGroup()
 		{
 			var radioGroup = RadioMenuItem.GetRadioGroup(this);
+
 			if (radioGroup != null)
 				radioGroup.CurrentRadio = SelectedItem;
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region ISelector<RadioMenuItem>
 
 		DependencyProperty ISelector<RadioMenuItem>.SelectedIndexProperty => SelectedIndexProperty;
 
@@ -240,21 +236,6 @@ namespace Zaaml.UI.Controls.Menu
 		DependencyProperty ISelector<RadioMenuItem>.SelectedSourceProperty => SelectedSourceProperty;
 
 		DependencyProperty ISelector<RadioMenuItem>.SelectedValueProperty => SelectedValueProperty;
-
-		object ISelector<RadioMenuItem>.GetValue(RadioMenuItem item, object source)
-		{
-			switch (SelectedValueSource)
-			{
-				case SelectedValueSource.Auto:
-					return GetItemValue(ItemCollection.SourceCollectionInternal == null ? item : source);
-				case SelectedValueSource.Item:
-					return GetItemValue(item);
-				case SelectedValueSource.Source:
-					return GetItemValue(source);
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-		}
 
 		void ISelector<RadioMenuItem>.OnSelectedIndexChanged(int oldIndex, int newIndex)
 		{
@@ -276,10 +257,6 @@ namespace Zaaml.UI.Controls.Menu
 		{
 			UpdateRadioGroup();
 		}
-
-		#endregion
-
-		#region ISupportInitialize
 
 		void ISupportInitialize.BeginInit()
 		{
@@ -304,21 +281,9 @@ namespace Zaaml.UI.Controls.Menu
 #endif
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedBoolItemDefinition IsInitializing;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -326,23 +291,15 @@ namespace Zaaml.UI.Controls.Menu
 
 				IsInitializing = allocator.AllocateBoolItem();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 
 	public class RadioMenuItemGroupTemplateContract : MenuItemGroupTemplateContractBase<RadioMenuItem, RadioMenuItemsPresenterHost, RadioMenuItemsPanel>
 	{
-		#region Properties
-
 		[TemplateContractPart(Required = true)]
 		public RadioMenuItemsPresenterHost ItemsPresenterHost { get; [UsedImplicitly] private set; }
 
 		protected override RadioMenuItemsPresenterHost ItemsPresenterHostCore => ItemsPresenterHost;
-
-		#endregion
 	}
 
 	internal sealed class RadioMenuItemGroupSelectorAdvisor : ItemCollectionSelectorAdvisor<Control, RadioMenuItem>
@@ -350,10 +307,15 @@ namespace Zaaml.UI.Controls.Menu
 		public RadioMenuItemGroupSelectorAdvisor(RadioMenuItemGroup radioMenuItemGroup) : base(radioMenuItemGroup, radioMenuItemGroup.ItemCollection)
 		{
 		}
-		
+
 		public override bool GetItemSelected(RadioMenuItem item)
 		{
 			return item.IsChecked == true;
+		}
+
+		public override object GetValue(RadioMenuItem item, object source)
+		{
+			return ((RadioMenuItemGroup) SelectorCore).GetValueInternal(item, source);
 		}
 
 		public override void SetItemSelected(RadioMenuItem item, bool value)

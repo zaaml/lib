@@ -12,165 +12,133 @@ using Zaaml.UI.Panels.Interfaces;
 
 namespace Zaaml.UI.Controls.TabView
 {
-  public sealed class TabViewItemsPanel : FlexItemsPanelBase<TabViewItem>, IFlexPanel
-  {
-    #region Fields
+	public sealed class TabViewItemsPanel : FlexItemsPanelBase<TabViewItem>, IFlexPanel
+	{
+		private readonly OrderedChildrenCollection _orderedChildren;
 
-    private readonly OrderedChildrenCollection _orderedChildren;
+		public TabViewItemsPanel()
+		{
+			_orderedChildren = new OrderedChildrenCollection(this);
+		}
 
-    #endregion
+		internal TabViewItemsPresenter ItemsPresenter { get; set; }
 
-    #region Ctors
+		internal IReadOnlyList<TabViewItem> OrderedChildren => _orderedChildren;
 
-    public TabViewItemsPanel()
-    {
-      _orderedChildren = new OrderedChildrenCollection(this);
-    }
+		private protected override FlexPanelLayout CreateLayout()
+		{
+			return new FlexPanelLayoutAdvanced(this);
+		}
 
-    #endregion
+		protected override FlexElement GetFlexElement(UIElement child)
+		{
+			var overflowBehavior = FlexOverflowBehavior.None;
+			var tabViewItem = (TabViewItem)child;
 
-    #region Properties
+			if (_orderedChildren.Count > 0)
+				overflowBehavior = tabViewItem.IsPinned || tabViewItem.IsSelected || ReferenceEquals(_orderedChildren[0], child) ? FlexOverflowBehavior.Pin | FlexOverflowBehavior.Stretch : FlexOverflowBehavior.Hide;
 
-    internal TabViewItemsPresenter ItemsPresenter { get; set; }
+			return base.GetFlexElement(child).WithOverflowBehavior(overflowBehavior);
+		}
 
-    internal IReadOnlyList<TabViewItem> OrderedChildren => _orderedChildren;
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			RefreshItems();
 
-    #endregion
+			var size = base.MeasureOverrideCore(availableSize);
+			var selectedItem = ItemsPresenter?.TabViewControl?.SelectedTabViewItem;
 
-    #region  Methods
+			if (selectedItem == null || GetIsHidden(selectedItem) == false)
+				return size;
 
-    protected override FlexElement GetFlexElement(UIElement child)
-    {
-      var overflowBehavior = FlexOverflowBehavior.None;
-      var tabViewItem = (TabViewItem)child;
+			var index = 1;
 
-      if (_orderedChildren.Count > 0)
-        overflowBehavior = tabViewItem.IsPinned || tabViewItem.IsSelected || ReferenceEquals(_orderedChildren[0], child) ? FlexOverflowBehavior.Pin | FlexOverflowBehavior.Stretch : FlexOverflowBehavior.Hide;
+			foreach (var tabViewItem in OrderedChildren)
+				tabViewItem.DisplayIndex = index++;
 
-      return base.GetFlexElement(child).WithOverflowBehavior(overflowBehavior);
-    }
+			selectedItem.DisplayIndex = 0;
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      RefreshItems();
+			RefreshItems();
 
-      var size = base.MeasureOverrideCore(availableSize);
-      var selectedItem = ItemsPresenter?.TabViewControl?.SelectedTabViewItem;
+			size = base.MeasureOverrideCore(availableSize);
 
-      if (selectedItem == null || GetIsHidden(selectedItem) == false)
-        return size;
+			return size;
+		}
 
-      var index = 1;
+		internal void OnDisplayIndexChanged(TabViewItem tabViewItem)
+		{
+			InvalidateMeasure();
+		}
 
-      foreach (var tabViewItem in OrderedChildren)
-        tabViewItem.DisplayIndex = index++;
+		private void RefreshItems()
+		{
+			_orderedChildren.Refresh();
+		}
 
-      selectedItem.DisplayIndex = 0;
+		IReadOnlyList<UIElement> IPanel.Elements => OrderedChildren;
 
-      RefreshItems();
+		private sealed class FlexPanelLayoutAdvanced : FlexPanelLayout
+		{
+			private readonly TabViewItemsPanel _panel;
 
-      size = base.MeasureOverrideCore(availableSize);
+			public FlexPanelLayoutAdvanced(TabViewItemsPanel panel) : base(panel)
+			{
+				_panel = panel;
+			}
 
-      return size;
-    }
+			private protected override bool? ShouldFillIndirect
+			{
+				get
+				{
+					var stretchDirection = _panel.FlexDefinition?.StretchDirection;
 
-    internal void OnDisplayIndexChanged(TabViewItem tabViewItem)
-    {
-      InvalidateMeasure();
-    }
+					if (stretchDirection == null)
+						return null;
 
-    private void RefreshItems()
-    {
-      _orderedChildren.Refresh();
-    }
+					return stretchDirection is FlexStretchDirection.Both or FlexStretchDirection.Expand;
+				}
+			}
+		}
 
-    #endregion
+		private class OrderedChildrenCollection : IReadOnlyList<TabViewItem>
+		{
+			private readonly TabViewItemsPanel _panel;
+			private readonly List<TabViewItem> _sortedElements = new();
 
-    #region Interface Implementations
+			public OrderedChildrenCollection(TabViewItemsPanel panel)
+			{
+				_panel = panel;
+			}
 
-    #region IPanel
+			public void Refresh()
+			{
+				var index = -1;
 
-    IReadOnlyList<UIElement> IPanel.Elements => OrderedChildren;
+				foreach (TabViewItem tabViewItem in _panel.Children)
+				{
+					if (tabViewItem.DisplayIndex != -1)
+						index = tabViewItem.DisplayIndex;
+					else if (index != -1)
+						tabViewItem.DisplayIndex = index;
+				}
 
-    #endregion
+				_sortedElements.Clear();
+				_sortedElements.AddRange(_panel.Children.Cast<TabViewItem>().OrderBy(t => t.IsPinned ? 0 : 1).ThenBy(t => t.DisplayIndex));
+			}
 
-    #endregion
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
 
-    #region  Nested Types
+			public IEnumerator<TabViewItem> GetEnumerator()
+			{
+				return _sortedElements.GetEnumerator();
+			}
 
-    private class OrderedChildrenCollection : IReadOnlyList<TabViewItem>
-    {
-      #region Fields
+			public int Count => _sortedElements.Count;
 
-      private readonly TabViewItemsPanel _panel;
-      private readonly List<TabViewItem> _sortedElements = new List<TabViewItem>();
-
-      #endregion
-
-      #region Ctors
-
-      public OrderedChildrenCollection(TabViewItemsPanel panel)
-      {
-        _panel = panel;
-      }
-
-      #endregion
-
-      #region  Methods
-
-      public void Refresh()
-      {
-        var index = -1;
-
-        foreach (TabViewItem tabViewItem in _panel.Children)
-        {
-          if (tabViewItem.DisplayIndex != -1)
-            index = tabViewItem.DisplayIndex;
-          else if (index != -1)
-            tabViewItem.DisplayIndex = index;
-        }
-
-        _sortedElements.Clear();
-        _sortedElements.AddRange(_panel.Children.Cast<TabViewItem>().OrderBy(t => t.IsPinned ? 0 : 1).ThenBy(t => t.DisplayIndex));
-      }
-
-      #endregion
-
-      #region Interface Implementations
-
-      #region IEnumerable
-
-      IEnumerator IEnumerable.GetEnumerator()
-      {
-        return GetEnumerator();
-      }
-
-      #endregion
-
-      #region IEnumerable<TabViewItem>
-
-      public IEnumerator<TabViewItem> GetEnumerator()
-      {
-        return _sortedElements.GetEnumerator();
-      }
-
-      #endregion
-
-      #region IReadOnlyCollection<TabViewItem>
-
-      public int Count => _sortedElements.Count;
-
-      #endregion
-
-      #region IReadOnlyList<TabViewItem>
-
-      public TabViewItem this[int index] => _sortedElements[index];
-
-      #endregion
-
-      #endregion
-    }
-
-    #endregion
-  }
+			public TabViewItem this[int index] => _sortedElements[index];
+		}
+	}
 }

@@ -31,7 +31,7 @@
         <zm:DropDownButton.PopupControl>
 
           <!--  DropDownControl  -->
-          <zm:PopupBar x:Name="Popup"
+          <zm:PopupBar x:Name="PopupBar"
                        PlacementOptions="{TemplateBinding PlacementOptions}"
                        PopupHeight="{TemplateBinding PopupHeight}"
                        PopupMaxHeight="{TemplateBinding PopupMaxHeight}"
@@ -128,7 +128,7 @@
             <zm:DropDownButton.PopupControl>
 
               <!--  DropDownControl  -->
-              <zm:PopupBar x:Name="Popup"
+              <zm:PopupBar x:Name="PopupBar"
                            PlacementOptions="{TemplateBinding PlacementOptions}"
                            PopupHeight="{TemplateBinding PopupHeight}"
                            PopupMaxHeight="{TemplateBinding PopupMaxHeight}"

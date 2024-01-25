@@ -2,31 +2,19 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-namespace Zaaml.PresentationCore.Animation.Interpolators
+namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class SingleInterpolator : InterpolatorBase<float>
-  {
-    #region Static Fields and Constants
+	public sealed class SingleInterpolator : PrimitiveInterpolator<float>
+	{
+		public static readonly SingleInterpolator Instance = new();
 
-    public static SingleInterpolator Instance = new SingleInterpolator();
+		private SingleInterpolator()
+		{
+		}
 
-    #endregion
-
-    #region Ctors
-
-    private SingleInterpolator()
-    {
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected internal override float EvaluateCore(float start, float end, double progress)
-    {
-      return (float) (start + (end - start) * progress);
-    }
-
-    #endregion
-  }
+		protected internal override float EvaluateCore(float start, float end, double progress)
+		{
+			return (float)(start + (end - start) * progress);
+		}
+	}
 }

@@ -10,7 +10,7 @@ using Zaaml.Core.Utils;
 
 namespace Zaaml.UI.Panels.Flexible
 {
-	public class FlexLengthTypeConverter : TypeConverter
+	public sealed class FlexLengthTypeConverter : TypeConverter
 	{
 		public override bool CanConvertFrom(ITypeDescriptorContext typeDescriptorContext, Type sourceType)
 		{

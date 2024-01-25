@@ -6,155 +6,141 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
-using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  public abstract class BaseLayoutView : TemplateContractContentControl
-  {
-    #region Static Fields and Constants
+	public abstract class BaseLayoutView : TemplateContractContentControl
+	{
+		public static readonly DependencyProperty SelectedItemProperty = DPM.Register<DockItem, BaseLayoutView>
+			("SelectedItem", v => v.OnSelectedItemChangedPrivate);
 
-    public static readonly DependencyProperty SelectedItemProperty = DPM.Register<DockItem, BaseLayoutView>
-      ("SelectedItem", v => v.OnSelectedItemChangedPrivate);
+		private bool _isArrangeValid;
+		private BaseLayout _layoutInternal;
 
-    #endregion
+		protected BaseLayoutView()
+		{
+			Items = new DockItemCollection(OnItemAddedPrivate, OnItemRemovedPrivate);
+		}
 
-    #region Fields
+		internal DockControl DockControl => LayoutInternal?.DockControl;
 
-    private bool _isArrangeValid;
-    private BaseLayout _layoutInternal;
+		protected internal DockItemCollection Items { get; }
 
-    #endregion
+		internal BaseLayout LayoutInternal
+		{
+			get => _layoutInternal;
+			set
+			{
+				if (ReferenceEquals(_layoutInternal, value))
+					return;
 
-    #region Ctors
+				if (_layoutInternal != null)
+					OnLayoutDetaching();
 
-    protected BaseLayoutView()
-    {
-      Items = new DockItemCollection(OnItemAdded, OnItemRemoved);
-    }
+				_layoutInternal = value;
 
-    #endregion
+				if (_layoutInternal != null)
+					OnLayoutAttached();
+			}
+		}
 
-    #region Properties
+		protected internal IEnumerable<DockItem> OrderedItems => Items.OrderBy(GetDockItemOrder);
 
-    protected internal DockItemCollection Items { get; }
+		protected internal IEnumerable<DockItem> ReverseOrderedItems => Items.OrderByDescending(GetDockItemOrder);
 
-    internal BaseLayout LayoutInternal
-    {
-      get => _layoutInternal;
-      set
-      {
-        if (ReferenceEquals(_layoutInternal, value))
-          return;
+		public DockItem SelectedItem
+		{
+			get => (DockItem)GetValue(SelectedItemProperty);
+			set => SetValue(SelectedItemProperty, value);
+		}
 
-        if (_layoutInternal != null)
-        {
-          OnLayoutDetaching();
+		protected internal abstract void ArrangeItems();
 
-          Items.Clear();
-        }
+		protected virtual int GetDockItemOrder(DockItem dockItem)
+		{
+			return LayoutInternal.GetDockItemOrderInternal(dockItem);
+		}
 
-        _layoutInternal = value;
+		protected virtual void InvalidateItemsArrange()
+		{
+			if (_isArrangeValid == false)
+				return;
 
-        if (_layoutInternal != null)
-        {
-          Items.AddRange(_layoutInternal.Items);
+			_isArrangeValid = false;
 
-          OnLayoutAttached();
-        }
-      }
-    }
+			InvalidateMeasure();
+		}
 
-    protected internal IEnumerable<DockItem> OrderedItems => Items.OrderBy(w => LayoutInternal.GetDockItemIndex(w) ?? -1);
+		internal virtual bool IsItemVisible(DockItem item)
+		{
+			return true;
+		}
 
-    protected internal IEnumerable<DockItem> ReverseOrderedItems => Items.OrderByDescending(w => LayoutInternal.GetDockItemIndex(w) ?? -1);
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			if (_isArrangeValid)
+				return base.MeasureOverride(availableSize);
 
-    public DockItem SelectedItem
-    {
-      get => (DockItem) GetValue(SelectedItemProperty);
-      set => SetValue(SelectedItemProperty, value);
-    }
+			ArrangeItems();
 
-    #endregion
+			_isArrangeValid = true;
 
-    #region  Methods
+			return base.MeasureOverride(availableSize);
+		}
 
-    protected internal abstract void ArrangeItems();
+		protected abstract void OnItemAdded(DockItem dockItem);
 
-    protected virtual void InvalidateItemsArrange()
-    {
-      if (_isArrangeValid == false)
-        return;
+		private void OnItemAddedPrivate(DockItem dockItem)
+		{
+			OnItemAdded(dockItem);
+			InvalidateItemsArrange();
+		}
 
-      _isArrangeValid = false;
+		protected abstract void OnItemRemoved(DockItem dockItem);
 
-      InvalidateMeasure();
-    }
+		private void OnItemRemovedPrivate(DockItem dockItem)
+		{
+			OnItemRemoved(dockItem);
+			InvalidateItemsArrange();
+		}
 
-    internal virtual bool IsItemVisible(DockItem item)
-    {
-      return true;
-    }
+		protected virtual void OnLayoutAttached()
+		{
+			SetBinding(SelectedItemProperty, new Binding { Path = new PropertyPath(BaseLayout.SelectedItemProperty), Mode = BindingMode.TwoWay, Source = LayoutInternal });
+		}
 
-    protected override Size MeasureOverride(Size availableSize)
-    {
-      if (_isArrangeValid)
-        return base.MeasureOverride(availableSize);
+		protected virtual void OnLayoutDetaching()
+		{
+			ClearValue(SelectedItemProperty);
+		}
 
-      ArrangeItems();
+		internal virtual void OnSelectedItemChangedInternal(DockItem oldItem, DockItem newItem)
+		{
+		}
 
-      _isArrangeValid = true;
+		private void OnSelectedItemChangedPrivate(DockItem oldItem, DockItem newItem)
+		{
+		}
 
-      return base.MeasureOverride(availableSize);
-    }
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-    protected abstract void OnItemAdded(DockItem dockItem);
+			InvalidateItemsArrange();
+		}
 
-    protected abstract void OnItemRemoved(DockItem dockItem);
+		protected override void OnTemplateContractDetaching()
+		{
+			InvalidateItemsArrange();
 
-    protected virtual void OnLayoutAttached()
-    {
-      SetBinding(SelectedItemProperty, new Binding {Path = new PropertyPath(BaseLayout.SelectedItemProperty), Mode = BindingMode.TwoWay, Source = LayoutInternal});
-    }
+			base.OnTemplateContractDetaching();
+		}
+	}
 
-    protected virtual void OnLayoutDetaching()
-    {
-      ClearValue(SelectedItemProperty);
-    }
-
-    internal virtual void OnSelectedItemChangedInternal(DockItem oldItem, DockItem newItem)
-    {
-    }
-
-    private void OnSelectedItemChangedPrivate(DockItem oldItem, DockItem newItem)
-    {
-    }
-
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
-
-      InvalidateItemsArrange();
-    }
-
-    protected override void OnTemplateContractDetaching()
-    {
-      InvalidateItemsArrange();
-
-      base.OnTemplateContractDetaching();
-    }
-
-    #endregion
-  }
-
-  public abstract class BaseLayoutView<T> : BaseLayoutView where T : BaseLayout
-  {
-    #region Properties
-
-    protected T Layout => (T) LayoutInternal;
-
-    #endregion
-  }
+	public abstract class BaseLayoutView<T> : BaseLayoutView where T : BaseLayout
+	{
+		protected T Layout => (T)LayoutInternal;
+	}
 }

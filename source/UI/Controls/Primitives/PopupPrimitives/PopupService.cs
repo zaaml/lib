@@ -9,31 +9,34 @@ using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  internal static class PopupService
-  {
-    #region  Methods
+	internal static class PopupService
+	{
+		public static void ClosePopupAncestors(DependencyObject dependencyObject, Popup rootPopup)
+		{
+			var strategy = MixedTreeEnumerationStrategy.DisconnectedThenVisualThenLogicalInstance;
 
-    public static void ClosePopupTree(DependencyObject dependencyObject)
-    {
-      GetRoot(dependencyObject)?.Close();
-    }
+			foreach (var popup in dependencyObject.GetAncestors(strategy).OfType<Popup>())
+			{
+				popup.IsOpen = false;
 
-	  public static void ClosePopupAncestors(DependencyObject dependencyObject)
-	  {
-		  foreach (var popup in dependencyObject.GetAncestors(MixedTreeEnumerationStrategy.DisconnectedThenVisualThenLogicalInstance).OfType<Popup>())
-			  popup.IsOpen = false;
-	  }
+				if (ReferenceEquals(popup, rootPopup))
+					break;
+			}
+		}
 
-    private static IPopupSubTree GetRoot(DependencyObject dependencyObject)
-    {
-      return dependencyObject.GetVisualAncestorsAndSelf().OfType<IPopupSubTree>().LastOrDefault();
-    }
+		public static void ClosePopupTree(DependencyObject dependencyObject)
+		{
+			GetRoot(dependencyObject)?.Close();
+		}
 
-    public static bool IsInPopupTree(DependencyObject dependencyObject)
-    {
-      return GetRoot(dependencyObject) != null;
-    }
+		private static IPopupSubTree GetRoot(DependencyObject dependencyObject)
+		{
+			return dependencyObject.GetVisualAncestorsAndSelf().OfType<IPopupSubTree>().LastOrDefault();
+		}
 
-    #endregion
-  }
+		public static bool IsInPopupTree(DependencyObject dependencyObject)
+		{
+			return GetRoot(dependencyObject) != null;
+		}
+	}
 }

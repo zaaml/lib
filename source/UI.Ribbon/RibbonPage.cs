@@ -12,7 +12,7 @@ using System.Windows.Input;
 using Zaaml.Core;
 using Zaaml.Core.Converters;
 using Zaaml.Core.Extensions;
-using Zaaml.PresentationCore;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -104,7 +104,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		public RelayCommand SelectCommand { get; }
 
-		private RibbonPageTemplateContract TemplateContract => (RibbonPageTemplateContract) TemplateContractInternal;
+		private RibbonPageTemplateContract TemplateContract => (RibbonPageTemplateContract)TemplateContractCore;
 
 		private void Activate()
 		{
@@ -209,7 +209,7 @@ namespace Zaaml.UI.Controls.Ribbon
 
 		private void SetIsSelectedInt(bool isSelected)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, isSelected ? KnownBoxes.BoolTrue : KnownBoxes.BoolFalse);
+			this.SetCurrentValueInternal(IsSelectedProperty, isSelected.Box());
 		}
 
 		public IconBase Icon
@@ -221,7 +221,7 @@ namespace Zaaml.UI.Controls.Ribbon
 		public bool IsSelected
 		{
 			get => (bool) GetValue(IsSelectedProperty);
-			set => SetValue(IsSelectedProperty, value);
+			set => SetValue(IsSelectedProperty, value.Box());
 		}
 	}
 

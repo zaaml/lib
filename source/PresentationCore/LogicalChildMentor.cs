@@ -93,7 +93,7 @@ namespace Zaaml.PresentationCore
 
 	internal sealed class LogicalChildMentor<TControl> : LogicalChildMentor where TControl : System.Windows.Controls.Control, ILogicalMentorOwner
 	{
-		private readonly List<object> _logicalChildren = new List<object>();
+		private readonly List<object> _logicalChildren = new();
 
 		public LogicalChildMentor(TControl control)
 		{

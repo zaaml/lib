@@ -4,100 +4,75 @@
 
 using System.Windows;
 using Zaaml.Core.Extensions;
-using Zaaml.PresentationCore.Data;
-using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Assets
 {
-  public sealed class CompositeThickness : AssetBase
-  {
-    #region Static Fields and Constants
+	public sealed class CompositeThickness : ThicknessAssetBase
+	{
+		public static readonly DependencyProperty LeftProperty = DPM.Register<double, CompositeThickness>
+			("Left", double.NaN, b => b.UpdateActualThickness);
 
-    public static readonly DependencyProperty LeftProperty = DPM.Register<double, CompositeThickness>
-      ("Left", double.NaN, b => b.RaiseActualThicknessChanged);
+		public static readonly DependencyProperty TopProperty = DPM.Register<double, CompositeThickness>
+			("Top", double.NaN, b => b.UpdateActualThickness);
 
-    public static readonly DependencyProperty TopProperty = DPM.Register<double, CompositeThickness>
-      ("Top", double.NaN, b => b.RaiseActualThicknessChanged);
+		public static readonly DependencyProperty RightProperty = DPM.Register<double, CompositeThickness>
+			("Right", double.NaN, b => b.UpdateActualThickness);
 
-    public static readonly DependencyProperty RightProperty = DPM.Register<double, CompositeThickness>
-      ("Right", double.NaN, b => b.RaiseActualThicknessChanged);
+		public static readonly DependencyProperty BottomProperty = DPM.Register<double, CompositeThickness>
+			("Bottom", double.NaN, b => b.UpdateActualThickness);
 
-    public static readonly DependencyProperty BottomProperty = DPM.Register<double, CompositeThickness>
-      ("Bottom", double.NaN, b => b.RaiseActualThicknessChanged);
+		public static readonly DependencyProperty ThicknessProperty = DPM.Register<Thickness, CompositeThickness>
+			("Thickness", b => b.UpdateActualThickness);
 
-    public static readonly DependencyProperty ThicknessProperty = DPM.Register<Thickness, CompositeThickness>
-      ("Thickness", b => b.RaiseActualThicknessChanged);
+		public double Bottom
+		{
+			get => (double) GetValue(BottomProperty);
+			set => SetValue(BottomProperty, value);
+		}
 
-    private static readonly DependencyPropertyKey ActualThicknessPropertyKey = DPM.RegisterReadOnly<Thickness, CompositeThickness>
-      ("ActualThickness");
+		public double Left
+		{
+			get => (double) GetValue(LeftProperty);
+			set => SetValue(LeftProperty, value);
+		}
 
-    public static readonly DependencyProperty ActualThicknessProperty = ActualThicknessPropertyKey.DependencyProperty;
+		public double Right
+		{
+			get => (double) GetValue(RightProperty);
+			set => SetValue(RightProperty, value);
+		}
 
-    #endregion
+		public Thickness Thickness
+		{
+			get => (Thickness) GetValue(ThicknessProperty);
+			set => SetValue(ThicknessProperty, value);
+		}
 
-    #region Properties
+		public double Top
+		{
+			get => (double) GetValue(TopProperty);
+			set => SetValue(TopProperty, value);
+		}
 
-    public Thickness ActualThickness
-    {
-      get => (Thickness) GetValue(ActualThicknessProperty);
-      private set => this.SetReadOnlyValue(ActualThicknessPropertyKey, value);
-    }
+		private void UpdateActualThickness()
+		{
+			var thickness = Thickness;
 
-    public double Bottom
-    {
-      get => (double) GetValue(BottomProperty);
-      set => SetValue(BottomProperty, value);
-    }
+			if (Left.IsNaN() == false)
+				thickness.Left = Left;
 
-    public double Left
-    {
-      get => (double) GetValue(LeftProperty);
-      set => SetValue(LeftProperty, value);
-    }
+			if (Top.IsNaN() == false)
+				thickness.Top = Top;
 
-    public double Right
-    {
-      get => (double) GetValue(RightProperty);
-      set => SetValue(RightProperty, value);
-    }
+			if (Right.IsNaN() == false)
+				thickness.Right = Right;
 
-    public Thickness Thickness
-    {
-      get => (Thickness) GetValue(ThicknessProperty);
-      set => SetValue(ThicknessProperty, value);
-    }
+			if (Bottom.IsNaN() == false)
+				thickness.Bottom = Bottom;
 
-    public double Top
-    {
-      get => (double) GetValue(TopProperty);
-      set => SetValue(TopProperty, value);
-    }
-
-    #endregion
-
-    #region  Methods
-
-    private void RaiseActualThicknessChanged()
-    {
-      var thickness = Thickness;
-
-      if (Left.IsNaN() == false)
-        thickness.Left = Left;
-
-      if (Top.IsNaN() == false)
-        thickness.Top = Top;
-
-      if (Right.IsNaN() == false)
-        thickness.Right = Right;
-
-      if (Bottom.IsNaN() == false)
-        thickness.Bottom = Bottom;
-
-      if (ActualThickness != thickness)
-        ActualThickness = thickness;
-    }
-
-    #endregion
-  }
+			if (ActualThickness != thickness)
+				ActualThickness = thickness;
+		}
+	}
 }

@@ -54,10 +54,10 @@
 
       <zm:DockPanel>
 
-        <!-- Glyph presenter -->
-        <zm:ListViewItemGlyphPresenter x:Name="GlyphPresenter" 
-                                       zm:DockPanel.Dock="Left"
-                                       Margin="2,0" />
+        <!--  Glyph presenter  -->
+        <zm:ListViewItemGlyphPresenter x:Name="GlyphPresenter"
+                                       Margin="2,0"
+                                       zm:DockPanel.Dock="Left" />
 
         <!--  CommonStatesBorder  -->
         <Border Padding="{TemplateBinding Padding}"
@@ -65,8 +65,10 @@
                 BorderThickness="0">
 
           <!--  Content  -->
-          <zm:IconContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                   VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+          <zm:IconContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                   VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch"
                                    zm:PathIcon.Brush="{TemplateBinding Foreground}"
                                    Content="{TemplateBinding Content}"
                                    ContentTemplate="{TemplateBinding ContentTemplate}"
@@ -82,13 +84,34 @@
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
+  <ControlTemplate x:Key="ListViewGridItemTemplate"
+                   TargetType="zm:ListViewItem">
+    <zm:ControlTemplateRoot Margin="0,-1,-1,0"
+                            Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <!--  CommonStatesBorder  -->
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+
+        <!--  CellsPresenter  -->
+        <zm:ListGridViewCellsPresenter x:Name="GridViewCellsPresenter"
+                                       BorderBrush="{TemplateBinding BorderBrush}" />
+      </Border>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
   <!--  Base Style  -->
   <zm:Style x:Key="ListViewItemBaseStyle" TargetType="zm:ListViewItem">
     <zm:Setter Property="Padding" Value="3,2" />
+    <zm:Setter Property="BorderThickness" Value="0" />
     <zm:Setter Property="HorizontalAlignment" Value="Stretch" />
     <zm:Setter Property="HorizontalContentAlignment" Value="Left" />
     <zm:Setter Property="VerticalContentAlignment" Value="Top" />
-    <zm:Setter Property="Template" Value="{StaticResource ListViewItemTemplate}" />
+    <zm:Setter Property="Template" Value="{zm:SelfBinding Path=ActualViewTemplate, TargetNullValue={StaticResource ListViewItemTemplate}}" />
+    <zm:Setter Property="zm:ListGridView.Template" Value="{StaticResource ListViewGridItemTemplate}" />
     <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
   </zm:Style>
 
@@ -102,6 +125,9 @@
 
       <!--  Background  -->
       <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePath="Background" Property="Background" />
+
+      <!--  BorderBrush  -->
+      <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePath="BorderBrush" Property="BorderBrush" />
 
     </zm:SetterGroup>
   </zm:Style>

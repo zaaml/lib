@@ -17,21 +17,27 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 	public abstract class PropertyEditor : TemplateContractControl
 	{
 		private static readonly DependencyPropertyKey PropertyItemPropertyKey = DPM.RegisterReadOnly<PropertyItem, PropertyEditor>
-			("PropertyItem", default, d => d.OnPropertyItemPropertyChangedPrivate);
+			("PropertyItem", d => d.OnPropertyItemPropertyChangedPrivate);
 
-		private static readonly DependencyPropertyKey PropertyViewItemPropertyKey = DPM.RegisterReadOnly<PropertyViewItem, PropertyEditor>
-			("PropertyViewItem", default, d => d.OnPropertyViewItemPropertyChangedPrivate);
+		private static readonly DependencyPropertyKey PropertyViewItemPropertyKey = DPM.RegisterReadOnly<PropertyGridViewItem, PropertyEditor>
+			("PropertyViewItem", d => d.OnPropertyViewItemPropertyChangedPrivate);
 
-		public static readonly DependencyProperty PropertyViewItemProperty = PropertyViewItemPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty PropertyViewItemBaseProperty = PropertyViewItemPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey IsEditingPropertyKey = DPM.RegisterReadOnly<bool, PropertyEditor>
-			("IsEditing", default, d => d.OnIsEditingPropertyChangedPrivate);
+			("IsEditing", d => d.OnIsEditingPropertyChangedPrivate);
 
 		public static readonly DependencyProperty IsEditingProperty = IsEditingPropertyKey.DependencyProperty;
 
 		public static readonly DependencyProperty PropertyItemProperty = PropertyItemPropertyKey.DependencyProperty;
 
 		public event EventHandler IsEditingChanged;
+
+		protected PropertyEditor()
+		{
+			Margin = new Thickness(-1, 0, -1, 0);
+			BorderThickness = new Thickness(1, 0, 1, 0);
+		}
 
 		internal PropertyViewController Controller { get; private set; }
 
@@ -49,9 +55,9 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 			private set => this.SetReadOnlyValue(PropertyItemPropertyKey, value);
 		}
 
-		public PropertyViewItem PropertyViewItem
+		public PropertyGridViewItem PropertyViewItemBase
 		{
-			get => (PropertyViewItem) GetValue(PropertyViewItemProperty);
+			get => (PropertyGridViewItem) GetValue(PropertyViewItemBaseProperty);
 			internal set => this.SetReadOnlyValue(PropertyViewItemPropertyKey, value);
 		}
 
@@ -163,7 +169,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 		{
 		}
 
-		private void OnPropertyViewItemPropertyChangedPrivate(PropertyViewItem oldValue, PropertyViewItem newValue)
+		private void OnPropertyViewItemPropertyChangedPrivate(PropertyGridViewItem oldValue, PropertyGridViewItem newValue)
 		{
 		}
 
@@ -201,7 +207,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 
 		protected void SetValidationError(string validationError)
 		{
-			PropertyViewItem?.SetValidationErrorInternal(validationError);
+			PropertyViewItemBase?.SetValidationErrorInternal(validationError);
 		}
 	}
 

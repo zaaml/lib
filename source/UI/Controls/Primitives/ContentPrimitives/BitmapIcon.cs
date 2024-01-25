@@ -10,7 +10,6 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Navigation;
 using Zaaml.PresentationCore.PropertyCore;
-
 #if !NETCOREAPP
 using Zaaml.Core.Extensions;
 #endif
@@ -28,18 +27,18 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 		public static readonly DependencyProperty StretchDirectionProperty = DPM.RegisterAttached<StretchDirection, BitmapIcon>
 			("StretchDirection", OnIconPropertyChanged);
 
-		private static readonly List<DependencyProperty> Properties = new List<DependencyProperty>
+		private static readonly List<DependencyProperty> Properties = new()
 		{
 			SourceProperty,
 			StretchProperty,
 			StretchDirectionProperty,
 		};
 
-		private static readonly Dictionary<DependencyProperty, DependencyProperty> PropertyDictionary = new Dictionary<DependencyProperty, DependencyProperty>
+		private static readonly Dictionary<DependencyProperty, DependencyProperty> PropertyDictionary = new()
 		{
-			{SourceProperty, Image.SourceProperty},
-			{StretchProperty, Image.StretchProperty},
-			{StretchDirectionProperty, Image.StretchDirectionProperty}
+			{ SourceProperty, Image.SourceProperty },
+			{ StretchProperty, Image.StretchProperty },
+			{ StretchDirectionProperty, Image.StretchDirectionProperty }
 		};
 
 		private Image _image;
@@ -57,7 +56,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 		internal Uri BaseUri
 		{
-			get => (Uri) GetValue(BaseUriHelper.BaseUriProperty);
+			get => (Uri)GetValue(BaseUriHelper.BaseUriProperty);
 			set => SetValue(BaseUriHelper.BaseUriProperty, value);
 		}
 
@@ -67,19 +66,19 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 		public ImageSource Source
 		{
-			get => (ImageSource) GetValue(SourceProperty);
+			get => (ImageSource)GetValue(SourceProperty);
 			set => SetValue(SourceProperty, value);
 		}
 
 		public Stretch Stretch
 		{
-			get => (Stretch) GetValue(StretchProperty);
+			get => (Stretch)GetValue(StretchProperty);
 			set => SetValue(StretchProperty, value);
 		}
 
 		public StretchDirection StretchDirection
 		{
-			get => (StretchDirection) GetValue(StretchDirectionProperty);
+			get => (StretchDirection)GetValue(StretchDirectionProperty);
 			set => SetValue(StretchDirectionProperty, value);
 		}
 
@@ -92,7 +91,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 				StretchDirection = ActualStretchDirection
 			};
 
-			var uriContext = (IUriContext) image;
+			var uriContext = (IUriContext)image;
 
 			uriContext.BaseUri = BaseUri;
 

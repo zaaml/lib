@@ -15,6 +15,11 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 		}
 
 		public string DisplayName { get; }
+
+		public static PropertyListViewItemSource<T> Create<T>(T value, string displayName)
+		{
+			return new PropertyListViewItemSource<T>(value, displayName);
+		}
 	}
 
 	public class PropertyListViewItemSource<T> : PropertyListViewItemSource
@@ -27,9 +32,9 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 		public T Value { get; }
 	}
 
-	public sealed class PropertyListViewItemTextFilter : ListViewItemTextFilter<PropertyListViewItemSource>
+	public sealed class PropertyListViewItemTextFilter : ListViewItemTextFilterBase<PropertyListViewItemSource>
 	{
-		protected override bool Pass(PropertyListViewItemSource item)
+		protected override bool Pass(ListViewControl listViewControl, PropertyListViewItemSource item)
 		{
 			return item.DisplayName.StartsWith(FilterText, StringComparison.OrdinalIgnoreCase);
 		}

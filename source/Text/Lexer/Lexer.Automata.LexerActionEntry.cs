@@ -10,7 +10,7 @@ namespace Zaaml.Text
 		{
 			private sealed class LexerActionEntry : ActionEntry
 			{
-				public LexerActionEntry(Grammar<TToken>.LexerAction grammarEntry) : base(CreateActionDelegate(grammarEntry.ActionEntry))
+				public LexerActionEntry(Grammar<TGrammar, TToken>.LexerGrammar.ActionSymbol grammarEntry) : base(CreateActionDelegate(grammarEntry.Action))
 				{
 				}
 			}

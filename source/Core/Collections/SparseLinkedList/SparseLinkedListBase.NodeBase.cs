@@ -1,4 +1,4 @@
-﻿// <copyright file="SparseLinkedListBase - Copy (2).Realize.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="SparseLinkedListBase.NodeBase.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -11,6 +11,9 @@ namespace Zaaml.Core.Collections
 		[DebuggerDisplay(("{Dump()}"))]
 		internal abstract class NodeBase
 		{
+			public NodeBase Next { get; set; }
+
+			public NodeBase Prev { get; set; }
 //#if TEST
 //			~NodeBase()
 //			{
@@ -21,9 +24,18 @@ namespace Zaaml.Core.Collections
 
 			public long Size { get; set; } = -1;
 
-			public NodeBase Next { get; set; }
+			protected bool ContainsLocal(long index)
+			{
+				return index >= 0 && index < Size;
+			}
 
-			public NodeBase Prev { get; set; }
+			public string Dump()
+			{
+				var index = GetGlobalIndex();
+				var range = Size == 0 ? $"[{index}]" : $"[{index}..{index + Size - 1}]";
+
+				return this is VoidNode ? $"void{range}" : $"real{range}";
+			}
 
 			internal long GetGlobalIndex()
 			{
@@ -39,16 +51,9 @@ namespace Zaaml.Core.Collections
 				return globalIndex;
 			}
 
-			protected bool ContainsLocal(long index)
-			{
-				return index >= 0 && index < Size;
-			}
-
-			internal abstract T GetLocalItem(int index);
-
 			internal abstract T GetItem(ref NodeCursor cursor);
 
-			internal abstract void SetItem(ref NodeCursor cursor, T item);
+			internal abstract T GetLocalItem(int index);
 
 			public virtual void Release()
 			{
@@ -57,13 +62,7 @@ namespace Zaaml.Core.Collections
 				Size = -1;
 			}
 
-			public string Dump()
-			{
-				var index = GetGlobalIndex();
-				var range = Size == 0 ? $"[{index}]" : $"[{index}..{index + Size - 1}]";
-
-				return this is GapNode ? $"gap{range}" : $"real{range}";
-			}
+			internal abstract void SetItem(ref NodeCursor cursor, T item);
 
 			public override string ToString()
 			{

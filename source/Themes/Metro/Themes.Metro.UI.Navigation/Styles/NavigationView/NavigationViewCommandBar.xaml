@@ -1,0 +1,35 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="NavigationViewItemShared.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <ControlTemplate x:Key="NavigationViewCommandBarTemplate"
+                   TargetType="zm:NavigationViewCommandBar">
+    <zm:ControlTemplateRoot Background="Transparent"
+                            VisualStateGroups="{StaticResource VisualStates}">
+
+      <!--  ItemsPresenter  -->
+      <zm:NavigationViewCommandItemsPresenter x:Name="ItemsPresenter" />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="NavigationViewCommandBarBaseStyle" TargetType="zm:NavigationViewCommandBar">
+    <zm:Setter Property="Template" Value="{StaticResource NavigationViewCommandBarTemplate}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="NavigationViewCommandBarStyle" BasedOn="{StaticResource NavigationViewCommandBarBaseStyle}" Skin="Metro.NavigationView.NavigationViewCommandBar" TargetType="zm:NavigationViewCommandBar" />
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="NavigationViewCommandBarThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource NavigationViewCommandBarStyle}" TargetType="zm:NavigationViewCommandBar" />
+
+</zm:ThemeResourceDictionary>

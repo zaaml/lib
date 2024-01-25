@@ -12,8 +12,17 @@ namespace Zaaml.UI.Controls.Core
 		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
 		public DelegateHeaderedIconContentItemGeneratorImplementation(IHeaderedIconContentItemsControl headeredContentControl)
-			: base(headeredContentControl.ItemHeaderMember, headeredContentControl.ItemHeaderTemplate, headeredContentControl.ItemHeaderTemplateSelector, headeredContentControl.ItemHeaderStringFormat, headeredContentControl.ItemIconMember,
-				headeredContentControl.ItemContentMember, headeredContentControl.ItemContentTemplate, headeredContentControl.ItemContentTemplateSelector, headeredContentControl.ItemContentStringFormat)
+			: base(
+				headeredContentControl.ItemHeaderMember,
+				headeredContentControl.ItemHeaderTemplate, 
+				headeredContentControl.ItemHeaderTemplateSelector, 
+				headeredContentControl.ItemHeaderStringFormat,
+				headeredContentControl.ItemIconMember,
+				headeredContentControl.ItemIconSelector,
+				headeredContentControl.ItemContentMember, 
+				headeredContentControl.ItemContentTemplate, 
+				headeredContentControl.ItemContentTemplateSelector, 
+				headeredContentControl.ItemContentStringFormat)
 		{
 			ItemsControlCore = headeredContentControl;
 		}
@@ -63,6 +72,11 @@ namespace Zaaml.UI.Controls.Core
 		public void OnItemIconMemberChanged()
 		{
 			ItemIconMember = ItemsControlCore.ItemIconMember;
+		}
+
+		public void OnItemIconSelectorChanged()
+		{
+			ItemIconSelector = ItemsControlCore.ItemIconSelector;
 		}
 	}
 }

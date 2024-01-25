@@ -12,7 +12,15 @@ using System.Runtime.InteropServices;
 
 namespace Zaaml.Platform
 {
-  public struct DWM_COLORIZATION_PARAMS
+	
+	internal enum MonitorDpiTypes
+	{
+		EffectiveDPI = 0,
+		AngularDPI = 1,
+		RawDPI = 2,
+	}
+	
+	internal struct DWM_COLORIZATION_PARAMS
   {
     public uint clrColor;
     public uint clrAfterGlow;
@@ -931,5 +939,13 @@ namespace Zaaml.Platform
 		public IntPtr hwnd;
 		public uint wHitTestCode;
 		public IntPtr dwExtraInfo;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	internal struct NCCALCSIZE_PARAMS
+	{
+		[MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+		public RECT[] rgrc;
+		public WINDOWPOS lppos;
 	}
 }

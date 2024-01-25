@@ -19,21 +19,22 @@
       <Border Padding="{TemplateBinding Padding}"
               Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}">
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{TemplateBinding CornerRadius}">
 
         <!--  Content  -->
-        <zm:IconContentPresenter zm:PathIcon.Brush="{TemplateBinding Foreground}"
-                                 HorizontalAlignment="Stretch"
+        <zm:IconContentPresenter HorizontalAlignment="Stretch"
                                  VerticalAlignment="Stretch"
                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                 zm:PathIcon.Brush="{TemplateBinding Foreground}"
                                  Content="{TemplateBinding Content}"
                                  ContentTemplate="{TemplateBinding ContentTemplate}"
-                                 ShowIcon="{TemplateBinding ShowIcon}"
-                                 ShowContent="{TemplateBinding ShowContent}"
                                  Icon="{TemplateBinding Icon}"
                                  IconDistance="{TemplateBinding IconDistance}"
-                                 IconDock="{TemplateBinding IconDock}" />
+                                 IconDock="{TemplateBinding IconDock}"
+                                 ShowContent="{TemplateBinding ShowContent}"
+                                 ShowIcon="{TemplateBinding ShowIcon}" />
       </Border>
 
       <!--  Disabled Veil  -->
@@ -64,7 +65,7 @@
 
   <!--  Style  -->
   <zm:Style x:Key="ButtonStyle" BasedOn="{StaticResource ButtonBaseStyle}" Skin="Metro.StandardControls.Button" TargetType="zm:ButtonBase">
-    <zm:SetterGroup ValuePathSource="Skin" SettersSource="{StaticResource SkinSetters}" />
+    <zm:SetterGroup SettersSource="{StaticResource SkinSetters}" ValuePathSource="Skin" />
   </zm:Style>
 
   <zm:Style x:Key="RepeatButtonStyle" BasedOn="{StaticResource ButtonStyle}" Skin="Metro.StandardControls.Button" TargetType="zm:ButtonBase">

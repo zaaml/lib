@@ -1,6 +1,6 @@
-//  <copyright file="WindowLayerPanel.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
-//    Copyright (c) zaaml. All rights reserved.
-//  </copyright>
+// <copyright file="WindowLayerPanel.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+//   Copyright (c) Zaaml. All rights reserved.
+// </copyright>
 
 using System;
 using System.Linq;
@@ -12,99 +12,91 @@ using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Windows
 {
-  internal class WindowLayerPanel : Panel
-  {
-    #region Static Fields and Constants
+	internal class WindowLayerPanel : Panel
+	{
+		public static readonly DependencyProperty LeftProperty = DPM.RegisterAttached<double, WindowLayerPanel>
+			("Left", DPM.StaticCallback<WindowBase>(OnLeftPropertyChanged));
 
-    public static readonly DependencyProperty LeftProperty = DPM.RegisterAttached<double, WindowLayerPanel>
-      ("Left", DPM.StaticCallback<WindowBase>(OnLeftPropertyChanged));
+		public static readonly DependencyProperty TopProperty = DPM.RegisterAttached<double, WindowLayerPanel>
+			("Top", DPM.StaticCallback<WindowBase>(OnTopPropertyChanged));
 
-    public static readonly DependencyProperty TopProperty = DPM.RegisterAttached<double, WindowLayerPanel>
-      ("Top", DPM.StaticCallback<WindowBase>(OnTopPropertyChanged));
+		protected override Size ArrangeOverrideCore(Size finalSize)
+		{
+			foreach (var child in Children.Cast<FrameworkElement>())
+				child.Arrange(GetChildRect(child, child.DesiredSize));
 
-    #endregion
+			return finalSize;
+		}
 
-    #region  Methods
+		private Rect GetChildRect(FrameworkElement child, Size desiredSize)
+		{
+			return new Rect(new Point(GetLeft(child), GetTop(child)), desiredSize);
+		}
 
-    public static void SetTop(DependencyObject element, double value)
-    {
-      element.SetValue(TopProperty, value);
-    }
+		public static double GetLeft(DependencyObject element)
+		{
+			return (double)element.GetValue(LeftProperty);
+		}
 
-    public static double GetTop(DependencyObject element)
-    {
-      return (double)element.GetValue(TopProperty);
-    }
+		public static double GetTop(DependencyObject element)
+		{
+			return (double)element.GetValue(TopProperty);
+		}
 
-    private static void OnLeftPropertyChanged(WindowBase window)
-    {
-      InvalidatePanelArrange(window);
-    }
+		private static void InvalidatePanelArrange(WindowBase window)
+		{
+			var panel = window.Parent as WindowLayerPanel;
+			panel?.InvalidateArrange();
+		}
 
-    private static void InvalidatePanelArrange(WindowBase window)
-    {
-      var panel = window.Parent as WindowLayerPanel;
-      panel?.InvalidateArrange();
-    }
+		protected override Size MeasureOverrideCore(Size availableSize)
+		{
+			var finalRect = new Rect();
 
-    private static void OnTopPropertyChanged(WindowBase window)
-    {
-      InvalidatePanelArrange(window);
-    }
+			foreach (var child in Children.Cast<FrameworkElement>())
+			{
+				child.Measure(XamlConstants.InfiniteSize);
+				var childRect = GetChildRect(child, child.DesiredSize);
+				if (childRect.Right < 0 || childRect.Bottom < 0)
+					continue;
 
-    public static void SetLeft(DependencyObject element, double value)
-    {
-      element.SetValue(LeftProperty, value);
-    }
+				if (childRect.Left < 0)
+				{
+					childRect.Width += childRect.Left;
+					childRect.X = 0;
+				}
 
-    public static double GetLeft(DependencyObject element)
-    {
-      return (double)element.GetValue(LeftProperty);
-    }
+				if (childRect.Top < 0)
+				{
+					childRect.Height += childRect.Top;
+					childRect.Y = 0;
+				}
 
-    private Rect GetChildRect(FrameworkElement child, Size desiredSize)
-    {
-      return new Rect(new Point(GetLeft(child), GetTop(child)), desiredSize);
-    }
+				finalRect.Width = Math.Max(finalRect.Width, childRect.Right);
+				finalRect.Height = Math.Max(finalRect.Height, childRect.Bottom);
+			}
 
-    protected override Size MeasureOverrideCore(Size availableSize)
-    {
-      var finalRect = new Rect();
+			return finalRect.Size();
+		}
 
-      foreach (var child in Children.Cast<FrameworkElement>())
-      {
-        child.Measure(XamlConstants.InfiniteSize);
-        var childRect = GetChildRect(child, child.DesiredSize);
-        if (childRect.Right < 0 || childRect.Bottom < 0)
-          continue;
+		private static void OnLeftPropertyChanged(WindowBase window)
+		{
+			InvalidatePanelArrange(window);
+		}
 
-        if (childRect.Left < 0)
-        {
-          childRect.Width += childRect.Left;
-          childRect.X = 0;
-        }
+		private static void OnTopPropertyChanged(WindowBase window)
+		{
+			InvalidatePanelArrange(window);
+		}
 
-        if (childRect.Top < 0)
-        {
-          childRect.Height += childRect.Top;
-          childRect.Y = 0;
-        }
+		public static void SetLeft(DependencyObject element, double value)
+		{
+			element.SetValue(LeftProperty, value);
+		}
 
-        finalRect.Width = Math.Max(finalRect.Width, childRect.Right);
-        finalRect.Height = Math.Max(finalRect.Height, childRect.Bottom);
-      }
-
-      return finalRect.Size();
-    }
-
-    protected override Size ArrangeOverrideCore(Size finalSize)
-    {
-      foreach (var child in Children.Cast<FrameworkElement>())
-        child.Arrange(GetChildRect(child, child.DesiredSize));
-
-      return finalSize;
-    }
-
-    #endregion
-  }
+		public static void SetTop(DependencyObject element, double value)
+		{
+			element.SetValue(TopProperty, value);
+		}
+	}
 }

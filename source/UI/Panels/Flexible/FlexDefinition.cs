@@ -14,220 +14,204 @@ using Zaaml.UI.Panels.Interfaces;
 
 namespace Zaaml.UI.Panels.Flexible
 {
-  public sealed class FlexDefinition : InheritanceContextObject
-  {
-    #region Static Fields and Constants
+	public sealed class FlexDefinition : InheritanceContextObject
+	{
+		public static readonly DependencyProperty MinLengthProperty = DPM.RegisterAttached<double, FlexDefinition>
+			("MinLength", FlexElement.Default.MinLength, OnLayoutPropertyChanged);
 
-    public static readonly DependencyProperty MinLengthProperty = DPM.RegisterAttached<double, FlexDefinition>
-      ("MinLength", FlexElement.Default.MinLength, OnLayoutPropertyChanged);
+		public static readonly DependencyProperty MaxLengthProperty = DPM.RegisterAttached<double, FlexDefinition>
+			("MaxLength", FlexElement.Default.MaxLength, OnLayoutPropertyChanged);
 
-    public static readonly DependencyProperty MaxLengthProperty = DPM.RegisterAttached<double, FlexDefinition>
-      ("MaxLength", FlexElement.Default.MaxLength, OnLayoutPropertyChanged);
+		public static readonly DependencyProperty StretchDirectionProperty = DPM.RegisterAttached<FlexStretchDirection, FlexDefinition>
+			("StretchDirection", FlexElement.Default.StretchDirection, OnLayoutPropertyChanged);
 
-    public static readonly DependencyProperty StretchDirectionProperty = DPM.RegisterAttached<FlexStretchDirection, FlexDefinition>
-      ("StretchDirection", FlexElement.Default.StretchDirection, OnLayoutPropertyChanged);
+		[TypeConverter(typeof(GenericTypeConverter<short>))]
+		public static readonly DependencyProperty ExpandPriorityProperty = DPM.RegisterAttached<short, FlexDefinition>
+			("ExpandPriority", FlexElement.Default.ExpandPriority, OnLayoutPropertyChanged);
 
-    [TypeConverter(typeof(GenericTypeConverter<short>))]
-    public static readonly DependencyProperty ExpandPriorityProperty = DPM.RegisterAttached<short, FlexDefinition>
-      ("ExpandPriority", FlexElement.Default.ExpandPriority, OnLayoutPropertyChanged);
+		[TypeConverter(typeof(GenericTypeConverter<short>))]
+		public static readonly DependencyProperty ShrinkPriorityProperty = DPM.RegisterAttached<short, FlexDefinition>
+			("ShrinkPriority", FlexElement.Default.ShrinkPriority, OnLayoutPropertyChanged);
 
-    [TypeConverter(typeof(GenericTypeConverter<short>))]
-    public static readonly DependencyProperty ShrinkPriorityProperty = DPM.RegisterAttached<short, FlexDefinition>
-      ("ShrinkPriority", FlexElement.Default.ShrinkPriority, OnLayoutPropertyChanged);
+		public static readonly DependencyProperty OverflowBehaviorProperty = DPM.RegisterAttached<FlexOverflowBehavior, FlexDefinition>
+			("OverflowBehavior", FlexElement.Default.OverflowBehavior, OnLayoutPropertyChanged);
 
-    public static readonly DependencyProperty OverflowBehaviorProperty = DPM.RegisterAttached<FlexOverflowBehavior, FlexDefinition>
-      ("OverflowBehavior", FlexElement.Default.OverflowBehavior, OnLayoutPropertyChanged);
+		public static readonly DependencyProperty DefinitionProperty = DPM.RegisterAttached<FlexDefinition, FlexDefinition>
+			("Definition", null, OnDefinitionPropertyChanged);
 
-    public static readonly DependencyProperty DefinitionProperty = DPM.RegisterAttached<FlexDefinition, FlexDefinition>
-      ("Definition", null, OnDefinitionPropertyChanged);
+		public static readonly DependencyProperty LengthProperty = DPM.RegisterAttached<FlexLength, FlexDefinition>
+			("Length", FlexElement.Default.Length, OnLayoutPropertyChanged);
 
-    public static readonly DependencyProperty LengthProperty = DPM.RegisterAttached<FlexLength, FlexDefinition>
-      ("Length", FlexElement.Default.Length, OnLayoutPropertyChanged);
+		private readonly WeakLinkedList<UIElement> _attachedElements = new();
 
-    #endregion
+		public event EventHandler DefinitionChanged;
 
-    #region Fields
+		[TypeConverter(typeof(GenericTypeConverter<short>))]
+		public short ExpandPriority
+		{
+			get => (short)GetValue(ExpandPriorityProperty);
+			set => SetValue(ExpandPriorityProperty, value);
+		}
 
-    private readonly WeakLinkedList<UIElement> _attachedElements = new WeakLinkedList<UIElement>();
+		[TypeConverter(typeof(FlexLengthTypeConverter))]
+		public FlexLength Length
+		{
+			get => (FlexLength)GetValue(LengthProperty);
+			set => SetValue(LengthProperty, value);
+		}
 
-    public event EventHandler DefinitionChanged;
+		public double MaxLength
+		{
+			get => (double)GetValue(MaxLengthProperty);
+			set => SetValue(MaxLengthProperty, value);
+		}
 
-    #endregion
+		public double MinLength
+		{
+			get => (double)GetValue(MinLengthProperty);
+			set => SetValue(MinLengthProperty, value);
+		}
 
-    #region Properties
+		public FlexOverflowBehavior OverflowBehavior
+		{
+			get => (FlexOverflowBehavior)GetValue(OverflowBehaviorProperty);
+			set => SetValue(OverflowBehaviorProperty, value);
+		}
 
-    [TypeConverter(typeof(GenericTypeConverter<short>))]
-    public short ExpandPriority
-    {
-      get => (short) GetValue(ExpandPriorityProperty);
-      set => SetValue(ExpandPriorityProperty, value);
-    }
+		[TypeConverter(typeof(GenericTypeConverter<short>))]
+		public short ShrinkPriority
+		{
+			get => (short)GetValue(ShrinkPriorityProperty);
+			set => SetValue(ShrinkPriorityProperty, value);
+		}
 
-    [TypeConverter(typeof(FlexLengthTypeConverter))]
-    public FlexLength Length
-    {
-      get => (FlexLength) GetValue(LengthProperty);
-      set => SetValue(LengthProperty, value);
-    }
+		public FlexStretchDirection StretchDirection
+		{
+			get => (FlexStretchDirection)GetValue(StretchDirectionProperty);
+			set => SetValue(StretchDirectionProperty, value);
+		}
 
-    public double MaxLength
-    {
-      get => (double) GetValue(MaxLengthProperty);
-      set => SetValue(MaxLengthProperty, value);
-    }
+		private void AttachDefinition(UIElement uie)
+		{
+			_attachedElements.Add(uie);
+		}
 
-    public double MinLength
-    {
-      get => (double) GetValue(MinLengthProperty);
-      set => SetValue(MinLengthProperty, value);
-    }
+		private void DetachDefinition(UIElement uie)
+		{
+			_attachedElements.Remove(uie);
+		}
 
-    public FlexOverflowBehavior OverflowBehavior
-    {
-      get => (FlexOverflowBehavior) GetValue(OverflowBehaviorProperty);
-      set => SetValue(OverflowBehaviorProperty, value);
-    }
+		public static FlexDefinition GetDefinition(DependencyObject element)
+		{
+			return (FlexDefinition)element.GetValue(DefinitionProperty);
+		}
 
-    [TypeConverter(typeof(GenericTypeConverter<short>))]
-    public short ShrinkPriority
-    {
-      get => (short) GetValue(ShrinkPriorityProperty);
-      set => SetValue(ShrinkPriorityProperty, value);
-    }
+		[TypeConverter(typeof(GenericTypeConverter<short>))]
+		public static short GetExpandPriority(DependencyObject element)
+		{
+			return (short)element.GetValue(ExpandPriorityProperty);
+		}
 
-    public FlexStretchDirection StretchDirection
-    {
-      get => (FlexStretchDirection) GetValue(StretchDirectionProperty);
-      set => SetValue(StretchDirectionProperty, value);
-    }
+		[TypeConverter(typeof(FlexLengthTypeConverter))]
+		public static FlexLength GetLength(DependencyObject element)
+		{
+			return (FlexLength)element.GetValue(LengthProperty);
+		}
 
-    #endregion
+		public static double GetMaxLength(DependencyObject element)
+		{
+			return (double)element.GetValue(MaxLengthProperty);
+		}
 
-    #region  Methods
+		public static double GetMinLength(DependencyObject element)
+		{
+			return (double)element.GetValue(MinLengthProperty);
+		}
 
-    private void AttachDefinition(UIElement uie)
-    {
-      _attachedElements.Add(uie);
-    }
+		public static FlexOverflowBehavior GetOverflowBehavior(DependencyObject element)
+		{
+			return (FlexOverflowBehavior)element.GetValue(OverflowBehaviorProperty);
+		}
 
-    private void DetachDefinition(UIElement uie)
-    {
-      _attachedElements.Remove(uie);
-    }
+		[TypeConverter(typeof(GenericTypeConverter<short>))]
+		public static short GetShrinkPriority(DependencyObject element)
+		{
+			return (short)element.GetValue(ShrinkPriorityProperty);
+		}
 
-    public static FlexDefinition GetDefinition(DependencyObject element)
-    {
-      return (FlexDefinition) element.GetValue(DefinitionProperty);
-    }
+		public static FlexStretchDirection GetStretchDirection(DependencyObject element)
+		{
+			return (FlexStretchDirection)element.GetValue(StretchDirectionProperty);
+		}
 
-    [TypeConverter(typeof(GenericTypeConverter<short>))]
-    public static short GetExpandPriority(DependencyObject element)
-    {
-      return (short) element.GetValue(ExpandPriorityProperty);
-    }
+		private void OnDefinitionChanged()
+		{
+			foreach (var uie in _attachedElements)
+				(uie.GetVisualParent() as IFlexPanel)?.InvalidateMeasure();
 
-    [TypeConverter(typeof(FlexLengthTypeConverter))]
-    public static FlexLength GetLength(DependencyObject element)
-    {
-      return (FlexLength) element.GetValue(LengthProperty);
-    }
+			DefinitionChanged?.Invoke(this, EventArgs.Empty);
+		}
 
-    public static double GetMaxLength(DependencyObject element)
-    {
-      return (double) element.GetValue(MaxLengthProperty);
-    }
+		private static void OnDefinitionPropertyChanged(DependencyObject dependencyObject, FlexDefinition oldDefinition, FlexDefinition newDefinition)
+		{
+			(dependencyObject.GetVisualParent() as IFlexPanel)?.InvalidateMeasure();
 
-    public static double GetMinLength(DependencyObject element)
-    {
-      return (double) element.GetValue(MinLengthProperty);
-    }
+			var uie = dependencyObject as UIElement;
 
-    public static FlexOverflowBehavior GetOverflowBehavior(DependencyObject element)
-    {
-      return (FlexOverflowBehavior) element.GetValue(OverflowBehaviorProperty);
-    }
+			if (uie == null)
+				return;
 
-    [TypeConverter(typeof(GenericTypeConverter<short>))]
-    public static short GetShrinkPriority(DependencyObject element)
-    {
-      return (short) element.GetValue(ShrinkPriorityProperty);
-    }
+			oldDefinition?.DetachDefinition(uie);
+			newDefinition?.AttachDefinition(uie);
+		}
 
-    public static FlexStretchDirection GetStretchDirection(DependencyObject element)
-    {
-      return (FlexStretchDirection) element.GetValue(StretchDirectionProperty);
-    }
+		private static void OnLayoutPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+		{
+			(dependencyObject.GetVisualParent() as IFlexPanel)?.InvalidateMeasure();
+			(dependencyObject as FlexDefinition)?.OnDefinitionChanged();
+		}
 
-    private void OnDefinitionChanged()
-    {
-      foreach (var uie in _attachedElements)
-        (uie.GetVisualParent() as IFlexPanel)?.InvalidateMeasure();
+		public static void SetDefinition(DependencyObject element, FlexDefinition value)
+		{
+			element.SetValue(DefinitionProperty, value);
+		}
 
-      DefinitionChanged?.Invoke(this, EventArgs.Empty);
-    }
+		[TypeConverter(typeof(GenericTypeConverter<short>))]
+		public static void SetExpandPriority(DependencyObject element, short value)
+		{
+			element.SetValue(ExpandPriorityProperty, value);
+		}
 
-    private static void OnDefinitionPropertyChanged(DependencyObject dependencyObject, FlexDefinition oldDefinition, FlexDefinition newDefinition)
-    {
-      (dependencyObject.GetVisualParent() as IFlexPanel)?.InvalidateMeasure();
+		[TypeConverter(typeof(FlexLengthTypeConverter))]
+		public static void SetLength(DependencyObject element, FlexLength value)
+		{
+			element.SetValue(LengthProperty, value);
+		}
 
-      var uie = dependencyObject as UIElement;
+		public static void SetMaxLength(DependencyObject element, double value)
+		{
+			element.SetValue(MaxLengthProperty, value);
+		}
 
-      if (uie == null)
-        return;
+		public static void SetMinLength(DependencyObject element, double value)
+		{
+			element.SetValue(MinLengthProperty, value);
+		}
 
-      oldDefinition?.DetachDefinition(uie);
-      newDefinition?.AttachDefinition(uie);
-    }
+		public static void SetOverflowBehavior(DependencyObject element, FlexOverflowBehavior value)
+		{
+			element.SetValue(OverflowBehaviorProperty, value);
+		}
 
-    private static void OnLayoutPropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
-    {
-      (dependencyObject.GetVisualParent() as IFlexPanel)?.InvalidateMeasure();
-      (dependencyObject as FlexDefinition)?.OnDefinitionChanged();
-    }
+		[TypeConverter(typeof(GenericTypeConverter<short>))]
+		public static void SetShrinkPriority(DependencyObject element, short value)
+		{
+			element.SetValue(ShrinkPriorityProperty, value);
+		}
 
-    public static void SetDefinition(DependencyObject element, FlexDefinition value)
-    {
-      element.SetValue(DefinitionProperty, value);
-    }
-
-    [TypeConverter(typeof(GenericTypeConverter<short>))]
-    public static void SetExpandPriority(DependencyObject element, short value)
-    {
-      element.SetValue(ExpandPriorityProperty, value);
-    }
-
-    [TypeConverter(typeof(FlexLengthTypeConverter))]
-    public static void SetLength(DependencyObject element, FlexLength value)
-    {
-      element.SetValue(LengthProperty, value);
-    }
-
-    public static void SetMaxLength(DependencyObject element, double value)
-    {
-      element.SetValue(MaxLengthProperty, value);
-    }
-
-    public static void SetMinLength(DependencyObject element, double value)
-    {
-      element.SetValue(MinLengthProperty, value);
-    }
-
-    public static void SetOverflowBehavior(DependencyObject element, FlexOverflowBehavior value)
-    {
-      element.SetValue(OverflowBehaviorProperty, value);
-    }
-
-    [TypeConverter(typeof(GenericTypeConverter<short>))]
-    public static void SetShrinkPriority(DependencyObject element, short value)
-    {
-      element.SetValue(ShrinkPriorityProperty, value);
-    }
-
-    public static void SetStretchDirection(DependencyObject element, FlexStretchDirection value)
-    {
-      element.SetValue(StretchDirectionProperty, value);
-    }
-
-    #endregion
-  }
+		public static void SetStretchDirection(DependencyObject element, FlexStretchDirection value)
+		{
+			element.SetValue(StretchDirectionProperty, value);
+		}
+	}
 }

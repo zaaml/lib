@@ -6,33 +6,27 @@ using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Primitives.TrackBar
 {
-  public sealed class TrackBarItemCollection : DependencyObjectCollectionBase<TrackBarItem>
-  {
-    #region Ctors
+	public sealed class TrackBarItemCollection : DependencyObjectCollectionBase<TrackBarItem>
+	{
+		internal TrackBarItemCollection(TrackBarControl trackBar)
+		{
+			TrackBar = trackBar;
+		}
 
-    internal TrackBarItemCollection(TrackBarControl trackBar)
-    {
-      TrackBar = trackBar;
-    }
+		internal TrackBarControl TrackBar { get; }
 
-    #endregion
+		protected override void OnItemAdded(TrackBarItem item)
+		{
+			base.OnItemAdded(item);
 
-    #region Properties
+			TrackBar.OnItemAddedInternal(item);
+		}
 
-    internal TrackBarControl TrackBar { get; }
+		protected override void OnItemRemoved(TrackBarItem item)
+		{
+			TrackBar.OnItemRemovedInternal(item);
 
-    #endregion
-
-    protected override void OnItemAdded(TrackBarItem item)
-    {
-      base.OnItemAdded(item);
-      TrackBar.OnItemAddedInternal(item);
-    }
-
-    protected override void OnItemRemoved(TrackBarItem item)
-    {
-      TrackBar.OnItemRemovedInternal(item);
-      base.OnItemRemoved(item);
-    }
-  }
+			base.OnItemRemoved(item);
+		}
+	}
 }

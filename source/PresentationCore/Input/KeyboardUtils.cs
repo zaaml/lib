@@ -6,7 +6,7 @@ using System.Windows.Input;
 
 namespace Zaaml.PresentationCore.Input
 {
-  public static class KeyboardUtils
+	internal static class KeyboardUtils
   {
     #region Properties
 

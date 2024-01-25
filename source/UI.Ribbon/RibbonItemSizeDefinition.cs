@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using Zaaml.Core.Interfaces;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Ribbon
@@ -54,7 +55,7 @@ namespace Zaaml.UI.Controls.Ribbon
     public bool IsFlexible
     {
       get => (bool) GetValue(IsFlexibleProperty);
-      set => SetValue(IsFlexibleProperty, value);
+      set => SetValue(IsFlexibleProperty, value.Box());
     }
 
     public RibbonItemStyle ItemStyle

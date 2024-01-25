@@ -16,90 +16,87 @@ using Zaaml.UI.Panels.Interfaces;
 
 namespace Zaaml.UI.Panels.Flexible
 {
-  internal class FlexPanelLayout : PanelLayoutBase<IFlexPanel>
-  {
-    public FlexPanelLayout(IFlexPanel panel) : base(panel)
-    {
-    }
+	internal class FlexPanelLayout : PanelLayoutBase<IFlexPanel>
+	{
+		private static readonly ArrayPool<Visibility> VisibilityArrayPool = new();
 
-    #region Static Fields and Constants
+		internal readonly FlexElementCollection FlexElements = new();
+		private bool _measureInfinite;
 
-    private static readonly ArrayPool<Visibility> VisibilityArrayPool = new ArrayPool<Visibility>();
+		public FlexPanelLayout(IFlexPanel panel) : base(panel)
+		{
+		}
 
-    #endregion
+		private protected virtual bool AllowMeasureInArrange => false;
 
-    #region Fields
+		protected virtual PanelMeasureMode MeasureMode => PanelMeasureMode.Desired;
 
-    internal readonly FlexElementCollection FlexElements = new FlexElementCollection();
-    private bool _measureInfinite;
+		private protected virtual bool? ShouldFillIndirect => null;
 
-    #endregion
+		protected override Size ArrangeCore(Size finalSize)
+		{
+			var arrangeResult = ArrangeCoreImpl(finalSize);
 
-    #region  Methods
+			return arrangeResult;
+		}
 
-    protected override Size ArrangeCore(Size finalSize)
-    {
-      return ArrangeCoreImpl(finalSize);
-    }
+		private Size ArrangeCoreImpl(Size finalSize)
+		{
+			var flexPanel = Panel;
+			var allowMeasure = AllowMeasureInArrange;
+			var orientation = flexPanel.Orientation;
+			var useLayoutRounding = flexPanel.UseLayoutRounding;
+			var spacing = GetRoundSpacing(flexPanel.Spacing, useLayoutRounding);
 
-    private Size ArrangeCoreImpl(Size finalSize)
-    {
-      var flexPanel = Panel;
-      var flexPanelEx = Panel as IFlexPanelEx;
-      var allowMeasure = flexPanelEx?.AllowMeasureInArrange ?? false;
-      var orientation = flexPanel.Orientation;
-      var useLayoutRounding = flexPanel.UseLayoutRounding;
-      var spacing = GetRoundSpacing(flexPanel.Spacing, useLayoutRounding);
+			for (var index = 0; index < flexPanel.Elements.Count; index++)
+				FlexElements[index] = FlexElements[index].WithUIElement(flexPanel.Elements[index], orientation);
 
-      for (var index = 0; index < flexPanel.Elements.Count; index++)
-        FlexElements[index] = FlexElements[index].WithUIElement(flexPanel.Elements[index], orientation);
+			var currentFlexElements = FlexElementCollection.Mount(FlexElements.Capacity);
 
-      var currentFlexElements = FlexElementCollection.Mount(FlexElements.Capacity);
+			try
+			{
+				FlexElements.CopyTo(currentFlexElements);
 
-      try
-      {
-        FlexElements.CopyTo(currentFlexElements);
+				while (true)
+				{
+					var nextArrangePass = false;
+					var size = new OrientedSize(orientation);
+					var spacingOffset = 0.0;
+					var finalOriented = finalSize.AsOriented(orientation);
+					var finalIndirect = finalOriented.Indirect;
+					var currentPoint = new OrientedPoint(orientation);
+					var childFinalOriented = new OrientedSize(orientation);
+					// Stretch
 
-        while (true)
-        {
-          var nextArrangePass = false;
-          var size = new OrientedSize(orientation);
-          var spacingDelta = 0.0;
-          var finalOriented = finalSize.AsOriented(orientation);
-          var finalIndirect = finalOriented.Indirect;
-          var currentPoint = new OrientedPoint(orientation);
-          var childFinalOriented = new OrientedSize(orientation);
+					Stretch(currentFlexElements, CalcSpacingDelta(GetVisibleCount(Panel, true), spacing), finalOriented.Direct);
 
-          // Stretch
-          Stretch(currentFlexElements, spacing, finalOriented.Direct, true);
+					for (var index = 0; index < flexPanel.Elements.Count; index++)
+					{
+						var child = flexPanel.Elements[index];
+						var flexElement = currentFlexElements[index];
 
-          for (var index = 0; index < flexPanel.Elements.Count; index++)
-          {
-            var child = flexPanel.Elements[index];
-            var flexElement = currentFlexElements[index];
+						if (child.Visibility == Visibility.Collapsed)
+							continue;
 
-            if (child.Visibility == Visibility.Collapsed)
-              continue;
+						if (flexPanel.GetIsHidden(child))
+						{
+							child.Arrange(XamlConstants.ZeroRect);
+							flexElement.ActualLength = 0.0;
+							currentFlexElements[index] = flexElement;
 
-            if (flexPanel.GetIsHidden(child))
-            {
-              child.Arrange(XamlConstants.ZeroRect);
-              flexElement.ActualLength = 0.0;
-              currentFlexElements[index] = flexElement;
+							continue;
+						}
 
-              continue;
-            }
+						var desiredOriented = child.DesiredSize.AsOriented(orientation);
 
-            var desiredOriented = child.DesiredSize.AsOriented(orientation);
+						childFinalOriented.Direct = flexElement.ActualLength;
+						childFinalOriented.Indirect = Math.Max(finalIndirect, desiredOriented.Indirect);
 
-            childFinalOriented.Direct = flexElement.ActualLength;
-            childFinalOriented.Indirect = Math.Max(finalIndirect, desiredOriented.Indirect);
+						// Arrange Child
+						var rect = new Rect(XamlConstants.ZeroPoint, childFinalOriented.Size).WithOffset(currentPoint);
 
-            // Arrange Child
-            var rect = new Rect(XamlConstants.ZeroPoint, childFinalOriented.Size).Offset(currentPoint);
-
-            if (useLayoutRounding)
-              rect = rect.LayoutRound(RoundingMode.MidPointFromZero);
+						if (useLayoutRounding)
+							rect = rect.LayoutRound(RoundingMode.MidPointFromZero);
 
 						if (_measureInfinite && allowMeasure && desiredOriented.Direct.IsGreaterThan(childFinalOriented.Direct))
 						{
@@ -112,631 +109,682 @@ namespace Zaaml.UI.Panels.Flexible
 
 						child.Arrange(rect);
 
-            var arrangeSize = GetActualArrangeSize(child);
+						var arrangeSize = GetActualArrangeSize(child);
+
+						if (arrangeSize.IsEmpty == false)
+						{
+							rect.Width = arrangeSize.Width;
+							rect.Height = arrangeSize.Height;
+						}
+
+						var finalChildDirect = rect.Size().AsOriented(orientation).Direct;
+
+						if (IsArrangeFixed(flexElement) == false && finalChildDirect.IsLessThan(childFinalOriented.Direct))
+						{
+							var length = finalChildDirect;
+
+							flexElement.SetLengths(length, length, length, length);
+							currentFlexElements[index] = flexElement;
+							nextArrangePass = true;
+
+							break;
+						}
+
+						if (useLayoutRounding)
+						{
+							var rectSize = rect.Size().AsOriented(orientation);
+
+							flexElement.ActualLength = rectSize.Direct;
+							currentPoint.Direct = Math.Max(0, (currentPoint.Direct + rectSize.Direct + spacing).LayoutRound(orientation, RoundingMode.MidPointFromZero));
+						}
+						else
+						{
+							var rectSize = rect.Size().AsOriented(orientation);
+
+							flexElement.ActualLength = rectSize.Direct;
+							currentPoint.Direct = Math.Max(0, currentPoint.Direct + rectSize.Direct + spacing);
+						}
+
+						currentFlexElements[index] = flexElement;
+
+						spacingOffset += spacing;
+
+						size = size.StackSize(childFinalOriented);
+					}
+
+					if (nextArrangePass)
+						continue;
+
+					if (spacingOffset.Equals(0.0) == false)
+						size.Direct = Math.Max(0, size.Direct + spacingOffset - spacing);
+
+					var result = finalSize;
+
+					if (orientation == Orientation.Horizontal)
+					{
+						var shouldFill = ShouldFillIndirect ?? flexPanel.ShouldFill(Orientation.Horizontal);
+
+						result.Width = shouldFill ? finalSize.Width : Math.Min(finalSize.Width, size.Width);
+					}
+					else
+					{
+						var shouldFill = ShouldFillIndirect ?? flexPanel.ShouldFill(Orientation.Vertical);
+
+						result.Height = shouldFill ? finalSize.Height : Math.Min(finalSize.Height, size.Height);
+					}
+
+					return result;
+				}
+			}
+			finally
+			{
+				FlexElementCollection.Release(currentFlexElements);
+			}
+		}
 
-            if (arrangeSize.IsEmpty == false)
-            {
-              rect.Width = arrangeSize.Width;
-              rect.Height = arrangeSize.Height;
-            }
+		private static double CalcSpacingDelta(int visibleCount, double spacing)
+		{
+			if (spacing.Equals(0.0))
+				return 0.0;
+
+			if (visibleCount < 2)
+				return 0.0;
 
-            var finalChildDirect = rect.Size().AsOriented(orientation).Direct;
+			return (visibleCount - 1) * spacing;
+		}
 
-            if (IsArrangeFixed(flexElement) == false && finalChildDirect.IsLessThan(childFinalOriented.Direct))
-            {
-              var length = finalChildDirect;
+		private bool CanHide(FlexElement flexElement)
+		{
+			return (flexElement.OverflowBehavior & FlexOverflowBehavior.Hide) != 0;
+		}
 
-              flexElement.SetLengths(length, length, length, length);
-              currentFlexElements[index] = flexElement;
-              nextArrangePass = true;
+		private bool CanPin(FlexElement flexElement)
+		{
+			return (flexElement.OverflowBehavior & FlexOverflowBehavior.Pin) != 0;
+		}
 
-              break;
-            }
+		private bool CanPinStretch(FlexElement flexElement)
+		{
+			return (flexElement.OverflowBehavior & FlexOverflowBehavior.Pin) != 0 && (flexElement.OverflowBehavior & FlexOverflowBehavior.Stretch) != 0;
+		}
 
-            if (useLayoutRounding)
-            {
-              var rectSize = rect.Size().AsOriented(orientation);
+		private OrientedSize FinalMeasureItems(OrientedSize availableOriented, double spacing, bool skipHiddenSpacing)
+		{
+			var children = Panel.Elements;
+			var childrenCount = children.Count;
+			var orientation = Panel.Orientation;
+			var desiredOriented = new OrientedSize(orientation);
 
-              flexElement.ActualLength = rectSize.Direct;
-              currentPoint.Direct = Math.Max(0, (currentPoint.Direct + rectSize.Direct + spacing).LayoutRound(orientation, RoundingMode.MidPointFromZero));
-            }
-            else
-            {
-              var rectSize = rect.Size().AsOriented(orientation);
+			for (var index = 0; index < childrenCount; index++)
+			{
+				var child = children[index];
+				var flexItem = FlexElements[index];
+				var childFinalDirect = flexItem.ActualLength;
+				var childDesiredOriented = child.DesiredSize.AsOriented(orientation);
 
-              flexElement.ActualLength = rectSize.Direct;
-              currentPoint.Direct = Math.Max(0, currentPoint.Direct + rectSize.Direct + spacing);
-            }
+				if (flexItem.ActualLength.IsLessThan(childDesiredOriented.Direct) == false)
+				{
+					childDesiredOriented.Direct = flexItem.ActualLength;
+					desiredOriented = desiredOriented.StackSize(childDesiredOriented);
 
-            currentFlexElements[index] = flexElement;
+					continue;
+				}
 
-            spacingDelta += spacing;
+				childDesiredOriented = MeasureChild(child, OrientedSize.Create(orientation, childFinalDirect, availableOriented.Indirect));
+				flexItem = flexItem.WithUIElement(child, orientation);
+				childDesiredOriented.Direct = flexItem.ActualLength;
+				desiredOriented = desiredOriented.StackSize(childDesiredOriented);
+				FlexElements[index] = flexItem;
+			}
 
-            size = size.StackSize(childFinalOriented);
-          }
+			desiredOriented.Direct = Math.Max(0, desiredOriented.Direct + CalcSpacingDelta(GetVisibleCount(Panel, skipHiddenSpacing), spacing));
 
-          if (nextArrangePass)
-            continue;
+			return desiredOriented;
+		}
 
-          if (spacingDelta.Equals(0.0) == false)
-            size.Direct = Math.Max(0, size.Direct + spacingDelta - spacing);
+		private Size GetActualArrangeSize(UIElement uie)
+		{
+			var fre = uie as FrameworkElement;
 
-          var result = finalSize;
+			return fre?.GetActualSize().Rect().GetInflated(fre.Margin).Size() ?? Size.Empty;
+		}
 
-          if (orientation == Orientation.Horizontal)
-            result.Width = flexPanel.ShouldFill(Orientation.Horizontal) ? finalSize.Width : Math.Min(finalSize.Width, size.Width);
-          else
-            result.Height = flexPanel.ShouldFill(Orientation.Vertical) ? finalSize.Height : Math.Min(finalSize.Height, size.Height);
+		internal FlexElement GetActualElement(IFlexPanel panel, UIElement child)
+		{
+			return FlexElements.ElementAtOrDefault(panel.Elements.IndexOf(child));
+		}
 
-          return result;
-        }
-      }
-      finally
-      {
-        FlexElementCollection.Release(currentFlexElements);
-      }
-    }
+		private static OrientedSize GetChildConstraint(FlexElement flexElement, OrientedSize autoConstraint, OrientedSize starConstraint)
+		{
+			if (starConstraint.Direct.IsNaN())
+				starConstraint.Direct = double.PositiveInfinity;
 
-    private static double CalcSpacingDelta(int visibleCount, double spacing)
-    {
-      if (spacing.Equals(0.0))
-        return 0.0;
+			if (autoConstraint.Direct.IsNaN())
+				autoConstraint.Direct = double.PositiveInfinity;
 
-      if (visibleCount < 2)
-        return 0.0;
+			var flexLength = flexElement.Length;
 
-      return (visibleCount - 1) * spacing;
-    }
+			if (flexLength.IsStar)
+			{
+				if (starConstraint.Direct.IsPositiveInfinity())
+					return starConstraint;
 
-    private Size GetActualArrangeSize(UIElement uie)
-    {
-      var fre = uie as FrameworkElement;
+				starConstraint.Direct *= flexLength.Value;
 
-      return fre?.GetActualSize().Rect().GetInflated(fre.Margin).Size() ?? Size.Empty;
-    }
+				return starConstraint;
+			}
 
-    internal FlexElement GetActualElement(IFlexPanel panel, UIElement child)
-    {
-      return FlexElements.ElementAtOrDefault(panel.Elements.IndexOf(child));
-    }
+			if (flexLength.IsAbsolute)
+			{
+				autoConstraint.Direct = flexLength.Value;
 
-    private static OrientedSize GetChildConstraint(FlexElement flexElement, OrientedSize autoConstraint, OrientedSize starConstraint)
-    {
-      var flexLength = flexElement.Length;
+				return autoConstraint;
+			}
 
-      if (flexLength.IsStar)
-      {
-        starConstraint.Direct *= flexLength.Value;
+			return autoConstraint;
+		}
 
-        return starConstraint;
-      }
+		private static OrientedSize GetFinalMeasureSize(OrientedSize availableSize, OrientedSize desiredSize, OrientedSize visibleSize)
+		{
+			var finalSize = availableSize;
 
-      if (flexLength.IsAbsolute)
-      {
-        autoConstraint.Direct = flexLength.Value;
-
-        return autoConstraint;
-      }
-
-      return autoConstraint;
-    }
-
-    private static OrientedSize GetFinalMeasureSize(OrientedSize availableSize, OrientedSize desiredSize, OrientedSize visibleSize)
-    {
-      var finalSize = availableSize;
-
-      // Indirect
-      finalSize.Indirect = finalSize.Indirect.IsInfinity() ? desiredSize.Indirect : visibleSize.Indirect;
-
-      // Direct
-      finalSize.Direct = finalSize.Direct.IsInfinity() ? desiredSize.Direct : visibleSize.Direct;
-
-      return finalSize.ConstraintSize(availableSize);
-    }
+			// Indirect
+			finalSize.Indirect = finalSize.Indirect.IsInfinity() ? desiredSize.Indirect : visibleSize.Indirect;
 
-    private static double GetRoundSpacing(double spacing, bool useLayoutRounding)
-    {
-      if (spacing.Equals(0.0))
-        return 0.0;
+			// Direct
+			finalSize.Direct = finalSize.Direct.IsInfinity() ? desiredSize.Direct : visibleSize.Direct;
 
-      if (useLayoutRounding == false)
-        return spacing;
+			return finalSize.ConstraintSize(availableSize);
+		}
 
-      spacing = spacing.Truncate();
+		private static double GetRoundSpacing(double spacing, bool useLayoutRounding)
+		{
+			if (spacing.Equals(0.0))
+				return 0.0;
 
-      if (Math.Abs(spacing) < 1)
-        return Math.Sign(spacing) * 1.0;
+			if (useLayoutRounding == false)
+				return spacing;
 
-      return spacing;
-    }
+			spacing = spacing.Truncate();
+
+			if (Math.Abs(spacing) < 1)
+				return Math.Sign(spacing) * 1.0;
+
+			return spacing;
+		}
+
+		private static int GetVisibleCount(IFlexPanel flexPanel, bool skipHiddenSpacing)
+		{
+			var count = 0;
+
+			foreach (var c in flexPanel.Elements)
+			{
+				if (c.IsVisible() && (skipHiddenSpacing == false || flexPanel.GetIsHidden(c) == false))
+					count++;
+			}
+
+			return count;
+		}
 
-    private static int GetVisibleCount(IFlexPanel flexPanel, bool skipHiddenSpacing)
-    {
-      return flexPanel.Elements.Count(c => c.IsVisible() && (skipHiddenSpacing == false || flexPanel.GetIsHidden(c) == false));
-    }
+		internal static void InvalidateFlexMeasure(IFlexPanel flexPanel)
+		{
+			flexPanel.InvalidateMeasure();
 
-    private bool IsArrangeFixed(FlexElement element)
-    {
-      return Equals(element.MinLength, element.MaxLength) && Equals(element.MinLength, element.ActualLength);
-    }
+			var dependencyObject = flexPanel as DependencyObject;
 
-    private static OrientedSize MeasureChild(UIElement child, OrientedSize childConstraint)
-    {
-      child.Measure(childConstraint.Size);
+			while (dependencyObject != null)
+			{
+				if (dependencyObject is IFlexPanel parentPanel)
+					parentPanel.InvalidateMeasure();
 
-      return child.DesiredSize.AsOriented(childConstraint.Orientation);
-    }
+				dependencyObject = dependencyObject.GetVisualParent();
+			}
+		}
 
-    protected override Size MeasureCore(Size availableSize)
-    {
-      return MeasureCoreImpl(availableSize);
-    }
+		private bool IsArrangeFixed(FlexElement element)
+		{
+			return Equals(element.MinLength, element.MaxLength) && Equals(element.MinLength, element.ActualLength);
+		}
 
-    private Size MeasureCoreImpl(Size availableSize)
-    {
-      var flexPanel = Panel;
-      var orientation = flexPanel.Orientation;
-      var availableOriented = availableSize.AsOriented(orientation);
-      var children = flexPanel.Elements;
-      var visibility = VisibilityArrayPool.GetArray(children.Count);
+		private static OrientedSize MeasureChild(UIElement child, OrientedSize childConstraint)
+		{
+			child.Measure(childConstraint.Size);
 
-      _measureInfinite = availableOriented.Direct.IsPositiveInfinity();
-
-      // First measure pass
-      try
-      {
-	      // Cache children visibility
-        for (var index = 0; index < children.Count; index++)
-          visibility[index] = children[index].Visibility;
+			return child.DesiredSize.AsOriented(childConstraint.Orientation);
+		}
 
-        var result = MeasureImpl(availableOriented.Size, out var isOverflowedChanged);
-        var childVisibilityChanged = false;
+		protected override Size MeasureCore(Size availableSize)
+		{
+			return MeasureCoreImpl(availableSize);
+		}
 
-        // Check children visibility changes
-        if (isOverflowedChanged == false)
-        {
-          var count = Math.Min(children.Count, visibility.Length);
-
-          for (var index = 0; index < count; index++)
-          {
-            childVisibilityChanged = visibility[index] != children[index].Visibility;
-
-            if (childVisibilityChanged)
-              break;
-          }
-        }
-
-        // Second measure pass
-        if (isOverflowedChanged || childVisibilityChanged)
-          result = MeasureImpl(availableOriented.Size, out isOverflowedChanged);
-
-        return result.AsOriented(orientation).Size;
-      }
-      finally
-      {
-        VisibilityArrayPool.ReleaseArray(visibility);
-      }
-    }
-
-    private Size MeasureImpl(Size availableSize, out bool overflowChanged)
-    {
-      overflowChanged = false;
-
-      var children = Panel.Elements;
-      var orientation = Panel.Orientation;
-      var childrenCount = children.Count;
-
-      if (childrenCount == 0)
-        return XamlConstants.ZeroSize;
-
-      var useLayoutRounding = Panel.UseLayoutRounding;
-
-      FlexElements.UseLayoutRounding = useLayoutRounding;
-
-      if (useLayoutRounding)
-        availableSize = availableSize.LayoutRound(RoundingMode.MidPointFromZero);
-
-      var spacing = GetRoundSpacing(Panel.Spacing, useLayoutRounding);
-      var availableOriented = availableSize.AsOriented(orientation);
-
-      // First measure
-      var desiredOriented = MeasureItems(availableSize, out var desiredFixed, out _);
-
-      // Stretch
-      desiredOriented.Direct = Stretch(FlexElements, spacing, availableOriented.Direct, false);
-
-      // Final measure
-      desiredOriented = FinalMeasureItems(availableOriented, spacing, false);
-
-      // Overflow
-      var visibleSize = ProcessSpacingAndOverflow(spacing, desiredOriented, availableOriented, out overflowChanged);
-
-      // Return
-      return GetFinalMeasureSize(availableOriented.Clamp(desiredFixed, XamlConstants.InfiniteSize.AsOriented(orientation)), desiredOriented, visibleSize).Size;
-    }
-
-    private OrientedSize FinalMeasureItems(OrientedSize availableOriented, double spacing, bool skipHiddenSpacing)
-    {
-      var children = Panel.Elements;
-      var childrenCount = children.Count;
-      var orientation = Panel.Orientation;
-      var desiredOriented = new OrientedSize(orientation);
-
-      for (var index = 0; index < childrenCount; index++)
-      {
-        var child = children[index];
-        var flexItem = FlexElements[index];
-        var childFinalDirect = flexItem.ActualLength;
-        var childDesiredOriented = child.DesiredSize.AsOriented(orientation);
-
-        if (flexItem.ActualLength.IsLessThan(childDesiredOriented.Direct) == false)
-        {
-          childDesiredOriented.Direct = flexItem.ActualLength;
-          desiredOriented = desiredOriented.StackSize(childDesiredOriented);
-
-          continue;
-        }
-
-        childDesiredOriented = MeasureChild(child, OrientedSize.Create(orientation, childFinalDirect, availableOriented.Indirect));
-        flexItem = flexItem.WithUIElement(child, orientation);
-        childDesiredOriented.Direct = flexItem.ActualLength;
-        desiredOriented = desiredOriented.StackSize(childDesiredOriented);
-        FlexElements[index] = flexItem;
-      }
-
-      desiredOriented.Direct = Math.Max(0, desiredOriented.Direct + CalcSpacingDelta(GetVisibleCount(Panel, skipHiddenSpacing), spacing));
-
-      return desiredOriented;
-    }
+		private Size MeasureCoreImpl(Size availableSize)
+		{
+			var flexPanel = Panel;
+			var orientation = flexPanel.Orientation;
+			var availableOriented = availableSize.AsOriented(orientation);
+			var children = flexPanel.Elements;
+			var visibility = VisibilityArrayPool.GetArray(children.Count);
 
-    private OrientedSize MeasureItems(Size availableSize, out OrientedSize fixedSize, out OrientedSize flexibleSize)
-    {
-      var stretch = Panel.Stretch;
-      var orientation = Panel.Orientation;
-      var children = Panel.Elements;
-      var childrenCount = children.Count;
-      var oriented = availableSize.AsOriented(orientation);
-      var fixedChildConstraint = oriented.Clone.ChangeDirect(double.PositiveInfinity);
-      var starChildConstraint = oriented.Clone.ChangeDirect(0);
-      var fixedResult = new OrientedSize(orientation);
-      var starValue = 0.0;
+			_measureInfinite = availableOriented.Direct.IsPositiveInfinity();
+
+			// First measure pass
+			try
+			{
+				for (var index = 0; index < children.Count; index++)
+				{
+					var child = children[index];
+
+					Panel.SetIsHidden(child, false);
+					visibility[index] = child.Visibility;
+				}
+
+				Panel.HasHiddenChildren = false;
 
-      FlexElements.EnsureCount(childrenCount);
-
-      for (var index = 0; index < childrenCount; index++)
-      {
-        var flexElement = Panel.GetFlexElement(children[index]).WithOrientation(orientation);
+				var result = MeasureImpl(availableOriented.Size, out var isOverflowedChanged);
+				var childVisibilityChanged = false;
 
-        if (flexElement.IsStar)
-          starValue += flexElement.Length.Value;
+				// Check children visibility changes
+				if (isOverflowedChanged == false)
+				{
+					var count = Math.Min(children.Count, visibility.Length);
 
-        FlexElements[index] = flexElement;
-      }
+					for (var index = 0; index < count; index++)
+					{
+						childVisibilityChanged = visibility[index] != children[index].Visibility;
+
+						if (childVisibilityChanged)
+							break;
+					}
+				}
+
+				// Second measure pass
+				if (isOverflowedChanged || childVisibilityChanged)
+					result = MeasureImpl(availableOriented.Size, out _);
+
+				return result.AsOriented(orientation).Size;
+			}
+			finally
+			{
+				VisibilityArrayPool.ReleaseArray(visibility);
+			}
+		}
+
+		private Size MeasureImpl(Size availableSize, out bool overflowChanged)
+		{
+			overflowChanged = false;
+
+			var children = Panel.Elements;
+			var orientation = Panel.Orientation;
+			var childrenCount = children.Count;
+
+			if (childrenCount == 0)
+				return XamlConstants.ZeroSize;
+
+			var useLayoutRounding = Panel.UseLayoutRounding;
+
+			FlexElements.UseLayoutRounding = useLayoutRounding;
 
-      // None Stretch
-      if (stretch == FlexStretch.None)
-      {
-        for (var index = 0; index < childrenCount; index++)
-        {
-          var flexElement = FlexElements[index];
-          var child = children[index];
-          var childConstraint = GetChildConstraint(flexElement, fixedChildConstraint, starChildConstraint);
-
-          // Stack child size
-          var size = MeasureChild(child, childConstraint);
+			if (useLayoutRounding)
+				availableSize = availableSize.LayoutRound(RoundingMode.MidPointFromZero);
+
+			var spacing = GetRoundSpacing(Panel.Spacing, useLayoutRounding);
+			var spacingDelta = CalcSpacingDelta(GetVisibleCount(Panel, false), spacing);
+			var availableOriented = availableSize.AsOriented(orientation);
+
+			// First measure
+			var desiredOriented = MeasureItems(availableSize, out var desiredFixed, out _);
+
+			if (MeasureMode == PanelMeasureMode.Desired)
+			{
+				if (desiredFixed.Direct + spacing < availableOriented.Direct)
+				{
+					desiredFixed.ChangeDirect(desiredOriented.Direct + spacingDelta);
 
-          flexElement = flexElement.WithUIElement(child, orientation);
-          size.Direct = flexElement.DesiredLength;
-          fixedResult = fixedResult.StackSize(size);
-          FlexElements[index] = flexElement;
-        }
-
-        fixedSize = fixedResult;
-        flexibleSize = new OrientedSize(orientation);
-
-        return fixedResult;
-      }
+					return desiredFixed.Size;
+				}
+			}
 
-      // Fixed size children
-      for (var index = 0; index < childrenCount; index++)
-      {
-        var flexElement = FlexElements[index];
+			// Stretch
+			desiredOriented.Direct = Stretch(FlexElements, spacingDelta, availableOriented.Direct);
 
-        if (flexElement.IsStar)
-          continue;
+			// Final measure
+			desiredOriented = FinalMeasureItems(availableOriented, spacing, false);
 
-        var child = children[index];
-        var childConstraint = GetChildConstraint(flexElement, fixedChildConstraint, starChildConstraint);
+			// Overflow
+			var visibleSize = ProcessSpacingAndOverflow(spacing, desiredOriented, availableOriented, out overflowChanged);
 
-        // Stack child size
-        var size = MeasureChild(child, childConstraint);
+			// Return
+			return GetFinalMeasureSize(availableOriented.Clamp(desiredFixed, XamlConstants.InfiniteSize.AsOriented(orientation)), desiredOriented, visibleSize).Size;
+		}
 
-        flexElement = flexElement.WithUIElement(child, orientation);
-        size.Direct = flexElement.DesiredLength;
-        fixedResult = fixedResult.StackSize(size);
-        FlexElements[index] = flexElement;
-      }
+		private OrientedSize MeasureItems(Size availableSize, out OrientedSize fixedSize, out OrientedSize flexibleSize)
+		{
+			var stretch = Panel.Stretch;
+			var orientation = Panel.Orientation;
+			var children = Panel.Elements;
+			var childrenCount = children.Count;
+			var oriented = availableSize.AsOriented(orientation);
+			var fixedChildConstraint = oriented.Clone.ChangeDirect(double.PositiveInfinity);
+			var starChildConstraint = oriented.Clone.ChangeDirect(0);
+			var fixedResult = new OrientedSize(orientation);
+			var starValue = 0.0;
 
-      fixedSize = fixedResult;
-      flexibleSize = new OrientedSize(orientation);
-      starChildConstraint.ChangeDirect(FlexUtils.CalcStarValue(oriented.Direct, fixedResult.Direct, starValue));
+			FlexElements.EnsureCount(childrenCount);
 
-      // Star size children
-      var flexibleResult = new OrientedSize(orientation);
+			for (var index = 0; index < childrenCount; index++)
+			{
+				var uiElement = children[index];
+				var flexElement = Panel.GetFlexElement(uiElement).WithOrientation(orientation);
 
-      for (var index = 0; index < childrenCount; index++)
-      {
-        var flexElement = FlexElements[index];
+				if (uiElement.Visibility == Visibility.Collapsed)
+					flexElement.StretchDirection = FlexStretchDirection.None;
 
-        if (flexElement.IsFixed)
-          continue;
+				if (flexElement.IsStar)
+					starValue += flexElement.Length.Value;
 
-        var child = children[index];
-        var childConstraint = GetChildConstraint(flexElement, fixedChildConstraint, starChildConstraint);
+				FlexElements[index] = flexElement;
+			}
 
-        // Stack child size
-        var size = MeasureChild(child, childConstraint);
+			// None Stretch
+			if (stretch == FlexStretch.None)
+			{
+				for (var index = 0; index < childrenCount; index++)
+				{
+					var flexElement = FlexElements[index];
+					var child = children[index];
+					var childConstraint = GetChildConstraint(flexElement, fixedChildConstraint, starChildConstraint);
 
-        flexElement = flexElement.WithUIElement(child, orientation);
-        size.Direct = flexElement.DesiredLength;
-        flexibleResult = flexibleResult.StackSize(size);
-        FlexElements[index] = flexElement.WithUIElement(child, orientation);
-      }
+					// Stack child size
+					var size = MeasureChild(child, childConstraint);
 
-      flexibleSize = flexibleResult;
+					flexElement = flexElement.WithUIElement(child, orientation);
+					size.Direct = flexElement.DesiredLength;
+					fixedResult = fixedResult.StackSize(size);
+					FlexElements[index] = flexElement;
+				}
 
-      return fixedResult.StackSize(flexibleResult);
-    }
+				fixedSize = fixedResult;
+				flexibleSize = new OrientedSize(orientation);
 
-    public override void OnLayoutUpdated()
-    {
-      var orientation = Panel.Orientation;
-      var useLayoutRounding = Panel.UseLayoutRounding;
+				return fixedResult;
+			}
 
-      for (var index = 0; index < Panel.Elements.Count; index++)
-      {
-        var fre = Panel.Elements[index] as FrameworkElement;
+			// Fixed size children
+			for (var index = 0; index < childrenCount; index++)
+			{
+				var flexElement = FlexElements[index];
 
-        if (fre == null)
-          continue;
+				if (flexElement.IsStar)
+					continue;
 
-        var prevFlexItem = FlexElements[index];
-        var nextFlexItem = prevFlexItem.WithUIElement(fre, orientation).WithRounding(useLayoutRounding);
+				var child = children[index];
+				var childConstraint = GetChildConstraint(flexElement, fixedChildConstraint, starChildConstraint);
 
-        if (prevFlexItem.MinLength.IsCloseTo(nextFlexItem.MinLength) && prevFlexItem.MaxLength.IsCloseTo(nextFlexItem.MaxLength))
-          continue;
+				// Stack child size
+				var size = MeasureChild(child, childConstraint);
 
-        Panel.InvalidateMeasure();
+				flexElement = flexElement.WithUIElement(child, orientation);
+				size.Direct = flexElement.DesiredLength;
+				fixedResult = fixedResult.StackSize(size);
+				FlexElements[index] = flexElement;
+			}
 
-        return;
-      }
-    }
+			fixedSize = fixedResult;
+			starChildConstraint.ChangeDirect(FlexUtils.CalcStarValue(oriented.Direct, fixedResult.Direct, starValue));
 
-    private bool CanPinStretch(FlexElement flexElement)
-    {
-      return (flexElement.OverflowBehavior & FlexOverflowBehavior.Pin) != 0 && (flexElement.OverflowBehavior & FlexOverflowBehavior.Stretch) != 0;
-    }
+			// Star size children
+			var flexibleResult = new OrientedSize(orientation);
 
-    private bool CanPin(FlexElement flexElement)
-    {
-      return (flexElement.OverflowBehavior & FlexOverflowBehavior.Pin) != 0;
-    }
+			for (var index = 0; index < childrenCount; index++)
+			{
+				var flexElement = FlexElements[index];
 
-    private bool CanHide(FlexElement flexElement)
-    {
-      return (flexElement.OverflowBehavior & FlexOverflowBehavior.Hide) != 0;
-    }
+				if (flexElement.IsFixed)
+					continue;
 
-    private OrientedSize ProcessSpacingAndOverflow(double spacing, OrientedSize desiredOriented, OrientedSize availableOriented, out bool isHiddenChanged)
-    {
-      var childrenCount = Panel.Elements.Count;
-      var orientation = Panel.Orientation;
+				var child = children[index];
+				var childConstraint = GetChildConstraint(flexElement, fixedChildConstraint, starChildConstraint);
 
-      var target = availableOriented.Direct;
+				// Stack child size
+				var size = MeasureChild(child, childConstraint);
 
-      isHiddenChanged = false;
+				flexElement = flexElement.WithUIElement(child, orientation);
+				size.Direct = flexElement.DesiredLength;
+				flexibleResult = flexibleResult.StackSize(size);
+				FlexElements[index] = flexElement.WithUIElement(child, orientation);
+			}
 
-      // Current length is greater than available and we have no possibility to stretch down -> mark elements as hidden
-      var current = 0.0;
-      var visible = 0.0;
+			flexibleSize = flexibleResult;
 
-      var hasHiddenChildren = false;
-      var visibleChildrenCount = 0;
+			return fixedResult.StackSize(flexibleResult);
+		}
 
-      if (desiredOriented.Direct.IsGreaterThan(availableOriented.Direct))
-      {
-        var stretchOverflow = FlexElementCollection.Mount(FlexElements.Capacity);
+		public override void OnLayoutUpdated()
+		{
+			var orientation = Panel.Orientation;
+			var useLayoutRounding = Panel.UseLayoutRounding;
 
-        try
-        {
-          // Process Pinned Flexible
-          for (var index = 0; index < childrenCount; index++)
-          {
-            var flexElement = FlexElements[index];
+			for (var index = 0; index < Panel.Elements.Count; index++)
+			{
+				var fre = Panel.Elements[index] as FrameworkElement;
 
-            if (CanPinStretch(flexElement) == false)
-              continue;
+				if (fre == null)
+					continue;
 
-            flexElement.StretchDirection = FlexStretchDirection.Shrink;
+				var prevFlexItem = FlexElements[index];
+				var nextFlexItem = prevFlexItem.WithUIElement(fre, orientation).WithRounding(useLayoutRounding);
 
-            stretchOverflow.Add(flexElement);
+				if (prevFlexItem.MinLength.IsCloseTo(nextFlexItem.MinLength) && prevFlexItem.MaxLength.IsCloseTo(nextFlexItem.MaxLength))
+					continue;
 
-            Panel.SetIsHidden(Panel.Elements[index], false);
-          }
+				Panel.InvalidateMeasure();
 
-          // Process Pinned
-          for (var index = 0; index < childrenCount; index++)
-          {
-            var child = Panel.Elements[index];
+				return;
+			}
+		}
 
-            if (child.Visibility == Visibility.Collapsed)
-              continue;
+		private OrientedSize ProcessSpacingAndOverflow(double spacing, OrientedSize desiredOriented, OrientedSize availableOriented, out bool isHiddenChanged)
+		{
+			var childrenCount = Panel.Elements.Count;
+			var orientation = Panel.Orientation;
 
-            var flexElement = FlexElements[index];
+			var target = availableOriented.Direct;
 
-            if (CanPin(flexElement) == false)
-              continue;
+			isHiddenChanged = false;
 
-            current += flexElement.ActualLength;
-            current += spacing;
+			// Current length is greater than available and we have no possibility to stretch down -> mark elements as hidden
+			var current = 0.0;
+			var visible = 0.0;
 
-            visible = current;
+			var hasHiddenChildren = false;
+			var visibleChildrenCount = 0;
 
-            Panel.SetIsHidden(Panel.Elements[index], false);
-          }
+			if (desiredOriented.Direct.IsGreaterThan(availableOriented.Direct))
+			{
+				var stretchOverflow = FlexElementCollection.Mount(FlexElements.Capacity);
 
-          // Process Hide
-          for (var index = 0; index < childrenCount; index++)
-          {
-            var child = Panel.Elements[index];
+				try
+				{
+					// Process Pinned Flexible
+					for (var index = 0; index < childrenCount; index++)
+					{
+						var flexElement = FlexElements[index];
 
-            if (child.Visibility == Visibility.Collapsed)
-              continue;
+						if (CanPinStretch(flexElement) == false)
+							continue;
 
-            visibleChildrenCount++;
+						flexElement.StretchDirection = FlexStretchDirection.Shrink;
 
-            var flexElement = FlexElements[index];
+						stretchOverflow.Add(flexElement);
 
-            if (CanPin(flexElement))
-              continue;
+						Panel.SetIsHidden(Panel.Elements[index], false);
+					}
 
-            current += flexElement.ActualLength;
+					// Process Pinned
+					for (var index = 0; index < childrenCount; index++)
+					{
+						var child = Panel.Elements[index];
 
-            if (CanHide(flexElement) == false)
-            {
-              isHiddenChanged |= Panel.GetIsHidden(child);
-              Panel.SetIsHidden(child, false);
+						if (child.Visibility == Visibility.Collapsed)
+							continue;
 
-              current += spacing;
+						var flexElement = FlexElements[index];
 
-              visible = current;
-              continue;
-            }
+						if (CanPin(flexElement) == false)
+							continue;
 
-            var isOverflowed = current.IsGreaterThan(target, XamlConstants.LayoutComparisonPrecision);
+						current += flexElement.ActualLength;
+						current += spacing;
 
-            current += spacing;
+						visible = current;
 
-            if (isOverflowed == false)
-              visible = current;
+						Panel.SetIsHidden(Panel.Elements[index], false);
+					}
 
-            isHiddenChanged |= Panel.GetIsHidden(child) != isOverflowed;
-            hasHiddenChildren |= isOverflowed;
+					// Process Hide
+					for (var index = 0; index < childrenCount; index++)
+					{
+						var child = Panel.Elements[index];
 
-            Panel.SetIsHidden(child, isOverflowed);
-          }
+						if (child.Visibility == Visibility.Collapsed)
+							continue;
 
-          if (visibleChildrenCount > 0)
-            visible = visible - spacing;
+						visibleChildrenCount++;
 
-          Panel.HasHiddenChildren = hasHiddenChildren;
+						var flexElement = FlexElements[index];
 
-          // Stretch Pinned
-          if (visible.IsGreaterThan(availableOriented.Direct) && stretchOverflow.Count > 0)
-          {
-            var currentPinStretch = stretchOverflow.Actual;
-            var pinStretchTarget = (currentPinStretch - (visible - availableOriented.Direct)).Clamp(0, availableOriented.Direct);
-            var pinStretchDesired = stretchOverflow.Stretch(FlexStretch.Fill, pinStretchTarget, FlexDistributor.Equalizer);
+						if (CanPin(flexElement))
+							continue;
 
-            if (pinStretchDesired < currentPinStretch)
-            {
-              var pinStretchIndex = 0;
+						current += flexElement.ActualLength;
 
-              for (var index = 0; index < childrenCount; index++)
-              {
-                var flexElement = FlexElements[index];
+						if (CanHide(flexElement) == false)
+						{
+							isHiddenChanged |= Panel.GetIsHidden(child);
+							Panel.SetIsHidden(child, false);
 
-                if (CanPinStretch(flexElement))
-                  FlexElements[index] = stretchOverflow[pinStretchIndex++].WithStretchDirection(FlexStretchDirection.Shrink).WithMaxLength(flexElement.ActualLength);
-                else
-                  FlexElements[index] = FlexElements[index].WithStretchDirection(FlexStretchDirection.Shrink).WithShrinkPriority(short.MaxValue);
-              }
+							current += spacing;
 
-              FinalMeasureItems(availableOriented, spacing, true);
+							visible = current;
 
-              return OrientedSize.Create(orientation, availableOriented.Direct, desiredOriented.Indirect);
-            }
-          }
-        }
-        finally
-        {
-          FlexElementCollection.Release(stretchOverflow);
-        }
+							continue;
+						}
 
-        return OrientedSize.Create(orientation, visible.Clamp(0, availableOriented.Direct), desiredOriented.Indirect);
-      }
+						var isOverflowed = current.IsGreaterThan(target, XamlConstants.LayoutComparisonPrecision);
 
-      for (var index = 0; index < childrenCount; index++)
-      {
-        var flexElement = FlexElements[index];
-        var child = Panel.Elements[index];
+						current += spacing;
 
-        if (child.Visibility == Visibility.Collapsed)
-          continue;
+						if (isOverflowed == false)
+							visible = current;
 
-        visibleChildrenCount++;
+						isHiddenChanged |= Panel.GetIsHidden(child) != isOverflowed;
+						hasHiddenChildren |= isOverflowed;
 
-        current += flexElement.ActualLength;
-        current += spacing;
+						Panel.SetIsHidden(child, isOverflowed);
+					}
 
-        Panel.SetIsHidden(Panel.Elements[index], false);
-      }
+					if (visibleChildrenCount > 0)
+						visible -= spacing;
 
-      Panel.HasHiddenChildren = false;
-      visible = Math.Max(0, current);
+					Panel.HasHiddenChildren = hasHiddenChildren;
 
-      if (visibleChildrenCount > 0)
-        visible = visible - spacing;
+					// Stretch Pinned
+					if (visible.IsGreaterThan(availableOriented.Direct) && stretchOverflow.Count > 0)
+					{
+						var currentPinStretch = stretchOverflow.Actual;
+						var pinStretchTarget = (currentPinStretch - (visible - availableOriented.Direct)).Clamp(0, availableOriented.Direct);
+						var pinStretchDesired = stretchOverflow.Stretch(FlexStretch.Fill, pinStretchTarget, FlexDistributor.Equalizer);
 
-      return OrientedSize.Create(orientation, visible.Clamp(0, availableOriented.Direct), desiredOriented.Indirect);
-    }
+						if (pinStretchDesired < currentPinStretch)
+						{
+							var pinStretchIndex = 0;
 
-    private double Stretch(FlexElementCollection flexElements, double spacing, double availableDirect, bool skipHiddenSpacing)
-    {
-      if (flexElements.Count == 0)
-        return 0.0;
+							for (var index = 0; index < childrenCount; index++)
+							{
+								var flexElement = FlexElements[index];
 
-      var stretch = Panel.Stretch;
-      var target = availableDirect;
+								if (CanPinStretch(flexElement))
+									FlexElements[index] = stretchOverflow[pinStretchIndex++].WithStretchDirection(FlexStretchDirection.Shrink).WithMaxLength(flexElement.ActualLength);
+								else
+									FlexElements[index] = FlexElements[index].WithStretchDirection(FlexStretchDirection.Shrink).WithShrinkPriority(short.MaxValue);
+							}
 
-      var spacingDelta = CalcSpacingDelta(GetVisibleCount(Panel, skipHiddenSpacing), spacing);
+							FinalMeasureItems(availableOriented, spacing, true);
 
-      if (spacingDelta.Equals(0.0) == false)
-        target = Math.Max(0, target - spacingDelta);
+							return OrientedSize.Create(orientation, availableOriented.Direct, desiredOriented.Indirect);
+						}
+					}
+				}
+				finally
+				{
+					FlexElementCollection.Release(stretchOverflow);
+				}
 
-      return flexElements.Stretch(stretch, target, Panel.Distributor) + spacingDelta;
-    }
+				return OrientedSize.Create(orientation, visible.Clamp(0, availableOriented.Direct), desiredOriented.Indirect);
+			}
 
-    #endregion
-  }
+			for (var index = 0; index < childrenCount; index++)
+			{
+				var flexElement = FlexElements[index];
+				var child = Panel.Elements[index];
 
-  internal class ArrayPool<T>
-  {
-    #region Fields
+				if (child.Visibility == Visibility.Collapsed)
+					continue;
 
-    private readonly List<T[]> _pool = new List<T[]>();
+				visibleChildrenCount++;
 
-    #endregion
+				current += flexElement.ActualLength;
+				current += spacing;
 
-    #region  Methods
+				Panel.SetIsHidden(Panel.Elements[index], false);
+			}
 
-    public T[] GetArray(int capacity)
-    {
-      if (_pool.Count == 0) return new T[capacity];
+			Panel.HasHiddenChildren = false;
+			visible = Math.Max(0, current);
 
-      var array = _pool[_pool.Count - 1];
-      _pool.RemoveAt(_pool.Count - 1);
+			if (visibleChildrenCount > 0)
+				visible = visible - spacing;
 
-      ArrayUtils.EnsureArrayLength(ref array, capacity, false);
+			return OrientedSize.Create(orientation, visible.Clamp(0, availableOriented.Direct), desiredOriented.Indirect);
+		}
 
-      return array;
-    }
+		private double Stretch(FlexElementCollection flexElements, double spacingDelta, double availableDirect)
+		{
+			if (flexElements.Count == 0)
+				return 0.0;
 
-    public void ReleaseArray(T[] array)
-    {
-      _pool.Add(array);
-    }
+			var stretch = Panel.Stretch;
+			var target = availableDirect;
+			
+			if (spacingDelta.Equals(0.0) == false)
+				target = Math.Max(0, target - spacingDelta);
 
-    #endregion
-  }
+			return flexElements.Stretch(stretch, target, Panel.Distributor) + spacingDelta;
+		}
+	}
+
+	internal class ArrayPool<T>
+	{
+		private readonly List<T[]> _pool = new();
+
+		public T[] GetArray(int capacity)
+		{
+			if (_pool.Count == 0)
+				return new T[capacity];
+
+			var array = _pool[_pool.Count - 1];
+
+			_pool.RemoveAt(_pool.Count - 1);
+
+			ArrayUtils.EnsureArrayLength(ref array, capacity);
+
+			return array;
+		}
+
+		public void ReleaseArray(T[] array)
+		{
+			_pool.Add(array);
+		}
+	}
 }

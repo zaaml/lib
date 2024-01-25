@@ -13,7 +13,7 @@ namespace Zaaml.PresentationCore.MarkupExtensions
 
     public override object ProvideValue(IServiceProvider serviceProvider)
     {
-      return CleanParentConverter.Instance;
+      return DetachLogicalParentConverter.Instance;
     }
 
     #endregion

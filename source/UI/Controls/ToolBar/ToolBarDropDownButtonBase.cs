@@ -104,7 +104,7 @@ namespace Zaaml.UI.Controls.ToolBar
 			set => _dropDownPopupWrapper.PlacementTarget = value;
 		}
 
-		private ToolBarDropDownButtonBaseTemplateContract TemplateContract => (ToolBarDropDownButtonBaseTemplateContract) TemplateContractInternal;
+		private ToolBarDropDownButtonBaseTemplateContract TemplateContract => (ToolBarDropDownButtonBaseTemplateContract) TemplateContractCore;
 
 		#endregion
 

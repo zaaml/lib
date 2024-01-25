@@ -5,6 +5,7 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.Extensions;
@@ -160,7 +161,6 @@ namespace Zaaml.PresentationCore.Behaviors.Resizable
 			if (IsResizing == false)
 				return;
 
-			CurrentAdvisor.OnResizeEnd(ActualElement, this);
 			OnResizeEnded();
 
 			IsResizing = false;
@@ -173,8 +173,6 @@ namespace Zaaml.PresentationCore.Behaviors.Resizable
 				return;
 
 			UpdatePosition();
-			CurrentAdvisor.OnResize(ActualElement, this);
-
 			OnResize();
 		}
 
@@ -188,8 +186,6 @@ namespace Zaaml.PresentationCore.Behaviors.Resizable
 			var resizableHandleKind = ActualHandle.HandleKind;
 
 			IsResizing = true;
-
-			CurrentAdvisor.OnResizeStart(ActualElement, this);
 
 			GetInitialRect();
 
@@ -256,7 +252,7 @@ namespace Zaaml.PresentationCore.Behaviors.Resizable
 
 		private protected void UpdatePosition()
 		{
-			if (CurrentAdvisor == null)
+			if (IsResizing == false || CurrentAdvisor == null)
 				return;
 
 			var resizeInfo = ResizeInfo;
@@ -280,7 +276,12 @@ namespace Zaaml.PresentationCore.Behaviors.Resizable
 
 			var targetRect = new Rect(new Point(_initialRect.Left + left, _initialRect.Top + top), new Point(_initialRect.Right + right, _initialRect.Bottom + bottom));
 
-			CurrentAdvisor.SetBoundingBox(ActualElement, targetRect);
+			SetPosition(targetRect);
+		}
+
+		protected virtual void SetPosition(Rect rect)
+		{
+			CurrentAdvisor.SetBoundingBox(ActualElement, rect);
 		}
 	}
 }

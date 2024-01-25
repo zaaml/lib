@@ -1,0 +1,50 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+  <!--  Control Template  -->
+  <ControlTemplate x:Key="TabViewContentPresenterTemplate"
+                   TargetType="zm:TabViewContentPresenter">
+    <zm:ControlTemplateRoot>
+
+      <Border Padding="{TemplateBinding Padding}"
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}">
+        <zm:Panel>
+          <ContentPresenter x:Name="ContentPresenter"
+                            Content="{zm:TemplateBinding Path=Content}"
+                            ContentTemplate="{x:Null}"
+                            Visibility="{zm:TemplateBinding Path=TabViewControl.ActualIsBackContentVisible,
+                                                            Converter={zm:InvertedVisibilityConverter},
+                                                            FallbackValue={zm:Collapsed},
+                                                            TargetNullValue={zm:Collapsed}}" />
+
+          <ContentPresenter x:Name="BackContentPresenter"
+                            Content="{zm:TemplateBinding Path=BackContent}"
+                            ContentTemplate="{x:Null}"
+                            Visibility="{zm:TemplateBinding Path=TabViewControl.ActualIsBackContentVisible,
+                                                            Converter={zm:VisibilityConverter},
+                                                            FallbackValue={zm:Collapsed},
+                                                            TargetNullValue={zm:Collapsed}}" />
+        </zm:Panel>
+      </Border>
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Base Styles  -->
+  <zm:Style x:Key="TabViewContentPresenterBaseStyle" TargetType="zm:TabViewContentPresenter">
+
+    <zm:Setter Property="Template" Value="{StaticResource TabViewContentPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Base Skinned Styles  -->
+  <zm:Style x:Key="TabViewContentPresenterStyle" BasedOn="{StaticResource TabViewContentPresenterBaseStyle}" Skin="Code.TabViewContentPresenter" TargetType="zm:TabViewContentPresenter" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="TabViewContentPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TabViewContentPresenterStyle}" TargetType="zm:TabViewContentPresenter" />
+
+</zm:ThemeResourceDictionary>

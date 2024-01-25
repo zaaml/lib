@@ -45,7 +45,7 @@
       <Border Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
               BorderThickness="{TemplateBinding BorderThickness}">
-        <Grid>
+        <zm:Panel>
           <!--  WPF Content Presenter  -->
           <ScrollViewer Name="PART_ContentHost"
                         Margin="0"
@@ -72,7 +72,7 @@
                        Style="{TemplateBinding WatermarkTextStyle}"
                        Text="{TemplateBinding WatermarkText}" />
           </StackPanel>
-        </Grid>
+        </zm:Panel>
 
       </Border>
 

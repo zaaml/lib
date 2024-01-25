@@ -7,10 +7,12 @@ using System.Windows.Controls;
 using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Behaviors.Draggable;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.Runtime;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
@@ -88,7 +90,7 @@ namespace Zaaml.UI.Controls.ToolBar
 		public ElementVisibility DragHandleVisibility
 		{
 			get => (ElementVisibility) GetValue(DragHandleVisibilityProperty);
-			set => SetValue(DragHandleVisibilityProperty, value);
+			set => SetValue(DragHandleVisibilityProperty, value.Box());
 		}
 
 		internal bool IsMeasureToMaxLength
@@ -106,7 +108,7 @@ namespace Zaaml.UI.Controls.ToolBar
 		public bool IsMenuOpen
 		{
 			get => (bool) GetValue(IsMenuOpenProperty);
-			set => SetValue(IsMenuOpenProperty, value);
+			set => SetValue(IsMenuOpenProperty, value.Box());
 		}
 
 		private ToolBarItemsPanel ItemsHost => ItemsPresenter?.ItemsHostInternal;
@@ -119,7 +121,7 @@ namespace Zaaml.UI.Controls.ToolBar
 
 		protected ToolBarOverflowItemsPresenter OverflowItemsPresenter => TemplateContract.OverflowItemsPresenter;
 
-		private ToolBarControlTemplateContract TemplateContract => (ToolBarControlTemplateContract) TemplateContractInternal;
+		private ToolBarControlTemplateContract TemplateContract => (ToolBarControlTemplateContract) TemplateContractCore;
 
 		public ToolBarTray Tray
 		{

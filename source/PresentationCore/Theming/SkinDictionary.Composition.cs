@@ -2,39 +2,38 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.Theming
 {
 	public partial class SkinDictionary
 	{
-		#region Properties
+		private Dictionary<string, ushort> _priorityDictionary;
 
-		private IEnumerable<KeyValuePair<string, object>> ShallowResources => Dictionary;
+		public ushort Priority { get; set; }
 
-		#endregion
+		private Dictionary<string, ushort> PriorityDictionary => _priorityDictionary ??= new Dictionary<string, ushort>();
 
-		#region  Methods
+		internal IEnumerable<KeyValuePair<string, object>> ShallowResources => Dictionary;
 
-		internal SkinDictionary AsFrozen()
+		internal SkinDictionary AsFrozen(ISkinResourceProvider skinResourceProvider = null)
 		{
-			var frozen = AsFrozenIntermediate();
+			var frozen = AsFrozenIntermediate(new FreezeContext(skinResourceProvider, false));
 
-			frozen.FreezeRelativeDeferred();
-			frozen.FreezeBasedOnRecursive();
-			frozen.FreezeProcessors();
+			frozen.FreezeBasedOnRecursive(new FreezeContext(skinResourceProvider, true));
+			frozen.FreezeGenerators();
 			frozen.FreezeValues();
 
 			return frozen;
 		}
 
-		private SkinDictionary AsFrozenIntermediate()
+		private SkinDictionary AsFrozenIntermediate(FreezeContext freezeContext)
 		{
 			var clone = Clone();
 
-			clone.FreezeBasedOnRecursive();
+			clone.FreezeBasedOnRecursive(freezeContext);
 
 			return clone;
 		}
@@ -49,19 +48,22 @@ namespace Zaaml.PresentationCore.Theming
 			return clone;
 		}
 
-		private object CloneValue(object value)
+		private static object CloneValue(object value)
 		{
-			var skinValue = value as SkinDictionary;
+			return value switch
+			{
+				SkinDictionary skinValue => skinValue.Clone(),
+				_ => value
+			};
+		}
 
-			if (skinValue != null)
-				return skinValue.Clone();
+		private void CopyGeneratorsFrom(SkinDictionary skinDictionary)
+		{
+			if (skinDictionary.HasGenerators == false)
+				return;
 
-			var processorValue = value as SkinDictionaryProcessor;
-
-			if (processorValue != null)
-				return processorValue.Clone();
-
-			return value;
+			foreach (var generator in skinDictionary.Generators)
+				Generators.Add(generator.Clone());
 		}
 
 		private void CopyResourcesFrom(SkinDictionary skinDictionary)
@@ -70,139 +72,107 @@ namespace Zaaml.PresentationCore.Theming
 				AddCore(keyValuePair.Key, CloneValue(keyValuePair.Value));
 		}
 
-		private void FreezeBasedOn()
+		private void FreezeBasedOn(FreezeContext freezeContext)
 		{
 			if (BasedOn.Count == 0)
 				return;
 
 			var basedOnCopy = BasedOn.ToList();
+			var processRelative = freezeContext.ResolveRelativeDependencies;
 
 			BasedOn.Clear();
 
-			if (BasedOnFlags == BasedOnFlags.Inherit)
+			var shallowResources = ShallowResources.ToList();
+
+			Clear();
+
+			foreach (var basedOn in basedOnCopy)
 			{
-				var shallowResources = ShallowResources.ToList();
+				var actualBasedOn = basedOn;
 
-				Clear();
-
-				foreach (var basedOn in basedOnCopy)
+				if (basedOn.IsDeferred)
 				{
-					if (basedOn.IsDeferred && basedOn.IsAbsoluteKey == false)
+					if (basedOn.IsAbsoluteKey == false)
 					{
-						BasedOn.Add(basedOn);
+						if (processRelative == false || Parent == null || Parent.TryGetValueRelative(basedOn.DeferredKey, out var relativeBasedOn) == false)
+						{
+							BasedOn.Add(basedOn);
 
-						continue;
+							continue;
+						}
+
+						actualBasedOn = (SkinDictionary)relativeBasedOn;
 					}
+					else
+					{
+						if (freezeContext.SkinResourceProvider == null || freezeContext.SkinResourceProvider.TryGetValue(basedOn.DeferredKey, out var absoluteBasedOn) == false)
+						{
+							BasedOn.Add(basedOn);
 
-					var frozenBasedOn = basedOn.AsFrozenIntermediate();
+							continue;
+						}
 
-					foreach (var keyValuePair in frozenBasedOn.ShallowResources)
-						FreezeMerge(keyValuePair);
+						actualBasedOn = (SkinDictionary)absoluteBasedOn;
+					}
 				}
 
-				foreach (var keyValuePair in shallowResources)
-					FreezeMerge(keyValuePair);
+				var frozenBasedOn = actualBasedOn.AsFrozenIntermediate(freezeContext);
+
+				foreach (var keyValuePair in frozenBasedOn.ShallowResources)
+					FreezeMerge(keyValuePair, frozenBasedOn, freezeContext);
 			}
-			else
-			{
-				foreach (var basedOn in basedOnCopy)
-				{
-					if (basedOn.IsDeferred && basedOn.IsAbsoluteKey == false)
-					{
-						BasedOn.Add(basedOn);
 
-						continue;
-					}
-
-					var frozenBasedOn = basedOn.AsFrozenIntermediate();
-
-					foreach (var keyValuePair in frozenBasedOn.ShallowResources)
-						FreezeMerge(keyValuePair);
-				}
-			}
+			foreach (var keyValuePair in shallowResources)
+				FreezeMerge(keyValuePair, this, freezeContext);
 		}
 
-		private void FreezeBasedOnRecursive()
+		private void FreezeBasedOnRecursive(FreezeContext freezeContext)
 		{
-			FreezeBasedOn();
+			FreezeBasedOn(freezeContext);
 
 			foreach (var keyValuePair in ShallowResources)
 			{
-				var skinValue = keyValuePair.Value as SkinDictionary;
-
-				skinValue?.FreezeBasedOnRecursive();
+				if (keyValuePair.Value is SkinDictionary skinValue)
+					skinValue.FreezeBasedOnRecursive(freezeContext);
 			}
 		}
 
-		private void FreezeMerge(KeyValuePair<string, object> keyValuePair)
+		private void FreezeMerge(KeyValuePair<string, object> keyValuePair, SkinDictionary sourceDictionary, FreezeContext freezeContext)
 		{
 			var key = keyValuePair.Key;
-			var skinValue = keyValuePair.Value as SkinDictionary;
 
-			if (skinValue == null)
-				SetCore(keyValuePair);
-			else
+			if (keyValuePair.Value is SkinDictionary skinValue)
 			{
-				var skinValueFrozen = skinValue.AsFrozenIntermediate();
+				var skinValueFrozen = skinValue.AsFrozenIntermediate(freezeContext);
 
-				object currentValue;
-
-				if (TryGetValueCore(key, out currentValue) == false)
+				if (TryGetValueCore(key, out var currentValue) == false)
 				{
-					SetCore(key, skinValueFrozen);
+					SetMergeCore(key, skinValueFrozen, sourceDictionary);
 
 					return;
 				}
 
-				var currentSkin = currentValue as SkinDictionary;
-
-				if (currentSkin == null)
-					SetCore(key, skinValueFrozen);
-				else
+				if (currentValue is SkinDictionary currentSkin)
 				{
-					currentSkin.BasedOnFlags = skinValueFrozen.BasedOnFlags;
+					currentSkin.CopyGeneratorsFrom(skinValueFrozen);
+#if INTERACTIVITY_DEBUG
+					currentSkin.Debug |= skinValueFrozen.Debug;
+#endif
 
-					foreach (var basedOn in skinValueFrozen.BasedOn.Where(s => s.IsDeferred))
-						if (basedOn.IsAbsoluteKey == false)
-							currentSkin.BasedOn.Add(basedOn.Clone());
+					foreach (var basedOn in skinValueFrozen.BasedOn.Where(s => s.IsDeferred && s.IsAbsoluteKey == false))
+						currentSkin.BasedOn.Add(basedOn.Clone());
 
 					foreach (var childKeyValuePair in skinValueFrozen)
-						currentSkin.FreezeMerge(childKeyValuePair);
+						currentSkin.FreezeMerge(childKeyValuePair, skinValueFrozen, freezeContext);
 				}
+				else
+					SetMergeCore(key, skinValueFrozen, sourceDictionary);
 			}
+			else
+				SetMergeCore(keyValuePair.Key, keyValuePair.Value, sourceDictionary);
 		}
 
-		private void FreezeRelativeDeferred()
-		{
-			foreach (var keyValuePair in ShallowResources)
-			{
-				var skinValue = keyValuePair.Value as SkinDictionary;
-
-				if (skinValue == null)
-					continue;
-
-				if (skinValue.BasedOn.Count > 0)
-				{
-					var basedOnCopy = skinValue.BasedOn.ToList();
-
-					skinValue.BasedOn.Clear();
-
-					foreach (var skinResources in basedOnCopy)
-					{
-						var actual = skinValue.GetValueOrDefault(skinResources.DeferredKey) as SkinDictionary;
-
-						if (actual == null)
-							continue;
-
-						skinValue.BasedOn.Add(actual);
-					}
-				}
-
-				skinValue.FreezeRelativeDeferred();
-			}
-		}
-
-		internal KeyValuePair<string, object> FreezeResource(KeyValuePair<string, object> themeResourceKeyValuePair)
+		internal static KeyValuePair<string, object> FreezeResource(KeyValuePair<string, object> themeResourceKeyValuePair)
 		{
 			return themeResourceKeyValuePair;
 		}
@@ -211,25 +181,52 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			foreach (var keyValuePair in ShallowResources.Select(UnwrapValue).ToList())
 			{
-				var skinValue = keyValuePair.Value as SkinDictionary;
-
-				if (skinValue == null)
+				if (keyValuePair.Value is SkinDictionary skinValue)
+					skinValue.FreezeValues();
+				else
 				{
 					var frozenKeyValuePair = FreezeResource(keyValuePair);
 
 					this[frozenKeyValuePair.Key] = frozenKeyValuePair.Value;
 				}
-				else
-					skinValue.FreezeValues();
 			}
 		}
-		
+
+		private ushort GetKeyPriority(string key)
+		{
+			if (_priorityDictionary == null)
+				return Priority;
+
+			var keyPriority = _priorityDictionary.TryGetValue(key, out var priority) ? priority : (ushort)0;
+
+			return Math.Max(Priority, keyPriority);
+		}
+
+		private void SetMergeCore(string key, object value, SkinDictionary sourceDictionary)
+		{
+			ushort currentPriority = 0;
+
+			if (TryGetValueCore(key, out var currentValue))
+			{
+				currentPriority = GetKeyPriority(key);
+
+				if (sourceDictionary.Priority < currentPriority)
+					return;
+			}
+
+			SetCore(key, value);
+
+			if (sourceDictionary.Priority > currentPriority)
+				PriorityDictionary[key] = sourceDictionary.Priority;
+		}
+
 		private SkinDictionary ShallowClone()
 		{
 			var clone = new SkinDictionary();
 
 			clone.ShallowCopyFrom(this);
 			clone.CopyResourcesFrom(this);
+			clone.CopyGeneratorsFrom(this);
 
 			return clone;
 		}
@@ -238,7 +235,7 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			Key = skinDictionary.Key;
 			DeferredKey = skinDictionary.DeferredKey;
-			BasedOnFlags = skinDictionary.BasedOnFlags;
+			Priority = skinDictionary.Priority;
 
 #if INTERACTIVITY_DEBUG
 			Debug = skinDictionary.Debug;
@@ -247,11 +244,19 @@ namespace Zaaml.PresentationCore.Theming
 
 		private static KeyValuePair<string, object> UnwrapValue(KeyValuePair<string, object> keyValuePair)
 		{
-			var themeResourceValue = keyValuePair.Value as ThemeResource;
-
-			return themeResourceValue != null ? keyValuePair.WithValue(themeResourceValue.Value) : keyValuePair;
+			return keyValuePair.Value is ThemeResource themeResourceValue ? keyValuePair.WithValue(themeResourceValue.Value) : keyValuePair;
 		}
 
-		#endregion
+		private readonly struct FreezeContext
+		{
+			public FreezeContext(ISkinResourceProvider skinResourceProvider, bool resolveRelativeDependencies)
+			{
+				SkinResourceProvider = skinResourceProvider;
+				ResolveRelativeDependencies = resolveRelativeDependencies;
+			}
+
+			public readonly ISkinResourceProvider SkinResourceProvider;
+			public readonly bool ResolveRelativeDependencies;
+		}
 	}
 }

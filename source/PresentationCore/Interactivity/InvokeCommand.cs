@@ -10,22 +10,12 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class InvokeCommand : TriggerActionBase, IEventTriggerArgsSupport
 	{
-		#region Static Fields and Constants
-
 		private static readonly InteractivityProperty CommandProperty = RegisterInteractivityProperty(OnCommandChanged);
 		private static readonly InteractivityProperty CommandParameterProperty = RegisterInteractivityProperty(CommandParameterChanged);
-
-		#endregion
-
-		#region Fields
 
 		private object _command;
 		private object _commandParameter;
 		private WeakReference _eventArgsStore;
-
-		#endregion
-
-		#region Properties
 
 		public ICommand Command
 		{
@@ -39,11 +29,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => SetValue(CommandParameterProperty, ref _commandParameter, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
-		private static void CommandParameterChanged(InteractivityObject interactivityobject, object oldvalue, object newvalue)
+		private static void CommandParameterChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
 		}
 
@@ -51,10 +37,10 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			base.CopyMembersOverride(source);
 
-			var sourceInvokeCommand = (InvokeCommand) source;
+			var sourceInvokeCommand = (InvokeCommand)source;
 
-			CommandProperty.Copy(out _command, sourceInvokeCommand._command);
-			CommandParameterProperty.Copy(out _commandParameter, sourceInvokeCommand._commandParameter);
+			InteractivityProperty.Copy(out _command, sourceInvokeCommand._command);
+			InteractivityProperty.Copy(out _commandParameter, sourceInvokeCommand._commandParameter);
 		}
 
 		protected override InteractivityObject CreateInstance()
@@ -82,7 +68,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			Load(CommandParameterProperty, ref _commandParameter);
 		}
 
-		private static void OnCommandChanged(InteractivityObject interactivityobject, object oldvalue, object newvalue)
+		private static void OnCommandChanged(InteractivityObject interactivityObject, object oldValue, object newValue)
 		{
 		}
 
@@ -106,19 +92,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.UnloadCore(root);
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IEventTriggerArgsSupport
-
 		void IEventTriggerArgsSupport.SetArgs(EventArgs args)
 		{
 			_eventArgsStore = args != null ? new WeakReference(args) : null;
 		}
-
-		#endregion
-
-		#endregion
 	}
 }

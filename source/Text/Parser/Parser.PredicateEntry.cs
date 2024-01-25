@@ -6,28 +6,19 @@ using System;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TToken> : ParserBase where TToken : unmanaged, Enum
+	internal abstract partial class Parser<TToken>
 	{
-		#region Nested Types
-
 		public class PredicateEntry
 		{
-			#region Ctors
-
-			public PredicateEntry(Func<ParserContext, bool> predicate)
+			public PredicateEntry(Func<Parser<TToken>, bool> predicate, string predicateName = null)
 			{
 				Predicate = predicate;
+				PredicateName = predicateName;
 			}
 
-			#endregion
+			public Func<Parser<TToken>, bool> Predicate { get; }
 
-			#region Properties
-
-			public Func<ParserContext, bool> Predicate { get; }
-
-			#endregion
+			public string PredicateName { get; }
 		}
-
-		#endregion
 	}
 }

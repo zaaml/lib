@@ -7,13 +7,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using Zaaml.Core;
-using Zaaml.Core.Collections;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Pools;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore.Extensions;
-using static Zaaml.UI.Controls.Docking.BaseLayout;
 
 namespace Zaaml.UI.Controls.Docking
 {
@@ -21,8 +18,6 @@ namespace Zaaml.UI.Controls.Docking
 	{
 		private DockControl _dockControl;
 		private DockItem _enqueueFocusItem;
-		internal event EventHandler<DragItemEventArgs> DragItemEvent;
-		internal event EventHandler<DropItemEventArgs> DropItemEvent;
 
 		protected DockControllerBase(DockControlViewBase controlView)
 		{
@@ -32,12 +27,14 @@ namespace Zaaml.UI.Controls.Docking
 			Items = new DockItemCollection(OnItemAdded, OnItemRemoved);
 			InternalItems = new DockItemCollection(AttachItem, DetachItem);
 			DockItemGroupPool = new MultiObjectPool<DockItemGroupKind, DockItemGroup>(BuildItemGroup, OnDockItemGroupMounted, OnDockItemGroupReleased);
-			SuspendState = new DelegateObservableSuspendState(OnLayoutSuspended, OnLayoutResumed);
 
 			SelectionScope.SelectedItemChanged += OnSelectionScopeSelectedItemChanged;
+
+			foreach (var layout in DockItem.EnumerateDockStates().Select(GetLayout))
+				layout.AttachController(this);
 		}
 
-		internal AutoHideLayout AutoHideLayout { get; } = new AutoHideLayout();
+		internal AutoHideLayout AutoHideLayout { get; } = new();
 
 		public DockControlViewBase ControlView { get; }
 
@@ -49,23 +46,30 @@ namespace Zaaml.UI.Controls.Docking
 				if (ReferenceEquals(_dockControl, value))
 					return;
 
+				foreach (var dockItem in InternalItems.OfType<DockItemGroup>())
+					dockItem.DetachDockControlInternal(_dockControl);
+
 				_dockControl = value;
 
 				foreach (var layout in DockItem.EnumerateDockStates().Select(GetLayout).SkipNull())
 					layout.DockControl = _dockControl;
 
 				foreach (var dockItem in InternalItems.OfType<DockItemGroup>())
-					dockItem.DockControl = _dockControl;
+					dockItem.AttachDockControlInternal(_dockControl);
+
+				EnsureDocumentGroup();
 			}
 		}
 
 		private MultiObjectPool<DockItemGroupKind, DockItemGroup> DockItemGroupPool { get; }
 
-		internal DockLayout DockLayout { get; } = new DockLayout();
+		internal DockLayout DockLayout { get; } = new();
 
 		public DocumentDockItemGroup DocumentGroup { get; private set; }
 
-		public DocumentLayout DocumentLayout { get; } = new DocumentLayout();
+		public DocumentLayout DocumentLayout { get; } = new();
+
+		internal virtual bool DragOutWithActualSize => false;
 
 		public DockItem EnqueueFocusItem
 		{
@@ -81,115 +85,67 @@ namespace Zaaml.UI.Controls.Docking
 			}
 		}
 
-		internal FloatLayout FloatLayout { get; } = new FloatLayout();
+		internal FloatLayout FloatLayout { get; } = new();
 
-		internal HiddenLayout HiddenLayout { get; } = new HiddenLayout();
+		internal HiddenLayout HiddenLayout { get; } = new();
 
 		protected DockItemCollection InternalItems { get; }
-
-		private bool IsInArrangeItems { get; set; }
-
-		internal bool IsItemLayoutValid { get; private set; }
-
-		internal bool IsLayoutSuspended => SuspendState.IsSuspended;
 
 		protected abstract bool IsPreview { get; }
 
 		public DockItemCollection Items { get; }
 
 		internal DockItemSelectionScope SelectionScope { get; }
+		internal event EventHandler<DragItemEventArgs> DragItemEvent;
+		internal event EventHandler<DropItemEventArgs> DropItemEvent;
 
-		private DelegateObservableSuspendState SuspendState { get; }
-
-		public void AfterMeasure()
+		internal void ApplyLayout(DockControlLayout layout)
 		{
-		}
-
-		internal void ApplyLayout(DockControlLayout layout, bool arrange)
-		{
-			using (EnterLayoutSuspendState())
+			foreach (var dockItem in InternalItems.ToList())
 			{
-				// Detach layouts
-				foreach (var dockItem in InternalItems.ToList())
-				{
-					dockItem.RemoveFromLayout();
-					dockItem.InvalidateItemArrange();
+				dockItem.ResetLayout();
+				dockItem.DockState = DockItemState.Hidden;
 
-					dockItem.DockState = DockItemState.Hidden;
-				}
+				if (dockItem is not DockItemGroup groupItem)
+					continue;
 
-				var normalizedLayout = layout.GetNormalized();
+				groupItem.Items.Clear();
 
-				// Destroy groups
-				var itemGroups = InternalItems.OfType<DockItemGroup>().ToList();
-
-				foreach (var group in itemGroups)
-					group.Items.Clear();
-
-				foreach (var group in itemGroups)
-					ReleaseItemGroup(group);
-
-				var layouts = normalizedLayout.Items.ToList();
-
-				// Create groups
-				foreach (var groupLayout in layouts.OfType<DockItemGroupLayout>())
-				{
-					if (string.IsNullOrEmpty(groupLayout.ItemName))
-						groupLayout.ItemName = GenerateItemName();
-
-					var group = MountItemGroup(groupLayout.GroupKind);
-
-					group.Name = groupLayout.ItemName;
-
-					groupLayout.InitGroup(group);
-				}
-
-				// Set dock state
-				foreach (var itemLayout in layouts)
-				{
-					var dockItem = GetDockItem(itemLayout);
-
-					if (dockItem == null)
-						continue;
-
-					dockItem.DockState = itemLayout.DockState;
-
-					LayoutSettings.CopySettings(itemLayout, dockItem, FullLayout.LayoutProperties);
-				}
-
-				// Load groups children
-				var groups = new MultiMap<DockItemGroup, DockItem>();
-
-				foreach (var groupItemLayout in layouts.OfType<DockItemGroupLayout>())
-				{
-					var groupItem = (DockItemGroup) GetDockItem(groupItemLayout);
-
-					if (groupItem == null)
-						continue;
-
-					foreach (var dockItem in groupItemLayout.Items.Select(GetDockItem).SkipNull())
-						groups.AddValue(groupItem, dockItem);
-				}
-
-				foreach (var group in groups)
-					group.Key.AddItems(group.Value);
-
-				EnsureDocumentGroup();
-
-				// Restore indices
-				foreach (var itemLayout in layouts)
-				{
-					var dockItem = GetDockItem(itemLayout.ItemName);
-
-					var targetLayout = dockItem?.GetTargetLayout(false);
-
-					if (targetLayout != null)
-						SetDockItemIndex(dockItem, targetLayout.GetType(), DockItemLayout.GetIndex(itemLayout));
-				}
+				ReleaseItemGroup(groupItem);
 			}
 
-			if (arrange)
-				ArrangeItemsImpl(true);
+			DockItem LoadLayout(DockItemLayout itemLayout)
+			{
+				var groupLayout = itemLayout as DockItemGroupLayout;
+				var item = groupLayout != null ? MountItemGroup(groupLayout) : GetDockItem(itemLayout);
+
+				if (item == null)
+					return null;
+
+				item.DockState = itemLayout.DockState;
+
+				LayoutSettings.MergeSettings(itemLayout, item, FullLayout.LayoutProperties);
+
+				if (groupLayout == null)
+					return item;
+
+				var groupItem = (DockItemGroup)item;
+
+				foreach (var childItem in groupLayout.Items)
+				{
+					var dockItem = LoadLayout(childItem);
+
+					if (dockItem != null)
+						groupItem.Items.Add(dockItem);
+				}
+
+				return item;
+			}
+
+			foreach (var itemLayout in layout.Items)
+				LoadLayout(itemLayout);
+
+			EnsureDocumentGroup();
 		}
 
 		private void ArrangeDocumentGroup()
@@ -205,42 +161,6 @@ namespace Zaaml.UI.Controls.Docking
 				splitDocumentGroup.Items.Insert(0, DocumentGroup);
 		}
 
-		protected internal void ArrangeItems()
-		{
-			ArrangeItemsImpl(false);
-		}
-
-		private void ArrangeItemsImpl(bool force)
-		{
-			if (IsInArrangeItems)
-				return;
-
-			try
-			{
-				IsInArrangeItems = true;
-
-				if (IsItemLayoutValid && force == false)
-					return;
-
-				ArrangeDocumentGroup();
-
-				// Arrange windows
-				foreach (var item in InternalItems)
-					item.PreApplyLayout();
-
-				foreach (var item in InternalItems)
-					item.ApplyLayout();
-
-				foreach (var item in InternalItems)
-					item.PostApplyLayout();
-			}
-			finally
-			{
-				IsItemLayoutValid = true;
-				IsInArrangeItems = false;
-			}
-		}
-
 		private void AttachItem(DockItem dockItem)
 		{
 			dockItem.Controller = this;
@@ -249,18 +169,35 @@ namespace Zaaml.UI.Controls.Docking
 				SelectionScope.SelectedItem = dockItem;
 		}
 
-		public void BeforeMeasure()
-		{
-		}
-
 		private DockItemGroup BuildItemGroup(DockItemGroupKind dockItemGroupKind)
 		{
 			var group = CreateItemGroup(dockItemGroupKind);
 
-			group.DockControl = DockControl;
-			group.Name = GenerateItemName();
+			group.AttachDockControlInternal(DockControl);
 
 			return group;
+		}
+
+		private DockItemGroup CopyGroup(DockItemGroup group, DockItemState dockState)
+		{
+			var clone = MountItemGroup(group.GroupKind);
+
+			clone.DockState = dockState;
+
+			CopyGroupContent(clone, group);
+
+			return clone;
+		}
+
+		private void CopyGroupContent(DockItemGroup clone, DockItemGroup group)
+		{
+			foreach (var item in group.GetChildren())
+			{
+				if (item is DockItemGroup childGroup)
+					clone.Items.Add(CopyGroup(childGroup, clone.DockState));
+				else
+					clone.Items.Add(item);
+			}
 		}
 
 		private DockItemGroup CreateItemGroup(DockItemGroupKind dockItemGroupKind)
@@ -269,15 +206,15 @@ namespace Zaaml.UI.Controls.Docking
 			{
 				case DockItemGroupKind.Document:
 
-					return new DocumentDockItemGroup {IsPreview = IsPreview};
+					return new DocumentDockItemGroup { IsPreview = IsPreview };
 
 				case DockItemGroupKind.Split:
 
-					return new SplitDockItemGroup {IsPreview = IsPreview};
+					return new SplitDockItemGroup { IsPreview = IsPreview };
 
 				case DockItemGroupKind.Tab:
 
-					return new TabDockItemGroup {IsPreview = IsPreview};
+					return new TabDockItemGroup { IsPreview = IsPreview };
 
 				default:
 
@@ -287,9 +224,7 @@ namespace Zaaml.UI.Controls.Docking
 
 		private DockItemGroup CreateSplitDocumentGroup(DockItem child, DockItem parent, Dock dockSide)
 		{
-			var parentDocumentGroup = parent.ParentDockGroup as DocumentDockItemGroup;
-
-			if (parentDocumentGroup == null)
+			if (parent.ParentDockGroup is not DocumentDockItemGroup parentDocumentGroup)
 				return null;
 
 			var documentGroup = MountItemGroup<DocumentDockItemGroup>();
@@ -298,14 +233,29 @@ namespace Zaaml.UI.Controls.Docking
 
 			foreach (var item in DestroyGroupRecursive(child).ToList())
 			{
-				item.DockState = DockItemState.Document;
-
 				documentGroup.Items.Add(item);
+
+				item.DockState = DockItemState.Document;
 			}
 
-			documentGroup.EnsureItemsIndices();
-
 			var parentSplitDocumentGroup = parentDocumentGroup.ParentDockGroup as SplitDockItemGroup;
+
+			if (parentSplitDocumentGroup != null && parentSplitDocumentGroup.Orientation == Util.GetOrientation(dockSide))
+			{
+				var idx = parentDocumentGroup.GetLayoutIndex(parentSplitDocumentGroup.Layout);
+
+				if (dockSide is Dock.Right or Dock.Bottom)
+					idx++;
+
+				foreach (var item in parentSplitDocumentGroup.Items.Where(w => w.GetLayoutIndex(parentSplitDocumentGroup.Layout) >= idx).ToList())
+					item.SetLayoutIndex(parentSplitDocumentGroup.Layout, item.GetLayoutIndex(parentSplitDocumentGroup.Layout) + 1);
+
+				documentGroup.SetLayoutIndex(parentSplitDocumentGroup.Layout, idx);
+
+				parentSplitDocumentGroup.Items.Add(documentGroup);
+
+				return parentSplitDocumentGroup;
+			}
 
 			if (parentSplitDocumentGroup != null && DockControl.AllowSplitDocumentsInAllDirections)
 			{
@@ -314,6 +264,7 @@ namespace Zaaml.UI.Controls.Docking
 				parentSplitDocumentGroup = MountItemGroup<SplitDockItemGroup>();
 				parentSplitDocumentGroup.DockState = DockItemState.Document;
 
+				parentDocumentGroup.CopyTargetLayoutIndex(parentSplitDocumentGroup);
 				parentDocumentGroup.CopyTargetLayoutSettings(parentSplitDocumentGroup);
 				currentParentSplitDocumentGroup.ReplaceItem(parentDocumentGroup, parentSplitDocumentGroup);
 
@@ -331,17 +282,15 @@ namespace Zaaml.UI.Controls.Docking
 
 			parentSplitDocumentGroup.Items.Add(documentGroup);
 
-			parentSplitDocumentGroup.EnsureItemsIndices();
+			var index = parentDocumentGroup.GetLayoutIndex(parentSplitDocumentGroup.Layout);
 
-			var index = GetActualDockItemIndex<SplitLayout>(parentDocumentGroup);
-
-			if (dockSide == Dock.Right || dockSide == Dock.Bottom)
+			if (dockSide is Dock.Right or Dock.Bottom)
 				index++;
 
-			foreach (var item in parentSplitDocumentGroup.Items.Where(w => GetActualDockItemIndex<SplitLayout>(w) >= index).ToList())
-				SetDockItemIndex<SplitLayout>(item, GetActualDockItemIndex<SplitLayout>(item) + 1);
+			foreach (var item in parentSplitDocumentGroup.Items.Where(w => w.GetLayoutIndex(parentSplitDocumentGroup.Layout) >= index).ToList())
+				item.SetLayoutIndex(parentSplitDocumentGroup.Layout, item.GetLayoutIndex(parentSplitDocumentGroup.Layout) + 1);
 
-			SetDockItemIndex<SplitLayout>(documentGroup, index);
+			documentGroup.SetLayoutIndex(parentSplitDocumentGroup.Layout, index);
 
 			return parentSplitDocumentGroup;
 		}
@@ -351,25 +300,26 @@ namespace Zaaml.UI.Controls.Docking
 			var dockState = parent.DockState;
 			var orientation = Util.GetOrientation(dockSide);
 
-			var children = child is SplitDockItemGroup childSplitGroup && childSplitGroup.Orientation == orientation ? DestroyGroup(childSplitGroup).OrderByDescending(GetActualDockItemIndex<SplitLayout>).ToList() : new List<DockItem> {child};
+			var children = child is SplitDockItemGroup childSplitGroup && childSplitGroup.Orientation == orientation
+				? DestroyGroup(childSplitGroup).OrderByDescending(i => i.GetLayoutIndex(childSplitGroup.Layout)).ToList()
+				: new List<DockItem> { child };
 
-			if (parent.ParentDockGroup is SplitDockItemGroup parentSplitContainer && ReferenceEquals(parentSplitContainer.ActualItem, parentSplitContainer) && parentSplitContainer.Orientation == orientation)
+			if (parent.ParentDockGroup is SplitDockItemGroup parentSplitContainer && parentSplitContainer.Orientation == orientation)
 			{
-				parentSplitContainer.EnsureItemsIndices();
+				var index = parent.GetLayoutIndex(parentSplitContainer.Layout);
 
-				var index = GetActualDockItemIndex<SplitLayout>(parent);
-
-				if (dockSide == Dock.Right || dockSide == Dock.Bottom)
+				if (dockSide is Dock.Right or Dock.Bottom)
 					index++;
 
-				foreach (var item in parentSplitContainer.Items.Where(w => GetActualDockItemIndex<SplitLayout>(w) >= index).ToList())
-					SetDockItemIndex<SplitLayout>(item, GetActualDockItemIndex<SplitLayout>(item) + children.Count);
+				foreach (var item in parentSplitContainer.Items.Where(w => w.GetLayoutIndex(parentSplitContainer.Layout) >= index).ToList())
+					item.SetLayoutIndex(parentSplitContainer.Layout, item.GetLayoutIndex(parentSplitContainer.Layout) + children.Count);
 
 				var i = index;
 
 				foreach (var item in children)
 				{
-					SetDockItemIndex<SplitLayout>(item, i++);
+					item.SetLayoutIndex(parentSplitContainer.Layout, i++);
+
 					item.DockState = dockState;
 
 					parentSplitContainer.Items.Add(item);
@@ -381,7 +331,6 @@ namespace Zaaml.UI.Controls.Docking
 			var itemGroup = MountItemGroup<SplitDockItemGroup>();
 
 			itemGroup.DockState = dockState;
-			itemGroup.InvalidateItemArrange();
 
 			var parentGroup = parent.ParentDockGroup;
 
@@ -391,52 +340,53 @@ namespace Zaaml.UI.Controls.Docking
 				parentGroup = parent.ParentDockGroup;
 			}
 
+			parent.CopyTargetLayoutIndex(itemGroup);
 			parent.CopyTargetLayoutSettings(itemGroup);
 			parentGroup?.ReplaceItem(parent, itemGroup);
 
 			itemGroup.Orientation = orientation;
 
-			if (dockSide == Dock.Left || dockSide == Dock.Top)
+			if (dockSide is Dock.Left or Dock.Top)
 				children.Insert(0, parent);
 			else
 				children.Add(parent);
 
 			foreach (var item in children.AsEnumerable().Reverse())
 			{
-				SetDockItemIndex<SplitLayout>(item, itemGroup.Layout.IndexProvider.NewIndex);
+				item.SetNewLayoutIndex(itemGroup.Layout);
 
 				item.DockState = dockState;
 			}
 
-			itemGroup.AddItems(children.AsEnumerable().Reverse());
+			itemGroup.AddItems(children);
 
 			return itemGroup;
 		}
 
-		protected DockItemGroup CreateTabGroup(DockItem child, DockItem parent, Dock? dockSide)
+		protected DockItemGroup CreateTabGroup(DockItem child, DockItem parent, Dock? dock)
 		{
 			var dockState = parent.DockState;
 
 			if (ReferenceEquals(parent, DocumentGroup))
 			{
-				foreach (var childWindow in DestroyGroupRecursive(child))
+				foreach (var childItem in DestroyGroupRecursive(child))
 				{
-					SetDockItemIndex<TabLayout>(childWindow, null);
-					childWindow.DockState = DockItemState.Document;
+					childItem.ClearLayoutIndex(DocumentGroup.Layout);
+
+					childItem.DockState = DockItemState.Document;
 				}
 
 				return DocumentGroup;
 			}
 
-			var itemGroup = (DockItemGroup) (parent.ParentDockGroup as TabDockItemGroup) ?? (parent.ParentDockGroup as DocumentDockItemGroup);
+			var itemGroup = (DockItemGroup)(parent.ParentDockGroup as TabDockItemGroup) ?? parent.ParentDockGroup as DocumentDockItemGroup;
 
 			if (itemGroup != null)
 			{
 				foreach (var childItem in DestroyGroupRecursive(child))
 				{
 					itemGroup.Items.Add(childItem);
-
-					SetDockItemIndex<TabLayout>(childItem, itemGroup.Layout.IndexProvider.NewIndex);
+					childItem.SetNewLayoutIndex(itemGroup.Layout);
 
 					childItem.DockState = dockState;
 				}
@@ -448,19 +398,16 @@ namespace Zaaml.UI.Controls.Docking
 
 				var parentGroup = parent.ParentDockGroup;
 
+				parent.CopyTargetLayoutIndex(itemGroup);
 				parent.CopyTargetLayoutSettings(itemGroup);
 
-				SetDockItemIndex<TabLayout>(parent, itemGroup.Layout.IndexProvider.NewIndex);
-
-				// Replace must be first.
 				parentGroup?.ReplaceItem(parent, itemGroup);
 
 				itemGroup.Items.Add(parent);
 
 				foreach (var childItem in DestroyGroupRecursive(child))
 				{
-					SetDockItemIndex<TabLayout>(childItem, itemGroup.Layout.IndexProvider.NewIndex);
-
+					childItem.SetNewLayoutIndex(itemGroup.Layout);
 					childItem.DockState = dockState;
 					itemGroup.Items.Add(childItem);
 				}
@@ -471,9 +418,7 @@ namespace Zaaml.UI.Controls.Docking
 
 		protected IEnumerable<DockItem> DestroyGroup(DockItem item)
 		{
-			var group = item as DockItemGroup;
-
-			if (group == null)
+			if (item is not DockItemGroup group)
 				yield return item;
 			else
 			{
@@ -505,8 +450,6 @@ namespace Zaaml.UI.Controls.Docking
 			if (dockItem.IsSelected)
 				SelectionScope.SelectedItem = null;
 
-			dockItem.RemoveFromLayout();
-
 			dockItem.Controller = null;
 		}
 
@@ -522,45 +465,42 @@ namespace Zaaml.UI.Controls.Docking
 					selectedItem = SelectionScope.SelectedItem;
 			}
 
-			using (EnterLayoutSuspendState())
+			var actionType = DropGuide.GetActionType(dropGuideAction);
+			var dockSide = DropGuide.GetGuideSide(dropGuideAction);
+
+			if (actionType == DropGuideActionType.Dock || actionType == DropGuideActionType.AutoHide || actionType == DropGuideActionType.Split && target != null && target.IsDocument())
 			{
-				var actionType = DropGuide.GetActionType(dropGuideAction);
-				var dockSide = DropGuide.GetGuideSide(dropGuideAction);
+				Ungroup(source, DockItemState.Dock);
 
-				if (actionType == DropGuideActionType.Dock || actionType == DropGuideActionType.AutoHide || actionType == DropGuideActionType.Split && target != null && target.IsDocument())
+				DockLayout.SetDock(source, dockSide ?? Dock.Left);
+
+				if (source.GetDependencyPropertyValueInfo(DockLayout.WidthProperty).IsDefaultValue)
+					DockLayout.SetWidth(source, FloatLayout.GetWidth(source));
+
+				if (source.GetDependencyPropertyValueInfo(DockLayout.HeightProperty).IsDefaultValue)
+					DockLayout.SetHeight(source, FloatLayout.GetHeight(source));
+
+				if (actionType == DropGuideActionType.Split)
 				{
-					Ungroup(source, DockItemState.Dock);
+					foreach (var dockedItem in DockLayout.Items)
+						dockedItem.SetLayoutIndex(DockLayout, dockedItem.GetLayoutIndex(DockLayout) + 1);
 
-					DockLayout.SetDockSide(source, dockSide ?? Dock.Left);
-
-					if (source.GetDependencyPropertyValueInfo(DockLayout.DockWidthProperty).IsDefaultValue)
-						DockLayout.SetDockWidth(source, FloatLayout.GetFloatWidth(source));
-
-					if (source.GetDependencyPropertyValueInfo(DockLayout.DockHeightProperty).IsDefaultValue)
-						DockLayout.SetDockHeight(source, FloatLayout.GetFloatHeight(source));
-
-					if (actionType == DropGuideActionType.Split)
-					{
-						foreach (var dockedItem in DockLayout.Items)
-							SetDockItemIndex<DockLayout>(dockedItem, GetActualDockItemIndex<DockLayout>(dockedItem.ActualItem) + 1);
-
-						SetDockItemIndex<DockLayout>(source, 0);
-					}
-					else
-						SetDockItemIndex<DockLayout>(source, DockLayout.IndexProvider.NewIndex);
-
-					if (actionType == DropGuideActionType.AutoHide && source is DockItemGroup itemGroup)
-						foreach (var childWindow in itemGroup.EnumerateDescendants())
-							DockLayout.SetDockSide(childWindow, dockSide ?? Dock.Left);
-
-					source.DockState = actionType == DropGuideActionType.AutoHide ? DockItemState.AutoHide : DockItemState.Dock;
+					source.SetLayoutIndex(DockLayout, 0);
 				}
 				else
-				{
-					var group = GroupItems(source, target, dropGuideAction);
+					source.SetLayoutIndex(DockLayout, DockLayout.GetNewLayoutIndex());
 
-					group.SelectedItem = selectedItem;
-				}
+				if (actionType == DropGuideActionType.AutoHide && source is DockItemGroup itemGroup)
+					foreach (var childWindow in itemGroup.EnumerateDescendants())
+						DockLayout.SetDock(childWindow, dockSide ?? Dock.Left);
+
+				source.DockState = actionType == DropGuideActionType.AutoHide ? DockItemState.AutoHide : DockItemState.Dock;
+			}
+			else
+			{
+				var group = GroupItems(source, target, dropGuideAction);
+
+				group.SelectedItem = selectedItem;
 			}
 
 			SelectionScope.SelectedItem = selectedItem;
@@ -590,7 +530,7 @@ namespace Zaaml.UI.Controls.Docking
 			if (DocumentGroup != null)
 				return;
 
-			var documentGroup = InternalItems.OfType<DocumentDockItemGroup>().FirstOrDefault(d => d.Name == "DocumentGroup");
+			var documentGroup = InternalItems.OfType<DocumentDockItemGroup>().FirstOrDefault();
 
 			if (documentGroup != null)
 			{
@@ -603,16 +543,10 @@ namespace Zaaml.UI.Controls.Docking
 			}
 
 			DocumentGroup = MountItemGroup<DocumentDockItemGroup>();
-			DocumentGroup.Name = "DocumentGroup";
 			DocumentGroup.DockState = DockItemState.Document;
 
 			foreach (var dockItem in InternalItems)
 				EnsureDockItemDocumentGroup(dockItem);
-		}
-
-		protected internal IDisposable EnterLayoutSuspendState()
-		{
-			return SuspendState.EnterSuspendState();
 		}
 
 		public static IEnumerable<Dock> EnumerateDockSides()
@@ -623,131 +557,67 @@ namespace Zaaml.UI.Controls.Docking
 			yield return Dock.Bottom;
 		}
 
-		private static string GenerateItemName()
+		private static int GetActualItemOrder(DockItem dockItem)
 		{
-			return "_" + Guid.NewGuid().ToString().Replace("-", "_");
-		}
-
-		private static int GetActualItemLayoutIndex(DockItem dockItem)
-		{
-			return dockItem.ActualLayout?.Items.OrderBy(i => dockItem.ActualLayout.GetDockItemIndex(i) ?? 0).IndexOf(dockItem) ?? 0;
+			return dockItem.GetTargetLayout()?.GetDockItemOrderInternal(dockItem) ?? 0;
 		}
 
 		internal DockControlLayout GetActualLayout()
 		{
-			ArrangeItemsImpl(true);
+			var dockControlLayout = new DockControlLayout();
+			var itemLayouts = new Dictionary<DockItem, DockItemLayout>();
 
-			var dockManagerLayout = new DockControlLayout();
-			var groupLayouts = new Dictionary<DockItem, DockItemLayout>();
-			var writtenProperties = new HashSet<LayoutKind>();
-			var documentGroupsCount = InternalItems.OfType<DocumentDockItemGroup>().Count();
-			var groups = new MultiMap<LayoutKind, DockItem>();
-			var nameDictionary = new Dictionary<DockItem, string>();
-
-			// Group items by actual layout kinds
-			foreach (var item in InternalItems)
+			DockItemLayout CreateItemLayout(DockItem dockItem)
 			{
-				nameDictionary[item] = item.Name ?? GenerateItemName();
+				var layout = dockItem.CreateItemLayout();
 
-				// Skip document container in case documents structure is not modified
-				if (ReferenceEquals(DocumentGroup, item) && documentGroupsCount < 2)
-					continue;
+				LayoutSettings.CopySettings(dockItem, layout, FullLayout.LayoutProperties);
 
-				// Skip groups without simple items
-				if (item.EnumerateDescendants(true).Count(DockItemExtensions.IsSimple) == 0)
-					continue;
-
-				groups.AddValue(item.ActualLayoutKind, item);
-			}
-
-			// Layout factory method caching container layouts
-			DockItemLayout GetItemLayout(DockItem i)
-			{
-				var dockItemLayout = i.IsSimple() ? i.CreateItemLayout() : groupLayouts.GetValueOrCreate(i, i.CreateItemLayout);
-
-				dockItemLayout.ItemName = nameDictionary[i];
-
-				return dockItemLayout;
-			}
-
-			foreach (var kv in groups)
-			{
-				foreach (var dockItem in kv.Value)
+				if (dockItem is DockItemGroup group)
 				{
-					var layouts = new List<DockItemLayout>();
-					var actualItem = dockItem.ActualItem ?? dockItem;
+					var groupLayout = (DockItemGroupLayout)layout;
 
-					foreach (var dockItemGroup in dockItem.ItemGroups.Values)
-					{
-						// Skip document container in case documents structure is not modified
-						if (ReferenceEquals(DocumentGroup, dockItemGroup) && documentGroupsCount < 2)
-							continue;
-
-						var layout = GetItemLayout(dockItem);
-
-						DockItemLayout.SetIndex(layout, GetActualItemLayoutIndex(actualItem));
-
-						layouts.Add(layout);
-
-						var groupLayout = (DockItemGroupLayout) groupLayouts.GetValueOrCreate(dockItemGroup, dockItemGroup.CreateItemLayout);
-
-						groupLayout.Items.Add(layout);
-
-						// Copy container layout properties
-						LayoutSettings.CopySettings(actualItem, layout, dockItemGroup.Layout.LayoutProperties);
-
-						writtenProperties.Add(dockItemGroup.Layout.LayoutKind);
-					}
-
-					if (layouts.Count == 0)
-					{
-						// Root layout
-						var layout = GetItemLayout(dockItem);
-
-						DockItemLayout.SetIndex(layout, GetActualItemLayoutIndex(actualItem));
-
-						LayoutSettings.CopySettings(actualItem, layout, FullLayout.LayoutProperties);
-
-						// Do not serialize generated Id when it is not needed to bind container with layout
-						if (layout.IsSimple() == false)
-							layout.SkipSerializeId = true;
-
-						dockManagerLayout.Items.Add(layout);
-					}
-					else if (layouts.Count > 1 || dockItem.ParentDockGroup == null)
-					{
-						// Shared layout, create root
-						var layout = GetItemLayout(dockItem);
-
-						DockItemLayout.SetIndex(layout, GetActualItemLayoutIndex(actualItem));
-
-						// Copy root layout properties
-						foreach (var layoutKind in FullLayout.EnumerateLayoutKinds().WhereNot(writtenProperties.Contains))
-							LayoutSettings.CopySettings(actualItem, layout, FullLayout.GetLayoutProperties(layoutKind));
-
-						dockManagerLayout.Items.Add(layout);
-					}
-					else
-					{
-						// Nested layout
-						var layout = layouts[0];
-
-						// Do not serialize generated Id when it is not needed to bind container with layout
-						if (layout.IsSimple() == false)
-							layout.SkipSerializeId = true;
-
-						// Copy rest layout properties
-						foreach (var layoutKind in FullLayout.EnumerateLayoutKinds().WhereNot(writtenProperties.Contains))
-							LayoutSettings.CopySettings(actualItem, layout, FullLayout.GetLayoutProperties(layoutKind));
-					}
-
-					writtenProperties.Clear();
+					foreach (var child in group.Items.OrderBy(d => d.GetLayoutIndex(group.Layout)))
+						groupLayout.Items.Add(itemLayouts.GetValueOrCreate(child, CreateItemLayout));
 				}
+
+				return layout;
 			}
 
-			dockManagerLayout.Sort();
+			foreach (var item in InternalItems.Where(d => d.IsRoot).OrderBy(d => d.DockState).ThenBy(d => d.GetLayoutIndex(d.GetTargetLayout())))
+				dockControlLayout.Items.Add(itemLayouts.GetValueOrCreate(item, CreateItemLayout));
 
-			return dockManagerLayout;
+			dockControlLayout.Merge();
+
+			return dockControlLayout;
+		}
+
+		public static IEnumerable<DependencyProperty> GetLayoutProperties(DockItemState dockState)
+		{
+			switch (dockState)
+			{
+				case DockItemState.Dock:
+
+					return BaseLayout.GetLayoutProperties<DockLayout>();
+
+				case DockItemState.Float:
+
+					return BaseLayout.GetLayoutProperties<FloatLayout>();
+
+				case DockItemState.AutoHide:
+
+					return BaseLayout.GetLayoutProperties<AutoHideLayout>();
+
+				case DockItemState.Document:
+
+					return BaseLayout.GetLayoutProperties<DocumentLayout>();
+
+				case DockItemState.Hidden:
+
+					return BaseLayout.GetLayoutProperties<HiddenLayout>();
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(dockState));
 		}
 
 		internal DockItem GetDockItem(string name)
@@ -757,7 +627,7 @@ namespace Zaaml.UI.Controls.Docking
 
 		internal DockItem GetDockItem(DockItemLayout dockItemLayout)
 		{
-			return dockItemLayout?.ItemName != null && InternalItems.TryGetDockItem(dockItemLayout.ItemName, out var item) ? item : null;
+			return dockItemLayout?.ItemNameInternal != null && InternalItems.TryGetDockItem(dockItemLayout.ItemNameInternal, out var item) ? item : null;
 		}
 
 		private static DockItemGroupKind GetItemGroupKind<T>() where T : DockItemGroup
@@ -781,7 +651,12 @@ namespace Zaaml.UI.Controls.Docking
 
 		internal DockItem GetItemIfDocumentLayout(UIElement uie)
 		{
-			return ReferenceEquals(uie, DockControl?.Controller?.DocumentLayout.View) || ReferenceEquals(uie, DockControl?.PreviewController?.DocumentLayout.View) ? DocumentGroup : uie as DockItem;
+			var itemIfDocumentLayout = ReferenceEquals(uie, DockControl?.Controller?.DocumentLayout.View) || ReferenceEquals(uie, DockControl?.PreviewController?.DocumentLayout.View) ? DocumentGroup : uie as DockItem;
+
+			if (DocumentGroup != null && ReferenceEquals(itemIfDocumentLayout, DocumentGroup) && DocumentGroup.GetChildren().Any())
+				return null;
+
+			return itemIfDocumentLayout;
 		}
 
 		public BaseLayout GetLayout(DockItemState dockState)
@@ -812,7 +687,7 @@ namespace Zaaml.UI.Controls.Docking
 			throw new ArgumentOutOfRangeException(nameof(dockState));
 		}
 
-		public virtual BaseLayout GetTargetLayout(DockItem item, bool arrange)
+		public virtual BaseLayout GetTargetLayout(DockItem item)
 		{
 			return GetLayout(item.DockState);
 		}
@@ -854,10 +729,13 @@ namespace Zaaml.UI.Controls.Docking
 			return null;
 		}
 
-		public void InvalidateItemArrange()
+		private DockItemGroup MountItemGroup(DockItemGroupLayout groupLayout)
 		{
-			IsItemLayoutValid = false;
-			ControlView?.InvalidateMeasure();
+			var group = MountItemGroup(groupLayout.GroupKind);
+
+			groupLayout.InitGroup(group);
+
+			return group;
 		}
 
 		public DockItemGroup MountItemGroup(DockItemGroupKind dockItemGroupKind)
@@ -867,7 +745,7 @@ namespace Zaaml.UI.Controls.Docking
 
 		public T MountItemGroup<T>() where T : DockItemGroup
 		{
-			return (T) MountItemGroup(GetItemGroupKind<T>());
+			return (T)MountItemGroup(GetItemGroupKind<T>());
 		}
 
 		internal void OnBeginDragMoveInternal(DockItem dockItem)
@@ -877,25 +755,16 @@ namespace Zaaml.UI.Controls.Docking
 
 		private void OnDockItemGroupMounted(DockItemGroupKind kind, DockItemGroup dockItemGroup)
 		{
-			dockItemGroup.Name = GenerateItemName();
-
 			InternalItems.Add(dockItemGroup);
 		}
 
 		private void OnDockItemGroupReleased(DockItemGroupKind kind, DockItemGroup dockItemGroup)
 		{
+			dockItemGroup.DockState = DockItemState.Hidden;
+
 			InternalItems.Remove(dockItemGroup);
 
-			dockItemGroup.Name = null;
-		}
-
-		public void OnDockStateChanged(DockItem dockItem, DockItemState oldState)
-		{
-			EnsureDockItemDocumentGroup(dockItem);
-		}
-
-		public void OnDockStateChanging(DockItem dockItem, DockItemState newState)
-		{
+			LayoutSettings.ClearSettings(dockItemGroup, FullLayout.LayoutProperties);
 		}
 
 		internal void OnDragMoveInternal(DockItem dockItem)
@@ -907,26 +776,42 @@ namespace Zaaml.UI.Controls.Docking
 		{
 			DragItemEvent?.Invoke(this, new DragItemEventArgs(dockItem));
 
-			using (EnterLayoutSuspendState())
+			dockItem.EnqueueSyncDragPosition = true;
+
+			var floatRect = new Rect(new Point(), DragOutWithActualSize ? dockItem.GetActualSize() : FloatLayout.GetSize(dockItem));
+			var floatWindow = dockItem.DockState == DockItemState.Float ? dockItem.GetVisualAncestors().OfType<FloatingDockWindow>().FirstOrDefault() : null;
+
+			floatRect = floatWindow != null ? new Rect(new Point(floatWindow.Left, floatWindow.Top), floatWindow.GetActualSize()) : floatRect.WithTopLeft(dockItem.GetScreenLogicalBox().TopLeft);
+
+			Ungroup(dockItem, DockItemState.Float);
+
+			var group = dockItem as DockItemGroup;
+
+			DockItemGroup groupCopy = null;
+
+			if (group != null)
 			{
-				dockItem.EnqueueSyncDragPosition = true;
+				var parentGroup = group.ParentDockGroup;
 
-				var actualSize = dockItem.GetActualSize();
-				var floatRect = new Rect(new Point(), actualSize);
-				var floatWindow = dockItem.DockState == DockItemState.Float ? dockItem.GetVisualAncestors().OfType<FloatingDockWindow>().FirstOrDefault() : null;
+				groupCopy = MountItemGroup(group.GroupKind);
+				groupCopy.DockState = dockItem.DockState;
 
-				floatRect = floatWindow != null ? new Rect(new Point(floatWindow.Left, floatWindow.Top), floatWindow.GetActualSize()) : floatRect.WithTopLeft(dockItem.GetScreenBox().TopLeft);
+				parentGroup?.ReplaceItem(dockItem, groupCopy);
 
-				Ungroup(dockItem, DockItemState.Float);
-
-				dockItem.DockState = DockItemState.Hidden;
-
-				FloatLayout.SetFloatRect(dockItem, floatRect);
-
-				ArrangeItems();
-
-				dockItem.DockState = DockItemState.Float;
+				dockItem.CopyTargetLayoutIndex(groupCopy);
+				dockItem.CopyTargetLayoutSettings(groupCopy);
 			}
+
+			//TODO Why Hidden?
+			//dockItem.DockState = DockItemState.Hidden;
+
+			FloatLayout.SetRect(dockItem, floatRect);
+
+			dockItem.DockState = DockItemState.Float;
+			dockItem.EnqueueDragMove();
+
+			if (groupCopy != null)
+				CopyGroupContent(groupCopy, group);
 		}
 
 		public void OnEndDragMoveInternal(DockItem dockItem)
@@ -941,12 +826,21 @@ namespace Zaaml.UI.Controls.Docking
 			InternalItems.Add(dockItem);
 
 			EnsureDockItemDocumentGroup(dockItem);
-
-			InvalidateItemArrange();
 		}
 
 		internal virtual void OnItemArranged(DockItem dockItem)
 		{
+		}
+
+		protected virtual void OnItemDockStateChanged(DockItem dockItem, DockItemState oldState, DockItemState newState)
+		{
+		}
+
+		internal void OnItemDockStateChangedInternal(DockItem dockItem, DockItemState oldState, DockItemState newState)
+		{
+			EnsureDockItemDocumentGroup(dockItem);
+
+			OnItemDockStateChanged(dockItem, oldState, newState);
 		}
 
 		internal virtual void OnItemMeasured(DockItem dockItem)
@@ -955,18 +849,18 @@ namespace Zaaml.UI.Controls.Docking
 
 		private void OnItemRemoved(DockItem dockItem)
 		{
+			foreach (var dockState in DockItem.EnumerateDockStates())
+			{
+				var parentGroup = dockItem.GetParentGroup(dockState);
+
+				parentGroup?.Items.Remove(dockItem);
+
+				var layout = GetLayout(dockState);
+
+				layout?.Items.Remove(dockItem);
+			}
+
 			InternalItems.Remove(dockItem);
-
-			InvalidateItemArrange();
-		}
-
-		private void OnLayoutResumed()
-		{
-		}
-
-		private void OnLayoutSuspended()
-		{
-			InvalidateItemArrange();
 		}
 
 		private void OnSelectionScopeSelectedItemChanged(object sender, EventArgs e)
@@ -998,7 +892,7 @@ namespace Zaaml.UI.Controls.Docking
 
 		private void ReleaseOnUnlock(object sender, EventArgs e)
 		{
-			var dockItemGroup = (DockItemGroup) sender;
+			var dockItemGroup = (DockItemGroup)sender;
 
 			dockItemGroup.IsLockedChanged -= ReleaseOnUnlock;
 
@@ -1012,41 +906,31 @@ namespace Zaaml.UI.Controls.Docking
 			if (itemGroup == null)
 				return;
 
-			using (EnterLayoutSuspendState())
+			var parentGroup = itemGroup.ParentDockGroup;
+
+			if (itemGroup.Items.Count == 2 && itemGroup.AllowSingleItem == false)
 			{
-				if (itemGroup.Items.Count == 2 && itemGroup.AllowSingleItem == false)
+				var neighbor = itemGroup.Items[ReferenceEquals(item, itemGroup.Items[0]) ? 1 : 0];
+
+				if (itemGroup.DockState == neighbor.DockState)
 				{
-					var neighbor = itemGroup.Items[ReferenceEquals(item, itemGroup.Items[0]) ? 1 : 0];
-
-					if (itemGroup.DockState == neighbor.DockState)
-						itemGroup.PushCurrentLayout(neighbor);
-
-					var parentGroup = itemGroup.ParentDockGroup;
-
-					parentGroup?.ReplaceItem(itemGroup, neighbor);
-
-					itemGroup.ClearItems();
+					itemGroup.CopyTargetLayoutIndex(neighbor);
+					itemGroup.CopyTargetLayoutSettings(neighbor);
 				}
-				else
-					itemGroup.Items.Remove(item);
 
-				if (itemGroup.Items.Count > 0)
-					return;
+				parentGroup?.ReplaceItem(itemGroup, neighbor);
 
-				itemGroup.ParentDockGroup?.Items.Remove(itemGroup);
-
-				ReleaseItemGroup(itemGroup);
+				itemGroup.ClearItems();
 			}
-		}
+			else
+				itemGroup.Items.Remove(item);
 
-		protected void Ungroup(DockItem item)
-		{
-			Ungroup(item, item.DockState);
-		}
+			if (itemGroup.Items.Count > 0)
+				return;
 
-		internal void UngroupInternal(DockItem item, DockItemState dockState)
-		{
-			Ungroup(item, dockState);
+			Ungroup(itemGroup, dockState);
+
+			ReleaseItemGroup(itemGroup);
 		}
 	}
 }

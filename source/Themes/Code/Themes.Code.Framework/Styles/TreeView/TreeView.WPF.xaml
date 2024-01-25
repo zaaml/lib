@@ -1,0 +1,56 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build" 
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                            mc:Ignorable="zmb">
+
+  <!-- Template -->
+  <ControlTemplate x:Key="TreeViewTemplate" TargetType="TreeView">
+    <zm:ControlTemplateRoot>
+
+      <Border Background="{TemplateBinding Background}" 
+              BorderBrush="{TemplateBinding BorderBrush}" 
+              BorderThickness="{TemplateBinding BorderThickness}"
+              zm:DisableVeilControl.VeilBrush="{TemplateBinding Background}">
+
+        <ScrollViewer x:Name="ScrollViewer"
+                      Background="#00FFFFFF" 
+                      BorderThickness="0"
+                      Padding="{TemplateBinding Padding}"
+                      Margin="{zm:TemplateSkinBinding SkinPath=ScrollViewerMargin}"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto" 
+                      IsTabStop="False">
+          <ItemsPresenter />
+        </ScrollViewer>
+      </Border>
+
+      <!-- Validation Error Element -->
+      <zm:ValidationErrorControl />
+
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!-- Base Style -->
+  <zm:Style x:Key="TreeViewBaseStyle" TargetType="TreeView">
+    <zm:Setter Property="BorderThickness" Value="1" />
+    <zm:Setter Property="Padding" Value="{zm:SelfSkinBinding SkinPath=ScrollViewerPadding}" />
+    <zm:Setter Property="Template" Value="{StaticResource TreeViewTemplate}" />
+    <zm:Setter Property="Validation.ErrorTemplate" Value="{x:Null}" />
+  </zm:Style>
+
+  <!-- Base Skinned Style -->
+  <zm:Style x:Key="TreeViewStyle" TargetType="TreeView" BasedOn="{StaticResource TreeViewBaseStyle}" 
+            Skin="Code.StandardControls.TreeView">
+    <zm:SetterGroup ValuePathSource="Skin">
+      <zm:Setter Property="Foreground" ValuePath="Foreground" />
+      <zm:Setter Property="Background" ValuePath="Background" />
+      <zm:Setter Property="BorderBrush" ValuePath="BorderBrush" />
+    </zm:SetterGroup>
+  </zm:Style>
+
+  <!-- Theme Styles -->
+  <zm:ThemeStyle x:Key="TreeViewThemeStyle" TargetType="TreeView" BasedOn="{StaticResource TreeViewStyle}" zmb:Deferred="True" />
+
+</zm:ThemeResourceDictionary>

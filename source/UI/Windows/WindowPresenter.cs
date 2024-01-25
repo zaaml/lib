@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Markup;
 using Zaaml.Core;
+using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -95,7 +96,7 @@ namespace Zaaml.UI.Windows
 		public bool DropShadow
 		{
 			get => (bool) GetValue(DropShadowProperty);
-			set => SetValue(DropShadowProperty, value);
+			set => SetValue(DropShadowProperty, value.Box());
 		}
 
 		internal WindowFooterPresenter FooterPresenter => TemplateContract.FooterPresenter;
@@ -119,22 +120,22 @@ namespace Zaaml.UI.Windows
 		public bool ShowFooter
 		{
 			get => (bool) GetValue(ShowFooterProperty);
-			set => SetValue(ShowFooterProperty, value);
+			set => SetValue(ShowFooterProperty, value.Box());
 		}
 
 		public bool ShowFrame
 		{
 			get => (bool) GetValue(ShowFrameProperty);
-			set => SetValue(ShowFrameProperty, value);
+			set => SetValue(ShowFrameProperty, value.Box());
 		}
 
 		public bool ShowHeader
 		{
 			get => (bool) GetValue(ShowHeaderProperty);
-			set => SetValue(ShowHeaderProperty, value);
+			set => SetValue(ShowHeaderProperty, value.Box());
 		}
 
-		private WindowContentPresenterTemplateContract TemplateContract => (WindowContentPresenterTemplateContract) TemplateContractInternal;
+		private WindowContentPresenterTemplateContract TemplateContract => (WindowContentPresenterTemplateContract) TemplateContractCore;
 
 		private IEnumerable<IWindowElement> EnumerateWindowElements()
 		{

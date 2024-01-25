@@ -61,7 +61,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		private MenuScrollViewer ScrollViewer => TemplateContract.ScrollViewer;
 
-		private MenuItemsPresenterBaseTemplateContract<TMenuItem, TMenuItemsPanel> TemplateContract => (MenuItemsPresenterBaseTemplateContract<TMenuItem, TMenuItemsPanel>) TemplateContractInternal;
+		private MenuItemsPresenterBaseTemplateContract<TMenuItem, TMenuItemsPanel> TemplateContract => (MenuItemsPresenterBaseTemplateContract<TMenuItem, TMenuItemsPanel>) TemplateContractCore;
 
 		#endregion
 

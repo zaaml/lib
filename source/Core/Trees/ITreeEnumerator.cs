@@ -8,6 +8,6 @@ namespace Zaaml.Core.Trees
 {
 	internal interface ITreeEnumerator<T> : IEnumerator<T>
 	{
-		AncestorsEnumerator<T> CurrentAncestors { get; }
+		AncestorsEnumerator<T> GetAncestorsEnumerator();
 	}
 }

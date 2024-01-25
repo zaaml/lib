@@ -50,6 +50,7 @@ namespace Zaaml.UI.Controls.Core
 				Generator.OnGeneratorChangingInt();
 
 				_itemContentMember = value;
+
 				CreateItemContentMemberBinding();
 
 				Generator.OnGeneratorChangedInt();

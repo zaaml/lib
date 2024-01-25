@@ -9,130 +9,134 @@ using Zaaml.UI.Windows;
 
 namespace Zaaml.UI.Controls.Docking
 {
-  internal sealed class FloatingDockWindowController
-  {
-    #region Fields
+	internal sealed class FloatingDockWindowController
+	{
+		private readonly HashSet<FloatingDockWindow> _hideQueue = new();
+		private readonly FloatLayoutView _layoutView;
+		private readonly HashSet<FloatingDockWindow> _showQueue = new();
+		private readonly Stack<FloatingDockWindow> _windowPool = new();
 
-    private readonly HashSet<FloatingDockWindow> _hideQueue = new HashSet<FloatingDockWindow>();
-    private readonly FloatLayoutView _layoutView;
-    private readonly HashSet<FloatingDockWindow> _showQueue = new HashSet<FloatingDockWindow>();
+		public FloatingDockWindowController(FloatLayoutView layoutView)
+		{
+			_layoutView = layoutView;
+		}
 
-    #endregion
+		public void ArrangeWindows()
+		{
+			foreach (var floatingDockWindow in _showQueue)
+				floatingDockWindow.ShowDockWindow();
 
-    #region Ctors
+			foreach (var floatingDockWindow in _hideQueue)
+			{
+				floatingDockWindow.HideDockWindow();
 
-    public FloatingDockWindowController(FloatLayoutView layoutView)
-    {
-      _layoutView = layoutView;
-    }
+				_windowPool.Push(floatingDockWindow);
+			}
 
-    #endregion
+			_showQueue.Clear();
+			_hideQueue.Clear();
+		}
 
-    #region  Methods
+		public void AttachWindow(DockItem item)
+		{
+			_layoutView.DockControl?.EnsureFloatPositionInternal(item);
 
-    public void ArrangeWindows()
-    {
-      foreach (var floatingDockWindow in _showQueue)
-        floatingDockWindow.Show();
+			if (item.IsPreview)
+				GetPreviewTarget(item)?.AttachItem(item);
+			else
+				GetFloatingDockWindow(item).AttachItem(item);
+		}
 
-      foreach (var floatingDockWindow in _hideQueue)
-        floatingDockWindow.Close();
+		private FloatingDockWindow CreateFloatingDockWindow()
+		{
+			return new FloatingDockWindow(this)
+			{
+				Owner = WindowBase.GetWindowInternal(_layoutView),
+			};
+		}
 
-      _showQueue.Clear();
-      _hideQueue.Clear();
-    }
+		public void DetachWindow(DockItem item)
+		{
+			if (item.IsPreview)
+				item.PreviewFloatingWindow?.DetachItem(item);
+			else
+			{
+				var floatingDockWindow = item.FloatingWindow;
 
-    public void AttachWindow(DockItem item)
-    {
-      if (item.IsPreview)
-        GetPreviewTarget(item)?.AttachItem(item);
-      else
-        GetFloatingDockWindow(item).AttachItem(item);
-    }
+				if (floatingDockWindow == null)
+					return;
 
-    private FloatingDockWindow CreateFloatingDockWindow()
-    {
-      return new FloatingDockWindow(this)
-      {
-        Owner = WindowBase.GetWindowInternal(_layoutView),
-      };
-    }
+				floatingDockWindow.DetachItem(item);
 
-    public void DetachWindow(DockItem item)
-    {
-      if (item.IsPreview)
-        item.PreviewFloatingWindow?.DetachItem(item);
-      else
-      {
-        var floatingDockWindow = item.FloatingWindow;
+				if (floatingDockWindow.PreviewDockItem != null)
+					floatingDockWindow.DetachItem(floatingDockWindow.PreviewDockItem);
 
-        if (floatingDockWindow == null)
-          return;
+				ReleaseFloatingDockWindow(floatingDockWindow);
+			}
+		}
 
-        floatingDockWindow.DetachItem(item);
+		private FloatingDockWindow GetFloatingDockWindow(DockItem item)
+		{
+			if (_windowPool.Count > 0)
+			{
+				var dockWindow = _windowPool.Pop();
 
-        if (floatingDockWindow.PreviewDockItem != null)
-          floatingDockWindow.DetachItem(floatingDockWindow.PreviewDockItem);
+				_showQueue.Add(dockWindow);
 
-        ReleaseFloatingDockWindow(floatingDockWindow);
-      }
-    }
+				return dockWindow;
+			}
 
-    private FloatingDockWindow GetFloatingDockWindow(DockItem item)
-    {
-      if (_hideQueue.Any() == false)
-      {
-        var dockWindow = CreateFloatingDockWindow();
+			if (_hideQueue.Any() == false)
+			{
+				var dockWindow = CreateFloatingDockWindow();
 
-        _showQueue.Add(dockWindow);
+				_showQueue.Add(dockWindow);
 
-        return dockWindow;
-      }
+				return dockWindow;
+			}
 
-      var targetRect = FloatLayout.GetFloatRect(item);
+			var targetRect = FloatLayout.GetRect(item);
 
-      FloatingDockWindow floatingWindow = null;
+			FloatingDockWindow floatingWindow = null;
 
-      foreach (var current in _hideQueue)
-      {
-        floatingWindow = current;
+			foreach (var current in _hideQueue)
+			{
+				floatingWindow = current;
 
-        if (current.GetLayoutBox().IsCloseTo(targetRect))
-          break;
-      }
+				if (current.GetLayoutBox().IsCloseTo(targetRect))
+					break;
+			}
 
-      _hideQueue.Remove(floatingWindow);
+			_hideQueue.Remove(floatingWindow);
 
-      return floatingWindow;
-    }
+			return floatingWindow;
+		}
 
-    private FloatingDockWindow GetPreviewTarget(DockItem item)
-    {
-      var dropTargetWindow = item.DockControl?.CurrentDropGuide?.Compass.PlacementTarget as DockItem;
+		private FloatingDockWindow GetPreviewTarget(DockItem item)
+		{
+			var dropTargetWindow = item.DockControl?.CurrentDropGuide?.Compass.PlacementTarget as DockItem;
 
-      return dropTargetWindow?.DockState != DockItemState.Float ? null : dropTargetWindow.Root.FloatingWindow;
-    }
+			return dropTargetWindow?.DockState != DockItemState.Float ? null : dropTargetWindow.Root.FloatingWindow;
+		}
 
-    private void ReleaseFloatingDockWindow(FloatingDockWindow window)
-    {
-      _hideQueue.Add(window);
-    }
+		private void ReleaseFloatingDockWindow(FloatingDockWindow window)
+		{
+			_hideQueue.Add(window);
+		}
 
-    public void UpdateWindow(DockItem item)
-    {
-      if (item.IsPreview == false)
-        return;
+		public void UpdateWindow(DockItem item)
+		{
+			if (item.IsPreview == false)
+				return;
 
-      var target = GetPreviewTarget(item);
-      var current = item.PreviewFloatingWindow;
+			var target = GetPreviewTarget(item);
+			var current = item.PreviewFloatingWindow;
 
-      if (ReferenceEquals(current, target))
-        return;
+			if (ReferenceEquals(current, target))
+				return;
 
-      current?.DetachItem(item);
-      target?.AttachItem(item);
-    }
-
-    #endregion
-  }
+			current?.DetachItem(item);
+			target?.AttachItem(item);
+		}
+	}
 }

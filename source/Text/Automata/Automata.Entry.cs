@@ -8,37 +8,25 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		#region Nested Types
-
 		[DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
 		protected abstract class Entry
 		{
-			#region Properties
-
 			protected abstract string DebuggerDisplay { get; }
-
-			#endregion
-
-			#region Methods
 
 			public static implicit operator Entry(TOperand operand)
 			{
-				return new SingleMatchEntry(operand);
+				return new OperandMatchEntry(operand);
 			}
 
-			public static implicit operator Entry(FiniteState state)
+			public static implicit operator Entry(Syntax state)
 			{
-				return new StateEntry(state);
+				return new SyntaxEntry(state);
 			}
 
 			public override string ToString()
 			{
 				return DebuggerDisplay;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -14,60 +14,28 @@ using System.Windows;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Monads;
 
-#if SILVERLIGHT
-using System.Xml;
-#endif
-
 namespace Zaaml.PresentationCore.Utils
 {
-  public static class AssemblyUtils
-  {
-    #region  Methods
+	public static class AssemblyUtils
+	{
+		public static IEnumerable<string> EnumerateEmbeddedResources(this Assembly assembly)
+		{
+			var culture = Thread.CurrentThread.CurrentUICulture;
+			var manifestResourceNames = assembly.GetManifestResourceNames();
 
-#if SILVERLIGHT
-    public static IEnumerable<AssemblyPart> EnumerateAssemblyParts()
-    {
-      XmlReader reader = XmlReader.Create(Application.GetResourceStream(new Uri("AppManifest.xaml", UriKind.Relative)).Stream);
+			foreach (IDictionaryEnumerator enumerator in manifestResourceNames
+				         .Select(r => new ResourceManager(r.Replace(".resources", ""), assembly))
+				         .WithAction(r => r.SafeDo(rm => rm.GetObject("dummyCall")))
+				         .Select(rm => rm.SafeWith(r => r.GetResourceSet(culture, false, true)))
+				         .SkipNull()
+				         .Select(r => r.GetEnumerator()))
+			{
+				while (enumerator.MoveNext())
+					yield return (string)enumerator.Key;
+			}
+		}
 
-      if (!reader.Read()) yield break;
-
-      reader.ReadStartElement();
-
-      if (!reader.ReadToNextSibling("Deployment.Parts")) yield break;
-
-      while (reader.ReadToFollowing("AssemblyPart"))
-        yield return new AssemblyPart {Source = reader.GetAttribute("Source")};
-    }
-#endif
-
-    public static IEnumerable<string> EnumerateEmbeddedResources(this Assembly assembly)
-    {
-      var culture = Thread.CurrentThread.CurrentUICulture;
-      foreach (IDictionaryEnumerator enumerator in assembly.GetManifestResourceNames()
-        .Select(r => new ResourceManager(r.Replace(".resources", ""), assembly))
-        .WithAction(r => r.SafeDo(rm => rm.GetObject("dummyCall")))
-        .Select(rm => rm.SafeWith(r => r.GetResourceSet(culture, false, true)))
-        .SkipNull()
-        .Select(r => r.GetEnumerator()))
-      {
-        while (enumerator.MoveNext())
-          yield return (string) enumerator.Key;
-      }
-    }
-
-    public static Stream GetResourceStream(this Assembly assembly, string resourcePath)
-    {
-      return Application.GetResourceStream(assembly.GetResourceUri(resourcePath))?.Stream;
-    }
-
-    public static Uri GetResourceUri(this Assembly assembly, string resourcePath)
-    {
-      var assemblyName = new AssemblyName(assembly.FullName).Name;
-
-      return new Uri($"{assemblyName};component/{resourcePath.TrimStart('/')}".ToLowerInvariant(), UriKind.RelativeOrAbsolute);
-    }
-
-	  internal static Uri GetResourcePathUri(this Assembly assembly, string resourcePath)
+		internal static Uri GetResourcePathUri(this Assembly assembly, string resourcePath)
 		{
 			var assemblyName = new AssemblyName(assembly.FullName).Name;
 
@@ -77,6 +45,16 @@ namespace Zaaml.PresentationCore.Utils
 			return new Uri($"{assemblyName};component/{resourcePath.Trim('/')}/".ToLowerInvariant(), UriKind.RelativeOrAbsolute);
 		}
 
-		#endregion
+		public static Stream GetResourceStream(this Assembly assembly, string resourcePath)
+		{
+			return Application.GetResourceStream(assembly.GetResourceUri(resourcePath))?.Stream;
+		}
+
+		public static Uri GetResourceUri(this Assembly assembly, string resourcePath)
+		{
+			var assemblyName = new AssemblyName(assembly.FullName).Name;
+
+			return new Uri($"{assemblyName};component/{resourcePath.TrimStart('/')}".ToLowerInvariant(), UriKind.RelativeOrAbsolute);
+		}
 	}
 }

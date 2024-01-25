@@ -3,11 +3,13 @@
 // </copyright>
 
 using System.Windows.Media;
-using Zaaml.PresentationCore.Animation.Animators;
 
 namespace Zaaml.PresentationCore.Animation
 {
-	public sealed class RotateTransformAnimation : Animation<RotateTransform, RotateTransformAnimator>
+	public sealed class RotateTransformAnimation : AnimationBase<RotateTransform>
 	{
+		public RotateTransformAnimation() : base(RotateTransformInterpolator.Instance)
+		{
+		}
 	}
 }

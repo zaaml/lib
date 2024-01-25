@@ -1,0 +1,64 @@
+<!--
+  <copyright file="MessageWindow.xaml" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+    Copyright (c) zaaml. All rights reserved.
+  </copyright>-->
+
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="d zmb">
+
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="../Button/Button.xaml" />
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
+  <zm:Style x:Key="WindowButtonStyle" BasedOn="{StaticResource ButtonStyle}" TargetType="zm:WindowButton">
+    <zm:Setter Property="MinWidth" Value="70" />
+  </zm:Style>
+
+  <!--  Buttons Presenter Template  -->
+  <ControlTemplate x:Key="ButtonsPresenterTemplate"
+                   TargetType="zm:ItemsPresenter">
+    <zm:FlexItemsPanel x:Name="ItemsHost"
+                       Orientation="Horizontal"
+                       Spacing="10"
+                       Stretch="Uniform" />
+  </ControlTemplate>
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="WindowFooterPresenterTemplate"
+                   TargetType="zm:WindowFooterPresenter">
+
+    <zm:Panel Height="{Binding Path=Buttons.Count, ElementName=ButtonsPresenter, Converter={zm:TernaryConverter Operand=0, TrueValue=0, FalseValue=NaN}}"
+              HorizontalAlignment="Stretch">
+
+      <Border Margin="0,10,0,0"
+              Padding="{zm:ThemeResource Key=Code.Window.Footer.Buttons.Padding}"
+              BorderBrush="{zm:ThemeResource Key=Code.Window.ButtonsSplitter.Stroke}"
+              BorderThickness="0,1,0,0">
+
+        <zm:WindowButtonsPresenter x:Name="ButtonsPresenter"
+                                   HorizontalAlignment="Right"
+                                   ButtonStyle="{TemplateBinding ButtonStyle}"
+                                   ButtonsPresenterTemplate="{TemplateBinding ButtonsPresenterTemplate}" />
+      </Border>
+    </zm:Panel>
+  </ControlTemplate>
+
+  <!--  Base Style  -->
+  <zm:Style x:Key="WindowFooterPresenterBaseStyle" TargetType="zm:WindowFooterPresenter">
+    <zm:Setter Property="ButtonsPresenterTemplate" Value="{StaticResource ButtonsPresenterTemplate}" />
+    <zm:Setter Property="ButtonStyle" Value="{StaticResource WindowButtonStyle}" />
+    <zm:Setter Property="Template" Value="{StaticResource WindowFooterPresenterTemplate}" />
+  </zm:Style>
+
+  <!--  Style  -->
+  <zm:Style x:Key="WindowFooterPresenterStyle" BasedOn="{StaticResource WindowFooterPresenterBaseStyle}" TargetType="zm:WindowFooterPresenter" />
+
+  <!--  Theme Styles  -->
+  <zm:ThemeStyle x:Key="WindowFooterPresenterThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource WindowFooterPresenterStyle}" TargetType="zm:WindowFooterPresenter" />
+
+</zm:ThemeResourceDictionary>

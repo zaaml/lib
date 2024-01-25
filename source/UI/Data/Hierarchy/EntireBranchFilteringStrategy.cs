@@ -21,7 +21,7 @@ namespace Zaaml.UI.Data.Hierarchy
 		{
 			foreach (var node in collection.SourceCollection)
 			{
-				if (node.Nodes.FilteredCollection.Count > 0 || node.PassedFilterField || (node.Parent?.PassedFilterField ?? false))
+				if (node.Nodes.FilteredCollectionInternal.Count > 0 || node.PassedFilterField || (node.Parent?.PassedFilterField ?? false))
 					yield return node;
 			}
 		}

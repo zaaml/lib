@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>library</OutputType>
+		<UseWPF>true</UseWPF>
+		<ThemePart>true</ThemePart>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<RootNamespace>Zaaml.Themes.Framework</RootNamespace>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition="$(Publish) == 'true'">
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<TargetFrameworks>net8.0-windows;net7.0-windows;net6.0-windows;net5.0-windows;net48</TargetFrameworks>
+		<TargetFramework></TargetFramework>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Core\Zaaml.Core.csproj" />
+		<ProjectReference Include="..\..\..\PresentationCore\Zaaml.PresentationCore.csproj" />
+		<ProjectReference Include="..\Themes.Code\Zaaml.Themes.Code.csproj" />
+		<ProjectReference Include="..\..\..\UI\Zaaml.UI.csproj" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Zaaml.Themes.Code.Framework.ThemePart.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Zaaml.Themes.Code.Framework.ThemePart.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="GitVersionTask" Version="5.5.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+
+</Project>

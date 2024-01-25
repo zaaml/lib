@@ -5,10 +5,8 @@
 using System;
 using System.Collections;
 using System.Windows;
-using System.Windows.Controls;
 using Zaaml.Core;
 using Zaaml.Core.Utils;
-using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.Interactivity;
 using Zaaml.PresentationCore.PropertyCore;
@@ -27,18 +25,9 @@ namespace Zaaml.UI.Controls.DropDown
 		public static readonly DependencyProperty DropDownGlyphProperty = DPM.Register<IconBase, DropDownButtonBase>
 			("DropDownGlyph");
 
-		public static readonly DependencyProperty IsDropDownOpenProperty = DPM.Register<bool, DropDownButtonBase>
-			("IsDropDownOpen", b => b.OnIsDropDownOpenPropertyChangedPrivate);
-
-		public static readonly DependencyProperty PlacementProperty = DPM.Register<Dock, DropDownButtonBase>
-			("Placement", Dock.Bottom);
-
 		private readonly DropDownPopupWrapper _dropDownPopupWrapper;
-		private bool _isPopupOpenInt;
+		private bool _isPopupOpenPrivate;
 		private object _logicalChild;
-
-		public event EventHandler DropDownClosed;
-		public event EventHandler DropDownOpened;
 
 		internal virtual bool CanFocusOnClose => IsPressed == false;
 
@@ -48,33 +37,21 @@ namespace Zaaml.UI.Controls.DropDown
 			set => SetValue(DropDownGlyphProperty, value);
 		}
 
-		public bool IsDropDownOpen
+		private bool IsPopupOpenPrivate
 		{
-			get => (bool) GetValue(IsDropDownOpenProperty);
-			set => SetValue(IsDropDownOpenProperty, value);
-		}
-
-		private bool IsPopupOpenInt
-		{
-			get => _isPopupOpenInt;
+			get => _isPopupOpenPrivate;
 			set
 			{
-				if (_isPopupOpenInt == value)
+				if (_isPopupOpenPrivate == value)
 					return;
 
-				_isPopupOpenInt = value;
+				_isPopupOpenPrivate = value;
 
 				UpdateVisualState(true);
 			}
 		}
 
 		protected override IEnumerator LogicalChildren => _logicalChild != null ? EnumeratorUtils.Concat(_logicalChild, base.LogicalChildren) : base.LogicalChildren;
-
-		public Dock Placement
-		{
-			get => (Dock) GetValue(PlacementProperty);
-			set => SetValue(PlacementProperty, value);
-		}
 
 		protected FrameworkElement PlacementTargetCore
 		{
@@ -88,59 +65,23 @@ namespace Zaaml.UI.Controls.DropDown
 			set => SetValue(PopupControlProperty, value);
 		}
 
+		protected override PopupControlBase PopupControlCore => PopupControl;
+
 		private PopupControlHost PopupHost => TemplateContract.PopupHost;
 
-		private DropDownButtonBaseTemplateContract TemplateContract => (DropDownButtonBaseTemplateContract) TemplateContractInternal;
+		private DropDownButtonBaseTemplateContract TemplateContract => (DropDownButtonBaseTemplateContract) TemplateContractCore;
 
 		protected override TemplateContract CreateTemplateContract()
 		{
 			return new DropDownButtonBaseTemplateContract();
 		}
 
-		protected virtual void OnClosed()
-		{
-			DropDownClosed?.Invoke(this, EventArgs.Empty);
-		}
-
-		public void OpenDropDown()
-		{
-			if (IsDropDownOpen)
-				return;
-			
-			if (PopupControl == null)
-				return;
-
-			this.SetCurrentValueInternal(IsDropDownOpenProperty, true);
-
-			CoerceIsDropDownOpen();
-		}
-
-		private void CoerceIsDropDownOpen()
-		{
-			var popupIsOpen = PopupControl?.PopupController?.Popup?.IsOpen;
-			
-			if (popupIsOpen == false)
-				this.SetCurrentValueInternal(IsDropDownOpenProperty, false);
-			else if (popupIsOpen == true)
-				this.SetCurrentValueInternal(IsDropDownOpenProperty, true);
-		}
-
-		public void CloseDropDown()
-		{
-			if (IsDropDownOpen == false)
-				return;
-
-			this.SetCurrentValueInternal(IsDropDownOpenProperty, false);
-
-			CoerceIsDropDownOpen();
-		}
-
-		private void OnClosedCore()
+		private protected override void OnClosedCore()
 		{
 			if (CanFocusOnClose && FocusHelper.IsKeyboardFocusWithin(this))
 				FocusHelper.SetKeyboardFocusedElement(this);
 
-			OnClosed();
+			base.OnClosedCore();
 		}
 
 		private void OnDropDownControlChanged(PopupControlBase oldControl, PopupControlBase newControl)
@@ -150,35 +91,9 @@ namespace Zaaml.UI.Controls.DropDown
 			DropDownControlHostHelper.OnDropDownControlChanged(this, oldControl, newControl);
 		}
 
-		private void OnIsDropDownOpenPropertyChangedPrivate()
-		{
-			if (IsDropDownOpen)
-				OnOpenedCore();
-			else
-				OnClosedCore();
-
-			OnIsDropDownOpenChangedInternal();
-
-			UpdateVisualState(true);
-		}
-
-		private protected virtual void OnIsDropDownOpenChangedInternal()
-		{
-		}
-
 		private void OnLayoutUpdated(object sender, EventArgs eventArgs)
 		{
-			IsPopupOpenInt = IsDropDownOpen;
-		}
-
-		protected virtual void OnOpened()
-		{
-			DropDownOpened?.Invoke(this, EventArgs.Empty);
-		}
-
-		private void OnOpenedCore()
-		{
-			OnOpened();
+			IsPopupOpenPrivate = IsDropDownOpen;
 		}
 
 		protected override void OnTemplateContractAttached()
@@ -199,7 +114,7 @@ namespace Zaaml.UI.Controls.DropDown
 		{
 			base.UpdateVisualState(useTransitions);
 
-			GotoVisualState(IsDropDownOpen || IsPopupOpenInt ? CommonVisualStates.PopupOpened : CommonVisualStates.PopupClosed, useTransitions);
+			GotoVisualState(IsDropDownOpen || IsPopupOpenPrivate ? CommonVisualStates.PopupOpened : CommonVisualStates.PopupClosed, useTransitions);
 		}
 
 		PopupControlHost IDropDownControlHost.PopupHost => PopupHost;
@@ -227,7 +142,6 @@ namespace Zaaml.UI.Controls.DropDown
 
 	public class DropDownButtonBaseTemplateContract : ButtonBaseTemplateContract
 	{
-		[TemplateContractPart]
-		public PopupControlHost PopupHost { get; [UsedImplicitly] private set; }
+		[TemplateContractPart] public PopupControlHost PopupHost { get; [UsedImplicitly] private set; }
 	}
 }

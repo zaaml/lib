@@ -55,7 +55,7 @@ namespace Zaaml.UI.Controls.BackstageView
 			set => SetValue(ContentProperty, value);
 		}
 
-		private BackstageControlContentPresenterTemplateContract TemplateContract => (BackstageControlContentPresenterTemplateContract) TemplateContractInternal;
+		private BackstageControlContentPresenterTemplateContract TemplateContract => (BackstageControlContentPresenterTemplateContract) TemplateContractCore;
 
 		#endregion
 	}

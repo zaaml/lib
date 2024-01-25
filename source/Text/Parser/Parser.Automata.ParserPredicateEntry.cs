@@ -6,79 +6,69 @@ using System;
 
 namespace Zaaml.Text
 {
-	internal abstract partial class Parser<TGrammar, TToken>
+	internal partial class Parser<TGrammar, TToken>
 	{
-		#region Nested Types
-
 		private sealed partial class ParserAutomata
 		{
-			#region Nested Types
-
 			private sealed class ParserPredicateEntry : PredicateEntry, IParserEntry, IParserPredicate
 			{
-				#region Ctors
-
-				public ParserPredicateEntry(Grammar<TToken>.ParserPredicate grammarEntry) : base(CreatePredicateDelegate(grammarEntry.PredicateEntry))
+				public ParserPredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.PredicateSymbol grammarEntry) 
+					: base(CreatePredicateDelegate(grammarEntry.PredicateEntry), grammarEntry.PredicateEntry.PredicateName)
 				{
-					ParserEntryData = new ParserEntryData(EnsureName(grammarEntry), this);
+					GrammarSymbol = grammarEntry;
 				}
 
-				public ParserPredicateEntry(Grammar<TToken>.ParserEntry grammarEntry, Func<AutomataContext, PredicateResult> predicate) : base(predicate)
+				public ParserPredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol grammarEntry, Func<AutomataContext, PredicateResult> predicate) : base(predicate)
 				{
-					ParserEntryData = new ParserEntryData(EnsureName(grammarEntry), this);
+					GrammarSymbol = grammarEntry;
 				}
 
-				#endregion
+				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
-				#region Interface Implementations
-
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserEntry
-
-				public ParserEntryData ParserEntryData { get; }
-
-				#endregion
-
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserPredicate
+				public ProductionArgument ProductionArgument { get; set; }
+				
+				public Entry Clone()
+				{
+					return new ParserPredicateEntry(GrammarSymbol, Predicate)
+					{
+						Source = this
+					};
+				}
 
 				public ParserPredicateKind PredicateKind => ParserPredicateKind.Generic;
 
-				#endregion
+				public Type ResultType => null;
 
-				#endregion
+				public IParserEntry Source { get; private set; }
 			}
 
 			private sealed class ParserPredicateEntry<TResult> : PredicateEntry<TResult>, IParserEntry, IParserPredicate
 			{
-				#region Ctors
-
-				public ParserPredicateEntry(Grammar<TToken>.ParserEntry grammarEntry, Func<AutomataContext, PredicateResult<TResult>> predicate, ParserPredicateKind predicateKind) : base(predicate)
+				public ParserPredicateEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol grammarEntry, Func<AutomataContext, PredicateResult<TResult>> predicate, ParserPredicateKind predicateKind) 
+					: base(predicate)
 				{
+					GrammarSymbol = grammarEntry;
 					PredicateKind = predicateKind;
-					ParserEntryData = new ParserEntryData(EnsureName(grammarEntry), this);
 				}
 
-				#endregion
+				public Grammar<TGrammar, TToken>.ParserGrammar.Symbol GrammarSymbol { get; }
 
-				#region Interface Implementations
+				public ProductionArgument ProductionArgument { get; set; }
+				
+				public Entry Clone()
+				{
+					return new ParserPredicateEntry<TResult>(GrammarSymbol, Predicate, PredicateKind)
+					{
+						Source = this
+					};
+				}
 
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserEntry
-
-				public ParserEntryData ParserEntryData { get; }
-
-				#endregion
-
-				#region Parser<TGrammar,TToken>.ParserAutomata.IParserPredicate
+				public IParserEntry Source { get; private set; }
 
 				public ParserPredicateKind PredicateKind { get; }
 
-				#endregion
-
-				#endregion
+				public Type ResultType => typeof(TResult);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

@@ -12,19 +12,13 @@ namespace Zaaml.UI.Controls.Core
 {
 	public sealed class OverlayContentControl : FixedTemplateContentControl<OverlayPanel, FrameworkElement>
 	{
-		#region Properties
-
-		private List<OverlayItemPresenter> Items { get; } = new List<OverlayItemPresenter>();
-
-		#endregion
-
 		public OverlayContentControl()
 		{
 			Focusable = false;
 			IsTabStop = false;
 		}
 
-		#region  Methods
+		private List<OverlayItemPresenter> Items { get; } = new();
 
 		public void AddItem(OverlayItemPresenter element)
 		{
@@ -64,7 +58,5 @@ namespace Zaaml.UI.Controls.Core
 
 			base.UndoTemplateOverride();
 		}
-
-		#endregion
 	}
 }

@@ -1,0 +1,21 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Styles.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <!--  BluetoothGeometry  -->
+  <Geometry x:Key="BluetoothGeometry">F1M6.48,6.44L17.53,17.49 12,23.01 12,0.99 17.53,6.44 6.48,17.49 M0,0Z M24,24Z</Geometry>
+
+  <!--  BluetoothPathIconRaw  -->
+  <zm:PathIcon x:Key="BluetoothPathIconRaw"
+               Data="{StaticResource BluetoothGeometry}" />
+
+  <!--  BluetoothPathIcon  -->
+  <zm:PathIcon x:Key="BluetoothPathIcon"
+               Data="{StaticResource BluetoothGeometry}"
+               Style="{StaticResource _PathIconStyle_Stroke_Size_24_StrokeThickness_2_StrokeLineJoin_Round}" />
+
+</ResourceDictionary>

@@ -13,7 +13,7 @@ namespace Zaaml.Core.Collections
 		void ICollection.CopyTo(Array array, int index)
 		{
 			if (array is T[] typeArray)
-				CopyToImpl(typeArray, index);
+				CopyTo(typeArray, index);
 			else
 				throw new InvalidOperationException();
 		}
