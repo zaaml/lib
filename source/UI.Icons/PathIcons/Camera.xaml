@@ -11,10 +11,12 @@
 
   <!--  CameraPathIconRaw  -->
   <zm:PathIcon x:Key="CameraPathIconRaw"
+               SharedResource="True"
                Data="{StaticResource CameraGeometry}" />
 
   <!--  CameraPathIcon  -->
   <zm:PathIcon x:Key="CameraPathIcon"
+               SharedResource="True"
                Data="{StaticResource CameraGeometry}"
                Style="{StaticResource _PathIconStyle_Stroke_Size_24_StrokeThickness_2_StrokeLineJoin_Round}" />
 

@@ -8,6 +8,7 @@
 
   <!--  ToggleButtonIcon  -->
   <zm:PathIcon x:Key="ToggleButtonIcon"
+               SharedResource="True"
                Width="24"
                Height="23"
                Margin="8,0"
