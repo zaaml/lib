@@ -18,7 +18,7 @@ jobs:
     #  run: git fetch --prune --unshallow --tags
       
     - name: Setup .NET 8.0
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 8.0.x    
     
