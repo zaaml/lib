@@ -1,37 +1,40 @@
-major-version-bump-message: '\+semver:\s?(breaking|major)'
-minor-version-bump-message: '\+semver:\s?(feature|minor)'
-patch-version-bump-message: '\+semver:\s?(fix|patch)'
-no-bump-message: '\+semver:\s?(none|skip)'
-commit-message-incrementing: Enabled
+mode: ContinuousDelivery
 branches:
   master:
-    mode: ContinuousDelivery
+    regex: ^main$
     tag: ''
-    increment: Patch
+    increment: None
     prevent-increment-of-merged-branch-version: true
     track-merge-target: false
-    regex: ^master$|^main$
-    tracks-release-branches: false
-    is-release-branch: false
-  release:
-    mode: ContinuousDelivery
-    tag: beta
-    increment: Patch
-    prevent-increment-of-merged-branch-version: true
-    track-merge-target: false
-    regex: ^releases?[/-]
-    tracks-release-branches: false
-    is-release-branch: true
-    pre-release-weight: 1000
-  develop:
-    mode: ContinuousDelivery
-    tag: alpha
-    increment: Patch
-    prevent-increment-of-merged-branch-version: false
-    track-merge-target: true
-    regex: ^dev(elop)?(ment)?$
+    source-branches: [ 'develop', 'release' ]
     tracks-release-branches: true
     is-release-branch: false
+    is-mainline: true
+    pre-release-weight: 55000
+  develop:
+    regex: ^dev(elop)?(ment)?$
+    mode: ContinuousDeployment
+    tag: alpha
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
+    source-branches: []
+    tracks-release-branches: false
+    is-release-branch: false
+    is-mainline: false
+    pre-release-weight: 0
+  release:
+    regex: ^releases?[/-]
+    mode: ContinuousDeployment
+    tag: beta
+    increment: None
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target: false
+    source-branches: [ 'develop' ]
+    tracks-release-branches: false
+    is-release-branch: true
+    is-mainline: false
+    pre-release-weight: 30000
 ignore:
   sha: []
 merge-message-formats: {}

@@ -475,10 +475,17 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal void OnItemPostClick(ListViewItem listViewItem)
 		{
+			TryToggleItemSelectionInternal(listViewItem, true);
+		}
+
+		internal void TryToggleItemSelectionInternal(ListViewItem listViewItem, bool focus)
+		{
 			if (listViewItem.ActualCanSelect == false)
 				return;
 
-			FocusItem(listViewItem);
+			if (focus)
+				FocusItem(listViewItem);
+
 			ToggleItemSelection(listViewItem);
 		}
 

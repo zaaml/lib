@@ -25,7 +25,6 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			return (StretchDirection)dependencyObject.GetValue(StretchDirectionProperty);
 		}
 
-
 		public static void SetSource(DependencyObject dependencyObject, ImageSource imageSource)
 		{
 			dependencyObject.SetValue(SourceProperty, imageSource);

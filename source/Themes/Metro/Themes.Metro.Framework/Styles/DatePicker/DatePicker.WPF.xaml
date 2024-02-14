@@ -11,7 +11,7 @@
 
 
   <!-- MaskBorderThicknessConverter -->
-  <zm:MaskThicknessConverter x:Key="MaskBorderThicknessConverter" Left="False" />
+  <zm:MaskThicknessConverter x:Key="MaskBorderThicknessConverter" Left="False" Top="True" Right="True" Bottom="True" />
   
   <!-- DatePicker Template -->
   <ControlTemplate x:Key="DatePickerBaseTemplate" TargetType="DatePicker">
@@ -33,8 +33,38 @@
         <Button Grid.Column="1" 
                 x:Name="PART_Button" 
                 Width="20"
-                Template="{StaticResource DropDownButtonTemplate}"
-                BorderThickness="{zm:TemplateBinding Path=BorderThickness, Converter={StaticResource MaskBorderThicknessConverter}}" />
+                Height="20"
+                Background="Transparent"
+                BorderThickness="{zm:TemplateBinding Path=BorderThickness, Converter={StaticResource MaskBorderThicknessConverter}}"
+                BorderBrush="{zm:TemplateSkinBinding SkinPath=Button.BorderBrush.Normal}">
+          <Button.Template>
+            <ControlTemplate TargetType="Button">
+              <zm:ControlTemplateRoot VisualStateGroups="{StaticResource VisualStates}">
+                <Grid>
+                  <Border BorderBrush="{TemplateBinding BorderBrush}"
+                          BorderThickness="{TemplateBinding BorderThickness}">
+
+                    <zm:ContentPresenter Content="{TemplateBinding Content}"/>
+
+                    <zm:Extension.Setters>
+                      <zm:SetterGroup Property="Background">
+                        <zm:Setter VisualState="Normal" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.Normal}" />
+                        <zm:Setter VisualState="MouseOver" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.MouseOver}" />
+                        <zm:Setter VisualState="Pressed" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.Pressed}" />
+                      </zm:SetterGroup>
+                    </zm:Extension.Setters>
+
+                  </Border>
+                </Grid>
+              </zm:ControlTemplateRoot>
+            </ControlTemplate>
+          </Button.Template>
+
+          <zm:IconPresenter Icon="{zm:TemplateSkinBinding SkinPath=CalendarIcon}"
+                            Width="20"
+                            Height="20"/>
+
+        </Button>
 
         <Popup x:Name="PART_Popup" 
                Grid.Column="0" 
@@ -58,7 +88,7 @@
   </zm:Style>
 
   <!-- Style -->
-  <zm:Style x:Key="DatePickerStyle" TargetType="DatePicker" BasedOn="{StaticResource DatePickerBaseStyle}" />
+  <zm:Style x:Key="DatePickerStyle" TargetType="DatePicker" BasedOn="{StaticResource DatePickerBaseStyle}" Skin="Metro.StandardControls.DatePicker" />
 
   <!-- Theme Styles -->
   <zm:ThemeStyle x:Key="DatePickerThemeStyle" TargetType="DatePicker" BasedOn="{StaticResource DatePickerStyle}" zmb:Deferred="True" />

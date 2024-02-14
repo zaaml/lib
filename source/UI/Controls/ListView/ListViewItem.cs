@@ -461,5 +461,15 @@ namespace Zaaml.UI.Controls.ListView
 
 			UpdateVisualStateImpl(true, newMouse, newFocus);
 		}
+
+		internal void OnCheckGlyphMouseLeftButtonDownInternal()
+		{
+			OnCheckGlyphToggleSelectionInternal();
+		}
+
+		private protected virtual void OnCheckGlyphToggleSelectionInternal()
+		{
+			ListViewControl?.TryToggleItemSelectionInternal(this, false);
+		}
 	}
 }

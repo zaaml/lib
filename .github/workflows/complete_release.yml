@@ -1,0 +1,49 @@
+name: Complete Release
+
+on:
+  pull_request:
+    types: 
+      - closed
+    branches:
+      - main    
+  
+jobs:
+  build:
+
+    runs-on: [windows-latest]
+   
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{secrets.ACTION_REPOSITORY_TOKEN}}
+
+    - name: Config Git
+      run: |
+        git config --global user.name github-actions
+        git config --global user.email github-actions@github.com
+
+    - name: Set Release Tag
+      shell: pwsh
+      run: |
+        "${{github.head_ref}}" -match 'releases/release-(\d+\.\d+\.\d+)'
+        $release_version = $Matches[1]
+        git tag -a "v$release_version" -m "Release $release_version"
+        git push origin "v$release_version"
+        
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Install GitVersion.Tool
+      run: dotnet tool install GitVersion.Tool --global
+      
+    - name: Print Release version
+      run: dotnet gitversion
+
+    - name: Rebase develop
+      run: |
+        git checkout develop
+        git rebase main
+        git push

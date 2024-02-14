@@ -69,5 +69,10 @@ namespace Zaaml.UI.Controls.ListView
 			else
 				IsCheckedInternal = null;
 		}
+
+		private protected override void OnCheckGlyphToggleSelectionInternal()
+		{
+			ListViewControl?.ToggleSelectionCommand.Execute(null);
+		}
 	}
 }

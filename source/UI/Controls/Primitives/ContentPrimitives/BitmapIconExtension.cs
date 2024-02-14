@@ -13,9 +13,9 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 	{
 		public ImageSource Source { get; set; }
 
-		public Stretch Stretch { get; set; }
+		public Stretch Stretch { get; set; } = Stretch.Uniform;
 
-		public StretchDirection StretchDirection { get; set; }
+		public StretchDirection StretchDirection { get; set; } = StretchDirection.Both;
 
 		public override object ProvideValue(IServiceProvider serviceProvider)
 		{

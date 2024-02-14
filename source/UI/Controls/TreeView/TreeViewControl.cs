@@ -616,10 +616,17 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal void OnItemPostClick(TreeViewItem treeViewItem)
 		{
+			TryToggleItemSelectionInternal(treeViewItem, true);
+		}
+
+		internal void TryToggleItemSelectionInternal(TreeViewItem treeViewItem, bool focus)
+		{
 			if (treeViewItem.ActualCanSelect == false)
 				return;
 
-			FocusItem(treeViewItem);
+			if (focus)
+				FocusItem(treeViewItem);
+
 			ToggleItemSelection(treeViewItem);
 		}
 
