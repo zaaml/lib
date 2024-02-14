@@ -17,7 +17,6 @@ using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.Interfaces;
-using Zaaml.UI.Controls.ListView;
 using Zaaml.UI.Controls.Primitives;
 using Zaaml.UI.Controls.Primitives.PopupPrimitives;
 using Zaaml.UI.Controls.TreeView.Data;
@@ -845,6 +844,16 @@ namespace Zaaml.UI.Controls.TreeView
 				SuspendPushIsExpanded = allocator.AllocateBoolItem();
 				CoerceIsExpanded = allocator.AllocateBoolItem();
 			}
+		}
+
+		private protected virtual void OnCheckGlyphToggleSelectionInternal()
+		{
+			TreeViewControl?.TryToggleItemSelectionInternal(this, false);
+		}
+
+		internal void OnCheckGlyphMouseLeftButtonDownInternal()
+		{
+			OnCheckGlyphToggleSelectionInternal();
 		}
 	}
 }

@@ -32,7 +32,7 @@
         </Grid.RowDefinitions>
 
         <Border Grid.RowSpan="4" 
-                x:Name="buttonBorder" 
+                x:Name="ButtonBorder" 
                 Background="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.Normal}" 
                 BorderBrush="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.BorderBrush.Normal}" 
                 BorderThickness="{TemplateBinding BorderThickness}">

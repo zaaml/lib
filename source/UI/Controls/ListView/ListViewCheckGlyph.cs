@@ -4,6 +4,7 @@
 
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
@@ -82,6 +83,13 @@ namespace Zaaml.UI.Controls.ListView
 				ListViewItem = null;
 
 			base.OnUnloaded();
+		}
+
+		protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			base.OnMouseLeftButtonDown(e);
+
+			ListViewItem?.OnCheckGlyphMouseLeftButtonDownInternal();
 		}
 	}
 }

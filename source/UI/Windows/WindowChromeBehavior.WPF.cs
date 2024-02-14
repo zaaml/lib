@@ -58,7 +58,10 @@ namespace Zaaml.UI.Windows
 		private NativeBitmap _nativeRenderBitmap;
 		private NativeWindow _nativeWindow;
 
+#if DPI_EXP
 		private bool _perMonitorEnabled = true;
+#endif
+
 		private double _scaleFactor;
 		private double _systemDpi = DpiUtils.DpiX;
 		private WindowPresenter _windowPresenterControl;
@@ -801,7 +804,10 @@ namespace Zaaml.UI.Windows
 				return;
 
 			_hwnd = wih.Handle;
+
+#if DPI_EXP
 			_perMonitorEnabled = DpiUtils.SetPerMonitorDPIAware();
+#endif
 			//var hrgn = NativeMethods.CreateRectRgn(0, 0, 0, 0);
 
 			//NativeMethods.SetWindowRgn(_hwnd, hrgn, true);

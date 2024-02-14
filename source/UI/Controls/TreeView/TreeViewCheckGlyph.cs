@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
@@ -73,6 +74,13 @@ namespace Zaaml.UI.Controls.TreeView
 				TreeViewItem = null;
 
 			base.OnUnloaded();
+		}
+
+		protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+		{
+			base.OnMouseLeftButtonDown(e);
+
+			TreeViewItem?.OnCheckGlyphMouseLeftButtonDownInternal();
 		}
 	}
 }

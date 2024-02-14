@@ -1,0 +1,33 @@
+name: Init New Release
+
+on:
+  workflow_dispatch
+  
+jobs:
+  build:
+
+    runs-on: [windows-latest]
+   
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+          
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+        
+    - name: Install GitVersion.Tool
+      run: dotnet tool install GitVersion.Tool --global
+      
+    - name: Init Release branch
+      shell: pwsh
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        dotnet gitversion | ConvertFrom-Json -OutVariable gitversion_json
+        $branch_name = "releases/release-$($gitversion_json.MajorMinorPatch)"
+        git checkout -b $branch_name
+        git commit --allow-empty -m "Init release-$($gitversion_json.MajorMinorPatch)"
+        git push --set-upstream origin $branch_name

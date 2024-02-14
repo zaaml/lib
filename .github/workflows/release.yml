@@ -13,9 +13,6 @@ jobs:
     - uses: actions/checkout@v2
       with:
           fetch-depth: 0      
-
-    #- name: Fetch
-    #  run: git fetch --prune --unshallow --tags
       
     - name: Setup .NET 8.0
       uses: actions/setup-dotnet@v3
@@ -26,7 +23,7 @@ jobs:
       run: dotnet clean -c Release && dotnet nuget locals all --clear
     
     - name: Build
-      run: dotnet build -c Release -p:Publish=true -p:Version=${{ github.event.release.tag_name }} -p:DisableGitVersionTask=true
+      run: dotnet build -c Release -p:Publish=true
 
     - name: Push packages to nuget.org
       run: dotnet nuget push artifacts/**/*.nupkg --api-key ${{ secrets.NUGET_ZAAML }} --source https://api.nuget.org/v3/index.json

@@ -22,17 +22,17 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			("Source", OnIconPropertyChanged);
 
 		public static readonly DependencyProperty StretchProperty = DPM.RegisterAttached<Stretch, BitmapIcon>
-			("Stretch", OnIconPropertyChanged);
+			("Stretch", Stretch.Uniform, OnIconPropertyChanged);
 
 		public static readonly DependencyProperty StretchDirectionProperty = DPM.RegisterAttached<StretchDirection, BitmapIcon>
-			("StretchDirection", OnIconPropertyChanged);
+			("StretchDirection", StretchDirection.Both, OnIconPropertyChanged);
 
-		private static readonly List<DependencyProperty> Properties = new()
-		{
+		private static readonly List<DependencyProperty> Properties =
+		[
 			SourceProperty,
 			StretchProperty,
-			StretchDirectionProperty,
-		};
+			StretchDirectionProperty
+		];
 
 		private static readonly Dictionary<DependencyProperty, DependencyProperty> PropertyDictionary = new()
 		{
@@ -120,7 +120,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 		private void UpdateUri()
 		{
-			if (!(_image?.Source is IUriContext sourceUriContext))
+			if (_image?.Source is not IUriContext sourceUriContext)
 				return;
 
 			var baseUri = BaseUriHelper.GetBaseUri(this);

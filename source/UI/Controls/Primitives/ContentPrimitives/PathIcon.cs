@@ -50,8 +50,8 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 		public static readonly DependencyProperty BrushModeProperty = DPM.RegisterAttached<PathIconBrushMode, PathIcon>
 			("BrushMode", OnIconPropertyChanged);
 
-		private static readonly List<DependencyProperty> Properties = new()
-		{
+		private static readonly List<DependencyProperty> Properties =
+		[
 			DataProperty,
 			StretchProperty,
 			BrushProperty,
@@ -59,8 +59,8 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			StrokeProperty,
 			StrokeThicknessProperty,
 			StrokeLineJoinProperty,
-			BrushModeProperty,
-		};
+			BrushModeProperty
+		];
 
 		private static readonly Dictionary<DependencyProperty, DependencyProperty> PropertyDictionary = new()
 		{

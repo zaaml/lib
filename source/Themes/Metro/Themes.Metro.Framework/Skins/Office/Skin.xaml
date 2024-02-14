@@ -10,6 +10,7 @@
 
   <zm:ThemeSkinResourceDictionary.MergedDictionaries>
     <zm:ThemeResourceDictionary Source="/Zaaml.Themes.Metro;component/Skins/Glyphs.Shared.xaml" />
+    <zm:ThemeResourceDictionary Source="../Assets.Shared.xaml" />
   </zm:ThemeSkinResourceDictionary.MergedDictionaries>
 
   <zm:SkinDictionary x:Key="Metro.StandardControls">
@@ -559,6 +560,14 @@
         <SolidColorBrush x:Key="Ellipse.Fill" Color="#FFFFFFFF" />
         <SolidColorBrush x:Key="Foreground" Color="#FF2F2F2F" zmb:Skin="Light" />
       </zm:SkinDictionary>
+
+      <!-- CalendarIcon -->
+      <zm:TemplateIcon x:Key="CalendarIcon" 
+                     SharedResource="True" 
+                     Width="20"
+                     Height="20" 
+                     Template="{StaticResource CalendarIconTemplate}" />
+
     </zm:SkinDictionary>
 
     <!-- DatePickerTextBox -->
