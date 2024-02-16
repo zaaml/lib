@@ -6,6 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
+#if NETCOREAPP
+#else
+using Zaaml.Core.Extensions;
+#endif
+
 namespace Zaaml.PresentationCore.Services
 {
 	internal class DependencyObjectServiceContainer

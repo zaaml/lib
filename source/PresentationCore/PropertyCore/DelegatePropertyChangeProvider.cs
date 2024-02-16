@@ -11,7 +11,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 {
 	internal abstract class DelegatePropertyChangeProviderBase : IDisposable
 	{
-		private static readonly ConditionalWeakTable<object, List<IDisposable>> StrongDisposables = [];
+		private static readonly ConditionalWeakTable<object, List<IDisposable>> StrongDisposables = new();
 
 		protected DelegatePropertyChangeProviderBase(IPropertyChangeProvider provider)
 		{
