@@ -120,7 +120,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		public FrameworkElement Owner
 		{
-			get => FrameworkElement.GetValue<FrameworkElement>(OwnerPropertyKey);
+			get => FrameworkElement.GetReadOnlyValue<FrameworkElement>(OwnerPropertyKey);
 			set => FrameworkElement.SetReadOnlyValue(OwnerPropertyKey, value);
 		}
 

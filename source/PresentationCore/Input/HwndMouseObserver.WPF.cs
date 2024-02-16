@@ -13,38 +13,20 @@ namespace Zaaml.PresentationCore.Input
 {
 	internal sealed class HwndMouseObserver : IGetMessageHookListener
 	{
-		#region Static Fields and Constants
+		private static readonly Lazy<HwndMouseObserver> LazyInstance = new(() => new HwndMouseObserver());
 
-		private static readonly Lazy<HwndMouseObserver> LazyInstance = new Lazy<HwndMouseObserver>(() => new HwndMouseObserver());
-
-		#endregion
-
-		#region Fields
-
-		private readonly HashSet<IMouseEventListener> _addQueue = new HashSet<IMouseEventListener>();
-		private readonly HashSet<IMouseEventListener> _removeQueue = new HashSet<IMouseEventListener>();
+		private readonly HashSet<IMouseEventListener> _addQueue = [];
+		private readonly HashSet<IMouseEventListener> _removeQueue = [];
 		private bool _hookInstalled;
 		private bool _inEventHandler;
-
-		#endregion
-
-		#region Ctors
 
 		private HwndMouseObserver()
 		{
 		}
 
-		#endregion
-
-		#region Properties
-
 		private static HwndMouseObserver Instance => LazyInstance.Value;
 
-		private List<IMouseEventListener> Listeners { get; } = new List<IMouseEventListener>();
-
-		#endregion
-
-		#region  Methods
+		private List<IMouseEventListener> Listeners { get; } = [];
 
 		public static void AddListener(IMouseEventListener listener)
 		{
@@ -99,7 +81,7 @@ namespace Zaaml.PresentationCore.Input
 			return isPressed != 0 ? MouseButtonStateKind.Pressed : MouseButtonStateKind.Released;
 		}
 
-		void NotifyMouseEvent(MouseEventInfo eventInfo)
+		private void NotifyMouseEvent(MouseEventInfo eventInfo)
 		{
 			_inEventHandler = true;
 
@@ -118,7 +100,7 @@ namespace Zaaml.PresentationCore.Input
 
 		private void OnMessage(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam)
 		{
-			switch ((WM) msg)
+			switch ((WM)msg)
 			{
 				case WM.NCMOUSELEAVE:
 					OnMouseLeaveEvent(hwnd, MouseEventAreaKind.NonClient, GetScreenPosition(), GetButtons());
@@ -249,34 +231,16 @@ namespace Zaaml.PresentationCore.Input
 			}
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IGetMessageHookListener
-
 		void IGetMessageHookListener.OnGetMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam)
 		{
 			OnMessage(hwnd, msg, wParam, lParam);
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
-		static class WinAPIHelper
+		private static class WinAPIHelper
 		{
-			#region Static Fields and Constants
-
-			const int MK_LBUTTON = 0x1;
-			const int MK_RBUTTON = 0x2;
-			const int MK_MBUTTON = 0x10;
-
-			#endregion
-
-			#region  Methods
+			private const int MK_LBUTTON = 0x1;
+			private const int MK_RBUTTON = 0x2;
+			private const int MK_MBUTTON = 0x10;
 
 			public static MouseButtons GetButtons(IntPtr wParam)
 			{
@@ -289,9 +253,9 @@ namespace Zaaml.PresentationCore.Input
 				return MouseButtons.CreateButtonsState(leftButton, rightButton, middleButton);
 			}
 
-			static int GetInt(IntPtr ptr)
+			private static int GetInt(IntPtr ptr)
 			{
-				return IntPtr.Size == 8 ? unchecked((int) ptr.ToInt64()) : ptr.ToInt32();
+				return IntPtr.Size == 8 ? unchecked((int)ptr.ToInt64()) : ptr.ToInt32();
 			}
 
 			public static POINT GetPoint(IntPtr lParam)
@@ -300,8 +264,8 @@ namespace Zaaml.PresentationCore.Input
 
 				return new POINT
 				{
-					x = (short) LoWord(i),
-					y = (short) HiWord(i)
+					x = (short)LoWord(i),
+					y = (short)HiWord(i)
 				};
 			}
 
@@ -314,10 +278,6 @@ namespace Zaaml.PresentationCore.Input
 			{
 				return n & ushort.MaxValue;
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

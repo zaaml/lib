@@ -32,8 +32,6 @@
 
         <Button Grid.Column="1" 
                 x:Name="PART_Button" 
-                Width="20"
-                Height="20"
                 Background="Transparent"
                 BorderThickness="{zm:TemplateBinding Path=BorderThickness, Converter={StaticResource MaskBorderThicknessConverter}}"
                 BorderBrush="{zm:TemplateSkinBinding SkinPath=Button.BorderBrush.Normal}">
@@ -60,9 +58,7 @@
             </ControlTemplate>
           </Button.Template>
 
-          <zm:IconPresenter Icon="{zm:TemplateSkinBinding SkinPath=CalendarIcon}"
-                            Width="20"
-                            Height="20"/>
+          <zm:IconPresenter Icon="{zm:TemplateSkinBinding SkinPath=CalendarIcon}" />
 
         </Button>
 

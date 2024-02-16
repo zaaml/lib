@@ -16,8 +16,6 @@ namespace Zaaml.PresentationCore.PropertyCore
 {
   internal static class DependencyPropertyManager
   {
-    #region Static Fields and Constants
-
     private const BindingFlags DepPropFieldBindingFlags = BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
     private const BindingFlags NonPublicDepPropFieldBindingFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
     private static readonly Dictionary<Type, List<DependencyPropertyInfo>> TypeToDPFieldCollection = new();
@@ -28,18 +26,10 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     internal static readonly DependencyProperty UnresolvedDependencyProperty = RegisterAttached("Unresolved", typeof(object), typeof(DependencyPropertyManager), new PropertyMetadata(null));
 
-    #endregion
-
-    #region Ctors
-
     static DependencyPropertyManager()
     {
       AppDomainObserver = new AppDomainObserver(RegisterAssemblyDependencyProperties);
     }
-
-    #endregion
-
-    #region  Methods
 
     private static IEnumerable<DependencyPropertyInfo> EnumerateDependencyPropertyInfos(Type type)
     {
@@ -55,11 +45,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     public static string GetDeclaringTypeName(this DependencyProperty dependencyProperty)
     {
-#if SILVERLIGHT
-      return dependencyProperty.GetDependencyPropertyInfo()?.DeclaringType.Name ?? "Unknown";
-#else
 	    return dependencyProperty.OwnerType.Name;
-#endif
     }
 
 	  private static string CoercePropertyName(string name)
@@ -84,12 +70,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     public static DependencyPropertyInfo GetDependencyPropertyInfo(this DependencyProperty dependencyProperty)
     {
-#if SILVERLIGHT
-			AppDomainObserver.Update();
-      return DP2DPInfo.GetValueOrDefault(dependencyProperty);
-#else
       return DP2DPInfo.GetValueOrCreate(dependencyProperty, () => new DependencyPropertyInfo(dependencyProperty));
-#endif
     }
 
     internal static DependencyProperty GetExpandoProperty(string name)
@@ -104,20 +85,12 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     public static string GetName(this DependencyProperty dependencyProperty)
     {
-#if SILVERLIGHT
-	    return dependencyProperty.GetDependencyPropertyInfo()?.Name ?? "Unknown";
-#else
 	    return dependencyProperty.Name;
-#endif
     }
 
     public static Type GetPropertyType(this DependencyProperty dependencyProperty)
     {
-#if SILVERLIGHT
-	    return dependencyProperty.GetDependencyPropertyInfo()?.PropertyType;
-#else
 	    return dependencyProperty.PropertyType;
-#endif
     }
 
     public static string GetQualifiedName(this DependencyProperty dependencyProperty)
@@ -209,14 +182,15 @@ namespace Zaaml.PresentationCore.PropertyCore
     {
       foreach (var assembly in assemblies)
       {
-#if !SILVERLIGHT
         if (assembly.GetReferencedAssemblies().Select(a => a.FullName).Contains(typeof(DependencyProperty).Assembly.GetName().FullName) == false)
           continue;
-#endif
+
         foreach (var type in assembly.GetLoadableTypes().Where(t => t.IsGenericType == false && t.IsPublic))
         {
           var typeDP = EnumerateDependencyPropertyInfos(type).ToList();
+
           TypeToDPFieldCollection[type] = typeDP;
+
           foreach (var dpInfo in typeDP)
             RegisterDependencyPropertyInfo(dpInfo);
         }
@@ -288,15 +262,11 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     private static DependencyPropertyKey RegisterAttachedReadOnlyImpl(string name, Type propertyType, Type ownerType, PropertyMetadata typeMetadata)
     {
-#if SILVERLIGHT
-      return new DependencyPropertyKey(RegisterAttachedImpl(name, propertyType, ownerType, typeMetadata));
-#else
       var dependencyPropertyKey = DependencyProperty.RegisterAttachedReadOnly(name, propertyType, ownerType, typeMetadata);
 
       RegisterDependencyPropertyInfo(new DependencyPropertyInfo(dependencyPropertyKey.DependencyProperty, name, ownerType, propertyType, true, false));
 
       return dependencyPropertyKey;
-#endif
     }
 
     private static void RegisterDependencyPropertyInfo(DependencyPropertyInfo dpInfo)
@@ -375,17 +345,11 @@ namespace Zaaml.PresentationCore.PropertyCore
 
     private static DependencyPropertyKey RegisterReadOnlyImpl(string name, Type propertyType, Type ownerType, PropertyMetadata typeMetadata)
     {
-#if SILVERLIGHT
-      return new DependencyPropertyKey(RegisterImpl(name, propertyType, ownerType, typeMetadata));
-#else
       var dependencyPropertyKey = DependencyProperty.RegisterReadOnly(name, propertyType, ownerType, typeMetadata);
 
       RegisterDependencyPropertyInfo(new DependencyPropertyInfo(dependencyPropertyKey, dependencyPropertyKey.DependencyProperty, name, ownerType, propertyType, false, false));
 
       return dependencyPropertyKey;
-#endif
     }
-
-#endregion
   }
 }

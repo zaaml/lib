@@ -6,12 +6,8 @@ using System.Windows;
 
 namespace Zaaml.PresentationCore.PropertyCore
 {
-  internal interface IDependencyPropertyListener
-  {
-    #region  Methods
-
-    void OnPropertyChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue);
-
-    #endregion
-  }
+	internal interface IDependencyPropertyListener
+	{
+		void OnPropertyChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue);
+	}
 }

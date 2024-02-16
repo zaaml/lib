@@ -56,7 +56,7 @@ namespace Zaaml.PresentationCore.Animation
 
 		public T Current
 		{
-			get => this.GetValue<T>(CurrentPropertyKey);
+			get => this.GetReadOnlyValue<T>(CurrentPropertyKey);
 			private set => this.SetReadOnlyValue(CurrentPropertyKey, value);
 		}
 

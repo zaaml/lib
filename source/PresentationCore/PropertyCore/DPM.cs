@@ -282,134 +282,134 @@ namespace Zaaml.PresentationCore.PropertyCore
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty, TOwner>(string name)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty, TOwner>(string name, TProperty defaultValue)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Action<DependencyObject> handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue, StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, StaticCallback(handler)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Action<DependencyObject, TProperty, TProperty> handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue, StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, StaticCallback(handler)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty, TOwner>(string name, Action<DependencyObject, TProperty, TProperty> handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty), StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), StaticCallback(handler)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty, TOwner>(string name, Action<DependencyObject> handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty), StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), StaticCallback(handler)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty, TOwner>(string name, PropertyChangedCallback handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty), handler));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), handler));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, PropertyChangedCallback handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue, handler));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, handler));
 		}
 
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty>(string name, Type ownerType)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ReadOnlyPropertyMetadataInternal(default(TProperty)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty>(string name, Type ownerType, TProperty defaultValue)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ReadOnlyPropertyMetadataInternal(defaultValue));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty>(string name, Type ownerType, TProperty defaultValue, Action<DependencyObject> handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ReadOnlyPropertyMetadataInternal(defaultValue, StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue, StaticCallback(handler)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty>(string name, Type ownerType, TProperty defaultValue, Action<DependencyObject, TProperty, TProperty> handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ReadOnlyPropertyMetadataInternal(defaultValue, StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue, StaticCallback(handler)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty>(string name, Type ownerType, Action<DependencyObject, TProperty, TProperty> handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ReadOnlyPropertyMetadataInternal(default(TProperty), StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty), StaticCallback(handler)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty>(string name, Type ownerType, Action<DependencyObject> handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ReadOnlyPropertyMetadataInternal(default(TProperty), StaticCallback(handler)));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty), StaticCallback(handler)));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty>(string name, Type ownerType, PropertyChangedCallback handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ReadOnlyPropertyMetadataInternal(default(TProperty), handler));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ZPropertyMetadata(default(TProperty), handler));
 		}
 
 		public static DependencyPropertyKey RegisterAttachedReadOnly<TProperty>(string name, Type ownerType, TProperty defaultValue, PropertyChangedCallback handler)
 		{
-			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ReadOnlyPropertyMetadataInternal(defaultValue, handler));
+			return DependencyPropertyManager.RegisterAttachedReadOnly(name, typeof(TProperty), ownerType, new ZPropertyMetadata(defaultValue, handler));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Action<TOwner> handler, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty), Callback(handler, suspendable)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handler, suspendable)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty), Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty), Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(default(TProperty), Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(default(TProperty), Callback(handlerFactory, suspendable)));
 		}
 
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Action<TOwner> handler, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue, Callback(handler, suspendable)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handler, suspendable)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, TProperty defaultValue, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, bool suspendable = false) where TOwner : DependencyObject
 		{
-			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ReadOnlyPropertyMetadataInternal(defaultValue, Callback(handlerFactory, suspendable)));
+			return DependencyPropertyManager.RegisterReadOnly(name, typeof(TProperty), typeof(TOwner), new ZPropertyMetadata(defaultValue, Callback(handlerFactory, suspendable)));
 		}
 
 		public static DependencyPropertyKey RegisterReadOnly<TProperty, TOwner>(string name, Func<TOwner, Action<TProperty, TProperty>> handlerFactory, Func<TOwner, Func<object, object>> coerceFactory, bool suspendable = false)

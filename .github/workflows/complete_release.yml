@@ -44,6 +44,9 @@ jobs:
 
     - name: Rebase develop
       run: |
+        dotnet gitversion | ConvertFrom-Json -OutVariable gitversion_json
+        $nextVersion = "$($gitversion_json.Major).$($gitversion_json.Minor).$($gitversion_json.Patch+1)-alpha.1"
         git checkout develop
         git rebase main
+        git commit --allow-empty -m "Init $nextVersion"
         git push

@@ -12,11 +12,11 @@ using Zaaml.Core.Disposable;
 using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
-using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.PropertyCore.Extensions;
 
 namespace Zaaml.PresentationCore
 {
-  internal static class DefaultFont
+	internal static class DefaultFont
   {
     #region Static Fields and Constants
 

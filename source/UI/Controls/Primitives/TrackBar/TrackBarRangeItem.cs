@@ -33,13 +33,13 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		public CornerRadius ActualCornerRadius
 		{
-			get => (CornerRadius) GetValue(ActualCornerRadiusProperty);
+			get => this.GetReadOnlyValue<CornerRadius>(ActualCornerRadiusPropertyKey);
 			internal set => this.SetReadOnlyValue(ActualCornerRadiusPropertyKey, value);
 		}
 
 		public double Range
 		{
-			get => (double) GetValue(RangeProperty);
+			get => this.GetReadOnlyValue<double>(RangePropertyKey);
 			internal set => this.SetReadOnlyValue(RangePropertyKey, value);
 		}
 	}

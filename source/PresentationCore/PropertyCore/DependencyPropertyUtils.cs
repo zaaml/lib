@@ -12,126 +12,124 @@ using Zaaml.PresentationCore.PropertyCore.Extensions;
 
 namespace Zaaml.PresentationCore.PropertyCore
 {
-  internal static class DependencyPropertyUtils
-  {
-    #region  Methods
+	internal static class DependencyPropertyUtils
+	{
+		private static int AdvancePosition(string str, int index, int change)
+		{
+			var strLength = str.Length;
 
-    internal static bool CopyDependencyPropertyValue(DependencyProperty dependencyProperty, DependencyObject source, DependencyObject target)
-    {
-      var valueSource = GetValueSource(source, dependencyProperty);
-      switch (valueSource)
-      {
-        case PropertyValueSource.Default:
-          target.ClearValue(dependencyProperty);
-          return true;
-        case PropertyValueSource.Local:
-          target.SetValue(dependencyProperty, source.GetValue(dependencyProperty));
-          return true;
-        case PropertyValueSource.LocalBinding:
-          target.CopyBinding(source, dependencyProperty);
-          return true;
-        case PropertyValueSource.Inherited:
-          return false;
-        default:
-          throw new ArgumentOutOfRangeException();
-      }
-    }
+			while (index >= 0 && index < strLength && SkipWhiteSpaceDependencyPropertyName(str[index]))
+				index += change;
 
-    public static object GetMetadataDefaultValue(DependencyObject dependencyObject, DependencyProperty dependencyProperty)
-    {
-      return new DependencyPropertyValueInfo(dependencyObject, dependencyProperty).PropertyMetadata.DefaultValue;
-    }
+			return index >= 0 && index < strLength ? index : -1;
+		}
 
-    public static object GetDefaultValue(DependencyObject dependencyObject, DependencyProperty dependencyProperty)
-    {
-      return new DependencyPropertyValueInfo(dependencyObject, dependencyProperty).DefaultValue;
-    }
+		internal static bool CopyDependencyPropertyValue(DependencyProperty dependencyProperty, DependencyObject source, DependencyObject target)
+		{
+			var valueSource = GetValueSource(source, dependencyProperty);
 
-    public static object GetMetadataDefaultValue(Type forType, DependencyProperty dependencyProperty)
-    {
-      return dependencyProperty.GetMetadata(forType).DefaultValue;
-    }
+			switch (valueSource)
+			{
+				case PropertyValueSource.Default:
+					target.ClearValue(dependencyProperty);
+					return true;
+				case PropertyValueSource.Local:
+					target.SetValue(dependencyProperty, source.GetValue(dependencyProperty));
+					return true;
+				case PropertyValueSource.LocalBinding:
+					target.CopyBinding(source, dependencyProperty);
+					return true;
+				case PropertyValueSource.Inherited:
+					return false;
+				case PropertyValueSource.TemplatedParent:
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
 
-    public static object GetDefaultValue(Type forType, DependencyProperty dependencyProperty)
-    {
-      var defaultMetadataValue = GetMetadataDefaultValue(forType, dependencyProperty);
+		public static object GetDefaultValue(DependencyObject dependencyObject, DependencyProperty dependencyProperty)
+		{
+			return new DependencyPropertyValueInfo(dependencyObject, dependencyProperty).DefaultValue;
+		}
 
-      return defaultMetadataValue.IsDependencyPropertyUnsetValue() ? dependencyProperty.GetPropertyType().CreateDefaultValue() : defaultMetadataValue;
-    }
+		public static object GetDefaultValue(Type forType, DependencyProperty dependencyProperty)
+		{
+			var defaultMetadataValue = GetMetadataDefaultValue(forType, dependencyProperty);
 
-    public static PropertyValueSource GetValueSource(DependencyObject dependencyObject, DependencyProperty dependencyProperty)
-    {
-      return new DependencyPropertyValueInfo(dependencyObject, dependencyProperty).ValueSource;
-    }
+			return defaultMetadataValue.IsDependencyPropertyUnsetValue() ? dependencyProperty.GetPropertyType().CreateDefaultValue() : defaultMetadataValue;
+		}
 
-    internal static DependencyProperty ResolveProperty(DependencyObject actualTarget, DependencyProperty property)
-    {
-      return actualTarget != null ? ResolveProperty(actualTarget.GetType(), property) : null;
-    }
+		public static object GetMetadataDefaultValue(DependencyObject dependencyObject, DependencyProperty dependencyProperty)
+		{
+			return new DependencyPropertyValueInfo(dependencyObject, dependencyProperty).PropertyMetadata.DefaultValue;
+		}
 
-    internal static DependencyProperty ResolveProperty(Type type, DependencyProperty property)
-    {
-      var resolvedProperty = property;
+		public static object GetMetadataDefaultValue(Type forType, DependencyProperty dependencyProperty)
+		{
+			return dependencyProperty.GetMetadata(forType).DefaultValue;
+		}
 
-      var propertyName = DependencyPropertyProxyManager.GetPropertyName(property, type);
+		public static PropertyValueSource GetValueSource(DependencyObject dependencyObject, DependencyProperty dependencyProperty)
+		{
+			return new DependencyPropertyValueInfo(dependencyObject, dependencyProperty).ValueSource;
+		}
 
-      if (propertyName != null)
-        resolvedProperty = DependencyPropertyManager.GetDependencyProperty(propertyName, type);
+		public static DependencyProperty ResolveAttachedDependencyProperty(string property, IServiceProvider serviceProvider)
+		{
+			var typeResolver = (IXamlTypeResolver)serviceProvider?.GetService(typeof(IXamlTypeResolver));
 
-      return resolvedProperty;
-    }
+			if (typeResolver == null)
+				return null;
 
-    private static bool SkipWhiteSpaceDependencyPropertyName(char ch)
-    {
-      return ch == '(' || ch == ')' || char.IsWhiteSpace(ch);
-    }
+			var dotIndex = property.IndexOf(".", StringComparison.Ordinal);
 
-    private static int AdvancePosition(string str, int index, int change)
-    {
-      var strLength = str.Length;
+			if (dotIndex == -1)
+				return null;
 
-      while (index >= 0 && index < strLength && SkipWhiteSpaceDependencyPropertyName(str[index]))
-        index += change;
+			var startIndex = AdvancePosition(property, 0, 1);
 
-      return index >= 0 && index < strLength ? index : -1;
-    }
+			if (startIndex == -1)
+				return null;
 
-    public static DependencyProperty ResolveAttachedDependencyProperty(string property, IServiceProvider serviceProvider)
-    {
-      var typeResolver = (IXamlTypeResolver)serviceProvider?.GetService(typeof(IXamlTypeResolver));
-
-      if (typeResolver == null)
-        return null;
-
-      var dotIndex = property.IndexOf(".", StringComparison.Ordinal);
-
-      if (dotIndex == -1)
-        return null;
-
-      var startIndex = AdvancePosition(property, 0, 1);
-
-      if (startIndex == -1)
-        return null;
-
-      var typeName = property.Substring(startIndex, dotIndex - startIndex);
+			var typeName = property.Substring(startIndex, dotIndex - startIndex);
 			var type = typeResolver.Resolve(typeName);
 
-      if (type == null)
-        return null;
+			if (type == null)
+				return null;
 
-      dotIndex = AdvancePosition(property, dotIndex + 1, 1);
-      
-      if (dotIndex == -1)
-        return null;
+			dotIndex = AdvancePosition(property, dotIndex + 1, 1);
 
-      var endIndex = AdvancePosition(property, property.Length - 1, -1);
+			if (dotIndex == -1)
+				return null;
 
-      if (endIndex == -1 || endIndex <= dotIndex)
-        return null;
+			var endIndex = AdvancePosition(property, property.Length - 1, -1);
 
-      return DependencyPropertyManager.GetDependencyProperty(property.Substring(dotIndex, endIndex - dotIndex + 1), type);
-    }
+			if (endIndex == -1 || endIndex <= dotIndex)
+				return null;
 
-    #endregion
-  }
+			return DependencyPropertyManager.GetDependencyProperty(property.Substring(dotIndex, endIndex - dotIndex + 1), type);
+		}
+
+		internal static DependencyProperty ResolveProperty(DependencyObject actualTarget, DependencyProperty property)
+		{
+			return actualTarget != null ? ResolveProperty(actualTarget.GetType(), property) : null;
+		}
+
+		internal static DependencyProperty ResolveProperty(Type type, DependencyProperty property)
+		{
+			var resolvedProperty = property;
+
+			var propertyName = DependencyPropertyProxyManager.GetPropertyName(property, type);
+
+			if (propertyName != null)
+				resolvedProperty = DependencyPropertyManager.GetDependencyProperty(propertyName, type);
+
+			return resolvedProperty;
+		}
+
+		private static bool SkipWhiteSpaceDependencyPropertyName(char ch)
+		{
+			return ch == '(' || ch == ')' || char.IsWhiteSpace(ch);
+		}
+	}
 }
