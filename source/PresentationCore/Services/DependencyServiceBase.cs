@@ -15,9 +15,9 @@ namespace Zaaml.PresentationCore.Services
 		private IDependencyObjectService<T> Attach(T target)
 		{
 			Target = target;
-			
+
 			OnAttach();
-			
+
 			return this;
 		}
 

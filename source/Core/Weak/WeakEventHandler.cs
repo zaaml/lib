@@ -12,7 +12,7 @@ namespace Zaaml.Core.Weak
 		where THandler : class
 	{
 		private static readonly MethodInfo InvokeMethod = typeof(WeakEventHandlerProxy<THandler, TEventArgs>).GetMethod
-			("Invoke", BindingFlags.Instance | BindingFlags.NonPublic);
+			(nameof(Invoke), BindingFlags.Instance | BindingFlags.NonPublic);
 
 		private readonly Action<object, TEventArgs> _handler;
 
@@ -24,7 +24,7 @@ namespace Zaaml.Core.Weak
 
 		public THandler Handler { get; }
 
-		// ReSharper disable once UnusedMember.Local
+		
 		private void Invoke(object sender, EventArgs args)
 		{
 			_handler.DynamicInvoke(sender, args);
@@ -64,7 +64,8 @@ namespace Zaaml.Core.Weak
 
 	internal static class WeakEventExtensions
 	{
-		public static WeakEvent<TSource, TEventArgs> WeakEvent<TSource, TEventArgs>(this TSource source, Action<TSource, EventHandler<TEventArgs>> addHandler, Action<TSource, EventHandler<TEventArgs>> removeHandler) where TEventArgs : EventArgs
+		public static WeakEvent<TSource, TEventArgs> WeakEvent<TSource, TEventArgs>(this TSource source, Action<TSource, EventHandler<TEventArgs>> addHandler, Action<TSource, EventHandler<TEventArgs>> removeHandler)
+			where TEventArgs : EventArgs
 		{
 			return new WeakEvent<TSource, TEventArgs>(source, addHandler, removeHandler);
 		}
@@ -83,7 +84,6 @@ namespace Zaaml.Core.Weak
 		public WeakEventHandler(TInstance target, Action<TInstance, object, TEventArgs> handler, Action<THandler> addHandler, Action<THandler> remove)
 		{
 			_innerDelegateProxy = new WeakEventHandlerProxy<THandler, TEventArgs>(Invoke);
-
 			_targetReference = new WeakReference<TInstance>(target);
 			_handler = handler;
 			_removeHandler = remove;
@@ -101,6 +101,7 @@ namespace Zaaml.Core.Weak
 			if (target == null)
 			{
 				Dispose();
+
 				return;
 			}
 

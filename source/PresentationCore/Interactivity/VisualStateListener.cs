@@ -71,7 +71,6 @@ namespace Zaaml.PresentationCore.Interactivity
 					return;
 
 				_templateRootHandlersDisposer = _templateRootHandlersDisposer.DisposeExchange();
-
 				_templateRoot = value;
 
 				if (_templateRoot != null)

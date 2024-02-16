@@ -66,7 +66,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		internal FrameworkElement Owner
 		{
-			get => this.GetValue<FrameworkElement>(OwnerPropertyKey);
+			get => this.GetReadOnlyValue<FrameworkElement>(OwnerPropertyKey);
 			set => this.SetReadOnlyValue(OwnerPropertyKey, value);
 		}
 

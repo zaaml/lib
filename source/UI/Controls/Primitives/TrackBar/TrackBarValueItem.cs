@@ -5,6 +5,7 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using Zaaml.Core;
 using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore.Extensions;
@@ -94,8 +95,11 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			return value;
 		}
 
+		public event EventHandler<ValueChangedEventArgs<double>> ValueChanged;
+
 		protected virtual void OnValueChanged(double oldValue, double newValue)
 		{
+			ValueChanged?.Invoke(this, new ValueChangedEventArgs<double>(oldValue, newValue));
 		}
 
 		private void OnValueChangedPrivate(double oldValue, double newValue)

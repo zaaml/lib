@@ -18,6 +18,7 @@ namespace Zaaml.PresentationCore.Services
 	internal interface IDependencyObjectService : IDisposable
 	{
 		IDependencyObjectService Attach(DependencyObject dependencyObject);
+
 		IDependencyObjectService Detach(DependencyObject dependencyObject);
 	}
 }

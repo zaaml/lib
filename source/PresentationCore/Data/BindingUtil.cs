@@ -36,14 +36,9 @@ namespace Zaaml.PresentationCore.Data
 
 		public static Binding CloneBinding(this Binding binding)
 		{
-#if SILVERLIGHT
-      return new Binding(binding);
-#else
 			return CloneBindingImpl(binding);
-#endif
 		}
 
-#if !SILVERLIGHT
 		public static Binding CloneBindingImpl(Binding bindingBase)
 		{
 			var binding = bindingBase;
@@ -87,15 +82,10 @@ namespace Zaaml.PresentationCore.Data
 
 			return result;
 		}
-#endif
 
 		private static object ConvertTemplateBindingExpression(TemplateBindingExpression templateBindingExpression)
 		{
-#if SILVERLIGHT
-      return templateBindingExpression == null ? null : DependencyProperty.UnsetValue;
-#else
 			return templateBindingExpression;
-#endif
 		}
 
 		public static void EnsureBindingAttached(DependencyObject dependencyObject, DependencyProperty dependencyProperty)
