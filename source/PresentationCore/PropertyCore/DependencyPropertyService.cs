@@ -15,155 +15,124 @@ using Zaaml.PresentationCore.Services;
 
 namespace Zaaml.PresentationCore.PropertyCore
 {
-  internal class DependencyPropertyService : ServiceBase<DependencyObject>
-  {
-    #region Static Fields and Constants
+	internal class DependencyPropertyService : ServiceBase<DependencyObject>
+	{
+		private static readonly MultiMap<Type, DependencyProperty> ServiceProperties = [];
+		private static readonly TwoWayDictionary<Type, int> TypeIdDictionary = new();
+		private static int _nextTypeId;
 
-    private static readonly MultiMap<Type, DependencyProperty> ServiceProperties = new MultiMap<Type, DependencyProperty>();
-    private static readonly TwoWayDictionary<Type, int> TypeIdDictionary = new TwoWayDictionary<Type, int>();
-    private static int _nextTypeId;
+		private readonly Dictionary<DependencyProperty, WeakLinkedList<IDependencyPropertyListener>> _expandoPropertyChangeListeners = [];
+		private readonly Dictionary<DependencyProperty, WeakReference> _servicePropertyListeners = [];
 
-    #endregion
+		public void AddExpandoPropertyListener(DependencyProperty dependencyProperty, IDependencyPropertyListener listener)
+		{
+			_expandoPropertyChangeListeners.GetValueOrCreate(dependencyProperty, () => []).Add(listener);
+		}
 
-    #region Fields
+		public DependencyProperty CaptureServiceProperty(Type type, IDependencyPropertyListener listener)
+		{
+			var typeProperties = ServiceProperties.GetOrCreateValues(type);
+			var weakListener = new WeakReference(listener ?? DummyListener.Instance);
+			var property = typeProperties.FirstOrDefault(IsFreeImpl);
 
-    private readonly Dictionary<DependencyProperty, WeakLinkedList<IDependencyPropertyListener>> _expandoPropertyChangeListeners = new Dictionary<DependencyProperty, WeakLinkedList<IDependencyPropertyListener>>();
-    private readonly Dictionary<DependencyProperty, WeakReference> _servicePropertyListeners = new Dictionary<DependencyProperty, WeakReference>();
+			if (property != null)
+			{
+				Target.ClearValue(property);
 
-    #endregion
+				_servicePropertyListeners.Add(property, weakListener);
 
-    #region  Methods
+				return property;
+			}
 
-    public void AddExpandoPropertyListener(DependencyProperty dependencyProperty, IDependencyPropertyListener listener)
-    {
-      _expandoPropertyChangeListeners.GetValueOrCreate(dependencyProperty, () => new WeakLinkedList<IDependencyPropertyListener>()).Add(listener);
-    }
+			var typeId = TypeIdDictionary.GetValueOrCreate(type, t => _nextTypeId++);
 
-    public DependencyProperty CaptureServiceProperty(Type type, IDependencyPropertyListener listener)
-    {
-      var typeProperties = ServiceProperties.GetOrCreateValues(type);
-      var weakListener = new WeakReference(listener ?? DummyListener.Instance);
-      var property = typeProperties.FirstOrDefault(IsFreeImpl);
+			property = RegisterServiceProperty($"{typeId}_svc{typeProperties.Count}", type);
+			_servicePropertyListeners.Add(property, weakListener);
+			typeProperties.Add(property);
 
-      if (property != null)
-      {
-        Target.ClearValue(property);
+			return property;
+		}
 
-        _servicePropertyListeners.Add(property, weakListener);
+		private bool IsFreeImpl(DependencyProperty property)
+		{
+			return _servicePropertyListeners.ContainsKey(property) == false;
+		}
 
-        return property;
-      }
+		public void OnExpandoPropertyValueChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
+		{
+			var listenerList = _expandoPropertyChangeListeners.GetValueOrDefault(dependencyProperty);
 
-      var typeId = TypeIdDictionary.GetValueOrCreate(type, t => _nextTypeId++);
+			if (listenerList == null)
+				return;
 
-      property = RegisterServiceProperty($"{typeId}_svc{typeProperties.Count}", type);
-      _servicePropertyListeners.Add(property, weakListener);
-      typeProperties.Add(property);
+			foreach (var listener in listenerList)
+				listener.OnPropertyChanged(depObj, dependencyProperty, oldValue, newValue);
+		}
 
-      return property;
-    }
+		private static void OnServicePropertyValueChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs args)
+		{
+			depObj.GetDependencyPropertyService().OnServicePropertyValueChanged(depObj, args.Property, args.OldValue, args.NewValue);
+		}
 
-    private bool IsFreeImpl(DependencyProperty property)
-    {
-      return _servicePropertyListeners.ContainsKey(property) == false;
-    }
+		private void OnServicePropertyValueChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
+		{
+			if (_servicePropertyListeners.TryGetValue(dependencyProperty, out var weakListener) == false) 
+				return;
 
-    public void OnExpandoPropertyValueChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
-    {
-      var listenerList = _expandoPropertyChangeListeners.GetValueOrDefault(dependencyProperty);
-      if (listenerList == null)
-        return;
+			var listener = weakListener.GetTarget<IDependencyPropertyListener>();
 
-      foreach (var listener in listenerList)
-        listener.OnPropertyChanged(depObj, dependencyProperty, oldValue, newValue);
-    }
+			if (listener != null)
+				listener.OnPropertyChanged(depObj, dependencyProperty, oldValue, newValue);
+			else
+				_servicePropertyListeners.Remove(dependencyProperty);
+		}
 
-    private static void OnServicePropertyValueChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs args)
-    {
-      depObj.GetDependencyPropertyService().OnServicePropertyValueChanged(depObj, args.Property, args.OldValue, args.NewValue);
-    }
+		private static DependencyProperty RegisterServiceProperty(string name, Type type)
+		{
+			var defaultValue = RuntimeUtils.CreateDefaultValue(type);
+			var propertyMetadata = new PropertyMetadata(defaultValue, OnServicePropertyValueChanged);
 
-    private void OnServicePropertyValueChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
-    {
-      WeakReference weakListener;
-      if (_servicePropertyListeners.TryGetValue(dependencyProperty, out weakListener) == false) return;
+			return DependencyPropertyManager.RegisterAttached(name, type, typeof(DependencyPropertyManager), propertyMetadata);
+		}
 
-      var listener = weakListener.GetTarget<IDependencyPropertyListener>();
-      if (listener != null)
-        listener.OnPropertyChanged(depObj, dependencyProperty, oldValue, newValue);
-      else
-        _servicePropertyListeners.Remove(dependencyProperty);
-    }
+		public void ReleaseServiceProperty(DependencyProperty property)
+		{
+			_servicePropertyListeners.Remove(property);
+			Target.ClearValue(property);
+		}
 
-    private static DependencyProperty RegisterServiceProperty(string name, Type type)
-    {
-      var defaultValue = RuntimeUtils.CreateDefaultValue(type);
-      var propertyMetadata = new PropertyMetadata(defaultValue, OnServicePropertyValueChanged);
-      return DependencyPropertyManager.RegisterAttached(name, type, typeof(DependencyPropertyManager), propertyMetadata);
-    }
+		public void RemoveExpandoListener(DependencyProperty dependencyProperty, IDependencyPropertyListener listener)
+		{
+			var listenerList = _expandoPropertyChangeListeners.GetValueOrDefault(dependencyProperty);
 
-    public void ReleaseServiceProperty(DependencyProperty property)
-    {
-      _servicePropertyListeners.Remove(property);
-      Target.ClearValue(property);
-    }
+			if (listenerList == null) 
+				return;
 
-    public void RemoveExpandoListener(DependencyProperty dependencyProperty, IDependencyPropertyListener listener)
-    {
-      var listenerList = _expandoPropertyChangeListeners.GetValueOrDefault(dependencyProperty);
+			listenerList.Remove(listener);
 
-      if (listenerList == null) return;
+			if (listenerList.IsEmpty)
+				_expandoPropertyChangeListeners.Remove(dependencyProperty);
+		}
 
-      listenerList.Remove(listener);
-      if (listenerList.IsEmpty)
-        _expandoPropertyChangeListeners.Remove(dependencyProperty);
-    }
+		private class DummyListener : IDependencyPropertyListener
+		{
+			public static readonly IDependencyPropertyListener Instance = new DummyListener();
 
-    #endregion
+			private DummyListener()
+			{
+			}
 
-    #region  Nested Types
+			void IDependencyPropertyListener.OnPropertyChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
+			{
+			}
+		}
+	}
 
-    private class DummyListener : IDependencyPropertyListener
-    {
-      #region Static Fields and Constants
-
-      public static readonly IDependencyPropertyListener Instance = new DummyListener();
-
-      #endregion
-
-      #region Ctors
-
-      private DummyListener()
-      {
-      }
-
-      #endregion
-
-      #region Interface Implementations
-
-      #region IDependencyPropertyListener
-
-      void IDependencyPropertyListener.OnPropertyChanged(DependencyObject depObj, DependencyProperty dependencyProperty, object oldValue, object newValue)
-      {
-      }
-
-      #endregion
-
-      #endregion
-    }
-
-    #endregion
-  }
-
-  internal static class DependencyPropertyServiceExtensions
-  {
-    #region  Methods
-
-    public static DependencyPropertyService GetDependencyPropertyService(this DependencyObject dependencyObject)
-    {
-      return dependencyObject.GetServiceOrCreate(() => new DependencyPropertyService());
-    }
-
-    #endregion
-  }
+	internal static class DependencyPropertyServiceExtensions
+	{
+		public static DependencyPropertyService GetDependencyPropertyService(this DependencyObject dependencyObject)
+		{
+			return dependencyObject.GetServiceOrCreate(() => new DependencyPropertyService());
+		}
+	}
 }
