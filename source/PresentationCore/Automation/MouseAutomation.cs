@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using Zaaml.Platform;
 using Zaaml.PresentationCore.Animation;
+using Zaaml.PresentationCore.Input;
 
-namespace Zaaml.PresentationCore.Input
+namespace Zaaml.PresentationCore.Automation
 {
-	internal sealed class MouseAutomation
+	internal sealed class MouseAutomation : InputAutomation
 	{
 		public MouseAutomation()
 		{
@@ -22,6 +23,8 @@ namespace Zaaml.PresentationCore.Input
 		}
 
 		public MouseAutomationOptions Options { get; }
+
+		protected override InputAutomationOptions OptionsCore => Options;
 
 		private static Point GetCursorPosition()
 		{
@@ -71,28 +74,9 @@ namespace Zaaml.PresentationCore.Input
 			await PostEventDelay();
 		}
 
-		private async Task PostEventDelay()
-		{
-			await Task.Delay(Options.PostEventDelay);
-		}
-
-		private async Task PreEventDelay()
-		{
-			await Task.Delay(Options.PreEventDelay);
-		}
-
 		private static void SetCursorPosition(Point position)
 		{
 			MouseInternal.ScreenLogicalPosition = position;
 		}
-	}
-
-	internal struct MouseAutomationOptions
-	{
-		public TimeSpan MoveDuration { get; set; }
-
-		public TimeSpan PreEventDelay { get; set; }
-
-		public TimeSpan PostEventDelay { get; set; }
 	}
 }

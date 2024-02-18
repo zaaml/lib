@@ -7,15 +7,11 @@ using System.Windows.Input;
 namespace Zaaml.PresentationCore.Input
 {
 	internal static class KeyboardUtils
-  {
-    #region Properties
+	{
+		public static bool IsAltPressed => Keyboard.Modifiers.IsAltPressed();
 
-    public static bool IsAltPressed => Keyboard.Modifiers.IsAltPressed();
+		public static bool IsControlPressed => Keyboard.Modifiers.IsControlPressed();
 
-    public static bool IsControlPressed => Keyboard.Modifiers.IsControlPressed();
-
-    public static bool IsShiftPressed => Keyboard.Modifiers.IsShiftPressed();
-
-    #endregion
-  }
+		public static bool IsShiftPressed => Keyboard.Modifiers.IsShiftPressed();
+	}
 }
