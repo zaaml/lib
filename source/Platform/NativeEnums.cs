@@ -661,6 +661,15 @@ namespace Zaaml.Platform
 		XUP = 0x00000100
 	}
 
+	[Flags]
+	internal enum KEYBD_EVENT_FLAGS : uint
+	{
+		KEYEVENTF_EXTENDEDKEY = 0x00000001,
+		KEYEVENTF_KEYUP = 0x00000002,
+		KEYEVENTF_SCANCODE = 0x00000008,
+		KEYEVENTF_UNICODE = 0x00000004,
+	}
+
 	public enum MouseEventDataXButtons : uint
 	{
 		XBUTTON1 = 0x00000001,
