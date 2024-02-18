@@ -2,7 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-namespace Zaaml.Core
+amespace Zaaml.Core
 {
   internal static class Unset
   {
