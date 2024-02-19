@@ -1,0 +1,79 @@
+﻿<zm:ThemeSkinResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:zm="http://schemas.zaaml.com/xaml">
+
+  <!--  ToolBarButton  -->
+  <zm:SkinDictionary x:Key="MetroUI.Shared.ToolBarButton">
+
+    <zm:SkinDictionary x:Key="Input">
+      <Color x:Key="ForegroundBase">#E3000000</Color>
+    </zm:SkinDictionary>
+
+    <!--  Foreground  -->
+    <zm:SkinDictionary x:Key="Foreground">
+
+      <!--  SolidColorBrushProcessor  -->
+      <zm:SkinDictionary.Generators>
+        <zm:SolidColorBrushGenerator ColorExpression="BaseColor" ExpressionScope="BaseColor:$(../Input.ForegroundBase)">
+          <zm:SkinResourceTemplate x:Key="Normal" />
+        </zm:SolidColorBrushGenerator>
+      </zm:SkinDictionary.Generators>
+
+    </zm:SkinDictionary>
+
+  </zm:SkinDictionary>
+
+  <!--  ToolBarDropDownButton  -->
+  <zm:SkinDictionary x:Key="MetroUI.Shared.ToolBarDropDownButton" BasedOn="MetroUI.Shared.ToolBarButton"/>
+
+  <!--  ToolBarSplitButton  -->
+  <zm:SkinDictionary x:Key="MetroUI.Shared.ToolBarSplitButton" BasedOn="MetroUI.Shared.ToolBarButton">
+
+    <!--  DropDownButton  -->
+    <zm:SkinDictionary x:Key="DropDownButton" BasedOn="MetroUI.Shared.ToolBarDropDownButton">
+
+      <!--  Reference Input  -->
+      <zm:SkinDictionary x:Key="Input" BasedOn="../Input"/>
+
+    </zm:SkinDictionary>
+  </zm:SkinDictionary>
+
+  <!--  MetroUI  -->
+  <zm:SkinDictionary x:Key="MetroUI">
+
+    <!--  ToolBarButton  -->
+    <zm:SkinDictionary x:Key="ToolBarButton" BasedOn="MetroUI.Shared.ToolBarButton" />
+
+    <!--  ToolBarDropDownButton  -->
+    <zm:SkinDictionary x:Key="ToolBarDropDownButton" BasedOn="MetroUI.Shared.ToolBarDropDownButton" />
+
+    <!--  ToolBarSplitButton  -->
+    <zm:SkinDictionary x:Key="ToolBarSplitButton" BasedOn="MetroUI.Shared.ToolBarSplitButton" />
+
+    <!--  AppToolBarControl  -->
+    <zm:SkinDictionary x:Key="AppToolBarControl" >
+
+      <!--  BaseColors  -->
+      <zm:SkinDictionary x:Key="BaseColors">
+
+        <!--  Input  -->
+        <zm:SkinDictionary x:Key="Input" Priority="1" >
+          <Color x:Key="ForegroundBase">#FFFFFFFF</Color>
+        </zm:SkinDictionary>
+
+      </zm:SkinDictionary>
+
+      <!--  ToolBarButton  -->
+      <zm:SkinDictionary x:Key="ToolBarButton" BasedOn="MetroUI.AppToolBarControl.BaseColors | MetroUI.ToolBarButton" />
+
+      <!--  ToolBarDropDownButton  -->
+      <zm:SkinDictionary x:Key="ToolBarDropDownButton" BasedOn="MetroUI.AppToolBarControl.BaseColors | MetroUI.ToolBarDropDownButton" />
+
+      <!--  ToolBarSplitButton  -->
+      <zm:SkinDictionary x:Key="ToolBarSplitButton" BasedOn="MetroUI.AppToolBarControl.BaseColors | MetroUI.ToolBarSplitButton"/>
+
+    </zm:SkinDictionary>
+
+  </zm:SkinDictionary>
+</zm:ThemeSkinResourceDictionary>

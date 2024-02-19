@@ -1,0 +1,28 @@
+﻿<zm:ThemeSkinResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:system="clr-namespace:System;assembly=mscorlib"
+  xmlns:zm="http://schemas.zaaml.com/xaml">
+  <!--  ReSharper disable InconsistentNaming  -->
+
+  <!--  BaseValues  -->
+  <zm:SkinDictionary x:Key="BaseValues">
+
+    <system:Int32 x:Key="IntValue">32</system:Int32>
+
+  </zm:SkinDictionary>
+
+  <!--  IntermediateDependency A  -->
+  <zm:SkinDictionary x:Key="A_Dependency" BasedOn="BaseValues" />
+
+  <!--  IntermediateDependency B  -->
+  <zm:SkinDictionary x:Key="B_Dependency" BasedOn="A_Dependency" />
+
+  <!--  IntermediateDependency C  -->
+  <zm:SkinDictionary x:Key="C_Dependency" BasedOn="B_Dependency" />
+
+  <!--  FinalDependency  -->
+  <zm:SkinDictionary x:Key="FinalDependency" BasedOn="C_Dependency" />
+
+  <!--  ReSharper restore InconsistentNaming  -->
+</zm:ThemeSkinResourceDictionary>

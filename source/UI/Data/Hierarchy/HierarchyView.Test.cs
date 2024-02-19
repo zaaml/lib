@@ -13,8 +13,6 @@ namespace Zaaml.UI.Data.Hierarchy
 {
 	internal abstract partial class HierarchyView
 	{
-		#region  Nested Types
-
 		[Flags]
 		internal enum DumpOptions
 		{
@@ -25,8 +23,6 @@ namespace Zaaml.UI.Data.Hierarchy
 			DebugInformation = 8,
 			Full = Padding + LineNumbers + ExpansionGlyph + DebugInformation
 		}
-
-		#endregion
 	}
 
 	internal abstract partial class HierarchyView<THierarchy, TNodeCollection, TNode>
@@ -34,8 +30,6 @@ namespace Zaaml.UI.Data.Hierarchy
 		where TNodeCollection : HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode>
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
 	{
-		#region  Methods
-
 		internal string Dump(DumpOptions dumpOptions)
 		{
 			var sb = new StringBuilder();
@@ -73,8 +67,6 @@ namespace Zaaml.UI.Data.Hierarchy
 			if (VisibleFlatCount != visibleCount)
 				throw new Exception(nameof(VisibleFlatCount));
 		}
-
-		#endregion
 	}
 }
 #endif

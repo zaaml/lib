@@ -46,9 +46,13 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 				if (value == null)
 					return null;
 
+				if (value is IconBase)
+					return value;
+
 				if (context != null)
 				{
 					var imageSource = (ImageSource)SafeImageSourceConverter.Converter.ConvertFrom(context, culture, value);
+
 					if (imageSource != null)
 						return new BitmapIcon { Source = imageSource };
 				}

@@ -1,10 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>library</OutputType>
 		<ExposeExternalInternals>True</ExposeExternalInternals>
-		<Configurations>Debug;Release;Test</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup>
