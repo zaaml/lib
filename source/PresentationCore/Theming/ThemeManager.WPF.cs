@@ -13,7 +13,8 @@ namespace Zaaml.PresentationCore.Theming
     #region Static Fields and Constants
 
     public static readonly DependencyProperty ThemeProperty = DependencyProperty.RegisterAttached
-      ("Theme", typeof(Theme), typeof(ThemeManager), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits | FrameworkPropertyMetadataOptions.AffectsMeasure, OnThemePropertyChanged));
+      ("Theme", typeof(Theme), typeof(ThemeManager), 
+	      new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits | FrameworkPropertyMetadataOptions.AffectsMeasure, OnThemePropertyChanged));
 
     private static readonly DependencyProperty DefaultStyleKeyProperty = DefaultStyleKeyHelper.DefaultStyleKeyProperty;
 

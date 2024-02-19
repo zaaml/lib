@@ -10,7 +10,6 @@ using Zaaml.Core.Utils;
 
 namespace Zaaml.Core.Trees
 {
-
 	internal abstract class TreeFlatCursor<TNode> where TNode : class
 	{
 		private Data[] _data = new Data[4];

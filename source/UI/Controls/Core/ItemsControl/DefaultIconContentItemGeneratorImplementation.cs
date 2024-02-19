@@ -1,4 +1,4 @@
-﻿// <copyright file="DefaultIconContentItemGeneratorImpl.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="DefaultIconContentItemGeneratorImplementation.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -15,8 +15,8 @@ namespace Zaaml.UI.Controls.Core
 		where TItem : FrameworkElement, IIconContentControl, new()
 		where TGenerator : ItemGenerator<TItem>, IDelegatedGenerator<TItem>, new()
 	{
-		private IIconSelector _itemIconSelector;
 		private string _itemIconMember;
+		private IIconSelector _itemIconSelector;
 
 		public DefaultIconContentItemGeneratorImplementation(
 			string itemIconMember,
@@ -54,6 +54,10 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
+		private Binding ItemIconMemberBinding { get; set; }
+
+		internal Binding ItemIconMemberBindingInternal => ItemIconMemberBinding;
+
 		public IIconSelector ItemIconSelector
 		{
 			get => _itemIconSelector;
@@ -71,10 +75,6 @@ namespace Zaaml.UI.Controls.Core
 				Generator.OnGeneratorChangedInt();
 			}
 		}
-
-		private Binding ItemIconMemberBinding { get; set; }
-
-		internal Binding ItemIconMemberBindingInternal => ItemIconMemberBinding;
 
 		public override void AttachItem(TItem item, object source)
 		{

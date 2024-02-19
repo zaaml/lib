@@ -1,0 +1,16 @@
+﻿<Window x:Class="Zaaml.UI.Test.ScreenPositionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        WindowStyle="None"
+        WindowState="Maximized"
+        xmlns:local="clr-namespace:Zaaml.UI.Test"
+        mc:Ignorable="d"
+        Title="ScreenPositionWindow" Height="450" Width="800">
+  <Grid>
+    <Border x:Name="RedBorder" Margin="100,100,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="200" Height="200" Background="Red" />
+    
+    <TextBlock x:Name="Info" HorizontalAlignment="Right" Margin="100" />
+  </Grid>
+</Window>

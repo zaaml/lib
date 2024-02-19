@@ -1,0 +1,28 @@
+﻿<zmuit:UITestWindow
+  x:Class="Zaaml.UI.Test.Controls.TabView.TabViewTestWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:zm="http://schemas.zaaml.com/xaml"
+  xmlns:zmdt="clr-namespace:Zaaml.UI.Test.Controls.TabView"
+  xmlns:zmuit="clr-namespace:Zaaml.UI.Test"
+  Title="MainWindow"
+  Width="1440"
+  Height="900"
+  WindowStartupLocation="CenterScreen"
+  mc:Ignorable="d">
+
+  <zm:TabViewControl>
+    <zm:TabViewItem Header="Item 1">
+      <Grid Margin="20">
+        <TextBox x:Name="TextBox1" VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" />
+      </Grid>
+    </zm:TabViewItem>
+
+    <zm:TabViewItem Header="Item 2">
+      <Image x:Name="Image2" />
+    </zm:TabViewItem>
+  </zm:TabViewControl>
+
+</zmuit:UITestWindow>

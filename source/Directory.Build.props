@@ -8,6 +8,7 @@
 		<ErrorReport>prompt</ErrorReport>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<GitVersion_NoFetchEnabled>true</GitVersion_NoFetchEnabled>
+    <Configurations>Debug;Release;Test</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">

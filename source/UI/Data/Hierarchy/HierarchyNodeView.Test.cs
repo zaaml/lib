@@ -15,8 +15,6 @@ namespace Zaaml.UI.Data.Hierarchy
 		where TNodeCollection : HierarchyNodeViewCollection<THierarchy, TNodeCollection, TNode>
 		where TNode : HierarchyNodeView<THierarchy, TNodeCollection, TNode>
 	{
-		#region  Methods
-
 		internal void Verify()
 		{
 			var treeFlatCountAdvisor = new DelegateTreeEnumeratorAdvisor<TNode>(n => n.Nodes?.GetEnumerator() ?? Enumerable.Empty<TNode>().GetEnumerator());
@@ -31,8 +29,6 @@ namespace Zaaml.UI.Data.Hierarchy
 			if (VisibleFlatCount != visibleCount)
 				throw new Exception(nameof(VisibleFlatCount));
 		}
-
-		#endregion
 	}
 }
 #endif
