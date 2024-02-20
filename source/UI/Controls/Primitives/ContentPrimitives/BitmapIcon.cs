@@ -10,9 +10,6 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Navigation;
 using Zaaml.PresentationCore.PropertyCore;
-#if !NETCOREAPP
-using Zaaml.Core.Extensions;
-#endif
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
@@ -22,7 +19,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			("Source", OnIconPropertyChanged);
 
 		public static readonly DependencyProperty StretchProperty = DPM.RegisterAttached<Stretch, BitmapIcon>
-			("Stretch", Stretch.Uniform, OnIconPropertyChanged);
+			("Stretch", Stretch.None, OnIconPropertyChanged);
 
 		public static readonly DependencyProperty StretchDirectionProperty = DPM.RegisterAttached<StretchDirection, BitmapIcon>
 			("StretchDirection", StretchDirection.Both, OnIconPropertyChanged);

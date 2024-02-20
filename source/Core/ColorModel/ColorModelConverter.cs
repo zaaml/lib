@@ -3,7 +3,6 @@
 // </copyright>
 
 using System;
-using Zaaml.Core.Extensions;
 
 namespace Zaaml.Core.ColorModel
 {
