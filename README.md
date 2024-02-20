@@ -2,6 +2,8 @@
 
 # Zaaml UI components library
 
+[![Build Status](https://dev.azure.com/zaaml/lib/_apis/build/status/ci-alpha)](https://dev.azure.com/zaaml/lib/_build/latest?definitionId=3)
+
 Zaaml library is a set of flexible and high performance WPF UI components for building rich desktop applications.
 
 Zaaml provides the following list of controls and components:

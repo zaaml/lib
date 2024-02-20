@@ -11,9 +11,7 @@
 
 // ReSharper disable All
 
-using System;
 using System.Collections.Generic;
-using Zaaml.Core.Extensions;
 
 
 namespace Zaaml.Core.Text
