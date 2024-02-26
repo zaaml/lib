@@ -11,8 +11,6 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public abstract class TargetTriggerActionBase : TriggerActionBase, IInteractivitySourceSubject
 	{
-		#region Ctors
-
 		static TargetTriggerActionBase()
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
@@ -22,10 +20,6 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			PackedDefinition.SubjectKind.SetValue(ref PackedValue, SubjectKind.Unspecified);
 		}
-
-		#endregion
-
-		#region Properties
 
 		protected DependencyObject ActualTarget => SubjectResolver.ResolveSubject(this);
 
@@ -47,15 +41,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => SubjectResolver.SetSubjectName(this, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (TargetTriggerActionBase) source;
+			var triggerSource = (TargetTriggerActionBase)source;
 			SubjectResolver.CopyFrom(this, triggerSource);
 		}
 
@@ -81,12 +71,6 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.UnloadCore(root);
 		}
 
-		#endregion
-
-		#region Interface Implementations
-
-		#region IInteractivitySubject
-
 		object IInteractivitySubject.SubjectStore { get; set; }
 
 		SubjectKind IInteractivitySubject.SubjectKind
@@ -101,21 +85,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			OnActualTargetChanged(oldSubject);
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedEnumItemDefinition<SubjectKind> SubjectKind;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -123,10 +95,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				SubjectKind = allocator.AllocateEnumItem<SubjectKind>();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

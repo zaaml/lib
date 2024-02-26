@@ -56,40 +56,40 @@
     <!-- Foreground -->
     <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
       <zm:Setter ValuePath="Normal" />
-      <zm:Setter VisualState="Active" ValuePath="Normal" />
-      <zm:Setter VisualState="Inactive" ValuePath="Inactive" />
+      <zm:Setter VisualStateTrigger="Active" ValuePath="Normal" />
+      <zm:Setter VisualStateTrigger="Inactive" ValuePath="Inactive" />
 
-      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="2"/>
-      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="2"/>
+      <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" Priority="2"/>
+      <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" Priority="2"/>
 
-      <zm:Setter VisualState="Today" ValuePath="Today" Priority="3" />
-      <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="3" />
+      <zm:Setter VisualStateTrigger="Today" ValuePath="Today" Priority="3" />
+      <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="3" />
     </zm:SetterGroup>
 
     <!-- Background -->
     <zm:SetterGroup Property="Background" ValuePath="Background">
       <zm:Setter ValuePath="Normal" />
-      <zm:Setter VisualState="Inactive" ValuePath="Inactive" />
+      <zm:Setter VisualStateTrigger="Inactive" ValuePath="Inactive" />
 
-      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="1"/>
-      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="1"/>
+      <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" Priority="1"/>
+      <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" Priority="1"/>
 
-      <zm:Setter VisualState="Today" ValuePath="Today" Priority="2" />
-      <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="2" />
+      <zm:Setter VisualStateTrigger="Today" ValuePath="Today" Priority="2" />
+      <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="2" />
     </zm:SetterGroup>
 
     <!-- BorderBrush -->
     <zm:SetterGroup Property="BorderBrush"  ValuePath="BorderBrush">
       <zm:Setter ValuePath="Normal" />
-      <zm:Setter VisualState="Inactive" ValuePath="Inactive"  />
+      <zm:Setter VisualStateTrigger="Inactive" ValuePath="Inactive"  />
 
-      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="1" />
-      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="1" />
+      <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" Priority="1" />
+      <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" Priority="1" />
 
-      <zm:Setter VisualState="Today" ValuePath="Today" Priority="2" />
-      <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="2" />
+      <zm:Setter VisualStateTrigger="Today" ValuePath="Today" Priority="2" />
+      <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="2" />
 
-      <zm:Setter VisualState="CalendarButtonFocused" ValuePath="Focused" Priority="3" />
+      <zm:Setter VisualStateTrigger="CalendarButtonFocused" ValuePath="Focused" Priority="3" />
     </zm:SetterGroup>
 
   </zm:SetterCollection>

@@ -10,8 +10,6 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public abstract class PropertyActionBase : TargetTriggerActionBase, IPropertySubject
 	{
-		#region Ctors
-
 		static PropertyActionBase()
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
@@ -21,10 +19,6 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			PackedDefinition.PropertyKind.SetValue(ref PackedValue, PropertyKind.Unspecified);
 		}
-
-		#endregion
-
-		#region Properties
 
 		internal DependencyProperty ActualProperty => PropertyResolver.ResolveProperty(this);
 
@@ -46,14 +40,10 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => PackedDefinition.PropertyKind.SetValue(ref PackedValue, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
-			var propertyActionSource = (PropertyActionBase) source;
+			var propertyActionSource = (PropertyActionBase)source;
 
 			PropertyResolver.CopyFrom(this, propertyActionSource);
 		}
@@ -67,12 +57,6 @@ namespace Zaaml.PresentationCore.Interactivity
 			PropertyResolver.UnResolveProperty(this);
 			base.UnloadCore(root);
 		}
-
-		#endregion
-
-		#region Interface Implementations
-
-		#region IPropertySubject
 
 		DependencyObject IPropertySubject.ActualSubject => ActualTarget;
 
@@ -89,21 +73,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			OnActualPropertyChanged(oldProperty, newProperty);
 		}
 
-		#endregion
-
-		#endregion
-
-		#region  Nested Types
-
 		private static class PackedDefinition
 		{
-			#region Static Fields and Constants
-
 			public static readonly PackedEnumItemDefinition<PropertyKind> PropertyKind;
-
-			#endregion
-
-			#region Ctors
 
 			static PackedDefinition()
 			{
@@ -111,10 +83,6 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				PropertyKind = allocator.AllocateEnumItem<PropertyKind>();
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 }

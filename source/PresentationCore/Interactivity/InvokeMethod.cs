@@ -12,24 +12,14 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public class InvokeMethod : TargetTriggerActionBase
 	{
-		#region Fields
-
 		private Action _method;
 
-		#endregion
-
-		#region Properties
-
 		public string MethodName { get; set; }
-
-		#endregion
-
-		#region  Methods
 
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
-			var invokeMethodSource = (InvokeMethod) source;
+			var invokeMethodSource = (InvokeMethod)source;
 			MethodName = invokeMethodSource.MethodName;
 		}
 
@@ -56,13 +46,13 @@ namespace Zaaml.PresentationCore.Interactivity
 				var instanceMethodInfo = actualTargetType.GetMethod(MethodName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod);
 				if (instanceMethodInfo != null && instanceMethodInfo.GetParameters().Any() == false)
 				{
-					_method = (Action) Delegate.CreateDelegate(typeof(Action), actualTarget, MethodName);
+					_method = (Action)Delegate.CreateDelegate(typeof(Action), actualTarget, MethodName);
 					return;
 				}
 
 				var staticMethodInfo = actualTargetType.GetMethod(MethodName, BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod);
 				if (staticMethodInfo != null && staticMethodInfo.GetParameters().Any() == false)
-					_method = (Action) Delegate.CreateDelegate(typeof(Action), actualTargetType, MethodName);
+					_method = (Action)Delegate.CreateDelegate(typeof(Action), actualTargetType, MethodName);
 			}
 			catch (Exception e)
 			{
@@ -82,7 +72,5 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.OnActualTargetChanged(oldTarget);
 			_method = null;
 		}
-
-		#endregion
 	}
 }

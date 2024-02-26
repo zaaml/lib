@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
@@ -19,7 +18,6 @@ using Zaaml.PresentationCore.PropertyCore.Extensions;
 
 #if NETCOREAPP
 #else
-using Zaaml.Core.Extensions;
 using Zaaml.UI.Controls.Core;
 #endif
 
@@ -36,8 +34,8 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 		public static readonly DependencyProperty PresenterProperty = PresenterPropertyKey.DependencyProperty;
 
-		private static readonly List<DependencyProperty> BaseProperties = new()
-		{
+		private static readonly List<DependencyProperty> BaseProperties =
+		[
 			VerticalAlignmentProperty,
 			HorizontalAlignmentProperty,
 			WidthProperty,
@@ -49,7 +47,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			MarginProperty,
 			StyleProperty,
 			SharedResourceProperty
-		};
+		];
 
 		protected static readonly Dictionary<DependencyProperty, Func<IconBase>> Factories = new();
 
@@ -240,7 +238,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 		public static implicit operator IconBase(ImageSource x)
 		{
-			return new BitmapIcon { Source = x };
+			return new ImageIcon { Source = x };
 		}
 
 		public static implicit operator IconBase(PathGeometry x)

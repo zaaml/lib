@@ -7,62 +7,57 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  internal sealed class StyleRoot : InteractivityRoot, IRuntimeSetterFactory
-  {
-    #region Ctors
+	internal sealed class StyleRoot : InteractivityRoot, IRuntimeSetterFactory
+	{
+		public StyleRoot(InteractivityService service) : base(service)
+		{
+		}
 
-    public StyleRoot(InteractivityService service) : base(service)
-    {
-    }
+		protected override void EnsureVisualStateObserver()
+		{
+			RealVisualStateObserver = InteractivityTarget.GetInteractivityService();
+		}
 
-    #endregion
+		protected override void OnDescendantApiPropertyChanged(Stack<InteractivityObject> descendants, string propertyName)
+		{
+		}
 
-    #region  Methods
+		public override void UpdateClass()
+		{
+			var service = StyleService.GetRuntimeService(InteractivityTarget);
 
-    protected override void EnsureVisualStateObserver()
-    {
-      RealVisualStateObserver = InteractivityTarget.GetInteractivityService();
-    }
+			if (service == null)
+				return;
 
-    protected override void OnDescendantApiPropertyChanged(Stack<InteractivityObject> descendants, string propertyName)
-    {
-    }
+			UpdateClass(service.Setters);
+			UpdateClass(service.Triggers);
+		}
 
-    public override void UpdateSkin(SkinBase newSkin)
-    {
-      var service = StyleService.GetRuntimeService(InteractivityTarget);
+		public override void UpdateSkin(SkinBase skin)
+		{
+			var service = StyleService.GetRuntimeService(InteractivityTarget);
 
-      if (service == null)
-        return;
+			if (service == null)
+				return;
 
-      UpdateSkin(service.Setters, newSkin);
-      UpdateSkin(service.Triggers, newSkin);
-    }
+			UpdateSkin(service.Setters, skin);
+			UpdateSkin(service.Triggers, skin);
+		}
 
-    public override void UpdateThemeResources()
-    {
-      var service = StyleService.GetRuntimeService(InteractivityTarget);
+		public override void UpdateThemeResources()
+		{
+			var service = StyleService.GetRuntimeService(InteractivityTarget);
 
-      if (service == null)
-        return;
+			if (service == null)
+				return;
 
-      UpdateThemeResources(service.Setters);
-      UpdateThemeResources(service.Triggers);
-    }
+			UpdateThemeResources(service.Setters);
+			UpdateThemeResources(service.Triggers);
+		}
 
-    #endregion
-
-    #region Interface Implementations
-
-    #region IRuntimeSetterFactory
-
-    RuntimeSetter IRuntimeSetterFactory.CreateSetter()
-    {
-      return new StyleRuntimeSetter();
-    }
-
-    #endregion
-
-    #endregion
-  }
+		RuntimeSetter IRuntimeSetterFactory.CreateSetter()
+		{
+			return new StyleRuntimeSetter();
+		}
+	}
 }

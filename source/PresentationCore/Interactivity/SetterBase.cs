@@ -18,7 +18,8 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
 
-			PackedDefinition.IsEnabled.SetValue(ref DefaultPackedValue, true);
+			PackedDefinition.IsVisualStateTriggerEnabled.SetValue(ref DefaultPackedValue, true);
+			PackedDefinition.IsClassTriggerEnabled.SetValue(ref DefaultPackedValue, true);
 		}
 
 		protected SetterBase()
@@ -43,15 +44,30 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		protected bool IsApplyQueried => Status == StatusKindConst.ApplyQueried;
 
-		internal bool IsEnabled
+		internal bool IsEnabled => IsVisualStateTriggerEnabled && IsClassTriggerEnabled;
+
+		internal bool IsVisualStateTriggerEnabled
 		{
-			get => PackedDefinition.IsEnabled.GetValue(PackedValue);
+			get => PackedDefinition.IsVisualStateTriggerEnabled.GetValue(PackedValue);
 			set
 			{
-				if (IsEnabled == value)
+				if (IsVisualStateTriggerEnabled == value)
 					return;
 
-				PackedDefinition.IsEnabled.SetValue(ref PackedValue, value);
+				PackedDefinition.IsVisualStateTriggerEnabled.SetValue(ref PackedValue, value);
+				OnIsEnabledIntChanged();
+			}
+		}
+
+		internal bool IsClassTriggerEnabled
+		{
+			get => PackedDefinition.IsClassTriggerEnabled.GetValue(PackedValue);
+			set
+			{
+				if (IsClassTriggerEnabled == value)
+					return;
+
+				PackedDefinition.IsClassTriggerEnabled.SetValue(ref PackedValue, value);
 				OnIsEnabledIntChanged();
 			}
 		}
@@ -197,14 +213,16 @@ namespace Zaaml.PresentationCore.Interactivity
 		private static class PackedDefinition
 		{
 			public static readonly PackedUIntItemDefinition Status;
-			public static readonly PackedBoolItemDefinition IsEnabled;
+			public static readonly PackedBoolItemDefinition IsVisualStateTriggerEnabled;
+			public static readonly PackedBoolItemDefinition IsClassTriggerEnabled;
 
 			static PackedDefinition()
 			{
 				var allocator = GetAllocator<SetterBase>();
 
 				Status = allocator.AllocateUIntItem(3);
-				IsEnabled = allocator.AllocateBoolItem();
+				IsVisualStateTriggerEnabled = allocator.AllocateBoolItem();
+				IsClassTriggerEnabled = allocator.AllocateBoolItem();
 			}
 		}
 	}

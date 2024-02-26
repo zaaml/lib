@@ -57,15 +57,15 @@
       <!-- Background -->
       <zm:SetterGroup Property="Background" ValuePath="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" />
       </zm:SetterGroup>
 
       <!-- Foreground -->
       <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" />
       </zm:SetterGroup>
     </zm:SetterGroup>
 

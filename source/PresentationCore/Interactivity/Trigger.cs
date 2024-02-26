@@ -9,7 +9,7 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-	public sealed class Trigger : SourceTriggerBase, IPropertySubject
+	public sealed class Trigger : SourceStateTriggerBase, IPropertySubject
 	{
 		private static readonly InteractivityProperty TargetValueProperty = RegisterInteractivityProperty(OnValueChanged);
 		private static readonly InteractivityProperty SourceValueProperty = RegisterInteractivityProperty(OnValueChanged);

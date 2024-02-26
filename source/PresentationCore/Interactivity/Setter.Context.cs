@@ -11,18 +11,11 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed partial class Setter
 	{
-		#region  Nested Types
-
 		internal class Context : IDisposable
 		{
-			#region Static Fields and Constants
-
-			private static readonly List<Context> Pool = new List<Context>();
-
-			#endregion
-
-			#region Fields
-
+			private static readonly List<Context> Pool = [];
+			private IInteractivityRoot _interactivityRoot;
+			private bool _interactivityRootDirty;
 			private DependencyProperty _property;
 			private bool _propertyDirty;
 			private Setter _setter;
@@ -34,12 +27,20 @@ namespace Zaaml.PresentationCore.Interactivity
 			private bool _valueKeyDirty;
 			private ValuePathSource _valuePathSource;
 			private bool _valuePathSourceDirty;
-			private bool _interactivityRootDirty;
-			private IInteractivityRoot _interactivityRoot;
 
-			#endregion
+			public IInteractivityRoot InteractivityRoot
+			{
+				get
+				{
+					if (_interactivityRootDirty == false)
+						return _interactivityRoot;
 
-			#region Properties
+					_interactivityRootDirty = false;
+					_interactivityRoot = _setter.Root;
+
+					return _interactivityRoot;
+				}
+			}
 
 			public DependencyProperty Property
 			{
@@ -55,19 +56,9 @@ namespace Zaaml.PresentationCore.Interactivity
 				}
 			}
 
-			public DependencyObject Target
-			{
-				get
-				{
-					if (_targetDirty == false)
-						return _target;
+			public object RuntimeValue => _setter.GetRuntimeValue(this);
 
-					_targetDirty = false;
-					_target = _setter.ActualTarget;
-
-					return _target;
-				}
-			}
+			public ISetterValueProvider RuntimeValueProvider => _setter.GetRuntimeValueProvider(this);
 
 			private Setter Setter
 			{
@@ -89,17 +80,17 @@ namespace Zaaml.PresentationCore.Interactivity
 				}
 			}
 
-			public IInteractivityRoot InteractivityRoot
+			public DependencyObject Target
 			{
 				get
 				{
-					if (_interactivityRootDirty == false)
-						return _interactivityRoot;
+					if (_targetDirty == false)
+						return _target;
 
-					_interactivityRootDirty = false;
-					_interactivityRoot = _setter.Root;
+					_targetDirty = false;
+					_target = _setter.ActualTarget;
 
-					return _interactivityRoot;
+					return _target;
 				}
 			}
 
@@ -114,20 +105,6 @@ namespace Zaaml.PresentationCore.Interactivity
 					_value = _setter.ActualValue;
 
 					return _value;
-				}
-			}
-
-			public ValuePathSource ValuePathSource
-			{
-				get
-				{
-					if (_valuePathSourceDirty == false)
-						return _valuePathSource;
-
-					_valuePathSourceDirty = false;
-					_valuePathSource = _setter.ActualValuePathSource;
-
-					return _valuePathSource;
 				}
 			}
 
@@ -155,19 +132,18 @@ namespace Zaaml.PresentationCore.Interactivity
 				}
 			}
 
-			public ISetterValueProvider RuntimeValueProvider => _setter.GetRuntimeValueProvider(this);
-
-			public object RuntimeValue => _setter.GetRuntimeValue(this);
-
-			#endregion
-
-			#region  Methods
-
-			public void Dispose()
+			public ValuePathSource ValuePathSource
 			{
-				Setter = null;
+				get
+				{
+					if (_valuePathSourceDirty == false)
+						return _valuePathSource;
 
-				Pool.Add(this);
+					_valuePathSourceDirty = false;
+					_valuePathSource = _setter.ActualValuePathSource;
+
+					return _valuePathSource;
+				}
 			}
 
 			public static Context Get(Setter setter)
@@ -184,9 +160,12 @@ namespace Zaaml.PresentationCore.Interactivity
 				return valueInfo;
 			}
 
-			#endregion
-		}
+			public void Dispose()
+			{
+				Setter = null;
 
-		#endregion
+				Pool.Add(this);
+			}
+		}
 	}
 }

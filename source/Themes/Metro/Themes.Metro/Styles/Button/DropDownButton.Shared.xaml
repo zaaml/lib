@@ -42,33 +42,33 @@
     
     <!-- Foreground -->
     <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
-      <zm:Setter VisualState="Normal" ValuePath="Normal" />
-      <zm:Setter VisualState="Disabled" ValuePath="Normal" />
-      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver"  Priority="3"/>
-      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="4" />
-      <zm:Setter VisualState="Checked" ValuePath="Checked" Priority="1" />
-      <zm:Setter VisualState="PopupOpened" ValuePath="Checked" Priority="6" />
+      <zm:Setter VisualStateTrigger="Normal" ValuePath="Normal" />
+      <zm:Setter VisualStateTrigger="Disabled" ValuePath="Normal" />
+      <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver"  Priority="3"/>
+      <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" Priority="4" />
+      <zm:Setter VisualStateTrigger="Checked" ValuePath="Checked" Priority="1" />
+      <zm:Setter VisualStateTrigger="PopupOpened" ValuePath="Checked" Priority="6" />
     </zm:SetterGroup>
 
     <!-- Background -->
     <zm:SetterGroup Property="Background" ValuePath="Background">
-      <zm:Setter VisualState="Normal" ValuePath="Normal" />
-      <zm:Setter VisualState="Disabled" ValuePath="Normal" />
-      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver"  Priority="3"/>
-      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="4" />
-      <zm:Setter VisualState="Checked" ValuePath="Checked" Priority="1" />
-      <zm:Setter VisualState="PopupOpened" ValuePath="Checked" Priority="6" />
+      <zm:Setter VisualStateTrigger="Normal" ValuePath="Normal" />
+      <zm:Setter VisualStateTrigger="Disabled" ValuePath="Normal" />
+      <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver"  Priority="3"/>
+      <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" Priority="4" />
+      <zm:Setter VisualStateTrigger="Checked" ValuePath="Checked" Priority="1" />
+      <zm:Setter VisualStateTrigger="PopupOpened" ValuePath="Checked" Priority="6" />
     </zm:SetterGroup>
 
     <!-- BorderBrush -->
     <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
-      <zm:Setter VisualState="Normal" ValuePath="Normal"/>
-      <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" Priority="3"/>
-      <zm:Setter VisualState="Pressed" ValuePath="Pressed" Priority="4"/>
-      <zm:Setter VisualState="Disabled" ValuePath="Normal" />
-      <zm:Setter VisualState="Checked" ValuePath="Checked" Priority="1" />
-      <zm:Setter VisualState="Focused" ValuePath="Focused" Priority="5" />
-      <zm:Setter VisualState="PopupOpened" ValuePath="Checked" Priority="6" />
+      <zm:Setter VisualStateTrigger="Normal" ValuePath="Normal"/>
+      <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" Priority="3"/>
+      <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" Priority="4"/>
+      <zm:Setter VisualStateTrigger="Disabled" ValuePath="Normal" />
+      <zm:Setter VisualStateTrigger="Checked" ValuePath="Checked" Priority="1" />
+      <zm:Setter VisualStateTrigger="Focused" ValuePath="Focused" Priority="5" />
+      <zm:Setter VisualStateTrigger="PopupOpened" ValuePath="Checked" Priority="6" />
     </zm:SetterGroup>
   </zm:SetterCollection>
 

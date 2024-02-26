@@ -24,6 +24,7 @@ using System.Windows.Markup;
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.PresentationCore.TemplateCore")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.PresentationCore.Theming")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.PresentationCore.MarkupExtensions")]
+[assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.PresentationCore.MarkupExtensions.AnimationCommand")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.PresentationCore.KnownTemplates")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.PresentationCore.Data")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.PresentationCore.Data.MarkupExtensions")]

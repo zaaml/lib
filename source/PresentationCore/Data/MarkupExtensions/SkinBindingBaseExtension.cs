@@ -13,7 +13,7 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
 	public abstract class SkinBindingBaseExtension : BindingBaseExtension
 	{
-		private static readonly PropertyPath PropertyPath = new(Extension.ActualSkinProperty);
+		protected static readonly PropertyPath ActualSkinPropertyPath = new(Extension.ActualSkinProperty);
 
 		internal SkinBindingBaseExtension()
 		{
@@ -21,16 +21,11 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
 		public string SkinPath { get; set; }
 
-		protected abstract RelativeSource Source { get; }
-
 		protected override NativeBinding GetBindingCore(IServiceProvider serviceProvider)
 		{
-			var binding = new NativeBinding
-			{
-				Path = PropertyPath,
-				RelativeSource = Source,
-			};
+			var binding = new NativeBinding();
 
+			SetBindingSource(binding);
 			InitBinding(binding);
 
 			if (binding.Converter == null)
@@ -46,6 +41,8 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
 			return binding;
 		}
+
+		protected abstract void SetBindingSource(NativeBinding binding);
 
 		private sealed class WrapConverter : IValueConverter
 		{

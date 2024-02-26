@@ -7,44 +7,32 @@ using Zaaml.PresentationCore.Data;
 
 namespace Zaaml.PresentationCore
 {
-  public class InheritanceContextDependencyObjectCollection<T> : DependencyObjectCollectionBase<T> where T : InheritanceContextObject
-  {
-    #region Fields
+	public class InheritanceContextDependencyObjectCollection<T> : DependencyObjectCollectionBase<T> where T : InheritanceContextObject
+	{
+		private IInheritanceContext _inheritanceContext;
 
-    private IInheritanceContext _inheritanceContext;
+		internal IInheritanceContext InheritanceContext => _inheritanceContext ??= new InheritanceContext();
 
-    #endregion
+		internal DependencyObject Owner
+		{
+			get => _inheritanceContext?.Owner;
+			set => InheritanceContext.Owner = value;
+		}
 
-    #region Properties
+		protected override void OnItemAdded(T obj)
+		{
+			if (obj is InheritanceContextObject inheritanceContextObject)
+				inheritanceContextObject.InheritanceContext = InheritanceContext;
 
-    internal IInheritanceContext InheritanceContext => _inheritanceContext ??= new InheritanceContext();
+			base.OnItemAdded(obj);
+		}
 
-    internal DependencyObject Owner
-    {
-      get => _inheritanceContext?.Owner;
-      set => InheritanceContext.Owner = value;
-    }
+		protected override void OnItemRemoved(T obj)
+		{
+			base.OnItemRemoved(obj);
 
-    #endregion
-
-    #region  Methods
-
-    protected override void OnItemAdded(T obj)
-    {
-	    if (obj is InheritanceContextObject inheritanceContextObject)
-        inheritanceContextObject.InheritanceContext = InheritanceContext;
-
-      base.OnItemAdded(obj);
-    }
-
-    protected override void OnItemRemoved(T obj)
-    {
-      base.OnItemRemoved(obj);
-
-      if (obj is InheritanceContextObject inheritanceContextObject)
-        inheritanceContextObject.InheritanceContext = null;
-    }
-
-    #endregion
-  }
+			if (obj is InheritanceContextObject inheritanceContextObject)
+				inheritanceContextObject.InheritanceContext = null;
+		}
+	}
 }

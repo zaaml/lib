@@ -29,12 +29,21 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 		}
 
-		public void UpdateSkin(InteractivityCollection collection, SkinBase skin)
+		public static void UpdateClass(InteractivityCollection collection)
+		{
+			collection?.WalkTree(UpdateClassVisitor.Instance);
+		}
+
+		public virtual void UpdateClass()
+		{
+		}
+
+		public static void UpdateSkin(InteractivityCollection collection, SkinBase skin)
 		{
 			collection?.WalkTree(skin ?? UpdateNullSkinVisitor.Instance);
 		}
 
-		public virtual void UpdateSkin(SkinBase newSkin)
+		public virtual void UpdateSkin(SkinBase skin)
 		{
 		}
 
@@ -116,6 +125,24 @@ namespace Zaaml.PresentationCore.Interactivity
 				var setter = interactivityObject as Setter;
 
 				setter?.UpdateSkin(null);
+			}
+		}
+
+		private class UpdateClassVisitor : IInteractivityVisitor
+		{
+			public static readonly IInteractivityVisitor Instance = new UpdateClassVisitor();
+
+			private UpdateClassVisitor()
+			{
+			}
+
+			public void Visit(InteractivityObject interactivityObject)
+			{
+				if (interactivityObject is ClassTrigger classTrigger)
+					classTrigger.OnClassChangedInternal();
+				else if (interactivityObject is Setter setter)
+					setter.OnClassChangedInternal();
+
 			}
 		}
 	}

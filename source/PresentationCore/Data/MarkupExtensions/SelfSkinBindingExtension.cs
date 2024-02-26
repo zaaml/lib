@@ -6,12 +6,8 @@ using System.Windows.Data;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public sealed class SelfSkinBindingExtension : SkinBindingBaseExtension
-  {
-    #region Properties
-
-    protected override RelativeSource Source => XamlConstants.Self;
-
-    #endregion
-  }
+	public sealed class SelfSkinBindingExtension : RelativeSkinBindingExtension
+	{
+		protected override RelativeSource RelativeSource => XamlConstants.Self;
+	}
 }

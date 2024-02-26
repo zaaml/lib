@@ -54,14 +54,14 @@
 
       <!--  Background  -->
       <zm:SetterGroup ValuePath="Background" Property="Background">
-        <zm:Setter ValuePath="Normal" VisualState="Normal" />
-        <zm:Setter ValuePath="Active" VisualState="Active" />
+        <zm:Setter ValuePath="Normal" VisualStateTrigger="Normal" />
+        <zm:Setter ValuePath="Active" VisualStateTrigger="Active" />
       </zm:SetterGroup>
 
       <!--  BorderBrush  -->
       <zm:SetterGroup ValuePath="BorderBrush" Property="BorderBrush">
-        <zm:Setter ValuePath="Normal" VisualState="Normal" />
-        <zm:Setter ValuePath="Active" VisualState="Active" />
+        <zm:Setter ValuePath="Normal" VisualStateTrigger="Normal" />
+        <zm:Setter ValuePath="Active" VisualStateTrigger="Active" />
       </zm:SetterGroup>
 
     </zm:SetterGroup>

@@ -36,6 +36,9 @@ namespace Zaaml.PresentationCore.Animation
 		public static readonly DependencyProperty SpeedRatioProperty = DPM.Register<double, Transition>
 			("SpeedRatio", 1.0);
 
+		public static readonly DependencyProperty RepeatBehaviorProperty = DPM.Register<RepeatBehavior, Transition>
+			("RepeatBehavior");
+
 		public double AccelerationRatio
 		{
 			get => (double)GetValue(AccelerationRatioProperty);
@@ -64,6 +67,12 @@ namespace Zaaml.PresentationCore.Animation
 		{
 			get => (IEasingFunction)GetValue(EasingFunctionProperty);
 			set => SetValue(EasingFunctionProperty, value);
+		}
+
+		public RepeatBehavior RepeatBehavior
+		{
+			get => (RepeatBehavior)GetValue(RepeatBehaviorProperty);
+			set => SetValue(RepeatBehaviorProperty, value);
 		}
 
 		public double SpeedRatio
@@ -96,13 +105,13 @@ namespace Zaaml.PresentationCore.Animation
 
 		public TimeSpan BeginTime
 		{
-			get => _transition?.BeginTime ?? default(TimeSpan);
+			get => _transition?.BeginTime ?? default;
 			set => ActualTransition.BeginTime = value;
 		}
 
 		public Duration Duration
 		{
-			get => _transition?.Duration ?? default(Duration);
+			get => _transition?.Duration ?? default;
 			set => ActualTransition.Duration = value;
 		}
 

@@ -63,14 +63,14 @@
       <!-- Foreground -->
       <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="Editing"  ValuePath="NormalEditing" />
+        <zm:Setter VisualStateTrigger="Editing"  ValuePath="NormalEditing" />
       </zm:SetterGroup>
 
       <!-- Background -->
       <zm:SetterGroup Property="Background" ValuePath="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="Current" ValuePath="Current" Priority="2" />
-        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1"/>
+        <zm:Setter VisualStateTrigger="Current" ValuePath="Current" Priority="2" />
+        <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="1"/>
 
       </zm:SetterGroup>
     </zm:SetterGroup>

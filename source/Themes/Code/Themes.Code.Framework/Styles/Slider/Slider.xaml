@@ -60,17 +60,17 @@
       <!-- Background -->
       <zm:SetterGroup Property="Background" ValuePath="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
-        <zm:Setter VisualState="Disabled" ValuePath="Disabled" />
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualStateTrigger="Disabled" ValuePath="Disabled" />
       </zm:SetterGroup>
 
       <!-- BorderBrush -->
       <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
-        <zm:Setter VisualState="Disabled" ValuePath="Disabled" />
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualStateTrigger="Disabled" ValuePath="Disabled" />
       </zm:SetterGroup>
     </zm:SetterGroup>
 

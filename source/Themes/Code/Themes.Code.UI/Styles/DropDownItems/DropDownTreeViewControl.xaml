@@ -211,19 +211,19 @@
       <!--  Background  -->
       <zm:SetterGroup ValuePath="Background" Property="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="ReadOnly" VisualState="ReadOnly" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
-        <zm:Setter ValuePath="Disabled" VisualState="Disabled" />
-        <zm:Setter Priority="1" ValuePath="Focused" VisualState="Focused" />
+        <zm:Setter ValuePath="ReadOnly" VisualStateTrigger="ReadOnly" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+        <zm:Setter ValuePath="Disabled" VisualStateTrigger="Disabled" />
+        <zm:Setter Priority="1" ValuePath="Focused" VisualStateTrigger="Focused" />
       </zm:SetterGroup>
 
       <!--  BorderBrush  -->
       <zm:SetterGroup ValuePath="BorderBrush" Property="BorderBrush">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="ReadOnly" VisualState="ReadOnly" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
-        <zm:Setter ValuePath="Disabled" VisualState="Disabled" />
-        <zm:Setter Priority="1" ValuePath="Focused" VisualState="Focused" />
+        <zm:Setter ValuePath="ReadOnly" VisualStateTrigger="ReadOnly" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+        <zm:Setter ValuePath="Disabled" VisualStateTrigger="Disabled" />
+        <zm:Setter Priority="1" ValuePath="Focused" VisualStateTrigger="Focused" />
       </zm:SetterGroup>
     </zm:SetterGroup>
 

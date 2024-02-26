@@ -6,11 +6,7 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	internal interface IVisualStateObserver
 	{
-		#region  Methods
-
 		void AttachListener(IVisualStateListener listener);
 		void DetachListener(IVisualStateListener listener);
-
-		#endregion
 	}
 }

@@ -39,7 +39,7 @@
             Style="{zm:TemplateSkinBinding SkinPath=BlackoutGlyph.Style}"
             Data="{zm:TemplateSkinBinding SkinPath=BlackoutGlyph.Data}">
         <zm:Extension.Setters>
-          <zm:Setter Property="Opacity" VisualState="BlackoutDay" Value="0.2"/>
+          <zm:Setter Property="Opacity" VisualStateTrigger="BlackoutDay" Value="0.2"/>
         </zm:Extension.Setters>
       </Path>
 

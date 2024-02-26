@@ -2,28 +2,14 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Zaaml.PresentationCore.PropertyCore;
 
-#if NETCOREAPP
-#else
-using Zaaml.Core.Extensions;
-#endif
-
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-	[Flags]
-	public enum PathIconBrushMode
-	{
-		None = 0,
-		Fill = 1,
-		Stroke = 2
-	}
-
 	public sealed partial class PathIcon : IconBase
 	{
 		public static readonly DependencyProperty DataProperty = DPM.RegisterAttached<Geometry, PathIcon>
@@ -152,32 +138,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			set => SetValue(StrokeThicknessProperty, value);
 		}
 
-		protected override object CopyValue(object value)
-		{
-#if SILVERLIGHT
-	    var geometry = value as Geometry;
-
-	    if (geometry != null)
-	    {
-	      try
-	      {
-	        var str = geometry.ToString();
-	        geometry = StringGeometryConverter.ConvertString(str);
-	      }
-	      catch (Exception e)
-	      {
-	        LogService.LogError(e);
-	      }
-
-	      return geometry;
-	    }
-#endif
-
-			return base.CopyValue(value);
-		}
-
 		protected override IconBase CreateInstanceCore() => new PathIcon();
-
 
 		private Path CreatePath()
 		{

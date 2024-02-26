@@ -10,7 +10,7 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-	public abstract class EventStateTriggerBase : SourceTriggerBase
+	public abstract class EventStateTriggerBase : SourceStateTriggerBase
 	{
 		static EventStateTriggerBase()
 		{

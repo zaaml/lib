@@ -201,7 +201,7 @@ namespace Zaaml.UI.Controls.Menu
 		private void OnIconChanged(IconBase oldIcon, IconBase newIcon)
 		{
 			// TODO : Implement Icon preload (Silverlight image deferred loading issue)
-			//(newIcon as BitmapIcon)?.Source?.Preload();
+			//(newIcon as ImageIcon)?.Source?.Preload();
 
 			LogicalChildMentor.OnLogicalChildPropertyChanged(oldIcon, newIcon);
 

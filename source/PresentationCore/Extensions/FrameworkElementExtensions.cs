@@ -82,6 +82,9 @@ namespace Zaaml.PresentationCore.Extensions
 
 		internal static Rect GetBoundingBox(this FrameworkElement element, FrameworkElement relativeTo)
 		{
+			if (ReferenceEquals(element, relativeTo))
+				return element.GetClientBox();
+
 			if (element.IsVisualDescendantOf(relativeTo) == false)
 				throw new InvalidOperationException("Specified elements are not relatives");
 

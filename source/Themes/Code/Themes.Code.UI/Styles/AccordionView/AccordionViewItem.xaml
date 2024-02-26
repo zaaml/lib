@@ -122,29 +122,29 @@
       <!-- Foreground -->
       <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
-        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1" />
+        <zm:Setter VisualStateTrigger="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="1" />
       </zm:SetterGroup>
       
       <!-- Background -->
       <zm:SetterGroup Property="Background" ValuePath="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
-        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1" />
+        <zm:Setter VisualStateTrigger="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="1" />
       </zm:SetterGroup>
 
       <!-- BorderBrush -->
       <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Pressed" ValuePath="Pressed" />
-        <zm:Setter VisualState="Disabled" ValuePath="Normal" />
-        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1" />
-        <zm:Setter VisualState="Focused" ValuePath="Focused" Priority="2" />
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Pressed" ValuePath="Pressed" />
+        <zm:Setter VisualStateTrigger="Disabled" ValuePath="Normal" />
+        <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="1" />
+        <zm:Setter VisualStateTrigger="Focused" ValuePath="Focused" Priority="2" />
       </zm:SetterGroup>
     </zm:SetterGroup>
   </zm:Style>

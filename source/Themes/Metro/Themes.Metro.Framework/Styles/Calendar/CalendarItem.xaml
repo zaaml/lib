@@ -27,8 +27,8 @@
 			                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
 			                VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
 				<zm:Extension.Setters>
-					<zm:Setter Property="Opacity" VisualState="Disabled" Value="0.5" />
-					<zm:Setter Property="Foreground" VisualState="MouseOver" ValuePathSource="ThemeResource" ValuePath="Metro.StandardControls.CalendarItem.HeaderButton.Foreground.MouseOver" />
+					<zm:Setter Property="Opacity" VisualStateTrigger="Disabled" Value="0.5" />
+					<zm:Setter Property="Foreground" VisualStateTrigger="MouseOver" ValuePathSource="ThemeResource" ValuePath="Metro.StandardControls.CalendarItem.HeaderButton.Foreground.MouseOver" />
 				</zm:Extension.Setters>
 			</ContentControl>
 		</zm:ControlTemplateRoot>
@@ -47,10 +47,10 @@
 			      Data="M288.75,232.25 L288.75,240.625 L283,236.625 z">
 
 				<zm:Extension.Setters>
-					<zm:Setter Property="Opacity" VisualState="Disabled" Value="0.5" />
+					<zm:Setter Property="Opacity" VisualStateTrigger="Disabled" Value="0.5" />
 					<zm:SetterGroup Property="Fill" ValuePathSource="ThemeResource">
 						<zm:Setter ValuePath="Metro.StandardControls.CalendarItem.HeaderButton.Foreground.Normal" />
-						<zm:Setter VisualState="MouseOver"  ValuePath="Metro.StandardControls.CalendarItem.HeaderButton.Foreground.MouseOver" />
+						<zm:Setter VisualStateTrigger="MouseOver"  ValuePath="Metro.StandardControls.CalendarItem.HeaderButton.Foreground.MouseOver" />
 					</zm:SetterGroup>
 				</zm:Extension.Setters>
 
@@ -72,10 +72,10 @@
 			      Data="M282.875,231.875 L282.875,240.375 L288.625,236 z">
 
 				<zm:Extension.Setters>
-					<zm:Setter Property="Opacity" VisualState="Disabled" Value="0.5" />
+					<zm:Setter Property="Opacity" VisualStateTrigger="Disabled" Value="0.5" />
 					<zm:SetterGroup Property="Fill" ValuePathSource="ThemeResource">
 						<zm:Setter ValuePath="Metro.StandardControls.CalendarItem.HeaderButton.Foreground.Normal" />
-						<zm:Setter VisualState="MouseOver"  ValuePath="Metro.StandardControls.CalendarItem.HeaderButton.Foreground.MouseOver" />
+						<zm:Setter VisualStateTrigger="MouseOver"  ValuePath="Metro.StandardControls.CalendarItem.HeaderButton.Foreground.MouseOver" />
 					</zm:SetterGroup>
 				</zm:Extension.Setters>
 			</Path>

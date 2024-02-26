@@ -14,6 +14,11 @@ namespace Zaaml.PresentationCore.Extensions
 	[DebuggerStepThrough]
 	public static class DependencyObjectExtensions
 	{
+		public static ClassList AddClass(this DependencyObject dependencyObject, string className)
+		{
+			return Extension.AddClass(dependencyObject, className);
+		}
+
 		public static void AddValueChanged(this DependencyObject depObj, DependencyProperty depProp, EventHandler<PropertyValueChangedEventArgs> handler)
 		{
 			depObj.GetServiceOrCreate<PropertyChangeService>().AddValueChanged(depProp, handler);
@@ -69,6 +74,11 @@ namespace Zaaml.PresentationCore.Extensions
 			return depObj.ReadLocalValue(DependencyPropertyManager.GetExpandoProperty(propertyName));
 		}
 
+		public static ClassList RemoveClass(this DependencyObject dependencyObject, string className)
+		{
+			return Extension.RemoveClass(dependencyObject, className);
+		}
+
 		public static void RemoveValueChanged(this DependencyObject depObj, DependencyProperty depProp, EventHandler<PropertyValueChangedEventArgs> handler)
 		{
 			depObj.GetService<PropertyChangeService>()?.RemoveValueChanged(depProp, handler);
@@ -117,6 +127,11 @@ namespace Zaaml.PresentationCore.Extensions
 		public static void SetValue<T>(this DependencyObject dependencyObject, DependencyProperty property, T value)
 		{
 			dependencyObject.SetValue(property, value);
+		}
+
+		public static ClassList ToggleClass(this DependencyObject dependencyObject, string className)
+		{
+			return Extension.ToggleClass(dependencyObject, className);
 		}
 	}
 }

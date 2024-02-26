@@ -44,7 +44,14 @@ namespace Zaaml.PresentationCore
 		private static readonly DependencyPropertyKey ActualSkinPropertyKey = DPM.RegisterAttachedReadOnly<SkinBase>
 			("ActualSkin", typeof(Extension), OnActualSkinChanged);
 
+		private static readonly DependencyPropertyKey ActualClassPropertyKey = DPM.RegisterAttachedReadOnly<ReadOnlyClassList>
+			("ActualClass", typeof(Extension));
+
+		private static readonly DependencyPropertyKey ActualClassPrivatePropertyKey = DPM.RegisterAttachedReadOnly<ClassList>
+			("ActualClassPrivate", typeof(Extension));
+
 		public static readonly DependencyProperty ActualSkinProperty = ActualSkinPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ActualClassProperty = ActualClassPropertyKey.DependencyProperty;
 
 		internal static readonly DependencyProperty StyleSkinProperty = DPM.RegisterAttached<SkinBase>
 			("StyleSkin", typeof(Extension), OnStyleSkinChanged);
@@ -53,13 +60,38 @@ namespace Zaaml.PresentationCore
 		public static readonly DependencyProperty SkinProperty = DPM.RegisterAttached<SkinBase>
 			("Skin", typeof(Extension), OnSkinChanged);
 
-		[TypeConverter(typeof(ClassStyleTypeConverter))]
-		public static readonly DependencyProperty ClassProperty = DPM.RegisterAttached<ClassStyle>
+		[TypeConverter(typeof(ClassListTypeConverter))]
+		public static readonly DependencyProperty ClassProperty = DPM.RegisterAttached<ClassList>
 			("Class", typeof(Extension), OnClassChanged);
 
 		static Extension()
 		{
 			PlatformCtor();
+		}
+
+		public static ClassList AddClass(DependencyObject dependencyObject, string @class)
+		{
+			return EnsureActualClass(dependencyObject).AddClass(@class);
+		}
+
+		internal static ClassList EnsureActualClass(DependencyObject dependencyObject)
+		{
+			var actualClassPrivate = (ClassList)dependencyObject.GetValue(ActualClassPrivatePropertyKey.DependencyProperty);
+
+			if (actualClassPrivate == null)
+			{
+				actualClassPrivate = new ClassList(dependencyObject);
+
+				dependencyObject.SetValue(ActualClassPrivatePropertyKey, actualClassPrivate);
+				dependencyObject.SetValue(ActualClassPropertyKey, new ReadOnlyClassList(actualClassPrivate));
+			}
+
+			return actualClassPrivate;
+		}
+
+		public static ReadOnlyClassList GetActualClass(DependencyObject dependencyObject)
+		{
+			return (ReadOnlyClassList)dependencyObject.GetValue(ActualClassProperty);
 		}
 
 		public static SkinBase GetActualSkin(FrameworkElement element)
@@ -87,9 +119,9 @@ namespace Zaaml.PresentationCore
 			return element.GetValueOrCreateOrDefault(BehaviorsPropertyKey, create, () => new BehaviorCollection(element));
 		}
 
-		public static ClassStyle GetClass(DependencyObject dependencyObject)
+		public static ClassList GetClass(DependencyObject dependencyObject)
 		{
-			return (ClassStyle)dependencyObject.GetValue(ClassProperty);
+			return (ClassList)dependencyObject.GetValue(ClassProperty);
 		}
 
 		public static SetterCollection GetSetters(FrameworkElement element)
@@ -134,13 +166,13 @@ namespace Zaaml.PresentationCore
 
 		private static void OnActualSkinChanged(DependencyObject dependencyObject, SkinBase oldSkin, SkinBase newSkin)
 		{
-			var frameworkElement = (FrameworkElement)dependencyObject;
-			var interactivityService = frameworkElement.GetInteractivityService();
+			var frameworkElement = dependencyObject as FrameworkElement;
+			var interactivityService = frameworkElement?.GetInteractivityService();
 
-			oldSkin?.OnDetachedInternal(frameworkElement);
-			newSkin?.OnAttachedInternal(frameworkElement);
+			oldSkin?.OnDetachedInternal(dependencyObject);
+			newSkin?.OnAttachedInternal(dependencyObject);
 
-			interactivityService.OnSkinChanged(oldSkin, newSkin);
+			interactivityService?.OnSkinChanged(oldSkin, newSkin);
 		}
 
 		private static void OnActualSkinPrivateChanged(DependencyObject dependencyObject, SkinBase oldSkin, SkinBase newSkin)
@@ -148,8 +180,15 @@ namespace Zaaml.PresentationCore
 			dependencyObject.SetReadOnlyValue(ActualSkinPropertyKey, newSkin);
 		}
 
-		private static void OnClassChanged(DependencyObject depObj, ClassStyle oldClass, ClassStyle newClass)
+		private static void OnClassChanged(DependencyObject depObj, ClassList oldClass, ClassList newClass)
 		{
+			var actualClass = EnsureActualClass(depObj);
+
+			if (oldClass != null)
+				actualClass.RemoveClassList(oldClass);
+
+			if (newClass != null)
+				actualClass.AddClassList(newClass);
 		}
 
 		private static void OnSettersPropertyChangedPrivate(DependencyObject dependencyObject, SetterCollection oldValue, SetterCollection newValue)
@@ -186,10 +225,15 @@ namespace Zaaml.PresentationCore
 
 		static partial void PlatformCtor();
 
-		[TypeConverter(typeof(ClassStyleTypeConverter))]
-		public static void SetClass(DependencyObject dependencyObject, ClassStyle classStyle)
+		public static ClassList RemoveClass(DependencyObject dependencyObject, string @class)
 		{
-			dependencyObject.SetValue(ClassProperty, classStyle);
+			return EnsureActualClass(dependencyObject).RemoveClass(@class);
+		}
+
+		[TypeConverter(typeof(ClassListTypeConverter))]
+		public static void SetClass(DependencyObject dependencyObject, ClassList classList)
+		{
+			dependencyObject.SetValue(ClassProperty, classList);
 		}
 
 		public static void SetSettersSource(FrameworkElement element, SetterCollection setters)
@@ -206,6 +250,11 @@ namespace Zaaml.PresentationCore
 		public static void SetTriggersSource(FrameworkElement element, TriggerCollection triggers)
 		{
 			element.SetReadOnlyValue(TriggersPropertyKey, triggers?.DeepClone(element));
+		}
+
+		public static ClassList ToggleClass(DependencyObject dependencyObject, string @class)
+		{
+			return EnsureActualClass(dependencyObject).RemoveClass(@class);
 		}
 
 		private static void UpdateActualSkin(DependencyObject dependencyObject)

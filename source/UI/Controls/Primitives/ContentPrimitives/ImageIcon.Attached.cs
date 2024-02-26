@@ -1,4 +1,4 @@
-﻿// <copyright file="BitmapIcon.Attached.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="ImageIcon.Attached.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -8,7 +8,7 @@ using System.Windows.Media;
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-	public sealed partial class BitmapIcon
+	public sealed partial class ImageIcon
 	{
 		public static ImageSource GetSource(DependencyObject dependencyObject)
 		{
