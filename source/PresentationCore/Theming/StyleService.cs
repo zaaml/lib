@@ -90,7 +90,7 @@ namespace Zaaml.PresentationCore.Theming
 
 			foreach (var setter in flatSetters)
 			{
-				if (string.IsNullOrEmpty(setter.ExpandoProperty) == false || string.IsNullOrEmpty(setter.VisualState))
+				if (string.IsNullOrEmpty(setter.ExpandoProperty) == false || string.IsNullOrEmpty(setter.VisualStateTrigger))
 					continue;
 
 				var property = setter.ResolveProperty(targetType);

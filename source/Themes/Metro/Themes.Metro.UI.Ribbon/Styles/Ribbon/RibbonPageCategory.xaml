@@ -50,19 +50,19 @@
       <!--  Foreground  -->
       <zm:SetterGroup ValuePath="Foreground" Property="Foreground">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
       </zm:SetterGroup>
 
       <!--  Background  -->
       <zm:SetterGroup ValuePath="Background" Property="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
       </zm:SetterGroup>
 
       <!--  BorderBrush  -->
       <zm:SetterGroup ValuePath="BorderBrush" Property="BorderBrush">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
       </zm:SetterGroup>
     </zm:SetterGroup>
   </zm:Style>

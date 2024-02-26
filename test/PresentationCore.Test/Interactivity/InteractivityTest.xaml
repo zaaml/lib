@@ -70,20 +70,20 @@
         <zm:Extension.Setters>
           <zm:SetterGroup Property="Output1">
             <!-- State1: ThemeResource Value -->
-            <zm:Setter VisualState="State1"  Value="{zm:ThemeResource Key=ThemeResource1}" Debug="True" />
+            <zm:Setter VisualStateTrigger="State1"  Value="{zm:ThemeResource Key=ThemeResource1}" Debug="True" />
             <!-- State2: ThemeResource ValuePathSource: ValuePath -->
-            <zm:Setter VisualState="State2" ValuePathSource="ThemeResource" ValuePath="ThemeResource2" />
+            <zm:Setter VisualStateTrigger="State2" ValuePathSource="ThemeResource" ValuePath="ThemeResource2" />
           </zm:SetterGroup>
 
           <zm:SetterGroup Property="Output2"  ValuePathSource="ThemeResource">
             <!-- State1: TemplateExpando -->
-            <zm:Setter VisualState="State1" Value="{zm:TemplateExpandoBinding Path=ExpandoInput1}" />
+            <zm:Setter VisualStateTrigger="State1" Value="{zm:TemplateExpandoBinding Path=ExpandoInput1}" />
             <!-- State2 Priority2: TemplateExpando -->
-            <zm:Setter VisualState="State2" Value="3" Priority="2" />
+            <zm:Setter VisualStateTrigger="State2" Value="3" Priority="2" />
             <!-- State3 implicit Priority: TemplateExpando -->
-            <zm:Setter VisualState="State3" Value="3"/>
+            <zm:Setter VisualStateTrigger="State3" Value="3"/>
             <!-- State4 Priority1: SelfExpando ValuePathSource: ValuePath -->
-            <zm:Setter VisualState="State4" ValuePath="ThemeResource4" Priority="1" />
+            <zm:Setter VisualStateTrigger="State4" ValuePath="ThemeResource4" Priority="1" />
           </zm:SetterGroup>
         </zm:Extension.Setters>
       </local:TestChildControl>

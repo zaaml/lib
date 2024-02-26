@@ -4,24 +4,11 @@
 		<ExposeExternalInternals>True</ExposeExternalInternals>
 	</PropertyGroup>
 
-	<!-- COLLECTION_VERIFY_STRUCTURE -->
-	<!--<PropertyGroup Condition="$(Configuration) == 'DEBUG' OR $(Configuration) == 'TEST'">
-		<DefineConstants>$(DefineConstants);COLLECTION_VERIFY_STRUCTURE</DefineConstants>
-	</PropertyGroup>-->
-
-  <PropertyGroup Condition="$(Configuration) == 'NGRelease'">
-    <Optimize>true</Optimize>
-  </PropertyGroup>
-
-	<PropertyGroup Condition="$(IsNGDev) != True">
-		<TargetFramework>net8.0</TargetFramework>
+	<PropertyGroup>
+    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$(IsNGDev) == True">
-		<TargetFramework>netstandard2.0</TargetFramework>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="$(Publish) == True AND $(IsNGDev) != True">
+	<PropertyGroup Condition="$(Publish) == True">
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<TargetFrameworks>net8.0;net7.0;net6.0;net5.0;net48;netstandard2.0</TargetFrameworks>
 		<TargetFramework></TargetFramework>
@@ -77,5 +64,4 @@
 	    <DependentUpon>Parser.tt</DependentUpon>
 	  </Compile>
 	</ItemGroup>
-
 </Project>

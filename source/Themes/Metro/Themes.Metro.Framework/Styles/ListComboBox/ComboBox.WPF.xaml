@@ -192,9 +192,9 @@
 
       <zm:SetterGroup ValuePath="BorderBrush" Property="BorderBrush">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="Focused" VisualState="Focused" />
-        <zm:Setter Priority="-1" ValuePath="Normal" VisualState="Unfocused" />
-        <zm:Setter Priority="-1" ValuePath="Normal" VisualState="FocusedDropDown" />
+        <zm:Setter ValuePath="Focused" VisualStateTrigger="Focused" />
+        <zm:Setter Priority="-1" ValuePath="Normal" VisualStateTrigger="Unfocused" />
+        <zm:Setter Priority="-1" ValuePath="Normal" VisualStateTrigger="FocusedDropDown" />
       </zm:SetterGroup>
     </zm:SetterGroup>
   </zm:Style>

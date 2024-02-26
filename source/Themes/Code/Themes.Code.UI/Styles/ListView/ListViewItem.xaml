@@ -9,17 +9,17 @@
   <zm:SetterCollection x:Key="SkinSetters">
     <!--  Common States  -->
     <zm:Setter ValuePath="Normal" />
-    <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
-    <zm:Setter ValuePath="Disabled" VisualState="Disabled" />
+    <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+    <zm:Setter ValuePath="Disabled" VisualStateTrigger="Disabled" />
 
     <!--  Focus States  -->
-    <zm:Setter ValuePath="Focused" VisualState="Focused" />
-    <zm:Setter Priority="-1" ValuePath="Unfocused" VisualState="Unfocused" />
+    <zm:Setter ValuePath="Focused" VisualStateTrigger="Focused" />
+    <zm:Setter Priority="-1" ValuePath="Unfocused" VisualStateTrigger="Unfocused" />
 
     <!--  Selection States  -->
-    <zm:Setter ValuePath="Selected" VisualState="Selected" />
-    <zm:Setter Priority="-1" ValuePath="Unselected" VisualState="Unselected" />
-    <zm:Setter ValuePath="SelectedUnfocused" VisualState="SelectedUnfocused" />
+    <zm:Setter ValuePath="Selected" VisualStateTrigger="Selected" />
+    <zm:Setter Priority="-1" ValuePath="Unselected" VisualStateTrigger="Unselected" />
+    <zm:Setter ValuePath="SelectedUnfocused" VisualStateTrigger="SelectedUnfocused" />
 
   </zm:SetterCollection>
 

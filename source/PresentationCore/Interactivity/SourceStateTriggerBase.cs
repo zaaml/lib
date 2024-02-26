@@ -1,4 +1,4 @@
-// <copyright file="SourceTriggerBase.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="SourceStateTriggerBase.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -8,18 +8,18 @@ using Zaaml.Core.Packed;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-	public abstract class SourceTriggerBase : StateTriggerBase, IInteractivitySourceSubject
+	public abstract class SourceStateTriggerBase : StateTriggerBase, IInteractivitySourceSubject
 	{
 		private static readonly uint DefaultPackedValue;
 
-		static SourceTriggerBase()
+		static SourceStateTriggerBase()
 		{
 			RuntimeHelpers.RunClassConstructor(typeof(PackedDefinition).TypeHandle);
 
 			PackedDefinition.SubjectKind.SetValue(ref DefaultPackedValue, SubjectKind.Unspecified);
 		}
 
-		internal SourceTriggerBase()
+		internal SourceStateTriggerBase()
 		{
 			PackedValue |= DefaultPackedValue;
 		}
@@ -48,7 +48,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			base.CopyMembersOverride(source);
 
-			var triggerSource = (SourceTriggerBase)source;
+			var triggerSource = (SourceStateTriggerBase)source;
 
 			SubjectResolver.CopyFrom(this, triggerSource);
 		}
@@ -83,7 +83,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			static PackedDefinition()
 			{
-				var allocator = GetAllocator<SourceTriggerBase>();
+				var allocator = GetAllocator<SourceStateTriggerBase>();
 
 				SubjectKind = allocator.AllocateEnumItem<SubjectKind>();
 			}

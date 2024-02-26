@@ -1,8 +1,7 @@
-// <copyright file="BitmapIcon.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="ImageIcon.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,15 +12,15 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 {
-	public sealed partial class BitmapIcon : IconBase
+	public sealed partial class ImageIcon : IconBase
 	{
-		public static readonly DependencyProperty SourceProperty = DPM.RegisterAttached<ImageSource, BitmapIcon>
+		public static readonly DependencyProperty SourceProperty = DPM.RegisterAttached<ImageSource, ImageIcon>
 			("Source", OnIconPropertyChanged);
 
-		public static readonly DependencyProperty StretchProperty = DPM.RegisterAttached<Stretch, BitmapIcon>
+		public static readonly DependencyProperty StretchProperty = DPM.RegisterAttached<Stretch, ImageIcon>
 			("Stretch", Stretch.None, OnIconPropertyChanged);
 
-		public static readonly DependencyProperty StretchDirectionProperty = DPM.RegisterAttached<StretchDirection, BitmapIcon>
+		public static readonly DependencyProperty StretchDirectionProperty = DPM.RegisterAttached<StretchDirection, ImageIcon>
 			("StretchDirection", StretchDirection.Both, OnIconPropertyChanged);
 
 		private static readonly List<DependencyProperty> Properties =
@@ -40,9 +39,9 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 		private Image _image;
 
-		static BitmapIcon()
+		static ImageIcon()
 		{
-			Factories[SourceProperty] = () => new BitmapIcon();
+			Factories[SourceProperty] = () => new ImageIcon();
 		}
 
 		private ImageSource ActualSource => GetActualValue<ImageSource>(SourceProperty);
@@ -95,7 +94,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			return image;
 		}
 
-		protected override IconBase CreateInstanceCore() => new BitmapIcon();
+		protected override IconBase CreateInstanceCore() => new ImageIcon();
 
 		protected override Size MeasureOverrideCore(Size availableSize)
 		{

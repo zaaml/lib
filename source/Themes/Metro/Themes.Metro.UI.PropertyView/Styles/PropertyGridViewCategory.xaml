@@ -73,7 +73,7 @@
       <!--  GlyphSkin  -->
       <zm:SetterGroup ExpandoProperty="GlyphSkin" ValuePath="GlyphSkin">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="Selected" VisualState="Selected" />
+        <zm:Setter ValuePath="Selected" VisualStateTrigger="Selected" />
       </zm:SetterGroup>
 
       <!--  Foreground  -->

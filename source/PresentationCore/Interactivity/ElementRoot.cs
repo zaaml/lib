@@ -11,148 +11,132 @@ using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  internal sealed class ElementRoot : InteractivityRoot, IRuntimeSetterFactory
-  {
-    #region Static Fields and Constants
+	internal sealed class ElementRoot : InteractivityRoot, IRuntimeSetterFactory
+	{
+		private static readonly DependencyProperty TemplatedParentProperty =
+			DPM.RegisterAttached<FrameworkElement, ElementRoot>
+				("TemplatedParent", OnTemplatedParentChanged);
 
-    private static readonly DependencyProperty TemplatedParentProperty =
-      DPM.RegisterAttached<FrameworkElement, ElementRoot>
-        ("TemplatedParent", OnTemplatedParentChanged);
+		private static readonly Binding TemplatedParentBinding = new Binding
+		{
+			BindsDirectlyToSource = true,
+			RelativeSource = XamlConstants.TemplatedParent
+		};
 
-    private static readonly Binding TemplatedParentBinding = new Binding
-    {
-      BindsDirectlyToSource = true,
-      RelativeSource = XamlConstants.TemplatedParent
-    };
+		public ElementRoot(InteractivityService service) : base(service)
+		{
+		}
 
-    #endregion
+		public FrameworkElement TemplatedParent
+		{
+			get
+			{
+				EnsureTemplatedParent();
+				return GetTemplatedParent(InteractivityTarget);
+			}
+		}
 
-    #region Ctors
+		public FrameworkElement XamlElementRoot => XamlRoot as FrameworkElement;
 
-    public ElementRoot(InteractivityService service) : base(service)
-    {
-    }
+		public void EnsureSkinListener()
+		{
+			if (InteractivityService.SkinListener)
+				return;
 
-    #endregion
+			EnsureTemplatedParent();
 
-    #region Properties
+			TemplatedParent?.GetInteractivityService().AttachRoot(this);
 
-    public FrameworkElement TemplatedParent
-    {
-      get
-      {
-        EnsureTemplatedParent();
-        return GetTemplatedParent(InteractivityTarget);
-      }
-    }
+			InteractivityService.SkinListener = true;
+		}
 
-    public FrameworkElement XamlElementRoot => XamlRoot as FrameworkElement;
+		private void EnsureTemplatedParent()
+		{
+			var interactivityTarget = InteractivityTarget;
 
-    #endregion
+			if (interactivityTarget.ReadLocalValue(TemplatedParentProperty).IsDependencyPropertyUnsetValue() == false)
+				return;
 
-    #region  Methods
+			interactivityTarget.SetBinding(TemplatedParentProperty, TemplatedParentBinding);
 
-    public void EnsureSkinListener()
-    {
-      if (InteractivityService.SkinListener)
-        return;
+			if (RealVisualStateObserver != null)
+				return;
 
-      EnsureTemplatedParent();
+			RealVisualStateObserver = XamlElementRoot?.GetInteractivityService();
+		}
 
-      TemplatedParent?.GetInteractivityService().AttachRoot(this);
+		protected override void EnsureVisualStateObserver()
+		{
+			if (InteractivityService.VisualStateListener)
+				return;
 
-      InteractivityService.SkinListener = true;
-    }
+			EnsureTemplatedParent();
 
-    private void EnsureTemplatedParent()
-    {
-      var interactivityTarget = InteractivityTarget;
+			InteractivityService.VisualStateListener = true;
 
-      if (interactivityTarget.ReadLocalValue(TemplatedParentProperty).IsDependencyPropertyUnsetValue() == false)
-        return;
+			UpdateVisualStateObserver();
+		}
 
-      interactivityTarget.SetBinding(TemplatedParentProperty, TemplatedParentBinding);
+		private static FrameworkElement GetTemplatedParent(DependencyObject element)
+		{
+			return (FrameworkElement)element.GetValue(TemplatedParentProperty);
+		}
 
-      if (RealVisualStateObserver != null) 
-	      return;
+		protected override void OnDescendantApiPropertyChanged(Stack<InteractivityObject> descendants, string propertyName)
+		{
+		}
 
-      RealVisualStateObserver = XamlElementRoot?.GetInteractivityService();
-    }
+		private static void OnTemplatedParentChanged(DependencyObject dependencyObject, FrameworkElement oldTemplatedParent, FrameworkElement newTemplatedParent)
+		{
+			var interactivityService = ((FrameworkElement)dependencyObject).GetInteractivityService();
+			var interactivityRoot = interactivityService.ActualElementRoot;
 
-    protected override void EnsureVisualStateObserver()
-    {
-      if (InteractivityService.VisualStateListener)
-        return;
+			if (interactivityRoot.InteractivityService.VisualStateListener)
+				interactivityRoot.UpdateVisualStateObserver();
 
-      EnsureTemplatedParent();
+			if (interactivityRoot.InteractivityService.SkinListener == false)
+				return;
 
-      InteractivityService.VisualStateListener = true;
+			oldTemplatedParent?.GetInteractivityService().DetachRoot(interactivityRoot);
+			newTemplatedParent?.GetInteractivityService().AttachRoot(interactivityRoot);
 
-      UpdateVisualStateObserver();
-    }
+			if (newTemplatedParent != null)
+				interactivityRoot.UpdateSkin(Extension.GetActualSkin(newTemplatedParent));
+		}
 
-    private static FrameworkElement GetTemplatedParent(DependencyObject element)
-    {
-      return (FrameworkElement) element.GetValue(TemplatedParentProperty);
-    }
+		public override void UpdateClass()
+		{
+			var interactivityTarget = InteractivityTarget;
 
-    protected override void OnDescendantApiPropertyChanged(Stack<InteractivityObject> descendants, string propertyName)
-    {
-    }
+			UpdateClass(Extension.GetSettersInternal(interactivityTarget, false));
+			UpdateClass(Extension.GetTriggersInternal(interactivityTarget, false));
+		}
 
-    private static void OnTemplatedParentChanged(DependencyObject dependencyObject, FrameworkElement oldTemplatedParent, FrameworkElement newTemplatedParent)
-    {
-      var interactivityService = ((FrameworkElement) dependencyObject).GetInteractivityService();
-      var interactivityRoot = interactivityService.ActualElementRoot;
+		public override void UpdateSkin(SkinBase skin)
+		{
+			var interactivityTarget = InteractivityTarget;
 
-      if (interactivityRoot.InteractivityService.VisualStateListener)
-        interactivityRoot.UpdateVisualStateObserver();
+			UpdateSkin(Extension.GetSettersInternal(interactivityTarget, false), skin);
+			UpdateSkin(Extension.GetTriggersInternal(interactivityTarget, false), skin);
+		}
 
-      if (interactivityRoot.InteractivityService.SkinListener == false)
-        return;
+		public override void UpdateThemeResources()
+		{
+			var interactivityTarget = InteractivityTarget;
 
-      oldTemplatedParent?.GetInteractivityService().DetachRoot(interactivityRoot);
-      newTemplatedParent?.GetInteractivityService().AttachRoot(interactivityRoot);
-
-      if (newTemplatedParent != null)
-        interactivityRoot.UpdateSkin(Extension.GetActualSkin(newTemplatedParent));
-    }
-
-    public override void UpdateSkin(SkinBase skin)
-    {
-      var interactivityTarget = InteractivityTarget;
-
-      UpdateSkin(Extension.GetSettersInternal(interactivityTarget, false), skin);
-      UpdateSkin(Extension.GetTriggersInternal(interactivityTarget, false), skin);
-    }
-
-    public override void UpdateThemeResources()
-    {
-      var interactivityTarget = InteractivityTarget;
-
-      UpdateThemeResources(Extension.GetSettersInternal(interactivityTarget, false));
-      UpdateThemeResources(Extension.GetTriggersInternal(interactivityTarget, false));
-    }
+			UpdateThemeResources(Extension.GetSettersInternal(interactivityTarget, false));
+			UpdateThemeResources(Extension.GetTriggersInternal(interactivityTarget, false));
+		}
 
 
-    private void UpdateVisualStateObserver()
-    {
-      RealVisualStateObserver = TemplatedParent?.GetInteractivityService();
-    }
+		private void UpdateVisualStateObserver()
+		{
+			RealVisualStateObserver = TemplatedParent?.GetInteractivityService();
+		}
 
-    #endregion
-
-    #region Interface Implementations
-
-    #region IRuntimeSetterFactory
-
-    RuntimeSetter IRuntimeSetterFactory.CreateSetter()
-    {
-      return new LocalRuntimeSetter();
-    }
-
-    #endregion
-
-    #endregion
-  }
+		RuntimeSetter IRuntimeSetterFactory.CreateSetter()
+		{
+			return new LocalRuntimeSetter();
+		}
+	}
 }

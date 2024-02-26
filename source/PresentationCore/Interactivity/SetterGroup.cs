@@ -64,7 +64,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			_setters = groupSetter._setters?.DeepCloneCollection<SetterCollection, SetterBase>(this);
 
-			ValueResolver.CopyFrom(this, groupSetter);
+			SetterValueResolver.CopyFrom(this, groupSetter);
 		}
 
 		protected override InteractivityObject CreateInstance()
@@ -140,12 +140,20 @@ namespace Zaaml.PresentationCore.Interactivity
 				setter.OnParentActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
 		}
 
-		protected override void OnActualVisualStateChanged(string oldVisualState, string newVisualState)
+		protected override void OnActualVisualStateTriggerChanged(string oldVisualStateTrigger, string newVisualStateTrigger)
 		{
-			base.OnActualVisualStateChanged(oldVisualState, newVisualState);
+			base.OnActualVisualStateTriggerChanged(oldVisualStateTrigger, newVisualStateTrigger);
 
 			foreach (var setter in ActualPropertySetters)
-				setter.OnParentActualVisualStateChanged(oldVisualState, newVisualState);
+				setter.OnParentActualVisualStateTriggerChanged(oldVisualStateTrigger, newVisualStateTrigger);
+		}
+
+		protected override void OnActualClassTriggerChanged(string oldClassTrigger, string newClassTrigger)
+		{
+			base.OnActualClassTriggerChanged(oldClassTrigger, newClassTrigger);
+
+			foreach (var setter in ActualPropertySetters) 
+				setter.OnParentActualClassTriggerChanged(oldClassTrigger, newClassTrigger);
 		}
 
 		protected override void UndoCore()

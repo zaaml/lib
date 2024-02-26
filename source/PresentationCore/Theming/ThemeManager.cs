@@ -59,9 +59,6 @@ namespace Zaaml.PresentationCore.Theming
 			set
 			{
 				var isInDesignMode = PresentationCoreUtils.IsInDesignMode;
-
-				PresentationCoreUtils.LaunchDebugger();
-
 				var oldTheme = _applicationTheme;
 				var newTheme = value ?? DefaultTheme.Instance;
 

@@ -2,34 +2,11 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using Zaaml.PresentationCore.Theming;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-	[Flags]
-	internal enum ValueKind
-	{
-		Unspecified = 31,
-		TemplateExpandoPath = 0,
-		SelfExpandoPath = 1,
-		ThemeResourcePath = 2,
-		SkinPath = 4,
-		TemplateSkinPath = 8,
-		ValuePath = 15,
-		Explicit = 16,
-		Resolved = 32,
-		Inherited = Resolved | Unspecified
-	}
-
-	internal interface IValueSetter
-	{
-		ValueKind ValueKind { get; set; }
-
-		object ValueStore { get; set; }
-	}
-
-	internal static class ValueResolver
+	internal static class SetterValueResolver
 	{
 		public static void CopyFrom(IValueSetter target, IValueSetter source)
 		{
@@ -49,57 +26,57 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		public static object GetValue(IValueSetter setter)
 		{
-			var valueKind = setter.ValueKind & ValueKind.Unspecified;
+			var valueKind = setter.ValueKind & SetterValueKind.Unspecified;
 
-			return valueKind == ValueKind.Explicit ? GetOriginalValue(setter) : null;
+			return valueKind == SetterValueKind.Explicit ? GetOriginalValue(setter) : null;
 		}
 
 		public static string GetValuePath(IValueSetter setter)
 		{
-			var valueKind = setter.ValueKind & ValueKind.Unspecified;
+			var valueKind = setter.ValueKind & SetterValueKind.Unspecified;
 
-			if (valueKind != ValueKind.Explicit)
-				return (string) GetOriginalValue(setter);
+			if (valueKind != SetterValueKind.Explicit)
+				return (string)GetOriginalValue(setter);
 
 			return null;
 		}
 
 		public static ValuePathSource GetValuePathSource(IValueSetter setter)
 		{
-			var valueKind = setter.ValueKind & ValueKind.Unspecified;
+			var valueKind = setter.ValueKind & SetterValueKind.Unspecified;
 
 			switch (valueKind)
 			{
-				case ValueKind.TemplateExpandoPath:
+				case SetterValueKind.TemplateExpandoPath:
 					return ValuePathSource.TemplateExpando;
-				case ValueKind.SelfExpandoPath:
+				case SetterValueKind.SelfExpandoPath:
 					return ValuePathSource.Expando;
-				case ValueKind.SkinPath:
+				case SetterValueKind.SkinPath:
 					return ValuePathSource.Skin;
-				case ValueKind.TemplateSkinPath:
+				case SetterValueKind.TemplateSkinPath:
 					return ValuePathSource.TemplateSkin;
-				case ValueKind.ThemeResourcePath:
+				case SetterValueKind.ThemeResourcePath:
 					return ValuePathSource.ThemeResource;
 				default:
 					return ValuePathSource.ThemeResource;
 			}
 		}
 
-		private static bool IsResolvedValueProvider(ValueKind valueKind)
+		private static bool IsResolvedValueProvider(SetterValueKind valueKind)
 		{
-			return (valueKind & ValueKind.Resolved) != 0;
+			return (valueKind & SetterValueKind.Resolved) != 0;
 		}
 
 		public static bool IsSpecified(IValueSetter setter)
 		{
-			return (setter.ValueKind & ValueKind.Unspecified) != ValueKind.Unspecified;
+			return (setter.ValueKind & SetterValueKind.Unspecified) != SetterValueKind.Unspecified;
 		}
 
 		public static bool IsSpecifiedValuePath(IValueSetter setter)
 		{
-			var valueKind = setter.ValueKind & ValueKind.Unspecified;
+			var valueKind = setter.ValueKind & SetterValueKind.Unspecified;
 
-			return valueKind != ValueKind.Unspecified && valueKind != ValueKind.ValuePath;
+			return valueKind != SetterValueKind.Unspecified && valueKind != SetterValueKind.ValuePath;
 		}
 
 		public static ISetterValueProvider ResolveValueProvider(IValueSetter setter)
@@ -116,7 +93,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			try
 			{
-				if (valueKind == ValueKind.ThemeResourcePath)
+				if (valueKind == SetterValueKind.ThemeResourcePath)
 				{
 					var actualValuePath = GetValuePath(setter);
 
@@ -129,7 +106,7 @@ namespace Zaaml.PresentationCore.Interactivity
 					}
 				}
 
-				if (valueKind == ValueKind.Explicit)
+				if (valueKind == SetterValueKind.Explicit)
 				{
 					var actualValue = GetValue(setter);
 					var value = actualValue;
@@ -143,7 +120,7 @@ namespace Zaaml.PresentationCore.Interactivity
 				if (valueProvider != null)
 					setter.ValueStore = valueProvider;
 
-				setter.ValueKind |= ValueKind.Resolved;
+				setter.ValueKind |= SetterValueKind.Resolved;
 			}
 
 			return valueProvider;
@@ -154,21 +131,21 @@ namespace Zaaml.PresentationCore.Interactivity
 			UnresolveValueProvider(setter);
 
 			setter.ValueStore = value;
-			setter.ValueKind = ValueKind.Explicit;
+			setter.ValueKind = SetterValueKind.Explicit;
 		}
 
 		public static void SetValuePath(IValueSetter setter, string value)
 		{
 			UnresolveValueProvider(setter);
 
-			var valueKind = setter.ValueKind & ValueKind.Unspecified;
+			var valueKind = setter.ValueKind & SetterValueKind.Unspecified;
 
-			if (valueKind != ValueKind.SelfExpandoPath
-			    && valueKind != ValueKind.TemplateExpandoPath
-			    && valueKind != ValueKind.ThemeResourcePath
-			    && valueKind != ValueKind.SkinPath
-			    && valueKind != ValueKind.TemplateSkinPath)
-				setter.ValueKind = ValueKind.ValuePath;
+			if (valueKind != SetterValueKind.SelfExpandoPath
+			    && valueKind != SetterValueKind.TemplateExpandoPath
+			    && valueKind != SetterValueKind.ThemeResourcePath
+			    && valueKind != SetterValueKind.SkinPath
+			    && valueKind != SetterValueKind.TemplateSkinPath)
+				setter.ValueKind = SetterValueKind.ValuePath;
 
 			setter.ValueStore = value;
 		}
@@ -178,17 +155,17 @@ namespace Zaaml.PresentationCore.Interactivity
 			UnresolveValueProvider(setter);
 
 			if (value == ValuePathSource.ThemeResource)
-				setter.ValueKind = ValueKind.ThemeResourcePath;
+				setter.ValueKind = SetterValueKind.ThemeResourcePath;
 			else if (value == ValuePathSource.Expando)
-				setter.ValueKind = ValueKind.SelfExpandoPath;
+				setter.ValueKind = SetterValueKind.SelfExpandoPath;
 			else if (value == ValuePathSource.TemplateExpando)
-				setter.ValueKind = ValueKind.TemplateExpandoPath;
+				setter.ValueKind = SetterValueKind.TemplateExpandoPath;
 			else if (value == ValuePathSource.Skin)
-				setter.ValueKind = ValueKind.SkinPath;
+				setter.ValueKind = SetterValueKind.SkinPath;
 			else if (value == ValuePathSource.TemplateSkin)
-				setter.ValueKind = ValueKind.TemplateSkinPath;
+				setter.ValueKind = SetterValueKind.TemplateSkinPath;
 			else
-				setter.ValueKind = ValueKind.ThemeResourcePath;
+				setter.ValueKind = SetterValueKind.ThemeResourcePath;
 		}
 
 		public static void UnresolveValueProvider(IValueSetter setter)
@@ -198,7 +175,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (IsResolvedValueProvider(valueKind) == false)
 				return;
 
-			setter.ValueKind = valueKind & ValueKind.Unspecified;
+			setter.ValueKind = valueKind & SetterValueKind.Unspecified;
 
 			var valueStore = setter.ValueStore;
 

@@ -154,23 +154,23 @@
 
       <!--  Foreground  -->
       <zm:SetterGroup ValuePath="Foreground" Property="Foreground">
-        <zm:Setter ValuePath="Normal" VisualState="Normal" />
-        <zm:Setter ValuePath="Selected" VisualState="Selected" />
-        <zm:Setter Priority="1" ValuePath="SelectedInactive" VisualState="SelectedInactive" />
+        <zm:Setter ValuePath="Normal" VisualStateTrigger="Normal" />
+        <zm:Setter ValuePath="Selected" VisualStateTrigger="Selected" />
+        <zm:Setter Priority="1" ValuePath="SelectedInactive" VisualStateTrigger="SelectedInactive" />
       </zm:SetterGroup>
 
       <!--  Background  -->
       <zm:SetterGroup ValuePath="Background" Property="Background">
-        <zm:Setter ValuePath="Normal" VisualState="Normal" />
-        <zm:Setter ValuePath="Selected" VisualState="Selected" />
-        <zm:Setter Priority="1" ValuePath="SelectedInactive" VisualState="SelectedInactive" />
+        <zm:Setter ValuePath="Normal" VisualStateTrigger="Normal" />
+        <zm:Setter ValuePath="Selected" VisualStateTrigger="Selected" />
+        <zm:Setter Priority="1" ValuePath="SelectedInactive" VisualStateTrigger="SelectedInactive" />
       </zm:SetterGroup>
 
       <!--  BorderBrush  -->
       <zm:SetterGroup ValuePath="BorderBrush" Property="BorderBrush">
-        <zm:Setter ValuePath="Normal" VisualState="Normal" />
-        <zm:Setter ValuePath="Selected" VisualState="Selected" />
-        <zm:Setter Priority="1" ValuePath="SelectedInactive" VisualState="SelectedInactive" />
+        <zm:Setter ValuePath="Normal" VisualStateTrigger="Normal" />
+        <zm:Setter ValuePath="Selected" VisualStateTrigger="Selected" />
+        <zm:Setter Priority="1" ValuePath="SelectedInactive" VisualStateTrigger="SelectedInactive" />
       </zm:SetterGroup>
     </zm:SetterGroup>
   </zm:Style>

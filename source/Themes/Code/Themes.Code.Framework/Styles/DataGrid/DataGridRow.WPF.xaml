@@ -81,12 +81,12 @@
       <!-- Background -->
       <zm:SetterGroup Property="Background" ValuePathSource="Skin" ValuePath="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="Normal_AlternatingRow" ValuePath="Alternating" />
-        <zm:Setter VisualState="Normal_Selected" ValuePath="NormalSelected" />
-        <zm:Setter VisualState="Normal_Editing" ValuePath="NormalEditing" />
+        <zm:Setter VisualStateTrigger="Normal_AlternatingRow" ValuePath="Alternating" />
+        <zm:Setter VisualStateTrigger="Normal_Selected" ValuePath="NormalSelected" />
+        <zm:Setter VisualStateTrigger="Normal_Editing" ValuePath="NormalEditing" />
 
-        <zm:Setter VisualState="Unfocused_Selected" ValuePath="UnfocusedSelected" />
-        <zm:Setter VisualState="Unfocused_Editing" ValuePath="UnfocusedEditing" />
+        <zm:Setter VisualStateTrigger="Unfocused_Selected" ValuePath="UnfocusedSelected" />
+        <zm:Setter VisualStateTrigger="Unfocused_Editing" ValuePath="UnfocusedEditing" />
 
         <!--<zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
         <zm:Setter VisualState="MouseOver_Editing" ValuePath="MouseOverEditing" />

@@ -1,0 +1,11 @@
+<Project>
+	<PropertyGroup>
+		<ParentBuildProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))</ParentBuildProps>
+	</PropertyGroup>
+
+	<Import Project="$(ParentBuildProps)" Condition="$(ParentBuildProps) != ''" />
+
+	<PropertyGroup>
+		<RepositoryDir Condition="$(RepositoryDir) == ''">$(MSBuildThisFileDirectory)</RepositoryDir>
+	</PropertyGroup>
+</Project>

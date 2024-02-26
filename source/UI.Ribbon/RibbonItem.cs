@@ -17,243 +17,203 @@ using Zaaml.UI.Panels.Core;
 
 namespace Zaaml.UI.Controls.Ribbon
 {
-  [TemplateContractType(typeof(RibbonItemTemplateContract))]
-  public abstract class RibbonItem : TemplateContractControl, IOverflowableItem<RibbonItem>
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(RibbonItemTemplateContract))]
+	public abstract class RibbonItem : TemplateContractControl, IOverflowableItem<RibbonItem>
+	{
+		private static readonly DependencyPropertyKey IsOverflowPropertyKey = DPM.RegisterReadOnly<bool, RibbonItem>
+			("IsOverflow", i => i.OnIsOverflowChanged);
 
-    private static readonly DependencyPropertyKey IsOverflowPropertyKey = DPM.RegisterReadOnly<bool, RibbonItem>
-      ("IsOverflow", i => i.OnIsOverflowChanged);
+		public static readonly DependencyProperty SizeDefinitionProperty = DPM.Register<RibbonItemSizeDefinition, RibbonItem>
+			("SizeDefinition", i => i.OnSizeDefinitionChanged);
 
-    public static readonly DependencyProperty SizeDefinitionProperty = DPM.Register<RibbonItemSizeDefinition, RibbonItem>
-      ("SizeDefinition", i => i.OnSizeDefinitionChanged);
+		public static readonly DependencyProperty LargeIconProperty = DPM.Register<IconBase, RibbonItem>
+			("LargeIcon");
 
-    public static readonly DependencyProperty LargeIconProperty = DPM.Register<IconBase, RibbonItem>
-      ("LargeIcon");
+		public static readonly DependencyProperty SmallIconProperty = DPM.Register<IconBase, RibbonItem>
+			("SmallIcon");
 
-    public static readonly DependencyProperty SmallIconProperty = DPM.Register<IconBase, RibbonItem>
-      ("SmallIcon");
+		public static readonly DependencyProperty TextProperty = DPM.Register<string, RibbonItem>
+			("Text");
 
-    public static readonly DependencyProperty TextProperty = DPM.Register<string, RibbonItem>
-      ("Text");
+		private static readonly DependencyPropertyKey ActualItemStylePropertyKey = DPM.RegisterReadOnly<RibbonItemStyle, RibbonItem>
+			("ActualItemStyle", r => r.OnActualItemStyleChanged);
 
-    private static readonly DependencyPropertyKey ActualItemStylePropertyKey = DPM.RegisterReadOnly<RibbonItemStyle, RibbonItem>
-      ("ActualItemStyle", r => r.OnActualItemStyleChanged);
+		private static readonly DependencyPropertyKey ToolBarPropertyKey = DPM.RegisterReadOnly<RibbonToolBar, RibbonItem>
+			("ToolBar", r => r.OnToolBarChanged);
 
-    private static readonly DependencyPropertyKey ToolBarPropertyKey = DPM.RegisterReadOnly<RibbonToolBar, RibbonItem>
-      ("ToolBar", r => r.OnToolBarChanged);
+		public static readonly DependencyProperty ToolBarProperty = ToolBarPropertyKey.DependencyProperty;
+		public static readonly DependencyProperty ActualItemStyleProperty = ActualItemStylePropertyKey.DependencyProperty;
+		public static readonly DependencyProperty IsOverflowProperty = IsOverflowPropertyKey.DependencyProperty;
 
-    public static readonly DependencyProperty ToolBarProperty = ToolBarPropertyKey.DependencyProperty;
-    public static readonly DependencyProperty ActualItemStyleProperty = ActualItemStylePropertyKey.DependencyProperty;
-    public static readonly DependencyProperty IsOverflowProperty = IsOverflowPropertyKey.DependencyProperty;
+		protected RibbonItem()
+		{
+			OverflowController = new OverflowItemController<RibbonItem>(this);
+		}
 
-    #endregion
+		public RibbonItemStyle ActualItemStyle
+		{
+			get => (RibbonItemStyle)GetValue(ActualItemStyleProperty);
+			internal set => this.SetReadOnlyValue(ActualItemStylePropertyKey, value);
+		}
 
-    #region Ctors
+		internal RibbonGroup Group { get; set; }
 
-    protected RibbonItem()
-    {
-      OverflowController = new OverflowItemController<RibbonItem>(this);
-    }
+		public bool IsOverflow
+		{
+			get => (bool)GetValue(IsOverflowProperty);
+			internal set => this.SetReadOnlyValue(IsOverflowPropertyKey, value);
+		}
 
-    #endregion
+		internal RibbonItemMeasurement ItemMeasurement { get; } = new RibbonItemMeasurement();
 
-    #region Properties
+		public IconBase LargeIcon
+		{
+			get => (IconBase)GetValue(LargeIconProperty);
+			set => SetValue(LargeIconProperty, value);
+		}
 
-    public RibbonItemStyle ActualItemStyle
-    {
-      get => (RibbonItemStyle) GetValue(ActualItemStyleProperty);
-      internal set => this.SetReadOnlyValue(ActualItemStylePropertyKey, value);
-    }
+		internal OverflowItemController<RibbonItem> OverflowController { get; }
 
-    internal RibbonGroup Group { get; set; }
+		[TypeConverter(typeof(RibbonItemSizeDefinitionTypeConverter))]
+		public RibbonItemSizeDefinition SizeDefinition
+		{
+			get => (RibbonItemSizeDefinition)GetValue(SizeDefinitionProperty);
+			set => SetValue(SizeDefinitionProperty, value);
+		}
 
-    public bool IsOverflow
-    {
-      get => (bool) GetValue(IsOverflowProperty);
-      internal set => this.SetReadOnlyValue(IsOverflowPropertyKey, value);
-    }
+		public IconBase SmallIcon
+		{
+			get => (IconBase)GetValue(SmallIconProperty);
+			set => SetValue(SmallIconProperty, value);
+		}
 
-    internal RibbonItemMeasurement ItemMeasurement { get; } = new RibbonItemMeasurement();
-
-    public IconBase LargeIcon
-    {
-      get => (IconBase) GetValue(LargeIconProperty);
-      set => SetValue(LargeIconProperty, value);
-    }
-
-    internal OverflowItemController<RibbonItem> OverflowController { get; }
-
-    [TypeConverter(typeof(RibbonItemSizeDefinitionTypeConverter))]
-    public RibbonItemSizeDefinition SizeDefinition
-    {
-      get => (RibbonItemSizeDefinition) GetValue(SizeDefinitionProperty);
-      set => SetValue(SizeDefinitionProperty, value);
-    }
-
-    public IconBase SmallIcon
-    {
-      get => (IconBase) GetValue(SmallIconProperty);
-      set => SetValue(SmallIconProperty, value);
-    }
-
-    public string Text
-    {
-      get => (string) GetValue(TextProperty);
-      set => SetValue(TextProperty, value);
-    }
+		public string Text
+		{
+			get => (string)GetValue(TextProperty);
+			set => SetValue(TextProperty, value);
+		}
 
 
-    public RibbonToolBar ToolBar
-    {
-      get => (RibbonToolBar) GetValue(ToolBarProperty);
-      internal set => this.SetReadOnlyValue(ToolBarPropertyKey, value);
-    }
+		public RibbonToolBar ToolBar
+		{
+			get => (RibbonToolBar)GetValue(ToolBarProperty);
+			internal set => this.SetReadOnlyValue(ToolBarPropertyKey, value);
+		}
 
-    #endregion
+		protected override Size ArrangeOverride(Size arrangeBounds)
+		{
+			var arrangeOverride = base.ArrangeOverride(arrangeBounds);
+			return arrangeOverride;
+		}
 
-    #region  Methods
+		internal void BeginMeasurePass()
+		{
+			ItemMeasurement.Reset();
+			InvalidateMeasureInt();
+		}
 
-    protected override Size ArrangeOverride(Size arrangeBounds)
-    {
-      var arrangeOverride = base.ArrangeOverride(arrangeBounds);
-      return arrangeOverride;
-    }
+		internal void EndMeasurePass()
+		{
+		}
 
-    internal void BeginMeasurePass()
-    {
-      ItemMeasurement.Reset();
-      InvalidateMeasureInt();
-    }
+		protected internal virtual RibbonItemStyle GetDefaultRibbonItemStyle()
+		{
+			return RibbonItemStyle.Default;
+		}
 
-    internal void EndMeasurePass()
-    {
-    }
+		internal void InvalidateMeasureInt()
+		{
+			var templateRoot = this.GetImplementationRoot() as RibbonItemTemplateRoot;
 
-    protected internal virtual RibbonItemStyle GetDefaultRibbonItemStyle()
-    {
-      return RibbonItemStyle.Default;
-    }
+			if (templateRoot == null)
+				return;
 
-    internal void InvalidateMeasureInt()
-    {
-      var templateRoot = this.GetImplementationRoot() as RibbonItemTemplateRoot;
+			foreach (var templatePart in templateRoot.LayoutDependsOnItemStyle)
+			{
+				var templateChild = GetTemplateChild(templatePart) as FrameworkElement;
 
-      if (templateRoot == null)
-        return;
+				if (templateChild == null)
+					continue;
 
-      foreach (var templatePart in templateRoot.LayoutDependsOnItemStyle)
-      {
-        var templateChild = GetTemplateChild(templatePart) as FrameworkElement;
+				foreach (var frameworkElement in templateChild.GetVisualAncestorsAndSelf().OfType<FrameworkElement>())
+				{
+					frameworkElement.InvalidateMeasure();
 
-        if (templateChild == null)
-          continue;
+					if (ReferenceEquals(frameworkElement, this))
+						break;
+				}
+			}
+		}
 
-        foreach (var frameworkElement in templateChild.GetVisualAncestorsAndSelf().OfType<FrameworkElement>())
-        {
-          frameworkElement.InvalidateMeasure();
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			var measureOverride = base.MeasureOverride(availableSize);
+			return measureOverride;
+		}
 
-          if (ReferenceEquals(frameworkElement, this))
-            break;
-        }
-      }
-    }
+		private void OnActualItemStyleChanged()
+		{
+			InvalidateMeasureInt();
+		}
 
-    protected override Size MeasureOverride(Size availableSize)
-    {
-      var measureOverride = base.MeasureOverride(availableSize);
-      return measureOverride;
-    }
+		private void OnIsOverflowChanged()
+		{
+			OverflowController.IsOverflow = IsOverflow;
+		}
 
-    private void OnActualItemStyleChanged()
-    {
-      InvalidateMeasureInt();
-    }
+		private void OnSizeDefinitionChanged()
+		{
+			if (SizeDefinition != null)
+				ActualItemStyle = SizeDefinition.ItemStyle;
 
-    private void OnIsOverflowChanged()
-    {
-      OverflowController.IsOverflow = IsOverflow;
-    }
+			Group?.OnItemSizeDefinitionChanged(this);
+		}
 
-    private void OnSizeDefinitionChanged()
-    {
-      if (SizeDefinition != null)
-        ActualItemStyle = SizeDefinition.ItemStyle;
+		private void OnToolBarChanged()
+		{
+			if (ToolBar != null)
+				OverflowController.Attach();
+			else
+				OverflowController.Detach();
+		}
 
-      Group?.OnItemSizeDefinitionChanged(this);
-    }
+		bool IOverflowableItem.IsOverflow => IsOverflow;
 
-    private void OnToolBarChanged()
-    {
-      if (ToolBar != null)
-        OverflowController.Attach();
-      else
-        OverflowController.Detach();
-    }
+		OverflowItemController<RibbonItem> IOverflowableItem<RibbonItem>.OverflowController => OverflowController;
+	}
 
-    #endregion
+	internal static class RibbonItemExtensions
+	{
+		public static bool CanBeLarge(this RibbonItem item)
+		{
+			return RibbonUtils.CanBeLarge(item);
+		}
 
-    #region Interface Implementations
+		public static bool CanBeSmall(this RibbonItem item)
+		{
+			return RibbonUtils.CanBeSmall(item);
+		}
 
-    #region IOverflowableItem
+		public static RibbonControlGroupSize GetAllowedGroupSize(this RibbonItem item, RibbonItemStyle itemStyle)
+		{
+			return RibbonUtils.GetAllowedGroupSize(item, itemStyle);
+		}
+	}
 
-    bool IOverflowableItem.IsOverflow => IsOverflow;
+	public sealed class RibbonItemTemplateRoot : ControlTemplateRoot
+	{
+		public static readonly DependencyProperty LayoutDependsOnItemStyleProperty = DPM.Register<StringCollection, RibbonItemTemplateRoot>
+			("LayoutDependsOnItemStyle");
 
-    #endregion
+		[TypeConverter(typeof(StringCollectionTypeConverter))]
+		public StringCollection LayoutDependsOnItemStyle
+		{
+			get { return this.GetValueOrCreate(LayoutDependsOnItemStyleProperty, () => new StringCollection()); }
+			set => SetValue(LayoutDependsOnItemStyleProperty, value);
+		}
+	}
 
-    #region IOverflowableItem<RibbonItem>
-
-    OverflowItemController<RibbonItem> IOverflowableItem<RibbonItem>.OverflowController => OverflowController;
-
-    #endregion
-
-    #endregion
-  }
-
-  internal static class RibbonItemExtensions
-  {
-    #region  Methods
-
-    public static bool CanBeLarge(this RibbonItem item)
-    {
-      return RibbonUtils.CanBeLarge(item);
-    }
-
-    public static bool CanBeSmall(this RibbonItem item)
-    {
-      return RibbonUtils.CanBeSmall(item);
-    }
-
-    public static RibbonControlGroupSize GetAllowedGroupSize(this RibbonItem item, RibbonItemStyle itemStyle)
-    {
-      return RibbonUtils.GetAllowedGroupSize(item, itemStyle);
-    }
-
-    #endregion
-  }
-
-  public sealed class RibbonItemTemplateRoot : ControlTemplateRoot
-  {
-    #region Static Fields and Constants
-
-    public static readonly DependencyProperty LayoutDependsOnItemStyleProperty = DPM.Register<StringCollection, RibbonItemTemplateRoot>
-      ("LayoutDependsOnItemStyle");
-
-    #endregion
-
-    #region Properties
-
-    [TypeConverter(typeof(StringCollectionTypeConverter))]
-    public StringCollection LayoutDependsOnItemStyle
-    {
-      get { return this.GetValueOrCreate(LayoutDependsOnItemStyleProperty, () => new StringCollection()); }
-      set => SetValue(LayoutDependsOnItemStyleProperty, value);
-    }
-
-    #endregion
-  }
-
-  public class RibbonItemTemplateContract : TemplateContract
-  {
-  }
+	public class RibbonItemTemplateContract : TemplateContract
+	{
+	}
 }

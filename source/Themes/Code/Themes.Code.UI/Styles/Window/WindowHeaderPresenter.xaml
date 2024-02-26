@@ -37,7 +37,7 @@
           <zm:DockPanel>
 
             <!--  Icon  -->
-            <zm:BitmapIcon MaxWidth="24"
+            <zm:ImageIcon MaxWidth="24"
                            MaxHeight="24"
                            Margin="6,0,0,0"
                            zm:DockPanel.Dock="Left"

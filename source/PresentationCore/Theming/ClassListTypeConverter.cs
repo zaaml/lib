@@ -1,4 +1,4 @@
-// <copyright file="ClassStyleTypeConverter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="ClassListTypeConverter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -8,7 +8,7 @@ using System.Globalization;
 
 namespace Zaaml.PresentationCore.Theming
 {
-	public sealed class ClassStyleTypeConverter : TypeConverter
+	public sealed class ClassListTypeConverter : TypeConverter
 	{
 		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
 		{
@@ -19,7 +19,7 @@ namespace Zaaml.PresentationCore.Theming
 		{
 			return value switch
 			{
-				string strValue => new ClassStyle(strValue),
+				string strValue => new ClassList(strValue),
 				_ => null
 			};
 		}

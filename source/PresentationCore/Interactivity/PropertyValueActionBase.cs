@@ -9,27 +9,13 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public abstract class PropertyValueActionBase : PropertyActionBase
 	{
-		#region Static Fields and Constants
-
 		private static readonly InteractivityProperty ValueProperty = RegisterInteractivityProperty(null);
 
-		#endregion
-
-		#region Fields
-
 		private object _value;
-
-		#endregion
-
-		#region Ctors
 
 		internal PropertyValueActionBase()
 		{
 		}
-
-		#endregion
-
-		#region Properties
 
 		protected object ActualValue
 		{
@@ -47,21 +33,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => SetValue(ValueProperty, ref _value, value);
 		}
 
-		#endregion
-
-		#region  Methods
-
-		[UsedImplicitly]
-		internal void SetValueProperty(object value)
-		{
-			SetValue(ValueProperty, ref _value, value);
-		}
-
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var setPropertyValueSource = (PropertyValueActionBase) source;
+			var setPropertyValueSource = (PropertyValueActionBase)source;
 
 			Value = setPropertyValueSource.Value;
 		}
@@ -86,12 +62,16 @@ namespace Zaaml.PresentationCore.Interactivity
 			Load(ValueProperty, ref _value);
 		}
 
+		[UsedImplicitly]
+		internal void SetValueProperty(object value)
+		{
+			SetValue(ValueProperty, ref _value, value);
+		}
+
 		internal override void UnloadCore(IInteractivityRoot root)
 		{
 			Unload(ValueProperty, ref _value);
 			base.UnloadCore(root);
 		}
-
-		#endregion
 	}
 }

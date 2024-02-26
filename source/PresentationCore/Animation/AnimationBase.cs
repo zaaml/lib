@@ -163,6 +163,8 @@ namespace Zaaml.PresentationCore.Animation
 				UpdateDuration();
 			else if (e.Property == Transition.EasingFunctionProperty)
 				UpdateEasingFunction();
+			else if (e.Property == Transition.RepeatBehaviorProperty)
+				UpdateRepeatBehavior();
 		}
 
 		private void OnTransitionPropertyChangedPrivate(Transition oldValue, Transition newValue)
@@ -182,6 +184,7 @@ namespace Zaaml.PresentationCore.Animation
 			UpdateBeginTime();
 			UpdateDuration();
 			UpdateEasingFunction();
+			UpdateRepeatBehavior();
 		}
 
 		private void UpdateCurrent()

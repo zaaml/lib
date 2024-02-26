@@ -12,244 +12,222 @@ using ZaamlVisualStateGroup = Zaaml.PresentationCore.Interactivity.VSM.VisualSta
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  internal sealed partial class InteractivityService : IVisualStateObserver
-  {
-    #region Static Fields and Constants
+	internal sealed partial class InteractivityService : IVisualStateObserver
+	{
+		private static readonly List<IVisualStateListener> DeadListeners = [];
 
-    private static readonly List<IVisualStateListener> DeadListeners = new List<IVisualStateListener>();
+		private readonly List<VisualStateListenerCollection> _stateListenerCollections = [];
+		private readonly List<VisualStateGroupObserverBase> _visualStateGroupObservers = [];
+
+		private void CleanupVisualStateListeners()
+		{
+			foreach (var listenerCollection in _stateListenerCollections)
+			{
+				foreach (var listener in listenerCollection.Listeners)
+				{
+					if (IsAliveListener(listener) == false)
+						DeadListeners.Add(listener);
+				}
+			}
+
+			foreach (var deadListener in DeadListeners)
+				DetachListener(deadListener);
+
+			DeadListeners.Clear();
+		}
+
+		private void CreateGroupObservers()
+		{
+			var implementationRoot = ImplementationRoot;
+			if (implementationRoot == null)
+				return;
+
+			var visualStateGroups = implementationRoot is IVisualStateManagerAdvisor advisor ? advisor.VisualStateGroups : VisualStateManager.GetInstance(implementationRoot)?.Groups;
+
+			if (visualStateGroups == null)
+				return;
+
+			foreach (var stateGroup in visualStateGroups)
+			{
+				if (FindGroupObserver(stateGroup.Name) != null)
+					continue;
+
+				var visualGroupListener = new VisualGroupListener();
+
+				foreach (var visualState in stateGroup.States)
+				{
+					var listeners = FindListenerCollection(visualState.Name) ?? new VisualStateListenerCollection(visualState.Name);
+
+					// Template changed. Keep previous visual states.
+					if (listeners.IsActive)
+						visualGroupListener.GoToState(listeners.StateName, false);
 
-    #endregion
+					visualGroupListener.AddStateListenersCollection(listeners);
+				}
 
-    #region Fields
+				_visualStateGroupObservers.Add(new DelegateVisualStateGroupObserver(stateGroup.Name, stateGroup.States.Select(v => v.Name), visualGroupListener));
+			}
+		}
 
-    private readonly List<VisualStateListenerCollection> _stateListenerCollections = new List<VisualStateListenerCollection>();
-    private readonly List<VisualStateGroupObserverBase> _visualStateGroupObservers = new List<VisualStateGroupObserverBase>();
+		private void CreateNativeGroupListeners()
+		{
+			foreach (var visualStateGroup in EnumerateVisualStateGroups())
+			{
+				VisualGroupListener groupListener = null;
 
-    #endregion
+				foreach (VisualState visualState in visualStateGroup.States)
+				{
+					var stateListeners = FindListenerCollection(visualState.Name);
 
-    #region  Methods
+					if (stateListeners == null)
+						continue;
 
-    private void CleanupVisualStateListeners()
-    {
-      foreach (var listenerCollection in _stateListenerCollections)
-      {
-        foreach (var listener in listenerCollection.Listeners)
-        {
-          if (IsAliveListener(listener) == false)
-            DeadListeners.Add(listener);
-        }
-      }
+					if (groupListener == null)
+						groupListener = new VisualGroupListener();
 
-      foreach (var deadListener in DeadListeners)
-        DetachListener(deadListener);
+					groupListener.AddStateListenersCollection(stateListeners);
+				}
 
-      DeadListeners.Clear();
-    }
+				if (groupListener == null)
+					continue;
 
-    private void CreateGroupObservers()
-    {
-      var implementationRoot = ImplementationRoot;
-      if (implementationRoot == null)
-        return;
+				_visualStateGroupObservers.Add(new VisualStateGroupObserver(visualStateGroup, groupListener));
+			}
+		}
 
-      var advisor = implementationRoot as IVisualStateManagerAdvisor;
-      var visualStateGroups = advisor != null ? advisor.VisualStateGroups : VisualStateManager.GetInstance(implementationRoot)?.Groups;
+		private IEnumerable<VisualStateGroup> EnumerateVisualStateGroups()
+		{
+			var implementationRoot = ImplementationRoot;
 
-      if (visualStateGroups == null)
-        return;
+			if (implementationRoot == null)
+				return Enumerable.Empty<VisualStateGroup>();
 
-      foreach (var stateGroup in visualStateGroups)
-      {
-        if (FindGroupObserver(stateGroup.Name) != null)
-          continue;
+			return System.Windows.VisualStateManager.GetVisualStateGroups(implementationRoot)?.Cast<VisualStateGroup>() ?? Enumerable.Empty<VisualStateGroup>();
+		}
 
-        var visualGroupListener = new VisualGroupListener();
+		private VisualStateGroupObserverBase FindGroupObserver(string name)
+		{
+			// ReSharper disable once LoopCanBeConvertedToQuery
+			foreach (var groupObserver in _visualStateGroupObservers)
+				if (groupObserver.Name.Equals(name, StringComparison.Ordinal))
+					return groupObserver;
 
-        foreach (var visualState in stateGroup.States)
-        {
-          var listeners = FindListenerCollection(visualState.Name) ?? new VisualStateListenerCollection(visualState.Name);
+			return null;
+		}
 
-          // Template changed. Keep previous visual states.
-          if (listeners.IsActive)
-            visualGroupListener.GoToState(listeners.StateName, false);
+		private VisualStateGroupObserverBase FindGroupObserverByStateName(string stateName)
+		{
+			// ReSharper disable once LoopCanBeConvertedToQuery
+			foreach (var groupObserver in _visualStateGroupObservers)
+				if (groupObserver.HasVisualState(stateName))
+					return groupObserver;
 
-          visualGroupListener.AddStateListenersCollection(listeners);
-        }
+			return null;
+		}
 
-        _visualStateGroupObservers.Add(new DelegateVisualStateGroupObserver(stateGroup.Name, stateGroup.States.Select(v => v.Name), visualGroupListener));
-      }
-    }
+		private VisualStateListenerCollection FindListenerCollection(string name)
+		{
+			// ReSharper disable once LoopCanBeConvertedToQuery
+			foreach (var listener in _stateListenerCollections)
+				if (listener.StateName.Equals(name, StringComparison.Ordinal))
+					return listener;
 
-    private void CreateNativeGroupListeners()
-    {
-      foreach (var visualStateGroup in EnumerateVisualStateGroups())
-      {
-        VisualGroupListener groupListener = null;
+			return null;
+		}
 
-        foreach (VisualState visualState in visualStateGroup.States)
-        {
-          var stateListeners = FindListenerCollection(visualState.Name);
+		private VisualStateListenerCollection GetListenerCollection(string name, bool create)
+		{
+			var listenerCollection = FindListenerCollection(name);
 
-          if (stateListeners == null)
-            continue;
+			if (listenerCollection == null && create == false)
+				return null;
 
-          if (groupListener == null)
-            groupListener = new VisualGroupListener();
+			var groupObserver = FindGroupObserverByStateName(name);
 
-          groupListener.AddStateListenersCollection(stateListeners);
-        }
+			if (groupObserver != null)
+				listenerCollection = groupObserver.GroupListener.GetListenerCollection(name, create);
 
-        if (groupListener == null)
-          continue;
+			if (listenerCollection != null)
+			{
+				_stateListenerCollections.Add(listenerCollection);
+				return listenerCollection;
+			}
 
-        _visualStateGroupObservers.Add(new VisualStateGroupObserver(visualStateGroup, groupListener));
-      }
-    }
+			listenerCollection = new VisualStateListenerCollection(name);
+			_stateListenerCollections.Add(listenerCollection);
 
-    private IEnumerable<VisualStateGroup> EnumerateVisualStateGroups()
-    {
-      var implementationRoot = ImplementationRoot;
-      if (implementationRoot == null)
-        return Enumerable.Empty<VisualStateGroup>();
+			var visualStateGroup = EnumerateVisualStateGroups().SingleOrDefault(g => g.States.Cast<VisualState>().Any(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase)));
 
-      return System.Windows.VisualStateManager.GetVisualStateGroups(implementationRoot)?.Cast<VisualStateGroup>() ?? Enumerable.Empty<VisualStateGroup>();
-    }
+			if (visualStateGroup == null)
+				return listenerCollection;
 
-    private VisualStateGroupObserverBase FindGroupObserver(string name)
-    {
-      // ReSharper disable once LoopCanBeConvertedToQuery
-      foreach (var groupObserver in _visualStateGroupObservers)
-        if (groupObserver.Name.Equals(name, StringComparison.Ordinal))
-          return groupObserver;
+			var groupListener = new VisualGroupListener();
 
-      return null;
-    }
+			groupListener.AddStateListenersCollection(listenerCollection);
+			groupObserver = new VisualStateGroupObserver(visualStateGroup, groupListener);
+			_visualStateGroupObservers.Add(groupObserver);
 
-    private VisualStateGroupObserverBase FindGroupObserverByStateName(string stateName)
-    {
-      // ReSharper disable once LoopCanBeConvertedToQuery
-      foreach (var groupObserver in _visualStateGroupObservers)
-        if (groupObserver.HasVisualState(stateName))
-          return groupObserver;
+			return listenerCollection;
+		}
 
-      return null;
-    }
+		public bool GoToState(string stateName, VisualStateGroup group, VisualState state, bool useTransitions)
+		{
+			if (ImplementationRoot == null)
+				UpdateImplementationRoot();
 
-    private VisualStateListenerCollection FindListenerCollection(string name)
-    {
-      // ReSharper disable once LoopCanBeConvertedToQuery
-      foreach (var listener in _stateListenerCollections)
-        if (listener.StateName.Equals(name, StringComparison.Ordinal))
-          return listener;
+			if (group == null || state == null || group.Name.IsNullOrEmpty() || state.Name.IsNullOrEmpty())
+			{
+				var groupObserver = FindGroupObserverByStateName(stateName) as DelegateVisualStateGroupObserver;
 
-      return null;
-    }
+				if (groupObserver == null)
+					return false;
 
-    private VisualStateListenerCollection GetListenerCollection(string name, bool create)
-    {
-      var listenerCollection = FindListenerCollection(name);
+				groupObserver.GoToState(stateName, useTransitions);
+				return true;
+			}
 
-      if (listenerCollection == null && create == false)
-        return null;
+			var groupListener = FindGroupObserver(group.Name)?.GroupListener;
 
-      var groupObserver = FindGroupObserverByStateName(name);
+			if (groupListener == null) return false;
 
-      if (groupObserver != null)
-        listenerCollection = groupObserver.GroupListener.GetListenerCollection(name, create);
+			groupListener.GoToState(state.Name, useTransitions);
 
-      if (listenerCollection != null)
-      {
-        _stateListenerCollections.Add(listenerCollection);
-        return listenerCollection;
-      }
+			return true;
+		}
 
-      listenerCollection = new VisualStateListenerCollection(name);
-      _stateListenerCollections.Add(listenerCollection);
+		private static bool IsAliveListener(IVisualStateListener listener)
+		{
+			var weakListener = listener as IWeakReference;
 
-      var visualStateGroup = EnumerateVisualStateGroups().SingleOrDefault(g => g.States.Cast<VisualState>().Any(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase)));
+			return weakListener == null || weakListener.IsAlive;
+		}
 
-      if (visualStateGroup == null)
-        return listenerCollection;
+		private void UpdateGroupListeners()
+		{
+			foreach (var visualStateGroupObserver in _visualStateGroupObservers)
+				visualStateGroupObserver.Dispose();
 
-      var groupListener = new VisualGroupListener();
-      groupListener.AddStateListenersCollection(listenerCollection);
-      groupObserver = new VisualStateGroupObserver(visualStateGroup, groupListener);
-      _visualStateGroupObservers.Add(groupObserver);
+			_visualStateGroupObservers.Clear();
 
-      return listenerCollection;
-    }
+			CreateNativeGroupListeners();
+			CreateGroupObservers();
+		}
 
-    public bool GoToState(string stateName, VisualStateGroup group, VisualState state, bool useTransitions)
-    {
-      if (ImplementationRoot == null)
-        UpdateImplementationRoot();
+		public void AttachListener(IVisualStateListener listener)
+		{
+			EnsureLayoutUpdatedHandler();
+			GetListenerCollection(listener.VisualStateName, true).AttachListener(listener);
+		}
 
-      if (group == null || state == null || group.Name.IsNullOrEmpty() || state.Name.IsNullOrEmpty())
-      {
-        var groupObserver = FindGroupObserverByStateName(stateName) as DelegateVisualStateGroupObserver;
+		public void DetachListener(IVisualStateListener listener)
+		{
+			EnsureLayoutUpdatedHandler();
+			GetListenerCollection(listener.VisualStateName, false)?.DetachListener(listener);
+		}
+	}
 
-        if (groupObserver == null)
-          return false;
-
-        groupObserver.GoToState(stateName, useTransitions);
-        return true;
-      }
-
-      var groupListener = FindGroupObserver(group.Name)?.GroupListener;
-
-      if (groupListener == null) return false;
-
-      groupListener.GoToState(state.Name, useTransitions);
-
-      return true;
-    }
-
-    private static bool IsAliveListener(IVisualStateListener listener)
-    {
-      var weakListener = listener as IWeakReference;
-      return weakListener == null || weakListener.IsAlive;
-    }
-
-    private void UpdateGroupListeners()
-    {
-      foreach (var visualStateGroupObserver in _visualStateGroupObservers)
-        visualStateGroupObserver.Dispose();
-
-      _visualStateGroupObservers.Clear();
-
-      CreateNativeGroupListeners();
-      CreateGroupObservers();
-    }
-
-    #endregion
-
-    #region Interface Implementations
-
-    #region IVisualStateObserver
-
-    public void AttachListener(IVisualStateListener listener)
-    {
-      EnsureLayoutUpdatedHandler();
-      GetListenerCollection(listener.VisualStateName, true).AttachListener(listener);
-    }
-
-    public void DetachListener(IVisualStateListener listener)
-    {
-      EnsureLayoutUpdatedHandler();
-      GetListenerCollection(listener.VisualStateName, false)?.DetachListener(listener);
-    }
-
-    #endregion
-
-    #endregion
-  }
-
-  internal interface IVisualStateManagerAdvisor
-  {
-    #region Properties
-
-    IEnumerable<ZaamlVisualStateGroup> VisualStateGroups { get; }
-
-    #endregion
-  }
+	internal interface IVisualStateManagerAdvisor
+	{
+		IEnumerable<ZaamlVisualStateGroup> VisualStateGroups { get; }
+	}
 }

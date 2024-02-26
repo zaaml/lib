@@ -291,25 +291,25 @@
       <!--  Foreground  -->
       <zm:SetterGroup ValuePath="Foreground" Property="Foreground">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="Highlighted" VisualState="Highlighted" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
-        <zm:Setter Priority="1" ValuePath="Pressed" VisualState="Pressed" />
+        <zm:Setter ValuePath="Highlighted" VisualStateTrigger="Highlighted" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+        <zm:Setter Priority="1" ValuePath="Pressed" VisualStateTrigger="Pressed" />
       </zm:SetterGroup>
 
       <!--  Background  -->
       <zm:SetterGroup ValuePath="Background" Property="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="Highlighted" VisualState="Highlighted" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
-        <zm:Setter ValuePath="Pressed" VisualState="Pressed" />
+        <zm:Setter ValuePath="Highlighted" VisualStateTrigger="Highlighted" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+        <zm:Setter ValuePath="Pressed" VisualStateTrigger="Pressed" />
       </zm:SetterGroup>
 
       <!--  BorderBrush  -->
       <zm:SetterGroup ValuePath="BorderBrush" Property="BorderBrush">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="Highlighted" VisualState="Highlighted" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
-        <zm:Setter ValuePath="Pressed" VisualState="Pressed" />
+        <zm:Setter ValuePath="Highlighted" VisualStateTrigger="Highlighted" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+        <zm:Setter ValuePath="Pressed" VisualStateTrigger="Pressed" />
       </zm:SetterGroup>
 
       <!--  Icon  -->
@@ -318,19 +318,19 @@
         <!--  Foreground  -->
         <zm:SetterGroup ExpandoProperty="IconForeground" ValuePath="Foreground">
           <zm:Setter ValuePath="Normal" />
-          <zm:Setter ValuePath="Checked" VisualState="Checked" />
+          <zm:Setter ValuePath="Checked" VisualStateTrigger="Checked" />
         </zm:SetterGroup>
 
         <!--  Background  -->
         <zm:SetterGroup ExpandoProperty="IconBackground" ValuePath="Background">
           <zm:Setter ValuePath="Normal" />
-          <zm:Setter ValuePath="Checked" VisualState="Checked" />
+          <zm:Setter ValuePath="Checked" VisualStateTrigger="Checked" />
         </zm:SetterGroup>
 
         <!--  BorderBrush  -->
         <zm:SetterGroup ExpandoProperty="IconBorderBrush" ValuePath="BorderBrush">
           <zm:Setter ValuePath="Normal" />
-          <zm:Setter ValuePath="Checked" VisualState="Checked" />
+          <zm:Setter ValuePath="Checked" VisualStateTrigger="Checked" />
         </zm:SetterGroup>
       </zm:SetterGroup>
     </zm:SetterGroup>

@@ -18,7 +18,7 @@ namespace Zaaml.UI.Test.Controls.Primitives.ContentPrimitives
 		public void BitmapIconShouldNotAutoStretch()
 		{
 			var iconSize = new Size(16, 16);
-			var icon = new BitmapIcon
+			var icon = new ImageIcon
 			{
 				Source = new DrawingImage
 				{

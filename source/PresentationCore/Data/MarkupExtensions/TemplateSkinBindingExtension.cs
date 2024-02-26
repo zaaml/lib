@@ -6,8 +6,8 @@ using System.Windows.Data;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-	public sealed class TemplateSkinBindingExtension : SkinBindingBaseExtension
+	public sealed class TemplateSkinBindingExtension : RelativeSkinBindingExtension
 	{
-		protected override RelativeSource Source => XamlConstants.TemplatedParent;
+		protected override RelativeSource RelativeSource => XamlConstants.TemplatedParent;
 	}
 }

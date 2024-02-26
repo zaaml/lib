@@ -85,7 +85,7 @@
           </Grid>
 
           <zm:Extension.Setters>
-            <zm:Setter Property="Opacity" VisualState="Disabled" Value="0.5" />
+            <zm:Setter Property="Opacity" VisualStateTrigger="Disabled" Value="0.5" />
           </zm:Extension.Setters>
 
           <zm:Extension.Triggers>

@@ -46,7 +46,7 @@
                                               Converter={zm:VisibilityConverter}}">
 
         <zm:Extension.Setters>
-          <zm:Setter VisualState="Empty" Property="Visibility" Value="Collapsed" />
+          <zm:Setter VisualStateTrigger="Empty" Property="Visibility" Value="Collapsed" />
         </zm:Extension.Setters>
 
         <zm:DockPanel>

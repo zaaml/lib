@@ -11,7 +11,7 @@ using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.PresentationCore.Utils;
 
-namespace Zaaml.PresentationCore.Test
+namespace Zaaml.PresentationCore.Test.Interactivity
 {
 	[TestFixture]
 	[Apartment(ApartmentState.STA)]
@@ -24,7 +24,7 @@ namespace Zaaml.PresentationCore.Test
 		[SetUp]
 		protected void Init()
 		{
-			var interactivityTestUri = Assembly.GetExecutingAssembly().GetResourceUri("/InteractivityTest.xaml");
+			var interactivityTestUri = Assembly.GetExecutingAssembly().GetResourceUri("/Interactivity/InteractivityTest.xaml");
 
 			_interactivityResourceDictionary = (ResourceDictionary)Application.LoadComponent(interactivityTestUri);
 		}

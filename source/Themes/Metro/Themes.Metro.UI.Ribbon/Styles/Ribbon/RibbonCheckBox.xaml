@@ -57,16 +57,16 @@
                                      IsChecked="{zm:TemplateBinding Path=IsChecked}">
               <zm:Extension.Setters>
                 <zm:SetterGroup ValuePathSource="TemplateExpando" Property="Background">
-                  <zm:Setter ValuePath="Background_Normal" VisualState="Normal" />
-                  <zm:Setter ValuePath="Background_Normal" VisualState="Disabled" />
-                  <zm:Setter ValuePath="Background_MouseOver" VisualState="MouseOver" />
-                  <zm:Setter ValuePath="Background_Pressed" VisualState="Pressed" />
+                  <zm:Setter ValuePath="Background_Normal" VisualStateTrigger="Normal" />
+                  <zm:Setter ValuePath="Background_Normal" VisualStateTrigger="Disabled" />
+                  <zm:Setter ValuePath="Background_MouseOver" VisualStateTrigger="MouseOver" />
+                  <zm:Setter ValuePath="Background_Pressed" VisualStateTrigger="Pressed" />
                 </zm:SetterGroup>
                 <zm:SetterGroup ValuePathSource="TemplateExpando" Property="BorderBrush">
-                  <zm:Setter ValuePath="BorderBrush_Normal" VisualState="Normal" />
-                  <zm:Setter ValuePath="BorderBrush_MouseOver" VisualState="MouseOver" />
-                  <zm:Setter ValuePath="BorderBrush_Pressed" VisualState="Pressed" />
-                  <zm:Setter ValuePath="BorderBrush_Normal" VisualState="Disabled" />
+                  <zm:Setter ValuePath="BorderBrush_Normal" VisualStateTrigger="Normal" />
+                  <zm:Setter ValuePath="BorderBrush_MouseOver" VisualStateTrigger="MouseOver" />
+                  <zm:Setter ValuePath="BorderBrush_Pressed" VisualStateTrigger="Pressed" />
+                  <zm:Setter ValuePath="BorderBrush_Normal" VisualStateTrigger="Disabled" />
                 </zm:SetterGroup>
               </zm:Extension.Setters>
             </zm:CheckGlyph>

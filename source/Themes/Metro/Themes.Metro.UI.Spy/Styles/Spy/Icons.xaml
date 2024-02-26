@@ -1,0 +1,73 @@
+﻿<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+  <zm:PathIcon x:Key="CodeIcon"
+               SharedResource="True"
+               Data="M6.08046 3.47493L4.91952 2.52507L0.0309448 8.5L4.91952 14.4749L6.08046 13.5251L1.96904 8.5L6.08046 3.47493ZM10.9195 3.47493L12.0805 2.52507L16.9691 8.5L12.0805 14.4749L10.9195 13.5251L15.031 8.5L10.9195 3.47493Z"
+               Width="17"
+               Height="17"
+               Stretch="None"
+               Fill="#FF0173C7" />
+
+  <zm:PathIcon x:Key="BorderIcon"
+               SharedResource="True"
+               Data="M14 2H3C2.44772 2 2 2.44772 2 3V14C2 14.5523 2.44772 15 3 15H14C14.5523 15 15 14.5523 15 14V3C15 2.44772 14.5523 2 14 2ZM3 1C1.89543 1 1 1.89543 1 3V14C1 15.1046 1.89543 16 3 16H14C15.1046 16 16 15.1046 16 14V3C16 1.89543 15.1046 1 14 1H3Z"
+               Width="17"
+               Height="17"
+               Stretch="None"
+               Fill="#FF0173C7" />
+
+  <zm:PathIcon x:Key="ControlIcon"
+               SharedResource="True"
+               Data="M6.76057 1.06105C6.83402 1.02099 6.91634 1 7 1H15.5C15.7761 1 16 1.22386 16 1.5V11C16 11.0987 15.9708 11.1952 15.916 11.2774L12.916 15.7774C12.8233 15.9164 12.6672 16 12.5 16H1.5C1.22386 16 1 15.7761 1 15.5V4.5C1 4.31703 1.09994 4.14867 1.26057 4.06105L6.76057 1.06105ZM7.1275 2L3.46083 4H12.2929L14.2929 2H7.1275ZM15 2.70711L13 4.70711V13.8486L15 10.8486V2.70711ZM12 15V5H2V15H12Z"
+               Width="17"
+               Height="17"
+               Stretch="None"
+               Fill="#FF0173C7" />
+
+  <zm:PathIcon x:Key="BorderDashIcon"
+               SharedResource="True"
+               Data="M1 13.9167V15C1 15.5523 1.44772 16 2 16H3.08333V15H2L2 13.9167H1ZM1 11.75H2V9.58333H1V11.75ZM1 7.41667H2V5.25H1V7.41667ZM1 3.08333H2V2L3.08333 2V1H2C1.44772 1 1 1.44772 1 2V3.08333ZM5.25 1V2H7.41667V1H5.25ZM9.58333 1V2H11.75V1H9.58333ZM13.9167 1V2H15V3.08333H16V2C16 1.44772 15.5523 1 15 1H13.9167ZM16 5.25H15V7.41667H16V5.25ZM16 9.58333H15V11.75H16V9.58333ZM16 13.9167H15V15H13.9167V16H15C15.5523 16 16 15.5523 16 15V13.9167ZM11.75 16V15H9.58333V16H11.75ZM7.41667 16V15H5.25V16H7.41667Z"
+               Width="17"
+               Height="17"
+               Stretch="None"
+               Fill="#FF0173C7" />
+
+  <zm:PathIcon x:Key="GridIcon"
+               SharedResource="True"
+               Data="M1 3C1 1.89543 1.89543 1 3 1H14C15.1046 1 16 1.89543 16 3V14C16 15.1046 15.1046 16 14 16H3C1.89543 16 1 15.1046 1 14V3ZM9 2H14C14.5523 2 15 2.44772 15 3V8H9V2ZM8 2H3C2.44772 2 2 2.44772 2 3V8H8V2ZM2 9V14C2 14.5523 2.44772 15 3 15H8V9H2ZM9 15H14C14.5523 15 15 14.5523 15 14V9H9V15Z"
+               Width="17"
+               Height="17"
+               Stretch="None"
+               Fill="#FF0173C7" />
+
+  <zm:PathIcon x:Key="PanelIcon"
+               SharedResource="True"
+               Data=" M7 3H3V7H7V3Z M14 3H10V7H14V3Z M10 10H14V14H10V10Z M7 10H3V14H7V10Z"
+               Width="17"
+               Height="17"
+               Stretch="None"
+               Fill="#FF0173C7" />
+
+  <zm:PathIcon x:Key="DockPanelIcon"
+               SharedResource="True"
+               Data="M13 2H15V11H13V2ZM4 6H2V15H4V6ZM7 7H10V10H7V7ZM6 13H15V15H6V13ZM11 2H2V4H11V2Z"
+               Width="17"
+               Height="17"
+               Stretch="None"
+               Fill="#FF0173C7" />
+  
+  <zm:PathIcon x:Key="StackPanelIcon"
+               SharedResource="True"
+               Data="M0 7H4V10H0V7ZM6 7H11V10H6V7ZM17 7H13V10H17V7Z"
+               Width="17"
+               Height="17"
+               Stretch="None"
+               Fill="#FF0173C7" />
+
+
+</zm:ThemeResourceDictionary>

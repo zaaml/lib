@@ -146,7 +146,6 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => SubjectKind = value;
 		}
 
-
 		void IInteractivitySubject.OnSubjectChanged(DependencyObject oldSubject, DependencyObject newSubject)
 		{
 			OnActualSourceChanged(oldSubject);
