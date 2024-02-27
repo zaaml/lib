@@ -12,6 +12,7 @@ namespace Zaaml.UI.Test
 	public abstract class UITestBase<TApp> where TApp : UITestApp, new()
 	{
 		private static readonly Lazy<TApp> LazyApp = new(() => new TApp());
+
 		protected virtual Size DefaultRenderSize => new(1280, 720);
 
 		[SetUp]
