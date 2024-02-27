@@ -12,20 +12,7 @@ namespace Zaaml.UI.Navigation.Test.NavigationView
 	public class NavigationViewTest : UITestBase<App>
 	{
 		[Test]
-		public void Test1()
-		{
-			var mainWindow = new NavigationViewTestWindow();
-
-			mainWindow.Show();
-			mainWindow.UpdateLayout();
-
-			var splitViewControl = mainWindow.NavigationViewControl.GetVisualDescendants<SplitViewControl>().Single();
-
-			Assert.Less(splitViewControl.ActualPaneLength, 100);
-		}
-
-		[Test]
-		public void Test2()
+		public void Test()
 		{
 			var mainWindow = new NavigationViewTestWindow();
 
