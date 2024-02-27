@@ -37,7 +37,7 @@ namespace Zaaml.PresentationCore.Animation
 			("SpeedRatio", 1.0);
 
 		public static readonly DependencyProperty RepeatBehaviorProperty = DPM.Register<RepeatBehavior, Transition>
-			("RepeatBehavior");
+			("RepeatBehavior", AnimationTimeline.DefaultRepeatBehavior);
 
 		public double AccelerationRatio
 		{

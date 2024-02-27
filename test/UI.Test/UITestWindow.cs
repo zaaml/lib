@@ -8,5 +8,11 @@ namespace Zaaml.UI.Test
 {
 	public class UITestWindow : AppWindow
 	{
+		public UITestWindow()
+		{
+			ShowInTaskbar = false;
+			AllowsTransparency = true;
+			Opacity = 0.0;
+		}
 	}
 }

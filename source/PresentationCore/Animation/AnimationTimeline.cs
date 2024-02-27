@@ -15,6 +15,8 @@ namespace Zaaml.PresentationCore.Animation
 {
 	public abstract class AnimationTimeline : AssetBase, ITimelineClockCallback
 	{
+		internal static readonly RepeatBehavior DefaultRepeatBehavior = new(1);
+
 		public static readonly DependencyProperty BeginTimeProperty = DPM.Register<TimeSpan?, AnimationTimeline>
 			("BeginTime", null, mt => mt.OnBeginTimePropertyChangedPrivate);
 
@@ -34,7 +36,7 @@ namespace Zaaml.PresentationCore.Animation
 			("DecelerationRatio", 0.0, mt => mt.OnDecelerationRatioPropertyChangedPrivate);
 
 		public static readonly DependencyProperty RepeatBehaviorProperty = DPM.Register<RepeatBehavior, AnimationTimeline>
-			("RepeatBehavior", d => d.OnRepeatBehaviorPropertyChangedPrivate);
+			("RepeatBehavior", DefaultRepeatBehavior, d => d.OnRepeatBehaviorPropertyChangedPrivate);
 
 		public static readonly DependencyProperty InitCommandProperty = DPM.Register<AnimationCommand, AnimationTimeline>
 			("InitCommand");
