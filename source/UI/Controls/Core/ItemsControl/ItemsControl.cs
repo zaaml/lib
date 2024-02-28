@@ -17,8 +17,6 @@ namespace Zaaml.UI.Controls.Core
 	[TemplateContractType(typeof(ItemsControlTemplateContract))]
 	public class ItemsControl : ItemsControlBase<ItemsControl, NativeControl, ItemCollection, ItemsPresenter, ItemsPanel<NativeControl>>
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty ItemsPresenterTemplateProperty = DPM.Register<ControlTemplate, ItemsControl>
 			("ItemsPresenterTemplate");
 
@@ -27,10 +25,6 @@ namespace Zaaml.UI.Controls.Core
 
 		public static readonly DependencyProperty ItemStyleProperty = DPM.Register<Style, ItemsControl>
 			("ItemStyle", i => i.OnItemStyleChanged);
-
-		#endregion
-
-		#region Ctors
 
 		static ItemsControl()
 		{
@@ -44,33 +38,25 @@ namespace Zaaml.UI.Controls.Core
 			Generator = new ItemsGeneratorInt(this);
 		}
 
-		#endregion
-
-		#region Properties
-
 		private ItemGenerator<NativeControl> Generator { get; }
 
 		public ControlTemplate ItemsPresenterTemplate
 		{
-			get => (ControlTemplate) GetValue(ItemsPresenterTemplateProperty);
+			get => (ControlTemplate)GetValue(ItemsPresenterTemplateProperty);
 			set => SetValue(ItemsPresenterTemplateProperty, value);
-		}
-
-		public IEnumerable SourceCollection
-		{
-			get => (IEnumerable) GetValue(SourceCollectionProperty);
-			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public Style ItemStyle
 		{
-			get => (Style) GetValue(ItemStyleProperty);
+			get => (Style)GetValue(ItemStyleProperty);
 			set => SetValue(ItemStyleProperty, value);
 		}
 
-		#endregion
-
-		#region  Methods
+		public IEnumerable SourceCollection
+		{
+			get => (IEnumerable)GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
+		}
 
 		protected virtual void AttachItem(FrameworkElement item, object source)
 		{
@@ -116,38 +102,24 @@ namespace Zaaml.UI.Controls.Core
 			item.UndoItemStyle(StyleProperty, ItemStyle);
 		}
 
-		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
-		{
-			SourceCollectionCore = newSource;
-		}
-
 		private void OnItemStyleChanged(Style oldStyle, Style newStyle)
 		{
 			this.ChangeStyle(StyleProperty, oldStyle, newStyle);
 		}
 
-		#endregion
-
-		#region  Nested Types
+		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldSource, IEnumerable newSource)
+		{
+			SourceCollectionCore = newSource;
+		}
 
 		private sealed class ItemsGeneratorInt : ItemGenerator<NativeControl>
 		{
-			#region Fields
-
 			private readonly ItemsControl _itemsControl;
-
-			#endregion
-
-			#region Ctors
 
 			public ItemsGeneratorInt(ItemsControl itemsControl)
 			{
 				_itemsControl = itemsControl;
 			}
-
-			#endregion
-
-			#region  Methods
 
 			protected override void AttachItem(NativeControl item, object source)
 			{
@@ -168,11 +140,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				_itemsControl.DisposeItem(item, source);
 			}
-
-			#endregion
 		}
-
-		#endregion
 	}
 
 	public class ItemsControlTemplateContract : ItemsControlBaseTemplateContract<ItemsPresenter>
