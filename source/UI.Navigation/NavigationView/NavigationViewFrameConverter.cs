@@ -20,7 +20,7 @@ namespace Zaaml.UI.Controls.NavigationView
 		{
 			if (value is string stringValue)
 			{
-				return new Binding {ElementName = stringValue, BindsDirectlyToSource = true}.ProvideValue(context);
+				return new Binding { ElementName = stringValue, BindsDirectlyToSource = true }.ProvideValue(context);
 			}
 
 			return base.ConvertFrom(context, culture, value);

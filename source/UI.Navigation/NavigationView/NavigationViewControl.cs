@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
@@ -70,13 +71,13 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		public double CompactModeThresholdWidth
 		{
-			get => (double) GetValue(CompactModeThresholdWidthProperty);
+			get => (double)GetValue(CompactModeThresholdWidthProperty);
 			set => SetValue(CompactModeThresholdWidthProperty, value);
 		}
 
 		public double CompactPaneLength
 		{
-			get => (double) GetValue(CompactPaneLengthProperty);
+			get => (double)GetValue(CompactPaneLengthProperty);
 			set => SetValue(CompactPaneLengthProperty, value);
 		}
 
@@ -86,21 +87,25 @@ namespace Zaaml.UI.Controls.NavigationView
 			set => SetValue(ContentProperty, value);
 		}
 
+		internal NavigationViewFrame DefaultFrameInternal => Frames.Count == 0 ? null : Frames[0];
+
 		public NavigationViewDisplayMode DisplayMode
 		{
-			get => (NavigationViewDisplayMode) GetValue(DisplayModeProperty);
+			get => (NavigationViewDisplayMode)GetValue(DisplayModeProperty);
 			private set => this.SetReadOnlyValue(DisplayModePropertyKey, value);
 		}
 
 		public double ExpandedModeThresholdWidth
 		{
-			get => (double) GetValue(ExpandedModeThresholdWidthProperty);
+			get => (double)GetValue(ExpandedModeThresholdWidthProperty);
 			set => SetValue(ExpandedModeThresholdWidthProperty, value);
 		}
 
+		private List<NavigationViewFrame> Frames { get; } = [];
+
 		public bool IsPaneOpen
 		{
-			get => (bool) GetValue(IsPaneOpenProperty);
+			get => (bool)GetValue(IsPaneOpenProperty);
 			set => SetValue(IsPaneOpenProperty, value.Box());
 		}
 
@@ -108,32 +113,39 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		public bool IsPaneToggleButtonVisible
 		{
-			get => (bool) GetValue(IsPaneToggleButtonVisibleProperty);
+			get => (bool)GetValue(IsPaneToggleButtonVisibleProperty);
 			set => SetValue(IsPaneToggleButtonVisibleProperty, value.Box());
 		}
 
 		public double OpenPaneLength
 		{
-			get => (double) GetValue(OpenPaneLengthProperty);
+			get => (double)GetValue(OpenPaneLengthProperty);
 			set => SetValue(OpenPaneLengthProperty, value);
 		}
 
 		public NavigationViewPaneDisplayMode PaneDisplayMode
 		{
-			get => (NavigationViewPaneDisplayMode) GetValue(PaneDisplayModeProperty);
+			get => (NavigationViewPaneDisplayMode)GetValue(PaneDisplayModeProperty);
 			set => SetValue(PaneDisplayModeProperty, value);
 		}
 
 		public string PaneTitle
 		{
-			get => (string) GetValue(PaneTitleProperty);
+			get => (string)GetValue(PaneTitleProperty);
 			set => SetValue(PaneTitleProperty, value);
 		}
 
 		public WindowBase ParentWindow
 		{
-			get => (WindowBase) GetValue(ParentWindowProperty);
+			get => (WindowBase)GetValue(ParentWindowProperty);
 			private set => this.SetReadOnlyValue(ParentWindowPropertyKey, value);
+		}
+
+		internal void AttachFrameInternal(NavigationViewFrame navigationViewFrame)
+		{
+			Frames.Add(navigationViewFrame);
+
+			UpdateActualFrame();
 		}
 
 		private void ClosePane()
@@ -144,6 +156,13 @@ namespace Zaaml.UI.Controls.NavigationView
 		protected override NavigationViewItemCollection CreateItemCollection()
 		{
 			return new NavigationViewItemCollection(this);
+		}
+
+		internal void DetachFrameInternal(NavigationViewFrame navigationViewFrame)
+		{
+			Frames.Remove(navigationViewFrame);
+
+			UpdateActualFrame();
 		}
 
 		private void OnCompactModeThresholdWidthPropertyChangedPrivate(double oldValue, double newValue)
@@ -186,9 +205,9 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		internal void OnItemClick(NavigationViewHeaderedIconItem item)
 		{
-			if (DisplayMode == NavigationViewDisplayMode.Minimal || DisplayMode == NavigationViewDisplayMode.Compact)
+			if (DisplayMode is NavigationViewDisplayMode.Minimal or NavigationViewDisplayMode.Compact)
 			{
-				if (item is NavigationViewItem || item is NavigationViewCommandItem)
+				if (item.ClosePaneOnClickInternal)
 					ClosePane();
 			}
 		}
@@ -231,6 +250,15 @@ namespace Zaaml.UI.Controls.NavigationView
 			this.SetCurrentValueInternal(IsPaneOpenProperty, true);
 		}
 
+		private void UpdateActualFrame()
+		{
+			foreach (var itemBase in ItemCollection)
+			{
+				if (itemBase is NavigationViewItem item)
+					item.UpdateActualFrameInternal();
+			}
+		}
+
 		private void UpdateDisplayMode()
 		{
 			if (PaneDisplayMode == NavigationViewPaneDisplayMode.Auto)
@@ -248,7 +276,7 @@ namespace Zaaml.UI.Controls.NavigationView
 			}
 			else if (PaneDisplayMode == NavigationViewPaneDisplayMode.Left)
 				DisplayMode = NavigationViewDisplayMode.Expanded;
-			else if (PaneDisplayMode == NavigationViewPaneDisplayMode.LeftCompact || PaneDisplayMode == NavigationViewPaneDisplayMode.Top)
+			else if (PaneDisplayMode is NavigationViewPaneDisplayMode.LeftCompact or NavigationViewPaneDisplayMode.Top)
 				DisplayMode = NavigationViewDisplayMode.Compact;
 			else if (PaneDisplayMode == NavigationViewPaneDisplayMode.LeftMinimal)
 				DisplayMode = NavigationViewDisplayMode.Minimal;

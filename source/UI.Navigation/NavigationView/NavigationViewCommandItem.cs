@@ -46,11 +46,13 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		public ICommand Command
 		{
-			get => (ICommand) GetValue(CommandProperty);
+			get => (ICommand)GetValue(CommandProperty);
 			set => SetValue(CommandProperty, value);
 		}
 
 		private protected override ClickMode ClickModeCore => ClickMode.Release;
+
+		protected override bool ClosePaneOnClick => true;
 
 		private protected override ICommand CommandCore => Command;
 
@@ -64,7 +66,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		public DependencyObject CommandTarget
 		{
-			get => (DependencyObject) GetValue(CommandTargetProperty);
+			get => (DependencyObject)GetValue(CommandTargetProperty);
 			set => SetValue(CommandTargetProperty, value);
 		}
 
@@ -72,7 +74,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		public bool IsPressed
 		{
-			get => (bool) GetValue(IsPressedProperty);
+			get => (bool)GetValue(IsPressedProperty);
 			private set => this.SetReadOnlyValue(IsPressedPropertyKey, value);
 		}
 
