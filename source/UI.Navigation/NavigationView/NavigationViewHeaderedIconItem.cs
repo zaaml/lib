@@ -116,5 +116,9 @@ namespace Zaaml.UI.Controls.NavigationView
 
 			HeaderedIconItemPresenter?.UpdateVisualStateInternal(useTransitions);
 		}
+
+		protected virtual bool ClosePaneOnClick => false;
+
+		internal bool ClosePaneOnClickInternal => ClosePaneOnClick;
 	}
 }

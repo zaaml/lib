@@ -20,10 +20,10 @@ jobs:
         dotnet-version: 8.0.x    
     
     - name: Clean
-      run: dotnet clean -c Release && dotnet nuget locals all --clear
+      run: dotnet clean source/Lib.sln -c Release && dotnet nuget locals all --clear
     
     - name: Build
-      run: dotnet build -c Release -p:Publish=true
+      run: dotnet build source/Lib.sln -c Release -p:Publish=true
 
     - name: Push packages to nuget.org
       run: dotnet nuget push artifacts/**/*.nupkg --api-key ${{ secrets.NUGET_ZAAML }} --source https://api.nuget.org/v3/index.json

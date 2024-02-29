@@ -11,7 +11,7 @@ namespace Zaaml.PresentationCore.PropertyCore
 {
 	public class DependencyObjectPropertyChangeProvider : DependencyObject, IPropertyChangeProvider
 	{
-		public static readonly DependencyProperty ValueProperty = DPM.Register<object, DependencyObjectPropertyChangeProvider>
+		private static readonly DependencyProperty ValueProperty = DPM.Register<object, DependencyObjectPropertyChangeProvider>
 			("Value", d => d.OnValueChanged);
 
 		private readonly object _property;

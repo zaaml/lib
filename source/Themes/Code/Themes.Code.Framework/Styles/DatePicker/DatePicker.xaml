@@ -38,8 +38,8 @@
                 BorderThickness="{TemplateBinding BorderThickness}">
           <zm:Extension.Setters>
             <zm:SetterGroup Property="Background">
-              <zm:Setter VisualState="MouseOver" Value="{zm:ThemeResource Key=Code.StandardControls.DatePicker.Button.Background.MouseOver}" />
-              <zm:Setter VisualState="Pressed" Value="{zm:ThemeResource Key=Code.StandardControls.DatePicker.Button.Background.Pressed}" />
+              <zm:Setter VisualStateTrigger="MouseOver" Value="{zm:ThemeResource Key=Code.StandardControls.DatePicker.Button.Background.MouseOver}" />
+              <zm:Setter VisualStateTrigger="Pressed" Value="{zm:ThemeResource Key=Code.StandardControls.DatePicker.Button.Background.Pressed}" />
             </zm:SetterGroup>
           </zm:Extension.Setters>
         </Border>

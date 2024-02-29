@@ -46,7 +46,7 @@
         </zm:DockPanel>
         
         <zm:Extension.Setters>
-          <zm:Setter Property="Margin" VisualState="Selected"  Value="{zm:TemplateBinding Path=(zm:TabPanel.ActualTabStripPlacement), Converter={StaticResource SelectionMarginConverter}}" />
+          <zm:Setter Property="Margin" VisualStateTrigger="Selected"  Value="{zm:TemplateBinding Path=(zm:TabPanel.ActualTabStripPlacement), Converter={StaticResource SelectionMarginConverter}}" />
         </zm:Extension.Setters>
       </Grid>
     </zm:ControlTemplateRoot>
@@ -73,28 +73,28 @@
       <!-- Foreground -->
       <zm:SetterGroup Property="Foreground" ValuePath="Foreground">
         <zm:Setter ValuePath="Normal"/>
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Selected" ValuePath="Selected"  Priority="1"/>
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected"  Priority="1"/>
       </zm:SetterGroup>
 
       <!-- Background -->
       <zm:SetterGroup Property="Background" ValuePath="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1"/>
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="1"/>
       </zm:SetterGroup>
 
       <!-- BorderBrush -->
       <zm:SetterGroup Property="BorderBrush" ValuePath="BorderBrush">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="MouseOver" ValuePath="MouseOver" />
-        <zm:Setter VisualState="Selected" ValuePath="Selected" Priority="1"/>
+        <zm:Setter VisualStateTrigger="MouseOver" ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" Priority="1"/>
       </zm:SetterGroup>
 
       <!-- SelectionLine -->
       <zm:SetterGroup ExpandoProperty="SelectionLine" ValuePath="SelectionLine">
         <zm:Setter ValuePath="Selected" />
-        <zm:Setter VisualState="SelectedInactive"  ValuePath="SelectedInactive" />
+        <zm:Setter VisualStateTrigger="SelectedInactive"  ValuePath="SelectedInactive" />
       </zm:SetterGroup>
     </zm:SetterGroup>
   </zm:Style>

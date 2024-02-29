@@ -46,7 +46,7 @@
                       Background="{zm:TemplateSkinBinding SkinPath=SelectionLineBackground}"
                       Visibility="Collapsed">
                 <zm:Extension.Setters>
-                  <zm:Setter VisualState="Selected" Property="Visibility" Value="Visible" />
+                  <zm:Setter VisualStateTrigger="Selected" Property="Visibility" Value="Visible" />
                 </zm:Extension.Setters>
               </Border>
             </zm:Panel>
@@ -76,8 +76,8 @@
                          Style="{zm:TemplateSkinBinding SkinPath=MenuGlyph.Style}">
               <zm:Extension.Setters>
                 <zm:SetterGroup ValuePath="MenuGlyph" ValuePathSource="TemplateSkin" Property="Data">
-                  <zm:Setter ValuePath="Collapsed" VisualState="Collapsed" />
-                  <zm:Setter ValuePath="Expanded" VisualState="Expanded" />
+                  <zm:Setter ValuePath="Collapsed" VisualStateTrigger="Collapsed" />
+                  <zm:Setter ValuePath="Expanded" VisualStateTrigger="Expanded" />
                 </zm:SetterGroup>
               </zm:Extension.Setters>
             </zm:PathIcon>
@@ -123,17 +123,17 @@
       <!--  Foreground  -->
       <zm:SetterGroup ValuePath="Foreground" Property="Foreground">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="Normal" VisualState="Disabled" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
-        <zm:Setter ValuePath="Pressed" VisualState="Pressed" />
+        <zm:Setter ValuePath="Normal" VisualStateTrigger="Disabled" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+        <zm:Setter ValuePath="Pressed" VisualStateTrigger="Pressed" />
       </zm:SetterGroup>
 
       <!--  Background  -->
       <zm:SetterGroup ValuePath="Background" Property="Background">
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter ValuePath="Normal" VisualState="Disabled" />
-        <zm:Setter ValuePath="MouseOver" VisualState="MouseOver" />
-        <zm:Setter ValuePath="Pressed" VisualState="Pressed" />
+        <zm:Setter ValuePath="Normal" VisualStateTrigger="Disabled" />
+        <zm:Setter ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+        <zm:Setter ValuePath="Pressed" VisualStateTrigger="Pressed" />
       </zm:SetterGroup>
     </zm:SetterGroup>
 

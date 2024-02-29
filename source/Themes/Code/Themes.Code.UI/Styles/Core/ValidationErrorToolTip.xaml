@@ -44,7 +44,7 @@
 
         <zm:Extension.Setters>
 
-          <zm:SetterGroup Transition="{StaticResource Transition}" VisualState="PopupOpened">
+          <zm:SetterGroup Transition="{StaticResource Transition}" VisualStateTrigger="PopupOpened">
             <zm:Setter Property="Opacity" Value="1" />
             <zm:Setter Target="{StaticResource Transform}" Property="X" Value="0" />
           </zm:SetterGroup>

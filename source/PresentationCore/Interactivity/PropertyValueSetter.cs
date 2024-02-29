@@ -28,8 +28,8 @@ namespace Zaaml.PresentationCore.Interactivity
 		private uint _priorityStore;
 		private object _propertyStore;
 		private object _runtimeTransitionStore = Unset.Value;
+		private string _trigger;
 		private object _valueStore;
-		private string _classStyle;
 
 		static PropertyValueSetter()
 		{
@@ -37,13 +37,16 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			PackedDefinition.SubjectKind.SetValue(ref DefaultPackedValue, SubjectKind.Unspecified);
 			PackedDefinition.PropertyKind.SetValue(ref DefaultPackedValue, PropertyKind.Unspecified);
-			PackedDefinition.ValueKind.SetValue(ref DefaultPackedValue, ValueKind.Unspecified);
+			PackedDefinition.ValueKind.SetValue(ref DefaultPackedValue, SetterValueKind.Unspecified);
+			PackedDefinition.TriggerKind.SetValue(ref DefaultPackedValue, SetterTriggerKind.Unspecified);
 		}
 
 		protected PropertyValueSetter()
 		{
 			PackedValue |= DefaultPackedValue;
 		}
+
+		protected string ActualClassTrigger => FindSpecified(GetClassTriggerSpecified).ClassTrigger;
 
 		protected short ActualPriority => FindSpecified(GetPrioritySpecified).Priority;
 
@@ -67,13 +70,43 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		protected Transition ActualTransition => FindSpecified(GetTransitionSpecified).Transition;
 
-		protected object ActualValue => ValueResolver.GetValue(FindSpecified(ValueResolver.IsSpecified));
+		protected object ActualValue => SetterValueResolver.GetValue(FindSpecified(SetterValueResolver.IsSpecified));
 
 		protected string ActualValuePath => ActualThemeResourceKey.IsEmpty ? null : ActualThemeResourceKey.Key;
 
-		protected ValuePathSource ActualValuePathSource => ValueResolver.GetValuePathSource(FindSpecified(ValueResolver.IsSpecifiedValuePath));
+		protected ValuePathSource ActualValuePathSource => SetterValueResolver.GetValuePathSource(FindSpecified(SetterValueResolver.IsSpecifiedValuePath));
 
-		protected string ActualVisualState => FindSpecified(GetVisualStateSpecified).VisualState;
+		protected string ActualVisualStateTrigger => FindSpecified(GetVisualStateTriggerSpecified).VisualStateTrigger;
+
+
+		[ApiProperty]
+		public string ClassTrigger
+		{
+			get => TriggerKind == SetterTriggerKind.Class ? _trigger : null;
+			set
+			{
+				try
+				{
+					var isAppliedOrQueried = IsAppliedOrQueried;
+					var oldClassTrigger = isAppliedOrQueried ? ActualClassTrigger : null;
+
+					TriggerKind = SetterTriggerKind.Class;
+					_trigger = value;
+
+					if (isAppliedOrQueried == false)
+						return;
+
+					var newClassTrigger = ActualClassTrigger;
+
+					if (string.Equals(oldClassTrigger, newClassTrigger) == false)
+						OnActualClassTriggerChanged(oldClassTrigger, newClassTrigger);
+				}
+				finally
+				{
+					OnApiPropertyChanged(nameof(ClassTrigger));
+				}
+			}
+		}
 
 		private string DebugView
 		{
@@ -101,9 +134,9 @@ namespace Zaaml.PresentationCore.Interactivity
 					sb.Append(' ');
 				}
 
-				if (VisualState != null)
+				if (VisualStateTrigger != null)
 				{
-					sb.AppendFormat($"VisualState=\"{VisualState}\"");
+					sb.AppendFormat($"VisualState=\"{VisualStateTrigger}\"");
 					sb.Append(' ');
 				}
 
@@ -155,7 +188,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			{
 				var isAppliedOrQueried = IsAppliedOrQueried;
 
-				var oldPriority = isAppliedOrQueried ? ActualPriority : (short) 0;
+				var oldPriority = isAppliedOrQueried ? ActualPriority : (short)0;
 
 				PackedPriorityDefinition.Index.SetValue(ref _priorityStore, value);
 
@@ -169,6 +202,8 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
+		protected bool IsClassTriggerSet => TriggerKind == SetterTriggerKind.Class && string.IsNullOrEmpty(_trigger) == false;
+
 		protected bool IsPrioritySet
 		{
 			get => PackedDefinition.IsPrioritySet.GetValue(PackedValue);
@@ -181,7 +216,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			private set => PackedDefinition.IsTransitionSet.SetValue(ref PackedValue, value);
 		}
 
-		protected bool IsVisualStateSet => VisualStateIndex > 0;
+		protected bool IsVisualStateTriggerSet => TriggerKind == SetterTriggerKind.VisualState && string.IsNullOrEmpty(_trigger) == false;
 
 		internal override DependencyProperty MergeDependencyProperty
 		{
@@ -192,7 +227,7 @@ namespace Zaaml.PresentationCore.Interactivity
 				if (dependencyProperty == null)
 					return null;
 
-				var actualVisualState = ActualVisualState;
+				var actualVisualState = ActualVisualStateTrigger;
 
 				return string.IsNullOrEmpty(actualVisualState) ? dependencyProperty : DependencyPropertyProxyManager.GetDependencyProperty(string.Concat(dependencyProperty.GetQualifiedName(), ".", actualVisualState));
 			}
@@ -209,7 +244,7 @@ namespace Zaaml.PresentationCore.Interactivity
 				{
 					var isAppliedOrQueried = IsAppliedOrQueried;
 
-					var oldPriority = isAppliedOrQueried ? ActualPriority : (short) 0;
+					var oldPriority = isAppliedOrQueried ? ActualPriority : (short)0;
 
 					PackedPriorityDefinition.Priority.SetValue(ref _priorityStore, value);
 					IsPrioritySet = true;
@@ -377,10 +412,16 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
+		private SetterTriggerKind TriggerKind
+		{
+			get => PackedDefinition.TriggerKind.GetValue(PackedValue);
+			set => PackedDefinition.TriggerKind.SetValue(ref PackedValue, value);
+		}
+
 		[ApiProperty]
 		public object Value
 		{
-			get => ValueResolver.GetValue(this);
+			get => SetterValueResolver.GetValue(this);
 			set
 			{
 				try
@@ -388,7 +429,7 @@ namespace Zaaml.PresentationCore.Interactivity
 					var isAppliedOrQueried = IsAppliedOrQueried;
 					var oldValue = isAppliedOrQueried ? ActualValue : null;
 
-					ValueResolver.SetValue(this, value);
+					SetterValueResolver.SetValue(this, value);
 
 					if (isAppliedOrQueried == false)
 						return;
@@ -405,24 +446,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 		}
 
-		[ApiProperty]
-		public string Class
-		{
-			get => _classStyle;
-			set
-			{
-				try
-				{
-					_classStyle = value;
-				}
-				finally
-				{
-					OnApiPropertyChanged(nameof(Class));
-				}
-			}
-		}
-
-		private ValueKind ValueKind
+		private SetterValueKind ValueKind
 		{
 			get => PackedDefinition.ValueKind.GetValue(PackedValue);
 			set => PackedDefinition.ValueKind.SetValue(ref PackedValue, value);
@@ -431,7 +455,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		[ApiProperty]
 		public string ValuePath
 		{
-			get => ValueResolver.GetValuePath(this);
+			get => SetterValueResolver.GetValuePath(this);
 			set
 			{
 				try
@@ -439,7 +463,7 @@ namespace Zaaml.PresentationCore.Interactivity
 					var isAppliedOrQueried = IsAppliedOrQueried;
 					var oldValuePath = isAppliedOrQueried ? ActualValuePath : null;
 
-					ValueResolver.SetValuePath(this, value);
+					SetterValueResolver.SetValuePath(this, value);
 
 					if (isAppliedOrQueried == false)
 						return;
@@ -459,7 +483,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		[ApiProperty]
 		public ValuePathSource ValuePathSource
 		{
-			get => ValueResolver.GetValuePathSource(this);
+			get => SetterValueResolver.GetValuePathSource(this);
 			set
 			{
 				try
@@ -467,7 +491,7 @@ namespace Zaaml.PresentationCore.Interactivity
 					var isAppliedOrQueried = IsAppliedOrQueried;
 					var oldValuePathSource = isAppliedOrQueried ? ActualValuePathSource : ValuePathSource.ThemeResource;
 
-					ValueResolver.SetValuePathSource(this, value);
+					SetterValueResolver.SetValuePathSource(this, value);
 
 					if (isAppliedOrQueried == false)
 						return;
@@ -485,42 +509,32 @@ namespace Zaaml.PresentationCore.Interactivity
 		}
 
 		[ApiProperty]
-		public string VisualState
+		public string VisualStateTrigger
 		{
-			get
-			{
-				var visualStateIndex = VisualStateIndex;
-
-				return visualStateIndex > 0 ? VisualStateMap.GetStateName(visualStateIndex) : null;
-			}
+			get { return TriggerKind == SetterTriggerKind.VisualState ? _trigger : null; }
 			set
 			{
 				try
 				{
 					var isAppliedOrQueried = IsAppliedOrQueried;
-					var oldVisualState = isAppliedOrQueried ? ActualVisualState : null;
+					var oldVisualStateTrigger = isAppliedOrQueried ? ActualVisualStateTrigger : null;
 
-					VisualStateIndex = VisualStateMap.GetStateIndex(value);
+					TriggerKind = SetterTriggerKind.VisualState;
+					_trigger = value;
 
 					if (isAppliedOrQueried == false)
 						return;
 
-					var newVisualState = ActualVisualState;
+					var newVisualStateTrigger = ActualVisualStateTrigger;
 
-					if (string.Equals(oldVisualState, newVisualState) == false)
-						OnActualVisualStateChanged(oldVisualState, newVisualState);
+					if (string.Equals(oldVisualStateTrigger, newVisualStateTrigger) == false)
+						OnActualVisualStateTriggerChanged(oldVisualStateTrigger, newVisualStateTrigger);
 				}
 				finally
 				{
-					OnApiPropertyChanged(nameof(VisualState));
+					OnApiPropertyChanged(nameof(VisualStateTrigger));
 				}
 			}
-		}
-
-		private uint VisualStateIndex
-		{
-			get => PackedDefinition.VisualStateIndex.GetValue(PackedValue);
-			set => PackedDefinition.VisualStateIndex.SetValue(ref PackedValue, value);
 		}
 
 		private void BuildActualValuePath(List<string> valuePath)
@@ -531,9 +545,9 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			do
 			{
-				if (ValueResolver.IsSpecified(current))
+				if (SetterValueResolver.IsSpecified(current))
 				{
-					var currentValuePath = ValueResolver.GetValuePath(current);
+					var currentValuePath = SetterValueResolver.GetValuePath(current);
 
 					if (currentValuePath.IsNullOrEmpty() == false)
 						valuePath.Add(currentValuePath);
@@ -549,11 +563,11 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			base.CopyMembersOverride(source);
 
-			var setterSource = (PropertyValueSetter) source;
+			var setterSource = (PropertyValueSetter)source;
 
 			SubjectResolver.CopyFrom(this, setterSource);
 			PropertyResolver.CopyFrom(this, setterSource);
-			ValueResolver.CopyFrom(this, setterSource);
+			SetterValueResolver.CopyFrom(this, setterSource);
 
 			if (setterSource.IsOverriden)
 				IsOverriden = true;
@@ -561,8 +575,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (setterSource.IsPrioritySet)
 				Priority = setterSource.Priority;
 
-			if (setterSource.IsVisualStateSet)
-				VisualStateIndex = setterSource.VisualStateIndex;
+			if (setterSource.IsVisualStateTriggerSet)
+				VisualStateTrigger = setterSource.VisualStateTrigger;
+
+			if (setterSource.IsClassTriggerSet)
+				ClassTrigger = setterSource.ClassTrigger;
 
 			if (setterSource.IsTransitionSet)
 				Transition = setterSource.Transition;
@@ -608,10 +625,10 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 			else
 			{
-				var valueSpecified = setterSource.FindSpecified(ValueResolver.IsSpecified);
+				var valueSpecified = setterSource.FindSpecified(SetterValueResolver.IsSpecified);
 
-				if (ValueResolver.IsSpecified(valueSpecified))
-					ValueResolver.CopyFrom(this, valueSpecified);
+				if (SetterValueResolver.IsSpecified(valueSpecified))
+					SetterValueResolver.CopyFrom(this, valueSpecified);
 			}
 
 			{
@@ -622,10 +639,10 @@ namespace Zaaml.PresentationCore.Interactivity
 			}
 
 			{
-				var visualStateSpecified = setterSource.FindSpecified(GetVisualStateSpecified);
+				var visualStateSpecified = setterSource.FindSpecified(GetVisualStateTriggerSpecified);
 
-				if (GetVisualStateSpecified(visualStateSpecified))
-					VisualState = visualStateSpecified.VisualState;
+				if (GetVisualStateTriggerSpecified(visualStateSpecified))
+					VisualStateTrigger = visualStateSpecified.VisualStateTrigger;
 			}
 
 			{
@@ -641,6 +658,11 @@ namespace Zaaml.PresentationCore.Interactivity
 			return Parent as SetterGroup;
 		}
 
+		private static bool GetClassTriggerSpecified(PropertyValueSetter s)
+		{
+			return s.IsClassTriggerSet;
+		}
+
 		private static bool GetPrioritySpecified(PropertyValueSetter s)
 		{
 			return s.IsPrioritySet;
@@ -651,17 +673,9 @@ namespace Zaaml.PresentationCore.Interactivity
 			return s.IsTransitionSet;
 		}
 
-		private static bool GetVisualStateSpecified(PropertyValueSetter s)
+		private static bool GetVisualStateTriggerSpecified(PropertyValueSetter s)
 		{
-			return s.IsVisualStateSet;
-		}
-
-		private protected override bool TryProvideValue(object target, object targetProperty, IServiceProvider serviceProvider, out object value)
-		{
-			if (targetProperty is DependencyProperty dependencyProperty) 
-				Property = dependencyProperty;
-
-			return base.TryProvideValue(target, targetProperty, serviceProvider, out value);
+			return s.IsVisualStateTriggerSet;
 		}
 
 		protected override void InitFromServiceProvider(IServiceProvider serviceProvider)
@@ -675,6 +689,10 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			if (property != null)
 				Property = property;
+		}
+
+		protected virtual void OnActualClassTriggerChanged(string oldClassTrigger, string newClassTrigger)
+		{
 		}
 
 		protected virtual void OnActualPriorityChanged(short oldPriority, short newPriority)
@@ -709,8 +727,14 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 		}
 
-		protected virtual void OnActualVisualStateChanged(string oldVisualState, string newVisualState)
+		protected virtual void OnActualVisualStateTriggerChanged(string oldVisualStateTrigger, string newVisualStateTrigger)
 		{
+		}
+
+		internal void OnParentActualClassTriggerChanged(string oldClassTrigger, string newClassTrigger)
+		{
+			if (IsClassTriggerSet == false)
+				OnActualClassTriggerChanged(oldClassTrigger, newClassTrigger);
 		}
 
 		internal void OnParentActualPriorityChanged(short oldPriority, short newPriority)
@@ -739,27 +763,27 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		internal void OnParentActualValueChanged(object oldValue, object newValue)
 		{
-			if (ValueResolver.IsSpecified(this) == false)
+			if (SetterValueResolver.IsSpecified(this) == false)
 				OnActualValueChanged(oldValue, newValue);
 		}
 
 		internal void OnParentActualValuePathChanged(string oldValuePath, string newValuePath)
 		{
-			if (ValueResolver.IsSpecified(this) == false)
+			if (SetterValueResolver.IsSpecified(this) == false)
 				OnActualValuePathChanged(oldValuePath, newValuePath);
 		}
 
 		internal void OnParentActualValuePathSourceChanged(ValuePathSource oldValuePathSource,
 			ValuePathSource newValuePathSource)
 		{
-			if (ValueResolver.IsSpecified(this) == false)
+			if (SetterValueResolver.IsSpecified(this) == false)
 				OnActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
 		}
 
-		internal void OnParentActualVisualStateChanged(string oldVisualState, string newVisualState)
+		internal void OnParentActualVisualStateTriggerChanged(string oldVisualState, string newVisualState)
 		{
-			if (IsVisualStateSet == false)
-				OnActualVisualStateChanged(oldVisualState, newVisualState);
+			if (IsVisualStateTriggerSet == false)
+				OnActualVisualStateTriggerChanged(oldVisualState, newVisualState);
 		}
 
 		protected void Reapply()
@@ -783,6 +807,14 @@ namespace Zaaml.PresentationCore.Interactivity
 		public override string ToString()
 		{
 			return DebugView;
+		}
+
+		private protected override bool TryProvideValue(object target, object targetProperty, IServiceProvider serviceProvider, out object value)
+		{
+			if (targetProperty is DependencyProperty dependencyProperty)
+				Property = dependencyProperty;
+
+			return base.TryProvideValue(target, targetProperty, serviceProvider, out value);
 		}
 
 		internal override void UnloadCore(IInteractivityRoot root)
@@ -849,7 +881,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			set => _valueStore = value;
 		}
 
-		ValueKind IValueSetter.ValueKind
+		SetterValueKind IValueSetter.ValueKind
 		{
 			get => ValueKind;
 			set => ValueKind = value;
@@ -873,10 +905,11 @@ namespace Zaaml.PresentationCore.Interactivity
 		{
 			public static readonly PackedEnumItemDefinition<SubjectKind> SubjectKind;
 			public static readonly PackedEnumItemDefinition<PropertyKind> PropertyKind;
-			public static readonly PackedEnumItemDefinition<ValueKind> ValueKind;
+			public static readonly PackedEnumItemDefinition<SetterValueKind> ValueKind;
+			public static readonly PackedEnumItemDefinition<SetterTriggerKind> TriggerKind;
 			public static readonly PackedBoolItemDefinition IsPrioritySet;
 			public static readonly PackedBoolItemDefinition IsTransitionSet;
-			public static readonly PackedUIntItemDefinition VisualStateIndex;
+
 
 			static PackedDefinition()
 			{
@@ -884,15 +917,10 @@ namespace Zaaml.PresentationCore.Interactivity
 
 				SubjectKind = allocator.AllocateEnumItem<SubjectKind>();
 				PropertyKind = allocator.AllocateEnumItem<PropertyKind>();
-				ValueKind = allocator.AllocateEnumItem<ValueKind>();
+				ValueKind = allocator.AllocateEnumItem<SetterValueKind>();
+				TriggerKind = allocator.AllocateEnumItem<SetterTriggerKind>();
 				IsPrioritySet = allocator.AllocateBoolItem();
 				IsTransitionSet = allocator.AllocateBoolItem();
-
-#if INTERACTIVITY_DEBUG
-				VisualStateIndex = allocator.AllocateUIntItem(512);
-#else
-        VisualStateIndex = allocator.AllocateUIntItem(1024);
-#endif
 			}
 		}
 	}

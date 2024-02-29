@@ -46,9 +46,9 @@
 
                     <zm:Extension.Setters>
                       <zm:SetterGroup Property="Background">
-                        <zm:Setter VisualState="Normal" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.Normal}" />
-                        <zm:Setter VisualState="MouseOver" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.MouseOver}" />
-                        <zm:Setter VisualState="Pressed" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.Pressed}" />
+                        <zm:Setter VisualStateTrigger="Normal" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.Normal}" />
+                        <zm:Setter VisualStateTrigger="MouseOver" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.MouseOver}" />
+                        <zm:Setter VisualStateTrigger="Pressed" Value="{zm:ThemeResource Key=Metro.StandardControls.DatePicker.Button.Background.Pressed}" />
                       </zm:SetterGroup>
                     </zm:Extension.Setters>
 

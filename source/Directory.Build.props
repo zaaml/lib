@@ -1,6 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
 
+	<PropertyGroup>
+		<ParentBuildProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))</ParentBuildProps>
+	</PropertyGroup>
+
+	<Import Project="$(ParentBuildProps)" Condition="$(ParentBuildProps) != ''" />
+
+	<PropertyGroup>
+		<RepositoryDir Condition="$(RepositoryDir) == ''">$(MSBuildThisFileDirectory)</RepositoryDir>
+	</PropertyGroup>
+  
 	<PropertyGroup>
 		<LangVersion>latest</LangVersion>
 		<SignAssembly>true</SignAssembly>
@@ -8,6 +17,7 @@
 		<ErrorReport>prompt</ErrorReport>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<GitVersion_NoFetchEnabled>true</GitVersion_NoFetchEnabled>
+    <Configurations>Debug;Release;Test</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">

@@ -57,10 +57,10 @@
   <!--  Foreground, Background, BorderBrush  -->
   <zm:SetterCollection x:Key="Setters">
     <zm:Setter ValuePath="Normal" />
-    <zm:Setter ValuePath="Normal" VisualState="Disabled" />
-    <zm:Setter Priority="3" ValuePath="MouseOver" VisualState="MouseOver" />
-    <zm:Setter Priority="4" ValuePath="Pressed" VisualState="Pressed" />
-    <zm:Setter Priority="1" ValuePath="Checked" VisualState="Checked" />
+    <zm:Setter ValuePath="Normal" VisualStateTrigger="Disabled" />
+    <zm:Setter Priority="3" ValuePath="MouseOver" VisualStateTrigger="MouseOver" />
+    <zm:Setter Priority="4" ValuePath="Pressed" VisualStateTrigger="Pressed" />
+    <zm:Setter Priority="1" ValuePath="Checked" VisualStateTrigger="Checked" />
   </zm:SetterCollection>
 
   <!--  Style  -->

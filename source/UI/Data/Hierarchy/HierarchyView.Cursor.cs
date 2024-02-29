@@ -9,6 +9,11 @@ namespace Zaaml.UI.Data.Hierarchy
 {
 	internal abstract partial class HierarchyView<THierarchy, TNodeCollection, TNode>
 	{
+		public int FindDataIndex(object data)
+		{
+			return Cursor.FindDataIndex(data);
+		}
+
 		private class NodeCursor : TreeFlatCursor<TNode>
 		{
 			public NodeCursor(THierarchy hierarchy)

@@ -6,17 +6,10 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	internal interface IVisualStateListener
 	{
-		#region Properties
-
 		string VisualStateName { get; }
 
-		#endregion
-
-		#region  Methods
-
 		void EnterState(bool useTransitions);
-		void LeaveState(bool useTransitions);
 
-		#endregion
+		void LeaveState(bool useTransitions);
 	}
 }

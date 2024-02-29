@@ -2,14 +2,12 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
 using Zaaml.Core;
-using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
@@ -55,6 +53,12 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			this.OverrideStyleKey<TrackBarControl>();
 		}
 
+		private bool CornersDirty
+		{
+			get => PackedDefinition.CornersDirty.GetValue(_packedValue);
+			set => PackedDefinition.CornersDirty.SetValue(ref _packedValue, value);
+		}
+
 		private bool Initializing
 		{
 			get => PackedDefinition.Initializing.GetValue(_packedValue);
@@ -67,26 +71,17 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			set => PackedDefinition.IsDragSyncValue.SetValue(ref _packedValue, value);
 		}
 
-		private bool CornersDirty
-		{
-			get => PackedDefinition.CornersDirty.GetValue(_packedValue);
-			set => PackedDefinition.CornersDirty.SetValue(ref _packedValue, value);
-		}
-
-		public TrackBarItemCollection ItemCollection
-		{
-			get { return this.GetValueOrCreate(ItemCollectionPropertyKey, () => new TrackBarItemCollection(this)); }
-		}
+		public TrackBarItemCollection ItemCollection => this.GetValueOrCreate(ItemCollectionPropertyKey, () => new TrackBarItemCollection(this));
 
 		public Orientation Orientation
 		{
-			get => (Orientation) GetValue(OrientationProperty);
+			get => (Orientation)GetValue(OrientationProperty);
 			set => SetValue(OrientationProperty, value);
 		}
 
 		private double PixelRatio => TrackBarPanel?.PixelRatio ?? 0.0;
 
-		private TrackBarTemplateContract TemplateContract => (TrackBarTemplateContract) TemplateContractCore;
+		private TrackBarTemplateContract TemplateContract => (TrackBarTemplateContract)TemplateContractCore;
 
 		private TrackBarPanel TrackBarPanel => TemplateContract.TrackBarPanel;
 
@@ -103,15 +98,17 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private void Clamp()
 		{
-			foreach (var item in ItemCollection.OfType<TrackBarValueItem>())
-				item.Clamp();
-
 			TrackBarValueItem prev = null;
 
-			foreach (var item in ItemCollection.OfType<TrackBarValueItem>())
+			foreach (var item in ItemCollection)
 			{
-				ClampRange(prev, item);
-				prev = item;
+				item.Clamp();
+
+				if (item is TrackBarValueItem valueItem)
+				{
+					ClampRange(prev, valueItem);
+					prev = valueItem;
+				}
 			}
 
 			ClampRange(prev, null);
@@ -119,23 +116,36 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private void ClampRange(TrackBarValueItem first, TrackBarValueItem second)
 		{
-			var minimum = first?.Value ?? Minimum;
-			var maximum = second?.Value ?? Maximum;
-
-			var startIndex = first?.Index ?? 0;
-			var endIndex = second?.Index ?? ItemCollection.Count - 1;
-
-			var count = endIndex - startIndex - 2;
-
-			if (count <= 0)
+			if (ItemCollection.Count == 0)
 				return;
 
-			var range = maximum - minimum;
+			if (ItemCollection.Count == 1 && ItemCollection[0] is TrackBarValueItem)
+				return;
 
-			for (var i = startIndex; i < endIndex; i++)
+			var minimum = first?.Value ?? Minimum;
+			var maximum = second?.Value ?? Maximum;
+			var range = maximum - minimum;
+			var startIndex = first != null ? first.Index + 1 : 0;
+			var endIndex = second != null ? second.Index - 1 : ItemCollection.Count - 1;
+
+			while (startIndex < endIndex && ItemCollection[startIndex] is TrackBarValueItem)
+				startIndex++;
+
+			while (endIndex > startIndex && ItemCollection[endIndex] is TrackBarValueItem)
+				endIndex--;
+
+			var rangeItemCount = endIndex - startIndex + 1;
+
+			if (rangeItemCount == 0)
+				return;
+
+			var rangeValue = range / rangeItemCount;
+
+			for (var i = startIndex; i <= endIndex; i++)
 			{
-				if (ItemCollection[i] is TrackBarRangeItem contentItem)
-					contentItem.Range = range;
+				var rangeItem = (TrackBarRangeItem)ItemCollection[i];
+
+				rangeItem.Range = rangeValue;
 			}
 		}
 
@@ -175,9 +185,36 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			OnDragEndedPrivate(dragItem);
 		}
 
+		private void InvalidateCornerRadius()
+		{
+			CornersDirty = true;
+
+			InvalidateMeasure();
+		}
+
 		private void InvalidatePanel()
 		{
 			TrackBarPanel?.InvalidateMeasure();
+		}
+
+		protected override Size MeasureOverride(Size availableSize)
+		{
+			if (CornersDirty)
+			{
+				CornersDirty = false;
+
+				UpdateCornerRadius();
+			}
+
+			return base.MeasureOverride(availableSize);
+		}
+
+
+		protected override void OnCornerRadiusChanged(CornerRadius oldValue, CornerRadius newValue)
+		{
+			base.OnCornerRadiusChanged(oldValue, newValue);
+
+			InvalidateCornerRadius();
 		}
 
 		protected virtual void OnDragEnded(TrackBarItem item)
@@ -210,15 +247,16 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			FinishDrag();
 
+			item.TrackBar = this;
+
 			if (Initializing == false)
 			{
 				AssignIndices();
+				item.Clamp();
 				Clamp();
 			}
 
 			TrackBarPanel?.Children.Add(item);
-
-			item.TrackBar = this;
 
 			InvalidateCornerRadius();
 		}
@@ -248,7 +286,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 				return;
 			}
 
-			var rangeItem = (TrackBarRangeItem) item;
+			var rangeItem = (TrackBarRangeItem)item;
 
 			_originRange = new Range<double>(rangeItem.PrevValueItem?.Value ?? Minimum, rangeItem.NextValueItem?.Value ?? Maximum);
 
@@ -259,15 +297,14 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			FinishDrag();
 
+			TrackBarPanel?.Children.Remove(item);
+			item.TrackBar = null;
+
 			if (Initializing == false)
 			{
 				AssignIndices();
 				Clamp();
 			}
-
-			item.TrackBar = null;
-
-			TrackBarPanel?.Children.Remove(item);
 
 			InvalidateCornerRadius();
 		}
@@ -376,6 +413,27 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			_originRange = new Range<double>(valueItem.Value, valueItem.Value);
 		}
 
+		private void UpdateCornerRadius()
+		{
+			var enabledCorners = CornerRadius;
+			var disabledCorners = new CornerRadius(0);
+
+			TrackBarRangeItem first = null;
+			TrackBarRangeItem last = null;
+
+			foreach (var trackBarRangeItem in ItemCollection.OfType<TrackBarRangeItem>())
+			{
+				first ??= trackBarRangeItem;
+				last = trackBarRangeItem;
+			}
+
+			if (first != null)
+				first.ActualCornerRadius = CornerRadiusUtils.Compose(enabledCorners, disabledCorners, false, MaskCornerRadiusFlags.TopLeft | MaskCornerRadiusFlags.BottomLeft);
+
+			if (last != null && ReferenceEquals(first, last) == false)
+				last.ActualCornerRadius = CornerRadiusUtils.Compose(enabledCorners, disabledCorners, false, MaskCornerRadiusFlags.TopRight | MaskCornerRadiusFlags.BottomRight);
+		}
+
 		private void UpdateValueOnMouseEvent(MouseEventArgs e)
 		{
 			if (_dragItem == null)
@@ -402,7 +460,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 				return;
 			}
 
-			var rangeItem = (TrackBarRangeItem) _dragItem;
+			var rangeItem = (TrackBarRangeItem)_dragItem;
 			var prevValueItem = rangeItem.PrevValueItem;
 			var nextValueItem = rangeItem.NextValueItem;
 
@@ -431,54 +489,6 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 				prevValueItem.SetValueInternal(_originRange.Minimum + _valueDelta);
 				nextValueItem.SetValueInternal(_originRange.Maximum + _valueDelta);
 			}
-		}
-
-		
-		protected override void OnCornerRadiusChanged(CornerRadius oldValue, CornerRadius newValue)
-		{
-			base.OnCornerRadiusChanged(oldValue, newValue);
-
-			InvalidateCornerRadius();
-		}
-
-		private void InvalidateCornerRadius()
-		{
-			CornersDirty = true;
-
-			InvalidateMeasure();
-		}
-
-		protected override Size MeasureOverride(Size availableSize)
-		{
-			if (CornersDirty)
-			{
-				CornersDirty = false;
-
-				UpdateCornerRadius();
-			}
-
-			return base.MeasureOverride(availableSize);
-		}
-
-		private void UpdateCornerRadius()
-		{
-			var enabledCorners = CornerRadius;
-			var disabledCorners = new CornerRadius(0);
-
-			TrackBarRangeItem first = null;
-			TrackBarRangeItem last = null;
-
-			foreach (var trackBarRangeItem in ItemCollection.OfType<TrackBarRangeItem>())
-			{
-				first ??= trackBarRangeItem;
-				last = trackBarRangeItem;
-			}
-
-			if (first != null)
-				first.ActualCornerRadius = CornerRadiusUtils.Compose(enabledCorners, disabledCorners, false, MaskCornerRadiusFlags.TopLeft | MaskCornerRadiusFlags.BottomLeft);
-
-			if (last != null && ReferenceEquals(first, last) == false)
-				last.ActualCornerRadius = CornerRadiusUtils.Compose(enabledCorners, disabledCorners, false, MaskCornerRadiusFlags.TopRight | MaskCornerRadiusFlags.BottomRight);
 		}
 
 		private static class PackedDefinition

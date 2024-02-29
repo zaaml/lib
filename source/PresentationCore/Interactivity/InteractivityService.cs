@@ -20,9 +20,9 @@ namespace Zaaml.PresentationCore.Interactivity
 		private static readonly DependencyProperty ImplementationRootProperty = DPM.RegisterAttached<FrameworkElement, InteractivityService>
 			("ImplementationRootInt", OnImplementationRootIntChanged);
 
-		private static readonly Binding ImplementationRootLoaderBinding = new Binding {Path = new PropertyPath(ImplementationRootProperty), RelativeSource = XamlConstants.Self};
+		private static readonly Binding ImplementationRootLoaderBinding = new() { Path = new PropertyPath(ImplementationRootProperty), RelativeSource = XamlConstants.Self };
 
-		private readonly WeakLinkedList<InteractivityRoot> _interactivityRoots = new WeakLinkedList<InteractivityRoot>();
+		private readonly WeakLinkedList<InteractivityRoot> _interactivityRoots = new();
 		private int _cleanupCount = GC.CollectionCount(0);
 		private WeakReference _implementationRoot;
 		private byte _packedValue;
@@ -164,6 +164,20 @@ namespace Zaaml.PresentationCore.Interactivity
 		public void OnSkinChanged(SkinBase oldSkin, SkinBase newSkin)
 		{
 			UpdateSkin(newSkin);
+		}
+
+		public void OnClassChanged()
+		{
+			UpdateClass();
+		}
+
+		private void UpdateClass()
+		{
+			foreach (var interactivityRoot in _interactivityRoots)
+				interactivityRoot.UpdateClass();
+
+			StyleRoot?.UpdateClass();
+			ElementRoot?.UpdateClass();
 		}
 
 		private void UpdateImplementationRoot()

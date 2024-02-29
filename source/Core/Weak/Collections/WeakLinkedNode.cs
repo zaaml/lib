@@ -23,7 +23,7 @@ namespace Zaaml.Core.Weak.Collections
 			Pool = pool;
 		}
 
-		internal bool IsAlive => WeakReference.IsAlive;
+		internal bool IsAlive => WeakReference?.IsAlive == true;
 
 		internal bool IsInPool { get; set; }
 
@@ -31,7 +31,7 @@ namespace Zaaml.Core.Weak.Collections
 
 		private WeakLinkedListNodePool<T> Pool { get; }
 
-		public T Target => WeakReference.Target;
+		public T Target => WeakReference?.Target;
 
 		private WeakReference<T> WeakReference { get; set; }
 
@@ -82,21 +82,16 @@ namespace Zaaml.Core.Weak.Collections
 			return aliveHead;
 		}
 
+		internal static WeakLinkedNode<T> CleanImpl(WeakLinkedNode<T> head)
+		{
+			return CleanImpl(head, out _);
+		}
+
 		public void Dispose()
 		{
 			WeakReference = null;
 			Next = null;
 			Pool?.ReturnNode(this);
-		}
-
-		internal void Mount(T target)
-		{
-			WeakReference = new WeakReference<T>(target);
-		}
-
-		internal static WeakLinkedNode<T> CleanImpl(WeakLinkedNode<T> head)
-		{
-			return CleanImpl(head, out _);
 		}
 
 		internal IEnumerable<T> EnumerateAlive(bool clean)
@@ -120,6 +115,11 @@ namespace Zaaml.Core.Weak.Collections
 
 				current = current.Next;
 			}
+		}
+
+		internal void Mount(T target)
+		{
+			WeakReference = new WeakReference<T>(target);
 		}
 
 		public void RemoveAfter()
@@ -165,7 +165,7 @@ namespace Zaaml.Core.Weak.Collections
 			else
 				tail.Next = node;
 
-			while (tail.Next != null) 
+			while (tail.Next != null)
 				tail = tail.Next;
 		}
 

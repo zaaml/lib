@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
@@ -40,7 +39,7 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 
 		public DropDownEditableSelectorDisplayMode DisplayMode
 		{
-			get => (DropDownEditableSelectorDisplayMode) GetValue(DisplayModeProperty);
+			get => (DropDownEditableSelectorDisplayMode)GetValue(DisplayModeProperty);
 			set => SetValue(DisplayModeProperty, value);
 		}
 
@@ -48,17 +47,17 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 
 		public bool IsTextEditable
 		{
-			get => (bool) GetValue(IsTextEditableProperty);
+			get => (bool)GetValue(IsTextEditableProperty);
 			set => SetValue(IsTextEditableProperty, value.Box());
 		}
 
 		public ListViewControl ListViewControl
 		{
-			get => (ListViewControl) GetValue(ListViewControlProperty);
+			get => (ListViewControl)GetValue(ListViewControlProperty);
 			set => SetValue(ListViewControlProperty, value);
 		}
 
-		private DropDownListViewEditorTemplateContract TemplateContract => (DropDownListViewEditorTemplateContract) TemplateContractCore;
+		private DropDownListViewEditorTemplateContract TemplateContract => (DropDownListViewEditorTemplateContract)TemplateContractCore;
 
 		private void DropDownListViewControlOnEditingEnded(object sender, EditingEndedEventArgs e)
 		{

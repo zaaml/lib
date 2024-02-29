@@ -16,10 +16,10 @@ namespace Zaaml.UI.Controls.PropertyView
 	public class PropertyViewController
 	{
 		private static readonly MethodInfo GetStringConverterMethodInfo = typeof(PropertyViewController).GetMethod(nameof(GetStringConverter), BindingFlags.Instance | BindingFlags.NonPublic);
-		private static readonly Dictionary<Type, PropertyStringConverter> ReadonlyConvertersDictionary = new Dictionary<Type, PropertyStringConverter>();
-		private static readonly Dictionary<Type, PropertyStringConverter> ConvertersDictionary = new Dictionary<Type, PropertyStringConverter>();
+		private static readonly Dictionary<Type, PropertyStringConverter> ReadonlyConvertersDictionary = [];
+		private static readonly Dictionary<Type, PropertyStringConverter> ConvertersDictionary = [];
 
-		private static readonly Dictionary<Type, Type> ValueEditorDictionary = new Dictionary<Type, Type>
+		private static readonly Dictionary<Type, Type> ValueEditorDictionary = new()
 		{
 			{typeof(bool), typeof(PropertyBooleanEditor)},
 			{typeof(string), typeof(PropertyTextEditor)},
@@ -40,7 +40,7 @@ namespace Zaaml.UI.Controls.PropertyView
 			PropertyView = propertyView;
 		}
 
-		private Dictionary<Type, Stack<PropertyEditor>> EditorsPoolDictionary { get; } = new Dictionary<Type, Stack<PropertyEditor>>();
+		private Dictionary<Type, Stack<PropertyEditor>> EditorsPoolDictionary { get; } = [];
 
 		public IReadOnlyCollection<PropertyCategory> PropertyCategories { get; private set; }
 
@@ -219,7 +219,7 @@ namespace Zaaml.UI.Controls.PropertyView
 					var categoryName = property.Category ?? "General";
 
 					if (propertyCategories.TryGetValue(categoryName, out var category) == false)
-						propertyCategories[categoryName] = category = new List<PropertyItem>();
+						propertyCategories[categoryName] = category = [];
 
 					category.Add(propertyItem);
 				}

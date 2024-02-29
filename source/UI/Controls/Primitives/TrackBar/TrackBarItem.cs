@@ -39,6 +39,13 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			set => SetValue(ContentProperty, value);
 		}
 
+		protected abstract void ClampCore();
+
+		internal void Clamp()
+		{
+			ClampCore();
+		}
+
 		internal int Index { get; set; }
 
 		internal TrackBarValueItem NextValueItem
@@ -55,8 +62,8 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 				for (var i = index; i < TrackBar.ItemCollection.Count; i++)
 				{
-					if (TrackBar.ItemCollection[i] is TrackBarValueItem thumb)
-						return thumb;
+					if (TrackBar.ItemCollection[i] is TrackBarValueItem valueItem)
+						return valueItem;
 				}
 
 				return null;
@@ -77,8 +84,8 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 				for (var i = index; i >= 0; i--)
 				{
-					if (TrackBar.ItemCollection[i] is TrackBarValueItem thumb)
-						return thumb;
+					if (TrackBar.ItemCollection[i] is TrackBarValueItem valueItem)
+						return valueItem;
 				}
 
 				return null;

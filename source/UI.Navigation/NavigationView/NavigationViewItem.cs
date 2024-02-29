@@ -18,6 +18,11 @@ namespace Zaaml.UI.Controls.NavigationView
 	[TemplateContractType(typeof(NavigationViewItemTemplateContract))]
 	public partial class NavigationViewItem : NavigationViewHeaderedIconItem
 	{
+		private static readonly DependencyPropertyKey ActualFramePropertyKey = DPM.RegisterReadOnly<NavigationViewFrame, NavigationViewItem>
+			("ActualFrame", d => d.OnActualFramePropertyChangedPrivate);
+
+		public static readonly DependencyProperty ActualFrameProperty = ActualFramePropertyKey.DependencyProperty;
+
 		public static readonly DependencyProperty PageProperty = DPM.Register<NavigationViewPage, NavigationViewItem>
 			("Page", n => n.OnPagePropertyChangedPrivate);
 
@@ -25,7 +30,7 @@ namespace Zaaml.UI.Controls.NavigationView
 			("IsSelected", i => i.OnIsSelectedPropertyChangedPrivate, i => i.OnCoerceSelection);
 
 		public static readonly DependencyProperty FrameProperty = DPM.Register<NavigationViewFrame, NavigationViewItem>
-			("Frame", null, d => d.OnFramePropertyChangedPrivate);
+			("Frame", d => d.OnFramePropertyChangedPrivate);
 
 		public event EventHandler IsSelectedChanged;
 
@@ -39,14 +44,22 @@ namespace Zaaml.UI.Controls.NavigationView
 			this.OverrideStyleKey<NavigationViewItem>();
 		}
 
-		internal bool ActualCanSelect => CanSelect && Frame?.CanSelectItemInternal(this) != false;
+		internal bool ActualCanSelect => CanSelect && ActualFrame?.CanSelectItemInternal(this) != false;
 
-		protected virtual bool CanSelect => IsInitialized == false || Frame != null;
+		public NavigationViewFrame ActualFrame
+		{
+			get => (NavigationViewFrame)GetValue(ActualFrameProperty);
+			private set => this.SetReadOnlyValue(ActualFramePropertyKey, value);
+		}
+
+		protected virtual bool CanSelect => IsInitialized == false || ActualFrame != null;
+
+		protected override bool ClosePaneOnClick => true;
 
 		[TypeConverter(typeof(NavigationViewFrameConverter))]
 		public NavigationViewFrame Frame
 		{
-			get => (NavigationViewFrame) GetValue(FrameProperty);
+			get => (NavigationViewFrame)GetValue(FrameProperty);
 			set => SetValue(FrameProperty, value);
 		}
 
@@ -56,7 +69,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		public bool IsSelected
 		{
-			get => (bool) GetValue(IsSelectedProperty);
+			get => (bool)GetValue(IsSelectedProperty);
 			set => SetValue(IsSelectedProperty, value.Box());
 		}
 
@@ -67,7 +80,7 @@ namespace Zaaml.UI.Controls.NavigationView
 		[TypeConverter(typeof(NavigationViewPageConverter))]
 		public NavigationViewPage Page
 		{
-			get => (NavigationViewPage) GetValue(PageProperty);
+			get => (NavigationViewPage)GetValue(PageProperty);
 			set => SetValue(PageProperty, value);
 		}
 
@@ -88,9 +101,18 @@ namespace Zaaml.UI.Controls.NavigationView
 			if (IsDeferredPageLoaded == false)
 				return null;
 
-			LoadedPage ??= (NavigationViewPage) Activator.CreateInstance(pageType);
+			LoadedPage ??= (NavigationViewPage)Activator.CreateInstance(pageType);
 
 			return LoadedPage;
+		}
+
+		private void OnActualFramePropertyChangedPrivate(NavigationViewFrame oldValue, NavigationViewFrame newValue)
+		{
+			oldValue?.DetachItem(this);
+			newValue?.AttachItem(this);
+
+			if (IsSelected)
+				ActualFrame?.Select(this);
 		}
 
 		private protected override void OnClickCore()
@@ -103,7 +125,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		private object OnCoerceSelection(object isSelectedObject)
 		{
-			var isSelected = (bool) isSelectedObject;
+			var isSelected = (bool)isSelectedObject;
 
 			if (isSelected && CanSelect == false)
 				return BooleanBoxes.False;
@@ -113,11 +135,7 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		private void OnFramePropertyChangedPrivate(NavigationViewFrame oldValue, NavigationViewFrame newValue)
 		{
-			oldValue?.DetachItem(this);
-			newValue?.AttachItem(this);
-
-			if (IsSelected) 
-				Frame?.Select(this);
+			UpdateActualFrameInternal();
 		}
 
 		protected virtual void OnIsSelectedChanged()
@@ -141,12 +159,19 @@ namespace Zaaml.UI.Controls.NavigationView
 			{
 				EnsurePage();
 
-				Frame?.Select(this);
+				ActualFrame?.Select(this);
 			}
 
 			OnIsSelectedChanged();
 
 			UpdateVisualState(true);
+		}
+
+		internal override void OnNavigationViewControlChangedInternal(NavigationViewControl oldNavigationView, NavigationViewControl newNavigationView)
+		{
+			UpdateActualFrameInternal();
+
+			base.OnNavigationViewControlChangedInternal(oldNavigationView, newNavigationView);
 		}
 
 		private void OnPagePropertyChangedPrivate(NavigationViewPage oldPage, NavigationViewPage newPage)
@@ -166,6 +191,11 @@ namespace Zaaml.UI.Controls.NavigationView
 		internal void SetIsSelectedInternal(bool value)
 		{
 			this.SetCurrentValueInternal(IsSelectedProperty, value.Box());
+		}
+
+		internal void UpdateActualFrameInternal()
+		{
+			ActualFrame = Frame ?? NavigationViewControl?.DefaultFrameInternal;
 		}
 	}
 }

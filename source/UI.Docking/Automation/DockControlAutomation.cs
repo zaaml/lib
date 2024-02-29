@@ -6,12 +6,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Zaaml.PresentationCore.Automation;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
+using Zaaml.UI.Automation;
 
 namespace Zaaml.UI.Controls.Docking.Automation
 {
-	internal class DockControlAutomation
+	internal class DockControlAutomation : AutomationBase
 	{
 		public DockControlAutomation(DockControl dockControl, MouseAutomation mouseAutomation)
 		{

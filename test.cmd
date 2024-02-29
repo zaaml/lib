@@ -1,0 +1,1 @@
+dotnet test test\Test.sln -c Test

@@ -31,22 +31,22 @@ namespace Zaaml.PresentationCore.Theming
 			return key.IsEmpty ? null : GetValueInternal(key.Key);
 		}
 
-		protected virtual void OnAttached(FrameworkElement frameworkElement)
+		protected virtual void OnAttached(DependencyObject dependencyObject)
 		{
 		}
 
-		internal void OnAttachedInternal(FrameworkElement frameworkElement)
+		internal void OnAttachedInternal(DependencyObject dependencyObject)
 		{
-			OnAttached(frameworkElement);
+			OnAttached(dependencyObject);
 		}
 
-		protected virtual void OnDetached(FrameworkElement frameworkElement)
+		protected virtual void OnDetached(DependencyObject dependencyObject)
 		{
 		}
 
-		internal void OnDetachedInternal(FrameworkElement frameworkElement)
+		internal void OnDetachedInternal(DependencyObject dependencyObject)
 		{
-			OnDetached(frameworkElement);
+			OnDetached(dependencyObject);
 		}
 
 		void IInteractivityVisitor.Visit(InteractivityObject interactivityObject)

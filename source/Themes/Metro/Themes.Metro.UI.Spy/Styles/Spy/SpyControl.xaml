@@ -5,6 +5,10 @@
                             xmlns:zmb="http://schemas.zaaml.com/build"
                             mc:Ignorable="zmb">
 
+  <zm:ThemeResourceDictionary.MergedDictionaries>
+    <zm:ThemeResourceDictionary Source="Icons.xaml"/>
+  </zm:ThemeResourceDictionary.MergedDictionaries>
+
   <ControlTemplate x:Key="SpyControlTemplate"
                    TargetType="zm:SpyControl">
     <zm:ControlTemplateRoot Background="Transparent">
@@ -20,6 +24,20 @@
         <zm:SpyVisualTreeViewControl x:Name="VisualTree"
                                      zm:GridPanel.Column="0"
                                      Element="{zm:TemplateBinding Path=Element, Mode=TwoWay}">
+          
+          <zm:SpyVisualTreeViewControl.ItemIconSelector>
+            <zm:TypeIconSelector DefaultIcon="{StaticResource CodeIcon}">
+              <zm:TypeIcon Type="Control" Icon="{StaticResource ControlIcon}" />
+              <zm:TypeIcon Type="Border" Icon="{StaticResource BorderIcon}" />
+              <zm:TypeIcon Type="Grid" Icon="{StaticResource GridIcon}" />
+              <zm:TypeIcon Type="Panel" Icon="{StaticResource PanelIcon}" />
+              <zm:TypeIcon Type="zm:GridPanel" Icon="{StaticResource GridIcon}" />
+              <zm:TypeIcon Type="zm:DockPanel" Icon="{StaticResource DockPanelIcon}" />
+              <zm:TypeIcon Type="zm:StackPanel" Icon="{StaticResource StackPanelIcon}" />
+              <zm:TypeIcon Type="zm:ControlTemplateRoot" Icon="{StaticResource BorderDashIcon}" />
+            </zm:TypeIconSelector>
+          </zm:SpyVisualTreeViewControl.ItemIconSelector>
+
           <zm:SpyVisualTreeViewControl.ItemContentTemplate>
             <DataTemplate DataType="{x:Type zm:SpyVisualTreeDataItem}">
               <TextBlock Text="{Binding TypeName}" 

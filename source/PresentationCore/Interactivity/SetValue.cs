@@ -6,27 +6,23 @@ using Zaaml.PresentationCore.PropertyCore.Extensions;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  public sealed class SetValue : PropertyValueActionBase
-  {
-    #region  Methods
+	public sealed class SetValue : PropertyValueActionBase
+	{
+		protected override InteractivityObject CreateInstance()
+		{
+			return new SetValue();
+		}
 
-    protected override InteractivityObject CreateInstance()
-    {
-      return new SetValue();
-    }
+		protected override void InvokeOverride()
+		{
+			var actualTarget = ActualTarget;
+			var actualProperty = ActualProperty;
 
-    protected override void InvokeOverride()
-    {
-      var actualTarget = ActualTarget;
-      var actualProperty = ActualProperty;
-
-      var actualValue = ActualValue;
-      if (actualValue.IsDependencyPropertyUnsetValue())
-        actualTarget.ClearValue(actualProperty);
-      else
-        actualTarget.SetValue(actualProperty, actualValue);
-    }
-
-    #endregion
-  }
+			var actualValue = ActualValue;
+			if (actualValue.IsDependencyPropertyUnsetValue())
+				actualTarget.ClearValue(actualProperty);
+			else
+				actualTarget.SetValue(actualProperty, actualValue);
+		}
+	}
 }

@@ -5,6 +5,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
@@ -367,6 +368,9 @@ namespace Zaaml.Platform
 
 		[DllImport(User32)]
 		public static extern void mouse_event(MOUSEEVENT dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+
+		[DllImport(User32)]
+		public static extern void keybd_event(byte bVk, byte bScan, KEYBD_EVENT_FLAGS dwFlags, int dwExtraInfo);
 
 		[DllImport(User32, SetLastError = true)]
 		public static extern bool MoveWindow(Hwnd hwnd, int x, int y, int width, int height, bool repaint);

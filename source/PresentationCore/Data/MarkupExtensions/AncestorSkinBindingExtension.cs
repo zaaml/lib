@@ -7,20 +7,16 @@ using System.Windows.Data;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public sealed class AncestorSkinBindingExtension : SkinBindingBaseExtension
-  {
-    #region Properties
+	public sealed class AncestorSkinBindingExtension : RelativeSkinBindingExtension
+	{
+		public int AncestorLevel { get; set; } = 1;
 
-    public int AncestorLevel { get; set; } = 1;
+		public Type AncestorType { get; set; }
 
-    public Type AncestorType { get; set; }
-
-    protected override RelativeSource Source => new RelativeSource(RelativeSourceMode.FindAncestor)
-    {
-      AncestorType = AncestorType,
-      AncestorLevel = AncestorLevel
-    };
-
-    #endregion
-  }
+		protected override RelativeSource RelativeSource => new(RelativeSourceMode.FindAncestor)
+		{
+			AncestorType = AncestorType,
+			AncestorLevel = AncestorLevel
+		};
+	}
 }

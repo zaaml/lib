@@ -19,7 +19,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			return _selector != null ? _selector.Select(value) : value;
+			return IconConverter.ConvertFrom(null, culture, _selector != null ? _selector.Select(value) : value);
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

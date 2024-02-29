@@ -102,7 +102,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			runtimeSetter.AssignValueOrProvider(context, false);
 
 			runtimeSetter.Apply(EffectiveValue.GetEffectiveValue(actualTarget, actualProperty));
-			runtimeSetter.EffectiveValue.KeepAlive = ActualVisualState != null;
+			runtimeSetter.EffectiveValue.KeepAlive = ActualVisualStateTrigger != null;
 
 			runtimeSetter.LeaveTransitionContext(useTransitions);
 
@@ -111,12 +111,13 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		private void AttachVisualStateObserver(IServiceProvider root = null)
 		{
-			if (ActualVisualState == null)
+			if (ActualVisualStateTrigger == null)
 				return;
 
-			IsEnabled = false;
+			IsVisualStateTriggerEnabled = false;
 
 			var vso = root?.GetService<IVisualStateObserver>() ?? GetService<IVisualStateObserver>();
+
 			vso?.AttachListener(this);
 
 			IsVisualStateObserverAttached = true;
@@ -150,7 +151,7 @@ namespace Zaaml.PresentationCore.Interactivity
 				return null;
 #endif
 
-			if (string.IsNullOrEmpty(ActualVisualState) == false)
+			if (string.IsNullOrEmpty(ActualVisualStateTrigger) == false)
 				return null;
 
 			var dependencyProperty = ResolveProperty(targetType);
@@ -258,7 +259,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (IsVisualStateObserverAttached)
 				GetService<IVisualStateObserver>()?.DetachListener(this);
 
-			IsEnabled = true;
+			IsVisualStateTriggerEnabled = true;
 			IsVisualStateObserverAttached = false;
 		}
 
@@ -312,14 +313,14 @@ namespace Zaaml.PresentationCore.Interactivity
 
 					if (styleSetterSource != null)
 					{
-						resolvedValueProvider = ValueResolver.ResolveValueProvider(styleSetterSource);
+						resolvedValueProvider = SetterValueResolver.ResolveValueProvider(styleSetterSource);
 
 						if (resolvedValueProvider != null)
 							return resolvedValueProvider;
 					}
 				}
 
-				resolvedValueProvider = ValueResolver.ResolveValueProvider(this);
+				resolvedValueProvider = SetterValueResolver.ResolveValueProvider(this);
 
 				if (resolvedValueProvider != null)
 					return resolvedValueProvider;
@@ -367,30 +368,30 @@ namespace Zaaml.PresentationCore.Interactivity
 
 		private ISetterValueProvider GetValuePathProvider(Context context)
 		{
-			var actualValuePathSource = ActualValuePathSource;
-
-			switch (actualValuePathSource)
+			return ActualValuePathSource switch
 			{
-				case ValuePathSource.ThemeResource:
-					return ThemeManager.GetThemeResourceReference(context.ValuePath);
-				case ValuePathSource.Skin:
-					return null;
-				case ValuePathSource.TemplateSkin:
-					return null;
-				case ValuePathSource.TemplateExpando:
-					return new ExpandoValueProvider(InteractivityTarget.GetTemplatedParent(), context.ValuePath);
-				case ValuePathSource.Expando:
-					return new ExpandoValueProvider(ActualTarget, context.ValuePath);
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
+				ValuePathSource.ThemeResource => ThemeManager.GetThemeResourceReference(context.ValuePath),
+				ValuePathSource.Skin => null,
+				ValuePathSource.TemplateSkin => null,
+				ValuePathSource.TemplateExpando => new ExpandoValueProvider(InteractivityTarget.GetTemplatedParent(), context.ValuePath),
+				ValuePathSource.Expando => new ExpandoValueProvider(ActualTarget, context.ValuePath),
+				_ => throw new ArgumentOutOfRangeException()
+			};
 		}
 
 		internal override void LoadCore(IInteractivityRoot root)
 		{
 			base.LoadCore(root);
 
+			UpdateClassTrigger();
 			AttachVisualStateObserver(root);
+		}
+
+		protected override void OnActualClassTriggerChanged(string oldClassTrigger, string newClassTrigger)
+		{
+			base.OnActualClassTriggerChanged(oldClassTrigger, newClassTrigger);
+
+			UpdateClassTrigger();
 		}
 
 		protected override void OnActualPriorityChanged(short oldPriority, short newPriority)
@@ -436,12 +437,17 @@ namespace Zaaml.PresentationCore.Interactivity
 			base.OnActualValuePathSourceChanged(oldValuePathSource, newValuePathSource);
 		}
 
-		protected override void OnActualVisualStateChanged(string oldVisualState, string newVisualState)
+		protected override void OnActualVisualStateTriggerChanged(string oldVisualStateTrigger, string newVisualStateTrigger)
 		{
-			base.OnActualVisualStateChanged(oldVisualState, newVisualState);
+			base.OnActualVisualStateTriggerChanged(oldVisualStateTrigger, newVisualStateTrigger);
 
 			DetachVisualStateObserver();
 			AttachVisualStateObserver();
+		}
+
+		internal void OnClassChangedInternal()
+		{
+			UpdateClassTrigger();
 		}
 
 		internal Setter Optimize()
@@ -477,9 +483,20 @@ namespace Zaaml.PresentationCore.Interactivity
 				RuntimeTransitionStore = IsTransitionSet ? runtimeSetter.Transition : null;
 			}
 
+			UpdateClassTrigger();
 			DetachVisualStateObserver();
 
 			base.UnloadCore(root);
+		}
+
+		private void UpdateClassTrigger()
+		{
+			var actualClassTrigger = ActualClassTrigger;
+			var interactivityTarget = InteractivityTarget;
+
+			IsClassTriggerEnabled = interactivityTarget == null ||
+			                        actualClassTrigger == null ||
+			                        Extension.GetActualClass(interactivityTarget)?.HasClass(actualClassTrigger) == true;
 		}
 
 		private void UpdateEffectiveValue()
@@ -496,7 +513,7 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			var actualValuePathSource = ActualValuePathSource;
 
-			if (actualValuePathSource == ValuePathSource.Skin || actualValuePathSource == ValuePathSource.TemplateSkin)
+			if (actualValuePathSource is ValuePathSource.Skin or ValuePathSource.TemplateSkin)
 				RuntimeSetter.Value = GetSkinValue(actualValuePathSource);
 		}
 
@@ -527,19 +544,19 @@ namespace Zaaml.PresentationCore.Interactivity
 			throw new NotSupportedException();
 		}
 
-		string IVisualStateListener.VisualStateName => ActualVisualState;
+		string IVisualStateListener.VisualStateName => ActualVisualStateTrigger;
 
 		void IVisualStateListener.EnterState(bool useTransitions)
 		{
 			UseTransitions = useTransitions;
-			IsEnabled = true;
+			IsVisualStateTriggerEnabled = true;
 			UseTransitions = false;
 		}
 
 		void IVisualStateListener.LeaveState(bool useTransitions)
 		{
 			UseTransitions = useTransitions;
-			IsEnabled = false;
+			IsVisualStateTriggerEnabled = false;
 			UseTransitions = false;
 		}
 

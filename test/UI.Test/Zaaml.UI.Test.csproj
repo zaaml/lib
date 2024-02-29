@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>library</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="NUnit" Version="3.13.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\source\Core\Zaaml.Core.csproj" />
+    <ProjectReference Include="..\..\source\Platform\Zaaml.Platform.csproj" />
+    <ProjectReference Include="..\..\source\PresentationCore\Zaaml.PresentationCore.csproj" />
+    <ProjectReference Include="..\..\source\Themes\Metro\Themes.Metro\Zaaml.Themes.Metro.csproj" />
+    <ProjectReference Include="..\..\source\UI\Zaaml.UI.csproj" />
+    <ProjectReference Include="..\..\source\Themes\Metro\Themes.Metro.UI\Zaaml.Themes.Metro.UI.csproj" />
+    <ProjectReference Include="..\..\source\Themes\Metro\Themes.Metro\Zaaml.Themes.Metro.csproj" />
+  </ItemGroup>
+
+</Project>

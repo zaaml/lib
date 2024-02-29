@@ -1,0 +1,219 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Zaaml.PresentationCore.Test"
+                    xmlns:zm="http://schemas.zaaml.com/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+
+  <system:Int32 x:Key="Int1">1</system:Int32>
+  <system:Int32 x:Key="Int2">2</system:Int32>
+  <system:Int32 x:Key="Int3">3</system:Int32>
+  <system:Int32 x:Key="Int4">4</system:Int32>
+
+  <ControlTemplate x:Key="TestSimpleSetters" TargetType="local:TestContainerControl">
+    <Grid x:Name="Root" zm:VisualStateManager.Instance="{zm:VisualStateManager}">
+
+      <!-- VisualStates -->
+      <VisualStateManager.VisualStateGroups>
+        <VisualStateGroup Name="Group1">
+          <VisualState Name="State1" />
+          <VisualState Name="State2" />
+        </VisualStateGroup>
+        <VisualStateGroup Name="Group2">
+          <VisualState Name="State3" />
+          <VisualState Name="State4" />
+        </VisualStateGroup>        
+      </VisualStateManager.VisualStateGroups>
+      
+      <local:TestChildControl x:Name="ChildControl1">
+        <zm:Extension.Setters>
+          <!-- Constant Value -->
+          <zm:Setter Property="Output1" Value="1" />
+          <!-- StaticResource Value -->
+          <zm:Setter Property="Output2" Value="{StaticResource Int2}" />
+          <!-- Binding to StaticResource Value -->
+          <zm:Setter Property="Output3" Value="{Binding Source={StaticResource Int3}, BindsDirectlyToSource=True}" />
+          <!-- TemplateBinding Value -->
+          <zm:Setter Property="Output4" Value="{zm:TemplateBinding Path=Input4}" />
+        </zm:Extension.Setters>
+      </local:TestChildControl>
+
+      <!-- Target for Template Root triggers -->
+      <local:TestChildControl x:Name="ChildControl2" />
+      
+      
+      <local:TestChildControl x:Name="ChildControl3">
+        
+        <zm:Extension.Setters>
+          <!-- Expando property -->
+          <zm:Setter ExpandoProperty="SelfExpando4" Value="{zm:Int Value=4}"/>
+          
+          <!-- ThemeResource Value -->
+          <zm:Setter Property="Output1" Value="{zm:ThemeResource Key=ThemeResource1}" />
+          
+          <zm:SetterGroup ValuePathSource="ThemeResource">
+            <!-- Groupped by ThemeResource ValuePathSource: ValuePath -->
+            <zm:Setter Property="Output2" ValuePath="ThemeResource2" />
+          </zm:SetterGroup>
+          
+          <!-- TemplateExpando -->
+          <zm:Setter Property="Output3" Value="{zm:TemplateExpandoBinding Path=ExpandoInput3}" />
+          
+          <zm:SetterGroup Property="Output4" ValuePathSource="Expando">
+            <!-- Groupped by Property and SelfExpando ValuePathSource: ValuePath -->
+            <zm:Setter ValuePath="SelfExpando4"/>
+          </zm:SetterGroup>
+        </zm:Extension.Setters>
+      </local:TestChildControl>
+
+      <local:TestChildControl x:Name="ChildControl4">
+
+        <zm:Extension.Setters>
+          <zm:SetterGroup Property="Output1">
+            <!-- State1: ThemeResource Value -->
+            <zm:Setter VisualStateTrigger="State1"  Value="{zm:ThemeResource Key=ThemeResource1}" Debug="True" />
+            <!-- State2: ThemeResource ValuePathSource: ValuePath -->
+            <zm:Setter VisualStateTrigger="State2" ValuePathSource="ThemeResource" ValuePath="ThemeResource2" />
+          </zm:SetterGroup>
+
+          <zm:SetterGroup Property="Output2"  ValuePathSource="ThemeResource">
+            <!-- State1: TemplateExpando -->
+            <zm:Setter VisualStateTrigger="State1" Value="{zm:TemplateExpandoBinding Path=ExpandoInput1}" />
+            <!-- State2 Priority2: TemplateExpando -->
+            <zm:Setter VisualStateTrigger="State2" Value="3" Priority="2" />
+            <!-- State3 implicit Priority: TemplateExpando -->
+            <zm:Setter VisualStateTrigger="State3" Value="3"/>
+            <!-- State4 Priority1: SelfExpando ValuePathSource: ValuePath -->
+            <zm:Setter VisualStateTrigger="State4" ValuePath="ThemeResource4" Priority="1" />
+          </zm:SetterGroup>
+        </zm:Extension.Setters>
+      </local:TestChildControl>
+
+      <zm:Extension.Setters>
+
+        <!-- Constant Value To TargetName -->
+        <zm:Setter Property="Output1" TargetName="ChildControl2" Value="1" />
+        <!-- StaticResource Value To Explicit Target -->
+        <zm:Setter Property="Output2" Target="{Binding ElementName=ChildControl2, BindsDirectlyToSource=True}" Value="{StaticResource Int2}" />
+        <!-- SetterGroup to TargetName -->
+        <zm:SetterGroup TargetName="ChildControl2">
+          <!-- Groupped by TargetName: Binding to StaticResource Value -->
+          <zm:Setter Property="Output3" Value="{Binding Source={StaticResource Int3}, BindsDirectlyToSource=True}"/>
+          <!-- PropertyGroup -->
+          <zm:SetterGroup Property="Output4">
+            <!-- Groupped by Property: TemplateBinding Value -->
+            <zm:Setter  Value="{zm:TemplateBinding Path=Input4}" />
+          </zm:SetterGroup>
+        </zm:SetterGroup>
+      </zm:Extension.Setters>
+    </Grid>
+  </ControlTemplate>
+
+
+  <ControlTemplate x:Key="TestTriggers" TargetType="local:TestContainerControl">
+    <Grid x:Name="Root">
+      <!-- VisualStates -->
+      <VisualStateManager.VisualStateGroups>
+        <VisualStateGroup Name="Group1">
+          <VisualState Name="State1" />
+          <VisualState Name="State2" />
+        </VisualStateGroup>
+        <VisualStateGroup Name="Group2">
+          <VisualState Name="State3" />
+          <VisualState Name="State4" />
+        </VisualStateGroup>
+      </VisualStateManager.VisualStateGroups>
+
+      <!-- Trigger -->
+      <local:TestChildControl x:Name="ChildControl1">
+        <zm:Extension.Triggers>
+          <!-- Trigger: Self Property -->
+          <zm:Trigger Property="Input1" Value="10">
+            <zm:Setter Property="Output1" Value="10" />
+          </zm:Trigger>
+          <!-- Trigger: Explicit Source Property -->
+          <zm:Trigger Source="{zm:ElementBinding ElementName=ChildControl1}" Property="Input2" Value="20">
+            <zm:Setter Property="Output2" Value="20" />
+          </zm:Trigger>
+          <!-- Trigger: Source Name Property -->
+          <zm:Trigger SourceName="ChildControl1" Property="Input3" Value="30">
+            <zm:Setter Property="Output3" Value="30" />
+          </zm:Trigger>
+        </zm:Extension.Triggers>
+      </local:TestChildControl>
+
+      <!-- DataTrigger -->
+      <local:TestChildControl x:Name="ChildControl2">
+        <zm:Extension.Triggers>
+          <!-- DataTrigger: TemplatedParent Property To Constant -->
+          <zm:DataTrigger Binding="{zm:TemplateBinding Path=Input1}" Value="10">
+            <zm:Setter Property="Output1" Value="10" />
+          </zm:DataTrigger>
+
+          <!-- DataTrigger: SelfProperty To TemplatedParent Property -->
+          <zm:DataTrigger Binding="{zm:SelfBinding Path=Input2}" Value="{zm:TemplateBinding Path=Input1}" Debug="True">
+            <zm:Setter Property="Output2" Value="20" />
+          </zm:DataTrigger>
+        </zm:Extension.Triggers>
+      </local:TestChildControl>
+
+
+      <!-- MultiDataTrigger -->
+      <local:TestChildControl x:Name="ChildControl3">
+        <zm:Extension.Triggers>
+          <!-- DataTrigger: TemplatedParent Property To Constant -->
+          <zm:MultiTrigger LogicalOperator="Or">
+            <zm:MultiTrigger.Conditions>
+              <!-- And group -->
+              <zm:And>
+                <zm:DataCondition Binding="{zm:SelfBinding Path=Input1}" Value="10"/>
+                <zm:DataCondition Binding="{zm:SelfBinding Path=Input2}" Value="20"/>
+              </zm:And>
+              <!-- Nested Or -->
+              <zm:Or>
+                <zm:Or>
+                  <zm:DataCondition Binding="{zm:SelfBinding Path=Input3}" Value="30"/>
+                </zm:Or>
+              </zm:Or>
+            </zm:MultiTrigger.Conditions>
+            <zm:Setter Property="Output1" Value="10" />
+          </zm:MultiTrigger>
+        </zm:Extension.Triggers>
+      </local:TestChildControl>
+
+      <local:TestChildControl x:Name="ChildControl4">
+
+      </local:TestChildControl>
+
+      <zm:Extension.Setters>
+
+
+      </zm:Extension.Setters>
+    </Grid>
+  </ControlTemplate>
+
+  <ControlTemplate x:Key="TestResolvers" TargetType="local:TestContainerControl">
+    <Grid x:Name="Root">
+
+        <!-- Trigger -->
+      <local:TestChildControl x:Name="ChildControl2">
+        <zm:Extension.Triggers>
+          <zm:Trigger SourceName="ChildControl2" Property="Input1" Value="10">
+            <!-- Propagate Property -->
+            <zm:SetterGroup Property="Output1">
+              <!-- Dummy -->
+              <zm:SetterGroup>
+                <!-- Propagate Target -->
+                <zm:SetterGroup Target="{zm:TemplateBinding Path=ChildControl1}">
+                  <!-- Inherit Target -->
+                  <zm:Setter Value="10" />
+                </zm:SetterGroup>
+              </zm:SetterGroup>
+            </zm:SetterGroup>
+          </zm:Trigger>
+        </zm:Extension.Triggers>
+      </local:TestChildControl>
+
+    </Grid>
+  </ControlTemplate>
+  
+</ResourceDictionary>

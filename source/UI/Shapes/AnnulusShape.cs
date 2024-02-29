@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -18,6 +17,9 @@ namespace Zaaml.UI.Shapes
 
 		public static readonly DependencyProperty EndAngleProperty = DPM.Register<double, AnnulusShape>
 			("EndAngle", d => d.OnEndAnglePropertyChangedPrivate);
+
+		public static readonly DependencyProperty RelativeAngleProperty = DPM.Register<double, AnnulusShape>
+			("RelativeAngle", d => d.OnRelativeAnglePropertyChangedPrivate);
 
 		public static readonly DependencyProperty InnerRadiusProperty = DPM.Register<double, AnnulusShape>
 			("InnerRadius", d => d.OnInnerRadiusPropertyChangedPrivate);
@@ -54,6 +56,12 @@ namespace Zaaml.UI.Shapes
 			set => SetValue(OuterRadiusProperty, value);
 		}
 
+		public double RelativeAngle
+		{
+			get => (double)GetValue(RelativeAngleProperty);
+			set => SetValue(RelativeAngleProperty, value);
+		}
+
 		public double StartAngle
 		{
 			get => (double)GetValue(StartAngleProperty);
@@ -84,6 +92,11 @@ namespace Zaaml.UI.Shapes
 			InvalidateGeometry();
 		}
 
+		private void OnRelativeAnglePropertyChangedPrivate(double oldValue, double newValue)
+		{
+			InvalidateGeometry();
+		}
+
 		private void OnStartAnglePropertyChangedPrivate(double oldValue, double newValue)
 		{
 			InvalidateGeometry();
@@ -91,7 +104,11 @@ namespace Zaaml.UI.Shapes
 
 		private Geometry UpdateAnnulus()
 		{
-			var annulusKind = AnnulusBuilder.Build(InnerRadius, OuterRadius, StartAngle, EndAngle, ref _circleGeometry, ref _annulusGeometry, ref _circleSectorGeometry, ref _annulusSectorGeometry);
+			var relativeAngle = RelativeAngle;
+			var startAngle = StartAngle + relativeAngle;
+			var endAngle = EndAngle + relativeAngle;
+			var annulusKind = AnnulusBuilder.Build(InnerRadius, OuterRadius, startAngle, endAngle,
+				ref _circleGeometry, ref _annulusGeometry, ref _circleSectorGeometry, ref _annulusSectorGeometry);
 
 			return annulusKind switch
 			{

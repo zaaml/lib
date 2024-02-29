@@ -5,6 +5,7 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Data;
@@ -14,6 +15,8 @@ namespace Zaaml.PresentationCore.Animation
 {
 	public abstract class AnimationTimeline : AssetBase, ITimelineClockCallback
 	{
+		internal static readonly RepeatBehavior DefaultRepeatBehavior = new(1);
+
 		public static readonly DependencyProperty BeginTimeProperty = DPM.Register<TimeSpan?, AnimationTimeline>
 			("BeginTime", null, mt => mt.OnBeginTimePropertyChangedPrivate);
 
@@ -31,6 +34,9 @@ namespace Zaaml.PresentationCore.Animation
 
 		public static readonly DependencyProperty DecelerationRatioProperty = DPM.Register<double, AnimationTimeline>
 			("DecelerationRatio", 0.0, mt => mt.OnDecelerationRatioPropertyChangedPrivate);
+
+		public static readonly DependencyProperty RepeatBehaviorProperty = DPM.Register<RepeatBehavior, AnimationTimeline>
+			("RepeatBehavior", DefaultRepeatBehavior, d => d.OnRepeatBehaviorPropertyChangedPrivate);
 
 		public static readonly DependencyProperty InitCommandProperty = DPM.Register<AnimationCommand, AnimationTimeline>
 			("InitCommand");
@@ -115,6 +121,12 @@ namespace Zaaml.PresentationCore.Animation
 			}
 		}
 
+		public RepeatBehavior RepeatBehavior
+		{
+			get => (RepeatBehavior)GetValue(RepeatBehaviorProperty);
+			set => SetValue(RepeatBehaviorProperty, value);
+		}
+
 		public ICommand ResumeCommand => ActualCommands.ResumeCommand;
 
 		public ICommand SeekCommand => ActualCommands.SeekCommand;
@@ -194,6 +206,11 @@ namespace Zaaml.PresentationCore.Animation
 
 		internal virtual void OnRelativeTimeChanged()
 		{
+		}
+
+		private void OnRepeatBehaviorPropertyChangedPrivate(RepeatBehavior oldValue, RepeatBehavior newValue)
+		{
+			UpdateRepeatBehavior();
 		}
 
 		private void OnResumeCommandExecuted(object commandParameter)
@@ -291,6 +308,11 @@ namespace Zaaml.PresentationCore.Animation
 		protected void UpdateDuration()
 		{
 			_clock.Duration = ActualDuration;
+		}
+
+		protected void UpdateRepeatBehavior()
+		{
+			_clock.RepeatBehavior = RepeatBehavior;
 		}
 
 		protected void UpdateSpeedRatio()

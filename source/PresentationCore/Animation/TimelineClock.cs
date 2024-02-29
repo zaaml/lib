@@ -88,14 +88,10 @@ namespace Zaaml.PresentationCore.Animation
 			}
 		}
 
-		public double CalculateRelativeTime(TimeSpan time)
+		public RepeatBehavior RepeatBehavior
 		{
-			return Duration.TimeSpan.TotalMilliseconds.IsZero() ? 1.0 : time.TotalMilliseconds / Duration.TimeSpan.TotalMilliseconds;
-		}
-		
-		public TimeSpan CalculateTime(double relativeTime)
-		{
-			return Duration.TimeSpan.TotalMilliseconds.IsZero() ? TimeSpan.Zero : TimeSpan.FromMilliseconds(relativeTime * Duration.TimeSpan.TotalMilliseconds);
+			get => _storyboard.RepeatBehavior;
+			set => _storyboard.RepeatBehavior = value;
 		}
 
 		public double SpeedRatio
@@ -114,6 +110,16 @@ namespace Zaaml.PresentationCore.Animation
 		{
 			_storyboard.Begin();
 			_animationTimeline.OnStarted(this);
+		}
+
+		public double CalculateRelativeTime(TimeSpan time)
+		{
+			return Duration.TimeSpan.TotalMilliseconds.IsZero() ? 1.0 : time.TotalMilliseconds / Duration.TimeSpan.TotalMilliseconds;
+		}
+
+		public TimeSpan CalculateTime(double relativeTime)
+		{
+			return Duration.TimeSpan.TotalMilliseconds.IsZero() ? TimeSpan.Zero : TimeSpan.FromMilliseconds(relativeTime * Duration.TimeSpan.TotalMilliseconds);
 		}
 
 		public void FromTransition(ValueTransition transition)

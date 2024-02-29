@@ -30,15 +30,28 @@ namespace Zaaml.PresentationCore.Theming
 			_frozenDictionary = frozenDictionary;
 		}
 
+		private SkinDictionary ActualDictionary => SkinDictionary ?? NullDictionary;
+
+		private SkinDictionary FrozenDictionary
+		{
+			get
+			{
+				if (IsFrozenDictionary)
+					return _frozenDictionary;
+
+				return _frozenDictionary = FreezeDictionary();
+			}
+		}
+
+		private bool IsFrozenDictionary => ReferenceEquals(_frozenDictionary, NullDictionary) == false;
+
+		internal override IEnumerable<KeyValuePair<string, object>> Resources => FrozenDictionary.ShallowResources;
+
 		public SkinDictionary SkinDictionary
 		{
 			get => (SkinDictionary)GetValue(SkinDictionaryProperty);
 			set => SetValue(SkinDictionaryProperty, value);
 		}
-
-		private bool IsFrozenDictionary => ReferenceEquals(_frozenDictionary, NullDictionary) == false;
-
-		internal override IEnumerable<KeyValuePair<string, object>> Resources => _frozenDictionary.ShallowResources;
 
 		protected abstract Theme Theme { get; }
 
@@ -51,21 +64,24 @@ namespace Zaaml.PresentationCore.Theming
 			return dictionary;
 		}
 
-		protected override object GetValue(string key)
+		private SkinDictionary FreezeDictionary()
 		{
-			return _frozenDictionary.GetValueOrDefault(key);
+			return Theme?.Freeze(ActualDictionary) ?? ActualDictionary.AsFrozen();
 		}
 
-		protected override void OnAttached(FrameworkElement frameworkElement)
+		protected override object GetValue(string key)
 		{
-			base.OnAttached(frameworkElement);
+			return FrozenDictionary.GetValueOrDefault(key);
+		}
+
+		protected override void OnAttached(DependencyObject dependencyObject)
+		{
+			base.OnAttached(dependencyObject);
 
 			if (IsFrozenDictionary)
 				return;
 
-			var dictionary = SkinDictionary ?? NullDictionary;
-
-			_frozenDictionary = Theme?.Freeze(dictionary) ?? dictionary.AsFrozen();
+			_frozenDictionary = FreezeDictionary();
 		}
 
 		private void OnDictionaryPropertyChangedPrivate(SkinDictionary oldValue, SkinDictionary newValue)

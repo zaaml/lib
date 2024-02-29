@@ -11,133 +11,97 @@ using Zaaml.Core.Collections;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  public abstract class InteractivityCollection
-  {
-    #region Properties
+	public abstract class InteractivityCollection
+	{
+		internal abstract IEnumerable<InteractivityObject> Items { get; }
 
-    internal abstract IEnumerable<InteractivityObject> Items { get; }
+		internal void WalkTree(IInteractivityVisitor visitor)
+		{
+			foreach (var interactivityObject in Items)
+				interactivityObject.WalkTree(visitor);
+		}
+	}
 
-    #endregion
+	public abstract partial class InteractivityCollection<T> : InteractivityCollection, IList where T : InteractivityObject
+	{
+		internal override IEnumerable<InteractivityObject> Items => this;
 
-    #region  Methods
+		private IList ListImplementation => _innerCollection ?? (IList)EmptyReadOnlyList<T>.Instance;
 
-    internal void WalkTree(IInteractivityVisitor visitor)
-    {
-      foreach (var interactivityObject in Items)
-        interactivityObject.WalkTree(visitor);
-    }
+		void ICollection.CopyTo(Array array, int index)
+		{
+			ListImplementation.CopyTo(array, index);
+		}
 
-    #endregion
-  }
+		int ICollection.Count => ListImplementation.Count;
 
-  public abstract partial class InteractivityCollection<T> : InteractivityCollection, IList where T : InteractivityObject
-  {
-    #region Properties
+		object ICollection.SyncRoot => ListImplementation.SyncRoot;
 
-    internal override IEnumerable<InteractivityObject> Items => this;
+		bool ICollection.IsSynchronized => ListImplementation.IsSynchronized;
 
-    private IList ListImplementation => _innerCollection ?? (IList) EmptyReadOnlyList<T>.Instance;
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return ListImplementation.GetEnumerator();
+		}
 
-    #endregion
+		int IList.Add(object value)
+		{
+			return AddImpl((T)value);
+		}
 
-    #region Interface Implementations
+		bool IList.Contains(object value)
+		{
+			return ListImplementation.Contains(value);
+		}
 
-    #region ICollection
+		void IList.Clear()
+		{
+			ClearImpl();
+		}
 
-    void ICollection.CopyTo(Array array, int index)
-    {
-      ListImplementation.CopyTo(array, index);
-    }
-
-    int ICollection.Count => ListImplementation.Count;
-
-    object ICollection.SyncRoot => ListImplementation.SyncRoot;
-
-    bool ICollection.IsSynchronized => ListImplementation.IsSynchronized;
-
-    #endregion
-
-    #region ICollection<T>
-
-    int ICollection<T>.Count => ListImplementation.Count;
-
-    void ICollection<T>.Clear()
-    {
-      ClearImpl();
-    }
-
-    bool ICollection<T>.IsReadOnly => ListImplementation.IsReadOnly;
-
-    #endregion
-
-    #region IEnumerable
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-      return ListImplementation.GetEnumerator();
-    }
-
-    #endregion
-
-    #region IList
-
-    int IList.Add(object value)
-    {
-      return AddImpl((T) value);
-    }
-
-    bool IList.Contains(object value)
-    {
-      return ListImplementation.Contains(value);
-    }
-
-    void IList.Clear()
-    {
-      ClearImpl();
-    }
-
-    int IList.IndexOf(object value)
-    {
-      return ListImplementation.IndexOf(value);
-    }
+		int IList.IndexOf(object value)
+		{
+			return ListImplementation.IndexOf(value);
+		}
 
 
-    void IList.Insert(int index, object value)
-    {
-      InsertImpl(index, (T) value);
-    }
+		void IList.Insert(int index, object value)
+		{
+			InsertImpl(index, (T)value);
+		}
 
-    void IList.Remove(object value)
-    {
-      RemoveImpl((T) value, -1);
-    }
+		void IList.Remove(object value)
+		{
+			RemoveImpl((T)value, -1);
+		}
 
-    void IList.RemoveAt(int index)
-    {
-      RemoveAtImpl(index);
-    }
+		void IList.RemoveAt(int index)
+		{
+			RemoveAtImpl(index);
+		}
 
-    object IList.this[int index]
-    {
-      get => ListImplementation[index];
-      set => SetItemImpl(index, (T) value);
-    }
+		object IList.this[int index]
+		{
+			get => ListImplementation[index];
+			set => SetItemImpl(index, (T)value);
+		}
 
-    bool IList.IsReadOnly => ListImplementation.IsReadOnly;
+		bool IList.IsReadOnly => ListImplementation.IsReadOnly;
 
-    bool IList.IsFixedSize => ListImplementation.IsFixedSize;
+		bool IList.IsFixedSize => ListImplementation.IsFixedSize;
 
-    #endregion
+		int ICollection<T>.Count => ListImplementation.Count;
 
-    #region IList<T>
+		void ICollection<T>.Clear()
+		{
+			ClearImpl();
+		}
 
-    void IList<T>.RemoveAt(int index)
-    {
-      RemoveAtImpl(index);
-    }
+		bool ICollection<T>.IsReadOnly => ListImplementation.IsReadOnly;
 
-    #endregion
-
-    #endregion
-  }
+		void IList<T>.RemoveAt(int index)
+		{
+			RemoveAtImpl(index);
+		}
+	}
 }

@@ -2,7 +2,9 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System.Linq;
 using System.Windows;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
@@ -13,6 +15,11 @@ namespace Zaaml.UI.Controls.NavigationView
 	[TemplateContractType(typeof(NavigationViewFrameTemplateContract))]
 	public class NavigationViewFrame : TemplateContractControl, ISelector<NavigationViewItem>
 	{
+		private static readonly DependencyPropertyKey NavigationViewControlPropertyKey = DPM.RegisterReadOnly<NavigationViewControl, NavigationViewFrame>
+			("NavigationViewControl", d => d.OnNavigationViewControlPropertyChangedPrivate);
+
+		public static readonly DependencyProperty NavigationViewControlProperty = NavigationViewControlPropertyKey.DependencyProperty;
+
 		private static readonly DependencyProperty SelectedItemProperty = DPM.Register<NavigationViewItem, NavigationViewFrame>
 			("SelectedItem", n => n.OnSelectedItemPropertyChangedPrivate, n => n.CoerceSelectedItem);
 
@@ -32,9 +39,15 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		private bool IsInitializing { get; set; }
 
-		internal NavigationViewFrameItemCollection Items { get; } = new NavigationViewFrameItemCollection();
+		internal NavigationViewFrameItemCollection Items { get; } = new();
 
-		private NavigationViewItem SelectedItem => (NavigationViewItem) GetValue(SelectedItemProperty);
+		public NavigationViewControl NavigationViewControl
+		{
+			get => (NavigationViewControl)GetValue(NavigationViewControlProperty);
+			private set => this.SetReadOnlyValue(NavigationViewControlPropertyKey, value);
+		}
+
+		private NavigationViewItem SelectedItem => (NavigationViewItem)GetValue(SelectedItemProperty);
 
 		private NavigationViewSelectorController SelectorController => _selectorController ??= CreateSelectorControllerPrivate();
 
@@ -103,7 +116,7 @@ namespace Zaaml.UI.Controls.NavigationView
 		public override void EndInit()
 		{
 			IsInitializing = false;
-			
+
 			SelectorController.EndInit();
 
 			base.EndInit();
@@ -111,10 +124,23 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		public void NavigateTo(NavigationViewItem navigationViewItem)
 		{
-			if (navigationViewItem.Frame != this)
+			if (navigationViewItem.ActualFrame != this)
 				Items.Add(navigationViewItem);
 
 			SelectorController.SelectItem(navigationViewItem);
+		}
+
+		protected override void OnLoaded()
+		{
+			base.OnLoaded();
+
+			NavigationViewControl = this.GetVisualAncestors().OfType<NavigationViewControl>().FirstOrDefault();
+		}
+
+		private void OnNavigationViewControlPropertyChangedPrivate(NavigationViewControl oldValue, NavigationViewControl newValue)
+		{
+			oldValue?.DetachFrameInternal(this);
+			newValue?.AttachFrameInternal(this);
 		}
 
 		private void OnSelectedItemPropertyChangedPrivate(NavigationViewItem oldValue, NavigationViewItem newValue)
@@ -136,6 +162,13 @@ namespace Zaaml.UI.Controls.NavigationView
 			base.OnTemplateContractDetaching();
 		}
 
+		protected override void OnUnloaded()
+		{
+			NavigationViewControl = null;
+
+			base.OnUnloaded();
+		}
+
 		internal void Select(NavigationViewItem navigationViewItem)
 		{
 			var currentSelectedItem = SelectorController.CurrentSelectedItem;
@@ -148,10 +181,8 @@ namespace Zaaml.UI.Controls.NavigationView
 
 		private void UpdateSelectedContent()
 		{
-			if (ContentPresenter != null)
-			{
+			if (ContentPresenter != null) 
 				ContentPresenter.Content = SelectedItem?.EnsurePage();
-			}
 		}
 
 		DependencyProperty ISelector<NavigationViewItem>.SelectedIndexProperty => null;

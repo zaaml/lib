@@ -2,58 +2,41 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-
-using System.Windows.Controls;
-using Zaaml.Core.Extensions;
-
-#if !SILVERLIGHT
 using System.Windows;
-#endif
+using Zaaml.Core.Extensions;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
-  public sealed class SetVisualStateAction : TargetTriggerActionBase
-  {
-    #region Properties
+	public sealed class SetVisualStateAction : TargetTriggerActionBase
+	{
+		public bool UseTransitions { get; set; }
 
-    public string VisualState { get; set; }
+		public string VisualState { get; set; }
 
-    public bool UseTransitions { get; set; }
+		protected internal override void CopyMembersOverride(InteractivityObject source)
+		{
+			base.CopyMembersOverride(source);
 
-    #endregion
+			var setVisualStateAction = (SetVisualStateAction)source;
 
-    #region  Methods
+			VisualState = setVisualStateAction.VisualState;
+			UseTransitions = setVisualStateAction.UseTransitions;
+		}
 
-    protected override InteractivityObject CreateInstance()
-    {
-      return new SetVisualStateAction();
-    }
+		protected override InteractivityObject CreateInstance()
+		{
+			return new SetVisualStateAction();
+		}
 
-    protected internal override void CopyMembersOverride(InteractivityObject source)
-    {
-      base.CopyMembersOverride(source);
+		protected override void InvokeCore()
+		{
+			if (VisualState.IsNullOrEmpty())
+				return;
 
-      var setVisualStateAction = (SetVisualStateAction)source;
-      VisualState = setVisualStateAction.VisualState;
-      UseTransitions = setVisualStateAction.UseTransitions;
-    }
+			if (ActualTarget is not FrameworkElement target)
+				return;
 
-    protected override void InvokeCore()
-    {
-      if (VisualState.IsNullOrEmpty())
-        return;
-
-#if SILVERLIGHT
-      var target = ActualTarget as Control;
-#else
-      var target = ActualTarget as FrameworkElement;
-#endif
-      if (target == null)
-        return;
-
-      System.Windows.VisualStateManager.GoToState(target, VisualState, UseTransitions);
-    }
-
-    #endregion
-  }
+			System.Windows.VisualStateManager.GoToState(target, VisualState, UseTransitions);
+		}
+	}
 }

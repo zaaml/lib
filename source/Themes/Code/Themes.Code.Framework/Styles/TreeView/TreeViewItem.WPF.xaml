@@ -35,7 +35,7 @@
 				              Template="{StaticResource ToggleButtonTemplate}" 
 				              IsChecked="{zm:TemplateBinding Path=IsExpanded, Mode=TwoWay}">
           <zm:Extension.Setters>
-            <zm:Setter Property="Visibility" VisualState="NoItems" Value="Collapsed" />
+            <zm:Setter Property="Visibility" VisualStateTrigger="NoItems" Value="Collapsed" />
           </zm:Extension.Setters>
         </ToggleButton>
 
@@ -97,19 +97,19 @@
       <!-- Foreground -->
       <zm:SetterGroup Property="Foreground" ValuePath="Foreground" >
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="HeaderMouseOver"  ValuePath="MouseOver" />
-        <zm:Setter VisualState="Selected" ValuePath="Selected" />
-        <zm:Setter VisualState="SelectedInactive" ValuePath="SelectedInactive" />
-        <zm:Setter VisualState="Unselected" ValuePath="Unselected" Priority="-1" />
+        <zm:Setter VisualStateTrigger="HeaderMouseOver"  ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Selected" ValuePath="Selected" />
+        <zm:Setter VisualStateTrigger="SelectedInactive" ValuePath="SelectedInactive" />
+        <zm:Setter VisualStateTrigger="Unselected" ValuePath="Unselected" Priority="-1" />
       </zm:SetterGroup>
 
       <!-- Background Setter -->
       <zm:SetterGroup Property="Background" ValuePath="Background" >
         <zm:Setter ValuePath="Normal" />
-        <zm:Setter VisualState="HeaderMouseOver"  ValuePath="MouseOver" />
-        <zm:Setter VisualState="Selected"  ValuePath="Selected" />
-        <zm:Setter VisualState="SelectedInactive"  ValuePath="SelectedInactive" />
-        <zm:Setter VisualState="Unselected" ValuePath="Unselected" Priority="-1" />
+        <zm:Setter VisualStateTrigger="HeaderMouseOver"  ValuePath="MouseOver" />
+        <zm:Setter VisualStateTrigger="Selected"  ValuePath="Selected" />
+        <zm:Setter VisualStateTrigger="SelectedInactive"  ValuePath="SelectedInactive" />
+        <zm:Setter VisualStateTrigger="Unselected" ValuePath="Unselected" Priority="-1" />
       </zm:SetterGroup>
     </zm:SetterGroup>
 

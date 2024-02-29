@@ -1,1 +1,1 @@
-dotnet build -c Release -v m -p:Publish=true
+dotnet build source\Lib.sln -c Release -v m -p:Publish=true

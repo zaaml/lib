@@ -2,11 +2,9 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core;
-using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
@@ -17,7 +15,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 	public class TrackBarValueItem : TrackBarItem
 	{
 		public static readonly DependencyProperty ValueProperty = DPM.Register<double, TrackBarValueItem>
-			("Value", t => t.OnValueChangedPrivate, t => t.CoerceValuePrivate);
+			("Value", t => t.OnValueChangedPrivate, _ => CoerceValuePrivate);
 
 		private byte _packedValue;
 		private double _valueCache;
@@ -53,24 +51,9 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			set => SetValue(ValueProperty, value);
 		}
 
-		internal void Clamp()
-		{
-			if (TrackBar == null)
-				return;
+		public event EventHandler<ValueChangedEventArgs<double>> ValueChanged;
 
-			try
-			{
-				SuspendValueHandler = true;
-
-				this.SetCurrentValueInternal(ValueProperty, ClampValue(PreserveValue ? _valueCache : Value));
-			}
-			finally
-			{
-				SuspendValueHandler = false;
-			}
-		}
-
-		internal double ClampValue(double value)
+		private double ClampValue(double value)
 		{
 			if (TrackBar == null)
 				return value;
@@ -78,8 +61,11 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			var trackBarMinimum = TrackBar.Minimum;
 			var trackBarMaximum = TrackBar.Maximum;
 
-			var minimum = PrevValueItem?.Value ?? trackBarMinimum;
-			var maximum = NextValueItem?.Value ?? trackBarMaximum;
+			var prevValue = PrevValueItem?.Value ?? trackBarMinimum;
+			var nextValue = NextValueItem?.Value ?? trackBarMaximum;
+
+			var minimum = prevValue.Clamp(trackBarMinimum, trackBarMaximum);
+			var maximum = nextValue.Clamp(minimum, trackBarMaximum);
 
 			if (value < trackBarMinimum || value > trackBarMaximum)
 				return value.Clamp(trackBarMinimum, trackBarMaximum);
@@ -87,15 +73,13 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			return value.Clamp(minimum, maximum);
 		}
 
-		private double CoerceValuePrivate(double value)
+		private static double CoerceValuePrivate(double value)
 		{
 			if (value.IsPositiveInfinity() || value.IsNegativeInfinity() || value.IsNaN())
 				throw new InvalidOperationException();
 
 			return value;
 		}
-
-		public event EventHandler<ValueChangedEventArgs<double>> ValueChanged;
 
 		protected virtual void OnValueChanged(double oldValue, double newValue)
 		{
@@ -121,6 +105,23 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			_valueCache = value;
 
 			this.SetCurrentValueInternal(ValueProperty, value);
+		}
+
+		protected override void ClampCore()
+		{
+			if (TrackBar == null)
+				return;
+
+			try
+			{
+				SuspendValueHandler = true;
+
+				this.SetCurrentValueInternal(ValueProperty, ClampValue(PreserveValue ? _valueCache : Value));
+			}
+			finally
+			{
+				SuspendValueHandler = false;
+			}
 		}
 
 		private static class PackedDefinition

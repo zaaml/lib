@@ -2,8 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using Zaaml.Core.Extensions;
-
 namespace Zaaml.Core.ColorModel
 {
 	internal struct HsvColor

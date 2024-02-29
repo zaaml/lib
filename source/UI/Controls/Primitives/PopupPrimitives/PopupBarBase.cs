@@ -7,30 +7,22 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
-  public enum PopupBorderStyle
-  {
-    None,
-    Border,
-    ArrowBorder
-  }
+	public enum PopupBorderStyle
+	{
+		None,
+		Border,
+		ArrowBorder
+	}
 
-  public abstract class PopupBarBase : PopupControlBase
-  {
-    #region Static Fields and Constants
+	public abstract class PopupBarBase : PopupControlBase
+	{
+		public static readonly DependencyProperty BorderStyleProperty = DPM.Register<PopupBorderStyle, PopupBarBase>
+			("BorderStyle", PopupBorderStyle.Border);
 
-    public static readonly DependencyProperty BorderStyleProperty = DPM.Register<PopupBorderStyle, PopupBarBase>
-      ("BorderStyle", PopupBorderStyle.Border);
-
-    #endregion
-
-    #region Properties
-
-    public PopupBorderStyle BorderStyle
-    {
-      get => (PopupBorderStyle) GetValue(BorderStyleProperty);
-      set => SetValue(BorderStyleProperty, value);
-    }
-
-    #endregion
-  }
+		public PopupBorderStyle BorderStyle
+		{
+			get => (PopupBorderStyle)GetValue(BorderStyleProperty);
+			set => SetValue(BorderStyleProperty, value);
+		}
+	}
 }

@@ -8,105 +8,92 @@ using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.PresentationCore.Theming
 {
-  public static partial class ThemeManager
-  {
-    #region Static Fields and Constants
+	public static partial class ThemeManager
+	{
+		public static readonly DependencyProperty ThemeProperty = DependencyProperty.RegisterAttached
+		("Theme", typeof(Theme), typeof(ThemeManager),
+			new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits | FrameworkPropertyMetadataOptions.AffectsMeasure, OnThemePropertyChanged));
 
-    public static readonly DependencyProperty ThemeProperty = DependencyProperty.RegisterAttached
-      ("Theme", typeof(Theme), typeof(ThemeManager), new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits | FrameworkPropertyMetadataOptions.AffectsMeasure, OnThemePropertyChanged));
+		private static readonly DependencyProperty DefaultStyleKeyProperty = DefaultStyleKeyHelper.DefaultStyleKeyProperty;
 
-    private static readonly DependencyProperty DefaultStyleKeyProperty = DefaultStyleKeyHelper.DefaultStyleKeyProperty;
+		private static void ActivateGeneric()
+		{
+			ProcessSources();
+		}
 
-    #endregion
+		internal static void EnableTheme(FrameworkElement frameworkElement)
+		{
+			var actualTheme = ApplicationThemeCore;
 
-    #region  Methods
+			if (ActualBehavior.ActivationMode == ThemeManagerActivationMode.Auto && actualTheme != null)
+				SetTheme(frameworkElement, actualTheme);
+		}
 
-    private static void ActivateGeneric()
-    {
-      ProcessSources();
-    }
+		private static void EnsureTheme(DependencyObject frameworkElement, Theme theme)
+		{
+			if (frameworkElement.Dispatcher.CheckAccess())
+			{
+				if (ReferenceEquals(GetTheme(frameworkElement), theme) == false)
+					SetTheme(frameworkElement, theme);
+			}
+			// TODO Implement thread-based theme loading.
+			//frameworkElement.Dispatcher.BeginInvoke(() =>
+			//{
+			//  if (ReferenceEquals(GetTheme(frameworkElement), theme) == false)
+			//    SetTheme(frameworkElement, theme);
+			//});
+		}
 
-    internal static void EnableTheme(FrameworkElement frameworkElement)
-    {
-      var actualTheme = ApplicationThemeCore;
+		public static Theme GetTheme(DependencyObject element)
+		{
+			return (Theme)element.GetValue(ThemeProperty);
+		}
 
-      if (ActualBehavior.ActivationMode == ThemeManagerActivationMode.Auto && actualTheme != null)
-        SetTheme(frameworkElement, actualTheme);
-    }
+		private static void OnThemeChanged(FrameworkElement fre, Theme theme)
+		{
+			var themeKey = theme?.GetThemeKey(ThemeKey.GetDefaultType(fre));
 
-    public static Theme GetTheme(DependencyObject element)
-    {
-      return (Theme) element.GetValue(ThemeProperty);
-    }
+			if (themeKey != null)
+				fre.SetValue(DefaultStyleKeyProperty, themeKey);
+		}
 
-    private static void OnThemeChanged(FrameworkElement fre, Theme theme)
-    {
-      var themeKey = theme?.GetThemeKey(ThemeKey.GetDefaultType(fre));
+		private static void OnThemePropertyChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs args)
+		{
+			if (depObj is FrameworkElement fre)
+				OnThemeChanged(fre, (Theme)args.NewValue);
+		}
 
-      if (themeKey != null)
-        fre.SetValue(DefaultStyleKeyProperty, themeKey);
-    }
+		static partial void PlatformActivateApplicationTheme()
+		{
+			if (ReferenceEquals(ActualTheme, DefaultTheme.Instance) == false)
+				ActivateGeneric();
+		}
 
-    private static void OnThemePropertyChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs args)
-    {
-	    if (depObj is FrameworkElement fre) 
-		    OnThemeChanged(fre, (Theme) args.NewValue);
-    }
+		private static void ProcessSources()
+		{
+			if (IsAutoActivationEnabled == false)
+				return;
 
-    static partial void PlatformActivateApplicationTheme()
-    {
-      if (ReferenceEquals(ActualTheme, DefaultTheme.Instance) == false)
-        ActivateGeneric();
-    }
+			var theme = ApplicationThemeCore;
 
-    private static void ProcessSources()
-    {
-      if (IsAutoActivationEnabled == false)
-        return;
+			foreach (var source in PresentationTreeUtils.EnumerateVisualRoots())
+			{
+				if (source is not FrameworkElement freSource)
+					continue;
 
-      var theme = ApplicationThemeCore;
+				var parent = freSource.Parent;
+				var themeTarget = parent is Popup or Window ? parent : freSource;
 
-      foreach (var source in PresentationTreeUtils.EnumerateVisualRoots())
-      {
-        var freSource = source as FrameworkElement;
+				EnsureTheme(themeTarget, theme);
+			}
 
-        if (freSource == null)
-          continue;
+			foreach (var enumeratePopup in PresentationTreeUtils.EnumeratePopups())
+				EnsureTheme(enumeratePopup, theme);
+		}
 
-        var parent = freSource.Parent;
-
-        var themeTarget = parent is Popup || parent is Window ? parent : freSource;
-
-	      EnsureTheme(themeTarget, theme);
-      }
-
-	    foreach (var enumeratePopup in PresentationTreeUtils.EnumeratePopups())
-		    EnsureTheme(enumeratePopup, theme);
-    }
-
-	  private static void EnsureTheme(DependencyObject frameworkElement, Theme theme)
-	  {
-	    if (frameworkElement.Dispatcher.CheckAccess())
-	    {
-	      if (ReferenceEquals(GetTheme(frameworkElement), theme) == false)
-	        SetTheme(frameworkElement, theme);
-      }
-	    else
-	    {
-				// TODO Implement thread-based theme loading.
-	      //frameworkElement.Dispatcher.BeginInvoke(() =>
-	      //{
-	      //  if (ReferenceEquals(GetTheme(frameworkElement), theme) == false)
-	      //    SetTheme(frameworkElement, theme);
-	      //});
-      }
-    }
-
-    public static void SetTheme(DependencyObject element, Theme value)
-    {
-      element.SetValue(ThemeProperty, value);
-    }
-
-    #endregion
-  }
+		public static void SetTheme(DependencyObject element, Theme value)
+		{
+			element.SetValue(ThemeProperty, value);
+		}
+	}
 }

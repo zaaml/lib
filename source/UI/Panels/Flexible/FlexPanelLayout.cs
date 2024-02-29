@@ -433,7 +433,7 @@ namespace Zaaml.UI.Panels.Flexible
 			var availableOriented = availableSize.AsOriented(orientation);
 
 			// First measure
-			var desiredOriented = MeasureItems(availableSize, out var desiredFixed, out _);
+			var desiredOriented = MeasureItems(availableSize, out var desiredFixed, out var desiredFlexible);
 
 			if (MeasureMode == PanelMeasureMode.Desired)
 			{
@@ -467,7 +467,10 @@ namespace Zaaml.UI.Panels.Flexible
 			var oriented = availableSize.AsOriented(orientation);
 			var fixedChildConstraint = oriented.Clone.ChangeDirect(double.PositiveInfinity);
 			var starChildConstraint = oriented.Clone.ChangeDirect(0);
-			var fixedResult = new OrientedSize(orientation);
+			
+			fixedSize = new OrientedSize(orientation);
+			flexibleSize = new OrientedSize(orientation);
+
 			var starValue = 0.0;
 
 			FlexElements.EnsureCount(childrenCount);
@@ -500,14 +503,13 @@ namespace Zaaml.UI.Panels.Flexible
 
 					flexElement = flexElement.WithUIElement(child, orientation);
 					size.Direct = flexElement.DesiredLength;
-					fixedResult = fixedResult.StackSize(size);
+					fixedSize = fixedSize.StackSize(size);
 					FlexElements[index] = flexElement;
 				}
-
-				fixedSize = fixedResult;
-				flexibleSize = new OrientedSize(orientation);
-
-				return fixedResult;
+				
+				flexibleSize = new OrientedSize(orientation).ChangeIndirect(fixedSize.Indirect);
+				
+				return fixedSize;
 			}
 
 			// Fixed size children
@@ -526,15 +528,13 @@ namespace Zaaml.UI.Panels.Flexible
 
 				flexElement = flexElement.WithUIElement(child, orientation);
 				size.Direct = flexElement.DesiredLength;
-				fixedResult = fixedResult.StackSize(size);
+				fixedSize = fixedSize.StackSize(size);
 				FlexElements[index] = flexElement;
 			}
 
-			fixedSize = fixedResult;
-			starChildConstraint.ChangeDirect(FlexUtils.CalcStarValue(oriented.Direct, fixedResult.Direct, starValue));
+			starChildConstraint.ChangeDirect(FlexUtils.CalcStarValue(oriented.Direct, fixedSize.Direct, starValue));
 
 			// Star size children
-			var flexibleResult = new OrientedSize(orientation);
 
 			for (var index = 0; index < childrenCount; index++)
 			{
@@ -551,13 +551,16 @@ namespace Zaaml.UI.Panels.Flexible
 
 				flexElement = flexElement.WithUIElement(child, orientation);
 				size.Direct = flexElement.DesiredLength;
-				flexibleResult = flexibleResult.StackSize(size);
+				flexibleSize = flexibleSize.StackSize(size);
 				FlexElements[index] = flexElement.WithUIElement(child, orientation);
 			}
 
-			flexibleSize = flexibleResult;
+			var desiredIndirect = Math.Max(fixedSize.Indirect, flexibleSize.Indirect);
 
-			return fixedResult.StackSize(flexibleResult);
+			fixedSize.ChangeIndirect(desiredIndirect);
+			flexibleSize.ChangeIndirect(desiredIndirect);
+			
+			return fixedSize.StackSize(flexibleSize);
 		}
 
 		public override void OnLayoutUpdated()
