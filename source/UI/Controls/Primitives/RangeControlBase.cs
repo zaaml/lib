@@ -8,54 +8,42 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Primitives
 {
-  public abstract class RangeControlBase : TemplateContractControl
-  {
-    #region Static Fields and Constants
+	public abstract class RangeControlBase : TemplateContractControl
+	{
+		public static readonly DependencyProperty MinimumProperty = DPM.Register<double, RangeControlBase>
+			("Minimum", 0.0, r => r.OnMinimumChangedPrivate);
 
-    public static readonly DependencyProperty MinimumProperty = DPM.Register<double, RangeControlBase>
-      ("Minimum", 0.0, r => r.OnMinimumChangedPrivate);
+		public static readonly DependencyProperty MaximumProperty = DPM.Register<double, RangeControlBase>
+			("Maximum", 1.0, r => r.OnMaximumChangedPrivate);
 
-    public static readonly DependencyProperty MaximumProperty = DPM.Register<double, RangeControlBase>
-      ("Maximum", 1.0, r => r.OnMaximumChangedPrivate);
+		public double Maximum
+		{
+			get => (double)GetValue(MaximumProperty);
+			set => SetValue(MaximumProperty, value);
+		}
 
-    #endregion
+		public double Minimum
+		{
+			get => (double)GetValue(MinimumProperty);
+			set => SetValue(MinimumProperty, value);
+		}
 
-    #region Properties
+		protected virtual void OnMaximumChanged(double oldValue, double newValue)
+		{
+		}
 
-    public double Maximum
-    {
-      get => (double) GetValue(MaximumProperty);
-      set => SetValue(MaximumProperty, value);
-    }
+		private void OnMaximumChangedPrivate(double oldValue, double newValue)
+		{
+			OnMaximumChanged(oldValue, newValue);
+		}
 
-    public double Minimum
-    {
-      get => (double) GetValue(MinimumProperty);
-      set => SetValue(MinimumProperty, value);
-    }
+		protected virtual void OnMinimumChanged(double oldValue, double newValue)
+		{
+		}
 
-    #endregion
-
-    #region  Methods
-
-    protected virtual void OnMaximumChanged(double oldValue, double newValue)
-    {
-    }
-
-    private void OnMaximumChangedPrivate(double oldValue, double newValue)
-    {
-      OnMaximumChanged(oldValue, newValue);
-    }
-
-    protected virtual void OnMinimumChanged(double oldValue, double newValue)
-    {
-    }
-
-    private void OnMinimumChangedPrivate(double oldValue, double newValue)
-    {
-      OnMinimumChanged(oldValue, newValue);
-    }
-
-    #endregion
-  }
+		private void OnMinimumChangedPrivate(double oldValue, double newValue)
+		{
+			OnMinimumChanged(oldValue, newValue);
+		}
+	}
 }
