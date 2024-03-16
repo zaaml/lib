@@ -119,11 +119,4 @@ namespace Zaaml.PresentationCore.TemplateCore
 			return (TemplateContract)Activator.CreateInstance(TemplateContractType);
 		}
 	}
-
-	public class TemplateContractTypeAttribute<T> : TemplateContractTypeAttribute
-	{
-		public TemplateContractTypeAttribute() : base(typeof(T))
-		{
-		}
-	}
 }
