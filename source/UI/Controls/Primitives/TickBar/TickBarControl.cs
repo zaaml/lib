@@ -15,7 +15,7 @@ using Zaaml.UI.Controls.Interfaces;
 
 namespace Zaaml.UI.Controls.Primitives.TickBar
 {
-	[TemplateContractType<TickBarTemplateContract>]
+	[TemplateContractType(typeof(TickBarTemplateContract))]
 	public class TickBarControl : ItemsControlBase<TickBarControl, TickBarItem, TickBarItemCollection, TickBarItemsPresenter, TickBarPanel>, IContentItemsControl
 	{
 		public static readonly DependencyProperty OrientationProperty = DPM.Register<Orientation, TickBarControl>

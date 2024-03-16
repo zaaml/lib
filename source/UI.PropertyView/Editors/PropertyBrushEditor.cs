@@ -10,7 +10,7 @@ using Zaaml.UI.Controls.Editors.DropDown;
 
 namespace Zaaml.UI.Controls.PropertyView.Editors
 {
-	[TemplateContractType<PropertyBrushEditorTemplateContract>]
+	[TemplateContractType(typeof(PropertyBrushEditorTemplateContract))]
 	public class PropertyBrushEditor : PropertyEditor
 	{
 		private bool _suspendValueChangedHandler;

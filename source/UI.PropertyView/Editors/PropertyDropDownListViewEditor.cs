@@ -13,7 +13,7 @@ using Zaaml.UI.Controls.ListView;
 
 namespace Zaaml.UI.Controls.PropertyView.Editors
 {
-	[TemplateContractType<PropertyDropDownListViewEditorTemplateContract>]
+	[TemplateContractType(typeof(PropertyDropDownListViewEditorTemplateContract))]
 	public abstract class PropertyDropDownListViewEditor : PropertyEditor
 	{
 		static PropertyDropDownListViewEditor()

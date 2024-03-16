@@ -7,7 +7,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Primitives.TickBar
 {
-	[TemplateContractType<TickBarItemsPresenterTemplateContract>]
+	[TemplateContractType(typeof(TickBarItemsPresenterTemplateContract))]
 	public sealed class TickBarItemsPresenter : ItemsPresenterBase<TickBarControl, TickBarItem, TickBarItemCollection, TickBarPanel>
 	{
 		public TickBarControl TickBarControl { get; internal set; }

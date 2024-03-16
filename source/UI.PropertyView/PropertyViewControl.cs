@@ -14,7 +14,7 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.PropertyView
 {
-	[TemplateContractType<PropertyViewControlTemplateContract>]
+	[TemplateContractType(typeof(PropertyViewControlTemplateContract))]
 	public class PropertyViewControl : TemplateContractControl
 	{
 		public static readonly DependencyProperty SelectedObjectProperty = DPM.Register<object, PropertyViewControl>
