@@ -31,6 +31,7 @@ using System.Windows.Markup;
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Primitives.TextPrimitives")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Primitives.SharedSizePrimitives")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Primitives.TrackBar")]
+[assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Controls.Primitives.TickBar")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Panels")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Panels.Core")]
 [assembly: XmlnsDefinition("http://schemas.zaaml.com/xaml", "Zaaml.UI.Panels.Primitives")]

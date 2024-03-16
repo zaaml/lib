@@ -13,10 +13,9 @@ namespace Zaaml.PresentationCore
 {
 	public struct OrientedSize
 	{
-		private Orientation _orientation;
-		private double _indirect;
 		private double _direct;
-
+		private double _indirect;
+		private Orientation _orientation;
 
 		public OrientedSize(Orientation orientation) : this()
 		{
@@ -35,12 +34,6 @@ namespace Zaaml.PresentationCore
 			Height = height;
 		}
 
-		private static void VerifySize(double value, string argumentName)
-		{
-			if (value < 0)
-				throw new ArgumentOutOfRangeException(argumentName);
-		}
-
 		public OrientedSize(Orientation orientation, Size size)
 			: this()
 		{
@@ -48,6 +41,8 @@ namespace Zaaml.PresentationCore
 			Width = size.Width;
 			Height = size.Height;
 		}
+
+		public OrientedSize Clone => this;
 
 
 		public double Direct
@@ -86,6 +81,8 @@ namespace Zaaml.PresentationCore
 			}
 		}
 
+		public Orientation IndirectOrientation => _orientation.Rotate();
+
 		public Orientation Orientation
 		{
 			get => _orientation;
@@ -95,8 +92,6 @@ namespace Zaaml.PresentationCore
 					Rotate();
 			}
 		}
-
-		public Orientation IndirectOrientation => _orientation.Rotate();
 
 		public Size Size
 		{
@@ -118,6 +113,46 @@ namespace Zaaml.PresentationCore
 			}
 		}
 
+		public OrientedSize ChangeDirect(double direct)
+		{
+			Direct = direct;
+
+			return this;
+		}
+
+		public OrientedSize ChangeIndirect(double indirect)
+		{
+			Indirect = indirect;
+
+			return this;
+		}
+
+		public static OrientedSize Create(Orientation orientation, double direct, double indirect)
+		{
+			return new OrientedSize(orientation) { Direct = direct, Indirect = indirect };
+		}
+
+
+		public double GetDirect(Size size)
+		{
+			return _orientation == Horizontal ? size.Width : size.Height;
+		}
+
+		public static double GetDirect(Size size, Orientation orientation)
+		{
+			return orientation == Horizontal ? size.Width : size.Height;
+		}
+
+		public double GetIndirect(Size size)
+		{
+			return _orientation == Vertical ? size.Width : size.Height;
+		}
+
+		public static double GetIndirect(Size size, Orientation orientation)
+		{
+			return orientation == Vertical ? size.Width : size.Height;
+		}
+
 		public static OrientedSize operator +(OrientedSize first, OrientedSize second)
 		{
 			if (first.Orientation != second.Orientation)
@@ -128,6 +163,11 @@ namespace Zaaml.PresentationCore
 				Direct = first.Direct + second.Direct,
 				Indirect = first.Indirect + second.Indirect
 			};
+		}
+
+		public static implicit operator Size(OrientedSize orientedSize)
+		{
+			return orientedSize.Size;
 		}
 
 		public static OrientedSize operator -(OrientedSize first, OrientedSize second)
@@ -142,33 +182,6 @@ namespace Zaaml.PresentationCore
 			};
 		}
 
-
-		public double GetDirect(Size size)
-		{
-			return _orientation == Horizontal ? size.Width : size.Height;
-		}
-
-		public double GetIndirect(Size size)
-		{
-			return _orientation == Vertical ? size.Width : size.Height;
-		}
-
-		public OrientedSize ChangeDirect(double direct)
-		{
-			Direct = direct;
-
-			return this;
-		}
-
-		public OrientedSize Clone => this;
-
-		public OrientedSize ChangeIndirect(double indirect)
-		{
-			Indirect = indirect;
-
-			return this;
-		}
-
 		public void Rotate()
 		{
 			(Direct, Indirect) = (Indirect, Direct);
@@ -176,24 +189,25 @@ namespace Zaaml.PresentationCore
 			_orientation = _orientation.Rotate();
 		}
 
-		public static OrientedSize Create(Orientation orientation, double direct, double indirect)
-		{
-			return new OrientedSize(orientation) { Direct = direct, Indirect = indirect };
-		}
-
-		public static double GetDirect(Size size, Orientation orientation)
-		{
-			return orientation == Horizontal ? size.Width : size.Height;
-		}
-
-		public static double GetIndirect(Size size, Orientation orientation)
-		{
-			return orientation == Vertical ? size.Width : size.Height;
-		}
-
 		public override string ToString()
 		{
 			return $"Direct={Direct}, Indirect={Indirect}, Size={Size}";
+		}
+
+		private static void VerifySize(double value, string argumentName)
+		{
+			if (value < 0)
+				throw new ArgumentOutOfRangeException(argumentName);
+		}
+
+		public OrientedSize WithDirect(double direct)
+		{
+			return Clone.ChangeDirect(direct);
+		}
+
+		public OrientedSize WithIndirect(double indirect)
+		{
+			return Clone.ChangeIndirect(indirect);
 		}
 	}
 }

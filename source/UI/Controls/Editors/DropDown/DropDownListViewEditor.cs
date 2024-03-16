@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.Core;
 using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -59,37 +60,6 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 
 		private DropDownListViewEditorTemplateContract TemplateContract => (DropDownListViewEditorTemplateContract)TemplateContractCore;
 
-		private void DropDownListViewControlOnEditingEnded(object sender, EditingEndedEventArgs e)
-		{
-			try
-			{
-				_suspendEditCommands = true;
-
-				if (e.Result == EditingResult.Cancel)
-					CancelEdit();
-				else
-					CommitEdit();
-			}
-			finally
-			{
-				_suspendEditCommands = false;
-			}
-		}
-
-		private void DropDownListViewControlOnEditingStarted(object sender, EventArgs e)
-		{
-			try
-			{
-				_suspendEditCommands = true;
-
-				BeginEdit();
-			}
-			finally
-			{
-				_suspendEditCommands = false;
-			}
-		}
-
 		private protected override void EnterEditState()
 		{
 			base.EnterEditState();
@@ -109,20 +79,51 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 			}
 		}
 
+		private void OnDropDownListViewControlEditingEnded(object sender, EditingEndedEventArgs e)
+		{
+			try
+			{
+				_suspendEditCommands = true;
+
+				if (e.Result == EditingResult.Cancel)
+					CancelEdit();
+				else
+					CommitEdit();
+			}
+			finally
+			{
+				_suspendEditCommands = false;
+			}
+		}
+
+		private void OnDropDownListViewControlEditingStarted(object sender, EventArgs e)
+		{
+			try
+			{
+				_suspendEditCommands = true;
+
+				BeginEdit();
+			}
+			finally
+			{
+				_suspendEditCommands = false;
+			}
+		}
+
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
 
-			DropDownListViewControl.EditingStarted += DropDownListViewControlOnEditingStarted;
-			DropDownListViewControl.EditingEnded += DropDownListViewControlOnEditingEnded;
+			DropDownListViewControl.EditingStarted += OnDropDownListViewControlEditingStarted;
+			DropDownListViewControl.EditingEnded += OnDropDownListViewControlEditingEnded;
 
 			DropDownListViewControl.ShouldHandleFocusNavigationKey = false;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
-			DropDownListViewControl.EditingStarted -= DropDownListViewControlOnEditingStarted;
-			DropDownListViewControl.EditingEnded -= DropDownListViewControlOnEditingEnded;
+			DropDownListViewControl.EditingStarted -= OnDropDownListViewControlEditingStarted;
+			DropDownListViewControl.EditingEnded -= OnDropDownListViewControlEditingEnded;
 
 			base.OnTemplateContractDetaching();
 		}
@@ -131,6 +132,6 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 	public class DropDownListViewEditorTemplateContract : DropDownEditorBaseTemplateContract
 	{
 		[TemplateContractPart(Required = true)]
-		public DropDownListViewControl DropDownListViewControl { get; private set; }
+		public DropDownListViewControl DropDownListViewControl { get; [UsedImplicitly] private set; }
 	}
 }

@@ -1,0 +1,33 @@
+<zm:ThemeResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                            xmlns:zm="http://schemas.zaaml.com/xaml"
+                            xmlns:zmb="http://schemas.zaaml.com/build"
+                            mc:Ignorable="zmb">
+
+
+  <!--  Template  -->
+  <ControlTemplate x:Key="Template"
+                   TargetType="zm:TickBarControl">
+    <zm:ControlTemplateRoot>
+      <Border Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="{TemplateBinding CornerRadius}">
+        <zm:TickBarItemsPresenter x:Name="ItemsPresenter" />
+      </Border>
+    </zm:ControlTemplateRoot>
+  </ControlTemplate>
+
+  <!--  Style  -->
+  <zm:Style x:Key="TickBarControlStyle" TargetType="zm:TickBarControl">
+    <zm:Setter Property="Template" Value="{StaticResource Template}" />
+  </zm:Style>
+
+  <!--  Skinned Style  -->
+  <zm:Style x:Key="TickBarControlSkinnedStyle" BasedOn="{StaticResource TickBarControlStyle}" Skin="Metro.TickBar" TargetType="zm:TickBarControl"/>
+
+  <!--  Theme Style  -->
+  <zm:ThemeStyle x:Key="TickBarControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TickBarControlSkinnedStyle}" TargetType="zm:TickBarControl" />
+
+</zm:ThemeResourceDictionary>

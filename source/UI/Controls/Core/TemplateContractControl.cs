@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using Zaaml.Core.Reflection;
 using Zaaml.PresentationCore.TemplateCore;
 
@@ -38,7 +37,7 @@ namespace Zaaml.UI.Controls.Core
 			return GetType().GetAttribute<TemplateContractTypeAttribute>().CreateTemplateContractInternal();
 		}
 
-		public override void OnApplyTemplate()
+		public sealed override void OnApplyTemplate()
 		{
 			if (TemplateContractCore.IsAttached)
 			{

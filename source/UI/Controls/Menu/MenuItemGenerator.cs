@@ -14,7 +14,7 @@ namespace Zaaml.UI.Controls.Menu
 	public sealed class MenuItemGenerator : MenuItemGeneratorBase
 	{
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<MenuItemTemplate, MenuItemGenerator>
-			("ItemTemplate", g => g.OnItemTemplateChanged);
+			("ItemTemplate", g => g.OnItemTemplateChangedPrivate);
 
 		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<DataTemplateSelector, MenuItemGenerator>
 			("ItemTemplateSelector", d => d.OnItemTemplateSelectorPropertyChangedPrivate);
@@ -77,7 +77,7 @@ namespace Zaaml.UI.Controls.Menu
 			return (MenuItemGenerator)element.GetValue(GeneratorProperty);
 		}
 
-		private void OnItemTemplateChanged()
+		private void OnItemTemplateChangedPrivate()
 		{
 			_generatorDataTemplateHelper.DataTemplate = ItemTemplate;
 

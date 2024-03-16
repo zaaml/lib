@@ -70,7 +70,7 @@
 		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
 		  <SubType>Designer</SubType>
 		</Page>
-		<Page Update="Styles\ColorEditor\DropDownColorEditorControl.xaml">
+		<Page Update="Styles\ColorEditor\DropDownColorSelector.xaml">
 		  <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
 		  <SubType>Designer</SubType>
 		</Page>

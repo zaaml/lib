@@ -2,8 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
+using Zaaml.Core;
 using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.TemplateCore;
@@ -26,6 +26,8 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 		public static readonly DependencyProperty TreeViewControlProperty = DPM.Register<TreeViewControl, DropDownTreeViewEditor>
 			("TreeViewControl");
 
+		private bool _suspendEditCommands;
+
 		static DropDownTreeViewEditor()
 		{
 			DefaultStyleKeyHelper.OverrideStyleKey<DropDownTreeViewEditor>();
@@ -38,7 +40,7 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 
 		public DropDownEditableSelectorDisplayMode DisplayMode
 		{
-			get => (DropDownEditableSelectorDisplayMode) GetValue(DisplayModeProperty);
+			get => (DropDownEditableSelectorDisplayMode)GetValue(DisplayModeProperty);
 			set => SetValue(DisplayModeProperty, value);
 		}
 
@@ -46,43 +48,80 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 
 		public bool IsTextEditable
 		{
-			get => (bool) GetValue(IsTextEditableProperty);
+			get => (bool)GetValue(IsTextEditableProperty);
 			set => SetValue(IsTextEditableProperty, value.Box());
 		}
 
-		private DropDownTreeViewEditorTemplateContract TemplateContract => (DropDownTreeViewEditorTemplateContract) TemplateContractCore;
+		private DropDownTreeViewEditorTemplateContract TemplateContract => (DropDownTreeViewEditorTemplateContract)TemplateContractCore;
 
 		public TreeViewControl TreeViewControl
 		{
-			get => (TreeViewControl) GetValue(TreeViewControlProperty);
+			get => (TreeViewControl)GetValue(TreeViewControlProperty);
 			set => SetValue(TreeViewControlProperty, value);
 		}
 
-		private void DropDownTreeViewControlOnEditingEnded(object sender, EditingEndedEventArgs e)
+		private protected override void EnterEditState()
 		{
-			if (e.Result == EditingResult.Cancel)
-				CancelEdit();
-			else
-				CommitEdit();
+			base.EnterEditState();
+
+			if (_suspendEditCommands)
+				return;
+
+			try
+			{
+				_suspendEditCommands = true;
+
+				DropDownTreeViewControl.BeginEdit();
+			}
+			finally
+			{
+				_suspendEditCommands = false;
+			}
 		}
 
-		private void DropDownTreeViewControlOnEditingStarted(object sender, EventArgs e)
+		private void OnDropDownTreeViewControlEditingEnded(object sender, EditingEndedEventArgs e)
 		{
-			BeginEdit();
+			try
+			{
+				_suspendEditCommands = true;
+
+				if (e.Result == EditingResult.Cancel)
+					CancelEdit();
+				else
+					CommitEdit();
+			}
+			finally
+			{
+				_suspendEditCommands = false;
+			}
+		}
+
+		private void OnDropDownTreeViewControlEditingStarted(object sender, EventArgs e)
+		{
+			try
+			{
+				_suspendEditCommands = true;
+
+				BeginEdit();
+			}
+			finally
+			{
+				_suspendEditCommands = false;
+			}
 		}
 
 		protected override void OnTemplateContractAttached()
 		{
 			base.OnTemplateContractAttached();
 
-			DropDownTreeViewControl.EditingStarted += DropDownTreeViewControlOnEditingStarted;
-			DropDownTreeViewControl.EditingEnded += DropDownTreeViewControlOnEditingEnded;
+			DropDownTreeViewControl.EditingStarted += OnDropDownTreeViewControlEditingStarted;
+			DropDownTreeViewControl.EditingEnded += OnDropDownTreeViewControlEditingEnded;
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
-			DropDownTreeViewControl.EditingStarted -= DropDownTreeViewControlOnEditingStarted;
-			DropDownTreeViewControl.EditingEnded -= DropDownTreeViewControlOnEditingEnded;
+			DropDownTreeViewControl.EditingStarted -= OnDropDownTreeViewControlEditingStarted;
+			DropDownTreeViewControl.EditingEnded -= OnDropDownTreeViewControlEditingEnded;
 
 			base.OnTemplateContractDetaching();
 		}
@@ -91,6 +130,6 @@ namespace Zaaml.UI.Controls.Editors.DropDown
 	public class DropDownTreeViewEditorTemplateContract : DropDownEditorBaseTemplateContract
 	{
 		[TemplateContractPart(Required = true)]
-		public DropDownTreeViewControl DropDownTreeViewControl { get; private set; }
+		public DropDownTreeViewControl DropDownTreeViewControl { get; [UsedImplicitly] private set; }
 	}
 }

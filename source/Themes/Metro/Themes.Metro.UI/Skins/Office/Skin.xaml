@@ -867,12 +867,8 @@
 
     </zm:SkinDictionary>
 
-    <!-- DropDownColorEditorControl -->
-    <zm:SkinDictionary x:Key="DropDownColorEditorControl">
-
-      <SolidColorBrush x:Key="Background" Color="#FFFFFFFF" zmb:Skin="Office" />
-
-    </zm:SkinDictionary>
+    <!-- DropDownColorSelector -->
+    <zm:SkinDictionary x:Key="DropDownColorSelector"  BasedOn="Metro.Shared.DropDownItemsControl" />
 
     <!-- ColorRectangleEditorControl -->
     <zm:SkinDictionary x:Key="ColorRectangleEditorControl">
