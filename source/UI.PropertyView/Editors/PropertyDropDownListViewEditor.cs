@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Collections.Generic;
+using Zaaml.Core;
 using Zaaml.PresentationCore.TemplateCore;
 using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
@@ -12,7 +13,7 @@ using Zaaml.UI.Controls.ListView;
 
 namespace Zaaml.UI.Controls.PropertyView.Editors
 {
-	[TemplateContractType(typeof(PropertyDropDownListViewEditorTemplateContract))]
+	[TemplateContractType<PropertyDropDownListViewEditorTemplateContract>]
 	public abstract class PropertyDropDownListViewEditor : PropertyEditor
 	{
 		static PropertyDropDownListViewEditor()
@@ -39,19 +40,11 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 		private bool _suspendListViewSelectionChangedHandler;
 		private bool _suspendValueChangedHandler;
 
+		protected virtual bool DefaultIsTextEditable => false;
+
 		protected abstract IReadOnlyCollection<PropertyListViewItemSource<T>> Items { get; }
 
 		protected abstract PropertyListViewItemSource<T> GetItemByValue(T value);
-
-		private void ListViewOnSelectionChanged(object sender, SelectionChangedEventArgs<ListViewItem> e)
-		{
-			if (_suspendListViewSelectionChangedHandler)
-				return;
-
-			UpdateValue();
-		}
-
-		protected virtual bool DefaultIsTextEditable => false;
 
 		protected void OnItemsChanged()
 		{
@@ -59,6 +52,14 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 				return;
 
 			ListView.SourceCollection = Items;
+		}
+
+		private void OnListViewSelectionChanged(object sender, SelectionChangedEventArgs<ListViewItem> e)
+		{
+			if (_suspendListViewSelectionChangedHandler)
+				return;
+
+			UpdateValue();
 		}
 
 		protected override void OnPropertyItemChanged(PropertyItem oldValue, PropertyItem newValue)
@@ -86,14 +87,14 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 
 			ListView.SourceCollection = Items;
 			ListView.ItemsFilter = new PropertyListViewItemTextFilter();
-			ListView.SelectionChanged += ListViewOnSelectionChanged;
+			ListView.SelectionChanged += OnListViewSelectionChanged;
 
 			UpdateListViewValue();
 		}
 
 		protected override void OnTemplateContractDetaching()
 		{
-			ListView.SelectionChanged -= ListViewOnSelectionChanged;
+			ListView.SelectionChanged -= OnListViewSelectionChanged;
 			ListView.SourceCollection = null;
 			ListView.ItemsFilter = null;
 
@@ -114,7 +115,7 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 			{
 				_suspendListViewSelectionChangedHandler = true;
 
-				var value = ((PropertyItem<T>) propertyItem).Value;
+				var value = ((PropertyItem<T>)propertyItem).Value;
 
 				ListView.SelectedSource = GetItemByValue(value);
 			}
@@ -143,9 +144,9 @@ namespace Zaaml.UI.Controls.PropertyView.Editors
 	public class PropertyDropDownListViewEditorTemplateContract : PropertyEditorTemplateContract
 	{
 		[TemplateContractPart(Required = true)]
-		public DropDownListViewEditor Editor { get; private set; }
+		public DropDownListViewEditor Editor { get; [UsedImplicitly] private set; }
 
 		[TemplateContractPart(Required = true)]
-		public ListViewControl ListView { get; private set; }
+		public ListViewControl ListView { get; [UsedImplicitly] private set; }
 	}
 }

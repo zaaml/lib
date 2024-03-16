@@ -38,6 +38,68 @@ namespace Zaaml.UI.Test.Controls.Primitives.TrackBar
 		}
 
 		[Test]
+		public void SetMinimum()
+		{
+			var trackBar = new TrackBarControl
+			{
+				ItemCollection =
+				{
+					new TrackBarValueItem()
+				}
+			};
+
+			trackBar.Minimum = trackBar.Maximum + 1;
+		}
+
+		[Test]
+		public void SetMaximum()
+		{
+			var trackBar = new TrackBarControl
+			{
+				ItemCollection =
+				{
+					new TrackBarValueItem()
+				}
+			};
+
+			trackBar.Maximum = trackBar.Minimum - 1;
+		}
+
+		[Test]
+		public void DualValueItem()
+		{
+			var startRange = new TrackBarRangeItem();
+			var middleRange = new TrackBarRangeItem();
+			var endRange = new TrackBarRangeItem();
+
+			var startValue = new TrackBarValueItem();
+			var endValue = new TrackBarValueItem();
+
+			var trackBar = new TrackBarControl
+			{
+				ItemCollection =
+				{
+					startRange,
+					startValue,
+					middleRange,
+					endValue,
+					endRange
+				}
+			};
+
+			trackBar.BeginUpdate();
+
+			trackBar.Minimum = 900;
+			trackBar.Maximum = 1000;
+			endValue.Value = 950;
+
+			trackBar.EndUpdate();
+
+			Assert.AreEqual(900, startValue.Value);
+			Assert.AreEqual(950, endValue.Value);
+		}
+
+		[Test]
 		public void RangesOnly()
 		{
 			var trackBar = new TrackBarControl

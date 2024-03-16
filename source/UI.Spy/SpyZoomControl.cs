@@ -50,22 +50,19 @@ namespace Zaaml.UI.Controls.Spy
 			};
 		}
 
-		private ArtboardCanvas Canvas { get; }
-
 		private SpyArtboardControl ArtboardControl => TemplateContract.ArtboardControl;
 
 		private ArtboardItem ArtboardItem { get; }
 
-		private SpyZoomElementSizeRenderer SizeRenderer { get; } = new()
-		{
-			Visibility = Visibility.Collapsed
-		};
+		private ArtboardCanvas Canvas { get; }
 
 		public UIElement Element
 		{
 			get => (UIElement)GetValue(ElementProperty);
 			set => SetValue(ElementProperty, value);
 		}
+
+		private Rect ElementBox { get; set; }
 
 		private Window ElementWindow
 		{
@@ -95,10 +92,6 @@ namespace Zaaml.UI.Controls.Spy
 			}
 		}
 
-		private ElementRenderer Renderer { get; }
-
-		private SpyZoomControlTemplateContract TemplateContract => (SpyZoomControlTemplateContract)TemplateContractCore;
-
 		private bool IsElementMouseOver
 		{
 			get => _isElementMouseOver;
@@ -117,7 +110,14 @@ namespace Zaaml.UI.Controls.Spy
 			}
 		}
 
-		private Rect ElementBox { get; set; }
+		private ElementRenderer Renderer { get; }
+
+		private SpyZoomElementSizeRenderer SizeRenderer { get; } = new()
+		{
+			Visibility = Visibility.Collapsed
+		};
+
+		private SpyZoomControlTemplateContract TemplateContract => (SpyZoomControlTemplateContract)TemplateContractCore;
 
 		private void ElementWindowOnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
@@ -131,26 +131,6 @@ namespace Zaaml.UI.Controls.Spy
 			UpdateSizeRenderer();
 		}
 
-		private void UpdateElementBox()
-		{
-			if (ElementWindow != null && Element is FrameworkElement element)
-				ElementBox = element.GetBoundingBox(ElementWindow);
-			else
-				ElementBox = Rect.Empty;
-		}
-
-		private void UpdateSizeRenderer()
-		{
-			if (Element is not FrameworkElement element)
-				return;
-
-			var box = element.GetVisualRootBox();
-
-			SizeRenderer.ElementSize = box.Size;
-
-			ArtboardCanvas.SetPosition(SizeRenderer, box.Location.WithOffset(0, -SizeRenderer.ActualHeight));
-		}
-
 		private void OnElementPropertyChangedPrivate(UIElement oldValue, UIElement newValue)
 		{
 			if (oldValue is FrameworkElement oldFrameworkElement)
@@ -162,9 +142,31 @@ namespace Zaaml.UI.Controls.Spy
 			UpdateElementBox();
 
 			IsElementMouseOver = ElementBox.IsEmpty == false && ElementBox.Contains(Mouse.GetPosition(Renderer));
-			
+
 			UpdateElementWindow();
 			UpdateSizeRenderer();
+		}
+
+		private void OnElementRendererMouseMove(MouseEventArgs e)
+		{
+			if (ElementWindow == null || Element == null)
+			{
+				IsElementMouseOver = false;
+
+				return;
+			}
+
+			IsElementMouseOver = ElementBox.IsEmpty == false && ElementBox.Contains(e.GetPosition(Renderer));
+		}
+
+		private void OnMouseEnterElement()
+		{
+			SizeRenderer.Visibility = Visibility.Visible;
+		}
+
+		private void OnMouseLeaveElement()
+		{
+			SizeRenderer.Visibility = Visibility.Collapsed;
 		}
 
 		protected override void OnTemplateContractAttached()
@@ -199,6 +201,14 @@ namespace Zaaml.UI.Controls.Spy
 			Renderer.Height = size.Height;
 		}
 
+		private void UpdateElementBox()
+		{
+			if (ElementWindow != null && Element is FrameworkElement element && element.IsVisualDescendantOf(ElementWindow))
+				ElementBox = element.GetBoundingBox(ElementWindow);
+			else
+				ElementBox = Rect.Empty;
+		}
+
 		private void UpdateElementWindow()
 		{
 			if (Element == null)
@@ -214,26 +224,16 @@ namespace Zaaml.UI.Controls.Spy
 				ElementWindow = elementWindow;
 		}
 
-		private void OnMouseEnterElement()
+		private void UpdateSizeRenderer()
 		{
-			SizeRenderer.Visibility = Visibility.Visible;
-		}
-
-		private void OnMouseLeaveElement()
-		{
-			SizeRenderer.Visibility = Visibility.Collapsed;
-		}
-
-		private void OnElementRendererMouseMove(MouseEventArgs e)
-		{
-			if (ElementWindow == null || Element == null)
-			{
-				IsElementMouseOver = false;
-
+			if (Element is not FrameworkElement element)
 				return;
-			}
 
-			IsElementMouseOver = ElementBox.IsEmpty == false && ElementBox.Contains(e.GetPosition(Renderer));
+			var box = element.GetVisualRootBox();
+
+			SizeRenderer.ElementSize = box.Size;
+
+			ArtboardCanvas.SetPosition(SizeRenderer, box.Location.WithOffset(0, -SizeRenderer.ActualHeight));
 		}
 
 		internal class ElementRenderer : Panel

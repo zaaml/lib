@@ -3,7 +3,6 @@
 // </copyright>
 
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.PresentationCore.Input;
 using Zaaml.UI.Controls.Core;

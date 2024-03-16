@@ -7,9 +7,8 @@
 	<s:Int64 x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/TAB_WIDTH/@EntryValue">2</s:Int64>
 	<s:Boolean x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/USE_INDENT_FROM_VS/@EntryValue">False</s:Boolean>
 	<s:Int64 x:Key="/Default/CodeStyle/CodeFormatting/CSharpFormat/WRAP_LIMIT/@EntryValue">240</s:Int64>
-	<s:String x:Key="/Default/CodeStyle/CSharpFileLayoutPatterns/Pattern/@EntryValue">&lt;?xml version="1.0" encoding="utf-16"?&gt;&#xD;
-&lt;Patterns xmlns="urn:schemas-jetbrains-com:member-reordering-patterns"&gt;&#xD;
-  &lt;TypePattern DisplayName="COM interfaces or structs"&gt;&#xD;
+	<s:String x:Key="/Default/CodeStyle/CSharpFileLayoutPatterns/Pattern/@EntryValue">&lt;Patterns xmlns="urn:schemas-jetbrains-com:member-reordering-patterns"&gt;&#xD;
+  &lt;TypePattern DisplayName="COM interfaces or structs" RemoveRegions="All"&gt;&#xD;
     &lt;TypePattern.Match&gt;&#xD;
       &lt;Or&gt;&#xD;
         &lt;And&gt;&#xD;
@@ -27,8 +26,8 @@
     &lt;TypePattern.Match&gt;&#xD;
       &lt;And&gt;&#xD;
         &lt;Kind Is="Class" /&gt;&#xD;
-        &lt;HasAttribute Name="NUnit.Framework.TestFixtureAttribute" Inherited="True" /&gt;&#xD;
-        &lt;HasAttribute Name="NUnit.Framework.TestCaseFixtureAttribute" Inherited="True" /&gt;&#xD;
+        &lt;HasAttribute Inherited="True" Name="NUnit.Framework.TestFixtureAttribute" /&gt;&#xD;
+        &lt;HasAttribute Inherited="True" Name="NUnit.Framework.TestCaseFixtureAttribute" /&gt;&#xD;
       &lt;/And&gt;&#xD;
     &lt;/TypePattern.Match&gt;&#xD;
     &lt;Entry DisplayName="Setup/Teardown Methods"&gt;&#xD;
@@ -36,10 +35,10 @@
         &lt;And&gt;&#xD;
           &lt;Kind Is="Method" /&gt;&#xD;
           &lt;Or&gt;&#xD;
-            &lt;HasAttribute Name="NUnit.Framework.SetUpAttribute" Inherited="True" /&gt;&#xD;
-            &lt;HasAttribute Name="NUnit.Framework.TearDownAttribute" Inherited="True" /&gt;&#xD;
-            &lt;HasAttribute Name="NUnit.Framework.FixtureSetUpAttribute" Inherited="True" /&gt;&#xD;
-            &lt;HasAttribute Name="NUnit.Framework.FixtureTearDownAttribute" Inherited="True" /&gt;&#xD;
+            &lt;HasAttribute Inherited="True" Name="NUnit.Framework.SetUpAttribute" /&gt;&#xD;
+            &lt;HasAttribute Inherited="True" Name="NUnit.Framework.TearDownAttribute" /&gt;&#xD;
+            &lt;HasAttribute Inherited="True" Name="NUnit.Framework.FixtureSetUpAttribute" /&gt;&#xD;
+            &lt;HasAttribute Inherited="True" Name="NUnit.Framework.FixtureTearDownAttribute" /&gt;&#xD;
           &lt;/Or&gt;&#xD;
         &lt;/And&gt;&#xD;
       &lt;/Entry.Match&gt;&#xD;
@@ -69,7 +68,7 @@
         &lt;/Or&gt;&#xD;
       &lt;/Entry.Match&gt;&#xD;
       &lt;Entry.SortBy&gt;&#xD;
-        &lt;Kind Order="Constant Field" /&gt;&#xD;
+        &lt;Kind Is="0" Order="Constant Field" /&gt;&#xD;
       &lt;/Entry.SortBy&gt;&#xD;
     &lt;/Entry&gt;&#xD;
     &lt;Group DisplayName="Group"&gt;&#xD;

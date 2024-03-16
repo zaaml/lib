@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Media;
 using Zaaml.Core.Converters;
 using Zaaml.UI.Controls.PropertyView.Editors;
 
@@ -21,11 +22,12 @@ namespace Zaaml.UI.Controls.PropertyView
 
 		private static readonly Dictionary<Type, Type> ValueEditorDictionary = new()
 		{
-			{typeof(bool), typeof(PropertyBooleanEditor)},
-			{typeof(string), typeof(PropertyTextEditor)},
-			{typeof(FontWeight), typeof(PropertyFontWeightEditor)},
-			{typeof(FontStretch), typeof(PropertyFontStretchEditor)},
-			{typeof(FontStyle), typeof(PropertyFontStyleEditor)}
+			{ typeof(bool), typeof(PropertyBooleanEditor) },
+			{ typeof(string), typeof(PropertyTextEditor) },
+			{ typeof(FontWeight), typeof(PropertyFontWeightEditor) },
+			{ typeof(FontStretch), typeof(PropertyFontStretchEditor) },
+			{ typeof(FontStyle), typeof(PropertyFontStyleEditor) },
+			{ typeof(Brush), typeof(PropertyBrushEditor) }
 		};
 
 		private PropertyDescriptorProvider _propertyDescriptorProvider;
@@ -66,7 +68,7 @@ namespace Zaaml.UI.Controls.PropertyView
 
 		private static PropertyEditor CreateEditor(Type editorType)
 		{
-			return (PropertyEditor) Activator.CreateInstance(editorType);
+			return (PropertyEditor)Activator.CreateInstance(editorType);
 		}
 
 		protected virtual PropertyDescriptorProvider CreatePropertyDescriptorProvider()
@@ -142,14 +144,14 @@ namespace Zaaml.UI.Controls.PropertyView
 				if (ReadonlyConvertersDictionary.TryGetValue(typeof(T), out var converter) == false)
 					ReadonlyConvertersDictionary[typeof(T)] = converter = CreateStringConverter(propertyItem.PropertyDescriptorInternal);
 
-				return (PropertyStringConverter<T>) converter;
+				return (PropertyStringConverter<T>)converter;
 			}
 
 			{
 				if (ConvertersDictionary.TryGetValue(typeof(T), out var converter) == false)
 					ConvertersDictionary[typeof(T)] = converter = CreateStringConverter(propertyItem.PropertyDescriptorInternal);
 
-				return (PropertyStringConverter<T>) converter;
+				return (PropertyStringConverter<T>)converter;
 			}
 		}
 
@@ -160,7 +162,7 @@ namespace Zaaml.UI.Controls.PropertyView
 
 			var genericMethod = GetStringConverterMethodInfo.MakeGenericMethod(propertyItem.ValueTypeInternal);
 
-			return (PropertyStringConverter) genericMethod.Invoke(this, new object[] {propertyItem});
+			return (PropertyStringConverter)genericMethod.Invoke(this, new object[] { propertyItem });
 		}
 
 		protected virtual PropertyEditor RentEditor(PropertyItem propertyItem)
@@ -211,7 +213,7 @@ namespace Zaaml.UI.Controls.PropertyView
 
 				foreach (var property in properties)
 				{
-					var factory = (IPropertyItemFactory) property;
+					var factory = (IPropertyItemFactory)property;
 					var propertyItem = factory.CreatePropertyItem(SelectedObject, null);
 
 					propertyItems.Add(propertyItem);

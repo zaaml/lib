@@ -13,8 +13,6 @@ namespace Zaaml.PresentationCore
 	{
 		private Orientation _orientation;
 
-		#region Ctors
-
 		public OrientedPoint(Orientation orientation)
 			: this()
 		{
@@ -37,9 +35,7 @@ namespace Zaaml.PresentationCore
 			Y = point.Y;
 		}
 
-		#endregion
-
-		#region Properties
+		public OrientedPoint Clone => this;
 
 		public double Direct { get; set; }
 
@@ -57,7 +53,7 @@ namespace Zaaml.PresentationCore
 			}
 		}
 
-		public Point Point => new Point(X, Y);
+		public Point Point => new(X, Y);
 
 		public double X
 		{
@@ -83,9 +79,19 @@ namespace Zaaml.PresentationCore
 			}
 		}
 
-		#endregion
+		public OrientedPoint ChangeDirect(double direct)
+		{
+			Direct = direct;
 
-		#region Methods
+			return this;
+		}
+
+		public OrientedPoint ChangeIndirect(double indirect)
+		{
+			Indirect = indirect;
+
+			return this;
+		}
 
 		public double GetDirect(Size size)
 		{
@@ -99,13 +105,19 @@ namespace Zaaml.PresentationCore
 
 		public void Rotate()
 		{
-			var t = Direct;
+			(Direct, Indirect) = (Indirect, Direct);
 
-			Direct = Indirect;
-			Indirect = t;
 			_orientation = _orientation.Rotate();
 		}
 
-		#endregion
+		public OrientedPoint WithDirect(double direct)
+		{
+			return Clone.ChangeDirect(direct);
+		}
+
+		public OrientedPoint WithIndirect(double indirect)
+		{
+			return Clone.ChangeIndirect(indirect);
+		}
 	}
 }

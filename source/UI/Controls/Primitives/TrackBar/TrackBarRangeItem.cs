@@ -43,7 +43,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			internal set => this.SetReadOnlyValue(RangePropertyKey, value);
 		}
 
-		protected override void ClampCore()
+		private protected override void ClampCore()
 		{
 		}
 	}

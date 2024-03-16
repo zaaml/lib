@@ -39,30 +39,23 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			set => SetValue(ContentProperty, value);
 		}
 
-		protected abstract void ClampCore();
-
-		internal void Clamp()
-		{
-			ClampCore();
-		}
-
 		internal int Index { get; set; }
 
 		internal TrackBarValueItem NextValueItem
 		{
 			get
 			{
-				if (TrackBar == null)
+				if (TrackBarControl == null)
 					return null;
 
 				var index = Index + 1;
 
-				if (CollectionUtils.IsWithinRanges(index, TrackBar.ItemCollection) == false)
+				if (CollectionUtils.IsWithinRanges(index, TrackBarControl.ItemCollection) == false)
 					return null;
 
-				for (var i = index; i < TrackBar.ItemCollection.Count; i++)
+				for (var i = index; i < TrackBarControl.ItemCollection.Count; i++)
 				{
-					if (TrackBar.ItemCollection[i] is TrackBarValueItem valueItem)
+					if (TrackBarControl.ItemCollection[i] is TrackBarValueItem valueItem)
 						return valueItem;
 				}
 
@@ -74,17 +67,17 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			get
 			{
-				if (TrackBar == null)
+				if (TrackBarControl == null)
 					return null;
 
 				var index = Index - 1;
 
-				if (CollectionUtils.IsWithinRanges(index, TrackBar.ItemCollection) == false)
+				if (CollectionUtils.IsWithinRanges(index, TrackBarControl.ItemCollection) == false)
 					return null;
 
 				for (var i = index; i >= 0; i--)
 				{
-					if (TrackBar.ItemCollection[i] is TrackBarValueItem valueItem)
+					if (TrackBarControl.ItemCollection[i] is TrackBarValueItem valueItem)
 						return valueItem;
 				}
 
@@ -92,7 +85,14 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			}
 		}
 
-		internal TrackBarControl TrackBar { get; set; }
+		internal TrackBarControl TrackBarControl { get; set; }
+
+		internal void Clamp()
+		{
+			ClampCore();
+		}
+
+		private protected abstract void ClampCore();
 
 		protected virtual void OnDragEnded()
 		{
@@ -116,7 +116,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			base.OnMouseLeftButtonDown(e);
 
-			TrackBar?.OnItemMouseLeftButtonDown(this, e);
+			TrackBarControl?.OnItemMouseLeftButtonDown(this, e);
 		}
 	}
 }
