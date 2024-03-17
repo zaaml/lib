@@ -74,7 +74,12 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 				divisionBounds = divisionBounds.WithBounds(tickBarControl.DivisionDrawing.Bounds);
 
 			foreach (var subDivision in tickBarControl.SubDivisions)
-				divisionBounds = divisionBounds.WithBounds(subDivision.Drawing.Bounds);
+			{
+				var subDivisionDrawing = subDivision.Drawing;
+
+				if (subDivisionDrawing != null)
+					divisionBounds = divisionBounds.WithBounds(subDivisionDrawing.Bounds);
+			}
 
 			return divisionBounds;
 		}
