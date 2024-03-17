@@ -67,6 +67,9 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		{
 			var divisionBounds = new Rect();
 
+			if (tickBarControl == null)
+				return divisionBounds;
+
 			if (tickBarControl.DivisionDrawing != null)
 				divisionBounds = divisionBounds.WithBounds(tickBarControl.DivisionDrawing.Bounds);
 
@@ -158,7 +161,7 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 			var subDivisionCount = subDivision.Count + 1;
 			var subDivisionDrawing = subDivision.Drawing;
 
-			if (subDivisionCount < 1 || subDivisionDrawing == null || delta < subDivision.ThresholdLength)
+			if (subDivision.Show == false || subDivisionCount < 1 || subDivisionDrawing == null || delta < subDivision.ThresholdLength)
 				return;
 
 			var subDelta = delta / subDivisionCount;
