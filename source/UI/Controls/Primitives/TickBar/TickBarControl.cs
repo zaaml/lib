@@ -51,7 +51,6 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		public static readonly DependencyProperty SubDivisionsProperty = SubDivisionsPropertyKey.DependencyProperty;
 
 		private DelegateContentItemGeneratorImplementation<TickBarItem, DefaultTickBarItemGenerator> _defaultGeneratorImplementation;
-		private DrawingBrush _divisionBrush;
 
 		static TickBarControl()
 		{
@@ -74,19 +73,6 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		{
 			get => (Drawing)GetValue(DivisionDrawingProperty);
 			set => SetValue(DivisionDrawingProperty, value);
-		}
-
-		internal DrawingBrush DivisionDrawingBrush
-		{
-			get
-			{
-				var drawing = DivisionDrawing;
-
-				if (drawing == null)
-					return null;
-
-				return _divisionBrush ??= new DrawingBrush(DivisionDrawing);
-			}
 		}
 
 		protected override bool HasLogicalOrientation => true;

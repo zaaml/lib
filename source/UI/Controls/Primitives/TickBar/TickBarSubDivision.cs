@@ -28,9 +28,6 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 			("Show", true, d => d.OnShowPropertyChangedPrivate);
 
 		public static readonly DependencyProperty TickBarControlProperty = TickBarControlPropertyKey.DependencyProperty;
-		private DrawingBrush _brush;
-
-		internal DrawingBrush Brush => _brush ??= new DrawingBrush(Drawing);
 
 		public int Count
 		{
@@ -69,8 +66,6 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 
 		private void InvalidateSubDivisions()
 		{
-			_brush = null;
-
 			TickBarControl?.InvalidateDivisionsInternal();
 		}
 
