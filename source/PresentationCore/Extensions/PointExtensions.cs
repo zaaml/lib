@@ -36,16 +36,6 @@ namespace Zaaml.PresentationCore.Extensions
 			return PointUtils.Negate(value);
 		}
 
-		public static Point WithOffset(this Point point, Point offset)
-		{
-			return PointUtils.Offset(point, offset);
-		}
-
-		public static Point WithOffset(this Point point, double offsetX, double offsetY)
-		{
-			return PointUtils.Offset(point, offsetX, offsetY);
-		}
-
 		public static Point Round(this Point point, int digits = 0)
 		{
 			return PointUtils.Round(point, digits);
@@ -74,6 +64,21 @@ namespace Zaaml.PresentationCore.Extensions
 		public static Point Truncate(this Point point)
 		{
 			return PointUtils.Truncate(point);
+		}
+
+		public static Point WithOffset(this Point point, Point offset)
+		{
+			return PointUtils.Offset(point, offset);
+		}
+
+		public static Point WithOffset(this Point point, OrientedPoint offset)
+		{
+			return PointUtils.Offset(point, offset.Point);
+		}
+
+		public static Point WithOffset(this Point point, double offsetX, double offsetY)
+		{
+			return PointUtils.Offset(point, offsetX, offsetY);
 		}
 	}
 }

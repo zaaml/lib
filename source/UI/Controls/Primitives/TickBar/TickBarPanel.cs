@@ -115,6 +115,7 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 			if (tickBarControl == null || (tickBarControl.SubDivisions.Count == 0 && tickBarControl.DivisionDrawing == null))
 				return;
 
+			var divisionDrawing = tickBarControl.DivisionDrawing;
 			var subDivisions = tickBarControl.SubDivisions;
 			var orientation = Orientation;
 			var orientedSize = new OrientedSize(orientation, RenderSize);
@@ -123,8 +124,7 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 			var offset = new OrientedPoint(orientation);
 			var count = Children.Count;
 			var useLayoutRounding = UseLayoutRounding;
-			var drawingBrush = tickBarControl.DivisionDrawingBrush;
-			var drawingBounds = drawingBrush?.Drawing?.Bounds ?? Rect.Empty;
+
 			var itemDock = tickBarControl.ItemDock;
 			var divisionSize = CalcDivisionBounds(tickBarControl).Size.AsOriented(orientation);
 
@@ -135,15 +135,18 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 
 			for (var i = 0; i < count; i++)
 			{
-				if (drawingBrush?.Drawing != null)
+				if (divisionDrawing != null)
 				{
-					var ptOffset = offset.Point;
-					var itemDrawingRect = drawingBounds.WithOffset(ptOffset);
+					var itemOffset = offset.Point;
 
 					if (useLayoutRounding)
-						itemDrawingRect = itemDrawingRect.LayoutRound(RoundingMode.MidPointToEven);
+						itemOffset = itemOffset.LayoutRound(RoundingMode.MidPointToEven);
 
-					dc.DrawRectangle(drawingBrush, null, itemDrawingRect);
+					var transform = new TranslateTransform(itemOffset.X, itemOffset.Y);
+
+					dc.PushTransform(transform);
+					dc.DrawDrawing(divisionDrawing);
+					dc.Pop();
 				}
 
 				if (i == count - 1)
@@ -166,8 +169,6 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 
 			var subDelta = delta / subDivisionCount;
 			var subOffset = new OrientedPoint(orientation);
-			var drawingBounds = subDivisionDrawing.Bounds;
-			var drawingBrush = subDivision.Brush;
 
 			for (var i = 0; i < subDivisionCount; i++)
 			{
@@ -180,12 +181,16 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 				subOffset.Direct += subDelta;
 
 				var ptOffset = subOffset.Point;
-				var subDivisionRect = drawingBounds.WithOffset(ptOffset).WithOffset(offset);
+				var subDivisionOffset = ptOffset.WithOffset(offset);
 
 				if (useLayoutRounding)
-					subDivisionRect = subDivisionRect.LayoutRound(RoundingMode.MidPointToEven);
+					subDivisionOffset = subDivisionOffset.LayoutRound(RoundingMode.MidPointToEven);
 
-				dc.DrawRectangle(drawingBrush, null, subDivisionRect);
+				var transform = new TranslateTransform(subDivisionOffset.X, subDivisionOffset.Y);
+
+				dc.PushTransform(transform);
+				dc.DrawDrawing(subDivision.Drawing);
+				dc.Pop();
 			}
 		}
 	}
