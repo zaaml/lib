@@ -24,6 +24,9 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		public static readonly DependencyProperty ThresholdLengthProperty = DPM.Register<double, TickBarSubDivision>
 			("ThresholdLength", 0.0, d => d.OnThresholdLengthPropertyChangedPrivate);
 
+		public static readonly DependencyProperty ShowProperty = DPM.Register<bool, TickBarSubDivision>
+			("Show", true, d => d.OnShowPropertyChangedPrivate);
+
 		public static readonly DependencyProperty TickBarControlProperty = TickBarControlPropertyKey.DependencyProperty;
 		private DrawingBrush _brush;
 
@@ -39,6 +42,12 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		{
 			get => (Drawing)GetValue(DrawingProperty);
 			set => SetValue(DrawingProperty, value);
+		}
+
+		public bool Show
+		{
+			get => (bool)GetValue(ShowProperty);
+			set => SetValue(ShowProperty, value);
 		}
 
 		public double ThresholdLength
@@ -71,6 +80,11 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		}
 
 		private void OnDrawingPropertyChangedPrivate(Drawing oldValue, Drawing newValue)
+		{
+			InvalidateSubDivisions();
+		}
+
+		private void OnShowPropertyChangedPrivate(bool oldValue, bool newValue)
 		{
 			InvalidateSubDivisions();
 		}
