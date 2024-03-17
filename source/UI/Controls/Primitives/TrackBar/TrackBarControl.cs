@@ -106,13 +106,6 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			ClampRange(prev, null);
 		}
 
-		protected override void EndUpdateCore()
-		{
-			Clamp();
-
-			base.EndUpdateCore();
-		}
-
 		private void ClampRange(TrackBarValueItem first, TrackBarValueItem second)
 		{
 			if (ItemCollection.Count == 0)
@@ -168,6 +161,15 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			Clamp();
 		}
 
+		protected override void EndUpdateCore()
+		{
+			Clamp();
+
+			InvalidatePanel();
+
+			base.EndUpdateCore();
+		}
+
 		private void FinishDrag()
 		{
 			if (_dragItem == null)
@@ -191,7 +193,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private void InvalidatePanel()
 		{
-			TrackBarPanel?.InvalidateMeasure();
+			TrackBarPanel?.InvalidateAncestorsMeasure(this, true);
 		}
 
 		protected override Size MeasureOverride(Size availableSize)
@@ -390,7 +392,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			ClampRange(valueItem.PrevValueItem, valueItem);
 			ClampRange(valueItem, valueItem.NextValueItem);
 
-			TrackBarPanel?.InvalidateMeasure();
+			InvalidatePanel();
 		}
 
 		internal void SyncDragItem()

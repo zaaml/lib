@@ -117,19 +117,20 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		protected virtual void OnValueChanged(double oldValue, double newValue)
 		{
-			ValueChanged?.Invoke(this, new ValueChangedEventArgs<double>(oldValue, newValue));
 		}
 
 		private void OnValueChangedPrivate(double oldValue, double newValue)
 		{
-			if (SuspendValueHandler)
-				return;
+			if (SuspendValueHandler == false)
+			{
+				_valueCache = newValue;
 
-			_valueCache = newValue;
-
-			TrackBarControl?.OnTrackBarItemValueChanged(this);
+				TrackBarControl?.OnTrackBarItemValueChanged(this);
+			}
 
 			OnValueChanged(oldValue, newValue);
+
+			ValueChanged?.Invoke(this, new ValueChangedEventArgs<double>(oldValue, newValue));
 		}
 
 		private void OnValueCoercerChanged(object sender, EventArgs e)
