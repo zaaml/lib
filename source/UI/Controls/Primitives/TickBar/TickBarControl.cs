@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Collections;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -108,8 +109,6 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 			get => this.GetValueOrCreate(SubDivisionsPropertyKey, () => new TickBarSubDivisionCollection(this));
 		}
 
-		private TickBarTemplateContract TemplateContract => (TickBarTemplateContract)TemplateContractCore;
-
 		protected override TickBarItemCollection CreateItemCollection()
 		{
 			return new TickBarItemCollection(this)
@@ -121,6 +120,13 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		internal void InvalidateDivisionsInternal()
 		{
 			ItemsPresenter?.ItemsHostInternal?.InvalidateVisual();
+		}
+
+		internal override void OnCollectionChangedInternal(object sender, NotifyCollectionChangedEventArgs args)
+		{
+			base.OnCollectionChangedInternal(sender, args);
+
+			InvalidateDivisionsInternal();
 		}
 
 		private void OnDivisionDrawingPropertyChangedPrivate(Drawing oldValue, Drawing newValue)
