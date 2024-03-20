@@ -2,26 +2,21 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using Zaaml.Core.Utils;
 
 namespace Zaaml.Core.Extensions
 {
-  internal static class TypeExtensions
-  {
-    #region  Methods
+	internal static class TypeExtensions
+	{
+		public static object CreateDefaultValue(this Type type)
+		{
+			return RuntimeUtils.CreateDefaultValue(type);
+		}
 
-    public static object CreateDefaultValue(this Type type)
-    {
-      return RuntimeUtils.CreateDefaultValue(type);
-    }
-
-    public static bool IsSelfOrDerived<T>(this Type type)
-    {
-      var baseType = typeof(T);
-      return type == baseType || type.IsSubclassOf(baseType);
-    }
-
-    #endregion
-  }
+		public static bool IsSelfOrDerived<T>(this Type type)
+		{
+			var baseType = typeof(T);
+			return type == baseType || type.IsSubclassOf(baseType);
+		}
+	}
 }

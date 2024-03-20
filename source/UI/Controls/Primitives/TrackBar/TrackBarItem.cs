@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Markup;
 using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
 using Zaaml.UI.Controls.Core;
@@ -16,6 +17,11 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 	[ContentProperty(nameof(Content))]
 	public abstract class TrackBarItem : Control
 	{
+		private static readonly DependencyPropertyKey TrackBarControlPropertyKey = DPM.RegisterReadOnly<TrackBarControl, TrackBarItem>
+			("TrackBarControl", d => d.OnTrackBarControlPropertyChangedPrivate);
+
+		public static readonly DependencyProperty TrackBarControlProperty = TrackBarControlPropertyKey.DependencyProperty;
+
 		public static readonly DependencyProperty ContentProperty = DPM.Register<object, TrackBarItem>
 			("Content");
 
@@ -85,7 +91,11 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			}
 		}
 
-		internal TrackBarControl TrackBarControl { get; set; }
+		public TrackBarControl TrackBarControl
+		{
+			get => (TrackBarControl)GetValue(TrackBarControlProperty);
+			internal set => this.SetReadOnlyValue(TrackBarControlPropertyKey, value);
+		}
 
 		internal void Clamp()
 		{
@@ -117,6 +127,10 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			base.OnMouseLeftButtonDown(e);
 
 			TrackBarControl?.OnItemMouseLeftButtonDown(this, e);
+		}
+
+		private void OnTrackBarControlPropertyChangedPrivate(TrackBarControl oldValue, TrackBarControl newValue)
+		{
 		}
 	}
 }
