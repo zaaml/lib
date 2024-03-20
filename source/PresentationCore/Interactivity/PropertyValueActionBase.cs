@@ -22,6 +22,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			get
 			{
 				var actualProperty = ActualProperty;
+
 				return actualProperty == null ? Value : CacheConvert(ValueProperty, actualProperty.GetPropertyType(), ref _value);
 			}
 		}
@@ -59,6 +60,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void LoadCore(IInteractivityRoot root)
 		{
 			base.LoadCore(root);
+
 			Load(ValueProperty, ref _value);
 		}
 
@@ -71,6 +73,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void UnloadCore(IInteractivityRoot root)
 		{
 			Unload(ValueProperty, ref _value);
+
 			base.UnloadCore(root);
 		}
 	}

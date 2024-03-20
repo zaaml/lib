@@ -43,6 +43,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
+
 			var propertyActionSource = (PropertyActionBase)source;
 
 			PropertyResolver.CopyFrom(this, propertyActionSource);
@@ -55,6 +56,7 @@ namespace Zaaml.PresentationCore.Interactivity
 		internal override void UnloadCore(IInteractivityRoot root)
 		{
 			PropertyResolver.UnResolveProperty(this);
+
 			base.UnloadCore(root);
 		}
 

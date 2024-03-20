@@ -6,8 +6,6 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class ClearValue : PropertyActionBase
 	{
-		#region  Methods
-
 		protected override InteractivityObject CreateInstance()
 		{
 			return new ClearValue();
@@ -23,7 +21,5 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			actualTarget.ClearValue(actualProperty);
 		}
-
-		#endregion
 	}
 }
