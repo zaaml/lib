@@ -27,8 +27,6 @@ namespace Zaaml.UI.Controls.Spy
 
 		public SpyVisualTreeViewControl()
 		{
-			ItemSourceCollectionMember = "Children";
-			ItemIconMember = "Element";
 			ScrollUnit = ScrollUnit.Pixel;
 			SourceCollection = _sourceCollection;
 
@@ -63,6 +61,14 @@ namespace Zaaml.UI.Controls.Spy
 				if (_rootDataItem != null)
 					_sourceCollection.Add(_rootDataItem);
 			}
+		}
+
+		public override void EndInit()
+		{
+			base.EndInit();
+
+			ItemSourceCollectionMember = "Children";
+			ItemIconMember = "Element";
 		}
 
 		private void OnElementPropertyChangedPrivate(UIElement oldValue, UIElement newValue)

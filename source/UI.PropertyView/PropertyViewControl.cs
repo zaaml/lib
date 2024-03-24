@@ -20,7 +20,7 @@ namespace Zaaml.UI.Controls.PropertyView
 		public static readonly DependencyProperty SelectedObjectProperty = DPM.Register<object, PropertyViewControl>
 			("SelectedObject", d => d.OnSelectedObjectPropertyChangedPrivate);
 
-		public static readonly DependencyProperty FilterProperty = DPM.Register<string, PropertyViewControl>
+		public static readonly DependencyProperty FilterProperty = DPM.Register<IPropertyViewFilter, PropertyViewControl>
 			("Filter", d => d.OnFilterPropertyChangedPrivate);
 
 		public static readonly DependencyProperty ViewProperty = DPM.Register<PropertyViewBase, PropertyViewControl>
@@ -52,8 +52,6 @@ namespace Zaaml.UI.Controls.PropertyView
 			private set => this.SetReadOnlyValue(ActualViewTemplatePropertyKey, value);
 		}
 
-		internal PropertyGridViewController ViewController { get; }
-
 		protected PropertyViewController Controller => _controller ??= CreateController();
 
 		internal PropertyViewController ControllerInternal => Controller;
@@ -82,6 +80,8 @@ namespace Zaaml.UI.Controls.PropertyView
 			set => SetValue(ViewProperty, value);
 		}
 
+		internal PropertyGridViewController ViewController { get; }
+
 		private void ApplyFilter()
 		{
 		}
@@ -91,8 +91,16 @@ namespace Zaaml.UI.Controls.PropertyView
 			return new PropertyViewController(this);
 		}
 
-		private void OnFilterPropertyChangedPrivate(string oldValue, string newValue)
+		private void OnFilterChanged(object sender, EventArgs e)
 		{
+			ApplyFilter();
+		}
+
+		private void OnFilterPropertyChangedPrivate(IPropertyViewFilter oldValue, IPropertyViewFilter newValue)
+		{
+			if (oldValue != null) oldValue.Changed -= OnFilterChanged;
+			if (newValue != null) newValue.Changed += OnFilterChanged;
+
 			ApplyFilter();
 		}
 

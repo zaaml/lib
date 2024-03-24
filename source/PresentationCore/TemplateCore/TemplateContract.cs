@@ -7,144 +7,116 @@ using System.Windows;
 
 namespace Zaaml.PresentationCore.TemplateCore
 {
-  public class TemplateContract
-  {
-    #region Fields
+	public class TemplateContract
+	{
+		private readonly Action _onAttached;
+		private readonly Action _onDetaching;
 
-    private readonly Action _onAttached;
-    private readonly Action _onDetaching;
+		private TemplateContractBinder _templateContractBinder;
+		public event EventHandler Attached;
+		public event EventHandler Detaching;
 
-    private TemplateContractBinder _templateContractBinder;
-    public event EventHandler Attached;
-    public event EventHandler Detaching;
+		public TemplateContract(FrameworkElement frameworkElement)
+			: this(new TemplateContractBinder(frameworkElement), null, null)
+		{
+		}
 
-    #endregion
+		public TemplateContract(GetTemplateChild templateDiscovery)
+			: this(new TemplateContractBinder(templateDiscovery), null, null)
+		{
+		}
 
-    #region Ctors
+		public TemplateContract(FrameworkElement frameworkElement, Action onAttached, Action onDetaching)
+			: this(new TemplateContractBinder(frameworkElement), onAttached, onDetaching)
+		{
+		}
 
-    public TemplateContract(FrameworkElement frameworkElement)
-      : this(new TemplateContractBinder(frameworkElement), null, null)
-    {
-    }
+		public TemplateContract(GetTemplateChild templateDiscovery, Action onAttached, Action onDetaching)
+			: this(new TemplateContractBinder(templateDiscovery), onAttached, onDetaching)
+		{
+		}
 
-    public TemplateContract(GetTemplateChild templateDiscovery)
-      : this(new TemplateContractBinder(templateDiscovery), null, null)
-    {
-    }
+		public TemplateContract()
+		{
+		}
 
-    public TemplateContract(FrameworkElement frameworkElement, Action onAttached, Action onDetaching)
-      : this(new TemplateContractBinder(frameworkElement), onAttached, onDetaching)
-    {
-    }
+		internal TemplateContract(TemplateContractBinder templateContractBinder, Action onAttached, Action onDetaching)
+		{
+			_onAttached = onAttached;
+			_onDetaching = onDetaching;
+			_templateContractBinder = templateContractBinder;
+		}
 
-    public TemplateContract(GetTemplateChild templateDiscovery, Action onAttached, Action onDetaching)
-      : this(new TemplateContractBinder(templateDiscovery), onAttached, onDetaching)
-    {
-    }
+		public bool IsAttached { get; private set; }
 
-    public TemplateContract()
-    {
-    }
+		internal TemplateContractBinder TemplateContractBinder
+		{
+			get => _templateContractBinder;
+			set
+			{
+				if (ReferenceEquals(_templateContractBinder, value))
+					return;
 
-    internal TemplateContract(TemplateContractBinder templateContractBinder, Action onAttached, Action onDetaching)
-    {
-      _onAttached = onAttached;
-      _onDetaching = onDetaching;
-      _templateContractBinder = templateContractBinder;
-    }
+				if (IsAttached)
+				{
+					_templateContractBinder?.Detach(this);
 
-    #endregion
+					_templateContractBinder = value;
 
-    #region Properties
+					_templateContractBinder?.Attach(this);
+				}
+				else
+					_templateContractBinder = value;
+			}
+		}
 
-    public bool IsAttached { get; private set; }
+		public void Attach()
+		{
+			Detach();
 
-    internal TemplateContractBinder TemplateContractBinder
-    {
-      get => _templateContractBinder;
-      set
-      {
-        if (ReferenceEquals(_templateContractBinder, value))
-          return;
+			_templateContractBinder.Attach(this);
+			IsAttached = true;
+			OnAttached();
+		}
 
-        if (IsAttached)
-        {
-          _templateContractBinder?.Detach(this);
+		public void Detach()
+		{
+			if (IsAttached == false)
+				return;
 
-          _templateContractBinder = value;
+			OnDetaching();
+			IsAttached = false;
+			_templateContractBinder.Detach(this);
+		}
 
-          _templateContractBinder?.Attach(this);
-        }
-        else
-          _templateContractBinder = value;
-      }
-    }
+		protected virtual void OnAttached()
+		{
+			_onAttached?.Invoke();
 
-    #endregion
+			Attached?.Invoke(this, EventArgs.Empty);
+		}
 
-    #region  Methods
+		protected virtual void OnDetaching()
+		{
+			_onDetaching?.Invoke();
 
-    public void Attach()
-    {
-      Detach();
+			Detaching?.Invoke(this, EventArgs.Empty);
+		}
+	}
 
-      _templateContractBinder.Attach(this);
-      IsAttached = true;
-      OnAttached();
-    }
+	//[AttributeUsage(AttributeTargets.Class)]
+	public class TemplateContractTypeAttribute : Attribute
+	{
+		public TemplateContractTypeAttribute(Type templateContractType)
+		{
+			TemplateContractType = templateContractType;
+		}
 
-    public void Detach()
-    {
-      if (IsAttached == false)
-        return;
+		public Type TemplateContractType { get; }
 
-      OnDetaching();
-      IsAttached = false;
-      _templateContractBinder.Detach(this);
-    }
-
-    protected virtual void OnAttached()
-    {
-      _onAttached?.Invoke();
-
-      Attached?.Invoke(this, EventArgs.Empty);
-    }
-
-    protected virtual void OnDetaching()
-    {
-      _onDetaching?.Invoke();
-
-      Detaching?.Invoke(this, EventArgs.Empty);
-    }
-
-    #endregion
-  }
-
-  //[AttributeUsage(AttributeTargets.Class)]
-  public class TemplateContractTypeAttribute : Attribute
-  {
-    #region Ctors
-
-    public TemplateContractTypeAttribute(Type templateContractType)
-    {
-      TemplateContractType = templateContractType;
-    }
-
-    #endregion
-
-    #region Properties
-
-    public Type TemplateContractType { get; }
-
-    #endregion
-
-    #region  Methods
-
-    internal TemplateContract CreateTemplateContractInternal()
-    {
-      return (TemplateContract) Activator.CreateInstance(TemplateContractType);
-    }
-
-    #endregion
-  }
+		internal TemplateContract CreateTemplateContractInternal()
+		{
+			return (TemplateContract)Activator.CreateInstance(TemplateContractType);
+		}
+	}
 }

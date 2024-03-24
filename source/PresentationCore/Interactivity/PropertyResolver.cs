@@ -136,6 +136,7 @@ namespace Zaaml.PresentationCore.Interactivity
 			{
 				case PropertyKind.Explicit:
 					interactivityObject.PropertyKind |= PropertyKind.Resolved;
+
 					return (DependencyProperty)interactivityObject.PropertyStore;
 
 				case PropertyKind.Implicit:
@@ -145,7 +146,9 @@ namespace Zaaml.PresentationCore.Interactivity
 					if (subject == null)
 						return null;
 
-					var resolvedProperty = DependencyPropertyManager.GetDependencyProperty((string)interactivityObject.PropertyStore, subject.GetType());
+					var subjectType = subject.GetType();
+					var propertyName = (string)interactivityObject.PropertyStore;
+					var resolvedProperty = DependencyPropertyManager.GetDependencyProperty(propertyName, subjectType);
 
 					if (resolvedProperty != null)
 						interactivityObject.PropertyStore = resolvedProperty;

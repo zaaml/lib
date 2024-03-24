@@ -9,19 +9,13 @@ namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class SetBinding : PropertyActionBase
 	{
-		#region Properties
-
 		public Binding Binding { get; set; }
-
-		#endregion
-
-		#region  Methods
 
 		protected internal override void CopyMembersOverride(InteractivityObject source)
 		{
 			base.CopyMembersOverride(source);
 
-			var setPropertyBindingSource = (SetBinding) source;
+			var setPropertyBindingSource = (SetBinding)source;
 
 			Binding = setPropertyBindingSource.Binding;
 		}
@@ -43,7 +37,5 @@ namespace Zaaml.PresentationCore.Interactivity
 			if (Binding != null)
 				actualTarget.SetBinding(actualProperty, Binding);
 		}
-
-		#endregion
 	}
 }

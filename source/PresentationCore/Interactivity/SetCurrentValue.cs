@@ -2,16 +2,14 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.PropertyCore.Extensions;
-using Zaaml.PresentationCore.Extensions;
 
 namespace Zaaml.PresentationCore.Interactivity
 {
 	public sealed class SetCurrentValue : PropertyValueActionBase
 	{
-		#region  Methods
-
 		protected override InteractivityObject CreateInstance()
 		{
 			return new SetCurrentValue();
@@ -28,7 +26,5 @@ namespace Zaaml.PresentationCore.Interactivity
 
 			actualTarget.SetCurrentValueInternal(actualProperty, actualValue);
 		}
-
-		#endregion
 	}
 }

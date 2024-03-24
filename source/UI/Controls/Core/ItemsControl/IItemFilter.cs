@@ -2,8 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
-
 namespace Zaaml.UI.Controls.Core
 {
 	public interface IItemFilter

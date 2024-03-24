@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore.Extensions;
@@ -28,13 +27,13 @@ namespace Zaaml.UI.Controls.Editors.Core
 
 		public bool IsEditing
 		{
-			get => (bool) GetValue(IsEditingProperty);
+			get => (bool)GetValue(IsEditingProperty);
 			private set => this.SetReadOnlyValue(IsEditingPropertyKey, value.Box());
 		}
 
 		public bool IsReadOnly
 		{
-			get => (bool) GetValue(IsReadOnlyProperty);
+			get => (bool)GetValue(IsReadOnlyProperty);
 			set => SetValue(IsReadOnlyProperty, value.Box());
 		}
 

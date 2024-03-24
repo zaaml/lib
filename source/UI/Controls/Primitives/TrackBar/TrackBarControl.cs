@@ -20,7 +20,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 {
 	[ContentProperty(nameof(ItemCollection))]
 	[TemplateContractType(typeof(TrackBarTemplateContract))]
-	public partial class TrackBarControl : RangeControlBase
+	public class TrackBarControl : RangeControlBase
 	{
 		private static readonly DependencyPropertyKey ItemCollectionPropertyKey = DPM.RegisterReadOnly<TrackBarItemCollection, TrackBarControl>
 			("ItemCollectionPrivate");
@@ -33,7 +33,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		private TrackBarItem _dragItem;
 		private double _originPixelRatio;
 		private Range<double> _originRange;
-		private byte _packedValue;
+
 		private double _pixelDelta;
 		private Point _trackBarOrigin;
 		private Point _trackBarPosition;
@@ -55,20 +55,14 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private bool CornersDirty
 		{
-			get => PackedDefinition.CornersDirty.GetValue(_packedValue);
-			set => PackedDefinition.CornersDirty.SetValue(ref _packedValue, value);
-		}
-
-		private bool Initializing
-		{
-			get => PackedDefinition.Initializing.GetValue(_packedValue);
-			set => PackedDefinition.Initializing.SetValue(ref _packedValue, value);
+			get => PackedDefinition.CornersDirty.GetValue(PackedValue);
+			set => PackedDefinition.CornersDirty.SetValue(ref PackedValue, value);
 		}
 
 		private bool IsDragSyncValue
 		{
-			get => PackedDefinition.IsDragSyncValue.GetValue(_packedValue);
-			set => PackedDefinition.IsDragSyncValue.SetValue(ref _packedValue, value);
+			get => PackedDefinition.IsDragSyncValue.GetValue(PackedValue);
+			set => PackedDefinition.IsDragSyncValue.SetValue(ref PackedValue, value);
 		}
 
 		public TrackBarItemCollection ItemCollection => this.GetValueOrCreate(ItemCollectionPropertyKey, () => new TrackBarItemCollection(this));
@@ -91,13 +85,11 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 				ItemCollection[index].Index = index;
 		}
 
-		private void BeginInitImpl()
-		{
-			Initializing = true;
-		}
-
 		private void Clamp()
 		{
+			if (Initializing || Updating)
+				return;
+
 			TrackBarValueItem prev = null;
 
 			foreach (var item in ItemCollection)
@@ -163,12 +155,19 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			}
 		}
 
-		private void EndInitImpl()
+		protected override void EndInitCore()
 		{
-			Initializing = false;
-
 			AssignIndices();
 			Clamp();
+		}
+
+		protected override void EndUpdateCore()
+		{
+			Clamp();
+
+			InvalidatePanel();
+
+			base.EndUpdateCore();
 		}
 
 		private void FinishDrag()
@@ -194,7 +193,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private void InvalidatePanel()
 		{
-			TrackBarPanel?.InvalidateMeasure();
+			TrackBarPanel?.InvalidateAncestorsMeasure(this, true);
 		}
 
 		protected override Size MeasureOverride(Size availableSize)
@@ -247,7 +246,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			FinishDrag();
 
-			item.TrackBar = this;
+			item.TrackBarControl = this;
 
 			if (Initializing == false)
 			{
@@ -298,7 +297,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			FinishDrag();
 
 			TrackBarPanel?.Children.Remove(item);
-			item.TrackBar = null;
+			item.TrackBarControl = null;
 
 			if (Initializing == false)
 			{
@@ -320,8 +319,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			base.OnMaximumChanged(oldValue, newValue);
 
-			if (Initializing == false)
-				Clamp();
+			Clamp();
 
 			InvalidatePanel();
 		}
@@ -330,8 +328,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		{
 			base.OnMinimumChanged(oldValue, newValue);
 
-			if (Initializing == false)
-				Clamp();
+			Clamp();
 
 			InvalidatePanel();
 		}
@@ -357,7 +354,6 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 			UpdateValueOnMouseEvent(e);
 		}
-
 
 		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
 		{
@@ -387,7 +383,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		internal void OnTrackBarItemValueChanged(TrackBarValueItem valueItem)
 		{
-			if (Initializing)
+			if (Initializing || Updating)
 				return;
 
 			valueItem.Clamp();
@@ -395,7 +391,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			ClampRange(valueItem.PrevValueItem, valueItem);
 			ClampRange(valueItem, valueItem.NextValueItem);
 
-			TrackBarPanel?.InvalidateMeasure();
+			InvalidatePanel();
 		}
 
 		internal void SyncDragItem()
@@ -493,15 +489,13 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private static class PackedDefinition
 		{
-			public static readonly PackedBoolItemDefinition Initializing;
 			public static readonly PackedBoolItemDefinition IsDragSyncValue;
 			public static readonly PackedBoolItemDefinition CornersDirty;
 
 			static PackedDefinition()
 			{
-				var allocator = new PackedValueAllocator();
+				var allocator = GetAllocator<TrackBarControl>();
 
-				Initializing = allocator.AllocateBoolItem();
 				IsDragSyncValue = allocator.AllocateBoolItem();
 				CornersDirty = allocator.AllocateBoolItem();
 			}

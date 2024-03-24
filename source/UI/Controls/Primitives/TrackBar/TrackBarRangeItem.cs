@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Windows;
+using Zaaml.Core;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Theming;
@@ -17,9 +18,11 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 		public static readonly DependencyProperty ActualCornerRadiusProperty = ActualCornerRadiusPropertyKey.DependencyProperty;
 
 		private static readonly DependencyPropertyKey RangePropertyKey = DPM.RegisterReadOnly<double, TrackBarRangeItem>
-			("Range");
+			("Range", t => t.OnRangeChangedPrivate);
 
 		public static readonly DependencyProperty RangeProperty = RangePropertyKey.DependencyProperty;
+
+		public event EventHandler<ValueChangedEventArgs<double>> RangeChanged;
 
 		static TrackBarRangeItem()
 		{
@@ -43,8 +46,19 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			internal set => this.SetReadOnlyValue(RangePropertyKey, value);
 		}
 
-		protected override void ClampCore()
+		private protected override void ClampCore()
 		{
+		}
+
+		protected virtual void OnRangeChanged(double oldRange, double newRange)
+		{
+		}
+
+		private void OnRangeChangedPrivate(double oldRange, double newRange)
+		{
+			OnRangeChanged(oldRange, newRange);
+
+			RangeChanged?.Invoke(this, new ValueChangedEventArgs<double>(oldRange, newRange));
 		}
 	}
 }

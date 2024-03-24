@@ -2,10 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Controls;
-using Zaaml.Core.Extensions;
 using Zaaml.Core.Packed;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore;
@@ -19,7 +17,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 	public sealed class TrackBarPanel : Panel, IStackPanel
 	{
 		private double _fixedSize;
-		private ItemMeasure[] _measure = new ItemMeasure[0];
+		private ItemMeasure[] _measure = [];
 		private byte _packedValue;
 		private TrackBarControl _trackBar;
 		private double _variableSize;
@@ -68,7 +66,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 				var variableSize = finalOriented.Direct - _fixedSize;
 
-				if (variableSize.IsCloseTo(_variableSize) == false) 
+				if (variableSize.IsCloseTo(_variableSize) == false)
 					MeasureVariable(variableSize);
 
 				for (var index = 0; index < itemsCount; index++)
@@ -166,17 +164,17 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			var items = TrackBar.ItemCollection;
 
 			if (startIndex == -1 && endIndex == 0)
-				return PixelRatio * (((TrackBarValueItem) items[endIndex]).Value - TrackBar.Minimum);
+				return PixelRatio * (((TrackBarValueItem)items[endIndex]).Value - TrackBar.Minimum);
 
 			if (endIndex == -1 && startIndex == items.Count - 1)
-				return PixelRatio * (TrackBar.Maximum - ((TrackBarValueItem) items[startIndex]).Value);
+				return PixelRatio * (TrackBar.Maximum - ((TrackBarValueItem)items[startIndex]).Value);
 
 			var actualStart = startIndex < 0 ? 0 : startIndex + 1;
 			var actualEnd = endIndex < 0 ? items.Count : endIndex;
 			var contentCount = actualEnd - actualStart;
 
-			var minimum = startIndex == -1 ? TrackBar.Minimum : ((TrackBarValueItem) items[startIndex]).Value;
-			var maximum = endIndex == -1 ? TrackBar.Maximum : ((TrackBarValueItem) items[endIndex]).Value;
+			var minimum = startIndex == -1 ? TrackBar.Minimum : ((TrackBarValueItem)items[startIndex]).Value;
+			var maximum = endIndex == -1 ? TrackBar.Maximum : ((TrackBarValueItem)items[endIndex]).Value;
 			var range = Math.Max(0, maximum - minimum);
 
 			var length = PixelRatio * range;
@@ -199,7 +197,7 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 			for (var i = actualStart; i < actualEnd; i++)
 			{
 				items[i].Measure(rangeOriented.Size);
-				_measure[i] = new ItemMeasure {Size = rangeOriented.Direct};
+				_measure[i] = new ItemMeasure { Size = rangeOriented.Direct };
 			}
 
 			return 0;
@@ -256,8 +254,8 @@ namespace Zaaml.UI.Controls.Primitives.TrackBar
 
 		private struct ItemMeasure
 		{
-			public double Size;
 			public double Offset;
+			public double Size;
 		}
 
 		private static class PackedDefinition

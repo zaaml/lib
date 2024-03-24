@@ -2,10 +2,9 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Zaaml.Core;
 using Zaaml.PresentationCore.Input;
 using Zaaml.UI.Panels.Core;
 
@@ -54,7 +53,7 @@ namespace Zaaml.UI.Controls.Core
 
 		protected virtual void FocusItem(TItem item)
 		{
-			var focusScope = FocusManager.GetFocusScope(item);
+			var focusScope = GetFocusScope(item);
 
 			if (focusScope != null && ReferenceEquals(item, focusScope) == false)
 				FocusManager.SetFocusedElement(focusScope, item);
@@ -64,7 +63,14 @@ namespace Zaaml.UI.Controls.Core
 		{
 			FocusItem(item);
 		}
-		
+
+		protected virtual DependencyObject GetFocusScope(TItem item)
+		{
+			var focusScope = FocusManager.GetFocusScope(item);
+
+			return ReferenceEquals(focusScope, item) ? FocusManager.GetFocusScope(this) : focusScope;
+		}
+
 		protected bool IsNavigationKey(Key key)
 		{
 			return FocusNavigator.IsNavigationKey(key);
@@ -107,12 +113,6 @@ namespace Zaaml.UI.Controls.Core
 				FocusedItemPrivate = null;
 
 			OnItemLostFocus(item);
-		}
-
-		internal void SyncFocusedIndex(int index)
-		{
-			throw Error.Refactoring;
-			//_focusedIndex = index.Clamp(-1, ItemsCount);
 		}
 
 		bool IFocusNavigatorAdvisor<TItem>.IsVirtualizing => IsVirtualizing;

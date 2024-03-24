@@ -1,10 +1,8 @@
-﻿// <copyright file="ItemFilter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+﻿// <copyright file="ItemTextFilter.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
-using Zaaml.Core.Extensions;
 using Zaaml.Core.Runtime;
 using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
@@ -34,13 +32,13 @@ namespace Zaaml.UI.Controls.Core
 
 		public TimeSpan Delay
 		{
-			get => (TimeSpan) GetValue(DelayProperty);
+			get => (TimeSpan)GetValue(DelayProperty);
 			set => SetValue(DelayProperty, value);
 		}
 
 		public string FilterText
 		{
-			get => (string) GetValue(FilterTextProperty);
+			get => (string)GetValue(FilterTextProperty);
 			set => SetValue(FilterTextProperty, value);
 		}
 
@@ -48,7 +46,7 @@ namespace Zaaml.UI.Controls.Core
 
 		public bool IsEnabled
 		{
-			get => (bool) GetValue(IsEnabledProperty);
+			get => (bool)GetValue(IsEnabledProperty);
 			set => SetValue(IsEnabledProperty, value.Box());
 		}
 
@@ -106,7 +104,7 @@ namespace Zaaml.UI.Controls.Core
 
 	internal interface IItemsControlProvider
 	{
-		ItemsControlBase ItemsControl { get;}
+		ItemsControlBase ItemsControl { get; }
 	}
 
 	public abstract class ItemTextFilter<TItemsControl, TItem> : ItemTextFilter, IItemFilter where TItemsControl : ItemsControlBase
@@ -115,7 +113,7 @@ namespace Zaaml.UI.Controls.Core
 
 		bool IItemFilter.Pass(object item, IServiceProvider serviceProvider)
 		{
-			return Pass((TItemsControl)(serviceProvider.GetService<IItemsControlProvider>()?.ItemsControl), (TItem) item);
+			return Pass((TItemsControl)(serviceProvider.GetService<IItemsControlProvider>()?.ItemsControl), (TItem)item);
 		}
 
 		bool IItemFilter.IsEnabled => IsEnabledCache && string.IsNullOrEmpty(FilterTextCache) == false;
