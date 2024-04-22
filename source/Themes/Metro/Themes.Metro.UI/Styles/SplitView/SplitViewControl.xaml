@@ -171,6 +171,7 @@
   <zm:Style x:Key="SplitViewControlBaseStyle" TargetType="zm:SplitViewControl">
     <zm:Setter Property="Template" Value="{StaticResource SplitViewControlTemplate}" />
     <zm:Setter Property="PaneBackground" Value="{zm:ThemeResource Keyword=ControlBackgroundBrush}" />
+    <zm:Setter Property="FocusVisualStyle" Value="{x:Null}" />
   </zm:Style>
 
   <!--  Style  -->

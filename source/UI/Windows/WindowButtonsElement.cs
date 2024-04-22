@@ -11,103 +11,81 @@ using Zaaml.PresentationCore.TemplateCore;
 
 namespace Zaaml.UI.Windows
 {
-  [TemplateContractType(typeof(WindowButtonsElementTemplateContract))]
-  public abstract class WindowButtonsElement : WindowElement
-  {
-    #region Static Fields and Constants
+	[TemplateContractType(typeof(WindowButtonsElementTemplateContract))]
+	public abstract class WindowButtonsElement : WindowElement
+	{
+		public static readonly DependencyProperty ButtonStyleProperty = DPM.Register<Style, WindowButtonsElement>
+			("ButtonStyle");
 
-    public static readonly DependencyProperty ButtonStyleProperty = DPM.Register<Style, WindowButtonsElement>
-      ("ButtonStyle");
+		public static readonly DependencyProperty ButtonsPresenterTemplateProperty = DPM.Register<ControlTemplate, WindowButtonsElement>
+			("ButtonsPresenterTemplate");
 
-    public static readonly DependencyProperty ButtonsPresenterTemplateProperty = DPM.Register<ControlTemplate, WindowButtonsElement>
-      ("ButtonsPresenterTemplate");
+		protected WindowButtonsElement()
+		{
+			Focusable = false;
+			IsTabStop = false;
+		}
 
-    #endregion
+		protected WindowButtonsPresenter ButtonsPresenter => TemplateContract.ButtonsPresenter;
 
-    #region Ctors
+		internal WindowButtonsPresenter ButtonsPresenterInternal => ButtonsPresenter;
 
-    protected WindowButtonsElement()
-    {
-#if !SILVERLIGHT
-      Focusable = false;
-#endif
-      IsTabStop = false;
-    }
+		public ControlTemplate ButtonsPresenterTemplate
+		{
+			get => (ControlTemplate)GetValue(ButtonsPresenterTemplateProperty);
+			set => SetValue(ButtonsPresenterTemplateProperty, value);
+		}
 
-    #endregion
+		public Style ButtonStyle
+		{
+			get => (Style)GetValue(ButtonStyleProperty);
+			set => SetValue(ButtonStyleProperty, value);
+		}
 
-    #region Properties
+		private WindowButtonsElementTemplateContract TemplateContract => (WindowButtonsElementTemplateContract)TemplateContractCore;
 
-    public ControlTemplate ButtonsPresenterTemplate
-    {
-      get => (ControlTemplate) GetValue(ButtonsPresenterTemplateProperty);
-      set => SetValue(ButtonsPresenterTemplateProperty, value);
-    }
+		internal override IEnumerable<IWindowElement> EnumerateWindowElements()
+		{
+			if (ButtonsPresenter != null)
+				yield return ButtonsPresenter;
+		}
 
-    public Style ButtonStyle
-    {
-      get => (Style) GetValue(ButtonStyleProperty);
-      set => SetValue(ButtonStyleProperty, value);
-    }
+		protected override void OnTemplateContractAttached()
+		{
+			base.OnTemplateContractAttached();
 
-    private WindowButtonsElementTemplateContract TemplateContract => (WindowButtonsElementTemplateContract) TemplateContractCore;
+			if (ButtonsPresenter != null)
+				ButtonsPresenter.Window = Window;
+		}
 
-    protected WindowButtonsPresenter ButtonsPresenter => TemplateContract.ButtonsPresenter;
+		protected override void OnTemplateContractDetaching()
+		{
+			if (ButtonsPresenter != null)
+				ButtonsPresenter.Window = null;
 
-    internal WindowButtonsPresenter ButtonsPresenterInternal => ButtonsPresenter;
+			base.OnTemplateContractDetaching();
+		}
 
-    #endregion
+		protected override void OnWindowAttached()
+		{
+			base.OnWindowAttached();
 
-    #region  Methods
+			if (ButtonsPresenter != null)
+				ButtonsPresenter.Window = Window;
+		}
 
-    protected override void OnTemplateContractAttached()
-    {
-      base.OnTemplateContractAttached();
+		protected override void OnWindowDetaching()
+		{
+			if (ButtonsPresenter != null)
+				ButtonsPresenter.Window = null;
 
-      if (ButtonsPresenter != null)
-        ButtonsPresenter.Window = Window;
-    }
+			base.OnWindowDetaching();
+		}
+	}
 
-    protected override void OnTemplateContractDetaching()
-    {
-      if (ButtonsPresenter != null)
-        ButtonsPresenter.Window = null;
-
-      base.OnTemplateContractDetaching();
-    }
-
-    internal override IEnumerable<IWindowElement> EnumerateWindowElements()
-    {
-      if (ButtonsPresenter != null)
-        yield return ButtonsPresenter;
-    }
-
-    protected override void OnWindowAttached()
-    {
-      base.OnWindowAttached();
-
-      if (ButtonsPresenter != null)
-        ButtonsPresenter.Window = Window;
-    }
-
-    protected override void OnWindowDetaching()
-    {
-      if (ButtonsPresenter != null)
-        ButtonsPresenter.Window = null;
-
-      base.OnWindowDetaching();
-    }
-
-    #endregion
-  }
-
-  public class WindowButtonsElementTemplateContract : TemplateContract
-  {
-    #region Properties
-
-    [TemplateContractPart(Required = false)]
-    public WindowButtonsPresenter ButtonsPresenter { get; [UsedImplicitly] private set; }
-
-    #endregion
-  }
+	public class WindowButtonsElementTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = false)]
+		public WindowButtonsPresenter ButtonsPresenter { get; [UsedImplicitly] private set; }
+	}
 }

@@ -27,7 +27,9 @@ namespace Zaaml.UI.Windows
 
 		public WindowContentPresenter()
 		{
+			Focusable = false;
 			IsTabStop = false;
+
 			this.OverrideStyleKey<WindowContentPresenter>();
 		}
 
@@ -39,7 +41,7 @@ namespace Zaaml.UI.Windows
 
 		public DataTemplate ContentTemplate
 		{
-			get => (DataTemplate) GetValue(ContentTemplateProperty);
+			get => (DataTemplate)GetValue(ContentTemplateProperty);
 			set => SetValue(ContentTemplateProperty, value);
 		}
 

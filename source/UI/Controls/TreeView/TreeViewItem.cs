@@ -616,7 +616,8 @@ namespace Zaaml.UI.Controls.TreeView
 
 		internal void SetIsSelectedInternal(bool value)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, value ? BooleanBoxes.True : BooleanBoxes.False);
+			if (IsSelected != value)
+				this.SetCurrentValueInternal(IsSelectedProperty, value ? BooleanBoxes.True : BooleanBoxes.False);
 		}
 
 		private void SyncTreeNodeState()

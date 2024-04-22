@@ -2,14 +2,12 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Zaaml.Core;
-using Zaaml.Core.Extensions;
 using Zaaml.PresentationCore.CommandCore;
 using Zaaml.PresentationCore.Data;
 using Zaaml.PresentationCore.Extensions;
@@ -21,7 +19,6 @@ using Zaaml.UI.Controls.Interfaces;
 using Zaaml.UI.Controls.ListView.Data;
 using Zaaml.UI.Controls.Primitives.ContentPrimitives;
 using Zaaml.UI.Controls.ScrollView;
-using Zaaml.UI.Controls.TreeView;
 using ScrollUnit = Zaaml.UI.Controls.ScrollView.ScrollUnit;
 
 namespace Zaaml.UI.Controls.ListView
