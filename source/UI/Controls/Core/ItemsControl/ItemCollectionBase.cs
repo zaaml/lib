@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -52,10 +51,14 @@ namespace Zaaml.UI.Controls.Core
 		protected abstract int GetIndexFromItemCore(TItem item);
 
 		protected abstract int GetIndexFromSourceCore(object source);
+		
+		protected abstract int GetIndexFromSourcePredicateCore(Func<object, bool> predicate);
 
 		protected abstract TItem GetItemFromIndexCore(int index);
 
 		protected abstract TItem GetItemFromSourceCore(object source);
+
+		protected abstract TItem GetItemFromSourcePredicateCore(Func<object, bool> sourcePredicate);
 
 		protected abstract object GetSourceCore(TItem item);
 
@@ -66,6 +69,8 @@ namespace Zaaml.UI.Controls.Core
 		protected abstract bool TryEnsureItemCore(int index, out TItem item);
 
 		protected abstract bool TryEnsureItemCore(object source, out TItem item);
+		
+		protected abstract bool TryEnsureItemCore(Func<object, bool> sourcePredicate, out TItem item);
 
 		protected abstract void UnlockItemCore(TItem item);
 
@@ -136,7 +141,7 @@ namespace Zaaml.UI.Controls.Core
 	{
 		private static readonly IEnumerable<TItem> EmptyActualItems = Enumerable.Empty<TItem>();
 
-		private readonly List<IItemCollectionObserver<TItem>> _observers = new List<IItemCollectionObserver<TItem>>();
+		private readonly List<IItemCollectionObserver<TItem>> _observers = [];
 
 		private ItemGenerator<TItem> _generatorCore;
 		private IEnumerable _sourceCollection;
@@ -380,6 +385,11 @@ namespace Zaaml.UI.Controls.Core
 			return ActualSource == null ? -1 : ActualIndexedSource.IndexOf(source);
 		}
 
+		protected override int GetIndexFromSourcePredicateCore(Func<object, bool> predicate)
+		{
+			return ActualSource == null ? -1 : ActualIndexedSource.IndexOf(predicate);
+		}
+
 		internal int GetIndexFromSourceInternal(object source)
 		{
 			return GetIndexFromSourceCore(source);
@@ -411,9 +421,21 @@ namespace Zaaml.UI.Controls.Core
 			return index != -1 ? GetItemFromIndexCore(index) : default;
 		}
 
+		protected override TItem GetItemFromSourcePredicateCore(Func<object, bool> sourcePredicate)
+		{
+			var index = GetIndexFromSourcePredicateCore(sourcePredicate);
+
+			return index != -1 ? GetItemFromIndexCore(index) : default;
+		}
+
 		internal TItem GetItemFromSourceInternal(object source)
 		{
 			return GetItemFromSourceCore(source);
+		}
+
+		internal TItem GetItemFromSourcePredicateInternal(Func<object, bool> predicate)
+		{
+			return GetItemFromSourcePredicateCore(predicate);
 		}
 
 		protected override object GetSourceCore(TItem item)
@@ -549,9 +571,26 @@ namespace Zaaml.UI.Controls.Core
 			return false;
 		}
 
+		protected override bool TryEnsureItemCore(Func<object, bool> sourcePredicate, out TItem item)
+		{
+			var index = GetIndexFromSourcePredicateCore(sourcePredicate);
+
+			if (index != -1)
+				return TryEnsureItemCore(index, out item);
+
+			item = default;
+
+			return false;
+		}
+
 		internal bool TryEnsureItemInternal(object source, out TItem item)
 		{
 			return TryEnsureItemCore(source, out item);
+		}
+		
+		internal bool TryEnsureItemInternal(Func<object, bool> sourcePredicate, out TItem item)
+		{
+			return TryEnsureItemCore(sourcePredicate, out item);
 		}
 
 		protected override void UnlockItemCore(TItem item)

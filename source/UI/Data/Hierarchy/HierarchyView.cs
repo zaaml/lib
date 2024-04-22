@@ -295,6 +295,43 @@ namespace Zaaml.UI.Data.Hierarchy
 			return result;
 		}
 
+		public TNode FindNode(Func<object, bool> predicate)
+		{
+			TNode result = default;
+
+			var stopSearch = false;
+
+			try
+			{
+				SuspendCollectionChange = true;
+
+				FlatCount = 0;
+				VisibleFlatCount = 0;
+
+				foreach (var node in Nodes)
+				{
+					if (predicate(node.Data))
+					{
+						result = node;
+
+						stopSearch = true;
+					}
+
+					if (stopSearch == false)
+						stopSearch = node.FindRecursive(predicate, out result);
+
+					FlatCount += node.FlatCount + 1;
+					VisibleFlatCount += node.VisibleFlatCount + 1;
+				}
+			}
+			finally
+			{
+				SuspendCollectionChange = false;
+			}
+
+			return result;
+		}
+
 		internal IEnumerable GetDataNodes(TNode node)
 		{
 			return GetDataNodesCore(node);

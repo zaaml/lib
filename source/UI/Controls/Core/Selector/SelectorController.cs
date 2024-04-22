@@ -2,10 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Linq;
 using System.Windows;
-using Zaaml.Core.Extensions;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -92,7 +90,7 @@ namespace Zaaml.UI.Controls.Core
 			get => _lockedItem;
 			set
 			{
-				if (ReferenceEquals(_lockedItem, value))
+				if (EqualsItem(_lockedItem, value))
 					return;
 
 				if (_lockedItem != null)
@@ -178,7 +176,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private int SelectionHandlingCount { get; set; }
 
-		private SelectionHandlingScopeImpl SelectionHandlingScope => new SelectionHandlingScopeImpl(this);
+		private SelectionHandlingScopeImpl SelectionHandlingScope => new(this);
 
 		private Selection<TItem> SelectionResume
 		{
@@ -208,14 +206,13 @@ namespace Zaaml.UI.Controls.Core
 		public int SuspendSelectionCount { get; private set; }
 
 		private int Version { get; set; }
-
-
+		
 		private bool AreSelectionEquals(Selection<TItem> first, Selection<TItem> second)
 		{
 			return first.Index == second.Index &&
-			       ReferenceEquals(first.Item, second.Item) &&
-			       ReferenceEquals(first.Source, second.Source) &&
-			       CompareValues(first.Value, second.Value);
+			       EqualsItem(first.Item, second.Item) &&
+			       EqualsSource(first.Source, second.Source) &&
+			       EqualsValue(first.Value, second.Value);
 		}
 
 		public void BeginInit()
@@ -286,9 +283,19 @@ namespace Zaaml.UI.Controls.Core
 			SelectionResume = selectionResume;
 		}
 
-		private bool CompareValues(object itemValue, object value)
+		private bool EqualsItem(TItem item1, TItem item2)
 		{
-			return Advisor.CompareValues(itemValue, value);
+			return ReferenceEquals(item1, item2);
+		}
+
+		private bool EqualsSource(object source1, object source2)
+		{
+			return ReferenceEquals(source1, source2);
+		}
+
+		private bool EqualsValue(object value1, object value2)
+		{
+			return Advisor.EqualValues(value1, value2);
 		}
 
 		public void EndInit()
@@ -431,7 +438,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private bool IsLocked(TItem item)
 		{
-			return ReferenceEquals(LockedItem, item);
+			return EqualsItem(LockedItem, item);
 		}
 
 		private bool IsWithinRange(int index)
@@ -599,7 +606,7 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
-		private bool TryGetItem(int index, bool ensure, out TItem item)
+		private bool TryGetItemByIndex(int index, bool ensure, out TItem item)
 		{
 			if (SupportsItem == false || IsWithinRange(index) == false)
 			{
@@ -608,7 +615,7 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-			return Advisor.TryGetItem(index, ensure, out item);
+			return Advisor.TryGetItemByIndex(index, ensure, out item);
 		}
 
 		private bool TryGetItemBySource(object source, bool ensure, out TItem item)
@@ -620,7 +627,19 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-			return Advisor.TryGetItem(source, ensure, out item);
+			return Advisor.TryGetItemBySource(source, ensure, out item);
+		}
+
+		private bool TryGetItemByValue(object value, bool ensure, out TItem item)
+		{
+			if (SupportsValue == false || value == null)
+			{
+				item = default;
+
+				return false;
+			}
+
+			return Advisor.TryGetItemByValue(value, ensure, out item);
 		}
 
 		private void VerifySafe()

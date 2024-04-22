@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -15,14 +14,14 @@ namespace Zaaml.UI.Controls.Core
 	[SuppressMessage("ReSharper", "StaticMemberInGenericType")]
 	internal abstract partial class SelectorController<TItem>
 	{
-		private static readonly NotifyCollectionChangedEventArgs ResetNotifyCollectionChangedEventArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
-		private static readonly PropertyChangedEventArgs CountPropertyChangedEventArgs = new PropertyChangedEventArgs("Count");
+		private static readonly NotifyCollectionChangedEventArgs ResetNotifyCollectionChangedEventArgs = new(NotifyCollectionChangedAction.Reset);
+		private static readonly PropertyChangedEventArgs CountPropertyChangedEventArgs = new("Count");
 
 		internal sealed class SelectionCollectionImpl : IEnumerable<Selection<TItem>>
 		{
 			// ReSharper disable once StaticMemberInGenericType
-			private readonly List<int> _indicesToRemove = new List<int>();
-			private readonly List<int> _indicesToUpdate = new List<int>();
+			private readonly List<int> _indicesToRemove = [];
+			private readonly List<int> _indicesToUpdate = [];
 			private readonly bool _isResumeCollection;
 
 			public SelectionCollectionImpl(SelectorController<TItem> controller, bool isResumeCollection)
@@ -45,13 +44,13 @@ namespace Zaaml.UI.Controls.Core
 				}
 			}
 
-			private List<Selection<TItem>> DeferList { get; } = new List<Selection<TItem>>();
+			private List<Selection<TItem>> DeferList { get; } = [];
 
 			public bool IsInverted { get; set; }
 
 			private IEnumerable<int> Keys => List.Select(s => s.Index);
 
-			private List<Selection<TItem>> List { get; } = new List<Selection<TItem>>();
+			private List<Selection<TItem>> List { get; } = [];
 
 			private int ListCount => List.Count;
 
@@ -120,7 +119,7 @@ namespace Zaaml.UI.Controls.Core
 				if (index == -1)
 					return false;
 
-				return FindByIndex(index, out var _);
+				return FindByIndex(index, out _);
 			}
 
 			public bool ContainsItem(TItem item)
@@ -370,7 +369,7 @@ namespace Zaaml.UI.Controls.Core
 				{
 					var current = ListGet(index);
 
-					if (ReferenceEquals(current.Item, item))
+					if (Controller.EqualsItem(current.Item, item))
 					{
 						keyIndex = index;
 
@@ -409,7 +408,7 @@ namespace Zaaml.UI.Controls.Core
 				{
 					var current = ListGet(index);
 
-					if (ReferenceEquals(current.Source, source))
+					if (Controller.EqualsSource(current.Source, source))
 					{
 						keyIndex = index;
 
@@ -422,14 +421,13 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-
 			private bool FindValueKeyIndex(object value, out int keyIndex)
 			{
 				for (var index = 0; index < ListCount; index++)
 				{
 					var current = ListGet(index);
 
-					if (Controller.CompareValues(current.Value, value))
+					if (Controller.EqualsValue(current.Value, value))
 					{
 						keyIndex = index;
 
@@ -612,7 +610,7 @@ namespace Zaaml.UI.Controls.Core
 					var selection = ListGet(index);
 					var source = Controller.GetSource(selection.Index);
 
-					if (ReferenceEquals(selection.Source, source) == false)
+					if (Controller.EqualsSource(selection.Source, source) == false)
 					{
 						if (source == null)
 							_indicesToRemove.Add(index);

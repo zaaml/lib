@@ -52,7 +52,7 @@ namespace Zaaml.UI.Controls.Core
 
 			for (var i = 0; i < count; i++)
 			{
-				if (Advisor.TryGetItem(i, true, out var item) == false || CanSelectItem(item) == false)
+				if (Advisor.TryGetItemByIndex(i, true, out var item) == false || CanSelectItem(item) == false)
 					continue;
 
 				if (SelectItemCore(item, true))

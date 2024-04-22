@@ -135,7 +135,7 @@ namespace Zaaml.UI.Controls.Core
 					TryGetItemBySource(source, ensureItem, out item);
 
 				if (item == null && index != -1)
-					TryGetItem(index, ensureItem, out item);
+					TryGetItemByIndex(index, ensureItem, out item);
 			}
 
 			if (index == -1)
