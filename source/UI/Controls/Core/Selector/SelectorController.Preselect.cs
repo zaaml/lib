@@ -21,7 +21,7 @@ namespace Zaaml.UI.Controls.Core
 			if (index == -1)
 				return PreselectNull(out preSelection);
 
-			TryGetItem(index, force, out var item);
+			TryGetItemByIndex(index, force, out var item);
 			var source = GetSource(index);
 			var itemValue = GetValue(item, source);
 
@@ -42,7 +42,7 @@ namespace Zaaml.UI.Controls.Core
 			if (SupportsItem == false)
 				return false;
 
-			if (force == false && ReferenceEquals(selection.Item, item))
+			if (force == false && EqualsItem(selection.Item, item))
 				return true;
 
 			if (item == null)
@@ -98,7 +98,7 @@ namespace Zaaml.UI.Controls.Core
 			if (SupportsSource == false)
 				return false;
 
-			if (force == false && ReferenceEquals(selection.Source, source))
+			if (force == false && EqualsSource(selection.Source, source))
 				return true;
 
 			if (source == null)
@@ -125,15 +125,15 @@ namespace Zaaml.UI.Controls.Core
 			if (SupportsValue == false)
 				return false;
 
-			if (force == false && CompareValues(selection.Value, value))
+			if (force == false && EqualsValue(selection.Value, value))
 				return true;
 
 			if (value == null)
 				return PreselectNull(out preSelection);
 
-			var index = GetIndexOfValue(value);
-			var source = GetSource(index);
-			TryGetItem(index, force, out var item);
+			TryGetItemByValue(value, force, out var item);
+			var source = GetSource(item);
+			var index = GetIndexOfSource(source);
 
 			preSelection = new Selection<TItem>(index, item, source, value);
 
@@ -150,7 +150,7 @@ namespace Zaaml.UI.Controls.Core
 			if (CanSelectIndex(index) == false)
 				return false;
 
-			if (TryGetItem(index, true, out var item))
+			if (TryGetItemByIndex(index, true, out var item))
 			{
 				if (CanSelectItem(item) == false)
 					return false;

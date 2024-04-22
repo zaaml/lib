@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 
 namespace Zaaml.UI.Controls.Core
@@ -25,7 +24,7 @@ namespace Zaaml.UI.Controls.Core
 
 		bool CanSelectValue(object value);
 
-		bool CompareValues(object value1, object value2);
+		bool EqualValues(object value1, object value2);
 
 		int GetIndexOfItem(T item);
 
@@ -53,9 +52,11 @@ namespace Zaaml.UI.Controls.Core
 
 		bool TryCreateSelection(object source, bool ensure, out Selection<T> selection);
 
-		bool TryGetItem(int index, bool ensure, out T item);
+		bool TryGetItemByIndex(int index, bool ensure, out T item);
 
-		bool TryGetItem(object source, bool ensure, out T item);
+		bool TryGetItemBySource(object source, bool ensure, out T item);
+		
+		bool TryGetItemByValue(object value, bool ensure, out T item);
 
 		void Unlock(T item);
 	}

@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Input;
 using Zaaml.Core;

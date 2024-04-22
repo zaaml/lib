@@ -62,7 +62,7 @@ namespace Zaaml.UI.Controls.Core
 
 				if (SupportsItem)
 				{
-					if (ReferenceEquals(ReadSelectedItem(), newSelectedItem) == false)
+					if (EqualsItem(ReadSelectedItem(), newSelectedItem) == false)
 					{
 						WriteSelectedItem(newSelectedItem);
 
@@ -72,7 +72,7 @@ namespace Zaaml.UI.Controls.Core
 
 				if (SupportsSource)
 				{
-					if (ReferenceEquals(ReadSelectedSource(), newSelectedSource) == false)
+					if (EqualsSource(ReadSelectedSource(), newSelectedSource) == false)
 					{
 						WriteSelectedSource(newSelectedSource);
 
@@ -92,7 +92,7 @@ namespace Zaaml.UI.Controls.Core
 
 				if (SupportsValue)
 				{
-					if (CompareValues(ReadSelectedValue(), newSelectedValue) == false)
+					if (EqualsValue(ReadSelectedValue(), newSelectedValue) == false)
 					{
 						WriteSelectedValue(newSelectedValue);
 
@@ -122,7 +122,7 @@ namespace Zaaml.UI.Controls.Core
 					SelectionCollection.CopyFrom(SelectionCollectionResume);
 					SelectionCollectionResume.Clear();
 				}
-				else if (ReferenceEquals(oldSelectedItem, newSelectedItem) == false)
+				else if (EqualsItem(oldSelectedItem, newSelectedItem) == false)
 				{
 					SetItemSelected(oldSelectedItem, false);
 					SetItemSelected(newSelectedItem, true);
@@ -130,14 +130,14 @@ namespace Zaaml.UI.Controls.Core
 
 				var raiseSelectionChanged = false;
 
-				if (ReferenceEquals(newSelectedItem, oldSelectedItem) == false)
+				if (EqualsItem(newSelectedItem, oldSelectedItem) == false)
 				{
 					RaiseOnSelectedItemChanged(oldSelectedItem, newSelectedItem);
 
 					raiseSelectionChanged = true;
 				}
 
-				if (ReferenceEquals(newSelectedSource, oldSelectedSource) == false)
+				if (EqualsSource(newSelectedSource, oldSelectedSource) == false)
 				{
 					RaiseOnSelectedSourceChanged(oldSelectedSource, newSelectedSource);
 
@@ -151,7 +151,7 @@ namespace Zaaml.UI.Controls.Core
 					raiseSelectionChanged = true;
 				}
 
-				if (CompareValues(oldSelectedValue, newSelectedValue) == false)
+				if (EqualsValue(oldSelectedValue, newSelectedValue) == false)
 				{
 					RaiseOnSelectedValueChanged(oldSelectedValue, newSelectedValue);
 
