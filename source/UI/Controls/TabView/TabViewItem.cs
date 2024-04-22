@@ -372,7 +372,8 @@ namespace Zaaml.UI.Controls.TabView
 
 		private void SetIsSelectedPrivate(bool isSelected)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, isSelected.Box());
+			if (IsSelected != isSelected)
+				this.SetCurrentValueInternal(IsSelectedProperty, isSelected.Box());
 		}
 
 		protected virtual void UpdateActualCloseCommand()

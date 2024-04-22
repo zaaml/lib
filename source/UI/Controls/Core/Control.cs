@@ -28,7 +28,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			PlatformCtor();
 
-			IsEnabledChanged += (sender, args) => OnIsEnabledChanged();
+			IsEnabledChanged += (_, _) => OnIsEnabledChanged();
 		}
 
 		public CornerRadius CornerRadius
