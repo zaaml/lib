@@ -22,7 +22,6 @@ namespace Zaaml.Text
 
 				public static readonly FieldInfo InstructionStreamPointerFieldInfo = typeof(ThreadContext).GetField(nameof(InstructionStreamPointer), BF.IPNP);
 				public static readonly FieldInfo InstructionStreamFieldInfo = typeof(ThreadContext).GetField(nameof(InstructionStream), BF.IPNP);
-				public static readonly MethodInfo CompleteBlockMethodInfo = typeof(ThreadContext).GetMethod(nameof(CompleteBlock), BF.IPNP);
 				public int Index;
 				public Process Process;
 				public int ExecutionStreamPointer;
@@ -36,7 +35,6 @@ namespace Zaaml.Text
 				public PredicateResultStream PredicateResultStream;
 				public int ExecutionMethodIndex;
 				public bool IsExecutionStreamRunning;
-				public bool IsCompleteBlock;
 
 				public ThreadContext(Process process, InstructionStream instructionStream, ExecutionStream executionStream, PredicateResultStream predicateResultStream, AutomataContext automataContext)
 				{
@@ -53,7 +51,6 @@ namespace Zaaml.Text
 					ExecutionPathRegistry = Process._automata._executionPathRegistry;
 					ExecutionMethodIndex = Process.ILGenerator.MainExecutionMethodIndex;
 					IsExecutionStreamRunning = false;
-					IsCompleteBlock = false;
 
 					InstructionStream.LockPointer(InstructionStreamPointer);
 
@@ -79,7 +76,6 @@ namespace Zaaml.Text
 					ExecutionMethodIndex = Process.ILGenerator.ParallelExecutionMethodIndex;
 
 					IsExecutionStreamRunning = false;
-					IsCompleteBlock = false;
 
 					InstructionStream.LockPointer(InstructionStreamPointer);
 
@@ -128,11 +124,6 @@ namespace Zaaml.Text
 					return ref InstructionStream.PeekInstructionOperand(InstructionStreamPointer, out operand);
 				}
 
-				public void CompleteBlock()
-				{
-					IsCompleteBlock = true;
-				}
-
 				public void RunExecutionStream(ref Thread thread)
 				{
 					IsExecutionStreamRunning = true;
@@ -160,8 +151,7 @@ namespace Zaaml.Text
 					InstructionStream.ReleaseReference();
 					
 					AutomataContext.DisposeContextStateInternal(AutomataContextState);
-					
-					IsCompleteBlock = false;
+
 					Process = null;
 					AutomataContext = null;
 					AutomataContextState = null;

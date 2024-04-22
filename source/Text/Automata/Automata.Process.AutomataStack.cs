@@ -28,10 +28,12 @@ namespace Zaaml.Text
 			[SuppressMessage("ReSharper", "UnusedMember.Local")]
 			internal partial class AutomataStack : IDisposable, ResourceCleaner<AutomataStackCleaner, AutomataStack>.IResource
 			{
+				private static long IdCounter;
 				private readonly Automata<TInstruction, TOperand> _automata;
 				private readonly List<SubGraph> _automataSubGraphRegistry;
 				private readonly MemorySpanAllocator<int> _memorySpanAllocator;
 				private readonly AutomataStackPool _pool;
+				private readonly long _id;
 				private int _count;
 				private int _forkCount;
 				private AutomataStack _forkTarget;
@@ -40,6 +42,7 @@ namespace Zaaml.Text
 
 				public AutomataStack(Automata<TInstruction, TOperand> automata, MemorySpanAllocator<int> memorySpanAllocator, AutomataStackPool pool)
 				{
+					_id = IdCounter++;
 					_pool = pool;
 					_automata = automata;
 					_memorySpanAllocator = memorySpanAllocator;
@@ -48,6 +51,7 @@ namespace Zaaml.Text
 
 				public AutomataStack(Automata<TInstruction, TOperand> automata, MemorySpanAllocator<int> memorySpanAllocator)
 				{
+					_id = IdCounter++;
 					_automata = automata;
 					_memorySpanAllocator = memorySpanAllocator;
 					_automataSubGraphRegistry = _automata._subGraphRegistry;
@@ -55,6 +59,7 @@ namespace Zaaml.Text
 
 				private AutomataStack()
 				{
+					_id = IdCounter++;
 				}
 
 				public int Capacity => _memorySpan.Length;
@@ -218,6 +223,16 @@ namespace Zaaml.Text
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public void Unfork(AutomataStack stack)
+				{
+					stack._forkTarget = _forkTarget;
+					stack._forkCount = _forkCount;
+
+					_forkTarget = null;
+					_forkCount = 0;
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public SubGraph Peek(int headIndex)
 				{
 					return _automataSubGraphRegistry[_memorySpan[_count - headIndex - 1] & SubGraphIdMask];
@@ -283,7 +298,7 @@ namespace Zaaml.Text
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				public void Unfork(AutomataStack stack)
+				public void StackExchange(AutomataStack stack)
 				{
 					if (stack._forkTarget == null)
 						stack.CopyFrom(this);

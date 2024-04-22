@@ -36,16 +36,16 @@ namespace Zaaml.Text
 			}
 		}
 
-		private ExecutionPath CreateExecutionPath(Node pathSourceNode, Node[] route, PredicateEntryBase predicate)
+		private ExecutionPath CreateExecutionPath(Node[] route, PredicateEntryBase predicate)
 		{
 			lock (_executionPathRegistry)
 			{
-				var key = new ExecutionPathKey(pathSourceNode, route, predicate);
+				var key = new ExecutionPathKey(route, predicate);
 
 				if (_executionRouteDictionary.TryGetValue(key, out _) == false) 
 					_executionRouteDictionary.Add(key, route);
 
-				var executionPath = new ExecutionPath(pathSourceNode, route, predicate);
+				var executionPath = new ExecutionPath(route, predicate);
 
 				RegisterExecutionPath(executionPath);
 
@@ -53,16 +53,16 @@ namespace Zaaml.Text
 			}
 		}
 
-		private ExecutionPath CreateExecutionPath(Node pathSourceNode, Node[] route, params MatchEntry[] match)
+		private ExecutionPath CreateExecutionPath(Node[] route, params MatchEntry[] match)
 		{
 			lock (_executionPathRegistry)
 			{
-				var key = new ExecutionPathKey(pathSourceNode, route, match);
+				var key = new ExecutionPathKey(route, match);
 
 				if (_executionRouteDictionary.TryGetValue(key, out _) == false)
 					_executionRouteDictionary.Add(key, route);
 
-				var executionPath = new ExecutionPath(pathSourceNode, route, match);
+				var executionPath = new ExecutionPath(route, match);
 
 				RegisterExecutionPath(executionPath);
 
@@ -74,21 +74,18 @@ namespace Zaaml.Text
 		{
 			private readonly int _hashCode;
 			private readonly MatchEntry[] _match;
-			private readonly Node _pathSourceNode;
 			private readonly PredicateEntryBase _predicate;
 			private readonly Node[] _route;
 
-			public ExecutionPathKey(Node pathSourceNode, Node[] route, PredicateEntryBase predicate)
+			public ExecutionPathKey(Node[] route, PredicateEntryBase predicate)
 			{
-				_pathSourceNode = pathSourceNode;
 				_route = route;
 				_predicate = predicate;
 				_hashCode = CalcHashCode();
 			}
 
-			public ExecutionPathKey(Node pathSourceNode, Node[] route, params MatchEntry[] match)
+			public ExecutionPathKey(Node[] route, params MatchEntry[] match)
 			{
-				_pathSourceNode = pathSourceNode;
 				_route = route;
 				_match = match;
 				_hashCode = CalcHashCode();
@@ -154,7 +151,7 @@ namespace Zaaml.Text
 		[DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
 		private protected sealed class ExecutionPath : ExecutionPathBase
 		{
-			public static readonly ExecutionPath Invalid = new(null, Array.Empty<Node>());
+			public static readonly ExecutionPath Invalid = new(null, []);
 
 			private readonly IPool<ExecutionPath> _forkExecutionPathPool;
 			public readonly bool ContextEval;
@@ -171,18 +168,16 @@ namespace Zaaml.Text
 			public readonly PrecedenceNode[] PrecedenceNodes;
 			public readonly int StackDelta;
 			public readonly int StackDepth;
-			private ExecutionPathMethodDelegate[] _executionMethods = Array.Empty<ExecutionPathMethodDelegate>();
+			private ExecutionPathMethodDelegate[] _executionMethods = [];
 			public int Id;
 			public ExecutionPath LookAheadPath;
 			public Node Output;
-			public Node PathSourceNode;
 			public PredicateEntryBase Predicate;
 			public ReferenceCounter ReferenceCount;
 			public bool Safe;
 
-			public ExecutionPath(Node pathSourceNode, Node[] route, params MatchEntry[] match)
+			public ExecutionPath(Node[] route, params MatchEntry[] match)
 			{
-				PathSourceNode = pathSourceNode;
 				Nodes = route;
 				IsInvalid = Nodes == null || Nodes.Length == 0;
 				Output = IsInvalid ? null : Nodes[Nodes.Length - 1];
@@ -190,7 +185,7 @@ namespace Zaaml.Text
 				OutputEnd = Output is ExitSyntaxNode;
 
 				if (match == null || match.Length == 0)
-					LookAheadMatch = Array.Empty<MatchEntry>();
+					LookAheadMatch = [];
 				else
 				{
 					Match = match[0];
@@ -200,9 +195,8 @@ namespace Zaaml.Text
 				CalcInfo(out PassLazyNode, out EnterReturnSubGraphs, out PrecedenceNodes, out HasPrecedenceNodes, out StackDepth, out StackDelta, out ContextEval);
 			}
 
-			public ExecutionPath(Node pathSourceNode, Node[] route, PredicateEntryBase predicate)
+			public ExecutionPath(Node[] route, PredicateEntryBase predicate)
 			{
-				PathSourceNode = pathSourceNode;
 				Nodes = route;
 				IsInvalid = Nodes == null || Nodes.Length == 0;
 				Output = IsInvalid ? null : Nodes[Nodes.Length - 1];
@@ -211,7 +205,7 @@ namespace Zaaml.Text
 
 				OutputReturn = false;
 				Predicate = predicate;
-				LookAheadMatch = Array.Empty<MatchEntry>();
+				LookAheadMatch = [];
 
 				CalcInfo(out PassLazyNode, out EnterReturnSubGraphs, out PrecedenceNodes, out HasPrecedenceNodes, out StackDepth, out StackDelta, out ContextEval);
 			}
@@ -225,11 +219,11 @@ namespace Zaaml.Text
 				Output = IsInvalid ? null : Nodes[Nodes.Length - 1];
 				OutputReturn = Output is ReturnSyntaxNode;
 				OutputEnd = Output is ExitSyntaxNode;
-				EnterReturnSubGraphs = Array.Empty<int>();
-				PrecedenceNodes = Array.Empty<PrecedenceNode>();
+				EnterReturnSubGraphs = [];
+				PrecedenceNodes = [];
 				ForkPredicatePath = true;
 				ContextEval = false;
-				LookAheadMatch = Array.Empty<MatchEntry>();
+				LookAheadMatch = [];
 
 				automata.RegisterExecutionPath(this);
 			}
@@ -247,10 +241,7 @@ namespace Zaaml.Text
 				}
 			}
 
-			private string DebugView
-			{
-				get { return string.Join("\n", Nodes.Select(n => n.ToString())); }
-			}
+			public string DebugView => string.Join("\n", Nodes.Select(n => n.ToString()));
 
 			public bool IsForkExecutionPath => _forkExecutionPathPool != null;
 
@@ -278,8 +269,8 @@ namespace Zaaml.Text
 
 				if (Nodes == null || Nodes.Length == 0)
 				{
-					enterReturnSubGraphs = Array.Empty<int>();
-					precedenceNodes = Array.Empty<PrecedenceNode>();
+					enterReturnSubGraphs = [];
+					precedenceNodes = [];
 					hasPrecedenceNodes = false;
 
 					return;
@@ -314,8 +305,8 @@ namespace Zaaml.Text
 					flags |= node.Flags;
 				}
 
-				precedenceNodes = precedenceNodeList != null ? precedenceNodeList.ToArray() : Array.Empty<PrecedenceNode>();
-				enterReturnSubGraphs = enterReturnSubGraphList != null ? enterReturnSubGraphList.ToArray() : Array.Empty<int>();
+				precedenceNodes = precedenceNodeList != null ? precedenceNodeList.ToArray() : [];
+				enterReturnSubGraphs = enterReturnSubGraphList != null ? enterReturnSubGraphList.ToArray() : [];
 
 				passLazyNode = (flags & Node.Lazy) != 0;
 				hasPrecedenceNodes = precedenceNodes.Length > 0;
@@ -380,7 +371,6 @@ namespace Zaaml.Text
 
 			public ExecutionPath Mount(Node startNode, PredicateNode predicate)
 			{
-				PathSourceNode = startNode;
 				Nodes[0] = predicate;
 				Predicate = predicate.PredicateEntry;
 				Output = predicate;
@@ -415,8 +405,6 @@ namespace Zaaml.Text
 
 				if (ReferenceCount.ReleaseReference() > 0)
 					return;
-
-				PathSourceNode = null;
 
 				var predicateNode = (PredicateNode)Nodes[0];
 

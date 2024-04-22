@@ -40,12 +40,11 @@ namespace Zaaml.Text
 				if (SyntaxGraph.BeginNode.HasReturn == false)
 					return;
 
-				EmptyPath = Automata.CreateExecutionPath(InitNode, new[]
+				EmptyPath = Automata.CreateExecutionPath(new[]
 				{
 					EnterNode,
 					SyntaxGraph.BeginNode,
 				}.Concat(SyntaxGraph.BeginNode.ReturnPaths[0].Nodes).ToArray());
-
 			}
 		}
 	}

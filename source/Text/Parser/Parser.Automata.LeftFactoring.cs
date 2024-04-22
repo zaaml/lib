@@ -35,7 +35,7 @@ namespace Zaaml.Text
 						continue;
 
 					if (dictionary.TryGetValue(entry, out var list) == false)
-						dictionary[entry] = list = new List<Tuple<int, ParserProduction>>();
+						dictionary[entry] = list = [];
 
 					list.Add(new Tuple<int, ParserProduction>(index, production));
 				}
@@ -43,6 +43,9 @@ namespace Zaaml.Text
 				foreach (var kv in dictionary)
 				{
 					if (kv.Value.Count < 2)
+						continue;
+
+					if (kv.Value.All(x => x.Item2.Entries.Length == 1))
 						continue;
 
 					var prefixEntry = kv.Key;
@@ -59,7 +62,7 @@ namespace Zaaml.Text
 						var factorPostfixProduction = new ParserProduction(this, p => new LeftFactoringBinder(p, LeftFactoringBinderKind.Postfix), postfixEntries, parserProduction, parserProduction);
 
 						if (factorPostfixProductions.Count == 0)
-							productions[tuple.Item1] = new ParserProduction(this, p => new LeftFactoringBinder(p, LeftFactoringBinderKind.Prefix), new[] { prefixEntry, factorPrefixSyntaxEntry }, parserProduction, null);
+							productions[tuple.Item1] = new ParserProduction(this, p => new LeftFactoringBinder(p, LeftFactoringBinderKind.Prefix), [prefixEntry, factorPrefixSyntaxEntry], parserProduction, null);
 						else
 							productions[tuple.Item1] = null;
 

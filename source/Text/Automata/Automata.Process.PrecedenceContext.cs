@@ -1,7 +1,6 @@
 ﻿// <copyright file="Automata.Process.PrecedenceContext.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
-
 using System.Runtime.CompilerServices;
 using Zaaml.Core;
 using Zaaml.Core.Collections;
@@ -125,6 +124,16 @@ namespace Zaaml.Text
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public void Unfork(PrecedenceContext precedence)
+				{
+					if (_stacks == null)
+						return;
+
+					for (var i = 0; i < _stacks.Length; i++)
+						_stacks[i].Unfork(precedence._stacks[i]);
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void Leave(PrecedencePredicate precedencePredicate)
 				{
 					_stacks[precedencePredicate.Id].Leave(precedencePredicate);
@@ -149,13 +158,13 @@ namespace Zaaml.Text
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				public void Unfork(PrecedenceContext precedence)
+				public void StackExchange(PrecedenceContext precedence)
 				{
 					if (_stacks == null)
 						return;
 
 					for (var i = 0; i < _stacks.Length; i++)
-						_stacks[i].Unfork(precedence._stacks[i]);
+						_stacks[i].StackExchange(precedence._stacks[i]);
 				}
 
 				public void Dispose()
@@ -352,6 +361,16 @@ namespace Zaaml.Text
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void Unfork(PrecedenceStack precedence)
+				{
+					precedence._forkTarget = _forkTarget;
+					precedence._forkCount = _forkCount;
+
+					_forkTarget = null;
+					_forkCount = 0;
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public void StackExchange(PrecedenceStack precedence)
 				{
 					if (precedence._forkTarget == null)
 						precedence.CopyFrom(this);

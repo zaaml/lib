@@ -17,7 +17,7 @@ namespace Zaaml.Text
 				Name = name;
 			}
 
-			internal bool CollapseBacktracking { get; set; }
+			internal bool ForkFrame { get; set; }
 
 			internal bool Inline { get; set; }
 

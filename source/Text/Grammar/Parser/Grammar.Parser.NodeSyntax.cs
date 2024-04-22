@@ -109,6 +109,7 @@ namespace Zaaml.Text
 			{
 				internal NodeSyntax([CallerMemberName] string name = null) : base(name)
 				{
+					ForkFrame = true;
 				}
 
 				public override Type NodeType => typeof(TNode);

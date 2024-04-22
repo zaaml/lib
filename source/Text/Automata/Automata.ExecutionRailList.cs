@@ -14,21 +14,21 @@ namespace Zaaml.Text
 			public static readonly ExecutionRailList Start = new(1, ExecutionRailNode.Empty);
 			public static readonly ExecutionRailList Next = new(-1, ExecutionRailNode.Empty);
 
+			public readonly int Count;
+			public readonly ExecutionRailNode Prefix;
+			public readonly ExecutionRailNode Root;
+
 			public ExecutionRailList(int count, ExecutionRailNode root)
 			{
 				Count = count;
 				Root = root;
 			}
 
-			public readonly int Count;
-			public readonly ExecutionRailNode Root;
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public ExecutionRailList MoveNext(out ExecutionRailNode railNode)
+			public ExecutionRailList(int count, ExecutionRailNode root, ExecutionRailNode prefix)
 			{
-				railNode = Root;
-
-				return new ExecutionRailList(Count - 1, Root.Next);
+				Count = count;
+				Root = root;
+				Prefix = prefix;
 			}
 
 			public void Dispose()
@@ -41,6 +41,14 @@ namespace Zaaml.Text
 
 					node.Dispose();
 				}
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public ExecutionRailList MoveNext(out ExecutionRailNode railNode)
+			{
+				railNode = Root;
+
+				return new ExecutionRailList(Count - 1, Root.Next);
 			}
 		}
 	}
