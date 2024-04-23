@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Markup;
-using Zaaml.Core.Extensions;
 using Zaaml.Core.Runtime;
 using Zaaml.Core.Utils;
 using Zaaml.PresentationCore.PropertyCore;
@@ -14,111 +13,95 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Primitives.SharedSizePrimitives
 {
-  [ContentProperty("Child")]
-  public sealed class SharedSizeGroupControl : FixedTemplateControl<SharedSizeGroupPanel>
-  {
-    #region Static Fields and Constants
+	[ContentProperty("Child")]
+	public sealed class SharedSizeGroupControl : FixedTemplateControl<SharedSizeGroupPanel>
+	{
+		public static readonly DependencyProperty ChildProperty = DPM.Register<FrameworkElement, SharedSizeGroupControl>
+			("Child", s => s.OnChildChanged);
 
-    public static readonly DependencyProperty ChildProperty = DPM.Register<FrameworkElement, SharedSizeGroupControl>
-      ("Child", s => s.OnChildChanged);
+		public static readonly DependencyProperty IsSharingEnabledProperty = DPM.Register<bool, SharedSizeGroupControl>
+			("IsSharingEnabled", true, s => s.OnIsSharingEnabledChanged);
 
-    public static readonly DependencyProperty IsSharingEnabledProperty = DPM.Register<bool, SharedSizeGroupControl>
-      ("IsSharingEnabled", true, s => s.OnIsSharingEnabledChanged);
+		internal Dictionary<string, SharedSizeEntry> SharedSizes;
 
-    #endregion
+		public FrameworkElement Child
+		{
+			get => (FrameworkElement)GetValue(ChildProperty);
+			set => SetValue(ChildProperty, value);
+		}
 
-    #region Fields
+		private bool IsInMeasure => TemplateRoot.IsInMeasure;
 
-    internal Dictionary<string, SharedSizeEntry> SharedSizes;
+		public bool IsSharingEnabled
+		{
+			get => (bool)GetValue(IsSharingEnabledProperty);
+			set => SetValue(IsSharingEnabledProperty, value.Box());
+		}
 
-    #endregion
+		protected override IEnumerator LogicalChildren => TemplateRoot == null || Child == null ? base.LogicalChildren : EnumeratorUtils.Concat(Child, base.LogicalChildren);
 
-    #region Properties
+		internal SharedSizeGroupPanel SharedSizeGroupPanel => TemplateRoot;
 
-    public FrameworkElement Child
-    {
-      get => (FrameworkElement) GetValue(ChildProperty);
-      set => SetValue(ChildProperty, value);
-    }
+		protected override void ApplyTemplateOverride()
+		{
+			base.ApplyTemplateOverride();
 
-    private bool IsInMeasure => TemplateRoot.IsInMeasure;
+			var child = Child;
+			if (child != null)
+				RemoveLogicalChild(child);
 
-    public bool IsSharingEnabled
-    {
-	    get => (bool)GetValue(IsSharingEnabledProperty);
-	    set => SetValue(IsSharingEnabledProperty, value.Box());
-    }
+			TemplateRoot.SharedSizeGroupControl = this;
+		}
 
-    protected override IEnumerator LogicalChildren => TemplateRoot == null || Child == null ? base.LogicalChildren : EnumeratorUtils.Concat(Child, base.LogicalChildren);
+		private SharedSizeEntry CreateSharedSize(string key)
+		{
+			var sharedSize = new SharedSizeEntry(key, this);
 
-    internal SharedSizeGroupPanel SharedSizeGroupPanel => TemplateRoot;
+			if (IsInMeasure)
+				sharedSize.BeginMeasurePass(0);
 
-    #endregion
+			return sharedSize;
+		}
 
-    #region  Methods
+		internal SharedSizeEntry GetSharedSize(string key)
+		{
+			if (key.IsNullOrEmpty())
+				return null;
 
-    protected override void ApplyTemplateOverride()
-    {
-      base.ApplyTemplateOverride();
+			if (SharedSizes == null)
+				SharedSizes = new Dictionary<string, SharedSizeEntry>();
 
-      var child = Child;
-      if (child != null)
-        RemoveLogicalChild(child);
+			return SharedSizes.GetValueOrCreate(key, CreateSharedSize);
+		}
 
-      TemplateRoot.SharedSizeGroupControl = this;
-    }
+		private void OnChildChanged(FrameworkElement oldChild, FrameworkElement newChild)
+		{
+			if (TemplateRoot != null)
+				TemplateRoot.OnChildChanged();
+			else
+			{
+				if (oldChild != null)
+					RemoveLogicalChild(oldChild);
 
-    private SharedSizeEntry CreateSharedSize(string key)
-    {
-      var sharedSize = new SharedSizeEntry(key, this);
+				if (newChild != null)
+					AddLogicalChild(newChild);
+			}
+		}
 
-      if (IsInMeasure)
-        sharedSize.BeginMeasurePass(0);
+		private void OnIsSharingEnabledChanged()
+		{
+			TemplateRoot?.InvalidateInternal();
+		}
 
-      return sharedSize;
-    }
+		protected override void UndoTemplateOverride()
+		{
+			TemplateRoot.SharedSizeGroupControl = null;
 
-    internal SharedSizeEntry GetSharedSize(string key)
-    {
-      if (key.IsNullOrEmpty())
-        return null;
+			var child = Child;
+			if (child != null)
+				AddLogicalChild(child);
 
-      if (SharedSizes == null)
-        SharedSizes = new Dictionary<string, SharedSizeEntry>();
-
-      return SharedSizes.GetValueOrCreate(key, CreateSharedSize);
-    }
-
-    private void OnChildChanged(FrameworkElement oldChild, FrameworkElement newChild)
-    {
-      if (TemplateRoot != null)
-        TemplateRoot.OnChildChanged();
-      else
-      {
-        if (oldChild != null)
-          RemoveLogicalChild(oldChild);
-
-        if (newChild != null)
-          AddLogicalChild(newChild);
-      }
-    }
-
-    private void OnIsSharingEnabledChanged()
-    {
-      TemplateRoot?.InvalidateInternal();
-    }
-
-    protected override void UndoTemplateOverride()
-    {
-      TemplateRoot.SharedSizeGroupControl = null;
-
-      var child = Child;
-      if (child != null)
-        AddLogicalChild(child);
-
-      base.UndoTemplateOverride();
-    }
-
-    #endregion
-  }
+			base.UndoTemplateOverride();
+		}
+	}
 }

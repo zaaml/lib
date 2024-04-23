@@ -85,7 +85,6 @@ namespace Zaaml.UI.Controls.Core
 				// TODO and perform immediate update on the binding to update Item IsSelected property.
 
 				var source = GetSource(item);
-				var value = GetValue(item, source);
 
 				if (MultipleSelection)
 					if (CurrentSelectionCollection.FindBySource(source, out var selection))
@@ -93,10 +92,6 @@ namespace Zaaml.UI.Controls.Core
 							CurrentSelectionCollection.UpdateSelection(selection.Index, selection.WithItem(item));
 
 				if (EqualsSource(source, CurrentSelectedSource))
-					if (EqualsItem(item, CurrentSelectedItem) == false)
-						Sync(CurrentSelection.WithItem(item));
-
-				if (EqualsValue(value, CurrentSelectedValue))
 					if (EqualsItem(item, CurrentSelectedItem) == false)
 						Sync(CurrentSelection.WithItem(item));
 
@@ -244,7 +239,6 @@ namespace Zaaml.UI.Controls.Core
 				if (IsLocked(item) == false)
 				{
 					var source = GetSource(item);
-					var value = GetValue(item, source);
 
 					if (MultipleSelection)
 						if (CurrentSelectionCollection.FindBySource(source, out var selection))
@@ -253,10 +247,6 @@ namespace Zaaml.UI.Controls.Core
 
 					if (EqualsSource(source, CurrentSelectedSource))
 						if (EqualsItem(item, CurrentSelectedItem))
-							Sync(CurrentSelection.WithItem(null));
-
-					if (EqualsValue(value, CurrentSelectedValue))
-						if (EqualsItem(item, CurrentSelectedItem) == false)
 							Sync(CurrentSelection.WithItem(null));
 				}
 			}
