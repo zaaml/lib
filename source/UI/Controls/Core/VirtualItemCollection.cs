@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -427,7 +426,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			if (generatedItem.IsAttached == false)
 			{
-				if (Debugger.IsAttached) 
+				if (Debugger.IsAttached)
 					Debugger.Break();
 
 				generatedItem.Release();

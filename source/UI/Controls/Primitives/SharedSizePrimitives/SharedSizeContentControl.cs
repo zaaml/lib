@@ -12,100 +12,88 @@ using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.Primitives.SharedSizePrimitives
 {
-  [ContentProperty("Content")]
-  public sealed class SharedSizeContentControl : FixedTemplateControl<SharedSizeContentPanel>
-  {
-    #region Static Fields and Constants
+	[ContentProperty("Content")]
+	public sealed class SharedSizeContentControl : FixedTemplateControl<SharedSizeContentPanel>
+	{
+		public static readonly DependencyProperty ContentProperty = DPM.Register<object, SharedSizeContentControl>
+			("Content", s => s.OnContentChanged);
 
-    public static readonly DependencyProperty ContentProperty = DPM.Register<object, SharedSizeContentControl>
-      ("Content", s => s.OnContentChanged);
+		public static readonly DependencyProperty SharedSizeKeyProperty = DPM.Register<string, SharedSizeContentControl>
+			("SharedSizeKey", s => s.Invalidate);
 
-    public static readonly DependencyProperty SharedSizeKeyProperty = DPM.Register<string, SharedSizeContentControl>
-      ("SharedSizeKey", s => s.Invalidate);
+		public static readonly DependencyProperty ShareWidthProperty = DPM.Register<bool, SharedSizeContentControl>
+			("ShareWidth", true, s => s.Invalidate);
 
-    public static readonly DependencyProperty ShareWidthProperty = DPM.Register<bool, SharedSizeContentControl>
-      ("ShareWidth", true, s => s.Invalidate);
+		public static readonly DependencyProperty ShareHeightProperty = DPM.Register<bool, SharedSizeContentControl>
+			("ShareHeight", true, s => s.Invalidate);
 
-    public static readonly DependencyProperty ShareHeightProperty = DPM.Register<bool, SharedSizeContentControl>
-      ("ShareHeight", true, s => s.Invalidate);
+		public object Content
+		{
+			get => GetValue(ContentProperty);
+			set => SetValue(ContentProperty, value);
+		}
 
-    #endregion
+		protected override IEnumerator LogicalChildren => TemplateRoot == null || Content == null ? base.LogicalChildren : EnumeratorUtils.Concat(Content, base.LogicalChildren);
 
-    #region Properties
+		public string SharedSizeKey
+		{
+			get => (string)GetValue(SharedSizeKeyProperty);
+			set => SetValue(SharedSizeKeyProperty, value);
+		}
 
-    public object Content
-    {
-      get => GetValue(ContentProperty);
-      set => SetValue(ContentProperty, value);
-    }
+		public bool ShareHeight
+		{
+			get => (bool)GetValue(ShareHeightProperty);
+			set => SetValue(ShareHeightProperty, value.Box());
+		}
 
-    protected override IEnumerator LogicalChildren => TemplateRoot == null || Content == null ? base.LogicalChildren : EnumeratorUtils.Concat(Content, base.LogicalChildren);
+		public bool ShareWidth
+		{
+			get => (bool)GetValue(ShareWidthProperty);
+			set => SetValue(ShareWidthProperty, value.Box());
+		}
 
-    public string SharedSizeKey
-    {
-      get => (string) GetValue(SharedSizeKeyProperty);
-      set => SetValue(SharedSizeKeyProperty, value);
-    }
+		protected override void ApplyTemplateOverride()
+		{
+			base.ApplyTemplateOverride();
 
-    public bool ShareHeight
-    {
-	    get => (bool)GetValue(ShareHeightProperty);
-	    set => SetValue(ShareHeightProperty, value.Box());
-    }
+			var content = Content;
 
-    public bool ShareWidth
-    {
-	    get => (bool)GetValue(ShareWidthProperty);
-	    set => SetValue(ShareWidthProperty, value.Box());
-    }
+			if (content != null)
+				RemoveLogicalChild(content);
 
-    #endregion
+			TemplateRoot.SharedSizeContentControl = this;
+		}
 
-    #region  Methods
+		private void Invalidate()
+		{
+			InvalidateMeasure();
+		}
 
-    protected override void ApplyTemplateOverride()
-    {
-      base.ApplyTemplateOverride();
+		private void OnContentChanged(object oldContent, object newContent)
+		{
+			if (TemplateRoot != null)
+				TemplateRoot.OnContentChanged();
+			else
+			{
+				if (oldContent != null)
+					RemoveLogicalChild(oldContent);
 
-      var content = Content;
+				if (newContent != null)
+					AddLogicalChild(newContent);
+			}
+		}
 
-      if (content != null)
-        RemoveLogicalChild(content);
+		protected override void UndoTemplateOverride()
+		{
+			TemplateRoot.SharedSizeContentControl = null;
 
-      TemplateRoot.SharedSizeContentControl = this;
-    }
+			var content = Content;
 
-    private void Invalidate()
-    {
-      InvalidateMeasure();
-    }
+			if (content != null)
+				AddLogicalChild(content);
 
-    private void OnContentChanged(object oldContent, object newContent)
-    {
-      if (TemplateRoot != null)
-        TemplateRoot.OnContentChanged();
-      else
-      {
-        if (oldContent != null)
-          RemoveLogicalChild(oldContent);
-
-        if (newContent != null)
-          AddLogicalChild(newContent);
-      }
-    }
-
-    protected override void UndoTemplateOverride()
-    {
-      TemplateRoot.SharedSizeContentControl = null;
-
-      var content = Content;
-
-      if (content != null)
-        AddLogicalChild(content);
-
-      base.UndoTemplateOverride();
-    }
-
-    #endregion
-  }
+			base.UndoTemplateOverride();
+		}
+	}
 }
