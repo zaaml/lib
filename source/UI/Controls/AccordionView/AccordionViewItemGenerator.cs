@@ -15,6 +15,9 @@ namespace Zaaml.UI.Controls.AccordionView
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<AccordionViewItemTemplate, AccordionViewItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
 
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<AccordionViewItemTemplateSelector, AccordionViewItemGenerator>
+			("ItemTemplateSelector", g => g.OnItemTemplateSelectorChanged);
+
 		public AccordionViewItemGenerator()
 		{
 			Implementation = new TemplatedGeneratorImplementation<AccordionViewItem>(this);
@@ -24,8 +27,14 @@ namespace Zaaml.UI.Controls.AccordionView
 
 		public AccordionViewItemTemplate ItemTemplate
 		{
-			get => (AccordionViewItemTemplate) GetValue(ItemTemplateProperty);
+			get => (AccordionViewItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
+		}
+
+		public AccordionViewItemTemplateSelector ItemTemplateSelector
+		{
+			get => (AccordionViewItemTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			set => SetValue(ItemTemplateSelectorProperty, value);
 		}
 
 		protected override bool SupportsRecycling => true;
@@ -53,6 +62,11 @@ namespace Zaaml.UI.Controls.AccordionView
 		private void OnItemTemplateChanged()
 		{
 			Implementation.ItemTemplate = ItemTemplate;
+		}
+
+		private void OnItemTemplateSelectorChanged()
+		{
+			Implementation.ItemTemplateSelector = ItemTemplateSelector;
 		}
 	}
 }

@@ -15,6 +15,9 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<TickBarItemTemplate, TickBarItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
 
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<TickBarItemTemplateSelector, TickBarItemGenerator>
+			("ItemTemplateSelector", g => g.OnItemTemplateSelectorChanged);
+
 		public TickBarItemGenerator()
 		{
 			Implementation = new TemplatedGeneratorImplementation<TickBarItem>(this);
@@ -26,6 +29,12 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		{
 			get => (TickBarItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
+		}
+
+		public TickBarItemTemplateSelector ItemTemplateSelector
+		{
+			get => (TickBarItemTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			set => SetValue(ItemTemplateSelectorProperty, value);
 		}
 
 		protected override bool SupportsRecycling => true;
@@ -53,6 +62,11 @@ namespace Zaaml.UI.Controls.Primitives.TickBar
 		private void OnItemTemplateChanged()
 		{
 			Implementation.ItemTemplate = ItemTemplate;
+		}
+
+		private void OnItemTemplateSelectorChanged()
+		{
+			Implementation.ItemTemplateSelector = ItemTemplateSelector;
 		}
 	}
 }
