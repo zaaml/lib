@@ -8,26 +8,18 @@ namespace Zaaml.UI.Controls.Menu
 {
 	public sealed class RadioMenuItemCollection : MenuItemCollectionBase<RadioMenuItem>
 	{
-		#region Ctors
-
 		internal RadioMenuItemCollection(Control menuItemOwner) : base(menuItemOwner)
 		{
 		}
 
-		#endregion
-
-		#region Properties
-
 		protected override ItemGenerator<RadioMenuItem> DefaultGenerator => DefaultRadioGenerator;
 
-		internal RadioMenuItemGenerator DefaultRadioGenerator { get; } = new RadioMenuItemGenerator();
+		internal RadioMenuItemGenerator DefaultRadioGenerator { get; } = new();
 
 		internal RadioMenuItemGeneratorBase Generator
 		{
-			get => (RadioMenuItemGeneratorBase) GeneratorCore;
+			get => (RadioMenuItemGeneratorBase)GeneratorCore;
 			set => GeneratorCore = value;
 		}
-
-		#endregion
 	}
 }

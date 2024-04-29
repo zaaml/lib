@@ -9,81 +9,69 @@ using Zaaml.UI.Controls.Menu;
 
 namespace Zaaml.UI.Controls.TabView
 {
-  internal class TabViewControlMenuItemGenerator : MenuItemGeneratorBase
-  {
-    #region Ctors
+	internal class TabViewControlMenuItemGenerator : MenuItemGeneratorBase
+	{
+		public TabViewControlMenuItemGenerator(TabViewControl tabViewControl)
+		{
+			TabViewControl = tabViewControl;
+			SelectCommand = new RelayCommand(OnSelectCommand);
+		}
 
-    public TabViewControlMenuItemGenerator(TabViewControl tabViewControl)
-    {
-      TabViewControl = tabViewControl;
-      SelectCommand = new RelayCommand(OnSelectCommand);
-    }
+		private ICommand SelectCommand { get; }
 
-    #endregion
+		public TabViewControl TabViewControl { get; }
 
-    #region Properties
+		protected override void AttachItem(MenuItemBase item, object source)
+		{
+			var menuItem = (MenuItem)item;
+			var tabViewItem = source as TabViewItem;
 
-    private ICommand SelectCommand { get; }
-
-    public TabViewControl TabViewControl { get; }
-
-    #endregion
-
-    #region  Methods
-
-    protected override void AttachItem(MenuItemBase item, object source)
-    {
-      var menuItem = (MenuItem) item;
-      var tabViewItem = source as TabViewItem;
-
-      if (tabViewItem == null)
-      {
-        menuItem.Header = source;
-        menuItem.HeaderTemplate = TabViewControl.ItemHeaderTemplate;
-        menuItem.HeaderTemplateSelector = TabViewControl.ItemHeaderTemplateSelector;
-        menuItem.DataContext = source;
-      }
-      else
-        tabViewItem.AttachMenuItem(menuItem);
+			if (tabViewItem == null)
+			{
+				menuItem.Header = source;
+				menuItem.HeaderTemplate = TabViewControl.ItemHeaderTemplate;
+				menuItem.HeaderTemplateSelector = TabViewControl.ItemHeaderTemplateSelector;
+				menuItem.DataContext = source;
+			}
+			else
+				tabViewItem.AttachMenuItem(menuItem);
 
 
-      menuItem.Command = SelectCommand;
-      menuItem.CommandParameter = source;
-    }
+			menuItem.Command = SelectCommand;
+			menuItem.CommandParameter = source;
+		}
 
-    protected override MenuItemBase CreateItem(object source)
-    {
-      return new MenuItem { HorizontalContentAlignment = HorizontalAlignment.Left };
-    }
+		protected override MenuItemBase CreateItem(object source)
+		{
+			return new MenuItem { HorizontalContentAlignment = HorizontalAlignment.Left };
+		}
 
-    protected override void DetachItem(MenuItemBase item, object source)
-    {
-      var menuItem = (MenuItem) item;
-      var tabViewItem = source as TabViewItem;
+		protected override void DetachItem(MenuItemBase item, object source)
+		{
+			var menuItem = (MenuItem)item;
+			var tabViewItem = source as TabViewItem;
 
-      if (tabViewItem == null)
-      {
-        menuItem.Header = null;
-        menuItem.DataContext = null;
-        menuItem.HeaderTemplate = null;
-        menuItem.HeaderTemplateSelector = null;
-      }
-      else
-        tabViewItem.DetachMenuItem(menuItem);
+			if (tabViewItem == null)
+			{
+				menuItem.Header = null;
+				menuItem.DataContext = null;
+				menuItem.HeaderTemplate = null;
+				menuItem.HeaderTemplateSelector = null;
+			}
+			else
+				tabViewItem.DetachMenuItem(menuItem);
 
-      menuItem.Command = null;
-      menuItem.CommandParameter = null;
-    }
+			menuItem.Command = null;
+			menuItem.CommandParameter = null;
+		}
 
-    protected override void DisposeItem(MenuItemBase item, object source)
-    {
-    }
+		protected override void DisposeItem(MenuItemBase item, object source)
+		{
+		}
 
-    private void OnSelectCommand(object parameter)
-    {
-      TabViewControl.OnMenuItemSelect(parameter);
-    }
-
-    #endregion
-  }
+		private void OnSelectCommand(object parameter)
+		{
+			TabViewControl.OnMenuItemSelect(parameter);
+		}
+	}
 }

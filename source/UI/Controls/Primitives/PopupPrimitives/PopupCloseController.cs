@@ -2,20 +2,14 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-#if SILVERLIGHT
-#else
-using Zaaml.Core.Extensions;
-using Zaaml.PresentationCore;
-#endif
-using System;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.Input;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.PresentationCore.Utils;
-using DispatcherPriority = System.Windows.Threading.DispatcherPriority;
 
 namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 {
@@ -26,9 +20,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private readonly Action _onClose;
 		private readonly Popup _popup;
-#if !SILVERLIGHT
 		private IDisposable _foregroundSession;
-#endif
 
 		private bool _hadKeyboardFocus;
 		private MouseButtonEventInfo _leftButtonDownInfo;
@@ -51,7 +43,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			_popup.Opened += PopupControllerOnOpened;
 			_popup.Closed += PopupControllerOnClosed;
 
-			this.SetBinding(PopupChildProperty, new Binding {Path = new PropertyPath(Popup.ChildProperty), Source = _popup});
+			this.SetBinding(PopupChildProperty, new Binding { Path = new PropertyPath(Popup.ChildProperty), Source = _popup });
 		}
 
 		private bool HasKeyboardFocus
@@ -67,14 +59,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private static IGlobalMouseEventsProducer MouseEvents
 		{
-			get
-			{
-#if SILVERLIGHT
-        return MouseRootsEventsProducer.Instance;
-#else
-				return MouseClassEventsProducer.Instance;
-#endif
-			}
+			get { return MouseClassEventsProducer.Instance; }
 		}
 
 		private void AttachGlobalMouseEvents()
@@ -151,10 +136,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			FocusObserver.KeyboardFocusedElementChanged += OnKeyboardFocusedElementChanged;
 			AttachGlobalMouseEvents();
 
-#if !SILVERLIGHT
 			_foregroundSession = _foregroundSession.DisposeExchange(ForegroundSession.Enter(_popup, QueryCloseCoreImmediate));
 			HwndMouseObserver.AddListener(this);
-#endif
 		}
 
 		private void ExitOpenState()
@@ -162,10 +145,8 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			FocusObserver.KeyboardFocusedElementChanged -= OnKeyboardFocusedElementChanged;
 			DetachGlobalMouseEvents();
 
-#if !SILVERLIGHT
 			_foregroundSession = _foregroundSession.DisposeExchange();
 			HwndMouseObserver.RemoveListener(this);
-#endif
 
 			_leftButtonDownInfo = MouseButtonEventInfo.Empty;
 			_rightButtonDownInfo = MouseButtonEventInfo.Empty;
@@ -197,7 +178,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 				return false;
 
 			var screenPosition = e.ScreenPosition;
-			var isMouseInsideEventHelper = MouseInternal.IsMouseInsideEventHelper(_popup.TreeMode == PopupTreeMode.Visual ? (UIElement) _popup : _popup.Panel, uie, screenPosition);
+			var isMouseInsideEventHelper = MouseInternal.IsMouseInsideEventHelper(_popup.TreeMode == PopupTreeMode.Visual ? _popup : _popup.Panel, uie, screenPosition);
 
 			return isMouseInsideEventHelper;
 		}
@@ -272,12 +253,10 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			_hadKeyboardFocus |= hasKeyboardFocus;
 		}
 
-#if !SILVERLIGHT
 		private void OnLocalMouseLeftDown(object sender, MouseButtonEventArgs e)
 		{
 			_leftButtonDownInfo = GetMouseDownInfo(e.ToMouseButtonEventArgsInt(MouseButton.Left, MouseButtonState.Pressed));
 		}
-#endif
 
 		private void OnLocalMouseLeftUp(object sender, MouseButtonEventArgs e)
 		{
@@ -291,12 +270,10 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 			_leftButtonDownInfo = MouseButtonEventInfo.Empty;
 		}
 
-#if !SILVERLIGHT
 		private void OnLocalMouseRightDown(object sender, MouseButtonEventArgs e)
 		{
 			_rightButtonDownInfo = GetMouseDownInfo(e.ToMouseButtonEventArgsInt(MouseButton.Right, MouseButtonState.Pressed));
 		}
-#endif
 
 		private void OnLocalMouseRightUp(object sender, MouseButtonEventArgs e)
 		{
@@ -314,24 +291,20 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 		{
 			if (oldChild != null)
 			{
-				oldChild.RemoveHandler(UIElement.MouseLeftButtonUpEvent, (MouseButtonEventHandler) OnLocalMouseLeftUp);
-				oldChild.RemoveHandler(UIElement.MouseRightButtonUpEvent, (MouseButtonEventHandler) OnLocalMouseRightUp);
+				oldChild.RemoveHandler(UIElement.MouseLeftButtonUpEvent, (MouseButtonEventHandler)OnLocalMouseLeftUp);
+				oldChild.RemoveHandler(UIElement.MouseRightButtonUpEvent, (MouseButtonEventHandler)OnLocalMouseRightUp);
 
-#if !SILVERLIGHT
-				oldChild.RemoveHandler(UIElement.PreviewMouseLeftButtonDownEvent, (MouseButtonEventHandler) OnLocalMouseLeftDown);
-				oldChild.RemoveHandler(UIElement.PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler) OnLocalMouseRightDown);
-#endif
+				oldChild.RemoveHandler(UIElement.PreviewMouseLeftButtonDownEvent, (MouseButtonEventHandler)OnLocalMouseLeftDown);
+				oldChild.RemoveHandler(UIElement.PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler)OnLocalMouseRightDown);
 			}
 
 			if (newChild != null)
 			{
-				newChild.AddHandler(UIElement.MouseLeftButtonUpEvent, (MouseButtonEventHandler) OnLocalMouseLeftUp, true);
-				newChild.AddHandler(UIElement.MouseRightButtonUpEvent, (MouseButtonEventHandler) OnLocalMouseRightUp, true);
+				newChild.AddHandler(UIElement.MouseLeftButtonUpEvent, (MouseButtonEventHandler)OnLocalMouseLeftUp, true);
+				newChild.AddHandler(UIElement.MouseRightButtonUpEvent, (MouseButtonEventHandler)OnLocalMouseRightUp, true);
 
-#if !SILVERLIGHT
-				newChild.AddHandler(UIElement.PreviewMouseLeftButtonDownEvent, (MouseButtonEventHandler) OnLocalMouseLeftDown, true);
-				newChild.AddHandler(UIElement.PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler) OnLocalMouseRightDown, true);
-#endif
+				newChild.AddHandler(UIElement.PreviewMouseLeftButtonDownEvent, (MouseButtonEventHandler)OnLocalMouseLeftDown, true);
+				newChild.AddHandler(UIElement.PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler)OnLocalMouseRightDown, true);
 			}
 		}
 
@@ -399,7 +372,7 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		void IMouseEventListener.OnMouseEvent(MouseEventInfo eventInfo)
 		{
-			if (eventInfo.EventKind == MouseEventKind.Button && eventInfo.AreaKind == MouseEventAreaKind.NonClient)
+			if (eventInfo is { EventKind: MouseEventKind.Button, AreaKind: MouseEventAreaKind.NonClient })
 				QueryCloseCoreImmediate();
 		}
 
@@ -412,24 +385,16 @@ namespace Zaaml.UI.Controls.Primitives.PopupPrimitives
 
 		private readonly struct MouseButtonEventInfo
 		{
-			public static readonly MouseButtonEventInfo Empty = new MouseButtonEventInfo();
-
-			#region Fields
+			public static readonly MouseButtonEventInfo Empty = new();
 
 			public readonly UIElement Element;
 			public readonly bool IsInside;
-
-			#endregion
-
-			#region Ctors
 
 			public MouseButtonEventInfo(UIElement element, bool isInside)
 			{
 				Element = element;
 				IsInside = isInside;
 			}
-
-			#endregion
 
 			public bool IsEmpty => Element == null;
 		}

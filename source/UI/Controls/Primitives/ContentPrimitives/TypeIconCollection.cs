@@ -15,16 +15,16 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			_iconSelector = iconSelector;
 		}
 
-		protected override void OnItemAdded(TypeIcon obj)
+		protected override void OnItemAdded(TypeIcon typeIcon)
 		{
-			base.OnItemAdded(obj);
+			base.OnItemAdded(typeIcon);
 
 			_iconSelector.OnChangedInternal();
 		}
 
-		protected override void OnItemRemoved(TypeIcon obj)
+		protected override void OnItemRemoved(TypeIcon typeIcon)
 		{
-			base.OnItemRemoved(obj);
+			base.OnItemRemoved(typeIcon);
 
 			_iconSelector.OnChangedInternal();
 		}

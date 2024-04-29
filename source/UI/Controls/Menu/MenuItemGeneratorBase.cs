@@ -8,8 +8,6 @@ namespace Zaaml.UI.Controls.Menu
 {
 	public abstract class MenuItemGeneratorBase : ItemGenerator<MenuItemBase>
 	{
-		#region  Methods
-
 		internal override MenuItemBase CreateItemCore(object source)
 		{
 			var menuItemBase = base.CreateItemCore(source);
@@ -25,7 +23,5 @@ namespace Zaaml.UI.Controls.Menu
 
 			item.ParentGenerator = null;
 		}
-
-		#endregion
 	}
 }

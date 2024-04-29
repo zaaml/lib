@@ -11,22 +11,12 @@ namespace Zaaml.UI.Controls.Menu
 {
 	public class RadioMenuItemGenerator : RadioMenuItemGeneratorBase
 	{
-		#region Static Fields and Constants
-
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<RadioMenuItemTemplate, RadioMenuItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
 
-		#endregion
-
-		#region Fields
-
-		private readonly GeneratorDataTemplateHelper<RadioMenuItem, RadioMenuItem> _generatorDataTemplateHelper = new GeneratorDataTemplateHelper<RadioMenuItem, RadioMenuItem>();
+		private readonly GeneratorDataTemplateHelper<RadioMenuItem, RadioMenuItem> _generatorDataTemplateHelper = new();
 
 		private MemberEvaluator _displayMemberEvaluator;
-
-		#endregion
-
-		#region Properties
 
 		internal string DisplayMember
 		{
@@ -44,13 +34,9 @@ namespace Zaaml.UI.Controls.Menu
 
 		public MenuItemTemplate ItemTemplate
 		{
-			get => (MenuItemTemplate) GetValue(ItemTemplateProperty);
+			get => (MenuItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
 		}
-
-		#endregion
-
-		#region  Methods
 
 		protected override void AttachItem(RadioMenuItem item, object source)
 		{
@@ -86,7 +72,5 @@ namespace Zaaml.UI.Controls.Menu
 
 			OnGeneratorChanged();
 		}
-
-		#endregion
 	}
 }

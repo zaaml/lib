@@ -15,6 +15,9 @@ namespace Zaaml.UI.Controls.TableView
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<TableViewItemTemplate, TableViewItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
 
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<TableViewItemTemplateSelector, TableViewItemGenerator>
+			("ItemTemplateSelector", g => g.OnItemTemplateSelectorChanged);
+
 		public TableViewItemGenerator()
 		{
 			Implementation = new TemplatedGeneratorImplementation<TableViewItem>(this);
@@ -24,8 +27,14 @@ namespace Zaaml.UI.Controls.TableView
 
 		public TableViewItemTemplate ItemTemplate
 		{
-			get => (TableViewItemTemplate) GetValue(ItemTemplateProperty);
+			get => (TableViewItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
+		}
+
+		public TableViewItemTemplateSelector ItemTemplateSelector
+		{
+			get => (TableViewItemTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			set => SetValue(ItemTemplateSelectorProperty, value);
 		}
 
 		protected override bool SupportsRecycling => true;
@@ -53,6 +62,11 @@ namespace Zaaml.UI.Controls.TableView
 		private void OnItemTemplateChanged()
 		{
 			Implementation.ItemTemplate = ItemTemplate;
+		}
+
+		private void OnItemTemplateSelectorChanged()
+		{
+			Implementation.ItemTemplateSelector = ItemTemplateSelector;
 		}
 	}
 }

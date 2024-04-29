@@ -2,8 +2,8 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -11,6 +11,7 @@ namespace Zaaml.UI.Controls.Core
 	{
 		private readonly GeneratorDataTemplateHelper<TItem, TItem> _generatorDataTemplateHelper = new();
 		private DataTemplate _itemTemplate;
+		private DataTemplateSelector _itemTemplateSelector;
 
 		public TemplatedGeneratorImplementation(ItemGenerator<TItem> generator)
 		{
@@ -36,6 +37,23 @@ namespace Zaaml.UI.Controls.Core
 			}
 		}
 
+		public DataTemplateSelector ItemTemplateSelector
+		{
+			get => _itemTemplateSelector;
+			set
+			{
+				if (ReferenceEquals(_itemTemplateSelector, value))
+					return;
+
+				Generator.OnGeneratorChangingInt();
+
+				_itemTemplateSelector = value;
+				_generatorDataTemplateHelper.DataTemplateSelector = value;
+
+				Generator.OnGeneratorChangedInt();
+			}
+		}
+
 		public void AttachItem(TItem item, object source)
 		{
 			_generatorDataTemplateHelper.AttachDataContext(item, source);
@@ -43,11 +61,6 @@ namespace Zaaml.UI.Controls.Core
 
 		public TItem CreateItem(object source)
 		{
-			var itemTemplate = ItemTemplate;
-
-			if (itemTemplate == null)
-				return new TItem();
-
 			var item = _generatorDataTemplateHelper.Load(source);
 
 			if (item == null)

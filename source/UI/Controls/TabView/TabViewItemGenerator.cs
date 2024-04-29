@@ -15,6 +15,9 @@ namespace Zaaml.UI.Controls.TabView
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<TabViewItemTemplate, TabViewItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
 
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<TabViewItemTemplateSelector, TabViewItemGenerator>
+			("ItemTemplateSelector", g => g.OnItemTemplateSelectorChanged);
+
 		public TabViewItemGenerator()
 		{
 			Implementation = new TemplatedGeneratorImplementation<TabViewItem>(this);
@@ -24,8 +27,14 @@ namespace Zaaml.UI.Controls.TabView
 
 		public TabViewItemTemplate ItemTemplate
 		{
-			get => (TabViewItemTemplate) GetValue(ItemTemplateProperty);
+			get => (TabViewItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
+		}
+
+		public TabViewItemTemplateSelector ItemTemplateSelector
+		{
+			get => (TabViewItemTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			set => SetValue(ItemTemplateSelectorProperty, value);
 		}
 
 		protected override bool SupportsRecycling => true;
@@ -53,6 +62,11 @@ namespace Zaaml.UI.Controls.TabView
 		private void OnItemTemplateChanged()
 		{
 			Implementation.ItemTemplate = ItemTemplate;
+		}
+
+		private void OnItemTemplateSelectorChanged()
+		{
+			Implementation.ItemTemplateSelector = ItemTemplateSelector;
 		}
 	}
 }
