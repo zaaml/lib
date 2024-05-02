@@ -2,23 +2,18 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
-using Zaaml.Core.Extensions;
-#if !SILVERLIGHT
 using System.Windows.Data;
-
-#endif
 
 namespace Zaaml.UI.Controls.Core
 {
 	internal sealed class IndexedEnumerable : IEnumerable
 	{
-		private static readonly object[] EmptyArray = new object[0];
-		public static readonly IndexedEnumerable Empty = new IndexedEnumerable(EmptyArray);
+		private static readonly object[] EmptyArray = [];
+		public static readonly IndexedEnumerable Empty = new(EmptyArray);
 
 		private int _cachedCount = -1;
 		private int _cachedIndex = -1;
@@ -51,9 +46,7 @@ namespace Zaaml.UI.Controls.Core
 
 		internal ICollection Collection { get; private set; }
 
-#if !SILVERLIGHT
 		internal CollectionView CollectionView { get; private set; }
-#endif
 
 		internal int Count
 		{
@@ -171,7 +164,7 @@ namespace Zaaml.UI.Controls.Core
 				ic.CopyTo(array, index);
 			else
 			{
-				var list = (IList) array;
+				var list = (IList)array;
 
 				foreach (var item in collection)
 				{
@@ -256,19 +249,17 @@ namespace Zaaml.UI.Controls.Core
 
 				isNativeValue = true;
 			}
-#if !SILVERLIGHT
 			else if (CollectionView != null)
 			{
 				value = CollectionView.Count;
 
 				isNativeValue = true;
 			}
-#endif
 			else if (_reflectedCount != null)
 			{
 				try
 				{
-					value = (int) _reflectedCount.GetValue(Enumerable, null);
+					value = (int)_reflectedCount.GetValue(Enumerable, null);
 					isNativeValue = true;
 				}
 				catch (MethodAccessException)
@@ -306,7 +297,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				try
 				{
-					value = (int) _reflectedIndexOf.Invoke(Enumerable, new[] {item});
+					value = (int)_reflectedIndexOf.Invoke(Enumerable, new[] { item });
 					isNativeValue = true;
 				}
 				catch (MethodAccessException)
@@ -330,18 +321,16 @@ namespace Zaaml.UI.Controls.Core
 				isEmpty = (Collection.Count == 0);
 				isNativeValue = true;
 			}
-#if !SILVERLIGHT
 			else if (CollectionView != null)
 			{
 				isEmpty = CollectionView.IsEmpty;
 				isNativeValue = true;
 			}
-#endif
 			else if (_reflectedCount != null)
 			{
 				try
 				{
-					isEmpty = ((int) _reflectedCount.GetValue(Enumerable, null) == 0);
+					isEmpty = (int)_reflectedCount.GetValue(Enumerable, null) == 0;
 					isNativeValue = true;
 				}
 				catch (MethodAccessException)
@@ -379,7 +368,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				try
 				{
-					value = _reflectedItemAt.GetValue(Enumerable, new object[] {index});
+					value = _reflectedItemAt.GetValue(Enumerable, new object[] { index });
 					isNativeValue = true;
 				}
 				catch (MethodAccessException)
@@ -391,7 +380,7 @@ namespace Zaaml.UI.Controls.Core
 
 			return isNativeValue;
 		}
-		
+
 		internal int IndexOf(object item)
 		{
 			if (GetNativeIndexOf(item, out var index))
@@ -399,7 +388,7 @@ namespace Zaaml.UI.Controls.Core
 
 			if (EnsureCacheCurrent())
 			{
-				if (item == _cachedItem)
+				if (Equals(item, _cachedItem))
 					return _cachedIndex;
 			}
 
@@ -433,6 +422,43 @@ namespace Zaaml.UI.Controls.Core
 			return index;
 		}
 
+		internal int IndexOf(Func<object, bool> predicate)
+		{
+			if (EnsureCacheCurrent())
+			{
+				if (predicate(_cachedItem))
+					return _cachedIndex;
+			}
+
+			var index = -1;
+
+			if (_cachedIndex >= 0)
+				UseNewEnumerator();
+
+			var i = 0;
+
+			while (_enumerator.MoveNext())
+			{
+				if (predicate(_enumerator.Current))
+				{
+					index = i;
+
+					break;
+				}
+
+				++i;
+			}
+
+			if (index >= 0)
+				CacheCurrentItem(index, _enumerator.Current);
+			else
+			{
+				ClearAllCaches();
+				DisposeEnumerator(ref _enumerator);
+			}
+
+			return index;
+		}
 
 		internal void Invalidate()
 		{
@@ -442,12 +468,7 @@ namespace Zaaml.UI.Controls.Core
 			{
 				if (Enumerable is INotifyCollectionChanged icc)
 				{
-#if SILVERLIGHT
-		      // TODO: Implement weak event pattern
-		      icc.CollectionChanged -= OnCollectionChanged;
-#else
 					CollectionChangedEventManager.RemoveHandler(icc, OnCollectionChanged);
-#endif
 				}
 			}
 
@@ -492,7 +513,7 @@ namespace Zaaml.UI.Controls.Core
 			if (List == null && CollectionView == null)
 			{
 				var srcType = collection.GetType();
-				var mi = srcType.GetMethod("IndexOf", new[] {typeof(object)});
+				var mi = srcType.GetMethod("IndexOf", [typeof(object)]);
 
 				if (mi != null && mi.ReturnType == typeof(int))
 					_reflectedIndexOf = mi;

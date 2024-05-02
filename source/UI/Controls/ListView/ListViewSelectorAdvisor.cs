@@ -3,6 +3,7 @@
 // </copyright>
 
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.ListView.Data;
 
 namespace Zaaml.UI.Controls.ListView
 {
@@ -51,6 +52,23 @@ namespace Zaaml.UI.Controls.ListView
 			return ListViewControl.ListViewData?.IndexedSource.IndexOf(source) ?? -1;
 		}
 
+		private bool GetItemFromListViewItemData(ListViewData listViewData, ListViewItemData listViewItemData, bool ensure, out ListViewItem item)
+		{
+			if (listViewItemData == null)
+			{
+				item = default;
+
+				return false;
+			}
+
+			item = listViewItemData.ListViewItem;
+
+			if (item != null)
+				return true;
+
+			return TryGetItemByIndex(listViewData.FindIndex(listViewItemData), ensure, out item);
+		}
+
 		public override object GetSource(int index)
 		{
 			return ListViewControl.ListViewData?.IndexedSource[index];
@@ -64,7 +82,7 @@ namespace Zaaml.UI.Controls.ListView
 			return ListViewControl.GetValueInternal(null, source);
 		}
 
-		public override bool TryGetItem(int index, bool ensure, out ListViewItem item)
+		public override bool TryGetItemByIndex(int index, bool ensure, out ListViewItem item)
 		{
 			if (index == -1)
 			{
@@ -82,26 +100,24 @@ namespace Zaaml.UI.Controls.ListView
 			return item != null;
 		}
 
-		public override bool TryGetItem(object source, bool ensure, out ListViewItem item)
+		public override bool TryGetItemBySource(object source, bool ensure, out ListViewItem item)
 		{
 			ListViewControl.EnsureVirtualItemCollection();
 
 			var listViewData = ListViewControl.EnsureListViewData();
 			var listViewItemData = listViewData.FindNode(source);
 
-			if (listViewItemData == null)
-			{
-				item = default;
+			return GetItemFromListViewItemData(listViewData, listViewItemData, ensure, out item);
+		}
 
-				return false;
-			}
+		public override bool TryGetItemByValue(object value, bool ensure, out ListViewItem item)
+		{
+			ListViewControl.EnsureVirtualItemCollection();
 
-			item = listViewItemData.ListViewItem;
+			var listViewData = ListViewControl.EnsureListViewData();
+			var listViewItemData = listViewData.FindNode(s => EqualValues(value, GetValue(null, s)));
 
-			if (item != null)
-				return true;
-
-			return TryGetItem(listViewData.FindIndex(listViewItemData), ensure, out item);
+			return GetItemFromListViewItemData(listViewData, listViewItemData, ensure, out item);
 		}
 	}
 }

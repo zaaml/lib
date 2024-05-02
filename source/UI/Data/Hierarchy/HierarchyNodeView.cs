@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Collections.Specialized;
 using Zaaml.Core.Packed;
@@ -300,6 +299,54 @@ namespace Zaaml.UI.Data.Hierarchy
 
 				if (found == false)
 					found = node.FindRecursive(nodeData, out result);
+
+				FlatCount += node.FlatCount + 1;
+
+				if (node.IsExpanded)
+					VisibleFlatCountCache += node.VisibleFlatCount + 1;
+				else
+					VisibleFlatCountCache += 1;
+			}
+
+			if (IsExpanded)
+				VisibleFlatCount = VisibleFlatCountCache;
+
+			return found;
+		}
+
+		internal bool FindRecursive(Func<object, bool> predicate, out TNode result)
+		{
+			if (Hierarchy == null)
+			{
+				result = null;
+
+				return false;
+			}
+
+			var isLoaded = CreateNodes();
+
+			FlatCount = 0;
+			VisibleFlatCount = 0;
+			VisibleFlatCountCache = 0;
+
+			result = default;
+
+			var found = false;
+
+			foreach (var node in Nodes)
+			{
+				if (isLoaded)
+					node.SetIsExpandedField(Hierarchy.IsDataExpanded(node));
+
+				if (predicate(node.Data))
+				{
+					result = node;
+
+					found = true;
+				}
+
+				if (found == false)
+					found = node.FindRecursive(predicate, out result);
 
 				FlatCount += node.FlatCount + 1;
 

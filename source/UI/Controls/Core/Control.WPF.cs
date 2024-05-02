@@ -39,8 +39,8 @@ namespace Zaaml.UI.Controls.Core
 
 		partial void PlatformCtor()
 		{
-			Loaded += (sender, args) => OnLoaded();
-			Unloaded += (sender, args) => OnUnloaded();
+			Loaded += (_, _) => OnLoaded();
+			Unloaded += (_, _) => OnUnloaded();
 		}
 	}
 }

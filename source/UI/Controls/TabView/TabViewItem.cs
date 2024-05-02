@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Windows;
 using System.Windows.Data;
@@ -237,10 +236,8 @@ namespace Zaaml.UI.Controls.TabView
 
 		private Visibility EvaluateHiddenVisibility(Visibility visibility, bool force = false)
 		{
-#if !SILVERLIGHT
 			if (visibility == Visibility.Hidden)
 				return force || IsMouseOver || IsSelected ? Visibility.Visible : Visibility.Hidden;
-#endif
 
 			return visibility;
 		}
@@ -283,12 +280,10 @@ namespace Zaaml.UI.Controls.TabView
 		{
 			base.OnGotFocus(e);
 
-#if !SILVERLIGHT
 			if (e.Handled)
 				return;
 
 			e.Handled = true;
-#endif
 
 			if (TabViewControl?.IsInitializing == false)
 				ActivatePrivate();
@@ -372,7 +367,8 @@ namespace Zaaml.UI.Controls.TabView
 
 		private void SetIsSelectedPrivate(bool isSelected)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, isSelected.Box());
+			if (IsSelected != isSelected)
+				this.SetCurrentValueInternal(IsSelectedProperty, isSelected.Box());
 		}
 
 		protected virtual void UpdateActualCloseCommand()

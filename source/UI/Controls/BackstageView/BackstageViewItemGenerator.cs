@@ -15,6 +15,9 @@ namespace Zaaml.UI.Controls.BackstageView
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<BackstageViewItemTemplate, BackstageViewItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
 
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<BackstageViewItemTemplateSelector, BackstageViewItemGenerator>
+			("ItemTemplateSelector", g => g.OnItemTemplateSelectorChanged);
+
 		public BackstageViewItemGenerator()
 		{
 			Implementation = new TemplatedGeneratorImplementation<BackstageViewItem>(this);
@@ -24,8 +27,14 @@ namespace Zaaml.UI.Controls.BackstageView
 
 		public BackstageViewItemTemplate ItemTemplate
 		{
-			get => (BackstageViewItemTemplate) GetValue(ItemTemplateProperty);
+			get => (BackstageViewItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
+		}
+
+		public BackstageViewItemTemplateSelector ItemTemplateSelector
+		{
+			get => (BackstageViewItemTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			set => SetValue(ItemTemplateSelectorProperty, value);
 		}
 
 		protected override bool SupportsRecycling => true;
@@ -53,6 +62,11 @@ namespace Zaaml.UI.Controls.BackstageView
 		private void OnItemTemplateChanged()
 		{
 			Implementation.ItemTemplate = ItemTemplate;
+		}
+
+		private void OnItemTemplateSelectorChanged()
+		{
+			Implementation.ItemTemplateSelector = ItemTemplateSelector;
 		}
 	}
 }

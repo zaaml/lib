@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -82,13 +81,13 @@ namespace Zaaml.UI.Controls.Menu
 
 		public RadioMenuItemCollection ItemCollection
 		{
-			get => (RadioMenuItemCollection) GetValue(ItemCollectionProperty);
+			get => (RadioMenuItemCollection)GetValue(ItemCollectionProperty);
 			private set => this.SetReadOnlyValue(ItemCollectionPropertyKey, value);
 		}
 
 		public RadioMenuItemGeneratorBase ItemGenerator
 		{
-			get => (RadioMenuItemGeneratorBase) GetValue(ItemGeneratorProperty);
+			get => (RadioMenuItemGeneratorBase)GetValue(ItemGeneratorProperty);
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
@@ -98,13 +97,13 @@ namespace Zaaml.UI.Controls.Menu
 
 		public int SelectedIndex
 		{
-			get => (int) GetValue(SelectedIndexProperty);
+			get => (int)GetValue(SelectedIndexProperty);
 			set => SetValue(SelectedIndexProperty, value);
 		}
 
 		public RadioMenuItem SelectedItem
 		{
-			get => (RadioMenuItem) GetValue(SelectedItemProperty);
+			get => (RadioMenuItem)GetValue(SelectedItemProperty);
 			set => SetValue(SelectedItemProperty, value);
 		}
 
@@ -122,13 +121,13 @@ namespace Zaaml.UI.Controls.Menu
 
 		public string SelectedValueMemberPath
 		{
-			get => (string) GetValue(SelectedValueMemberPathProperty);
+			get => (string)GetValue(SelectedValueMemberPathProperty);
 			set => SetValue(SelectedValueMemberPathProperty, value);
 		}
 
 		public SelectedValueSource SelectedValueSource
 		{
-			get => (SelectedValueSource) GetValue(SelectedValueSourceProperty);
+			get => (SelectedValueSource)GetValue(SelectedValueSourceProperty);
 			set => SetValue(SelectedValueSourceProperty, value);
 		}
 
@@ -260,9 +259,8 @@ namespace Zaaml.UI.Controls.Menu
 
 		void ISupportInitialize.BeginInit()
 		{
-#if !SILVERLIGHT
 			BeginInit();
-#endif
+
 			IsInitializing = true;
 			SelectorController.BeginInit();
 			SelectorController.AllowNullSelection = true;
@@ -276,9 +274,7 @@ namespace Zaaml.UI.Controls.Menu
 			SelectorController.AllowNullSelection = false;
 			SelectorController.PreferSelection = true;
 
-#if !SILVERLIGHT
 			EndInit();
-#endif
 		}
 
 		private static class PackedDefinition
@@ -315,7 +311,7 @@ namespace Zaaml.UI.Controls.Menu
 
 		public override object GetValue(RadioMenuItem item, object source)
 		{
-			return ((RadioMenuItemGroup) SelectorCore).GetValueInternal(item, source);
+			return ((RadioMenuItemGroup)SelectorCore).GetValueInternal(item, source);
 		}
 
 		public override void SetItemSelected(RadioMenuItem item, bool value)

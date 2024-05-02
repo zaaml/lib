@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Data;
 using Zaaml.UI.Controls.Interfaces;
@@ -81,7 +80,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private void CreateItemSelectionMemberBinding()
 		{
-			ItemSelectionMemberBinding = _itemSelectionMember != null ? new Binding(_itemSelectionMember) : null;
+			ItemSelectionMemberBinding = _itemSelectionMember != null ? new Binding(_itemSelectionMember) { Mode = BindingMode.TwoWay } : null;
 		}
 
 		private void CreateValueMemberBinding()

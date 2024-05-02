@@ -2,11 +2,9 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.Core.Runtime;
-using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Interfaces;
@@ -89,7 +87,8 @@ namespace Zaaml.UI.Controls.ListView
 
 		internal void SetIsSelectedInternal(bool value)
 		{
-			this.SetCurrentValueInternal(IsSelectedProperty, value.Box());
+			if (IsSelected != value)
+				this.SetCurrentValueInternal(IsSelectedProperty, value.Box());
 		}
 
 		internal void UnselectInternal()

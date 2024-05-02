@@ -48,7 +48,7 @@ namespace Zaaml.UI.Controls.Core
 			if (item == null)
 				return false;
 
-			if (ReferenceEquals(item, CurrentSelectedItem))
+			if (EqualsItem(item, CurrentSelectedItem))
 				return true;
 
 			return MultipleSelection && CurrentSelectionCollection.ContainsItem(item);
@@ -59,7 +59,7 @@ namespace Zaaml.UI.Controls.Core
 			if (source == null)
 				return false;
 
-			if (ReferenceEquals(source, CurrentSelectedSource))
+			if (EqualsSource(source, CurrentSelectedSource))
 				return true;
 
 			return MultipleSelection && CurrentSelectionCollection.ContainsSource(source);
@@ -88,11 +88,11 @@ namespace Zaaml.UI.Controls.Core
 
 				if (MultipleSelection)
 					if (CurrentSelectionCollection.FindBySource(source, out var selection))
-						if (ReferenceEquals(item, selection.Item) == false)
+						if (EqualsItem(item, selection.Item) == false)
 							CurrentSelectionCollection.UpdateSelection(selection.Index, selection.WithItem(item));
 
-				if (ReferenceEquals(source, CurrentSelectedSource))
-					if (ReferenceEquals(item, CurrentSelectedItem) == false)
+				if (EqualsSource(source, CurrentSelectedSource))
+					if (EqualsItem(item, CurrentSelectedItem) == false)
 						Sync(CurrentSelection.WithItem(item));
 
 				{
@@ -122,11 +122,11 @@ namespace Zaaml.UI.Controls.Core
 
 						if (MultipleSelection)
 							if (CurrentSelectionCollection.FindByIndex(index, out var selection))
-								if (ReferenceEquals(item, selection.Item) == false)
+								if (EqualsItem(item, selection.Item) == false)
 									CurrentSelectionCollection.UpdateSelection(selection.Index, selection);
 
 						if (selectedIndex == itemIndex)
-							if (ReferenceEquals(item, CurrentSelectedItem) == false)
+							if (EqualsItem(item, CurrentSelectedItem) == false)
 								Sync(CurrentSelection.WithItem(item));
 					}
 				}
@@ -242,11 +242,11 @@ namespace Zaaml.UI.Controls.Core
 
 					if (MultipleSelection)
 						if (CurrentSelectionCollection.FindBySource(source, out var selection))
-							if (ReferenceEquals(item, selection.Item))
+							if (EqualsItem(item, selection.Item))
 								CurrentSelectionCollection.UpdateSelection(selection.Index, selection.WithItem(null));
 
-					if (ReferenceEquals(source, CurrentSelectedSource))
-						if (ReferenceEquals(item, CurrentSelectedItem))
+					if (EqualsSource(source, CurrentSelectedSource))
+						if (EqualsItem(item, CurrentSelectedItem))
 							Sync(CurrentSelection.WithItem(null));
 				}
 			}

@@ -3,7 +3,6 @@
 // </copyright>
 
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Markup;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Controls.Core;
@@ -16,7 +15,7 @@ namespace Zaaml.UI.Controls.Menu
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<MenuItemTemplate, MenuItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChangedPrivate);
 
-		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<DataTemplateSelector, MenuItemGenerator>
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<MenuItemTemplateSelector, MenuItemGenerator>
 			("ItemTemplateSelector", d => d.OnItemTemplateSelectorPropertyChangedPrivate);
 
 		private static readonly DependencyPropertyKey GeneratorPropertyKey = DPM.RegisterAttachedReadOnly<MenuItemGenerator, MenuItemGenerator>
@@ -32,9 +31,9 @@ namespace Zaaml.UI.Controls.Menu
 			set => SetValue(ItemTemplateProperty, value);
 		}
 
-		public DataTemplateSelector ItemTemplateSelector
+		public MenuItemTemplateSelector ItemTemplateSelector
 		{
-			get => (DataTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			get => (MenuItemTemplateSelector)GetValue(ItemTemplateSelectorProperty);
 			set => SetValue(ItemTemplateSelectorProperty, value);
 		}
 
@@ -84,7 +83,7 @@ namespace Zaaml.UI.Controls.Menu
 			OnGeneratorChanged();
 		}
 
-		private void OnItemTemplateSelectorPropertyChangedPrivate(DataTemplateSelector oldValue, DataTemplateSelector newValue)
+		private void OnItemTemplateSelectorPropertyChangedPrivate(MenuItemTemplateSelector oldValue, MenuItemTemplateSelector newValue)
 		{
 			_generatorDataTemplateHelper.DataTemplateSelector = ItemTemplateSelector;
 

@@ -62,8 +62,8 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var source = GetSource(index);
 
-			if (TryGetItem(source, ensure, out var item) == false)
-				TryGetItem(index, ensure, out item);
+			if (TryGetItemBySource(source, ensure, out var item) == false)
+				TryGetItemByIndex(index, ensure, out item);
 
 			var value = GetValue(item, source);
 
@@ -76,8 +76,8 @@ namespace Zaaml.UI.Controls.Core
 		{
 			var index = GetIndexOfSource(source);
 
-			if (TryGetItem(source, ensure, out var item) == false && index != -1)
-				TryGetItem(index, ensure, out item);
+			if (TryGetItemBySource(source, ensure, out var item) == false && index != -1)
+				TryGetItemByIndex(index, ensure, out item);
 
 			var value = GetValue(item, source);
 
@@ -86,14 +86,21 @@ namespace Zaaml.UI.Controls.Core
 			return true;
 		}
 
-		public override bool TryGetItem(int index, bool ensure, out TItem item)
+		public override bool TryGetItemByIndex(int index, bool ensure, out TItem item)
 		{
 			return ensure ? ItemCollection.TryEnsureItemInternal(index, out item) : (item = ItemCollection.GetItemFromIndexInternal(index)) != null;
 		}
 
-		public override bool TryGetItem(object source, bool ensure, out TItem item)
+		public override bool TryGetItemBySource(object source, bool ensure, out TItem item)
 		{
 			return ensure ? ItemCollection.TryEnsureItemInternal(source, out item) : (item = ItemCollection.GetItemFromSourceInternal(source)) != null;
+		}
+
+		public override bool TryGetItemByValue(object value, bool ensure, out TItem item)
+		{
+			Func<object, bool> sourceValuePredicate = source => EqualValues(GetValue(null, source), value);
+
+			return ensure ? ItemCollection.TryEnsureItemInternal(sourceValuePredicate, out item) : (item = ItemCollection.GetItemFromSourcePredicateInternal(sourceValuePredicate)) != null;
 		}
 
 		public override void Unlock(TItem item)

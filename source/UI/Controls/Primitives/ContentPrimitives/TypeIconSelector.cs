@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Markup;
+using Zaaml.Core.Utils;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
 
@@ -41,28 +42,18 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 			if (source == null)
 				return null;
 
-			var type = source.GetType();
+			var sourceType = source.GetType();
 
-			if (_typeIcons.TryGetValue(type, out var icon))
+			if (_typeIcons.TryGetValue(sourceType, out var icon))
 				return icon;
 
 			var iconTypeDistance = int.MaxValue;
 
 			foreach (var typeIcon in TypeIcons)
 			{
-				if (typeIcon.Type.IsAssignableFrom(type))
+				if (typeIcon.Type.IsAssignableFrom(sourceType))
 				{
-					var iconType = typeIcon.Type;
-					var distance = 0;
-
-					while (iconType != null)
-					{
-						if (iconType == type)
-							break;
-
-						iconType = iconType.BaseType;
-						distance++;
-					}
+					var distance = RuntimeUtils.GetTypeInheritanceDistance(typeIcon.Type, sourceType);
 
 					if (distance < iconTypeDistance)
 					{
@@ -74,7 +65,7 @@ namespace Zaaml.UI.Controls.Primitives.ContentPrimitives
 
 			icon ??= DefaultIcon;
 
-			_typeIcons.Add(type, icon);
+			_typeIcons.Add(sourceType, icon);
 
 			return icon;
 		}

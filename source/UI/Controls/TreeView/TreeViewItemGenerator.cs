@@ -18,7 +18,10 @@ namespace Zaaml.UI.Controls.TreeView
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<TreeViewItemTemplate, TreeViewItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
 
-		private readonly Dictionary<object, TreeViewItem> _explicitItemsDictionary = new Dictionary<object, TreeViewItem>();
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<TreeViewItemTemplateSelector, TreeViewItemGenerator>
+			("ItemTemplateSelector", g => g.OnItemTemplateSelectorChanged);
+
+		private readonly Dictionary<object, TreeViewItem> _explicitItemsDictionary = new();
 
 		private ITreeViewAdvisor _advisor;
 
@@ -31,8 +34,14 @@ namespace Zaaml.UI.Controls.TreeView
 
 		public TreeViewItemTemplate ItemTemplate
 		{
-			get => (TreeViewItemTemplate) GetValue(ItemTemplateProperty);
+			get => (TreeViewItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
+		}
+
+		public TreeViewItemTemplateSelector ItemTemplateSelector
+		{
+			get => (TreeViewItemTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			set => SetValue(ItemTemplateSelectorProperty, value);
 		}
 
 		protected override bool SupportsRecycling => true;
@@ -83,7 +92,19 @@ namespace Zaaml.UI.Controls.TreeView
 		{
 			Implementation.ItemTemplate = ItemTemplate;
 
-			_advisor = ItemTemplate != null ? new TreeViewItemTemplateAdvisor(this) : null;
+			UpdateAdvisor();
+		}
+
+		private void UpdateAdvisor()
+		{
+			_advisor = ItemTemplate != null || ItemTemplateSelector != null ? new TreeViewItemTemplateAdvisor(this) : null;
+		}
+
+		private void OnItemTemplateSelectorChanged()
+		{
+			Implementation.ItemTemplateSelector = ItemTemplateSelector;
+
+			UpdateAdvisor();
 		}
 	}
 }

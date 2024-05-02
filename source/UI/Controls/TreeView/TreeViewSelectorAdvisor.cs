@@ -3,6 +3,7 @@
 // </copyright>
 
 using Zaaml.UI.Controls.Core;
+using Zaaml.UI.Controls.TreeView.Data;
 
 namespace Zaaml.UI.Controls.TreeView
 {
@@ -23,32 +24,8 @@ namespace Zaaml.UI.Controls.TreeView
 			return item.ActualCanSelect;
 		}
 
-		public override object GetSource(TreeViewItem item)
+		private bool GetItemFromTreeViewItemData(TreeViewData treeViewData, TreeViewItemData treeViewItemData, bool ensure, out TreeViewItem item)
 		{
-			if (item == null)
-				return null;
-
-			if (item.TreeViewItemData != null)
-				return item.TreeViewItemData.Data;
-
-			return base.GetSource(item);
-		}
-
-		public override object GetValue(TreeViewItem item, object source)
-		{
-			if (item != null && source == null)
-				return item.Value;
-
-			return TreeViewControl.GetValueInternal(null, source);
-		}
-
-		public override bool TryGetItem(object source, bool ensure, out TreeViewItem item)
-		{
-			TreeViewControl.EnsureVirtualItemCollection();
-
-			var treeViewData = TreeViewControl.EnsureTreeViewData();
-			var treeViewItemData = treeViewData.FindNode(source);
-
 			if (treeViewItemData == null)
 			{
 				item = default;
@@ -75,6 +52,45 @@ namespace Zaaml.UI.Controls.TreeView
 			}
 
 			return item != null;
+		}
+
+		public override object GetSource(TreeViewItem item)
+		{
+			if (item == null)
+				return null;
+
+			if (item.TreeViewItemData != null)
+				return item.TreeViewItemData.Data;
+
+			return base.GetSource(item);
+		}
+
+		public override object GetValue(TreeViewItem item, object source)
+		{
+			if (item != null && source == null)
+				return item.Value;
+
+			return TreeViewControl.GetValueInternal(null, source);
+		}
+
+		public override bool TryGetItemBySource(object source, bool ensure, out TreeViewItem item)
+		{
+			TreeViewControl.EnsureVirtualItemCollection();
+
+			var treeViewData = TreeViewControl.EnsureTreeViewData();
+			var treeViewItemData = treeViewData.FindNode(source);
+
+			return GetItemFromTreeViewItemData(treeViewData, treeViewItemData, ensure, out item);
+		}
+
+		public override bool TryGetItemByValue(object value, bool ensure, out TreeViewItem item)
+		{
+			TreeViewControl.EnsureVirtualItemCollection();
+
+			var treeViewData = TreeViewControl.EnsureTreeViewData();
+			var treeViewItemData = treeViewData.FindNode(s => EqualValues(value, GetValue(null, s)));
+
+			return GetItemFromTreeViewItemData(treeViewData, treeViewItemData, ensure, out item);
 		}
 	}
 }

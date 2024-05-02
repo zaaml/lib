@@ -80,7 +80,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			CurrentSelectionCollection.UnselectItem(item);
 
-			if (ReferenceEquals(CurrentSelectedItem, item))
+			if (EqualsItem(CurrentSelectedItem, item))
 			{
 				if (MultipleSelection)
 				{
@@ -123,7 +123,7 @@ namespace Zaaml.UI.Controls.Core
 					{
 						CurrentSelectionCollection.Unselect(selection);
 
-						if (Advisor.TryGetItem(source, false, out var item)) 
+						if (Advisor.TryGetItemBySource(source, false, out var item)) 
 							SetItemSelected(item, false);
 					}
 				}
@@ -138,7 +138,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			CurrentSelectionCollection.UnselectSource(source);
 
-			if (ReferenceEquals(SelectedSource, source))
+			if (EqualsSource(SelectedSource, source))
 			{
 				if (MultipleSelection)
 				{
@@ -175,7 +175,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			CurrentSelectionCollection.UnselectValue(value);
 
-			if (ReferenceEquals(SelectedValue, value))
+			if (EqualsValue(SelectedValue, value))
 			{
 				if (MultipleSelection)
 				{

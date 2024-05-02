@@ -67,7 +67,14 @@ namespace Zaaml.UI.Controls.NavigationView
 		{
 		}
 
-		public override bool TryGetItem(object source, bool ensure, out NavigationViewItem item)
+		public override bool TryGetItemBySource(object source, bool ensure, out NavigationViewItem item)
+		{
+			item = null;
+
+			return false;
+		}
+
+		public override bool TryGetItemByValue(object value, bool ensure, out NavigationViewItem item)
 		{
 			item = null;
 

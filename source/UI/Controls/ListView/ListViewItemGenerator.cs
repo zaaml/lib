@@ -15,6 +15,9 @@ namespace Zaaml.UI.Controls.ListView
 		public static readonly DependencyProperty ItemTemplateProperty = DPM.Register<ListViewItemTemplate, ListViewItemGenerator>
 			("ItemTemplate", g => g.OnItemTemplateChanged);
 
+		public static readonly DependencyProperty ItemTemplateSelectorProperty = DPM.Register<ListViewItemTemplateSelector, ListViewItemGenerator>
+			("ItemTemplateSelector", g => g.OnItemTemplateSelectorChanged);
+
 		public ListViewItemGenerator()
 		{
 			Implementation = new TemplatedGeneratorImplementation<ListViewItem>(this);
@@ -24,8 +27,14 @@ namespace Zaaml.UI.Controls.ListView
 
 		public ListViewItemTemplate ItemTemplate
 		{
-			get => (ListViewItemTemplate) GetValue(ItemTemplateProperty);
+			get => (ListViewItemTemplate)GetValue(ItemTemplateProperty);
 			set => SetValue(ItemTemplateProperty, value);
+		}
+
+		public ListViewItemTemplateSelector ItemTemplateSelector
+		{
+			get => (ListViewItemTemplateSelector)GetValue(ItemTemplateSelectorProperty);
+			set => SetValue(ItemTemplateSelectorProperty, value);
 		}
 
 		protected override bool SupportsRecycling => true;
@@ -53,6 +62,11 @@ namespace Zaaml.UI.Controls.ListView
 		private void OnItemTemplateChanged()
 		{
 			Implementation.ItemTemplate = ItemTemplate;
+		}
+
+		private void OnItemTemplateSelectorChanged()
+		{
+			Implementation.ItemTemplateSelector = ItemTemplateSelector;
 		}
 	}
 }

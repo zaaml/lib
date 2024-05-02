@@ -2,7 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Windows;
@@ -61,7 +60,7 @@ namespace Zaaml.UI.Controls.TableView
 		[TypeConverter(typeof(FlexLengthTypeConverter))]
 		public FlexLength DefinitionLength
 		{
-			get => (FlexLength) GetValue(DefinitionLengthProperty);
+			get => (FlexLength)GetValue(DefinitionLengthProperty);
 			set => SetValue(DefinitionLengthProperty, value);
 		}
 
@@ -69,44 +68,44 @@ namespace Zaaml.UI.Controls.TableView
 
 		public double ElementSpacing
 		{
-			get => (double) GetValue(ElementSpacingProperty);
+			get => (double)GetValue(ElementSpacingProperty);
 			set => SetValue(ElementSpacingProperty, value);
 		}
 
 		public TableViewItem FooterItem
 		{
-			get => (TableViewItem) GetValue(FooterItemProperty);
+			get => (TableViewItem)GetValue(FooterItemProperty);
 			set => SetValue(FooterItemProperty, value);
 		}
 
 		public TableViewItem HeaderItem
 		{
-			get => (TableViewItem) GetValue(HeaderItemProperty);
+			get => (TableViewItem)GetValue(HeaderItemProperty);
 			set => SetValue(HeaderItemProperty, value);
 		}
 
 		public TableViewItemGenerator ItemGenerator
 		{
-			get => (TableViewItemGenerator) GetValue(ItemGeneratorProperty);
+			get => (TableViewItemGenerator)GetValue(ItemGeneratorProperty);
 			set => SetValue(ItemGeneratorProperty, value);
 		}
 
 		public double ItemSpacing
 		{
-			get => (double) GetValue(ItemSpacingProperty);
+			get => (double)GetValue(ItemSpacingProperty);
 			set => SetValue(ItemSpacingProperty, value);
-		}
-
-		public IEnumerable SourceCollection
-		{
-			get => (IEnumerable) GetValue(SourceCollectionProperty);
-			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		public Orientation Orientation
 		{
-			get => (Orientation) GetValue(OrientationProperty);
+			get => (Orientation)GetValue(OrientationProperty);
 			set => SetValue(OrientationProperty, value);
+		}
+
+		public IEnumerable SourceCollection
+		{
+			get => (IEnumerable)GetValue(SourceCollectionProperty);
+			set => SetValue(SourceCollectionProperty, value);
 		}
 
 		protected override TableViewItemCollection CreateItemCollection()
@@ -218,14 +217,14 @@ namespace Zaaml.UI.Controls.TableView
 			InvalidatePanel();
 		}
 
-		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldValue, IEnumerable newValue)
-		{
-			SourceCollectionCore = newValue;
-		}
-
 		private void OnOrientationPropertyChangedPrivate(Orientation oldValue, Orientation newValue)
 		{
 			InvalidatePanel();
+		}
+
+		private void OnSourceCollectionPropertyChangedPrivate(IEnumerable oldValue, IEnumerable newValue)
+		{
+			SourceCollectionCore = newValue;
 		}
 
 		protected override void OnTemplateContractAttached()
