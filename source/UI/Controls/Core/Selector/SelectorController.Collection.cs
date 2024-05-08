@@ -382,7 +382,6 @@ namespace Zaaml.UI.Controls.Core
 				return false;
 			}
 
-
 			private bool FindSelectionKeyIndex(Selection<TItem> searchSelection, out int keyIndex)
 			{
 				for (var index = 0; index < ListCount; index++)

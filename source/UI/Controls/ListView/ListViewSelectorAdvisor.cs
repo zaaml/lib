@@ -2,6 +2,7 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using Zaaml.PresentationCore.Data;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Controls.ListView.Data;
 
@@ -20,6 +21,8 @@ namespace Zaaml.UI.Controls.ListView
 		public override bool HasSource => ListViewControl.SourceCollection != null;
 
 		public ListViewControl ListViewControl { get; }
+
+		private MemberEvaluator SelectionEvaluator { get; set; }
 
 		public override bool CanSelectIndex(int index)
 		{
@@ -72,6 +75,17 @@ namespace Zaaml.UI.Controls.ListView
 		public override object GetSource(int index)
 		{
 			return ListViewControl.ListViewData?.IndexedSource[index];
+		}
+
+		public override bool GetSourceSelected(object source)
+		{
+			if (ListViewControl.ItemSelectionMember != null)
+			{
+				if (SelectionEvaluator == null || SelectionEvaluator.Member != ListViewControl.ItemSelectionMember)
+					SelectionEvaluator = new MemberEvaluator(ListViewControl.ItemSelectionMember);
+			}
+
+			return SelectionEvaluator?.GetValue(source) is true;
 		}
 
 		public override object GetValue(ListViewItem item, object source)
