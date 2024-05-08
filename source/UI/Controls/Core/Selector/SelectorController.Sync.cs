@@ -65,9 +65,20 @@ namespace Zaaml.UI.Controls.Core
 			return MultipleSelection && CurrentSelectionCollection.ContainsSource(source);
 		}
 
+		private bool IsIndexInSelection(int index)
+		{
+			if (Count == 0 || index < 0 || index >= Count)
+				return false;
+
+			if (index == CurrentSelectedIndex)
+				return true;
+
+			return MultipleSelection && CurrentSelectionCollection.ContainsIndex(index);
+		}
+
 		private bool IsSourceSelected(object source)
 		{
-			return false;
+			return Advisor.GetSourceSelected(source);
 		}
 
 		private void OnItemAttachedSafe(int index, TItem item)
@@ -195,7 +206,26 @@ namespace Zaaml.UI.Controls.Core
 				if (SupportsIndex)
 				{
 					if (MultipleSelection)
+					{
+						if (SupportsSource)
+						{
+							for (var index = 0; index < Count; index++)
+							{
+								var source = GetSource(index);
+								
+								if (IsSourceSelected(source) && IsIndexInSelection(index) == false)
+								{
+									TryGetItemByIndex(index, false, out var item);
+
+									var selection = new Selection<TItem>(index, item, source, GetValue(item, source));
+
+									CurrentSelectionCollection.Select(selection);
+								}
+							}
+						}
+
 						CurrentSelectionCollection.UpdateIndicesSources();
+					}
 
 					if (CurrentSelectedIndex != -1)
 					{

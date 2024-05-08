@@ -12,82 +12,58 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Data
 {
-  internal static class BindingEvaluator
-  {
-    #region Static Fields and Constants
+	internal static class BindingEvaluator
+	{
+		private static readonly Dictionary<Type, BindingEvaluatorImpl> Evaluators = new();
 
-    private static readonly Dictionary<Type, BindingEvaluatorImpl> Evaluators = new Dictionary<Type, BindingEvaluatorImpl>();
+		private static readonly DependencyProperty ValueProperty = DPM.RegisterAttached<object>
+			("Value", typeof(BindingEvaluator));
 
-    private static readonly DependencyProperty ValueProperty = DPM.RegisterAttached<object>
-      ("Value", typeof(BindingEvaluator));
+		public static object EvaluateBinding(Binding binding)
+		{
+			return EvaluateBinding(binding, typeof(object));
+		}
 
-    #endregion
+		public static object EvaluateBinding(Binding binding, Type propertyType)
+		{
+			return Evaluators.GetValueOrCreate(propertyType, () => new BindingEvaluatorImpl(propertyType)).EvaluateBindingImpl(binding);
+		}
 
-    #region  Methods
+		public static object EvaluateBinding(DependencyObject target, Binding binding)
+		{
+			target.SetBinding(ValueProperty, binding);
+			var value = target.GetValue(ValueProperty);
+			target.ClearValue(ValueProperty);
+			return value;
+		}
 
-    public static object EvaluateBinding(Binding binding)
-    {
-      return EvaluateBinding(binding, typeof(object));
-    }
+		public static object GetValue(DependencyObject element)
+		{
+			return element.GetValue(ValueProperty);
+		}
 
-    public static object EvaluateBinding(Binding binding, Type propertyType)
-    {
-      return Evaluators.GetValueOrCreate(propertyType, () => new BindingEvaluatorImpl(propertyType)).EvaluateBindingImpl(binding);
-    }
+		public static void SetValue(DependencyObject element, object value)
+		{
+			element.SetValue(ValueProperty, value);
+		}
 
-    public static object EvaluateBinding(DependencyObject target, Binding binding)
-    {
-      target.SetBinding(ValueProperty, binding);
-      var value = target.GetValue(ValueProperty);
-      target.ClearValue(ValueProperty);
-      return value;
-    }
+		private class BindingEvaluatorImpl : DependencyObject
+		{
+			private readonly DependencyProperty _valueProperty;
 
-    public static object GetValue(DependencyObject element)
-    {
-      return element.GetValue(ValueProperty);
-    }
+			public BindingEvaluatorImpl(Type targetType)
+			{
+				_valueProperty = DependencyProperty.RegisterAttached($"Value{targetType.TypeHandle}", targetType, typeof(BindingEvaluator), new PropertyMetadata(targetType.CreateDefaultValue()));
+			}
 
-    public static void SetValue(DependencyObject element, object value)
-    {
-      element.SetValue(ValueProperty, value);
-    }
+			public object EvaluateBindingImpl(Binding binding)
+			{
+				this.SetBinding(_valueProperty, binding);
+				var value = GetValue(_valueProperty);
+				ClearValue(_valueProperty);
 
-    #endregion
-
-    #region  Nested Types
-
-    private class BindingEvaluatorImpl : DependencyObject
-    {
-      #region Fields
-
-      private readonly DependencyProperty _valueProperty;
-
-      #endregion
-
-      #region Ctors
-
-      public BindingEvaluatorImpl(Type targetType)
-      {
-        _valueProperty = DependencyProperty.RegisterAttached($"Value{targetType.TypeHandle}", targetType, typeof(BindingEvaluator), new PropertyMetadata(targetType.CreateDefaultValue()));
-      }
-
-      #endregion
-
-      #region  Methods
-
-      public object EvaluateBindingImpl(Binding binding)
-      {
-        this.SetBinding(_valueProperty, binding);
-        var value = GetValue(_valueProperty);
-        ClearValue(_valueProperty);
-
-        return value;
-      }
-
-      #endregion
-    }
-
-    #endregion
-  }
+				return value;
+			}
+		}
+	}
 }

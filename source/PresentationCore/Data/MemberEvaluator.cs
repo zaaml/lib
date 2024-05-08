@@ -9,7 +9,7 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Data
 {
-	internal readonly struct MemberEvaluator
+	internal class MemberEvaluator
 	{
 		private readonly BindingValueSite _valueSite;
 
