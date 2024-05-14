@@ -6,27 +6,28 @@
                             mc:Ignorable="zmb">
 
   <!--  Template  -->
-  <ControlTemplate x:Key="TableViewControlTemplate"
-                   TargetType="zm:TableViewControl">
+  <ControlTemplate x:Key="TableViewItemTemplate"
+                   TargetType="zm:TableViewItem">
     <zm:ControlTemplateRoot>
       <Border Background="{TemplateBinding Background}"
               BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}">
-        <zm:TableViewItemsPresenter x:Name="ItemsPresenter" />
+              BorderThickness="{TemplateBinding BorderThickness}"
+              Padding="{TemplateBinding Padding}">
+        <zm:TableViewItemPanel x:Name="ItemPanel" />
       </Border>
     </zm:ControlTemplateRoot>
   </ControlTemplate>
 
   <!--  Base Style  -->
-  <zm:Style x:Key="TableViewControlBaseStyle" TargetType="zm:TableViewControl">
+  <zm:Style x:Key="TableViewItemBaseStyle" TargetType="zm:TableViewItem">
     <zm:Setter Property="Background" Value="#00FFFFFF" />
-    <zm:Setter Property="Template" Value="{StaticResource TableViewControlTemplate}" />
+    <zm:Setter Property="Template" Value="{StaticResource TableViewItemTemplate}" />
   </zm:Style>
 
   <!--  Style  -->
-  <zm:Style x:Key="TableViewControlStyle" BasedOn="{StaticResource TableViewControlBaseStyle}" Skin="Metro.TableView" TargetType="zm:TableViewControl" />
+  <zm:Style x:Key="TableViewItemStyle" BasedOn="{StaticResource TableViewItemBaseStyle}" Skin="Metro.TableView" TargetType="zm:TableViewItem" />
 
   <!--  Theme Style  -->
-  <zm:ThemeStyle x:Key="TableViewControlThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TableViewControlStyle}" TargetType="zm:TableViewControl" />
+  <zm:ThemeStyle x:Key="TableViewItemThemeStyle" zmb:Deferred="True" BasedOn="{StaticResource TableViewItemStyle}" TargetType="zm:TableViewItem" />
 
 </zm:ThemeResourceDictionary>

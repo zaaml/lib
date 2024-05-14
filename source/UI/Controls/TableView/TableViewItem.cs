@@ -4,17 +4,19 @@
 
 using System.Collections;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Markup;
+using Zaaml.Core;
 using Zaaml.PresentationCore.Extensions;
 using Zaaml.PresentationCore.PropertyCore;
+using Zaaml.PresentationCore.TemplateCore;
+using Zaaml.PresentationCore.Theming;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Controls.TableView
 {
 	[ContentProperty(nameof(Elements))]
-	public class TableViewItem : FixedTemplateControl<TableViewItemPanel>
+	[TemplateContractType(typeof(TableViewItemTemplateContract))]
+	public class TableViewItem : TemplateContractControl
 	{
 		private static readonly DependencyPropertyKey ElementsPropertyKey = DPM.RegisterReadOnly<TableViewItemElementsCollection, TableViewItem>
 			("ElementsPrivate");
@@ -24,7 +26,11 @@ namespace Zaaml.UI.Controls.TableView
 
 		public static readonly DependencyProperty TableViewControlProperty = TableViewControlPropertyKey.DependencyProperty;
 		public static readonly DependencyProperty ElementsProperty = ElementsPropertyKey.DependencyProperty;
-		private static readonly PropertyPath BackgroundPropertyPath = new PropertyPath(BackgroundProperty);
+
+		static TableViewItem()
+		{
+			DefaultStyleKeyHelper.OverrideStyleKey<TableViewItem>();
+		}
 
 		public TableViewItemElementsCollection Elements => this.GetValueOrCreate(ElementsPropertyKey, CreateElementsCollection);
 
@@ -32,19 +38,13 @@ namespace Zaaml.UI.Controls.TableView
 
 		public TableViewControl TableViewControl
 		{
-			get => (TableViewControl) GetValue(TableViewControlProperty);
+			get => (TableViewControl)GetValue(TableViewControlProperty);
 			internal set => this.SetReadOnlyValue(TableViewControlPropertyKey, value);
 		}
 
-		protected override void ApplyTemplateOverride()
-		{
-			base.ApplyTemplateOverride();
+		private TableViewItemTemplateContract TemplateContract => (TableViewItemTemplateContract)TemplateContractCore;
 
-			TemplateRoot.Item = this;
-			Elements.ItemPanel = TemplateRoot;
-
-			TemplateRoot.SetBinding(Panel.BackgroundProperty, new Binding {Path = BackgroundPropertyPath, Source = this});
-		}
+		private TableViewItemPanel TemplateRoot => TemplateContract.ItemPanel;
 
 		private TableViewItemElementsCollection CreateElementsCollection()
 		{
@@ -53,8 +53,7 @@ namespace Zaaml.UI.Controls.TableView
 
 		internal void FixedMeasure(Size availableSize)
 		{
-			TemplateRoot?.InvalidateMeasure();
-			InvalidateMeasure();
+			InvalidatePanelMeasure();
 
 			Measure(availableSize);
 		}
@@ -73,21 +72,38 @@ namespace Zaaml.UI.Controls.TableView
 			OnTableViewControlChangedInternal(oldTableView, newTableView);
 		}
 
-		internal void StarMeasure(Size availableSize)
+		protected override void OnTemplateContractAttached()
 		{
-			TemplateRoot?.InvalidateMeasure();
-			InvalidateMeasure();
+			base.OnTemplateContractAttached();
 
-			Measure(availableSize);
+			TemplateRoot.Item = this;
+			Elements.ItemPanel = TemplateRoot;
 		}
 
-		protected override void UndoTemplateOverride()
+		protected override void OnTemplateContractDetaching()
 		{
 			Elements.ItemPanel = null;
 			TemplateRoot.Item = null;
-			TemplateRoot.ClearValue(Panel.BackgroundProperty);
 
-			base.UndoTemplateOverride();
+			base.OnTemplateContractDetaching();
 		}
+
+		private void InvalidatePanelMeasure()
+		{
+			TemplateRoot?.InvalidateAncestorsMeasure(this, true);
+		}
+
+		internal void StarMeasure(Size availableSize)
+		{
+			InvalidatePanelMeasure();
+
+			Measure(availableSize);
+		}
+	}
+
+	public class TableViewItemTemplateContract : TemplateContract
+	{
+		[TemplateContractPart(Required = true)]
+		public TableViewItemPanel ItemPanel { get; [UsedImplicitly] private set; }
 	}
 }
