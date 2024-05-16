@@ -1,4 +1,4 @@
-// <copyright file="MemberValueEvaluator.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
+// <copyright file="MemberEvaluator.cs" author="Dmitry Kravchenin" email="d.kravchenin@zaaml.com">
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
@@ -27,12 +27,12 @@ namespace Zaaml.PresentationCore.Data
 			_valueSite = new BindingValueSite(Member);
 		}
 
+		public string Member { get; }
+
 		public object GetValue(object source)
 		{
 			return _valueSite?.Evaluate(source);
 		}
-
-		public string Member { get; }
 
 		private class BindingValueSite : DependencyObject
 		{
@@ -44,7 +44,7 @@ namespace Zaaml.PresentationCore.Data
 
 			public BindingValueSite(string valuePath)
 			{
-				this.SetBinding(ValueProperty, new Binding($"Source.{valuePath}") {Source = this});
+				this.SetBinding(ValueProperty, new Binding($"Source.{valuePath}") { Source = this });
 			}
 
 			private object Source

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -163,7 +164,7 @@ namespace Zaaml.UI.Controls.Core
 
 				LockedItem = SelectedItem;
 
-				SelectionCollectionChanged?.Invoke(SelectionCollection, ResetNotifyCollectionChangedEventArgs);
+				SelectionCollectionChanged?.Invoke(SelectionCollection, Constants.NotifyCollectionChangedReset);
 				SelectionCollectionPropertyChanged?.Invoke(SelectionCollection, CountPropertyChangedEventArgs);
 			}
 			finally

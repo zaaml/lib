@@ -9,15 +9,11 @@ using NativeBinding = System.Windows.Data.Binding;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public sealed class SelfBindingExtension : PathBindingBase
-  {
-    #region  Methods
-
-    protected override void InitSource(NativeBinding binding)
-    {
-      binding.RelativeSource = XamlConstants.Self;
-    }
-
-    #endregion
-  }
+	public sealed class SelfBindingExtension : PathBindingBase
+	{
+		protected override void InitSource(NativeBinding binding)
+		{
+			binding.RelativeSource = XamlConstants.Self;
+		}
+	}
 }

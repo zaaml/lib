@@ -11,39 +11,27 @@ using Zaaml.PresentationCore.Utils;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  internal class ElementBindingConverter : WrapConverter
-  {
-    #region Fields
+	internal class ElementBindingConverter : WrapConverter
+	{
+		private readonly string _elementName;
 
-    private readonly string _elementName;
+		public ElementBindingConverter(string elementName, IValueConverter converter)
+			: base(converter)
+		{
+			_elementName = elementName;
+		}
 
-    #endregion
+		protected override object ConvertBackOverride(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			throw new NotSupportedException();
+		}
 
-    #region Ctors
+		protected override object ConvertOverride(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			if (value is FrameworkElement fre)
+				NameScopeUtils.FindName(fre, _elementName);
 
-    public ElementBindingConverter(string elementName, IValueConverter converter)
-      : base(converter)
-    {
-      _elementName = elementName;
-    }
-
-    #endregion
-
-    #region  Methods
-
-    protected override object ConvertBackOverride(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-      throw new NotSupportedException();
-    }
-
-    protected override object ConvertOverride(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-	    if (value is FrameworkElement fre)
-        NameScopeUtils.FindName(fre, _elementName);
-
-      return value;
-    }
-
-    #endregion
-  }
+			return value;
+		}
+	}
 }

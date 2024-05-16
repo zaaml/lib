@@ -2,10 +2,10 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Editors.Text
 {
@@ -29,7 +29,7 @@ namespace Zaaml.UI.Controls.Editors.Text
       _innerCollection.Clear();
       _innerCollection.AddRange(searchResult);
 
-      OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+      OnCollectionChanged(Constants.NotifyCollectionChangedReset);
     }
 
     #endregion

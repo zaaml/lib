@@ -2,13 +2,12 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Windows;
-using Zaaml.Core.Extensions;
+using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -16,8 +15,6 @@ namespace Zaaml.UI.Controls.Core
 	internal sealed class MixedItemSourceCollection<TItem> : IReadOnlyList<object>, IDisposable, INotifyCollectionChanged
 		where TItem : FrameworkElement
 	{
-		private static readonly NotifyCollectionChangedEventArgs ResetArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
-
 		public MixedItemSourceCollection(ItemCollectionBase<TItem> itemCollection, IEnumerable sourceCollection, int itemCollectionSplitIndex)
 		{
 			IndexedSourceCollection = new IndexedEnumerable(sourceCollection);
@@ -49,7 +46,7 @@ namespace Zaaml.UI.Controls.Core
 			if (IndexedSourceCollection.IsEmpty || IndexedSourceCollection.Count == 0)
 				CollectionChanged?.Invoke(this, e);
 			else
-				CollectionChanged?.Invoke(this, ResetArgs);
+				CollectionChanged?.Invoke(this, Constants.NotifyCollectionChangedReset);
 		}
 
 		private void OnSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -57,7 +54,7 @@ namespace Zaaml.UI.Controls.Core
 			if (ItemCollection.Count == 0)
 				CollectionChanged?.Invoke(this, e);
 			else
-				CollectionChanged?.Invoke(this, ResetArgs);
+				CollectionChanged?.Invoke(this, Constants.NotifyCollectionChangedReset);
 		}
 
 		public void Dispose()

@@ -2,13 +2,15 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
 using System.Windows.Data;
+using Zaaml.Core.Extensions;
 
-namespace Zaaml.UI.Controls.Core
+namespace Zaaml.PresentationCore
 {
 	internal sealed class IndexedEnumerable : IEnumerable
 	{
@@ -499,7 +501,11 @@ namespace Zaaml.UI.Controls.Core
 		private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			InvalidateEnumerator();
+
+			InnerCollectionChanged?.Invoke(this, e);
 		}
+
+		internal event NotifyCollectionChangedEventHandler InnerCollectionChanged;
 
 		private void SetCollection(IEnumerable collection)
 		{

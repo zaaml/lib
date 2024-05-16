@@ -8,22 +8,14 @@ using Zaaml.PresentationCore.PropertyCore;
 
 namespace Zaaml.PresentationCore.Data
 {
-  internal class BindingResolverCollection : DependencyObjectCollectionBase<BindingResolver>
-  {
-    #region Static Fields and Constants
+	internal class BindingResolverCollection : DependencyObjectCollectionBase<BindingResolver>
+	{
+		public static readonly DependencyProperty ResolversProperty = DPM.RegisterAttached<BindingResolverCollection, BindingResolverCollection>
+			("Resolvers");
 
-    public static readonly DependencyProperty ResolversProperty = DPM.RegisterAttached<BindingResolverCollection, BindingResolverCollection>
-      ("Resolvers");
-
-    #endregion
-
-    #region  Methods
-
-    public static BindingResolverCollection GetResolvers(DependencyObject depObj)
-    {
-      return depObj.GetValueOrCreate(ResolversProperty, () => new BindingResolverCollection());
-    }
-
-    #endregion
-  }
+		public static BindingResolverCollection GetResolvers(DependencyObject depObj)
+		{
+			return depObj.GetValueOrCreate(ResolversProperty, () => new BindingResolverCollection());
+		}
+	}
 }

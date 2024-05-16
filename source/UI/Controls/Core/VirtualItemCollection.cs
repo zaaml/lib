@@ -10,6 +10,7 @@ using System.Linq;
 using System.Windows;
 using Zaaml.Core;
 using Zaaml.Core.Collections;
+using Zaaml.PresentationCore;
 
 // ReSharper disable StaticMemberInGenericType
 

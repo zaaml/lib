@@ -35,7 +35,7 @@ namespace Zaaml.UI.Controls.TableView
 			if (Item?.GetVisualParent() is not TableViewPanel tableViewPanel)
 				return StackPanelLayout.Arrange(this, finalSize);
 
-			var orientation = tableViewPanel.ItemsPresenter?.TableViewControl?.Orientation.Rotate() ?? Orientation.Horizontal;
+			var orientation = tableViewPanel.Orientation;
 			var offset = new OrientedPoint(orientation);
 			var finalOriented = finalSize.AsOriented(orientation);
 			var spacing = Item.TableViewControl?.ElementSpacing ?? 0;
@@ -61,15 +61,15 @@ namespace Zaaml.UI.Controls.TableView
 
 		protected override Size MeasureOverrideCore(Size availableSize)
 		{
-			var tableViewPanel = Item?.GetVisualParent() as TableViewPanel;
-
-			if (tableViewPanel == null)
+			if (Item?.GetVisualParent() is not TableViewPanel tableViewPanel)
 				return StackPanelLayout.Measure(this, availableSize);
 
-			var orientation = tableViewPanel.ItemsPresenter?.TableViewControl?.Orientation.Rotate() ?? Orientation.Horizontal;
+			var orientation = tableViewPanel.Orientation;
 			var orientedResult = new OrientedSize(orientation);
 			var orientedAvailable = new OrientedSize(orientation, availableSize);
 			var starAsAuto = orientedAvailable.Direct.IsPositiveInfinity();
+
+			tableViewPanel.SetItemAvailableIndirectSize(this, orientedAvailable.Direct);
 
 			for (var index = 0; index < Children.Count; index++)
 			{

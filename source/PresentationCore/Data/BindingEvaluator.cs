@@ -14,7 +14,7 @@ namespace Zaaml.PresentationCore.Data
 {
 	internal static class BindingEvaluator
 	{
-		private static readonly Dictionary<Type, BindingEvaluatorImpl> Evaluators = new();
+		private static readonly Dictionary<Type, BindingEvaluatorImpl> Evaluators = [];
 
 		private static readonly DependencyProperty ValueProperty = DPM.RegisterAttached<object>
 			("Value", typeof(BindingEvaluator));
@@ -32,8 +32,11 @@ namespace Zaaml.PresentationCore.Data
 		public static object EvaluateBinding(DependencyObject target, Binding binding)
 		{
 			target.SetBinding(ValueProperty, binding);
+
 			var value = target.GetValue(ValueProperty);
+
 			target.ClearValue(ValueProperty);
+
 			return value;
 		}
 
@@ -59,7 +62,9 @@ namespace Zaaml.PresentationCore.Data
 			public object EvaluateBindingImpl(Binding binding)
 			{
 				this.SetBinding(_valueProperty, binding);
+
 				var value = GetValue(_valueProperty);
+
 				ClearValue(_valueProperty);
 
 				return value;

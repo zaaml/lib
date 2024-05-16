@@ -19,146 +19,126 @@ using SetterBase = Zaaml.PresentationCore.Interactivity.SetterBase;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public abstract class BindingMarkupExtension : MarkupExtensionBase
-  {
-    #region Static Fields and Constants
+	public abstract class BindingMarkupExtension : MarkupExtensionBase
+	{
+		protected static readonly NativeBinding UnallowedBinding = new NativeBinding { Source = Unset.Value, BindsDirectlyToSource = true, Converter = TargetNullValueConverter.Instance, Mode = BindingMode.OneTime };
 
-    protected static readonly NativeBinding UnallowedBinding = new NativeBinding {Source = Unset.Value, BindsDirectlyToSource = true, Converter = TargetNullValueConverter.Instance, Mode = BindingMode.OneTime};
-
-    #endregion
-
-    #region Ctors
-
-    internal BindingMarkupExtension()
-    {
-    }
-
-    #endregion
-
-    #region Properties
+		internal BindingMarkupExtension()
+		{
+		}
 
 #if INTERACTIVITY_DEBUG
-    public bool Debug { get; set; }
+		public bool Debug { get; set; }
 #endif
 
-    protected virtual bool SupportNativeSetter => true;
+		protected virtual bool SupportNativeSetter => true;
 
-    #endregion
+		internal void FinalizeXamlInitialization(IServiceProvider serviceProvider)
+		{
+			FinalizeXamlInitializationCore(serviceProvider);
+		}
 
-    #region  Methods
+		protected virtual void FinalizeXamlInitializationCore(IServiceProvider serviceProvider)
+		{
+		}
 
-    internal void FinalizeXamlInitialization(IServiceProvider serviceProvider)
-    {
-      FinalizeXamlInitializationCore(serviceProvider);
-    }
+		protected internal abstract NativeBinding GetBinding(IServiceProvider serviceProvider);
 
-    protected virtual void FinalizeXamlInitializationCore(IServiceProvider serviceProvider)
-    {
-    }
+		internal NativeBinding GetBinding(object target, object targetProperty)
+		{
+			using var serviceProvider = TargetServiceProvider.GetServiceProvider(target, targetProperty);
 
-    protected internal abstract NativeBinding GetBinding(IServiceProvider serviceProvider);
+			return GetBinding(serviceProvider);
+		}
 
-    internal NativeBinding GetBinding(object target, object targetProperty)
-    {
-	    using var serviceProvider = TargetServiceProvider.GetServiceProvider(target, targetProperty);
+		private object GetDefaultValue(object targetProperty)
+		{
+			var propertyType = GetPropertyType(targetProperty);
 
-	    return GetBinding(serviceProvider);
-    }
+			return propertyType == null ? null : RuntimeUtils.CreateDefaultValue(propertyType);
+		}
 
-    private object GetDefaultValue(object targetProperty)
-    {
-      var propertyType = GetPropertyType(targetProperty);
+		protected object GetSafeTarget(IServiceProvider serviceProvider)
+		{
+			return GetTarget(serviceProvider, out var target, out _, out _) == false ? null : target;
+		}
 
-      return propertyType == null ? null : RuntimeUtils.CreateDefaultValue(propertyType);
-    }
+		private object ProvideSetterValue(IServiceProvider serviceProvider)
+		{
+			FinalizeXamlInitializationCore(serviceProvider);
 
-    protected object GetSafeTarget(IServiceProvider serviceProvider)
-    {
-	    return GetTarget(serviceProvider, out var target, out _, out _) == false ? null : target;
-    }
+			return this;
+		}
 
-    private object ProvideSetterValue(IServiceProvider serviceProvider)
-    {
-      FinalizeXamlInitializationCore(serviceProvider);
+		public sealed override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			if (GetTarget(serviceProvider, out var target, out var targetProperty, out var reflected) == false)
+			{
+				FinalizeXamlInitializationCore(serviceProvider);
 
-      return this;
-    }
+				return this;
+			}
 
-    public sealed override object ProvideValue(IServiceProvider serviceProvider)
-    {
-	    if (GetTarget(serviceProvider, out var target, out var targetProperty, out var reflected) == false)
-      {
-        FinalizeXamlInitializationCore(serviceProvider);
+			var dependencyProperty = targetProperty as DependencyProperty;
 
-        return this;
-      }
+			if (reflected && target is DependencyObject dependencyObjectTarget)
+			{
+				dependencyObjectTarget.SetBinding(dependencyProperty, GetBinding(serviceProvider));
 
-	    var dependencyProperty = targetProperty as DependencyProperty;
+				throw new XamlMarkupInstalException();
+			}
 
-      if (reflected && target is DependencyObject dependencyObjectTarget)
-      {
-        dependencyObjectTarget.SetBinding(dependencyProperty, GetBinding(serviceProvider));
+			if (target is NativeSetter nativeSetter)
+			{
+				if (SupportNativeSetter)
+					return ProvideSetterValue(serviceProvider);
 
-        throw new XamlMarkupInstalException();
-      }
+				throw new InvalidOperationException($"{GetType().Name} markup extension does not support native setters");
+			}
 
-      if (target is NativeSetter nativeSetter)
-      {
-        if (SupportNativeSetter)
-          return ProvideSetterValue(serviceProvider);
+			return target is SetterBase setter ? ProvideSetterValue(serviceProvider) : ProvideValueCore(target, targetProperty, serviceProvider);
+		}
 
-        throw new InvalidOperationException($"{GetType().Name} markup extension does not support native setters");
-      }
+		protected virtual object ProvideValueCore(object target, object targetProperty, IServiceProvider serviceProvider)
+		{
+			var dependencyObjectTarget = target as DependencyObject;
+			var interactivityTarget = target as InteractivityObject;
+			var propertyInfo = targetProperty as PropertyInfo;
 
-      return target is SetterBase setter ? ProvideSetterValue(serviceProvider) : ProvideValueCore(target, targetProperty, serviceProvider);
-    }
+			if (dependencyObjectTarget == null)
+			{
+				if (target?.GetType().Name == "SharedDp")
+				{
+					FinalizeXamlInitializationCore(serviceProvider);
 
-    protected virtual object ProvideValueCore(object target, object targetProperty, IServiceProvider serviceProvider)
-    {
-      var dependencyObjectTarget = target as DependencyObject;
-      var interactivityTarget = target as InteractivityObject;
-      var propertyInfo = targetProperty as PropertyInfo;
+					return this;
+				}
+			}
 
-      if (dependencyObjectTarget == null)
-      {
-        if (target?.GetType().Name == "SharedDp")
-        {
-          FinalizeXamlInitializationCore(serviceProvider);
+			var binding = GetBinding(serviceProvider);
 
-          return this;
-        }
-      }
+			if (serviceProvider is InteractivityObject)
+				return binding;
 
-      var binding = GetBinding(serviceProvider);
+			if (ReferenceEquals(binding, UnallowedBinding))
+				return GetDefaultValue(targetProperty);
 
-      if (serviceProvider is InteractivityObject)
-        return binding;
+			if (interactivityTarget != null && propertyInfo != null)
+			{
+				if (interactivityTarget.SetMarkupExtension(propertyInfo, this, serviceProvider, true))
+				{
+					if (PresentationCoreUtils.IsInDesignMode)
+						throw new XamlMarkupInstalException();
 
-      if (ReferenceEquals(binding, UnallowedBinding))
-        return GetDefaultValue(targetProperty);
+					return GetDefaultValue(targetProperty);
+				}
+			}
 
-      if (interactivityTarget != null && propertyInfo != null)
-      {
-        if (interactivityTarget.SetMarkupExtension(propertyInfo, this, serviceProvider, true))
-        {
-          if (PresentationCoreUtils.IsInDesignMode)
-            throw new XamlMarkupInstalException();
+			return binding.ProvideValue(serviceProvider);
+		}
 
-          return GetDefaultValue(targetProperty);
-        }
-      }
-
-      return binding.ProvideValue(serviceProvider);
-    }
-
-    #endregion
-
-    #region  Nested Types
-
-    internal class XamlMarkupInstalException : InvalidOperationException
-    {
-    }
-
-    #endregion
-  }
+		internal class XamlMarkupInstalException : InvalidOperationException
+		{
+		}
+	}
 }

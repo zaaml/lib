@@ -13,12 +13,6 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 	{
 		internal readonly CommonBindingProperties BindingProperties = new();
 
-		public AllowedFramework AllowedFramework
-		{
-			get => BindingProperties.AllowedFramework;
-			set => BindingProperties.AllowedFramework = value;
-		}
-
 		public IValueConverter Converter
 		{
 			get => BindingProperties.Converter;
@@ -93,12 +87,6 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
 		protected internal sealed override NativeBinding GetBinding(IServiceProvider serviceProvider)
 		{
-			if (XamlConstants.Framework == FrameworkType.WPF && (AllowedFramework & AllowedFramework.WPF) == 0)
-				return UnallowedBinding;
-
-			if (XamlConstants.Framework == FrameworkType.Silverlight && (AllowedFramework & AllowedFramework.Silverlight) == 0)
-				return UnallowedBinding;
-
 			return GetBindingCore(serviceProvider);
 		}
 

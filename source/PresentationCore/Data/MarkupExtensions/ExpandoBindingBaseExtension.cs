@@ -9,38 +9,26 @@ using NativeBinding = System.Windows.Data.Binding;
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  public abstract class ExpandoBindingBaseExtension : BindingBaseExtension
-  {
-    #region Ctors
+	public abstract class ExpandoBindingBaseExtension : BindingBaseExtension
+	{
+		internal ExpandoBindingBaseExtension()
+		{
+		}
 
-    internal ExpandoBindingBaseExtension()
-    {
-    }
+		public string Path { get; set; }
+		protected abstract RelativeSource Source { get; }
 
-    #endregion
+		protected override NativeBinding GetBindingCore(IServiceProvider serviceProvider)
+		{
+			var binding = new NativeBinding
+			{
+				Path = ExpandoPathExtension.CreatePropertyPath(Path),
+				RelativeSource = Source
+			};
 
-    #region Properties
+			InitBinding(binding);
 
-    public string Path { get; set; }
-    protected abstract RelativeSource Source { get; }
-
-    #endregion
-
-    #region  Methods
-
-    protected override NativeBinding GetBindingCore(IServiceProvider serviceProvider)
-    {
-      var binding = new NativeBinding
-      {
-        Path = ExpandoPathExtension.CreatePropertyPath(Path),
-        RelativeSource = Source
-      };
-
-      InitBinding(binding);
-
-      return binding;
-    }
-
-    #endregion
-  }
+			return binding;
+		}
+	}
 }

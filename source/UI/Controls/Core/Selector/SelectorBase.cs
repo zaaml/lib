@@ -149,7 +149,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			try
 			{
-				return SelectedValueEvaluator.GetValue(item);
+				return SelectedValueEvaluator?.GetValue(item);
 			}
 			catch (Exception e)
 			{

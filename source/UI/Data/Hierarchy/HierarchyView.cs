@@ -9,6 +9,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using Zaaml.Core.Packed;
 using Zaaml.Core.Trees;
+using Zaaml.PresentationCore;
 using Zaaml.UI.Controls.Core;
 
 namespace Zaaml.UI.Data.Hierarchy

@@ -14,7 +14,7 @@ namespace Zaaml.PresentationCore.Data
 
 		public T Value
 		{
-			get => (T) GetValue(ValueProperty);
+			get => (T)GetValue(ValueProperty);
 			set => SetValue(ValueProperty, value);
 		}
 	}

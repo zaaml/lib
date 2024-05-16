@@ -8,13 +8,13 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Core
 {
 	[SuppressMessage("ReSharper", "StaticMemberInGenericType")]
 	internal abstract partial class SelectorController<TItem>
 	{
-		private static readonly NotifyCollectionChangedEventArgs ResetNotifyCollectionChangedEventArgs = new(NotifyCollectionChangedAction.Reset);
 		private static readonly PropertyChangedEventArgs CountPropertyChangedEventArgs = new("Count");
 
 		internal sealed class SelectionCollectionImpl : IEnumerable<Selection<TItem>>
