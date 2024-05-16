@@ -74,25 +74,29 @@ namespace Zaaml.PresentationCore.Theming
 		private static void TransformElements(XElement element)
 		{
 			const string transformNamespace = "http://schemas.zaaml.com/xaml/transform";
+
 			foreach (var child in element.Descendants().ToList())
 			{
 				var name = child.Name;
+
 				if (name.NamespaceName == transformNamespace)
 				{
-					var actualNamespaceName = "";
-					switch (XamlConstants.Framework)
-					{
-						case FrameworkType.WPF:
-							actualNamespaceName = child.Attribute(XName.Get("WpfNameSpace", transformNamespace)).Value;
-							break;
-						case FrameworkType.Silverlight:
-							actualNamespaceName = child.Attribute(XName.Get("SilverlightNameSpace", transformNamespace)).Value;
-							break;
-						default:
-							throw new ArgumentOutOfRangeException();
-					}
+					throw new NotImplementedException();
+					//var actualNamespaceName = "";
 
-					child.ReplaceWith(new XElement(XName.Get(name.LocalName, actualNamespaceName), child.Nodes(), child.Attributes()));
+					//switch (XamlConstants.Framework)
+					//{
+					//	case FrameworkType.WPF:
+					//		actualNamespaceName = child.Attribute(XName.Get("WpfNameSpace", transformNamespace)).Value;
+					//		break;
+					//	case FrameworkType.Silverlight:
+					//		actualNamespaceName = child.Attribute(XName.Get("SilverlightNameSpace", transformNamespace)).Value;
+					//		break;
+					//	default:
+					//		throw new ArgumentOutOfRangeException();
+					//}
+
+					//child.ReplaceWith(new XElement(XName.Get(name.LocalName, actualNamespaceName), child.Nodes(), child.Attributes()));
 				}
 			}
 		}

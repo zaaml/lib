@@ -4,20 +4,16 @@
 
 namespace Zaaml.PresentationCore.Data.MarkupExtensions
 {
-  internal class StrongReferenceBinding : System.Windows.Data.Binding
-  {
-    public StrongReferenceBinding()
-    {
-    }
+	internal class StrongReferenceBinding : System.Windows.Data.Binding
+	{
+		public StrongReferenceBinding()
+		{
+		}
 
-    public StrongReferenceBinding(string path) : base(path)
-    {
-    }
+		public StrongReferenceBinding(string path) : base(path)
+		{
+		}
 
-    #region Properties
-
-    public object Reference { get; set; }
-
-    #endregion
-  }
+		public object Reference { get; set; }
+	}
 }

@@ -6,18 +6,10 @@ using System.Windows;
 
 namespace Zaaml.PresentationCore.Data
 {
-  internal interface IDependencyObjectProxy
-  {
-    #region Properties
+	internal interface IDependencyObjectProxy
+	{
+		DependencyObject Proxy { get; }
 
-    DependencyObject Proxy { get; }
-
-    #endregion
-
-    #region  Methods
-
-    DependencyProperty GetProxyProperty(string propertyName);
-
-    #endregion
-  }
+		DependencyProperty GetProxyProperty(string propertyName);
+	}
 }

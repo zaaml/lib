@@ -7,70 +7,52 @@ using System.Windows;
 using System.Windows.Data;
 using Zaaml.PresentationCore.PropertyCore;
 
-
-
 namespace Zaaml.PresentationCore.Data
 {
-  internal class BindingResolver : DependencyObject
-  {
-    #region Static Fields and Constants
+	internal class BindingResolver : DependencyObject
+	{
+		internal static readonly DependencyProperty InstanceProperty = DPM.RegisterAttached<BindingResolver, BindingResolver>
+			("Instance");
 
-    internal static readonly DependencyProperty InstanceProperty = DPM.RegisterAttached<BindingResolver, BindingResolver>
-      ("Instance");
+		internal static readonly DependencyProperty SourceProperty = DPM.Register<object, BindingResolver>
+			("Source", r => r.OnSourceResolved);
 
-    internal static readonly DependencyProperty SourceProperty = DPM.Register<object, BindingResolver>
-      ("Source", r => r.OnSourceResolved);
+		private readonly bool _autoDettach;
+		private readonly Action<object> _bindingResolved;
+		private readonly WeakReference _dataItemRef;
+		private bool _isResolved;
 
-    #endregion
+		public BindingResolver(DependencyObject dataItem, Binding binding, Action<object> bindingResolved, bool autoDettach = true)
+		{
+			_dataItemRef = new WeakReference(dataItem);
+			_bindingResolved = bindingResolved;
+			_autoDettach = autoDettach;
 
-    #region Fields
+			BindingResolverCollection.GetResolvers(dataItem).Add(this);
+			BindingOperations.SetBinding(this, SourceProperty, binding);
+		}
 
-    private readonly bool _autoDettach;
-    private readonly Action<object> _bindingResolved;
-    private readonly WeakReference _dataItemRef;
-    private bool _isResolved;
+		private void OnSourceResolved(object oldValue, object newValue)
+		{
+			if (_isResolved)
+				return;
 
-    #endregion
+			_bindingResolved(newValue);
 
-    #region Ctors
+			if (_autoDettach == false)
+				return;
 
-    public BindingResolver(DependencyObject dataItem, Binding binding, Action<object> bindingResolved, bool autoDettach = true)
-    {
-      _dataItemRef = new WeakReference(dataItem);
-      _bindingResolved = bindingResolved;
-      _autoDettach = autoDettach;
+			_isResolved = true;
 
-      BindingResolverCollection.GetResolvers(dataItem).Add(this);
-      BindingOperations.SetBinding(this, SourceProperty, binding);
-    }
+			ClearValue(SourceProperty);
+			var dataItem = (DependencyObject)_dataItemRef.Target;
 
-    #endregion
+			if (dataItem == null) return;
 
-    #region  Methods
-
-    private void OnSourceResolved(object oldValue, object newValue)
-    {
-      if (_isResolved)
-        return;
-
-      _bindingResolved(newValue);
-
-      if (_autoDettach == false)
-        return;
-
-      _isResolved = true;
-
-      ClearValue(SourceProperty);
-      var dataItem = (DependencyObject) _dataItemRef.Target;
-
-      if (dataItem == null) return;
-
-      var resolvers = BindingResolverCollection.GetResolvers(dataItem);
-      resolvers.Remove(this);
-      if (resolvers.Count == 0)
-        dataItem.ClearValue(BindingResolverCollection.ResolversProperty);
-    }
-
-    #endregion
-  }
+			var resolvers = BindingResolverCollection.GetResolvers(dataItem);
+			resolvers.Remove(this);
+			if (resolvers.Count == 0)
+				dataItem.ClearValue(BindingResolverCollection.ResolversProperty);
+		}
+	}
 }

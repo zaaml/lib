@@ -96,6 +96,14 @@ namespace Zaaml.PresentationCore.Data
 			set => SetValue(SourceProperty, value);
 		}
 
+		protected override void EndInitCore()
+		{
+			base.EndInitCore();
+
+			if (Source != null)
+				InitChain();
+		}
+
 		private void InitChain()
 		{
 			var currentSource = Source;
@@ -109,7 +117,7 @@ namespace Zaaml.PresentationCore.Data
 			var lastChainElement = _bindingChainElements.LastOrDefault();
 
 			if (lastChainElement != null)
-				this.SetBinding(ValueProperty, new Binding {Path = new PropertyPath(ValueAsset.ValueProperty), Source = lastChainElement});
+				this.SetBinding(ValueProperty, new Binding { Path = new PropertyPath(ValueAsset.ValueProperty), Source = lastChainElement });
 		}
 
 		private void OnSourceChanged()
@@ -121,14 +129,6 @@ namespace Zaaml.PresentationCore.Data
 		private void OnValueChanged()
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ActualValue"));
-		}
-
-		protected override void EndInitCore()
-		{
-			base.EndInitCore();
-			
-			if (Source != null)
-				InitChain();
 		}
 	}
 }

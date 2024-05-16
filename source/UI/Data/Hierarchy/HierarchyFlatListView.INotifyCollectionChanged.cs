@@ -2,10 +2,10 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections.Specialized;
 using Zaaml.Core.Collections;
 using Zaaml.Core.Collections.Specialized;
+using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Data.Hierarchy
 {
@@ -25,7 +25,7 @@ namespace Zaaml.UI.Data.Hierarchy
 
 		internal void RaiseReset()
 		{
-			CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+			CollectionChanged?.Invoke(this, Constants.NotifyCollectionChangedReset);
 		}
 
 		event NotifyCollectionChangedEventHandler INotifyCollectionChanged.CollectionChanged

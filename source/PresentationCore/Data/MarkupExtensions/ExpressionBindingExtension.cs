@@ -70,7 +70,7 @@ namespace Zaaml.PresentationCore.Data.MarkupExtensions
 
 			UpdateValue();
 
-			return new System.Windows.Data.Binding {Path = PropertyPath, Source = _expressionValue, Converter = XamlConverter.Instance};
+			return new System.Windows.Data.Binding { Path = PropertyPath, Source = _expressionValue, Converter = XamlConverter.Instance };
 		}
 
 		private void OnExpressionChanged()

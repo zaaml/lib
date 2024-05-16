@@ -15,21 +15,6 @@ using Zaaml.PresentationCore.MarkupExtensions;
 
 namespace Zaaml.PresentationCore
 {
-	public enum FrameworkType
-	{
-		WPF,
-		Silverlight
-	}
-
-	[Flags]
-	public enum AllowedFramework
-	{
-		None = 0x0,
-		WPF = 0x1,
-		Silverlight = 0x2,
-		All = WPF | Silverlight
-	}
-
 	public static class XamlConstants
 	{
 		public static readonly Size NanSize = new(double.NaN, double.NaN);
@@ -43,12 +28,6 @@ namespace Zaaml.PresentationCore
 		public static readonly string XamlMCNamespace = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 		public static readonly string XamlZMNamespace = "http://schemas.zaaml.com/xaml";
 		public static readonly string XamlZMPrefix = "zm";
-
-#if SILVERLIGHT
-		public static readonly FrameworkType Framework = FrameworkType.Silverlight;
-#else
-		public static readonly FrameworkType Framework = FrameworkType.WPF;
-#endif
 
 		internal static readonly RelativeSource TemplatedParent = new(RelativeSourceMode.TemplatedParent);
 		internal static readonly RelativeSource Self = new(RelativeSourceMode.Self);
@@ -99,24 +78,6 @@ namespace Zaaml.PresentationCore
 		public override object ProvideValue(IServiceProvider serviceProvider)
 		{
 			return Dictionary.GetValueOrDefault(Type, () => Guid.NewGuid().ToString());
-		}
-	}
-
-	public class StyleTypeKeyExtension : MarkupExtensionBase
-	{
-		public Type Type { get; set; }
-
-		public override object ProvideValue(IServiceProvider serviceProvider)
-		{
-			switch (XamlConstants.Framework)
-			{
-				case FrameworkType.WPF:
-					return Type;
-				case FrameworkType.Silverlight:
-					return Type.Name;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
 		}
 	}
 }

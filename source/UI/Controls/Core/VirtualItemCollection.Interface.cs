@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Windows;
 using Zaaml.Core;
+using Zaaml.PresentationCore;
 
 namespace Zaaml.UI.Controls.Core
 {
@@ -84,7 +85,7 @@ namespace Zaaml.UI.Controls.Core
 
 				Reset();
 
-				OnSourceCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+				OnSourceCollectionChanged(Constants.NotifyCollectionChangedReset);
 			}
 		}
 

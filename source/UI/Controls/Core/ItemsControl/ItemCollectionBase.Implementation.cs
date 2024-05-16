@@ -127,7 +127,7 @@ namespace Zaaml.UI.Controls.Core
 
 		private void RaiseReset()
 		{
-			var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+			var args = Constants.NotifyCollectionChangedReset;
 
 			CollectionChanged?.Invoke(this, args);
 

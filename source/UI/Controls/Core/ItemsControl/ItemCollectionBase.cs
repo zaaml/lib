@@ -8,6 +8,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using Zaaml.Core;
+using Zaaml.PresentationCore;
 using Zaaml.PresentationCore.PropertyCore;
 using Zaaml.UI.Panels;
 using NativeControl = System.Windows.Controls.Control;
@@ -520,7 +521,7 @@ namespace Zaaml.UI.Controls.Core
 		{
 			try
 			{
-				var e = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+				var e = Constants.NotifyCollectionChangedReset;
 
 				foreach (var observer in _observers)
 					observer.OnSourceCollectionChanged(e);

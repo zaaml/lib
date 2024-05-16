@@ -2,12 +2,12 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Zaaml.PresentationCore;
+using Zaaml.PresentationCore.Extensions;
 using Zaaml.UI.Controls.Core;
 using Zaaml.UI.Panels;
 using Zaaml.UI.Panels.Core;
@@ -19,11 +19,13 @@ namespace Zaaml.UI.Controls.TableView
 	{
 		private TableViewItem _footerItem;
 		private TableViewItem _headerItem;
+		private double _itemIndirect;
+
 		internal MeasurePass CurrentMeasurePass { get; set; }
 
-		private List<TableViewDefinition> Definitions { get; } = new List<TableViewDefinition>();
+		private List<TableViewDefinition> Definitions { get; } = [];
 
-		private Stack<TableViewDefinition> DefinitionsPool { get; } = new Stack<TableViewDefinition>();
+		private Stack<TableViewDefinition> DefinitionsPool { get; } = [];
 
 		internal TableViewItem FooterItem
 		{
@@ -99,7 +101,14 @@ namespace Zaaml.UI.Controls.TableView
 			}
 		}
 
+		internal void SetItemAvailableIndirectSize(TableViewItemPanel itemPanel, double indirect)
+		{
+			_itemIndirect = Math.Min(_itemIndirect, indirect);
+		}
+
 		internal TableViewItemsPresenter ItemsPresenter { get; set; }
+
+		internal Orientation Orientation  => ItemsPresenter?.TableViewControl?.Orientation.Rotate() ?? Orientation.Horizontal;
 
 		protected override Size ArrangeOverrideCore(Size finalSize)
 		{
@@ -164,6 +173,8 @@ namespace Zaaml.UI.Controls.TableView
 			if (tableViewControl == null)
 				return StackPanelLayout.Measure(this, availableSize);
 
+			_itemIndirect = int.MaxValue;
+
 			InitDefinitions(tableViewControl);
 
 			var orientation = tableViewControl.Orientation;
@@ -206,7 +217,8 @@ namespace Zaaml.UI.Controls.TableView
 					starLengthValue += definition.Length.Value;
 			}
 
-			var starAvailable = Math.Max(0, orientedAvailable.Indirect - fixedIndirect);
+			var actualAvailableIndirect = Math.Min(orientedAvailable.Indirect, _itemIndirect);
+			var starAvailable = Math.Max(0, actualAvailableIndirect - fixedIndirect);
 			var starLength = starAvailable / starLengthValue;
 
 			// Star measure pass
