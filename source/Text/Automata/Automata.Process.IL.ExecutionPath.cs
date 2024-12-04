@@ -27,12 +27,14 @@ namespace Zaaml.Text
 				#region Static Fields and Constants
 
 				private static readonly MethodInfo DebugNodeMethodInfo = ProcessILGeneratorType.GetMethod(nameof(DebugNode), SPNP);
+				private static readonly MethodInfo DebugParallelNodeMethodInfo = ProcessILGeneratorType.GetMethod(nameof(DebugParallelNode), SPNP);
 				private static readonly MethodInfo DebugExecutionPathMethodInfo = ProcessILGeneratorType.GetMethod(nameof(DebugExecutionPath), SPNP);
 				private static readonly MethodInfo CallPredicateMethodInfo = ProcessType.GetMethod(nameof(CallPredicate), IPNP);
 				private static readonly MethodInfo ShouldPopPredicateResultMethodInfo = ProcessType.GetMethod(nameof(ShouldPopPredicateResult), IPNP);
 
 				private static readonly MethodInfo PredicateResultIsForkMethodInfo = typeof(PredicateResult).GetMethod(nameof(PredicateResult.IsFork), IPNP);
 				private static readonly MethodInfo PredicateResultDisposeMethodInfo = typeof(PredicateResult).GetMethod(nameof(PredicateResult.Dispose), IPNP);
+				private static readonly FieldInfo ExecutionPathOutputFieldInfo = typeof(ExecutionPath).GetField(nameof(ExecutionPath.Output), IPNP);
 
 				#endregion
 
@@ -118,14 +120,28 @@ namespace Zaaml.Text
 				[SuppressMessage("ReSharper", "UnusedParameter.Local")]
 				private static void DebugNode(Node node, ExecutionPath executionPath)
 				{
+					//System.Diagnostics.Debug.WriteLine(node.Id);
 				}
 
-				[Conditional("DEBUG_IL")]
+				[SuppressMessage("ReSharper", "UnusedParameter.Local")]
+				private static void DebugParallelNode(Node node, ExecutionPath executionPath)
+				{
+				}
+
+				//[Conditional("DEBUG_IL")]
 				private void EmitDebugNode(ILContext ilBuilderContext, Node node, ExecutionPath executionPath)
 				{
 					ilBuilderContext.EmitLdValue(node);
 					ilBuilderContext.EmitLdValue(executionPath);
 					ilBuilderContext.IL.Emit(OpCodes.Call, DebugNodeMethodInfo);
+				}
+
+				[Conditional("DEBUG_IL")]
+				private void EmitDebugParallelNode(ILContext ilBuilderContext, Node node, ExecutionPath executionPath)
+				{
+					ilBuilderContext.EmitLdValue(node);
+					ilBuilderContext.EmitLdValue(executionPath);
+					ilBuilderContext.IL.Emit(OpCodes.Call, DebugParallelNodeMethodInfo);
 				}
 
 				[Conditional("DEBUG_IL")]
@@ -211,7 +227,7 @@ namespace Zaaml.Text
 
 							case PrecedenceEnterNode precedenceEnterNode:
 							{
-								EmitDebugNode(ilBuilderContext, node, executionPath);
+								EmitDebugParallelNode(ilBuilderContext, node, executionPath);
 
 								var successLabel = ilBuilderContext.IL.DefineLabel();
 
@@ -226,7 +242,7 @@ namespace Zaaml.Text
 
 							case PrecedenceLeaveNode precedenceLeaveNode:
 							{
-								EmitDebugNode(ilBuilderContext, node, executionPath);
+								EmitDebugParallelNode(ilBuilderContext, node, executionPath);
 
 								Thread.ThreadILGenerator.EmitLeavePrecedenceNode(ilBuilderContext, precedenceLeaveNode);
 
@@ -277,8 +293,8 @@ namespace Zaaml.Text
 
 							case BeginSyntaxNode beginSyntaxNode:
 							{
-								if (beginSyntaxNode.SyntaxGraph.Syntax.CollapseBacktracking)
-									EmitEnterForkFrame(ilBuilderContext);
+								if (beginSyntaxNode.SyntaxGraph.Syntax.ForkFrame)
+									EmitEnterForkFrame(ilBuilderContext, beginSyntaxNode.Id);
 
 								break;
 							}
@@ -287,16 +303,10 @@ namespace Zaaml.Text
 							{
 									//return stack.Pop().LeaveNode;
 
-									//if (returnNode.SyntaxGraph.Syntax.CollapseBacktracking)
-									//{
-									//	ilBuilderContext.EmitLdThreadContext();
-									//	ilBuilderContext.IL.Emit(OpCodes.Call, ThreadContext.CompleteBlockMethodInfo);
-									//}
+								if (returnNode.SyntaxGraph.Syntax.ForkFrame)
+									EmitLeaveForkFrame(ilBuilderContext, returnNode.Id);
 
-									AutomataStack.ILGenerator.EmitPopLeaveNode(ilBuilderContext);
-
-								if (returnNode.SyntaxGraph.Syntax.CollapseBacktracking)
-										EmitLeaveForkFrame(ilBuilderContext);
+								AutomataStack.ILGenerator.EmitPopLeaveNode(ilBuilderContext);
 
 								if (index == executionPath.Nodes.Length - 1)
 								{
@@ -317,7 +327,8 @@ namespace Zaaml.Text
 					if (executionPath.Output == null)
 						throw new InvalidOperationException();
 
-					ilBuilderContext.EmitLdValue(executionPath.Output);
+					ilBuilderContext.EmitExecutionPath();
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ExecutionPathOutputFieldInfo);
 
 					ilBuilderContext.IL.Emit(OpCodes.Ret);
 
@@ -342,21 +353,6 @@ namespace Zaaml.Text
 						AutomataStack.ILGenerator.EmitEnsureStackDepth(ilBuilderContext, executionPath.StackDepth);
 					}
 
-					{
-						if (executionPath.PathSourceNode is LeaveSyntaxNode leaveRuleNode)
-						{
-							EmitDebugNode(ilBuilderContext, executionPath.PathSourceNode, executionPath);
-
-							var subGraph = leaveRuleNode.SubGraph;
-
-							if (subGraph.SyntaxEntry != null)
-							{
-								if (IsOverriden(nameof(EmitLeaveSyntaxEntry)))
-									EmitLeaveSyntaxEntry(ilBuilderContext, subGraph.SyntaxEntry);
-							}
-						}
-					}
-
 					EmitDebugExecutionPath(ilBuilderContext, executionPath);
 
 					for (var index = 0; index < executionPath.Nodes.Length; index++)
@@ -367,7 +363,7 @@ namespace Zaaml.Text
 						{
 							case LeaveSyntaxNode leaveRuleNode:
 							{
-								EmitDebugNode(ilBuilderContext, executionPath.PathSourceNode, executionPath);
+								EmitDebugNode(ilBuilderContext, leaveRuleNode, executionPath);
 
 								var subGraph = leaveRuleNode.SubGraph;
 
@@ -399,13 +395,13 @@ namespace Zaaml.Text
 								break;
 							}
 
-							case BeginSyntaxNode beginRuleNode:
+							case BeginSyntaxNode beginSyntaxNode:
 							{
-								if (beginRuleNode.SyntaxGraph.Syntax.CollapseBacktracking)
-									EmitEnterForkFrame(ilBuilderContext);
-								
 								EmitDebugNode(ilBuilderContext, node, executionPath);
 
+								if (beginSyntaxNode.SyntaxGraph.Syntax.ForkFrame)
+									EmitEnterForkFrame(ilBuilderContext, beginSyntaxNode.Id);
+								
 								break;
 							}
 
@@ -594,6 +590,8 @@ namespace Zaaml.Text
 
 							case ValueNode valueNode:
 							{
+								EmitDebugNode(ilBuilderContext, node, executionPath);
+
 								if (IsOverriden(nameof(EmitValue)))
 									EmitValue(ilBuilderContext, valueNode.ValueEntry);
 
@@ -607,6 +605,9 @@ namespace Zaaml.Text
 								var lastNode = index == executionPath.Nodes.Length - 1;
 								var leaveNodeLocal = lastNode ? ilBuilderContext.IL.DeclareLocal(typeof(Node)) : null;
 
+								if (returnSyntaxNode.SyntaxGraph.Syntax.ForkFrame)
+									EmitLeaveForkFrame(ilBuilderContext, returnSyntaxNode.Id);
+
 								if (lastNode)
 								{
 									AutomataStack.ILGenerator.EmitPopLeaveNode(ilBuilderContext);
@@ -615,9 +616,6 @@ namespace Zaaml.Text
 								}
 								else
 									AutomataStack.ILGenerator.EmitPopNoRet(ilBuilderContext);
-
-								if (returnSyntaxNode.SyntaxGraph.Syntax.CollapseBacktracking)
-										EmitLeaveForkFrame(ilBuilderContext);
 
 								if (lastNode)
 								{
@@ -637,8 +635,9 @@ namespace Zaaml.Text
 					if (executionPath.Output == null)
 						throw new InvalidOperationException();
 
-					ilBuilderContext.EmitLdValue(executionPath.Output);
-
+					ilBuilderContext.EmitExecutionPath();
+					ilBuilderContext.IL.Emit(OpCodes.Ldfld, ExecutionPathOutputFieldInfo);
+					
 					ilBuilderContext.IL.Emit(OpCodes.Ret);
 
 					closure = ilBuilderContext.Values.ToArray();

@@ -14,7 +14,7 @@ namespace Zaaml.Text
 				{
 				}
 
-				public bool CollapseBacktracking { get; set; }
+				public bool ForkFrame { get; set; }
 			}
 		}
 	}

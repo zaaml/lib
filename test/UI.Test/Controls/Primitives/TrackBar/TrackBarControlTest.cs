@@ -33,8 +33,8 @@ namespace Zaaml.UI.Test.Controls.Primitives.TrackBar
 			var values = trackBar.ItemCollection.OfType<TrackBarValueItem>().Select(x => x.Value).ToArray();
 			var ranges = trackBar.ItemCollection.OfType<TrackBarRangeItem>().Select(x => x.Range).ToArray();
 
-			Assert.True(values.SequenceEqual([50, 60, 60]));
-			Assert.True(ranges.SequenceEqual([50, 10, 0, 40]));
+			Assert.That(values.SequenceEqual([50, 60, 60]), Is.True);
+			Assert.That(ranges.SequenceEqual([50, 10, 0, 40]), Is.True);
 		}
 
 		[Test]
@@ -95,8 +95,8 @@ namespace Zaaml.UI.Test.Controls.Primitives.TrackBar
 
 			trackBar.EndUpdate();
 
-			Assert.AreEqual(900, startValue.Value);
-			Assert.AreEqual(950, endValue.Value);
+			Assert.That(startValue.Value, Is.EqualTo(900));
+			Assert.That(endValue.Value, Is.EqualTo(950));
 		}
 
 		[Test]
@@ -112,7 +112,7 @@ namespace Zaaml.UI.Test.Controls.Primitives.TrackBar
 
 			var ranges = trackBar.ItemCollection.OfType<TrackBarRangeItem>().Select(x => x.Range).ToArray();
 
-			Assert.True(ranges.SequenceEqual([100]));
+			Assert.That(ranges.SequenceEqual([100]), Is.True);
 
 			trackBar.ItemCollection.Add(new TrackBarRangeItem());
 			trackBar.ItemCollection.Add(new TrackBarRangeItem());
@@ -120,7 +120,7 @@ namespace Zaaml.UI.Test.Controls.Primitives.TrackBar
 
 			ranges = trackBar.ItemCollection.OfType<TrackBarRangeItem>().Select(x => x.Range).ToArray();
 
-			Assert.True(ranges.SequenceEqual([25, 25, 25, 25]));
+			Assert.That(ranges.SequenceEqual([25, 25, 25, 25]), Is.True);
 		}
 	}
 }

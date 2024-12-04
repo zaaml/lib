@@ -26,16 +26,16 @@ namespace Zaaml.Core.Test
 		[Test(Description = "TestRemoveSpan")]
 		public void TestRemoveSpan()
 		{
-			Assert.AreEqual("[5;15)", StrRemoveSpan("[10;20)", "[0;5)"));
-			Assert.AreEqual("[10;20)", StrRemoveSpan("[10;20)", "[25;30)"));
-			Assert.AreEqual("(Empty)", StrRemoveSpan("[10;20)", "[10;20)"));
-			Assert.AreEqual("(Empty)", StrRemoveSpan("[10;20)", "[0;30)"));
+			Assert.That(StrRemoveSpan("[10;20)", "[0;5)"), Is.EqualTo("[5;15)"));
+			Assert.That(StrRemoveSpan("[10;20)", "[25;30)"), Is.EqualTo("[10;20)"));
+			Assert.That(StrRemoveSpan("[10;20)", "[10;20)"), Is.EqualTo("(Empty)"));
+			Assert.That(StrRemoveSpan("[10;20)", "[0;30)"), Is.EqualTo("(Empty)"));
 			
-			Assert.AreEqual("[10;20)", StrRemoveSpan("[10;25)", "[15;20)"));
-			Assert.AreEqual("[10;15)", StrRemoveSpan("[10;25)", "[15;30)"));
-			Assert.AreEqual("[5;15)", StrRemoveSpan("[10;25)", "[5;15)"));
+			Assert.That(StrRemoveSpan("[10;25)", "[15;20)"), Is.EqualTo("[10;20)"));
+			Assert.That(StrRemoveSpan("[10;25)", "[15;30)"), Is.EqualTo("[10;15)"));
+			Assert.That(StrRemoveSpan("[10;25)", "[5;15)"), Is.EqualTo("[5;15)"));
 			
-			Assert.AreEqual("[0;1)", StrRemoveSpan("[1;2)", "[0;1)"));
+			Assert.That(StrRemoveSpan("[1;2)", "[0;1)"), Is.EqualTo("[0;1)"));
 		}
 
 		[Test(Description = "TestInsertSpan")]
@@ -43,10 +43,10 @@ namespace Zaaml.Core.Test
 		{
 			var r = StrInsertSpan("[10;20)", "[9;14)");
 
-			Assert.AreEqual("[15;25)", StrInsertSpan("[10;20)", "[0;5)"));
-			Assert.AreEqual("[10;20)", StrInsertSpan("[10;20)", "[20;25)"));
-			Assert.AreEqual("[10;25)", StrInsertSpan("[10;20)", "[19;24)"));
-			Assert.AreEqual("[15;25)", StrInsertSpan("[10;20)", "[9;14)"));
+			Assert.That(StrInsertSpan("[10;20)", "[0;5)"), Is.EqualTo("[15;25)"));
+			Assert.That(StrInsertSpan("[10;20)", "[20;25)"), Is.EqualTo("[10;20)"));
+			Assert.That(StrInsertSpan("[10;20)", "[19;24)"), Is.EqualTo("[10;25)"));
+			Assert.That(StrInsertSpan("[10;20)", "[9;14)"), Is.EqualTo("[15;25)"));
 		}
 	}
 

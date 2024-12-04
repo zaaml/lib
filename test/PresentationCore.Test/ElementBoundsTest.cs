@@ -27,7 +27,8 @@ namespace Zaaml.PresentationCore.Test
 				ScaleY = 2
 			};
 
-			Assert.AreEqual(new Rect(100, 100, 200, 200), elementBounds.TransformedBounds);
+			Rect a1 = new Rect(100, 100, 200, 200);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a1));
 
 			var applyTransform = elementBounds;
 			var applyTranslate = elementBounds;
@@ -37,18 +38,22 @@ namespace Zaaml.PresentationCore.Test
 			// ApplyTransform
 			applyTransform.ApplyTransform();
 
-			Assert.AreEqual(new Rect(100, 100, 200, 200), applyTransform.TransformedBounds);
-			Assert.AreEqual(new Rect(100, 100, 200, 200), applyTransform.Bounds);
+			Rect a2 = new Rect(100, 100, 200, 200);
+			Assert.That(applyTransform.TransformedBounds, Is.EqualTo(a2));
+			Rect a3 = new Rect(100, 100, 200, 200);
+			Assert.That(applyTransform.Bounds, Is.EqualTo(a3));
 
 			// ApplyTranslate
 			applyTranslate.ApplyTranslate();
 
-			Assert.AreEqual(new Rect(100, 100, 200, 200), applyTranslate.TransformedBounds);
+			Rect a4 = new Rect(100, 100, 200, 200);
+			Assert.That(applyTranslate.TransformedBounds, Is.EqualTo(a4));
 
 			// ApplyScale
 			applyScale.ApplyTransform();
 
-			Assert.AreEqual(new Rect(100, 100, 200, 200), applyScale.TransformedBounds);
+			Rect a5 = new Rect(100, 100, 200, 200);
+			Assert.That(applyScale.TransformedBounds, Is.EqualTo(a5));
 		}
 
 		[Test(Description = "TestBounds")]
@@ -66,24 +71,24 @@ namespace Zaaml.PresentationCore.Test
 			};
 
 			// Check relative center
-			Assert.AreEqual(elementBounds.RelativeCenterX, 1.0);
-			Assert.AreEqual(elementBounds.RelativeCenterY, 1.0);
+			Assert.That(1.0, Is.EqualTo(elementBounds.RelativeCenterX));
+			Assert.That(1.0, Is.EqualTo(elementBounds.RelativeCenterY));
 
 			var transformedBounds = elementBounds.TransformedBounds;
 			var expectedBounds = new Rect(-100, -100, 200, 200);
 
 			// Check bounds
-			Assert.AreEqual(transformedBounds, expectedBounds);
+			Assert.That(expectedBounds, Is.EqualTo(transformedBounds));
 
 			// Check transformed center
-			Assert.AreEqual(elementBounds.TransformedCenter, transformedBounds.GetBottomRight());
+			Assert.That(transformedBounds.GetBottomRight(), Is.EqualTo(elementBounds.TransformedCenter));
 
 			elementBounds.Bounds = new Rect();
 
 			elementBounds.TransformedBounds = transformedBounds;
 
 			// Check transformation
-			Assert.AreEqual(originalBounds, elementBounds.Bounds);
+			Assert.That(elementBounds.Bounds, Is.EqualTo(originalBounds));
 		}
 
 		[Test(Description = "TestCenter")]
@@ -101,20 +106,20 @@ namespace Zaaml.PresentationCore.Test
 			var transformedBounds = elementBounds.TransformedBounds;
 
 			// Check center
-			Assert.AreEqual(elementBounds.CenterX, transformedBounds.Right);
-			Assert.AreEqual(elementBounds.CenterY, transformedBounds.Bottom);
+			Assert.That(transformedBounds.Right, Is.EqualTo(elementBounds.CenterX));
+			Assert.That(transformedBounds.Bottom, Is.EqualTo(elementBounds.CenterY));
 
 			// Check local center
-			Assert.AreEqual(elementBounds.LocalCenterX, elementBounds.Bounds.Width);
-			Assert.AreEqual(elementBounds.LocalCenterY, elementBounds.Bounds.Height);
+			Assert.That(elementBounds.Bounds.Width, Is.EqualTo(elementBounds.LocalCenterX));
+			Assert.That(elementBounds.Bounds.Height, Is.EqualTo(elementBounds.LocalCenterY));
 
 			// Change local center
 			elementBounds.LocalCenterX = 50;
 			elementBounds.LocalCenterY = 50;
 
 			// Check relative center
-			Assert.AreEqual(0.5, elementBounds.RelativeCenterX);
-			Assert.AreEqual(0.5, elementBounds.RelativeCenterY);
+			Assert.That(elementBounds.RelativeCenterX, Is.EqualTo(0.5));
+			Assert.That(elementBounds.RelativeCenterY, Is.EqualTo(0.5));
 		}
 
 		[Test(Description = "TestCenterScale")]
@@ -132,13 +137,15 @@ namespace Zaaml.PresentationCore.Test
 
 			elementBounds.Scale(1.5, 1.5, 300, 300);
 
-			Assert.AreEqual(originalBounds, elementBounds.Bounds);
-			Assert.AreEqual(new Rect(150, 150, 600, 600), elementBounds.TransformedBounds);
+			Assert.That(elementBounds.Bounds, Is.EqualTo(originalBounds));
+			Rect a1 = new Rect(150, 150, 600, 600);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a1));
 
 			elementBounds.ChangeRelativeCenterPreserveTransform(0.5, 0.5);
 
-			Assert.AreEqual(originalBounds, elementBounds.Bounds);
-			Assert.AreEqual(new Rect(150, 150, 600, 600), elementBounds.TransformedBounds);
+			Assert.That(elementBounds.Bounds, Is.EqualTo(originalBounds));
+			Rect a2 = new Rect(150, 150, 600, 600);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a2));
 		}
 
 
@@ -158,22 +165,26 @@ namespace Zaaml.PresentationCore.Test
 
 			elementBounds.Scale(2, 2, 400, 400);
 
-			Assert.AreEqual(originalBounds, elementBounds.Bounds);
-			Assert.AreEqual(elementBounds.Center, originalCenter);
-			Assert.AreEqual(new Rect(-400, -400, 800, 800), elementBounds.TransformedBounds);
+			Assert.That(elementBounds.Bounds, Is.EqualTo(originalBounds));
+			Assert.That(originalCenter, Is.EqualTo(elementBounds.Center));
+			Rect a1 = new Rect(-400, -400, 800, 800);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a1));
 
 			elementBounds.ChangeTranslatePreserveTransform(-200, -200);
 
-			Assert.AreEqual(new Rect(-400, -400, 800, 800), elementBounds.TransformedBounds);
+			Rect a2 = new Rect(-400, -400, 800, 800);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a2));
 
 			elementBounds.Scale(4, 4, 400, 400);
 
-			Assert.AreEqual(originalBounds, elementBounds.Bounds);
-			Assert.AreEqual(new Rect(-1200, -1200, 1600, 1600), elementBounds.TransformedBounds);
+			Assert.That(elementBounds.Bounds, Is.EqualTo(originalBounds));
+			Rect a3 = new Rect(-1200, -1200, 1600, 1600);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a3));
 
 			elementBounds.ChangeRelativeCenterPreserveTransform(1, 1);
 
-			Assert.AreEqual(new Rect(-1200, -1200, 1600, 1600), elementBounds.TransformedBounds);
+			Rect a4 = new Rect(-1200, -1200, 1600, 1600);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a4));
 		}
 
 		[Test(Description = "TestScale2")]
@@ -192,8 +203,9 @@ namespace Zaaml.PresentationCore.Test
 
 			elementBounds.Scale(8, 8, 400, 400);
 
-			Assert.AreEqual(originalBounds, elementBounds.Bounds);
-			Assert.AreEqual(new Rect(1400, 1400, 1600, 1600), elementBounds.TransformedBounds);
+			Assert.That(elementBounds.Bounds, Is.EqualTo(originalBounds));
+			Rect a1 = new Rect(1400, 1400, 1600, 1600);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a1));
 		}
 
 		[Test(Description = "TestScalePreserve")]
@@ -212,8 +224,9 @@ namespace Zaaml.PresentationCore.Test
 
 			elementBounds.Scale(2, 2, 200, 200);
 
-			Assert.AreEqual(originalBounds, elementBounds.Bounds);
-			Assert.AreEqual(new Rect(0, 0, 800, 800), elementBounds.TransformedBounds);
+			Assert.That(elementBounds.Bounds, Is.EqualTo(originalBounds));
+			Rect a1 = new Rect(0, 0, 800, 800);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a1));
 
 			elementBounds.Scale(4, 4, 300, 200);
 		}
@@ -233,20 +246,21 @@ namespace Zaaml.PresentationCore.Test
 			};
 
 			// Check transformed center
-			Assert.AreEqual(elementBounds.TransformedCenter, elementBounds.TransformedBounds.GetCenter());
+			Assert.That(elementBounds.TransformedBounds.GetCenter(), Is.EqualTo(elementBounds.TransformedCenter));
 
 			elementBounds.TransformedCenterX = elementBounds.TransformedBounds.Right;
 			elementBounds.TransformedCenterY = elementBounds.TransformedBounds.Bottom;
 
 			// Check relative center
-			Assert.AreEqual(1.0, elementBounds.RelativeCenterX);
-			Assert.AreEqual(1.0, elementBounds.RelativeCenterY);
+			Assert.That(elementBounds.RelativeCenterX, Is.EqualTo(1.0));
+			Assert.That(elementBounds.RelativeCenterY, Is.EqualTo(1.0));
 
 			elementBounds.RelativeCenter = new Point(0, 0);
 			elementBounds.TransformedLocalCenter = new Point(100, 100);
 
 			// Check relative center
-			Assert.AreEqual(new Point(0.5, 0.5), elementBounds.RelativeCenter);
+			Point a1 = new Point(0.5, 0.5);
+			Assert.That(elementBounds.RelativeCenter, Is.EqualTo(a1));
 		}
 
 		[Test(Description = "TestTranslate")]
@@ -265,11 +279,13 @@ namespace Zaaml.PresentationCore.Test
 				ScaleY = 2
 			};
 
-			Assert.AreEqual(new Rect(100, 100, 200, 200), elementBounds.TransformedBounds);
+			Rect a1 = new Rect(100, 100, 200, 200);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a1));
 
 			elementBounds.Center = elementBounds.Translate;
 
-			Assert.AreEqual(new Rect(0, 0, 200, 200), elementBounds.TransformedBounds);
+			Rect a2 = new Rect(0, 0, 200, 200);
+			Assert.That(elementBounds.TransformedBounds, Is.EqualTo(a2));
 		}
 	}
 }

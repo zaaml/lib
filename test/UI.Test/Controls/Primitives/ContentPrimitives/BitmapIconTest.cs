@@ -35,7 +35,7 @@ namespace Zaaml.UI.Test.Controls.Primitives.ContentPrimitives
 				Icon = icon
 			});
 
-			Assert.AreEqual(iconSize, icon.RenderSize);
+			Assert.That(icon.RenderSize, Is.EqualTo(iconSize));
 		}
 	}
 }

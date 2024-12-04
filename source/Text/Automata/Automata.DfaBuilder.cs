@@ -47,6 +47,25 @@ namespace Zaaml.Text
 				return dfa;
 			}
 
+			public MemorySpan<int> CreateExecutionRail(ExecutionPath executionPath)
+			{
+				var span = _railPathAllocator.Allocate(1);
+
+				span[0] = executionPath.Id;
+
+				return span;
+			}
+
+			public MemorySpan<int> CreateExecutionRail(IReadOnlyList<ExecutionPath> executionPathList)
+			{
+				var span = _railPathAllocator.Allocate(executionPathList.Count);
+
+				for (var i = 0; i < executionPathList.Count; i++) 
+					span[i] = executionPathList[i].Id;
+
+				return span;
+			}
+
 			public DfaState GetDfa(Node node, Span<int> stack, DfaState sourceDfa, bool next)
 			{
 				var depth = sourceDfa?.Depth ?? node.DfaDepth;
@@ -120,7 +139,7 @@ namespace Zaaml.Text
 				return new NfaState(dfaTransitions, BuildPrefixExecutionList(dfa, dfaTransitions));
 			}
 
-			private static int GetPrefixLength(DfaTransition[] transitions)
+			private static int GetPrefixLength(Span<DfaTransition> transitions)
 			{
 				var prefixLength = 0;
 
@@ -203,7 +222,7 @@ namespace Zaaml.Text
 				}
 			}
 
-			public ExecutionRailNode BuildPrefixExecutionList(DfaState sourceDfa, DfaTransition[] transitions)
+			public ExecutionRailNode BuildPrefixExecutionList(DfaState sourceDfa, Span<DfaTransition> transitions)
 			{
 				var prefixLength = GetPrefixLength(transitions);
 

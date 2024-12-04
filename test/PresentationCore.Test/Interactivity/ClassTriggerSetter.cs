@@ -16,23 +16,23 @@ namespace Zaaml.PresentationCore.Test.Interactivity
 		{
 			var control = new ClassTriggerSetterTestControl().TestChildControl;
 
-			Assert.AreEqual(0, control.Input1);
-			Assert.AreEqual(0, control.Input2);
+			Assert.That(control.Input1, Is.EqualTo(0));
+			Assert.That(control.Input2, Is.EqualTo(0));
 
 			Extension.AddClass(control, "in1");
 
-			Assert.AreEqual(1, control.Input1);
-			Assert.AreEqual(0, control.Input2);
+			Assert.That(control.Input1, Is.EqualTo(1));
+			Assert.That(control.Input2, Is.EqualTo(0));
 
 			Extension.AddClass(control, "in2");
 
-			Assert.AreEqual(1, control.Input1);
-			Assert.AreEqual(2, control.Input2);
+			Assert.That(control.Input1, Is.EqualTo(1));
+			Assert.That(control.Input2, Is.EqualTo(2));
 
 			Extension.RemoveClass(control, "in1");
 
-			Assert.AreEqual(0, control.Input1);
-			Assert.AreEqual(2, control.Input2);
+			Assert.That(control.Input1, Is.EqualTo(0));
+			Assert.That(control.Input2, Is.EqualTo(2));
 		}
 	}
 }

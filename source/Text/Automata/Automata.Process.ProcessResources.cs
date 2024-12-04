@@ -39,7 +39,6 @@ namespace Zaaml.Text
 				public readonly AutomataStackCleaner.NodePool AutomataStackCleanNodePool = new();
 				public readonly PrecedenceStackCleaner.NodePool PrecedenceStackCleanerNodePool = new();
 				public readonly PrecedenceContextCleaner.NodePool PrecedenceContextCleanerNodePool = new();
-				public readonly ResetForkNodePool ResetForkNodePool = new();
 
 				private ProcessResources(Automata<TInstruction, TOperand> automata)
 				{

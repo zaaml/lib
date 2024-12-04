@@ -2,8 +2,6 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
-// ReSharper disable ForCanBeConvertedToForeach
-
 using System;
 using System.Linq;
 using System.Reflection;
@@ -22,12 +20,12 @@ namespace Zaaml.Text
 			private protected partial struct Thread
 			{
 				public static readonly FieldInfo StackField = typeof(Thread).GetField(nameof(Stack), BF.IPNP);
+				public DfaState Dfa;
+				public ExecutionRailNode ExecutionRailNode;
 
 				public Node Node;
-				public DfaState Dfa;
-				public AutomataStack Stack;
 				public PrecedenceContext Precedence;
-				public ExecutionRailNode ExecutionRailNode;
+				public AutomataStack Stack;
 
 				public Thread(Node node, AutomataStack stack)
 				{
@@ -74,6 +72,118 @@ namespace Zaaml.Text
 					ExecutionRailNode.Dispose();
 				}
 
+				[UsedImplicitly]
+				private static string DumpForkPaths(ref Thread thread, ref ThreadContext context, ExecutionRailList executionPaths)
+				{
+					var stringBuilder = new StringBuilder();
+					var count = executionPaths.Count;
+
+					for (var i = 0; i < count; i++)
+					{
+						executionPaths = executionPaths.MoveNext(out var railNode);
+
+						stringBuilder.Append($"ForkPath: {i + 1}\r\n");
+						stringBuilder.Append(DumpPath(ref thread, ref context, railNode.ExecutionRail));
+						stringBuilder.Append("\r\n--------------------------------------------------------------\r\n");
+					}
+
+					return stringBuilder.ToString();
+				}
+
+				[UsedImplicitly]
+				private static string DumpPath(ref Thread thread, ref ThreadContext context, MemorySpan<int> executionPath)
+				{
+					var contextExecutionPathRegistry = context.ExecutionPathRegistry;
+
+					return string.Join("\r\n", executionPath.SpanSafe.ToArray().SelectMany(e => contextExecutionPathRegistry[e].Nodes).Select(n => n.ToString()));
+				}
+
+				[UsedImplicitly]
+				private static string DumpTrace(ref Thread thread, ref ThreadContext context)
+				{
+					if (context.Index > 0)
+					{
+						ref var prevContext = ref context.Process.PrevThreadContext();
+						ref var prevThread = ref context.Process.PrevThread();
+						var prevPosition = prevContext.InstructionStreamPosition;
+						var currPosition = context.InstructionStreamPosition;
+						var prevPointer = prevContext.InstructionStreamPointer;
+						var currPointer = context.InstructionStreamPointer;
+
+						var text = context.InstructionStream.Dump(prevPosition, currPosition - prevPosition);
+					}
+
+					var prevInstructionPointer = context.Index == 0 ? 0 : context.Process.PrevThreadContext().ExecutionStreamPointer;
+					var executionTrace = context.ExecutionStream.GetSpan(prevInstructionPointer, context.ExecutionStreamPointer - prevInstructionPointer);
+					var contextExecutionPathRegistry = context.ExecutionPathRegistry;
+
+					return string.Join("\r\n", executionTrace.ToArray().SelectMany(e => contextExecutionPathRegistry[e].Nodes).Select(n => n.ToString()));
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public Thread Fork(ExecutionRailNode executionRailNode)
+				{
+					var stack = Stack;
+					var precedence = Precedence;
+
+					Stack = stack.Fork();
+					Precedence = precedence.Fork();
+
+					return new Thread(Dfa, Node, stack, precedence, executionRailNode);
+				}
+
+				private ThreadStatusKind ForkThreadNode(ForkNode forkNode, ReadOnlySpan<int> executionPaths, ref ThreadContext context)
+				{
+					throw Error.Refactoring;
+
+					//var forkPredicateResult = (IForkPredicateResult)forkNode.PredicateResult;
+					//var startNode = forkNode.PredicateNode;
+					//var processResources = context.Process._processResources;
+					//var forkPaths = processResources.ExecutionPathSpanAllocator.Allocate(executionPaths.Length * 2 + 2);
+					//var forkPathsSpan = forkPaths.Span;
+					//var forkPathsHead = 0;
+
+					//for (var i = 0; i <= 1; i++)
+					//{
+					//	var predicateEntry = i == 0 ? forkPredicateResult.First : forkPredicateResult.Second;
+					//	var predicateNode = processResources.ForkPredicateNodePool.Rent().Mount(predicateEntry);
+					//	var predicateExecutionPath = processResources.ForkExecutionPathPool.Rent().Mount(startNode, predicateNode);
+
+					//	predicateNode.CopyLookup(forkNode);
+
+					//	forkPathsSpan[forkPathsHead++] = predicateExecutionPath.Id;
+
+					//	foreach (var executionPath in executionPaths)
+					//		forkPathsSpan[forkPathsHead++] = executionPath;
+					//}
+
+					//forkNode.Release();
+
+					//return context.Process.ForkThread(ref this, ref context, forkPaths, forkPathsHead);
+				}
+
+				private int GetBacktrackingLength(ref ThreadContext context)
+				{
+					if (context.Index == 0)
+						return context.InstructionStreamPointer;
+
+					ref var prevContext = ref context.Process.PrevThreadContext();
+
+					return context.InstructionStreamPointer - prevContext.InstructionStreamPointer;
+				}
+
+				private void LeavePrecedence(int precedenceEnterNodeId)
+				{
+					var precedenceLeaveNode = (PrecedenceLeaveNode)Node.Automata._nodeRegistry[precedenceEnterNodeId];
+
+					Precedence.Leave(precedenceLeaveNode.Precedence);
+				}
+
+				private void LeavePrecedenceCode(int precedenceCode)
+				{
+					Precedence.LeaveCode(precedenceCode);
+				}
+
 				private ThreadStatusKind Run(ref ThreadContext context, ReadOnlySpan<int> executionPaths)
 				{
 					context.InstructionStream.UnlockPointer(context.InstructionStreamPointer);
@@ -108,68 +218,16 @@ namespace Zaaml.Text
 					return Node.ThreadStatusKind;
 				}
 
-				private bool TryEnterPrecedence(int precedenceEnterNodeId)
-				{
-					var precedenceEnterNode = (PrecedenceEnterNode)Node.Automata._nodeRegistry[precedenceEnterNodeId];
-
-					return Precedence.TryEnter(precedenceEnterNode.Precedence);
-				}
-
-				private bool TryEnterPrecedenceCode(int precedenceCode)
-				{
-					return Precedence.TryEnterCode(precedenceCode);
-				}
-
-				private void LeavePrecedenceCode(int precedenceCode)
-				{
-					Precedence.LeaveCode(precedenceCode);
-				}
-
-				private void LeavePrecedence(int precedenceEnterNodeId)
-				{
-					var precedenceLeaveNode = (PrecedenceLeaveNode)Node.Automata._nodeRegistry[precedenceEnterNodeId];
-
-					Precedence.Leave(precedenceLeaveNode.Precedence);
-				}
-
-				private ThreadStatusKind ForkThreadNode(ForkNode forkNode, ReadOnlySpan<int> executionPaths, ref ThreadContext context)
-				{
-					throw Error.Refactoring;
-
-					//var forkPredicateResult = (IForkPredicateResult)forkNode.PredicateResult;
-					//var startNode = forkNode.PredicateNode;
-					//var processResources = context.Process._processResources;
-					//var forkPaths = processResources.ExecutionPathSpanAllocator.Allocate(executionPaths.Length * 2 + 2);
-					//var forkPathsSpan = forkPaths.Span;
-					//var forkPathsHead = 0;
-
-					//for (var i = 0; i <= 1; i++)
-					//{
-					//	var predicateEntry = i == 0 ? forkPredicateResult.First : forkPredicateResult.Second;
-					//	var predicateNode = processResources.ForkPredicateNodePool.Rent().Mount(predicateEntry);
-					//	var predicateExecutionPath = processResources.ForkExecutionPathPool.Rent().Mount(startNode, predicateNode);
-
-					//	predicateNode.CopyLookup(forkNode);
-
-					//	forkPathsSpan[forkPathsHead++] = predicateExecutionPath.Id;
-
-					//	foreach (var executionPath in executionPaths)
-					//		forkPathsSpan[forkPathsHead++] = executionPath;
-					//}
-
-					//forkNode.Release();
-
-					//return context.Process.ForkThread(ref this, ref context, forkPaths, forkPathsHead);
-				}
-
 				public ThreadStatusKind Run(ref ThreadContext context)
 				{
 					var startExecutionRailNode = ExecutionRailNode;
 					var startExecutionRail = startExecutionRailNode.ExecutionRail;
+#if false
 					var pointer = context.InstructionStreamPointer;
 					var position = context.InstructionStreamPosition;
 					var startNode = Node;
-					
+#endif
+
 					ExecutionRailNodeStat runStat = default;
 
 					if (startExecutionRail.IsEmpty == false)
@@ -181,12 +239,9 @@ namespace Zaaml.Text
 							Dfa = startExecutionRailNode.Dfa;
 
 							runStat = startExecutionRailNode.RunStat;
-							
+
 							if (entryStatus != ThreadStatusKind.Run)
 							{
-								if (entryStatus == ThreadStatusKind.Block)
-									return ThreadStatusKind.Block;
-
 								if (entryStatus == ThreadStatusKind.Finished && context.Process._processKind == ProcessKind.SubProcess)
 									return entryStatus;
 
@@ -207,8 +262,7 @@ namespace Zaaml.Text
 
 					while (true)
 					{
-						if (context.IsCompleteBlock)
-							return ThreadStatusKind.Block;
+						process._telemetry?.LookupPath();
 
 						switch (executionRailBuilder.Build(ref this, ref context, transitionBuilder))
 						{
@@ -217,9 +271,12 @@ namespace Zaaml.Text
 								var executionTrace = DumpTrace(ref this, ref context);
 								context.InstructionStream.Dump(position, context.InstructionStreamPosition - position)
 #endif
+
+#if false
 								var backtrackingLength = context.InstructionStreamPointer - pointer;
 
 								runStat?.Fail(backtrackingLength);
+#endif
 
 #if false
 								DumpTrace(ref this, ref context);
@@ -227,19 +284,21 @@ namespace Zaaml.Text
 
 								Dfa = default;
 
+#if false
 								process._telemetry?.Backtracking(backtrackingLength);
+#endif
 
 								return Node.ThreadStatusKind == ThreadStatusKind.Finished ? ThreadStatusKind.Finished : ThreadStatusKind.Unexpected;
 
 							case 1:
-#if false
-								var fp = DumpPath(ref this, ref context, executionPaths.ExecutionRail);
-#endif
-
 								Dfa = executionRailBuilder.Dfa;
 
 								var executionPaths = executionRailBuilder.ExecutionRail.SpanSafe;
-								
+
+#if false
+								var fp = DumpPath(ref this, ref context, executionRailBuilder.ExecutionRail);
+#endif
+
 								if (Run(ref context, executionPaths) == ThreadStatusKind.Run)
 									continue;
 
@@ -250,9 +309,20 @@ namespace Zaaml.Text
 
 							default:
 
+#if false
 								process._telemetry?.Fork();
+#endif
 
 								var executionRailList = executionRailBuilder.DetachRailList();
+
+								//if (executionRailList.Prefix != null)
+								//{
+								//	var prefixExecutionPaths = executionRailList.Prefix.ExecutionRail.SpanSafe;
+								//	var status = Run(ref context, prefixExecutionPaths);
+
+								//	if (status != ThreadStatusKind.Run)
+								//		throw new InvalidOperationException();
+								//}
 
 								Dfa = default;
 
@@ -264,84 +334,26 @@ namespace Zaaml.Text
 					}
 				}
 
-				private int GetBacktrackingLength(ref ThreadContext context)
-				{
-					if (context.Index == 0)
-						return context.InstructionStreamPointer;
-
-					ref var prevContext = ref context.Process._threads.PrevContext();
-
-					return context.InstructionStreamPointer - prevContext.InstructionStreamPointer;
-				}
-
-				[UsedImplicitly]
-				private static string DumpTrace(ref Thread thread, ref ThreadContext context)
-				{
-					if (context.Index > 0)
-					{
-						ref var prevContext = ref context.Process._threads.PrevContext();
-						ref var prevThread = ref context.Process._threads.PrevThread();
-						var prevPosition = prevContext.InstructionStreamPosition;
-						var currPosition = context.InstructionStreamPosition;
-						var prevPointer = prevContext.InstructionStreamPointer;
-						var currPointer = context.InstructionStreamPointer;
-
-						var text = context.InstructionStream.Dump(prevPosition, currPosition - prevPosition);
-					}
-
-					var prevInstructionPointer = context.Index == 0 ? 0 : context.Process._threads.PrevContext().ExecutionStreamPointer;
-					var executionTrace = context.ExecutionStream.GetSpan(prevInstructionPointer, context.ExecutionStreamPointer - prevInstructionPointer);
-					var contextExecutionPathRegistry = context.ExecutionPathRegistry;
-
-					return string.Join("\r\n", executionTrace.ToArray().SelectMany(e => contextExecutionPathRegistry[e].Nodes).Select(n => n.ToString()));
-				}
-
-				[UsedImplicitly]
-				private static string DumpForkPaths(ref Thread thread, ref ThreadContext context, ExecutionRailList executionPaths)
-				{
-					var stringBuilder = new StringBuilder();
-					var count = executionPaths.Count;
-
-					for (var i = 0; i < count; i++)
-					{
-						executionPaths = executionPaths.MoveNext(out var railNode);
-
-						stringBuilder.Append($"ForkPath: {i + 1}\r\n");
-						stringBuilder.Append(DumpPath(ref thread, ref context, railNode.ExecutionRail));
-						stringBuilder.Append("\r\n--------------------------------------------------------------\r\n");
-					}
-
-					return stringBuilder.ToString();
-				}
-
-				[UsedImplicitly]
-				private static string DumpPath(ref Thread thread, ref ThreadContext context, MemorySpan<int> executionPath)
-				{
-					var contextExecutionPathRegistry = context.ExecutionPathRegistry;
-
-					return string.Join("\r\n", executionPath.SpanSafe.ToArray().SelectMany(e => contextExecutionPathRegistry[e].Nodes).Select(n => n.ToString()));
-				}
-
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				public void StackForkExchange(ref Thread threadSource)
 				{
-					Stack.Unfork(threadSource.Stack);
-					Precedence.Unfork(threadSource.Precedence);
+					Stack.StackExchange(threadSource.Stack);
+					Precedence.StackExchange(threadSource.Precedence);
 
 					(Stack, threadSource.Stack) = (threadSource.Stack, Stack);
 					(Precedence, threadSource.Precedence) = (threadSource.Precedence, Precedence);
 				}
 
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				public Thread Fork(ExecutionRailNode executionRailNode)
+				private bool TryEnterPrecedence(int precedenceEnterNodeId)
 				{
-					var stack = Stack;
-					var precedence = Precedence;
+					var precedenceEnterNode = (PrecedenceEnterNode)Node.Automata._nodeRegistry[precedenceEnterNodeId];
 
-					Stack = stack.Fork();
-					Precedence = precedence.Fork();
+					return Precedence.TryEnter(precedenceEnterNode.Precedence);
+				}
 
-					return new Thread(Dfa, Node, stack, precedence, executionRailNode);
+				private bool TryEnterPrecedenceCode(int precedenceCode)
+				{
+					return Precedence.TryEnterCode(precedenceCode);
 				}
 			}
 		}

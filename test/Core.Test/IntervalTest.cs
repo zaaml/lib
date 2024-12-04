@@ -19,20 +19,20 @@ namespace Zaaml.Core.Test
 			// Closed bounds
 			var r1 = new Interval<int>(2, 8);
 
-			Assert.True(r1.Contains(new Interval<int>(2, 8)));
-			Assert.True(r1.Contains(new Interval<int>(2, IntervalEndPoint.Open, 8, IntervalEndPoint.Open)));
-			Assert.True(r1.Contains(new Interval<int>(3, 7)));
-			Assert.False(r1.Contains(new Interval<int>(3, 9)));
-			Assert.False(r1.Contains(new Interval<int>(1, 7)));
+			Assert.That(r1.Contains(new Interval<int>(2, 8)), Is.True);
+			Assert.That(r1.Contains(new Interval<int>(2, IntervalEndPoint.Open, 8, IntervalEndPoint.Open)), Is.True);
+			Assert.That(r1.Contains(new Interval<int>(3, 7)), Is.True);
+			Assert.That(r1.Contains(new Interval<int>(3, 9)), Is.False);
+			Assert.That(r1.Contains(new Interval<int>(1, 7)), Is.False);
 
 			// Open bounds
 			r1 = new Interval<int>(2, IntervalEndPoint.Open, 8, IntervalEndPoint.Open);
 
-			Assert.False(r1.Contains(new Interval<int>(2, 8)));
-			Assert.True(r1.Contains(new Interval<int>(2, IntervalEndPoint.Open, 8, IntervalEndPoint.Open)));
-			Assert.True(r1.Contains(new Interval<int>(3, 7)));
-			Assert.False(r1.Contains(new Interval<int>(3, 9)));
-			Assert.False(r1.Contains(new Interval<int>(1, 7)));
+			Assert.That(r1.Contains(new Interval<int>(2, 8)), Is.False);
+			Assert.That(r1.Contains(new Interval<int>(2, IntervalEndPoint.Open, 8, IntervalEndPoint.Open)), Is.True);
+			Assert.That(r1.Contains(new Interval<int>(3, 7)), Is.True);
+			Assert.That(r1.Contains(new Interval<int>(3, 9)), Is.False);
+			Assert.That(r1.Contains(new Interval<int>(1, 7)), Is.False);
 		}
 
 		[Test(Description = "TestContainsValue")]
@@ -41,47 +41,47 @@ namespace Zaaml.Core.Test
 			// Closed bounds
 			var r1 = new Interval<int>(2, 8);
 
-			Assert.True(r1.Contains(2));
-			Assert.True(r1.Contains(8));
-			Assert.True(r1.Contains(3));
-			Assert.True(r1.Contains(7));
-			Assert.False(r1.Contains(1));
-			Assert.False(r1.Contains(9));
+			Assert.That(r1.Contains(2), Is.True);
+			Assert.That(r1.Contains(8), Is.True);
+			Assert.That(r1.Contains(3), Is.True);
+			Assert.That(r1.Contains(7), Is.True);
+			Assert.That(r1.Contains(1), Is.False);
+			Assert.That(r1.Contains(9), Is.False);
 
 			// Open bounds
 			r1 = new Interval<int>(2, IntervalEndPoint.Open, 8, IntervalEndPoint.Open);
 
-			Assert.False(r1.Contains(2));
-			Assert.False(r1.Contains(8));
+			Assert.That(r1.Contains(2), Is.False);
+			Assert.That(r1.Contains(8), Is.False);
 
-			Assert.True(r1.Contains(3));
-			Assert.True(r1.Contains(7));
-			Assert.False(r1.Contains(1));
-			Assert.False(r1.Contains(9));
+			Assert.That(r1.Contains(3), Is.True);
+			Assert.That(r1.Contains(7), Is.True);
+			Assert.That(r1.Contains(1), Is.False);
+			Assert.That(r1.Contains(9), Is.False);
 
 			// Unbounded Minimum
 			r1 = new Interval<int>(2, IntervalEndPoint.Unbounded, 8, IntervalEndPoint.Closed);
 
-			Assert.True(r1.Contains(3));
-			Assert.True(r1.Contains(0));
-			Assert.False(r1.Contains(9));
+			Assert.That(r1.Contains(3), Is.True);
+			Assert.That(r1.Contains(0), Is.True);
+			Assert.That(r1.Contains(9), Is.False);
 
 			// Unbounded Maximum
 			r1 = new Interval<int>(2, IntervalEndPoint.Closed, 8, IntervalEndPoint.Unbounded);
 
-			Assert.True(r1.Contains(3));
-			Assert.False(r1.Contains(0));
-			Assert.True(r1.Contains(9));
+			Assert.That(r1.Contains(3), Is.True);
+			Assert.That(r1.Contains(0), Is.False);
+			Assert.That(r1.Contains(9), Is.True);
 
 			// Unbounded
 			r1 = new Interval<int>(2, IntervalEndPoint.Unbounded, 8, IntervalEndPoint.Unbounded);
 
-			Assert.True(r1.Contains(2));
-			Assert.True(r1.Contains(8));
-			Assert.True(r1.Contains(3));
-			Assert.True(r1.Contains(7));
-			Assert.True(r1.Contains(1));
-			Assert.True(r1.Contains(9));
+			Assert.That(r1.Contains(2), Is.True);
+			Assert.That(r1.Contains(8), Is.True);
+			Assert.That(r1.Contains(3), Is.True);
+			Assert.That(r1.Contains(7), Is.True);
+			Assert.That(r1.Contains(1), Is.True);
+			Assert.That(r1.Contains(9), Is.True);
 		}
 
 		[Test(Description = "TestFlags")]
@@ -89,20 +89,20 @@ namespace Zaaml.Core.Test
 		{
 			var r1 = new Interval<int>(0, IntervalEndPoint.Open, 1, IntervalEndPoint.Open);
 
-			Assert.AreEqual(IntervalEndPoint.Open, r1.MinimumPoint);
-			Assert.AreEqual(IntervalEndPoint.Open, r1.MaximumPoint);
-			Assert.False(r1.IsEmpty);
+			Assert.That(r1.MinimumPoint, Is.EqualTo(IntervalEndPoint.Open));
+			Assert.That(r1.MaximumPoint, Is.EqualTo(IntervalEndPoint.Open));
+			Assert.That(r1.IsEmpty, Is.False);
 
 			var r2 = new Interval<int>(1, IntervalEndPoint.Closed, 0, IntervalEndPoint.Closed);
 
-			Assert.AreEqual(IntervalEndPoint.Closed, r2.MinimumPoint);
-			Assert.AreEqual(IntervalEndPoint.Closed, r2.MaximumPoint);
-			Assert.True(r2.IsEmpty);
+			Assert.That(r2.MinimumPoint, Is.EqualTo(IntervalEndPoint.Closed));
+			Assert.That(r2.MaximumPoint, Is.EqualTo(IntervalEndPoint.Closed));
+			Assert.That(r2.IsEmpty, Is.True);
 
 			var r3 = new Interval<int>(0, IntervalEndPoint.Unbounded, 1, IntervalEndPoint.Unbounded);
 
-			Assert.AreEqual(IntervalEndPoint.Unbounded, r3.MinimumPoint);
-			Assert.AreEqual(IntervalEndPoint.Unbounded, r3.MaximumPoint);
+			Assert.That(r3.MinimumPoint, Is.EqualTo(IntervalEndPoint.Unbounded));
+			Assert.That(r3.MaximumPoint, Is.EqualTo(IntervalEndPoint.Unbounded));
 		}
 
 		[Test(Description = "TestIntersection")]
@@ -113,59 +113,59 @@ namespace Zaaml.Core.Test
 
 			var i = Interval.Intersect(r1, r2);
 
-			Assert.AreEqual("[4;8]", i.ToString());
+			Assert.That(i.ToString(), Is.EqualTo("[4;8]"));
 
 			i = Interval.Intersect(r2, r1);
 
-			Assert.AreEqual("[4;8]", i.ToString());
+			Assert.That(i.ToString(), Is.EqualTo("[4;8]"));
 
 			r2 = new Interval<int>(2, 8);
 			i = Interval.Intersect(r1, r2);
 
-			Assert.AreEqual("[2;8]", i.ToString());
+			Assert.That(i.ToString(), Is.EqualTo("[2;8]"));
 
 			r1 = new Interval<int>(2, IntervalEndPoint.Open, 8, IntervalEndPoint.Open);
 			i = Interval.Intersect(r1, r2);
 
-			Assert.AreEqual("(2;8)", i.ToString());
+			Assert.That(i.ToString(), Is.EqualTo("(2;8)"));
 
 			r1 = new Interval<int>(1, IntervalEndPoint.Closed, 9, IntervalEndPoint.Closed);
 			i = Interval.Intersect(r1, r2);
 
-			Assert.AreEqual("[2;8]", i.ToString());
+			Assert.That(i.ToString(), Is.EqualTo("[2;8]"));
 
 			r2 = new Interval<int>(2, IntervalEndPoint.Open, 8, IntervalEndPoint.Open);
 			i = Interval.Intersect(r1, r2);
 
-			Assert.AreEqual("(2;8)", i.ToString());
+			Assert.That(i.ToString(), Is.EqualTo("(2;8)"));
 
 			r1 = new Interval<int>(2, 8);
 			r2 = new Interval<int>(8, 10);
 
 			i = Interval.Intersect(r1, r2);
 
-			Assert.AreEqual("[8;8]", i.ToString());
+			Assert.That(i.ToString(), Is.EqualTo("[8;8]"));
 
 			r1 = new Interval<int>(2, IntervalEndPoint.Closed, 8, IntervalEndPoint.Open);
 			i = Interval.Intersect(r1, r2);
 
-			Assert.AreEqual("[8;8)", i.ToString());
-			Assert.True(i.IsEmpty);
-			Assert.False(i.Contains(8));
+			Assert.That(i.ToString(), Is.EqualTo("[8;8)"));
+			Assert.That(i.IsEmpty, Is.True);
+			Assert.That(i.Contains(8), Is.False);
 
 			r1 = Interval.CreateMinimumUnbounded(8);
 			r2 = Interval.CreateMaximumUnbounded(2);
 			i = Interval.Intersect(r1, r2);
 
-			Assert.AreEqual("[2;8]", i.ToString());
+			Assert.That(i.ToString(), Is.EqualTo("[2;8]"));
 		}
 
 		[Test(Description = "TestUnion")]
 		public void TestUnion()
 		{
-			Assert.AreEqual("[2;10]", Union("[2;8]", "[8;10]").ToString());
-			Assert.AreEqual("(2;10]", Union("(2;8)", "[8;10]").ToString());
-			Assert.AreEqual("[2;10)", Union("[2;8]", "(8;10)").ToString());
+			Assert.That(Union("[2;8]", "[8;10]").ToString(), Is.EqualTo("[2;10]"));
+			Assert.That(Union("(2;8)", "[8;10]").ToString(), Is.EqualTo("(2;10]"));
+			Assert.That(Union("[2;8]", "(8;10)").ToString(), Is.EqualTo("[2;10)"));
 
 			Assert.Catch<ArgumentOutOfRangeException>(() => Union("[2;8)", "(8;10]"));
 		}
@@ -173,19 +173,19 @@ namespace Zaaml.Core.Test
 		[Test(Description = "TestOpenClose")]
 		public void TestOpenClose()
 		{
-			Assert.AreEqual("(3;4]", OpenMinimum("[2;4]").ToString());
-			Assert.AreEqual("[2;5)", OpenMaximum("[2;4]").ToString());
-			Assert.AreEqual("[2;4]", CloseMinimum("(3;4]").ToString());
-			Assert.AreEqual("[2;4]", CloseMaximum("[2;5)").ToString());
+			Assert.That(OpenMinimum("[2;4]").ToString(), Is.EqualTo("(3;4]"));
+			Assert.That(OpenMaximum("[2;4]").ToString(), Is.EqualTo("[2;5)"));
+			Assert.That(CloseMinimum("(3;4]").ToString(), Is.EqualTo("[2;4]"));
+			Assert.That(CloseMaximum("[2;5)").ToString(), Is.EqualTo("[2;4]"));
 		}
 
 		[Test(Description = "TestNormalize")]
 		public void TestNormalize()
 		{
-			Assert.AreEqual("(3;4]", Normalize("[2;4]", IntervalEndPoint.Open, IntervalEndPoint.Closed).ToString());
-			Assert.AreEqual("[2;5)", Normalize("[2;4]", IntervalEndPoint.Closed, IntervalEndPoint.Open).ToString());
-      Assert.AreEqual("[2;4]", Normalize("(3;4]", IntervalEndPoint.Closed, IntervalEndPoint.Closed).ToString());
-      Assert.AreEqual("[2;4]", Normalize("[2;5)", IntervalEndPoint.Closed , IntervalEndPoint.Closed).ToString());
+			Assert.That(Normalize("[2;4]", IntervalEndPoint.Open, IntervalEndPoint.Closed).ToString(), Is.EqualTo("(3;4]"));
+			Assert.That(Normalize("[2;4]", IntervalEndPoint.Closed, IntervalEndPoint.Open).ToString(), Is.EqualTo("[2;5)"));
+      Assert.That(Normalize("(3;4]", IntervalEndPoint.Closed, IntervalEndPoint.Closed).ToString(), Is.EqualTo("[2;4]"));
+      Assert.That(Normalize("[2;5)", IntervalEndPoint.Closed , IntervalEndPoint.Closed).ToString(), Is.EqualTo("[2;4]"));
 		}
 
     private static Interval<int> Normalize(string interval, IntervalEndPoint minimumPoint, IntervalEndPoint maximumPoint)
@@ -243,11 +243,11 @@ namespace Zaaml.Core.Test
 		[Test(Description = "TestExcept")]
 		public void TestExcept()
 		{
-			Assert.AreEqual("[0;5)", Except("[0;10]", "[5;10]").ToString());
-			Assert.AreEqual("[0;5)", Except("[5;10]", "[0;10]").ToString());
+			Assert.That(Except("[0;10]", "[5;10]").ToString(), Is.EqualTo("[0;5)"));
+			Assert.That(Except("[5;10]", "[0;10]").ToString(), Is.EqualTo("[0;5)"));
 
-      Assert.AreEqual("(5;10]", Except("[0;10]", "[0;5]").ToString());
-      Assert.AreEqual("(5;10]", Except("[0;5]", "[0;10]").ToString());
+      Assert.That(Except("[0;10]", "[0;5]").ToString(), Is.EqualTo("(5;10]"));
+      Assert.That(Except("[0;5]", "[0;10]").ToString(), Is.EqualTo("(5;10]"));
 		}
 
 		[Test(Description = "TestHasIntersection")]
@@ -256,16 +256,16 @@ namespace Zaaml.Core.Test
 			var r1 = new Interval<int>(2, 8);
 			var r2 = new Interval<int>(8, 10);
 
-			Assert.True(Interval.HasIntersection(r1, r2));
+			Assert.That(Interval.HasIntersection(r1, r2), Is.True);
 
 			r2 = new Interval<int>(8, IntervalEndPoint.Open, 10, IntervalEndPoint.Closed );
 
-			Assert.False(Interval.HasIntersection(r1, r2));
+			Assert.That(Interval.HasIntersection(r1, r2), Is.False);
 
 			r1 = Interval.CreateMaximumUnbounded(2);
 			r2 = Interval.CreateMinimumUnbounded(10);
 
-			Assert.True(Interval.HasIntersection(r1, r2));
+			Assert.That(Interval.HasIntersection(r1, r2), Is.True);
 		}
 
 		[Test(Description = "TestSplitInterval")]
@@ -275,24 +275,24 @@ namespace Zaaml.Core.Test
 			var b = IntervalItem.Create("b", new Interval<int>(4, 6));
 
 			var split = Interval.Split(a,b).ToArray();
-			Assert.AreEqual("a:[2;4),a:[4;6],a:(6;8],b:[4;6]", string.Join(",", split));
+			Assert.That(string.Join(",", split), Is.EqualTo("a:[2;4),a:[4;6],a:(6;8],b:[4;6]"));
 
 			split = Interval.Split(b, a).ToArray();
-			Assert.AreEqual("a:[2;4),a:[4;6],a:(6;8],b:[4;6]", string.Join(",", split));
+			Assert.That(string.Join(",", split), Is.EqualTo("a:[2;4),a:[4;6],a:(6;8],b:[4;6]"));
 
 			a = IntervalItem.Create("a", new Interval<int>(2, 8));
 			b = IntervalItem.Create("b", new Interval<int>(4, 10));
 
 			split = Interval.Split(a, b).ToArray();
-			Assert.AreEqual("a:[2;4),a:[4;8],b:[4;8],b:(8;10]", string.Join(",", split));
+			Assert.That(string.Join(",", split), Is.EqualTo("a:[2;4),a:[4;8],b:[4;8],b:(8;10]"));
 
 			split = Interval.Split(b, a).ToArray();
-			Assert.AreEqual("a:[2;4),a:[4;8],b:[4;8],b:(8;10]", string.Join(",", split));
+			Assert.That(string.Join(",", split), Is.EqualTo("a:[2;4),a:[4;8],b:[4;8],b:(8;10]"));
 
 			a = IntervalItem.Create("a", new Interval<int>(2, 4));
 			b = IntervalItem.Create("b", new Interval<int>(6, 8));
 			split = Interval.Split(b, a).ToArray();
-			Assert.AreEqual("b:[6;8],a:[2;4]", string.Join(",", split));
+			Assert.That(string.Join(",", split), Is.EqualTo("b:[6;8],a:[2;4]"));
 		}
 
 		#endregion

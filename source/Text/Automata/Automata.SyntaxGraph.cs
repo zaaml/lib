@@ -12,8 +12,8 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Automata<TInstruction, TOperand>
 	{
-		private const int SubGraphReturnMask = 0x10000000;
-		private const int SubGraphIdMask = 0x10000000 - 1;
+		private const int SubGraphReturnMask = 0x40000000;
+		private const int SubGraphIdMask = SubGraphReturnMask - 1;
 		private bool _built;
 
 		private Dictionary<Syntax, SyntaxGraph> GraphDictionary { get; } = new();

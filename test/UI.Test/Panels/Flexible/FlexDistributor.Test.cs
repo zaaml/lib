@@ -26,10 +26,11 @@ namespace Zaaml.UI.Test.Panels.Flexible
 				using (var elements = GetElements())
 				{
 					var target = initialTarget + i * 0.1;
+
 					elements.Value.UseLayoutRounding = true;
 					distributor.Distribute(elements.Value, target);
 
-					Assert.AreEqual(target.Truncate(), elements.Value.Actual, $"Expand Failed: target={target}");
+					Assert.That(elements.Value.Actual, Is.EqualTo(target.Truncate()), $"Expand Failed: target={target}");
 				}
 			}
 		}
@@ -49,7 +50,7 @@ namespace Zaaml.UI.Test.Panels.Flexible
 					elements.Value.UseLayoutRounding = true;
 					distributor.Distribute(elements.Value, target);
 
-					Assert.AreEqual(target.Truncate(), elements.Value.Actual, $"Shrink Failed: target={target}");
+					Assert.That(elements.Value.Actual, Is.EqualTo(target.Truncate()), $"Shrink Failed: target={target}");
 				}
 			}
 		}

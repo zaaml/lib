@@ -57,7 +57,7 @@ namespace Zaaml.Text
 
 					private void EmitConsumeSyntaxEntryValue(ILContext context, ProductionArgument argument)
 					{
-						if (argument is not { Binder: { ConsumeValue: true } })
+						if (argument is not { Binder.ConsumeValue: true })
 							return;
 
 						EmitDebugPreConsumeParserValue(context, argument);

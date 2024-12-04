@@ -2,6 +2,10 @@
 //   Copyright (c) Zaaml. All rights reserved.
 // </copyright>
 
+// False positive error
+// https://github.com/dotnet/roslyn-analyzers/issues/7357
+#pragma warning disable CA2021
+
 using System.Linq;
 
 namespace Zaaml.Text

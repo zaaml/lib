@@ -50,6 +50,7 @@ namespace Zaaml.Text
 			private IntTrie<DfaState> _dfaTrie;
 
 			private volatile ExecutionPathLookup _executionPathLookup;
+			private volatile ExecutionRailNode _prefixExecution;
 			private volatile ExecutionPath[] _executionPaths;
 			private volatile ExecutionPath[] _finalExecutionPaths;
 			private volatile ExecutionPath[] _returnPaths;
@@ -137,11 +138,69 @@ namespace Zaaml.Text
 						if (_executionPathLookup != null)
 							return _executionPathLookup;
 
-						_executionPathLookup = new ExecutionPathLookup(Automata, BuildExecutionGraph());
+						var executionPaths = BuildExecutionGraph();
+
+						_prefixExecution = BuildPathPrefix(executionPaths);
+						_executionPathLookup = new ExecutionPathLookup(Automata, executionPaths);
 					}
 
 					return _executionPathLookup;
 				}
+			}
+
+			public ExecutionRailNode PrefixExecution
+			{
+				get
+				{
+					_ = ExecutionPathLookup;
+
+					return _prefixExecution;
+				}
+			}
+
+			private ExecutionRailNode BuildPathPrefix(ExecutionPath[] executionPaths)
+			{
+				if (executionPaths.Length < 2)
+					return null;
+
+				var prefixLength = 0;
+				var minLength = executionPaths.Select(x => x.Nodes.Length).Min();
+				var hasEnterNode = false;
+
+				for (var i = 0; i < minLength; i++)
+				{
+					var node = executionPaths[0].Nodes[i];
+
+					if (node is OperandNode or PredicateNode)
+						break;
+
+					hasEnterNode |= node is EnterSyntaxNode;
+
+					var breakSearch = false;
+
+					for (var j = 1; j < executionPaths.Length; j++)
+					{
+						if (executionPaths[j].Nodes[i].Id == node.Id) 
+							continue;
+
+						breakSearch = true;
+
+						break;
+					}
+
+					if (breakSearch)
+						break;
+
+					prefixLength++;
+				}
+
+				if (prefixLength == 0)
+					return null;
+
+				var prefixPath = Automata.CreateExecutionPath(executionPaths[0].Nodes.Take(prefixLength).ToArray());
+				var executionRail = Automata._dfaBuilderInstance.CreateExecutionRail(prefixPath);
+
+				return new ExecutionRailNode { ExecutionRail = executionRail };
 			}
 
 			public ExecutionPath[] ExecutionPaths
@@ -189,7 +248,7 @@ namespace Zaaml.Text
 							return _returnPaths;
 
 						if (ReturnPathsBuilding)
-							return Array.Empty<ExecutionPath>();
+							return [];
 
 						ReturnPathsBuilding = true;
 
@@ -218,7 +277,7 @@ namespace Zaaml.Text
 				if (_finalExecutionPaths != null)
 					return _finalExecutionPaths;
 
-				_finalExecutionPaths = Array.Empty<ExecutionPath>();
+				_finalExecutionPaths = [];
 
 				var executionPaths = ExecutionPaths;
 				var jointPaths = new List<ExecutionPath>();
@@ -285,7 +344,7 @@ namespace Zaaml.Text
 
 			private ExecutionPath JoinPaths(IReadOnlyList<ExecutionPath> executionPaths)
 			{
-				return Automata.CreateExecutionPath(executionPaths[0].PathSourceNode, executionPaths.SelectMany(p => p.Nodes).ToArray(), executionPaths.SelectMany(p => p.LookAheadMatch).Where(m => m != null).ToArray());
+				return Automata.CreateExecutionPath(executionPaths.SelectMany(p => p.Nodes).ToArray(), executionPaths.SelectMany(p => p.LookAheadMatch).Where(m => m != null).ToArray());
 			}
 
 			public void ReCalcRId(Automata<TInstruction, TOperand> automata)
@@ -303,11 +362,12 @@ namespace Zaaml.Text
 				}
 			}
 
-			private static NodeRoute BuildRoute(EdgeDfsStack stack, Node outputNode)
+			private static NodeRoute BuildRoute(Node sourceNode, EdgeDfsStack stack, Node outputNode)
 			{
 				var nodes = new List<Node>();
+				var startIndex = stack.Array[0].Node is LeaveSyntaxNode ? 0 : 1;
 
-				for (var index = 1; index < stack.Count; index++)
+				for (var index = startIndex; index < stack.Count; index++)
 				{
 					ref var edgeDfs = ref stack.Array[index];
 					var node = edgeDfs.Node;
@@ -407,14 +467,14 @@ namespace Zaaml.Text
 						var nextEdge = nextEdgeNull.Value;
 						if (nextEdge.Terminal)
 						{
-							var route = BuildRoute(stack, nextNode);
+							var route = BuildRoute(this, stack, nextNode);
 
 							if (nextEdge.OperandMatch != null)
-								result.Add(Automata.CreateExecutionPath(this, route.Nodes, nextEdge.OperandMatch));
+								result.Add(Automata.CreateExecutionPath(route.Nodes, nextEdge.OperandMatch));
 							else if (nextEdge.PredicateMatch != null)
-								result.Add(Automata.CreateExecutionPath(this, route.Nodes, nextEdge.PredicateMatch));
+								result.Add(Automata.CreateExecutionPath(route.Nodes, nextEdge.PredicateMatch));
 							else if (nextEdge.TargetNode is ExitSyntaxNode)
-								result.Add(Automata.CreateExecutionPath(this, route.Nodes));
+								result.Add(Automata.CreateExecutionPath(route.Nodes));
 							else
 								throw new InvalidOperationException();
 
@@ -456,9 +516,9 @@ namespace Zaaml.Text
 								continue;
 							}
 
-							var route = BuildRoute(stack, nextNode);
+							var route = BuildRoute(this, stack, nextNode);
 
-							result.Add(Automata.CreateExecutionPath(this, route.Nodes));
+							result.Add(Automata.CreateExecutionPath(route.Nodes));
 
 							RemoveVisitedNode(nodeVisitor, nextNode);
 						}
@@ -572,7 +632,7 @@ namespace Zaaml.Text
 			private class EdgeDfsStack
 			{
 				private const int DefaultCapacity = 8;
-				private static readonly EdgeDfs[] EmptyArray = System.Array.Empty<EdgeDfs>();
+				private static readonly EdgeDfs[] EmptyArray = [];
 
 				public EdgeDfs[] Array;
 				public int Count;

@@ -26,6 +26,9 @@ namespace Zaaml.Text
 		public TimeSpan SimulationTime { get; private set; }
 
 		public TimeSpan ExecutionTime { get; private set; }
+		
+		public int LookupPathCount { get; private set; }
+
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal void Backtracking(int length)
@@ -88,6 +91,11 @@ namespace Zaaml.Text
 			_execution.Stop();
 
 			ExecutionTime += _execution?.Elapsed ?? TimeSpan.Zero;
+		}
+
+		public void LookupPath()
+		{
+			LookupPathCount++;
 		}
 	}
 }

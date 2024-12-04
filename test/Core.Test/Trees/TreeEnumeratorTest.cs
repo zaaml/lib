@@ -38,50 +38,50 @@ namespace Zaaml.Core.Test.Trees
 			var tree = GetTestTree();
 
 			// Direct from root
-			Assert.True(CheckEnumerator(TreeEnumerator.GetEnumerator(tree, TreeNodeEnumeratorAdvisor.Instance), [1, 11, 12, 13, 131, 132]));
+			Assert.That(CheckEnumerator(TreeEnumerator.GetEnumerator(tree, TreeNodeEnumeratorAdvisor.Instance), [1, 11, 12, 13, 131, 132]), Is.True);
 
 			// Direct from collection
-			Assert.True(CheckEnumerator(TreeEnumerator.GetEnumerator(tree.Children, TreeNodeEnumeratorAdvisor.Instance), [11, 12, 13, 131, 132]));
+			Assert.That(CheckEnumerator(TreeEnumerator.GetEnumerator(tree.Children, TreeNodeEnumeratorAdvisor.Instance), [11, 12, 13, 131, 132]), Is.True);
 
 			// Reverse from root
-			Assert.True(CheckEnumerator(TreeEnumerator.GetReverseEnumerator(tree, TreeNodeEnumeratorAdvisor.Instance), [11, 12, 131, 132, 13, 1]));
+			Assert.That(CheckEnumerator(TreeEnumerator.GetReverseEnumerator(tree, TreeNodeEnumeratorAdvisor.Instance), [11, 12, 131, 132, 13, 1]), Is.True);
 
 			// Reverse from collection
-			Assert.True(CheckEnumerator(TreeEnumerator.GetReverseEnumerator(tree.Children, TreeNodeEnumeratorAdvisor.Instance), [11, 12, 131, 132, 13]));
+			Assert.That(CheckEnumerator(TreeEnumerator.GetReverseEnumerator(tree.Children, TreeNodeEnumeratorAdvisor.Instance), [11, 12, 131, 132, 13]), Is.True);
 
 			using var enumerator = TreeEnumerator.GetEnumerator(tree, TreeNodeEnumeratorAdvisor.Instance);
 
 			enumerator.MoveNext();
 
 			// Current = 1
-			Assert.AreEqual(true, enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([]));
+			Assert.That(enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([]), Is.True);
 
 			enumerator.MoveNext();
 
 			// Current = 11
-			Assert.AreEqual(true, enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([1]));
+			Assert.That(enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([1]), Is.True);
 
 			enumerator.MoveNext();
 
 			// Current = 12
-			Assert.AreEqual(true, enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([1]));
+			Assert.That(enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([1]), Is.True);
 
 			enumerator.MoveNext();
 
 			// Current = 13
-			Assert.AreEqual(true, enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([1]));
+			Assert.That(enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([1]), Is.True);
 
 			enumerator.MoveNext();
 
 			// Current = 131
-			Assert.AreEqual(true, enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([13, 1]));
+			Assert.That(enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([13, 1]), Is.True);
 
 			enumerator.MoveNext();
 
 			// Current = 132
-			Assert.AreEqual(true, enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([13, 1]));
+			Assert.That(enumerator.GetAncestorsEnumerator().Enumerate().Select(n => n.Value).SequenceEqual([13, 1]), Is.True);
 
-			Assert.AreEqual(false, enumerator.MoveNext());
+			Assert.That(enumerator.MoveNext(), Is.EqualTo(false));
 		}
 
 		private static TreeNode GetTestTree()

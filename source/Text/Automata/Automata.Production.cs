@@ -13,7 +13,7 @@ namespace Zaaml.Text
 		{
 			protected Production(Entry entry)
 			{
-				Entries = new[] { entry };
+				Entries = [entry];
 			}
 
 			public Production(IEnumerable<Entry> entries)

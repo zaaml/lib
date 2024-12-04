@@ -44,7 +44,7 @@ namespace Zaaml.UI.Test.Data.Hierarchy
 				directCaptions.Add(treeItem.Caption);
 			}
 
-			Assert.True(enumeratorCaptions.SequenceEqual(directCaptions));
+			Assert.That(enumeratorCaptions.SequenceEqual(directCaptions), Is.True);
 
 			var reverseCaptions = new List<string>();
 
@@ -59,8 +59,8 @@ namespace Zaaml.UI.Test.Data.Hierarchy
 			var item189 = dataTree.GetItem("Item_223");
 			var index = tree.FindDataIndex(item189);
 
-			Assert.AreEqual(index, 189);
-			Assert.True(enumeratorCaptions.AsEnumerable().Reverse().SequenceEqual(reverseCaptions));
+			Assert.That(index, Is.EqualTo(189));
+			Assert.That(enumeratorCaptions.AsEnumerable().Reverse().SequenceEqual(reverseCaptions), Is.True);
 		}
 
 		[Test(Description = "ExpandCollapseTest")]

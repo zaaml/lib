@@ -19,27 +19,27 @@ namespace Zaaml.Text
 				public static FieldInfo ThreadField = Type.GetField(nameof(Thread));
 				public static FieldInfo ContextField = Type.GetField(nameof(Context));
 
-				public static ThreadFork Empty = new(default, default, ResetForkNode.Empty);
+				public static ThreadFork Empty = new(default, default);
 
+				public int Frame;
 				public Thread Thread;
+				public long ParentForkCount;
 				public ThreadContext Context;
 				public ExecutionRailList ExecutionRailList;
-				public ResetForkNode ResetForkNode;
-
-				public ThreadFork(Thread thread, ThreadContext context, ResetForkNode resetForkNode)
+				
+				public ThreadFork(Thread thread, ThreadContext context)
 				{
 					Thread = thread;
 					Context = context;
 					ExecutionRailList = ExecutionRailList.Start;
-					ResetForkNode = resetForkNode;
 				}
 
-				public ThreadFork(Thread thread, ThreadContext context, ExecutionRailList executionRailList, ResetForkNode resetForkNode)
+				public ThreadFork(Thread thread, ThreadContext context, ExecutionRailList executionRailList, long parentForkCount)
 				{
+					ParentForkCount = parentForkCount;
 					Thread = thread;
 					Context = context;
 					ExecutionRailList = executionRailList;
-					ResetForkNode = resetForkNode;
 				}
 
 				public void Dispose()
@@ -47,19 +47,20 @@ namespace Zaaml.Text
 					Thread.Dispose();
 					Context.Dispose();
 					ExecutionRailList.Dispose();
-					ResetForkNode.Dispose();
 
 					this = Empty;
 				}
 
-				public bool IsEmpty => Thread.Node == null;
+				public long TotalForkCount => ParentForkCount * (ExecutionRailList.Count + 1);
 
+				public bool IsEmpty => Thread.Node == null;
+				
 				public override string ToString()
 				{
 					if (IsEmpty)
 						return "Empty";
 
-					return $"Node:{Thread.Node}, InstructionPointer:{Context.InstructionStreamPointer}, ForkCount:{ExecutionRailList.Count}";
+					return $"Node:{Thread.Node}, InstructionPointer:{Context.InstructionStreamPointer}, ForkCount:{ExecutionRailList.Count}, TotalForkCount: {TotalForkCount}";
 				}
 			}
 		}

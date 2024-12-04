@@ -3,7 +3,7 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
+using System.Buffers;
 using System.Threading;
 using Zaaml.Core;
 
@@ -28,11 +28,11 @@ namespace Zaaml.Text
 			private readonly ProcessResources _processResources;
 			private readonly AutomataTelemetry _telemetry;
 			private readonly AutomataStack _evalStack;
-			private readonly List<ResetForkNode> _resetForkStack = new();
 			private CancellationToken _cancellationToken;
-
 			private ReferenceCounter _referenceCount;
-			private ThreadCollection _threads;
+			private ThreadFork[] _threads;
+			private int _threadsHead;
+			private bool _executing;
 
 			public Process(IInstructionReader instructionReader, AutomataContext context)
 			{
@@ -63,15 +63,17 @@ namespace Zaaml.Text
 				_executionStream.AddReference();
 				_predicateResultStream.AddReference();
 
-				_threads = new ThreadCollection(this, thread, threadContext, _processResources.ResetForkNodePool.Rent());
+				_threads = ArrayPool<ThreadFork>.Shared.Rent(64);
+				_threadsHead = 0;
+				_threads[_threadsHead] = new ThreadFork(thread, threadContext);
 				_telemetry = (AutomataTelemetry)context.ServiceProvider?.GetService(typeof(AutomataTelemetry));
 			}
 
 			public AutomataContextState ContextState => CurrentThreadContext.AutomataContextState;
 
-			private ref ThreadContext CurrentThreadContext => ref _threads.Context;
-			
-			private ref Thread CurrentThread => ref _threads.Thread;
+			private ref ThreadContext CurrentThreadContext => ref _threads[_threadsHead].Context;
+
+			private ref Thread CurrentThread => ref _threads[_threadsHead].Thread;
 
 			private protected virtual ProcessILGenerator CreateILGenerator(Automata<TInstruction, TOperand> automata)
 			{
@@ -155,7 +157,6 @@ namespace Zaaml.Text
 
 			private static Node ExecuteForkPathParallel(ExecutionPath executionPath, Process process)
 			{
-				
 				var predicateNode = (PredicateNode)executionPath.Nodes[0];
 
 				return process.ExecuteForkPathParallel(predicateNode, executionPath);
@@ -237,10 +238,11 @@ namespace Zaaml.Text
 				_executionStream.ReleaseReference();
 				_predicateResultStream.ReleaseReference();
 				_executionRailBuilder.Dispose();
-				_threads.Dispose();
 				_automataStackCleaner.Clean();
 				_precedenceStackCleaner.Clean();
 				_precedenceContextCleaner.Clean();
+
+				DisposeFork();
 			}
 
 			internal void EnqueuePredicateResult(PredicateResult predicateResult)
@@ -259,20 +261,6 @@ namespace Zaaml.Text
 			public AutomataResult ForkRunNext()
 			{
 				return RunPrivate();
-			}
-
-			private ThreadStatusKind ForkThread(ref Thread thread, ref ThreadContext context, ExecutionRailList executionRailList)
-			{
-				//var resetForkNode = _processResources.ResetForkNodePool.Rent();
-				//var head = _resetForkStack.Count - 1;
-
-				//resetForkNode.FrameHead = _resetForkStack[head];
-				//resetForkNode.Next = resetForkNode.FrameHead.Next;
-				//resetForkNode.FrameHead.Next = resetForkNode;
-
-				var resetForkNode = ResetForkNode.Empty;
-
-				return _threads.ForkThread(ref thread, ref context, executionRailList, resetForkNode);
 			}
 
 			private bool GetExecuteThreadQueue()
@@ -296,49 +284,6 @@ namespace Zaaml.Text
 				return Run(CancellationToken);
 			}
 
-			private void EnterForkFrame()
-			{
-				if (GetExecuteThreadQueue())
-					return;
-
-				//var resetForkNode = _processResources.ResetForkNodePool.Rent();
-
-				//resetForkNode.ThreadHead = -1;
-
-				//_resetForkStack.Add(resetForkNode);
-			}
-
-			private void LeaveForkFrame()
-			{
-				if (GetExecuteThreadQueue())
-					return;
-
-				//var resetForkNode = _resetForkStack[_resetForkStack.Count - 1];
-
-				//_resetForkStack.RemoveAt(_resetForkStack.Count - 1);
-
-				//while (resetForkNode != null)
-				//{
-				//	if (resetForkNode.ThreadHead != -1)
-				//		_threads.ResetFork(resetForkNode.ThreadHead);
-
-				//	var next = resetForkNode.Next;
-					
-				//	resetForkNode.Next = null;
-				//	_processResources.ResetForkNodePool.Release(resetForkNode);
-
-				//	resetForkNode = next;
-				//}
-			}
-
-			private void ClearForkFrame()
-			{
-				foreach (var resetForkNode in _resetForkStack) 
-					resetForkNode.Dispose();
-
-				_resetForkStack.Clear();
-			}
-
 			public AutomataResult Run(CancellationToken cancellationToken)
 			{
 				_cancellationToken = cancellationToken;
@@ -346,9 +291,7 @@ namespace Zaaml.Text
 
 				try
 				{
-					EnterForkFrame();
-
-					_threads.Init();
+					_threads[0].Context.AutomataContextState = _threads[0].Context.AutomataContext.CreateContextStateInternal();
 
 					InitDeferExecution();
 
@@ -357,15 +300,13 @@ namespace Zaaml.Text
 						if (_cancellationToken.IsCancellationRequested)
 							return _processResources.ExceptionAutomataResultPool.Rent().Mount(new OperationCanceledException(), this);
 
-						ref var threadFork = ref _threads.Pop();
+						ref var threadFork = ref PopThreadFork();
 
 						if (threadFork.IsEmpty)
 							break;
 
 						ref var thread = ref threadFork.Thread;
 						ref var threadContext = ref threadFork.Context;
-
-						continue_run:
 
 						switch (thread.Run(ref threadContext))
 						{
@@ -375,20 +316,9 @@ namespace Zaaml.Text
 							case ThreadStatusKind.Fork:
 								continue;
 
-							case ThreadStatusKind.Block:
-								threadContext.IsCompleteBlock = false;
-
-								RunExecutionStream();
-
-								threadFork = ref _threads.Peek();
-								thread = ref threadFork.Thread;
-								threadContext = ref threadFork.Context;
-
-								goto continue_run;
-
 							case ThreadStatusKind.Finished:
 
-								if (_processKind == ProcessKind.SubProcess && _threads.Parallel)
+								if (_processKind == ProcessKind.SubProcess && Parallel)
 									return _processResources.ForkAutomataResultPool.Rent().Mount(this);
 
 								_telemetry?.StopSimulation();
@@ -410,10 +340,6 @@ namespace Zaaml.Text
 				{
 					return _processResources.ExceptionAutomataResultPool.Rent().Mount(e, this);
 				}
-				finally
-				{
-					ClearForkFrame();
-				}
 
 				return _processResources.ExceptionAutomataResultPool.Rent().Mount(new InvalidOperationException(), this);
 			}
@@ -423,7 +349,7 @@ namespace Zaaml.Text
 				if (DeferExecution == false)
 					return;
 
-				ref var mainThreadFork = ref _threads.Pop();
+				ref var mainThreadFork = ref PopThreadFork();
 
 				var root = new ExecutionRailNode
 				{
@@ -443,11 +369,46 @@ namespace Zaaml.Text
 
 			private void RunExecutionStream()
 			{
-				_threads.RunExecutionStream();
+				if (_threadsHead == 0)
+					return;
+
+				ref var tailThreadFork = ref _threads[0];
+				ref var headThreadFork = ref _threads[_threadsHead];
+
+				for (var i = _threadsHead; i > 0; i--)
+				{
+					ref var prevThread = ref _threads[i - 1].Thread;
+					ref var currThread = ref _threads[i].Thread;
+
+					prevThread.StackForkExchange(ref currThread);
+				}
+
+				(tailThreadFork.Context.InstructionStream, headThreadFork.Context.InstructionStream) = (headThreadFork.Context.InstructionStream, tailThreadFork.Context.InstructionStream);
+
+				tailThreadFork.Context.ExecutionStreamPointer = headThreadFork.Context.ExecutionStreamPointer;
+				tailThreadFork.Context.PredicateResultStreamPointer = headThreadFork.Context.PredicateResultStreamPointer;
+
+				while (_threadsHead > 0)
+					_threads[_threadsHead--].Dispose();
+
+				if (tailThreadFork.Context.ExecutionStreamPointer == 0)
+					return;
+
+				try
+				{
+					_executing = true;
+
+					tailThreadFork.Context.RunExecutionStream(ref tailThreadFork.Thread);
+				}
+				finally
+				{
+					_executing = false;
+				}
 			}
 
-			private bool ShouldPopPredicateResult(ExecutionPath executionPath)
+			private static bool ShouldPopPredicateResult(ExecutionPath executionPath)
 			{
+				// ReSharper disable once UseIndexFromEndExpression
 				var predicateNode = (PredicateNode)executionPath.Nodes[executionPath.Nodes.Length - 1];
 
 				return predicateNode.PredicateEntry.PopResult;

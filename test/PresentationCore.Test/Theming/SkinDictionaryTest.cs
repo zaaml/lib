@@ -24,21 +24,21 @@ namespace Zaaml.PresentationCore.Test.Theming
 			};
 
 			// Contains test
-			Assert.AreEqual(true, skinDictionary.ContainsKey(key));
+			Assert.That(skinDictionary.ContainsKey(key), Is.EqualTo(true));
 
 			// Add value test
-			Assert.AreEqual(5, skinDictionary[key]);
+			Assert.That(skinDictionary[key], Is.EqualTo(5));
 
 			var keysHashSet = new HashSet<string>(new[] {"MetroUI", "MetroUI.Controls", "MetroUI.Controls.Value"});
 
 			// Flatten test
-			Assert.AreEqual(keysHashSet, new HashSet<string>(skinDictionary.Flatten().Select(kv => kv.Key)));
+			Assert.That(new HashSet<string>(skinDictionary.Flatten().Select(kv => kv.Key)), Is.EqualTo(keysHashSet));
 
 			// Remove test
-			Assert.AreEqual(true, skinDictionary.Remove(key));
+			Assert.That(skinDictionary.Remove(key), Is.EqualTo(true));
 
 			// Contains test
-			Assert.AreEqual(false, skinDictionary.ContainsKey(key));
+			Assert.That(skinDictionary.ContainsKey(key), Is.EqualTo(false));
 		}
 
 		[Test(Description = "MergeDefault")]
@@ -60,9 +60,9 @@ namespace Zaaml.PresentationCore.Test.Theming
 			target.Merge("MetroUI.Controls", first, SkinDictionaryMergeFlags.Default);
 			target.Merge("MetroUI.Controls", second, SkinDictionaryMergeFlags.Default);
 
-			Assert.AreEqual(10, target["MetroUI.Controls.Button.Value1"]);
-			Assert.AreEqual(15, target["MetroUI.Controls.Button.Value2"]);
-			Assert.AreEqual(20, target["MetroUI.Controls.Button.Value3"]);
+			Assert.That(target["MetroUI.Controls.Button.Value1"], Is.EqualTo(10));
+			Assert.That(target["MetroUI.Controls.Button.Value2"], Is.EqualTo(15));
+			Assert.That(target["MetroUI.Controls.Button.Value3"], Is.EqualTo(20));
 		}
 
 		[Test(Description = "MergeOverride")]
@@ -83,13 +83,13 @@ namespace Zaaml.PresentationCore.Test.Theming
 
 			target.Merge("MetroUI.Controls", first, SkinDictionaryMergeFlags.Override);
 
-			Assert.AreEqual(5, target["MetroUI.Controls.Button.Value1"]);
-			Assert.AreEqual(10, target["MetroUI.Controls.Button.Value2"]);
+			Assert.That(target["MetroUI.Controls.Button.Value1"], Is.EqualTo(5));
+			Assert.That(target["MetroUI.Controls.Button.Value2"], Is.EqualTo(10));
 
 			target.Merge("MetroUI.Controls", second, SkinDictionaryMergeFlags.Override);
 
-			Assert.AreEqual(5, target["MetroUI.Controls.Button.Value1"]);
-			Assert.AreEqual(15, target["MetroUI.Controls.Button.Value2"]);
+			Assert.That(target["MetroUI.Controls.Button.Value1"], Is.EqualTo(5));
+			Assert.That(target["MetroUI.Controls.Button.Value2"], Is.EqualTo(15));
 		}
 
 		#endregion

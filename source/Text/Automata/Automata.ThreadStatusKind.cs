@@ -10,7 +10,6 @@ namespace Zaaml.Text
 		{
 			Run,
 			Fork,
-			Block,
 			Finished,
 			Unexpected
 		}

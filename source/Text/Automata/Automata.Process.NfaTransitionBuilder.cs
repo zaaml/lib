@@ -3,6 +3,8 @@
 // </copyright>
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Zaaml.Core;
 using Zaaml.Core.Pools;
 using Zaaml.Core.Utils;
@@ -20,13 +22,16 @@ namespace Zaaml.Text
 				private readonly StackPool<DfaBranch> _branchesPool = new();
 				private readonly StackPool<DfaBranchNode> _branchNodesPool = new();
 				private readonly DfaBuilder _dfaBuilder;
+				private readonly Automata<TInstruction, TOperand> _automata;
 				private readonly Pool<NfaTransitionBuilder> _pool;
 				private DfaBranchNode[] _nfa1 = new DfaBranchNode[32];
 				private DfaBranchNode[] _nfa2 = new DfaBranchNode[32];
+				private DfaTransition[] _dfaTransitions = new DfaTransition[32];
 
 				public NfaTransitionBuilder(Automata<TInstruction, TOperand> automata, Pool<NfaTransitionBuilder> pool)
 				{
 					_dfaBuilder = automata._dfaBuilderInstance;
+					_automata = automata;
 					_pool = pool;
 				}
 
@@ -89,7 +94,6 @@ namespace Zaaml.Text
 						var nextDfa = dfa.GetNextDfa(transitionBuilder.ExecutionRail);
 
 						trieNode.Value = new NfaExecution(transitionBuilder.Fork(dfa), nextDfa);
-						transitionBuilder.Unfork(trieNode.Value.ExecutionRailList);
 
 						return;
 					}
@@ -200,7 +204,35 @@ namespace Zaaml.Text
 						trieNode.Value = NfaExecution.Next;
 					}
 
+					//var prevRail = MemorySpan<int>.Empty;
+
+					//for (var i = 0; i < transitionsLength; i++)
+					//{
+					//	var branchNode = _branches[i];
+
+					//	if (branchNode.Branch.Succeeded || branchNode.Branch.ReferenceCount > 0)
+					//	{
+					//		if (prevRail.IsEmpty || prevRail.SpanSafe.SequenceEqual(branchNode.Transition.ExecutionRail.SpanSafe) == false)
+					//		{
+					//			transitionBuilder.AddExecutionRail(branchNode.Transition.ExecutionRail);
+
+					//			prevRail = branchNode.Transition.ExecutionRail;
+					//		}
+					//	}
+
+					//	_branchesPool.Return(branchNode.Branch);
+					//}
+
+					//{
+					//	var nextDfa = transitionBuilder.ExecutionPathsCount == 1 ? dfa.GetNextDfa(transitionBuilder.ExecutionRail) : null;
+
+					//	trieNode.Value = transitionBuilder.ExecutionPathsCount == 0 ? NfaExecution.Empty : new NfaExecution(transitionBuilder.Fork(dfa), nextDfa);
+
+					//	transitionBuilder.Unfork(trieNode.Value.ExecutionRailList);
+					//}
+
 					var prevRail = MemorySpan<int>.Empty;
+					var transitionCount = 0;
 
 					for (var i = 0; i < transitionsLength; i++)
 					{
@@ -210,7 +242,9 @@ namespace Zaaml.Text
 						{
 							if (prevRail.IsEmpty || prevRail.SpanSafe.SequenceEqual(branchNode.Transition.ExecutionRail.SpanSafe) == false)
 							{
-								transitionBuilder.AddExecutionRail(branchNode.Transition.ExecutionRail);
+								_dfaTransitions[transitionCount++] = branchNode.Transition;
+
+								ArrayUtils.EnsureArrayLength(ref _dfaTransitions, transitionCount, true);
 
 								prevRail = branchNode.Transition.ExecutionRail;
 							}
@@ -219,12 +253,38 @@ namespace Zaaml.Text
 						_branchesPool.Return(branchNode.Branch);
 					}
 
+					if (transitionCount == 0)
 					{
-						var nextDfa = transitionBuilder.ExecutionPathsCount == 1 ? dfa.GetNextDfa(transitionBuilder.ExecutionRail) : null;
+						trieNode.Value = NfaExecution.Empty;
+					}
+					else if (transitionCount == 1)
+					{
+						transitionBuilder.AddExecutionRail(_dfaTransitions[0].ExecutionRail);
+						
+						var executionRailList = transitionBuilder.Fork(dfa);
 
-						trieNode.Value = transitionBuilder.ExecutionPathsCount == 0 ? NfaExecution.Empty : new NfaExecution(transitionBuilder.Fork(dfa), nextDfa);
+						trieNode.Value = new NfaExecution(executionRailList, dfa.GetNextDfa(executionRailList.Root.ExecutionRail));
+					}
+					else
+					{
+						var transitions = new Span<DfaTransition>(_dfaTransitions, 0, transitionCount);
+						//var prefix = _dfaBuilder.BuildPrefixExecutionList(dfa, transitions);
 
-						transitionBuilder.Unfork(trieNode.Value.ExecutionRailList);
+						//if (prefix != null)
+						//{
+						//	trieNode.Value = new NfaExecution(new ExecutionRailList(1, prefix), dfa.GetNextDfa(prefix.ExecutionRail));
+						//}
+						//else
+						{
+							foreach (var transition in transitions)
+								transitionBuilder.AddExecutionRail(transition.ExecutionRail);
+
+							var executionRailList = transitionBuilder.Fork(dfa);
+
+							//executionRailList = GetExecutionRailPrefix(dfa, executionRailList, _automata._executionPathRegistry, transitionBuilder);
+
+							trieNode.Value = new NfaExecution(executionRailList, null);
+						}
 					}
 
 					while (true)
@@ -238,6 +298,83 @@ namespace Zaaml.Text
 
 						headNode = next;
 					}
+				}
+
+				private ExecutionRailList GetExecutionRailPrefix(DfaState dfa, ExecutionRailList executionRailList, List<ExecutionPath> executionPathRegistry, ExecutionRailBuilder transitionBuilder)
+				{
+					var matrix = new List<List<int>>();
+					var executionRailNode = executionRailList.Root;
+					var minLength = int.MaxValue;
+
+					for (var i = 0; i < executionRailList.Count; i++)
+					{
+						var rail = new List<int>();
+
+						matrix.Add(rail);
+
+						foreach (var executionPathId in executionRailNode.ExecutionRail)
+						{
+							var executionPath = executionPathRegistry[executionPathId];
+
+							foreach (var executionPathNode in executionPath.Nodes)
+								rail.Add(executionPathNode.Id);
+						}
+
+						if (rail.Count < minLength)
+							minLength = rail.Count;
+
+						executionRailNode = executionRailNode.Next;
+					}
+
+					var prefixLength = 0;
+
+					for (var i = 0; i < minLength; i++)
+					{
+						var nodeId = matrix[0][i];
+						var node = _automata.GetNode(nodeId);
+						var breakSearch = false;
+
+						//if (node is PredicateNode or OperandNode or PrecedenceNode)
+						//	break;
+
+						for (var j = 1; j < matrix.Count; j++)
+						{
+							if (matrix[j][i] != nodeId)
+							{
+								breakSearch = true;
+								break;
+							}
+						}
+
+						if (breakSearch)
+							break;
+
+						prefixLength++;
+					}
+
+					if (prefixLength == 0)
+						return executionRailList;
+
+					transitionBuilder.Reset();
+
+					var prefixRoute = matrix[0].Take(prefixLength).Select(_automata.GetNode).ToArray();
+					var prefixExecution = _automata.CreateExecutionPath(prefixRoute);
+					var prefixExecutionRail = _dfaBuilder.CreateExecutionRail(prefixExecution).DetachAllocator();
+
+					dfa = dfa.GetNextDfa(prefixExecution.Id);
+					transitionBuilder.AddPrefix(new ExecutionRailNode(dfa) { ExecutionRail = prefixExecutionRail });
+
+					foreach (var rail in matrix)
+					{
+						var route = rail.Skip(prefixLength).Select(_automata.GetNode).ToArray();
+						var executionPath = _automata.CreateExecutionPath(route);
+
+						transitionBuilder.AddExecutionRail(_dfaBuilder.CreateExecutionRail(executionPath).DetachAllocator());
+					}
+
+					executionRailList = transitionBuilder.Fork(dfa);
+
+					return executionRailList;
 				}
 
 				private static bool TrieLookahead(ref ThreadContext context, NfaState nfa, ExecutionRailBuilder transitionBuilder)

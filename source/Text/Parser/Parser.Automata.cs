@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Threading;
 using Zaaml.Core.Converters;
 
+// ReSharper disable LoopCanBeConvertedToQuery
+
 namespace Zaaml.Text
 {
 	internal partial class Parser<TGrammar, TToken>
@@ -24,6 +26,7 @@ namespace Zaaml.Text
 
 				grammar.ParserGrammarInstance.Seal();
 
+				var parserGrammar = grammar.ParserGrammarInstance;
 				var undefinedTokenName = Enum.GetName(typeof(TToken), grammar.UndefinedToken);
 
 				foreach (TToken token in Enum.GetValues(typeof(TToken)))
@@ -42,10 +45,10 @@ namespace Zaaml.Text
 						throw new InvalidOperationException("No token except of Grammar.UndefinedToken may have value of 0.");
 				}
 
-				foreach (var parserSyntax in grammar.ParserSyntaxFragmentCollection)
+				foreach (var parserSyntax in parserGrammar.SyntaxFragmentCollection)
 					RegisterParserSyntax(parserSyntax);
 
-				foreach (var parserSyntax in grammar.NodeCollection)
+				foreach (var parserSyntax in parserGrammar.NodeSyntaxCollection)
 					RegisterParserSyntax(parserSyntax);
 
 				foreach (var parserSyntax in ParserSyntaxDictionary.Values)
@@ -118,100 +121,6 @@ namespace Zaaml.Text
 				return precedenceEntry;
 			}
 
-			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Symbol> RenameFragmentSymbols(Grammar<TGrammar, TToken>.ParserGrammar.Production production, string name)
-			{
-				foreach (var childSymbol in production.Symbols)
-				{
-					switch (childSymbol)
-					{
-						case Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol childTokenSymbol:
-							yield return new Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol(childTokenSymbol.Token)
-							{
-								ArgumentName = name
-							};
-							break;
-						case Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol childTokenSetSymbol:
-							yield return new Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol(childTokenSetSymbol.Tokens)
-							{
-								ArgumentName = name
-							};
-							break;
-						case Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol nodeSymbol:
-							yield return new Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol(nodeSymbol.Node)
-							{
-								ArgumentName = name
-							};
-							break;
-						default:
-							yield return childSymbol;
-							break;
-					}
-				}
-			}
-
-			private IEnumerable<Entry> CreateParserEntries(Grammar<TGrammar, TToken>.ParserGrammar.Symbol symbol)
-			{
-				switch (symbol)
-				{
-					case Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol fragmentSymbol:
-
-						if (fragmentSymbol.Fragment.Productions.Count == 1)
-						{
-							var production = fragmentSymbol.Fragment.Productions[0];
-
-							if (production.Symbols.Any(s => s is Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol recursiveFragmentSymbol && ReferenceEquals(recursiveFragmentSymbol.Fragment, fragmentSymbol.Fragment)))
-								yield return CreateParserEntry(symbol);
-							else
-							{
-								if (fragmentSymbol.ArgumentName != null)
-									foreach (var entry in RenameFragmentSymbols(production, fragmentSymbol.ArgumentName).SelectMany(CreateParserEntries))
-										yield return entry;
-								else
-									foreach (var entry in production.Symbols.SelectMany(CreateParserEntries))
-										yield return entry;
-							}
-						}
-						else
-							yield return CreateParserEntry(symbol);
-
-						break;
-
-					case Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol { Node.Precedences.Count: > 0 } nodeSymbol:
-
-						foreach (var entry in CreatePrecedenceNode(nodeSymbol))
-							yield return entry;
-
-						break;
-					case Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol { Token.Composite: true } tokenSymbol:
-						foreach (var entry in CreateCompositeTokenEntries(tokenSymbol))
-							yield return entry;
-
-						break;
-
-					default:
-
-						yield return CreateParserEntry(symbol);
-
-						break;
-				}
-			}
-
-			private IEnumerable<Entry> CreatePrecedenceNode(Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol nodeSymbol)
-			{
-				if (nodeSymbol.Node.Precedences.Count > 1)
-					throw new NotImplementedException();
-
-				var precedence = nodeSymbol.Node.Precedences[0];
-
-				var productionPrecedence = CreateProductionPrecedence(precedence.Syntax, precedence.Level, false);
-				var enterPrecedenceEntry = new EnterPrecedenceEntry(productionPrecedence);
-				var leavePrecedenceEntry = new LeavePrecedenceEntry(productionPrecedence);
-
-				yield return enterPrecedenceEntry;
-				yield return CreateParserEntry(nodeSymbol);
-				yield return leavePrecedenceEntry;
-			}
-
 			private Entry CreateExternalLexerEntry(Grammar<TGrammar, TToken>.ParserGrammar.ExternalTokenSymbol externalTokenSymbol)
 			{
 				var externalGrammarType = externalTokenSymbol.ExternalGrammarType;
@@ -273,6 +182,53 @@ namespace Zaaml.Text
 				return precedenceEntry;
 			}
 
+			private IEnumerable<Entry> CreateParserEntries(Grammar<TGrammar, TToken>.ParserGrammar.Symbol symbol)
+			{
+				switch (symbol)
+				{
+					case Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol fragmentSymbol:
+
+						if (fragmentSymbol.Fragment.Productions.Count == 1)
+						{
+							var production = fragmentSymbol.Fragment.Productions[0];
+
+							if (production.Symbols.Any(s => s is Grammar<TGrammar, TToken>.ParserGrammar.FragmentSymbol recursiveFragmentSymbol && ReferenceEquals(recursiveFragmentSymbol.Fragment, fragmentSymbol.Fragment)))
+								yield return CreateParserEntry(symbol);
+							else
+							{
+								if (fragmentSymbol.ArgumentName != null)
+									foreach (var entry in RenameFragmentSymbols(production, fragmentSymbol.ArgumentName).SelectMany(CreateParserEntries))
+										yield return entry;
+								else
+									foreach (var entry in production.Symbols.SelectMany(CreateParserEntries))
+										yield return entry;
+							}
+						}
+						else
+							yield return CreateParserEntry(symbol);
+
+						break;
+
+					case Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol { Node.Precedences.Count: > 0 } nodeSymbol:
+
+						foreach (var entry in CreatePrecedenceNode(nodeSymbol))
+							yield return entry;
+
+						break;
+					case Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol { Token.Composite: true } tokenSymbol:
+						foreach (var entry in CreateCompositeTokenEntries(tokenSymbol))
+							yield return entry;
+
+						break;
+
+					default:
+
+						yield return CreateParserEntry(symbol);
+
+						break;
+				}
+			}
+
 			private Entry CreateParserEntry(Grammar<TGrammar, TToken>.ParserGrammar.Symbol symbol)
 			{
 				return symbol switch
@@ -319,6 +275,22 @@ namespace Zaaml.Text
 			private ParserSyntaxEntry CreateParserSyntaxEntry(Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol syntaxNode)
 			{
 				return new ParserSyntaxEntry(syntaxNode, GetParserSyntax(syntaxNode.Node));
+			}
+
+			private IEnumerable<Entry> CreatePrecedenceNode(Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol nodeSymbol)
+			{
+				if (nodeSymbol.Node.Precedences.Count > 1)
+					throw new NotImplementedException();
+
+				var precedence = nodeSymbol.Node.Precedences[0];
+
+				var productionPrecedence = CreateProductionPrecedence(precedence.Syntax, precedence.Level, false);
+				var enterPrecedenceEntry = new EnterPrecedenceEntry(productionPrecedence);
+				var leavePrecedenceEntry = new LeavePrecedenceEntry(productionPrecedence);
+
+				yield return enterPrecedenceEntry;
+				yield return CreateParserEntry(nodeSymbol);
+				yield return leavePrecedenceEntry;
 			}
 
 			private static Func<AutomataContext, PredicateResult> CreatePredicateDelegate(Parser<TToken>.PredicateEntry predicateEntry)
@@ -487,14 +459,21 @@ namespace Zaaml.Text
 
 			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Production> GetSyntaxProductions(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax)
 			{
-#if true
-				if (parserSyntax.Productions.All(p => p.ProductionBinding is Grammar<TGrammar, TToken>.ParserGrammar.ReturnNodeBinding))
-				{
-					return GetProductions(parserSyntax);
-				}
-#endif
+				var returnNodeBindingCount = 0;
 
-				return parserSyntax.Productions;
+				foreach (var production in parserSyntax.Productions)
+				{
+					if (production.ProductionBinding is Grammar<TGrammar, TToken>.ParserGrammar.ReturnNodeBinding)
+						returnNodeBindingCount++;
+				}
+
+				if (returnNodeBindingCount == 0)
+					return parserSyntax.Productions;
+
+				if (returnNodeBindingCount == parserSyntax.Productions.Count)
+					return GetProductions(parserSyntax);
+
+				throw new InvalidOperationException("Mixed productions are not supported.");
 			}
 
 			public TResult Parse<TResult>(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser, CancellationToken cancellationToken = default)
@@ -504,7 +483,7 @@ namespace Zaaml.Text
 
 				return context.GetResult<TResult>();
 			}
-			
+
 			public void Parse(Grammar<TGrammar, TToken>.ParserGrammar.NodeSyntax syntax, LexemeSource<TToken> lexemeSource, Parser<TGrammar, TToken> parser, CancellationToken cancellationToken = default)
 			{
 				using var context = CreateProcessContext(syntax, lexemeSource, ProcessKind.Process, parser);
@@ -554,6 +533,37 @@ namespace Zaaml.Text
 				Productions.Add(parserProduction);
 
 				return productionIndex;
+			}
+
+			private static IEnumerable<Grammar<TGrammar, TToken>.ParserGrammar.Symbol> RenameFragmentSymbols(Grammar<TGrammar, TToken>.ParserGrammar.Production production, string name)
+			{
+				foreach (var childSymbol in production.Symbols)
+				{
+					switch (childSymbol)
+					{
+						case Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol childTokenSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.TokenSymbol(childTokenSymbol.Token)
+							{
+								ArgumentName = name
+							};
+							break;
+						case Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol childTokenSetSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.TokenSetSymbol(childTokenSetSymbol.Tokens)
+							{
+								ArgumentName = name
+							};
+							break;
+						case Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol nodeSymbol:
+							yield return new Grammar<TGrammar, TToken>.ParserGrammar.NodeSymbol(nodeSymbol.Node)
+							{
+								ArgumentName = name
+							};
+							break;
+						default:
+							yield return childSymbol;
+							break;
+					}
+				}
 			}
 		}
 	}
