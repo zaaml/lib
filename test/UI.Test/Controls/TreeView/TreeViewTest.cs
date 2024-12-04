@@ -32,11 +32,11 @@ namespace Zaaml.UI.Test.Controls.TreeView
 			var treeViewItem = treeViewControl.GetVisualDescendants<TreeViewItem>().Single();
 			var icon = treeViewItem.Icon;
 
-			Assert.IsInstanceOf<ImageIcon>(icon);
+			Assert.That(icon, Is.InstanceOf<ImageIcon>());
 
 			var bitmapIcon = (ImageIcon)icon;
 
-			Assert.IsInstanceOf<WriteableBitmap>(bitmapIcon.Source);
+			Assert.That(bitmapIcon.Source, Is.InstanceOf<WriteableBitmap>());
 		}
 
 		private sealed class TreeItemData

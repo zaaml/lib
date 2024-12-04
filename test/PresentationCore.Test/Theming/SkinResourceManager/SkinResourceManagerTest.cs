@@ -30,26 +30,26 @@ namespace Zaaml.PresentationCore.Test.Theming.SkinResourceManager
 			var baseValue1 = skinResourceManager.GetResource("BaseValues.Value1");
 			var baseValue2 = skinResourceManager.GetResource("BaseValues.Value2");
 
-			Assert.AreEqual(1, baseValue1.Value, "Value1");
-			Assert.AreEqual(2, baseValue2.Value, "Value2");
+			Assert.That(baseValue1.Value, Is.EqualTo(1), "Value1");
+			Assert.That(baseValue2.Value, Is.EqualTo(2), "Value2");
 
 			var baseNestedValue1 = skinResourceManager.GetResource("BaseValues.Nested.Value1");
 			var baseNestedValue2 = skinResourceManager.GetResource("BaseValues.Nested.Value2");
 
-			Assert.AreEqual(11, baseNestedValue1.Value, "Value1");
-			Assert.AreEqual(12, baseNestedValue2.Value, "Value2");
+			Assert.That(baseNestedValue1.Value, Is.EqualTo(11), "Value1");
+			Assert.That(baseNestedValue2.Value, Is.EqualTo(12), "Value2");
 
 			var finalValue1 = skinResourceManager.GetResource("FinalValues.Value1");
 			var finalValue2 = skinResourceManager.GetResource("FinalValues.Value2");
 
-			Assert.AreEqual(1, finalValue1.Value, "Value1");
-			Assert.AreEqual(3, finalValue2.Value, "Value2");
+			Assert.That(finalValue1.Value, Is.EqualTo(1), "Value1");
+			Assert.That(finalValue2.Value, Is.EqualTo(3), "Value2");
 
 			var finalNestedValue1 = skinResourceManager.GetResource("FinalValues.Nested.Value1");
 			var finalNestedValue2 = skinResourceManager.GetResource("FinalValues.Nested.Value2");
 
-			Assert.AreEqual(14, finalNestedValue1.Value, "Value1");
-			Assert.AreEqual(12, finalNestedValue2.Value, "Value2");
+			Assert.That(finalNestedValue1.Value, Is.EqualTo(14), "Value1");
+			Assert.That(finalNestedValue2.Value, Is.EqualTo(12), "Value2");
 		}
 
 		[Test(Description = "Test Dependency Resolver")]
@@ -69,11 +69,11 @@ namespace Zaaml.PresentationCore.Test.Theming.SkinResourceManager
 
 			//var intValue = skinResourceManager.GetResource("BaseValues.IntValue");
 
-			//Assert.AreEqual(32, intValue.Value, "Base Value");
+			//NR.AssertAreEqual(32, intValue.Value, "Base Value");
 
 			//var intFinal = skinResourceManager.GetResource("FinalDependency.IntValue");
 
-			//Assert.AreEqual(32, intFinal.Value, "Final Value");
+			//NR.AssertAreEqual(32, intFinal.Value, "Final Value");
 		}
 
 		[Test(Description = "ToolBar Test")]
@@ -90,9 +90,9 @@ namespace Zaaml.PresentationCore.Test.Theming.SkinResourceManager
 			var dropDownInputValue = (Color)skinResourceManager.GetResource("MetroUI.AppToolBarControl.ToolBarSplitButton.DropDownButton.Input.ForegroundBase").Value;
 			var foregroundNormalValue = (SolidColorBrush)skinResourceManager.GetResource("MetroUI.AppToolBarControl.ToolBarSplitButton.DropDownButton.Foreground.Normal").Value;
 
-			Assert.AreEqual(Color.FromArgb(255, 255, 255, 255), inputValue);
-			Assert.AreEqual(Color.FromArgb(255, 255, 255, 255), dropDownInputValue);
-			Assert.AreEqual(Color.FromArgb(255, 255, 255, 255), foregroundNormalValue.Color);
+			Assert.That(inputValue, Is.EqualTo(Color.FromArgb(255, 255, 255, 255)));
+			Assert.That(dropDownInputValue, Is.EqualTo(Color.FromArgb(255, 255, 255, 255)));
+			Assert.That(foregroundNormalValue.Color, Is.EqualTo(Color.FromArgb(255, 255, 255, 255)));
 		}
 
 		private class TestTheme : SkinnedTheme

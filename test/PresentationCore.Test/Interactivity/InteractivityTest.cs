@@ -75,34 +75,34 @@ namespace Zaaml.PresentationCore.Test.Interactivity
 			VisualStateManager.GoToState(testContainer, "State1", false);
 			VisualStateManager.GoToState(testContainer, "State3", false);
 
-			Assert.AreEqual(1, testContainer.ChildControl1.Output1, "Constant value");
-			Assert.AreEqual(2, testContainer.ChildControl1.Output2, "StaticResource Value");
-			Assert.AreEqual(3, testContainer.ChildControl1.Output3, "Binding to StaticResource Value");
-			Assert.AreEqual(4, testContainer.ChildControl1.Output4, "TemplateBinding Value");
+			Assert.That(testContainer.ChildControl1.Output1, Is.EqualTo(1));
+			Assert.That(testContainer.ChildControl1.Output2, Is.EqualTo(2));
+			Assert.That(testContainer.ChildControl1.Output3, Is.EqualTo(3));
+			Assert.That(testContainer.ChildControl1.Output4, Is.EqualTo(4));
 
-			Assert.AreEqual(1, testContainer.ChildControl2.Output1, "Constant Value To TargetName");
-			Assert.AreEqual(2, testContainer.ChildControl2.Output2, "StaticResource Value To Explicit Target");
-			Assert.AreEqual(3, testContainer.ChildControl2.Output3, "Groupped by TargetName: Binding to StaticResource Value");
-			Assert.AreEqual(4, testContainer.ChildControl2.Output4, "Groupped by Property: TemplateBinding Value");
+			Assert.That(testContainer.ChildControl2.Output1, Is.EqualTo(1));
+			Assert.That(testContainer.ChildControl2.Output2, Is.EqualTo(2));
+			Assert.That(testContainer.ChildControl2.Output3, Is.EqualTo(3));
+			Assert.That(testContainer.ChildControl2.Output4, Is.EqualTo(4));
 
-			Assert.AreEqual(1, testContainer.ChildControl3.Output1, "ThemeResource Value");
-			Assert.AreEqual(2, testContainer.ChildControl3.Output2, "Groupped by ThemeResource ValuePathSource: ValuePath");
-			Assert.AreEqual(3, testContainer.ChildControl3.Output3, "TemplateExpando");
+			Assert.That(testContainer.ChildControl3.Output1, Is.EqualTo(1));
+			Assert.That(testContainer.ChildControl3.Output2, Is.EqualTo(2));
+			Assert.That(testContainer.ChildControl3.Output3, Is.EqualTo(3));
 
-			Assert.AreEqual(4, testContainer.ChildControl3.GetExpandoValue("SelfExpando4"), "Expando value");
-			Assert.AreEqual(4, testContainer.ChildControl3.Output4, "Groupped by Property and SelfExpando ValuePathSource: ValuePath");
+			Assert.That(testContainer.ChildControl3.GetExpandoValue("SelfExpando4"), Is.EqualTo(4));
+			Assert.That(testContainer.ChildControl3.Output4, Is.EqualTo(4));
 
-			Assert.AreEqual(1, testContainer.ChildControl4.Output1, "State1: ThemeResource Value");
-			Assert.AreEqual(3, testContainer.ChildControl4.Output2, "State3 implicit Priority: TemplateExpando");
+			Assert.That(testContainer.ChildControl4.Output1, Is.EqualTo(1));
+			Assert.That(testContainer.ChildControl4.Output2, Is.EqualTo(3));
 			VisualStateManager.GoToState(testContainer, "State2", false);
-			Assert.AreEqual(2, testContainer.ChildControl4.Output1, "State2: ThemeResource ValuePathSource: ValuePath");
-			Assert.AreEqual(3, testContainer.ChildControl4.Output2, "State2 Priority2: TemplateExpando");
+			Assert.That(testContainer.ChildControl4.Output1, Is.EqualTo(2));
+			Assert.That(testContainer.ChildControl4.Output2, Is.EqualTo(3));
 			VisualStateManager.GoToState(testContainer, "State4", false);
-			Assert.AreEqual(3, testContainer.ChildControl4.Output2, "State2 Priority2: TemplateExpando");
+			Assert.That(testContainer.ChildControl4.Output2, Is.EqualTo(3));
 			VisualStateManager.GoToState(testContainer, "State1", false);
-			Assert.AreEqual(4, testContainer.ChildControl4.Output2, "State4 Priority1: SelfExpando ValuePathSource: ValuePath");
+			Assert.That(testContainer.ChildControl4.Output2, Is.EqualTo(4));
 			VisualStateManager.GoToState(testContainer, "State3", false);
-			Assert.AreEqual(3, testContainer.ChildControl4.Output2, "State3 implicit Priority: TemplateExpando");
+			Assert.That(testContainer.ChildControl4.Output2, Is.EqualTo(3));
 		}
 
 		[Test(Description = "Test Triggers")]
@@ -124,61 +124,61 @@ namespace Zaaml.PresentationCore.Test.Interactivity
 			testContainer.ApplyTemplate();
 
 			// Trigger
-			Assert.AreEqual(0, testContainer.ChildControl1.Output1, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output2, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output3, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output4, "Default Value");
+			Assert.That(testContainer.ChildControl1.Output1, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output2, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output3, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output4, Is.EqualTo(0));
 
 			testContainer.ChildControl1.Input1 = 10;
-			Assert.AreEqual(10, testContainer.ChildControl1.Output1, "Trigger: Self Property");
+			Assert.That(testContainer.ChildControl1.Output1, Is.EqualTo(10));
 
 			testContainer.ChildControl1.Input2 = 20;
-			Assert.AreEqual(20, testContainer.ChildControl1.Output2, "Trigger: Explicit Source Property");
+			Assert.That(testContainer.ChildControl1.Output2, Is.EqualTo(20));
 
 			testContainer.ChildControl1.Input3 = 30;
-			Assert.AreEqual(30, testContainer.ChildControl1.Output3, "Trigger: Source Name Property");
+			Assert.That(testContainer.ChildControl1.Output3, Is.EqualTo(30));
 
 			Extension.GetTriggers(testContainer.ChildControl1).Clear();
-			Assert.AreEqual(0, testContainer.ChildControl1.Output1, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output2, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output3, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output4, "Default Value");
+			Assert.That(testContainer.ChildControl1.Output1, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output2, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output3, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output4, Is.EqualTo(0));
 
 			// DataTrigger
 			testContainer.Input1 = -1;
 
-			Assert.AreEqual(0, testContainer.ChildControl2.Output1, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl2.Output2, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl2.Output3, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl2.Output4, "Default Value");
+			Assert.That(testContainer.ChildControl2.Output1, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl2.Output2, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl2.Output3, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl2.Output4, Is.EqualTo(0));
 
 			testContainer.Input1 = 10;
-			Assert.AreEqual(10, testContainer.ChildControl2.Output1, "DataTrigger: TemplatedParent Property To Constant");
+			Assert.That(testContainer.ChildControl2.Output1, Is.EqualTo(10));
 
 			testContainer.ChildControl2.Input2 = 10;
-			Assert.AreEqual(20, testContainer.ChildControl2.Output2, "DataTrigger: SelfProperty To TemplatedParent Property");
+			Assert.That(testContainer.ChildControl2.Output2, Is.EqualTo(20));
 
 			Extension.GetTriggers(testContainer.ChildControl2).Clear();
-			Assert.AreEqual(0, testContainer.ChildControl1.Output1, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output2, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output3, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl1.Output4, "Default Value");
+			Assert.That(testContainer.ChildControl1.Output1, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output2, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output3, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl1.Output4, Is.EqualTo(0));
 
 			// MultiDataTrigger
 
-			Assert.AreEqual(0, testContainer.ChildControl3.Output1, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl3.Output2, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl3.Output3, "Default Value");
-			Assert.AreEqual(0, testContainer.ChildControl3.Output4, "Default Value");
+			Assert.That(testContainer.ChildControl3.Output1, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl3.Output2, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl3.Output3, Is.EqualTo(0));
+			Assert.That(testContainer.ChildControl3.Output4, Is.EqualTo(0));
 
 			testContainer.ChildControl3.Input1 = 10;
-			Assert.AreEqual(0, testContainer.ChildControl3.Output1, "Default Value");
+			Assert.That(testContainer.ChildControl3.Output1, Is.EqualTo(0));
 			testContainer.ChildControl3.Input2 = 20;
-			Assert.AreEqual(10, testContainer.ChildControl3.Output1, "And group");
+			Assert.That(testContainer.ChildControl3.Output1, Is.EqualTo(10));
 			testContainer.ChildControl3.Input2 = 30;
-			Assert.AreEqual(0, testContainer.ChildControl3.Output1, "Default Value");
+			Assert.That(testContainer.ChildControl3.Output1, Is.EqualTo(0));
 			testContainer.ChildControl3.Input3 = 30;
-			Assert.AreEqual(10, testContainer.ChildControl3.Output1, "Or modifier");
+			Assert.That(testContainer.ChildControl3.Output1, Is.EqualTo(10));
 		}
 	}
 }

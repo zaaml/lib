@@ -30,7 +30,7 @@ namespace Zaaml.Core.Test
 			WeakLinkedList<ValueNode> list;
 
 			InitWeakLinkedList(count, out values, out nodes, out list);
-			Assert.True(list.SequenceEqual(nodes), "Collections should be the same");
+			Assert.That(list.SequenceEqual(nodes), Is.True, "Collections should be the same");
 		}
 
 		private void InitWeakLinkedList(int count, out List<int> values, out List<ValueNode> nodes, out WeakLinkedList<ValueNode> list)
@@ -87,7 +87,7 @@ namespace Zaaml.Core.Test
 				list.Remove(node);
 			}
 
-			Assert.True(list.SequenceEqual(nodes), "Collections should be the same");
+			Assert.That(list.SequenceEqual(nodes), "Collections should be the same");
 		}
 
 		#endregion

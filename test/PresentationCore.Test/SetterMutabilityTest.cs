@@ -31,36 +31,36 @@ namespace Zaaml.PresentationCore.Test
 
 			Extension.GetTriggers(testControl).Add(trigger);
 
-			Assert.AreEqual(0, testControl.Output1, "Initial state");
+			Assert.That(testControl.Output1, Is.EqualTo(0), "Initial state");
 
 			// Open trigger
 			testControl.Input1 = 10;
-			Assert.AreEqual(20, testControl.Output1, "Second setter has higher priority (Order)");
+			Assert.That(testControl.Output1, Is.EqualTo(20), "Second setter has higher priority (Order)");
 
 			// Make first setter topmost
 			setter1.Priority = 1;
-			Assert.AreEqual(10, testControl.Output1, "First setter has higher priority (Explicit)");
+			Assert.That(testControl.Output1, Is.EqualTo(10), "First setter has higher priority (Explicit)");
 
 			// Make second setter topmost
 			setter2.Priority = 2;
-			Assert.AreEqual(20, testControl.Output1, "Second setter has higher priority (Explicit)");
+			Assert.That(testControl.Output1, Is.EqualTo(20), "Second setter has higher priority (Explicit)");
 
 			// Remove second setter
 			trigger.Setters.Remove(setter2);
-			Assert.AreEqual(10, testControl.Output1, "First setter is single (second removed)");
+			Assert.That(testControl.Output1, Is.EqualTo(10), "First setter is single (second removed)");
 
 			// Remove first setter
 			trigger.Setters.Remove(setter1);
-			Assert.AreEqual(testControl.Output1, 0, "Initial state (all setters removed)");
+			Assert.That(0, Is.EqualTo(testControl.Output1), "Initial state (all setters removed)");
 
 			// Add second setter
 			trigger.Setters.Add(setter2);
-			Assert.AreEqual(20, testControl.Output1, "Second setter has higher priority (single)");
+			Assert.That(testControl.Output1, Is.EqualTo(20), "Second setter has higher priority (single)");
 
 			// Make first setter topmost and add to trigger
 			setter1.Priority = 3;
 			trigger.Setters.Add(setter1);
-			Assert.AreEqual(10, testControl.Output1, "First setter has higher priority (Explicit)");
+			Assert.That(testControl.Output1, Is.EqualTo(10), "First setter has higher priority (Explicit)");
 		}
 
 		[Test(Description = "Change Property")]
@@ -77,29 +77,29 @@ namespace Zaaml.PresentationCore.Test
 
 			Extension.GetTriggers(testControl).Add(trigger);
 
-			Assert.AreEqual(0, testControl.Output1, "Initial state");
-			Assert.AreEqual(0, testControl.Output2, "Initial state");
+			Assert.That(testControl.Output1, Is.EqualTo(0), "Initial state");
+			Assert.That(testControl.Output2, Is.EqualTo(0), "Initial state");
 
 			// Open trigger
 			testControl.Input1 = 10;
 
-			Assert.AreEqual(10, testControl.Output1, "Output1 Modified with first setter");
-			Assert.AreEqual(20, testControl.Output2, "Output2 Modified with second setter");
+			Assert.That(testControl.Output1, Is.EqualTo(10), "Output1 Modified with first setter");
+			Assert.That(testControl.Output2, Is.EqualTo(20), "Output2 Modified with second setter");
 
 			// Change setter1 property
 			setter1.Property = "Output3";
-			Assert.AreEqual(0, testControl.Output1, "Output1 Back to initial state");
-			Assert.AreEqual(10, testControl.Output3, "Output3 modified with first setter");
+			Assert.That(testControl.Output1, Is.EqualTo(0), "Output1 Back to initial state");
+			Assert.That(testControl.Output3, Is.EqualTo(10), "Output3 modified with first setter");
 
 			// Change setter1 property to Explicit DependencyProperty
 			setter1.Property = TestChildControl.Output4Property;
-			Assert.AreEqual(0, testControl.Output3, "Output3 Back to initial state");
-			Assert.AreEqual(10, testControl.Output4, "Output4 modified with first setter");
+			Assert.That(testControl.Output3, Is.EqualTo(0), "Output3 Back to initial state");
+			Assert.That(testControl.Output4, Is.EqualTo(10), "Output4 modified with first setter");
 
 			// Change setter2 property to implicit Expando property
 			setter2.ExpandoProperty = "Expando1";
-			Assert.AreEqual(0, testControl.Output2, "Output2 Back to initial state");
-			Assert.AreEqual(20, testControl.GetExpandoValue("Expando1"), "Expando1 modified with second setter");
+			Assert.That(testControl.Output2, Is.EqualTo(0), "Output2 Back to initial state");
+			Assert.That(testControl.GetExpandoValue("Expando1"), Is.EqualTo(20), "Expando1 modified with second setter");
 		}
 
 		[Test(Description = "Change Target")]
@@ -133,20 +133,20 @@ namespace Zaaml.PresentationCore.Test
 			// Open trigger
 			testContainer.Input1 = 10;
 
-			Assert.AreEqual(10, testControl1.Output1, "Output1 changed by first setter");
-			Assert.AreEqual(20, testControl2.Output2, "Output2 changed by second setter");
+			Assert.That(testControl1.Output1, Is.EqualTo(10), "Output1 changed by first setter");
+			Assert.That(testControl2.Output2, Is.EqualTo(20), "Output2 changed by second setter");
 
 			// Change first setter target to null
 			setter1.Target = null;
-			Assert.AreEqual(0, testControl1.Output1, "Output1 back to initial state");
+			Assert.That(testControl1.Output1, Is.EqualTo(0), "Output1 back to initial state");
 
 			// Change second setter target to first control
 			setter2.Target = testControl1;
-			Assert.AreEqual(20, testControl1.Output2, "Output2 changed by second setter");
+			Assert.That(testControl1.Output2, Is.EqualTo(20), "Output2 changed by second setter");
 
 			// Change first setter target name to second control
 			setter1.TargetName = testControl2.Name;
-			Assert.AreEqual(10, testControl2.Output1, "Output1 changed by first setter");
+			Assert.That(testControl2.Output1, Is.EqualTo(10), "Output1 changed by first setter");
 		}
 
 		[Test(Description = "Change Transition")]
@@ -168,17 +168,17 @@ namespace Zaaml.PresentationCore.Test
 			Extension.GetTriggers(testControl).Add(trigger);
 
 			// Initial state
-			Assert.AreEqual(0, testControl.Output1, "Initial state");
+			Assert.That(testControl.Output1, Is.EqualTo(0), "Initial state");
 
 			// Open trigger
 			testControl.Input1 = 10;
 
-			Assert.AreEqual(10, testControl.Output1, "Output1 changed by setter");
+			Assert.That(testControl.Output1, Is.EqualTo(10), "Output1 changed by setter");
 
 			// Change value
 			setter.Value = 20;
 
-			Assert.AreEqual(20, testControl.Output1, "Setter value changed to 20");
+			Assert.That(testControl.Output1, Is.EqualTo(20), "Setter value changed to 20");
 		}
 
 		[Test(Description = "Change ValuePath")]

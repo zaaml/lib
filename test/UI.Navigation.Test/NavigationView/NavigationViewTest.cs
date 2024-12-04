@@ -21,7 +21,7 @@ namespace Zaaml.UI.Navigation.Test.NavigationView
 
 			var splitViewControl = mainWindow.NavigationViewControl.GetVisualDescendants<SplitViewControl>().Single();
 
-			Assert.Less(splitViewControl.ActualPaneLength, 100);
+			Assert.That(splitViewControl.ActualPaneLength, Is.LessThan(100));
 		}
 	}
 }

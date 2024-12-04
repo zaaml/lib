@@ -46,10 +46,10 @@ namespace Zaaml.Core.Test
 			WeakLinkedNode.Clean(ref head, out var tail);
 
 			// New head
-			Assert.AreSame(weakNodes.First(w => w.IsAlive), head);
+			Assert.That(weakNodes.First(w => w.IsAlive), Is.SameAs(head));
 
 			// New tail should point on item8
-			Assert.AreSame(weakNodes.Last(w => w.IsAlive), tail);
+			Assert.That(weakNodes.Last(w => w.IsAlive), Is.SameAs(tail));
 
 			VerifySameCollections(nodes, weakNodes);
 		}
@@ -103,7 +103,7 @@ namespace Zaaml.Core.Test
 			var cleanedValues = nodes.Where(x => x != null).Select(x => x.Value).ToList();
 
 			// Weak values should equals cleaned values
-			Assert.True(cleanedValues.SequenceEqual(weakValues), "Collections should be the same");
+			Assert.That(cleanedValues.SequenceEqual(weakValues), Is.True, "Collections should be the same");
 		}
 	}
 }
