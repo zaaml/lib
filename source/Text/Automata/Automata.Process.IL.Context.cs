@@ -21,7 +21,6 @@ namespace Zaaml.Text
 				private readonly ExecutionPathBase _executionPath;
 				private readonly ExecutionPathMethodKind _executionPathMethodKind;
 				
-				
 				public readonly DynamicMethod DynMethod;
 				private readonly Lazy<LocalBuilder> _contextLocalLazy;
 				private readonly Lazy<LocalBuilder> _stackLocalLazy;
@@ -37,7 +36,7 @@ namespace Zaaml.Text
 
 					Values = new List<object>();
 					ValuesMap = new Dictionary<object, int>();
-					DynMethod = new DynamicMethod("Execute", typeof(Node), new[] { typeof(object[]), typeof(ExecutionPath), typeof(Process) }, typeof(ExecutionPath), true);
+					DynMethod = new DynamicMethod("Execute", typeof(Node), [typeof(object[]), typeof(ExecutionPath), typeof(Process)], typeof(ExecutionPath), true);
 
 					DynMethod.DefineParameter(1, ParameterAttributes.None, "executionPath");
 					DynMethod.DefineParameter(2, ParameterAttributes.None, "process");
@@ -61,19 +60,15 @@ namespace Zaaml.Text
 
 					_threadForkLazy = new Lazy<LocalBuilder>(() =>
 					{
-						var threadsCollectionLocal = il.DeclareLocal(typeof(ThreadCollection).MakeByRefType());
 						var threadForkLocal = il.DeclareLocal(typeof(ThreadFork).MakeByRefType());
 
 						il.Emit(OpCodes.Ldarg_2);
-						il.Emit(OpCodes.Ldflda, ProcessILGenerator.ProcessThreadsFieldInfo);
-						il.Emit(OpCodes.Stloc, threadsCollectionLocal);
+						il.Emit(OpCodes.Ldfld, ProcessILGenerator.ProcessThreadsFieldInfo);
 
-						il.Emit(OpCodes.Ldloc, threadsCollectionLocal);
-						il.Emit(OpCodes.Ldfld, ThreadCollection.ThreadsField);
-						il.Emit(OpCodes.Ldloc, threadsCollectionLocal);
-						il.Emit(OpCodes.Ldfld, ThreadCollection.ThreadsHeadField);
+						il.Emit(OpCodes.Ldarg_2);
+						il.Emit(OpCodes.Ldfld, ProcessILGenerator.ProcessThreadsHeadFieldInfo);
+
 						il.Emit(OpCodes.Ldelema, typeof(ThreadFork));
-
 						il.Emit(OpCodes.Stloc, threadForkLocal);
 
 						return threadForkLocal;

@@ -41,6 +41,10 @@
 	<ItemGroup>
 	  <None Remove="Grammar\Grammar.ParserRule.BindFactory.btt" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Automata\Automata.Process.Fork.cs" />
+	</ItemGroup>
 	<ItemGroup>
 	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 	</ItemGroup>

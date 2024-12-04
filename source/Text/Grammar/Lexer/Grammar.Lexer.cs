@@ -8,19 +8,21 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Grammar<TGrammar, TToken>
 	{
-		internal IEnumerable<LexerGrammar.FragmentSyntax> LexerSyntaxFragmentCollection => LexerGrammar.FragmentSyntaxCollection;
 
-		internal IEnumerable<LexerGrammar.TokenSyntax> LexerSyntaxTokenCollection => LexerGrammar.TokenSyntaxCollection;
-
-		internal IEnumerable<LexerGrammar.TriviaSyntax> LexerSyntaxTriviaCollection => LexerGrammar.TriviaSyntaxCollection;
 
 		public partial class LexerGrammar
 		{
-			private static readonly Dictionary<string, FragmentSyntax> FragmentSyntaxDictionary = new();
-			private static readonly Dictionary<string, TriviaSyntax> TriviaSyntaxDictionary = new();
-			private static readonly Dictionary<string, TokenSyntax> TokenSyntaxDictionary = new();
+			private static readonly Dictionary<string, FragmentSyntax> FragmentSyntaxDictionary = [];
+			private static readonly Dictionary<string, TriviaSyntax> TriviaSyntaxDictionary = [];
+			private static readonly Dictionary<string, TokenSyntax> TokenSyntaxDictionary = [];
 
-			private static readonly Dictionary<int, Production> ProductionDictionary = new();
+			private static readonly Dictionary<int, Production> ProductionDictionary = [];
+
+			internal IEnumerable<FragmentSyntax> SyntaxFragmentCollection => FragmentSyntaxCollection;
+
+			internal IEnumerable<TokenSyntax> SyntaxTokenCollection => TokenSyntaxCollection;
+
+			internal IEnumerable<TriviaSyntax> SyntaxTriviaCollection => TriviaSyntaxCollection;
 
 			internal static IEnumerable<FragmentSyntax> FragmentSyntaxCollection => FragmentSyntaxDictionary.Values;
 

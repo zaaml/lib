@@ -9,21 +9,17 @@ namespace Zaaml.Text
 {
 	internal abstract partial class Grammar<TGrammar, TToken>
 	{
-		internal IEnumerable<ParserGrammar.NodeSyntax> NodeCollection => ParserGrammar.NodeCollection;
 
-		internal IEnumerable<ParserGrammar.FragmentSyntax> ParserSyntaxFragmentCollection => ParserGrammar.FragmentCollection;
 
 		public partial class ParserGrammar
 		{
-			private static readonly Dictionary<string, NodeSyntax> NodeDictionary = new();
-			private static readonly Dictionary<string, FragmentSyntax> FragmentDictionary = new();
-			private static readonly Dictionary<int, Production> ProductionDictionary = new();
+			private static readonly Dictionary<string, NodeSyntax> NodeDictionary = [];
+			private static readonly Dictionary<string, FragmentSyntax> FragmentDictionary = [];
+			private static readonly Dictionary<int, Production> ProductionDictionary = [];
 
-			internal static IEnumerable<NodeSyntax> NodeCollection => NodeDictionary.Values;
+			internal IEnumerable<NodeSyntax> NodeSyntaxCollection => NodeDictionary.Values;
 
-			internal static IEnumerable<FragmentSyntax> FragmentCollection => FragmentDictionary.Values;
-
-			internal static IEnumerable<Production> ProductionCollection => ProductionDictionary.Values;
+			internal IEnumerable<FragmentSyntax> SyntaxFragmentCollection => FragmentDictionary.Values;
 
 			public void Seal()
 			{

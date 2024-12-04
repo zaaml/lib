@@ -13,7 +13,7 @@ namespace Zaaml.Text
 				public ParserSyntax(Grammar<TGrammar, TToken>.ParserGrammar.Syntax parserSyntax) : base(parserSyntax.Name)
 				{
 					Inline = parserSyntax is Grammar<TGrammar, TToken>.ParserGrammar.FragmentSyntax;
-					CollapseBacktracking = parserSyntax.CollapseBacktracking;
+					ForkFrame = parserSyntax.ForkFrame;
 				}
 			}
 		}

@@ -35,13 +35,15 @@ namespace Zaaml.Text
 
 				grammar.LexerGrammarInstance.Seal();
 
-				foreach (var fragment in grammar.LexerSyntaxFragmentCollection)
+				var lexerGrammar = grammar.LexerGrammarInstance;
+
+				foreach (var fragment in lexerGrammar.SyntaxFragmentCollection)
 					RegisterLexerSyntax(fragment);
 
-				foreach (var trivia in grammar.LexerSyntaxTriviaCollection)
+				foreach (var trivia in lexerGrammar.SyntaxTriviaCollection)
 					RegisterLexerSyntax(trivia);
 
-				foreach (var token in grammar.LexerSyntaxTokenCollection)
+				foreach (var token in lexerGrammar.SyntaxTokenCollection)
 				{
 					if (token.Composite == false) 
 						RegisterLexerSyntax(token);

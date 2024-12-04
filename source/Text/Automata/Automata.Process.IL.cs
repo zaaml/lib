@@ -40,6 +40,7 @@ namespace Zaaml.Text
 				private static readonly MethodInfo EnqueueParallelPathMethodInfo = ThreadContextType.GetMethod(nameof(ThreadContext.EnqueueParallelPath), IPNP);
 
 				public static readonly FieldInfo ProcessThreadsFieldInfo = ProcessType.GetField(nameof(_threads), IPNP);
+				public static readonly FieldInfo ProcessThreadsHeadFieldInfo = ProcessType.GetField(nameof(_threadsHead), IPNP);
 
 				private static readonly MethodInfo EnterForkFrameMethodInfo = ProcessType.GetMethod(nameof(EnterForkFrame), IPNP);
 				private static readonly MethodInfo LeaveForkFrameMethodInfo = ProcessType.GetMethod(nameof(LeaveForkFrame), IPNP);
@@ -59,15 +60,17 @@ namespace Zaaml.Text
 
 				private Automata<TInstruction, TOperand> Automata { get; }
 
-				public void EmitEnterForkFrame(ILContext context)
+				public void EmitEnterForkFrame(ILContext context, int nodeIndex)
 				{
 					context.EmitLdProcess();
+					context.IL.Emit(OpCodes.Ldc_I4, nodeIndex);
 					context.IL.Emit(OpCodes.Call, EnterForkFrameMethodInfo);
 				}
 
-				public void EmitLeaveForkFrame(ILContext context)
+				public void EmitLeaveForkFrame(ILContext context, int nodeIndex)
 				{
 					context.EmitLdProcess();
+					context.IL.Emit(OpCodes.Ldc_I4, nodeIndex);
 					context.IL.Emit(OpCodes.Call, LeaveForkFrameMethodInfo);
 				}
 
